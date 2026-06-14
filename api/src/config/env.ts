@@ -1,0 +1,37 @@
+import { NodeEnv } from "../enums";
+
+export const env = {
+  // Application Configuration
+  NODE_ENV: process.env.NODE_ENV as NodeEnv,
+  PORT: parseInt(process.env.PORT || "3000", 10),
+  API_PREFIX: process.env.API_PREFIX || "api/v1",
+  BASE_URL: process.env.BASE_URL,
+
+  // Database Configuration
+  MONGODB_URI: process.env.MONGODB_URI,
+  MONGODB_DATABASE: process.env.MONGODB_DATABASE,
+
+  // JWT Configuration
+  JWT_SECRET: process.env.JWT_SECRET,
+  JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "24h",
+
+  // Logging Configuration
+  LOG_LEVEL: process.env.LOG_LEVEL || "info",
+  LOG_FILE: process.env.LOG_FILE || "logs/app.log",
+
+  // Rate Limiting
+  RATE_LIMIT_TTL: parseInt(process.env.RATE_LIMIT_TTL || "60", 10),
+  RATE_LIMIT_LIMIT: parseInt(process.env.RATE_LIMIT_LIMIT || "100", 10),
+
+  // GraphQL Configuration
+  GRAPHQL_PLAYGROUND: process.env.GRAPHQL_PLAYGROUND === true.toString(),
+  GRAPHQL_INTROSPECTION: process.env.GRAPHQL_INTROSPECTION === true.toString(),
+
+  // MinIO Configuration
+  MINIO_ENDPOINT: process.env.MINIO_ENDPOINT,
+  MINIO_PORT: parseInt(process.env.MINIO_PORT, 10),
+  MINIO_USE_SSL: process.env.MINIO_USE_SSL === true.toString(),
+  MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
+  MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
+  MINIO_BUCKET: process.env.MINIO_BUCKET,
+} as const;

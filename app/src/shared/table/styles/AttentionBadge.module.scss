@@ -1,0 +1,23 @@
+.attentionBadgeRed {
+  :global(.MuiBadge-badge) {
+    background-color: #d32f2f;
+    animation: attentionBadgeBlinkSync 6s ease-in-out infinite;
+  }
+}
+
+.attentionBadgeBlue {
+  :global(.MuiBadge-badge) {
+    background-color: #1976d2;
+    animation: attentionBadgeBlinkSync 6s ease-in-out infinite;
+  }
+}
+
+@keyframes attentionBadgeBlinkSync {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}

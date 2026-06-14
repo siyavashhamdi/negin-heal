@@ -1,0 +1,155 @@
+{
+    "layout": {
+        "header": {
+            "brand": {
+                "title": "Negin Heal",
+                "tagline": "سامانه مدیریت محتوای Negin Heal",
+                "publicTagline": "مسیر یادگیری و مراقبت سلامت با Negin Heal",
+                "adminPanelBadge": "پنل مدیریت"
+            },
+            "actions": {
+                "notifications": "اعلان‌ها",
+                "settings": "تنظیمات",
+                "help": "راهنما",
+                "exit": "خروج"
+            },
+            "panels": {
+                "notifications": {
+                    "popoverTitle": "اعلان‌های جدید",
+                    "___popoverStringSamples": [
+                        "تایید نهایی پرونده صنف نان و شیرینی",
+                        "یادآور جلسه کمیته نظارت",
+                        "ثبت درخواست جدید اتحادیه پوشاک"
+                    ],
+                    "panelSubtitle": "مدیریت Negin Heal",
+                    "countLabel": "{{count}} مورد",
+                    "viewAll": "مشاهده همه",
+                    "markAllRead": "علامت‌گذاری همه",
+                    "___samples": [
+                        {
+                            "id": "notify-1",
+                            "title": "تایید نهایی پرونده صنف نان و شیرینی",
+                            "description": "پرونده شماره ۱۰۲۳ در صف تایید نهایی قرار گرفت و نیاز به بررسی مدیر دارد.",
+                            "timeLabel": "۲ دقیقه پیش"
+                        },
+                        {
+                            "id": "notify-2",
+                            "title": "یادآور جلسه کمیته نظارت",
+                            "description": "جلسه هفتگی کمیته نظارت امروز ساعت ۱۴:۳۰ برگزار می شود.",
+                            "timeLabel": "۱۲ دقیقه پیش"
+                        },
+                        {
+                            "id": "notify-3",
+                            "title": "ثبت درخواست جدید اتحادیه پوشاک",
+                            "description": "درخواست جدید برای بروزرسانی مجوز فعالیت ثبت شد.",
+                            "timeLabel": "۳۵ دقیقه پیش"
+                        }
+                    ]
+                },
+                "settings": {
+                    "popoverTitle": "تنظیمات سریع",
+                    "popoverRoles": "دسترسی نقش‌ها",
+                    "popoverContact": "تماس با ما",
+                    "popoverNotifications": "تنظیمات اعلان‌ها",
+                    "title": "تنظیمات سریع سامانه",
+                    "subtitle": "میانبرهای پرکاربرد مدیریت پنل",
+                    "badgeSuggested": "پیشنهادی",
+                    "enterSettings": "ورود به تنظیمات",
+                    "customizePanel": "شخصی‌سازی پنل",
+                    "___sampleItems": [
+                        {
+                            "id": "setting-1",
+                            "title": "دسترسی نقش‌ها",
+                            "description": "بازنگری سطح دسترسی کاربران دبیرخانه و اتحادیه‌ها"
+                        },
+                        {
+                            "id": "setting-2",
+                            "title": "تنظیمات امنیتی",
+                            "description": "الزام ورود دومرحله‌ای برای مدیران ارشد"
+                        },
+                        {
+                            "id": "setting-3",
+                            "title": "تنظیمات اعلان‌ها",
+                            "description": "زمان‌بندی اعلان پرونده‌های اولویت‌دار"
+                        }
+                    ]
+                },
+                "help": {
+                    "popoverTitle": "راهنمای سریع سامانه",
+                    "popoverRegisterGuide": "راهنمای ثبت پرونده صنفی",
+                    "popoverFaqExperts": "سوالات متداول کارشناسان",
+                    "popoverSupportContact": "ارتباط با پشتیبانی سامانه",
+                    "subtitle": "پاسخ‌های فوری برای کارهای روزانه",
+                    "viewGuide": "مشاهده راهنما",
+                    "supportTicket": "ثبت تیکت پشتیبانی",
+                    "___sampleItems": [
+                        {
+                            "id": "help-1",
+                            "title": "راهنمای ثبت پرونده صنفی",
+                            "description": "مراحل کامل ثبت، ویرایش و ارسال پرونده برای تایید نهایی."
+                        },
+                        {
+                            "id": "help-2",
+                            "title": "سوالات متداول کارشناسان",
+                            "description": "پاسخ سریع به خطاهای رایج و نکات کار با پنل مدیریت."
+                        },
+                        {
+                            "id": "help-3",
+                            "title": "ارتباط با پشتیبانی سامانه",
+                            "description": "ثبت تیکت فوری برای مشکلات فنی یا دسترسی کاربران."
+                        }
+                    ]
+                },
+                "user": {
+                    "popoverEditProfile": "ویرایش اطلاعات کاربری",
+                    "popoverPersonalNotifications": "مدیریت اعلان‌های شخصی",
+                    "popoverSecurity": "تنظیمات امنیت حساب",
+                    "chipAriaLabel": "اطلاعات کاربر",
+                    "openProfile": "ورود به پروفایل",
+                    "changePassword": "تغییر رمز عبور",
+                    "___sampleItems": [
+                        {
+                            "id": "user-action-1",
+                            "title": "ویرایش اطلاعات کاربری",
+                            "description": "به‌روزرسانی نام، اطلاعات تماس و تصویر پروفایل کاربر."
+                        },
+                        {
+                            "id": "user-action-2",
+                            "title": "مدیریت اعلان‌های شخصی",
+                            "description": "تنظیم نحوه دریافت اعلان‌ها بر اساس اولویت و نوع پیام."
+                        },
+                        {
+                            "id": "user-action-3",
+                            "title": "تنظیمات امنیت حساب",
+                            "description": "مدیریت رمز عبور، نشست‌های فعال و ورود دومرحله‌ای."
+                        }
+                    ]
+                },
+                "theme": {
+                    "darkModeTooltip": "حالت تاریک",
+                    "lightModeTooltip": "حالت روشن"
+                }
+            },
+            "dashboardMenu": {
+                "imageAlt": "آیکون {{title}}"
+            }
+        },
+        "mainLayout": {
+            "fallbackUser": "کاربر",
+            "navigation": {
+                "backToDashboard": "بازگشت به داشبورد",
+                "brandHomeLink": "صفحه اصلی — {{title}}"
+            }
+        },
+        "footer": {
+            "ariaLabel": "پاورقی سامانه",
+            "copyright": "Negin Heal | ۱۴۰۵",
+            "version": "نسخه {{version}}",
+            "links": {
+                "helpCenter": "مرکز راهنما",
+                "supportTicket": "تیکت پشتیبانی",
+                "contactUs": "تماس با ما"
+            }
+        }
+    }
+}

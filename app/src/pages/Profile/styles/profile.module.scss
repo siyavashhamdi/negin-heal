@@ -1,0 +1,97 @@
+@use "../../../styles/variables" as variables;
+
+.page {
+  display: grid;
+  gap: 1rem;
+}
+
+.hero {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  border-radius: 1.1rem;
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--app-layout-glow) 14%, transparent), transparent 58%),
+    color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+}
+
+.avatar {
+  inline-size: 4rem !important;
+  block-size: 4rem !important;
+  font-size: 1.5rem !important;
+  font-weight: variables.$font-weight-bold !important;
+}
+
+.hero h2,
+.hero p {
+  margin: 0;
+}
+
+.hero h2 {
+  margin-block: 0.12rem;
+  font-size: clamp(1.15rem, 4vw, 1.45rem);
+}
+
+.hero p:not(.eyebrow) {
+  color: var(--text-secondary);
+}
+
+.eyebrow {
+  color: #1976d2;
+  font-size: 0.78rem;
+  font-weight: variables.$font-weight-semibold;
+}
+
+.cardGrid {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.actionCard {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  inline-size: 100%;
+  padding: 0.85rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+  color: var(--text-primary);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.actionCard svg {
+  flex: 0 0 auto;
+  color: #1976d2;
+}
+
+.actionCard span {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.actionCard strong {
+  font-size: 0.92rem;
+}
+
+.actionCard small {
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.logoutButton {
+  justify-self: stretch;
+  border-radius: 0.9rem !important;
+  padding-block: 0.62rem !important;
+}
+
+body[data-theme="dark"] {
+  .hero,
+  .actionCard {
+    background: color-mix(in srgb, var(--app-surface-bg) 86%, #0f172a);
+  }
+}

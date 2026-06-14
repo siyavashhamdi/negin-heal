@@ -1,0 +1,61 @@
+@use "../../../styles/variables" as variables;
+
+.listPaper {
+  border-radius: variables.$border-radius-xl;
+  overflow: hidden;
+}
+
+.tableShell {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 13.125rem + var(--entity-table-shell-extra, 0px));
+  max-height: calc(100vh - 13.125rem + var(--entity-table-shell-extra, 0px));
+
+  > :not(.tableContainerFlex) {
+    flex-shrink: 0;
+  }
+}
+
+.tableContainerFlex {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: auto;
+  /* Required so sticky thead cells stick within this scroll container. */
+  isolation: isolate;
+}
+
+.tableLayoutFixed {
+  table-layout: fixed;
+}
+
+.tableLayoutAuto {
+  table-layout: auto;
+}
+
+.actionsCellFlex {
+  display: flex;
+  justify-content: center;
+  gap: variables.$spacing-0-5;
+  user-select: none;
+}
+
+.actionsColumnCell {
+  user-select: none;
+}
+
+.tableFilterCell {
+  padding: variables.$spacing-1;
+
+  :global {
+    .MuiAutocomplete-root,
+    .MuiFormControl-root {
+      width: 100%;
+      min-width: 0;
+    }
+  }
+}
+
+.noDataCell {
+  padding-top: variables.$spacing-4;
+  padding-bottom: variables.$spacing-4;
+}

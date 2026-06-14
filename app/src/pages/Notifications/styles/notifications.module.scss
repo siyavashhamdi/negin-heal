@@ -1,0 +1,104 @@
+@use "../../../styles/variables" as variables;
+
+.page {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.hero {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  border-radius: 1.15rem;
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--app-layout-glow) 14%, transparent), transparent 58%),
+    color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+}
+
+.heroIcon {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 3rem;
+  block-size: 3rem;
+  border-radius: 1rem;
+  background: color-mix(in srgb, #1976d2 12%, transparent);
+  color: #1976d2;
+}
+
+.hero p,
+.hero h2,
+.hero span {
+  margin: 0;
+}
+
+.hero p {
+  color: #1976d2;
+  font-size: 0.78rem;
+  font-weight: variables.$font-weight-semibold;
+}
+
+.hero h2 {
+  margin-block: 0.16rem;
+  font-size: clamp(1.15rem, 4vw, 1.45rem);
+}
+
+.hero span,
+.item p,
+.item time {
+  color: var(--text-secondary);
+}
+
+.list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.65rem;
+  padding: 0.85rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+}
+
+.dot {
+  inline-size: 0.55rem;
+  block-size: 0.55rem;
+  margin-top: 0.45rem;
+  border-radius: 999rem;
+  background: #1976d2;
+}
+
+.item h3,
+.item p {
+  margin: 0;
+}
+
+.item h3 {
+  font-size: 0.92rem;
+}
+
+.item p {
+  margin-block: 0.2rem;
+  line-height: 1.7;
+}
+
+.item time {
+  font-size: 0.76rem;
+}
+
+.actionButton {
+  border-radius: 0.9rem !important;
+  padding-block: 0.62rem !important;
+}
+
+body[data-theme="dark"] {
+  .hero,
+  .item {
+    background: color-mix(in srgb, var(--app-surface-bg) 86%, #0f172a);
+  }
+}

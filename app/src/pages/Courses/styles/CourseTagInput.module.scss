@@ -1,0 +1,81 @@
+@use "../../../styles/variables" as variables;
+
+.root {
+  position: relative;
+}
+
+.label {
+  position: absolute;
+  z-index: 1;
+  inset-block-start: 50%;
+  inset-inline-start: 0.78rem;
+  transform: translateY(-50%) scale(1);
+  transform-origin: right center;
+  padding-inline: 0.28rem;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1;
+  pointer-events: none;
+  transition:
+    inset-block-start 0.18s ease,
+    transform 0.18s ease,
+    background-color 0.18s ease,
+    color 0.18s ease,
+    font-size 0.18s ease;
+}
+
+.rootFloating .label {
+  inset-block-start: 0;
+  transform: translateY(-50%) scale(0.86);
+  background: var(--app-surface-bg);
+  color: #1976d2;
+  font-size: 0.78rem;
+}
+
+.inputShell {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  min-block-size: 3.5rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--text-primary) 23%, transparent);
+  border-radius: variables.$border-radius-md;
+  padding: 0.52rem 0.68rem;
+  background: transparent;
+  transition:
+    border-color 0.18s ease,
+    border-width 0.18s ease,
+    padding 0.18s ease;
+}
+
+.inputShell:focus-within {
+  border-color: #1976d2;
+  border-width: 0.125rem;
+  padding: calc(0.52rem - 0.0625rem) calc(0.68rem - 0.0625rem);
+}
+
+.inputShell:hover:not(:focus-within) {
+  border-color: var(--text-primary);
+}
+
+.tagChip {
+  max-inline-size: 8.5rem;
+  font-weight: 700 !important;
+}
+
+.input {
+  flex: 1 1 9rem;
+  min-inline-size: 8rem;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  line-height: 1.8;
+}
+
+.input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.9;
+}

@@ -1,0 +1,62 @@
+@use "../../styles/variables";
+@use "../../styles/mixins";
+
+.snackbar {
+  @include mixins.respond-below(sm) {
+    top: max(#{variables.$spacing-2}, env(safe-area-inset-top, 0px)) !important;
+    bottom: auto !important;
+    inset-inline: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    transform: none !important;
+    padding-inline: max(0.75rem, env(safe-area-inset-left, 0px))
+      max(0.75rem, env(safe-area-inset-right, 0px)) !important;
+    box-sizing: border-box;
+  }
+
+  @include mixins.respond-to(sm) {
+    /* Slight lift above pagination / footer without sitting too high on the screen */
+    bottom: calc(#{variables.$spacing-3} + env(safe-area-inset-bottom, 0px)) !important;
+    inset-inline-start: variables.$spacing-3 !important;
+    inset-inline-end: auto !important;
+    top: auto !important;
+    padding-inline: 0;
+    max-width: none;
+    position: fixed !important;
+  }
+}
+
+.alert {
+  width: 100%;
+  min-width: 17.5rem; // 280px
+  max-width: calc(100vw - 2rem); // calc(100vw - 32px)
+  font-family: variables.$font-family !important;
+
+  @include mixins.respond-below(sm) {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    border-radius: 0.75rem;
+  }
+
+  @include mixins.respond-to(sm) {
+    min-width: 18.75rem; // 300px
+    max-width: 25rem; // 400px
+  }
+
+  :global(.MuiAlert-message) {
+    font-family: variables.$font-family !important;
+    max-height: min(40vh, 11rem);
+    overflow-y: auto;
+    padding-inline-end: variables.$spacing-0-5;
+  }
+
+  :global(.MuiAlert-icon) {
+    font-family: variables.$font-family !important;
+  }
+
+  :global(.MuiAlert-action) {
+    font-family: variables.$font-family !important;
+  }
+}

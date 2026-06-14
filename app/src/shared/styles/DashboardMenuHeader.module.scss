@@ -1,0 +1,115 @@
+@use "../../styles/variables" as variables;
+@use "../../styles/mixins" as mixins;
+
+.outer {
+  margin-bottom: variables.$spacing-3;
+}
+
+.rowLtr {
+  direction: ltr;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+  width: 100%;
+
+  @include mixins.respond-to(sm) {
+    gap: 0.625rem;
+  }
+}
+
+.backWrap {
+  flex-shrink: 0;
+  align-self: flex-start;
+  padding-top: variables.$spacing-0-5;
+
+  @include mixins.respond-to(sm) {
+    align-self: center;
+    padding-top: 0;
+  }
+}
+
+.backTextButton {
+  padding-inline: variables.$spacing-0-5;
+  padding-block: 0.125rem;
+  min-width: 0;
+  text-transform: none;
+  font-weight: variables.$font-weight-semibold;
+
+  :global(.MuiButton-endIcon) {
+    margin-inline-start: variables.$spacing-1;
+  }
+}
+
+.backArrowIcon {
+  font-size: 1.125rem;
+  transform: scaleX(-1);
+}
+
+.mobileBackIcon {
+  transform: scaleX(-1);
+}
+
+.backIconButton {
+  border-radius: variables.$border-radius-lg;
+  box-shadow: variables.$shadow-md;
+}
+
+.rowRtl {
+  direction: rtl;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: variables.$spacing-2;
+  flex-wrap: wrap;
+}
+
+.titleImg {
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: -0.125rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  object-fit: contain;
+
+  @include mixins.respond-to(sm) {
+    margin-top: -0.1875rem;
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+}
+
+.titleColumn {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.titleHeading {
+  font-weight: variables.$font-weight-semibold;
+}
+
+.titleHeadingWithDescription {
+  margin-bottom: variables.$spacing-0-5;
+}
+
+.description {
+  min-width: 0;
+}
+
+.actionsWrap {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  align-self: center;
+  justify-content: flex-end;
+  width: 100%;
+
+  @include mixins.respond-to(sm) {
+    width: auto;
+  }
+}

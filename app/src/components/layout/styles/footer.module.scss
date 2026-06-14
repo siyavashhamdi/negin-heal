@@ -1,0 +1,174 @@
+@use "../../../styles/variables" as variables;
+
+// 56.25rem ≈ 900px — stack vs three-column footer
+$layout-break: 56.25rem;
+$shadow-elevated: 0 1.5rem 3rem rgba(15, 23, 42, 0.12);
+$hairline: 0.0625rem solid;
+
+.footer {
+  margin-top: variables.$spacing-1-5;
+  width: 100%;
+  border: $hairline color-mix(in srgb, var(--app-surface-border) 74%, transparent);
+  border-radius: variables.$border-radius-lg;
+  background: var(--app-surface-bg);
+  box-shadow: $shadow-elevated;
+  padding: clamp(variables.$spacing-1-5, 1.8vw, 1.1rem);
+}
+
+.footerEmbedded {
+  margin-top: 0;
+  width: 100%;
+  padding: clamp(0.55rem, 1.4vw, 0.85rem) 0 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  border-top: $hairline variables.$color-divider;
+}
+
+.footerBottom {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: variables.$spacing-1-5 variables.$spacing-2;
+}
+
+// Embedded login bar: two-line stack (after `.footerBottom` so it overrides base flex).
+.footerEmbedded .footerBottom {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "copy version"
+    "links links";
+  align-items: center;
+  gap: variables.$spacing-1 variables.$spacing-2;
+}
+
+.footerEmbedded .footerInlineLinks {
+  grid-area: links;
+  justify-self: center;
+}
+
+.footerEmbedded .footerCopyright {
+  grid-area: copy;
+  justify-self: start;
+}
+
+.footerEmbedded .footerVersion {
+  grid-area: version;
+  justify-self: end;
+}
+
+.footerEmbedded .footerLink {
+  font-size: variables.$font-size-xs;
+}
+
+.footerCopyright,
+.footerVersion {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: variables.$font-size-sm;
+}
+
+.footerCopyrightMark {
+  display: inline-block;
+  position: relative;
+  top: 0.25em;
+}
+
+.footerInlineLinks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+}
+
+.footerLink {
+  color: inherit;
+  text-decoration: none;
+  font-size: variables.$font-size-sm;
+  line-height: 1.75;
+  transition: color variables.$transition-duration-shorter variables.$transition-easing-ease-in-out;
+}
+
+.footerLink:hover {
+  color: variables.$color-info-dark;
+  text-decoration: underline;
+}
+
+.footerLink + .footerLink::before {
+  content: "|";
+  color: var(--text-secondary);
+  margin-inline: 0.45rem;
+  opacity: 0.75;
+}
+
+// Wide three-column row only for the main layout footer (not the narrow embedded login bar).
+@media (min-width: $layout-break) {
+  .footer:not(.footerEmbedded) .footerBottom {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: variables.$spacing-2;
+  }
+
+  .footer:not(.footerEmbedded) .footerCopyright {
+    justify-self: start;
+  }
+
+  .footer:not(.footerEmbedded) .footerVersion {
+    justify-self: end;
+  }
+
+  .footer:not(.footerEmbedded) .footerInlineLinks {
+    justify-self: center;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: ($layout-break - 0.0625rem)) {
+  .footer:not(.footerEmbedded) {
+    display: none;
+  }
+
+  .footer:not(.footerEmbedded) .footerBottom {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "copy version"
+      "links links";
+    align-items: center;
+    gap: variables.$spacing-1 variables.$spacing-2;
+  }
+
+  .footer:not(.footerEmbedded) .footerInlineLinks {
+    grid-area: links;
+    justify-self: center;
+  }
+
+  .footer:not(.footerEmbedded) .footerCopyright {
+    grid-area: copy;
+    justify-self: start;
+  }
+
+  .footer:not(.footerEmbedded) .footerVersion {
+    grid-area: version;
+    justify-self: end;
+  }
+
+  .footer:not(.footerEmbedded) .footerLink {
+    font-size: variables.$font-size-xs;
+  }
+}
+
+body[data-theme="dark"] {
+  .footerEmbedded {
+    border-top-color: rgba(255, 255, 255, 0.16);
+  }
+
+  .footerLink:hover {
+    color: variables.$color-info-light;
+  }
+}
+

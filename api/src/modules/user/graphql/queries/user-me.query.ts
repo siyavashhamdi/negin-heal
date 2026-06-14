@@ -1,0 +1,60 @@
+import { UseGuards, NotFoundException } from "@nestjs/common";
+import { Query, Resolver, Context } from "@nestjs/graphql";
+
+import { UserRole } from "../../../../enums";
+import { UserService } from "../../user.service";
+import { GraphQLContextUtil } from "../../../../utils";
+import { UserDocument } from "../../../../database/schemas";
+import { GqlAuthGuard } from "../../../auth";
+import { GraphQLContext } from "../../../../types/graphql-context.types";
+import { UserMeGqlResponse } from "../responses/user-me.gql.response";
+
+@Resolver(() => UserMeGqlResponse)
+@UseGuards(GqlAuthGuard)
+export class UserMeQuery {
+  constructor(private readonly userService: UserService) {}
+
+  @Query(() => UserMeGqlResponse, {
+    name: "me",
+    description: "Get the currently authenticated user's information",
+  })
+  async me(@Context() context: GraphQLContext): Promise<UserMeGqlResponse> {
+    const user = GraphQLContextUtil.getUser(context);
+
+    // Fetch full user data from database
+    const userDoc = await this.userService.findById(user.userId);
+
+    if (!userDoc) {
+      throw new NotFoundException("User not found");
+    }
+
+    // Convert to GraphQL response
+    const userObj =
+      (
+        userDoc as UserDocument & { toObject?: () => Record<string, unknown> }
+      ).toObject?.() || userDoc;
+
+    return {
+      id: userDoc._id,
+      username: userObj.username,
+      roles: (userObj.roles || []) as UserRole[],
+      status: userObj.status,
+      profile: userObj.profile
+        ? {
+            firstName: userObj.profile.firstName,
+            lastName: userObj.profile.lastName,
+            avatarFileId: userObj.profile.avatarFileId,
+          }
+        : undefined,
+      preferences: userObj.preferences
+        ? {
+            language: userObj.preferences.language,
+            timezone: userObj.preferences.timezone,
+            notificationsEnabled:
+              userObj.preferences.notificationsEnabled ?? true,
+            theme: userObj.preferences.theme,
+          }
+        : undefined,
+    } as UserMeGqlResponse;
+  }
+}

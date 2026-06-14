@@ -1,0 +1,103 @@
+.root {
+  width: 100%;
+}
+
+.pickerContainer {
+  width: 100%;
+}
+
+.textFieldInput {
+  cursor: pointer;
+}
+
+/* Align react-multi-date-picker popup with app light/dark tokens */
+:global {
+  .jalali-date-filter-popup.rmdp-wrapper {
+    border: 1px solid var(--app-surface-border) !important;
+    border-radius: 4px;
+    background-color: var(--app-surface-bg) !important;
+    color: var(--text-primary);
+    box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.12);
+    font-family: var(--app-font-family);
+  }
+
+  html[data-theme="dark"] .jalali-date-filter-popup.rmdp-wrapper {
+    box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.5);
+  }
+
+  .jalali-date-filter-popup .rmdp-header,
+  .jalali-date-filter-popup .rmdp-panel-header {
+    border-color: var(--app-surface-border) !important;
+  }
+
+  .jalali-date-filter-popup .rmdp-month-picker,
+  .jalali-date-filter-popup .rmdp-year-picker {
+    background-color: var(--app-surface-bg) !important;
+  }
+
+  .jalali-date-filter-popup .rmdp-header-values,
+  .jalali-date-filter-popup .rmdp-week-day,
+  .jalali-date-filter-popup .rmdp-day span {
+    color: var(--text-primary);
+  }
+
+  .jalali-date-filter-popup .rmdp-day.rmdp-deactive span,
+  .jalali-date-filter-popup .rmdp-day.rmdp-disabled {
+    color: var(--text-secondary);
+  }
+
+  .jalali-date-filter-popup .rmdp-arrow {
+    border-color: var(--text-secondary);
+  }
+
+  .jalali-date-filter-popup .rmdp-arrow-container:hover {
+    background-color: rgba(25, 118, 210, 0.15);
+    box-shadow: none;
+  }
+
+  .jalali-date-filter-popup .rmdp-arrow-container:hover .rmdp-arrow {
+    border-color: #fff;
+  }
+
+  .jalali-date-filter-popup .rmdp-day:not(.rmdp-disabled):not(.rmdp-day-hidden) span:hover {
+    background-color: rgba(25, 118, 210, 0.12);
+    color: var(--text-primary);
+  }
+
+  .jalali-date-filter-popup .rmdp-day.rmdp-selected span:not(.highlight) {
+    background-color: #1976d2 !important;
+    color: #fff !important;
+    box-shadow: none;
+  }
+
+  .jalali-date-filter-popup .rmdp-day.rmdp-today span {
+    background-color: transparent;
+    color: #1976d2;
+    font-weight: 600;
+  }
+
+  .jalali-date-filter-popup .rmdp-day.rmdp-selected.rmdp-today span {
+    color: #fff !important;
+  }
+
+  /* Popper arrow */
+  .jalali-date-filter-arrow.rmdp-ep-arrow::after {
+    background-color: var(--app-surface-bg) !important;
+  }
+
+  .rmdp-container .jalali-date-filter-arrow.rmdp-ep-arrow[direction="top"] {
+    border-bottom-color: var(--app-surface-border);
+  }
+
+  .rmdp-container .jalali-date-filter-arrow.rmdp-ep-arrow[direction="bottom"] {
+    border-top-color: var(--app-surface-border);
+  }
+
+  .rmdp-container .jalali-date-filter-arrow.rmdp-ep-arrow[direction="left"] {
+    border-right-color: var(--app-surface-border);
+  }
+
+  .rmdp-container .jalali-date-filter-arrow.rmdp-ep-arrow[direction="right"] {
+    border-left-color: var(--app-surface-border);
+  }
+}

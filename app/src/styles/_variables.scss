@@ -1,0 +1,150 @@
+// ============================================
+// SCSS Variables
+// ============================================
+
+// Color Palette
+// Primary colors
+$color-primary-main: #1976d2;
+$color-primary-light: #42a5f5;
+$color-primary-dark: #1565c0;
+$color-primary-contrast: #ffffff;
+
+// Secondary colors
+$color-secondary-main: #00acc1;
+$color-secondary-light: #4dd0e1;
+$color-secondary-dark: #00838f;
+$color-secondary-contrast: #ffffff;
+
+// Success colors
+$color-success-main: #10b981;
+$color-success-light: #34d399;
+$color-success-dark: #059669;
+
+// Warning colors
+$color-warning-main: #f59e0b;
+$color-warning-light: #fbbf24;
+$color-warning-dark: #d97706;
+
+// Error colors
+$color-error-main: #ef4444;
+$color-error-light: #f87171;
+$color-error-dark: #dc2626;
+
+// Info colors
+$color-info-main: #3b82f6;
+$color-info-light: #60a5fa;
+$color-info-dark: #2563eb;
+
+// Grey scale
+$color-grey-50: #f9fafb;
+$color-grey-100: #f3f4f6;
+$color-grey-200: #e5e7eb;
+$color-grey-300: #d1d5db;
+$color-grey-400: #9ca3af;
+$color-grey-500: #6b7280;
+$color-grey-600: #4b5563;
+$color-grey-700: #374151;
+$color-grey-800: #1f2937;
+$color-grey-900: #111827;
+
+// Background colors
+$color-background-default: #f5f7fa;
+$color-background-paper: #ffffff;
+
+// Text colors
+$color-text-primary: #1a1a1a;
+$color-text-secondary: $color-grey-500;
+$color-text-disabled: $color-grey-400;
+
+// Divider color
+$color-divider: $color-grey-200;
+
+// Action colors
+$color-action-hover: rgba(0, 0, 0, 0.04);
+$color-backdrop: rgba(0, 0, 0, 0.5);
+
+// Spacing (0.5rem base unit)
+$spacing-unit: 0.5rem;
+$spacing-0: 0;
+$spacing-0-5: 0.25rem; // 0.5 * 0.5rem
+$spacing-1: 0.5rem; // 1 * 0.5rem
+$spacing-1-5: 0.75rem; // 1.5 * 0.5rem
+$spacing-2: 1rem; // 2 * 0.5rem
+$spacing-3: 1.5rem; // 3 * 0.5rem
+$spacing-4: 2rem; // 4 * 0.5rem
+
+// Border radius
+$border-radius-sm: 0.25rem;
+$border-radius-md: 0.5rem;
+$border-radius-lg: 0.75rem;
+$border-radius-xl: 1rem;
+$border-radius-full: 3.125rem;
+
+// Shadows
+$shadow-sm: 0 0.0625rem 0.125rem 0 rgba(0, 0, 0, 0.05);
+$shadow-md: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.08);
+$shadow-lg: 0 0.25rem 1rem rgba(0, 0, 0, 0.12);
+$shadow-xl: 0 0.625rem 1.5rem rgba(0, 0, 0, 0.15);
+$shadow-drawer-mobile: 0.125rem 0 0.5rem rgba(0, 0, 0, 0.15);
+
+// Transitions
+$transition-duration-shortest: 150ms;
+$transition-duration-shorter: 200ms;
+$transition-duration-short: 250ms;
+$transition-duration-standard: 300ms;
+$transition-duration-complex: 375ms;
+$transition-duration-entering-screen: 225ms;
+$transition-duration-leaving-screen: 195ms;
+
+$transition-easing-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+$transition-easing-ease-out: cubic-bezier(0.0, 0, 0.2, 1);
+$transition-easing-ease-in: cubic-bezier(0.4, 0, 1, 1);
+$transition-easing-sharp: cubic-bezier(0.4, 0, 0.6, 1);
+
+// Typography
+$font-family: "B Yekan", "-apple-system", "BlinkMacSystemFont", "Arial", sans-serif;
+/** Latin-only stack for captcha and other English-only UI (avoids Persian glyph shaping). */
+$font-family-latin: "Segoe UI", "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif;
+$font-size-xs: 0.7rem;
+$font-size-sm: 0.875rem;
+$font-size-base: 1rem;
+$font-size-lg: 1.25rem;
+$font-size-xl: 1.5rem;
+$font-size-2xl: 1.75rem;
+$font-size-3xl: 2rem;
+$font-size-4xl: 2.5rem;
+
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+// Z-index
+$z-index-mobile-stepper: 1000;
+$z-index-speed-dial: 1050;
+$z-index-app-bar: 1100;
+$z-index-drawer: 1200;
+$z-index-modal: 1300;
+$z-index-snackbar: 1400;
+$z-index-tooltip: 1500;
+
+// Breakpoints
+$breakpoint-xs: 0;
+$breakpoint-sm: 37.5rem;
+$breakpoint-md: 60rem;
+$breakpoint-lg: 80rem;
+$breakpoint-xl: 120rem;
+
+// Layout
+$header-height: 4rem;
+$drawer-width: 17.5rem;
+$drawer-collapsed-width: 4rem;
+
+// Scrollbar
+$scrollbar-width: 0.5rem;
+$scrollbar-height: 0.5rem;
+$scrollbar-track-bg: #f1f1f1;
+$scrollbar-thumb-bg: #888;
+$scrollbar-thumb-bg-hover: #555;
+$scrollbar-thumb-radius: 0.25rem;
+

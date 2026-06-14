@@ -1,0 +1,28 @@
+@use "variables";
+@use "mixins";
+
+// App container
+.app-container {
+  @include mixins.flex-column;
+  min-height: 100vh;
+  padding: 0.9rem;
+  background:
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.1), transparent 50%),
+    var(--app-surface-bg);
+}
+
+// Content wrapper (below header)
+.content-wrapper {
+  display: block;
+  flex: 1;
+  margin-top: 0.7rem;
+}
+
+// Main content area
+.main-content {
+  flex-grow: 1;
+  min-height: 0;
+  @include mixins.flex-column;
+  width: 100%;
+}
+

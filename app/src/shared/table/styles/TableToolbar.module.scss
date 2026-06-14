@@ -1,0 +1,188 @@
+$breakpoint-md: 900px;
+
+.toolbar {
+  padding-inline: 8px;
+  padding-block: 8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  gap: 6px;
+  flex-wrap: nowrap;
+  min-height: 56px !important;
+  justify-content: space-between;
+  width: 100%;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.01);
+
+  @media (min-width: $breakpoint-md) {
+    padding-inline: 16px;
+    padding-block: 10px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+}
+
+:global(html[data-theme="dark"]) .toolbar {
+  background-color: rgba(255, 255, 255, 0.02);
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+}
+
+:global(html[data-theme="light"]) .toolbar {
+  background-color: rgba(0, 0, 0, 0.01);
+}
+
+.leftCluster {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: nowrap;
+  overflow: hidden;
+
+  @media (min-width: $breakpoint-md) {
+    gap: 16px;
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+}
+
+.searchRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: nowrap;
+  flex: 1;
+  min-width: 0;
+
+  @media (min-width: $breakpoint-md) {
+    gap: 8px;
+    flex-wrap: wrap;
+
+    &:has(.searchField:focus-within),
+    &:has(.searchFieldHasValue) {
+      flex: 1 1 auto;
+    }
+  }
+}
+
+.searchField {
+  flex: 1 1 0%;
+  width: auto;
+  min-width: 56px;
+  max-width: none;
+  flex-shrink: 1;
+
+  /* Desktop: compact when empty + blurred; wider on focus or when typing */
+  @media (min-width: $breakpoint-md) {
+    flex: 0 1 auto;
+    width: 15rem;
+    min-width: 9rem;
+    max-width: 15rem;
+    flex-shrink: 0;
+    transition:
+      width 0.25s ease,
+      max-width 0.25s ease,
+      min-width 0.25s ease,
+      flex 0.25s ease;
+
+    &:focus-within,
+    &.searchFieldHasValue {
+      flex: 1 1 auto;
+      width: min(325rem, 100%);
+      min-width: 20rem;
+      max-width: min(32rem, 100%);
+    }
+  }
+
+  :global(.MuiOutlinedInput-root) {
+    background-color: rgba(0, 0, 0, 0.02);
+    transition: background-color 0.2s ease-in-out;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.04);
+    }
+
+    &:global(.Mui-focused) {
+      background-color: rgba(0, 0, 0, 0.06);
+    }
+  }
+}
+
+:global(html[data-theme="dark"]) .searchField :global(.MuiOutlinedInput-root) {
+  background-color: rgba(255, 255, 255, 0.05);
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+
+  &:global(.Mui-focused) {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.iconActions {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  flex-shrink: 0;
+
+  @media (min-width: $breakpoint-md) {
+    gap: 4px;
+  }
+}
+
+.iconActions :global(.MuiIconButton-root),
+.iconActionButton {
+  width: 2rem;
+  height: 2rem;
+  padding: 0.25rem;
+
+  @media (min-width: $breakpoint-md) {
+    width: 2.125rem;
+    height: 2.125rem;
+  }
+}
+
+.iconActionButton:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+:global(html[data-theme="dark"]) .iconActionButton:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.refreshButton {
+  transition: transform 0.2s ease-in-out;
+
+  &:active {
+    transform: rotate(180deg);
+  }
+}
+
+.columnMenuPaper {
+  max-height: 400px;
+  min-width: 200px;
+}
+
+.columnMenuHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 16px;
+}
+
+.trailingActions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-inline-start: 4px;
+  gap: 8px;
+
+  @media (min-width: $breakpoint-md) {
+    margin-inline-start: auto;
+  }
+}
+
+.createButtonNoShrink {
+  flex-shrink: 0;
+}

@@ -1,0 +1,173 @@
+@use "../../styles/variables" as variables;
+
+.root {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  max-inline-size: 100%;
+}
+
+.rootFullWidth {
+  display: flex;
+  inline-size: 100%;
+}
+
+.label {
+  position: absolute;
+  z-index: 1;
+  inset-block-start: -0.48rem;
+  inset-inline-start: 0.85rem;
+  padding-inline: 0.28rem;
+  background: var(--app-surface-bg);
+  color: variables.$color-primary-main;
+  font-size: 0.74rem;
+  font-weight: variables.$font-weight-medium;
+  line-height: 1;
+}
+
+.requiredMark {
+  color: variables.$color-error-main;
+}
+
+.optionalMark {
+  color: var(--text-secondary);
+  font-weight: variables.$font-weight-normal;
+}
+
+.dropzone {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  inline-size: 11rem;
+  block-size: 11rem;
+  max-inline-size: 100%;
+  border: 1px dashed variables.$color-divider;
+  border-radius: variables.$border-radius-md;
+  padding: 0.9rem;
+  text-align: center;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+
+  &:hover {
+    border-color: variables.$color-primary-main;
+    background-color: rgba(variables.$color-primary-main, 0.04);
+  }
+}
+
+.dropzoneFullWidth {
+  inline-size: 100%;
+}
+
+.dropzoneDragActive {
+  border-color: variables.$color-primary-main;
+  background-color: rgba(variables.$color-primary-main, 0.08);
+  box-shadow: 0 0 0 0.125rem rgba(variables.$color-primary-main, 0.12);
+}
+
+.dropzoneError {
+  border-color: variables.$color-error-main;
+}
+
+.dropzoneHasFile {
+  border-style: solid;
+  text-align: start;
+  align-items: stretch;
+}
+
+.icon {
+  font-size: 2rem;
+  color: variables.$color-text-secondary;
+  margin-bottom: variables.$spacing-0-5;
+}
+
+.title {
+  font-weight: variables.$font-weight-semibold;
+}
+
+.meta {
+  display: block;
+  color: variables.$color-text-secondary;
+  margin-top: variables.$spacing-0-5;
+}
+
+.rules {
+  display: grid;
+  justify-content: center;
+  gap: variables.$spacing-0-5;
+  margin-top: variables.$spacing-1;
+}
+
+.rule {
+  color: variables.$color-text-secondary;
+  background-color: variables.$color-grey-100;
+  border-radius: variables.$border-radius-full;
+  padding: 0.125rem 0.625rem;
+}
+
+.fileRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: variables.$spacing-1;
+  flex-wrap: wrap;
+}
+
+.filePreview {
+  display: flex;
+  flex-direction: column;
+  gap: variables.$spacing-1;
+  width: 100%;
+  min-width: 0;
+}
+
+.previewMedia {
+  display: block;
+  width: 100%;
+  block-size: 6.7rem;
+  object-fit: contain;
+  border-radius: variables.$border-radius-md;
+  background-color: variables.$color-grey-100;
+}
+
+.previewIcon,
+.loadingState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 6.7rem;
+  border-radius: variables.$border-radius-md;
+  background-color: variables.$color-grey-100;
+  color: variables.$color-text-secondary;
+}
+
+.previewIcon {
+  svg {
+    font-size: 3rem;
+  }
+}
+
+.fileName {
+  word-break: break-word;
+  font-weight: variables.$font-weight-medium;
+}
+
+.hiddenInput {
+  display: none;
+}
+
+@media (max-width: (variables.$breakpoint-sm - 0.0625rem)) {
+  .root,
+  .dropzone {
+    inline-size: 100%;
+  }
+
+  .dropzone {
+    block-size: auto;
+    min-block-size: 11rem;
+  }
+}

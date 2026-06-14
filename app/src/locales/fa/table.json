@@ -1,0 +1,147 @@
+{
+    "table": {
+        "columns": {
+            "actions": "عملیات"
+        },
+        "pagination": {
+            "showing": "نمایش {{count}} از {{total}} مورد",
+            "rowsPerPage": "تعداد در هر صفحه",
+            "firstPage": "اولین صفحه",
+            "previousPage": "صفحه قبل",
+            "nextPage": "صفحه بعد",
+            "lastPage": "آخرین صفحه",
+            "goToPage": "رفتن به صفحه",
+            "goToPageLabel": "شماره صفحه",
+            "goToPagePlaceholder": "مثلاً ۵",
+            "goToPageButton": "برو",
+            "goToPageInvalid": "شماره صفحه باید بین ۱ تا {{totalPages}} باشد."
+        },
+        "filters": {
+            "all": "همه",
+            "multipleSelected": "چند انتخاب",
+            "noOptions": "موردی یافت نشد"
+        },
+        "tfFlags": {
+            "yesNo": {
+                "yes": "بلی",
+                "no": "خیر"
+            },
+            "hasNot": {
+                "yes": "دارد",
+                "no": "ندارد"
+            }
+        },
+        "toolbar": {
+            "searchPlaceholder": "جستجو",
+            "clearSearch": "پاک کردن جستجو",
+            "refresh": "به‌روزرسانی",
+            "columnVisibility": "نمایش/مخفی کردن ستون‌ها",
+            "columnVisibilityLabel": "ستون‌های قابل نمایش",
+            "columnVisibilityResetDefault": "بازنشانی به حالت پیش‌فرض"
+        },
+        "dataGrid": {
+            "toolbar": {
+                "toggleColumnFilters": "نمایش فیلتر ستون‌ها",
+                "hideColumnFilters": "مخفی کردن فیلتر ستون‌ها"
+            },
+            "emptyState": {
+                "noData": "داده‌ای یافت نشد."
+            },
+            "rowActions": {
+                "viewDetails": "مشاهده جزئیات",
+                "edit": "ویرایش",
+                "delete": "حذف"
+            },
+            "filter": {
+                "clearField": "پاک کردن فیلتر این ستون",
+                "applyFilters": "اعمال فیلترها",
+                "clearAllFilters": "پاک کردن همه فیلترها"
+            },
+            "deleteDialog": {
+                "title": "تایید حذف",
+                "cancel": "خیر",
+                "confirm": "بله، حذف شود"
+            },
+            "toggleActiveDialog": {
+                "activateTitle": "تایید فعال‌سازی",
+                "deactivateTitle": "تایید غیرفعال‌سازی",
+                "activateMessage": "با تأیید، این عضو فعال خواهد شد.",
+                "deactivateMessage": "با تأیید، این عضو غیرفعال خواهد شد.",
+                "cancel": "انصراف",
+                "confirmActivate": "بله، فعال شود",
+                "confirmDeactivate": "بله، غیرفعال شود"
+            },
+            "modal": {
+                "close": "بستن",
+                "closeAria": "بستن"
+            }
+        },
+        "entity": {
+            "createButton": "ایجاد {{title}}",
+            "deleteConfirmMessage": "آیا از حذف این {{title}} مطمئن هستید؟",
+            "modalViewTitle": "جزئیات {{title}}"
+        },
+        "pages": {
+            "usersManagement": {
+                "columns": {
+                    "username": "نام کاربری",
+                    "firstName": "نام",
+                    "lastName": "نام خانوادگی",
+                    "fullName": "نام و نام خانوادگی",
+                    "email": "ایمیل",
+                    "phoneNumber": "شماره تماس",
+                    "avatarFileId": "تصویر پروفایل",
+                    "bio": "بیوگرافی",
+                    "roles": "نقش‌ها",
+                    "status": "وضعیت",
+                    "createdAt": "تاریخ ایجاد",
+                    "updatedAt": "آخرین بروزرسانی"
+                },
+                "filters": {
+                    "createdAtFrom": "ایجاد از تاریخ",
+                    "createdAtTo": "ایجاد تا تاریخ",
+                    "updatedAtFrom": "بروزرسانی از تاریخ",
+                    "updatedAtTo": "بروزرسانی تا تاریخ"
+                }
+            },
+            "payments": {
+                "columns": {
+                    "id": "شناسه پرداخت",
+                    "userId": "شناسه کاربر",
+                    "courseId": "شناسه دوره",
+                    "userFullName": "نام پرداخت‌کننده",
+                    "username": "نام کاربری",
+                    "userEmail": "ایمیل",
+                    "userPhone": "شماره تماس",
+                    "courseTitle": "دوره",
+                    "status": "وضعیت",
+                    "paymentMethod": "روش پرداخت",
+                    "currency": "واحد",
+                    "paymentProvider": "درگاه/ارائه‌دهنده",
+                    "amountIrt": "مبلغ اولیه",
+                    "discountPercentage": "درصد تخفیف",
+                    "discountAmountIrt": "مبلغ تخفیف",
+                    "finalAmountIrt": "مبلغ نهایی",
+                    "paymentReference": "کد/مرجع پرداخت",
+                    "transactionId": "شناسه تراکنش",
+                    "couponId": "شناسه کد تخفیف",
+                    "couponCode": "کد تخفیف",
+                    "couponDiscountType": "نوع تخفیف کوپن",
+                    "couponDiscountValue": "مقدار تخفیف کوپن",
+                    "uploadedReceiptFileId": "شناسه رسید",
+                    "receiptUploadedBy": "آپلودکننده رسید",
+                    "isManualStatusChange": "تغییر دستی",
+                    "manualStatusChangedBy": "تغییردهنده دستی",
+                    "manualStatusChangedDescription": "توضیح تغییر دستی",
+                    "createdAt": "تاریخ ثبت",
+                    "updatedAt": "آخرین بروزرسانی",
+                    "pendingAt": "تاریخ انتظار",
+                    "paidAt": "تاریخ پرداخت",
+                    "failedAt": "تاریخ خطا",
+                    "refundedAt": "تاریخ مرجوعی",
+                    "cancelledAt": "تاریخ لغو"
+                }
+            }
+        }
+    }
+}

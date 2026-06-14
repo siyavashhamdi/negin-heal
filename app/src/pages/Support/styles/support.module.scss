@@ -1,0 +1,96 @@
+@use "../../../styles/variables" as variables;
+
+.page {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.hero {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  border-radius: 1.15rem;
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--app-layout-glow) 14%, transparent), transparent 58%),
+    color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+}
+
+.heroIcon {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 3rem;
+  block-size: 3rem;
+  border-radius: 1rem;
+  background: color-mix(in srgb, #1976d2 12%, transparent);
+  color: #1976d2;
+}
+
+.hero p,
+.hero h2,
+.hero span {
+  margin: 0;
+}
+
+.hero p {
+  color: #1976d2;
+  font-size: 0.78rem;
+  font-weight: variables.$font-weight-semibold;
+}
+
+.hero h2 {
+  margin-block: 0.16rem;
+  font-size: clamp(1.15rem, 4vw, 1.45rem);
+}
+
+.hero span {
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.grid {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  inline-size: 100%;
+  padding: 0.85rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+  color: var(--text-primary);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.card svg {
+  flex: 0 0 auto;
+  color: #1976d2;
+}
+
+.card span {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.card strong {
+  font-size: 0.92rem;
+}
+
+.card small {
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+body[data-theme="dark"] {
+  .hero,
+  .card {
+    background: color-mix(in srgb, var(--app-surface-bg) 86%, #0f172a);
+  }
+}

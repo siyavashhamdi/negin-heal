@@ -1,0 +1,17 @@
+@use "../../styles/variables" as variables;
+
+.root {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline: 0;
+  z-index: variables.$z-index-modal + 2;
+  inline-size: 100%;
+}
+
+.progress {
+  block-size: 0.1875rem;
+
+  :global(.MuiLinearProgress-bar) {
+    transition: transform variables.$transition-duration-shorter linear;
+  }
+}

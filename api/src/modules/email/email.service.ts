@@ -1,0 +1,203 @@
+import * as nodemailer from "nodemailer";
+
+import { Injectable, Logger } from "@nestjs/common";
+
+import { APP_SETTING_KEY } from "../../constants";
+import { AppSettingsService } from "../app-settings";
+
+type StoredEmailGmailSmtpConfig = {
+  host?: unknown;
+  port?: unknown;
+  secure?: unknown;
+  username?: unknown;
+  password?: unknown;
+  fromName?: unknown;
+  fromEmail?: unknown;
+};
+
+type NormalizedEmailGmailSmtpConfig = {
+  host: string;
+  port: number;
+  secure: boolean;
+  username: string;
+  password: string;
+  fromName: string;
+  fromEmail: string;
+};
+
+type SendEmailInput = {
+  to: string;
+  subject: string;
+  text: string;
+  html?: string;
+  replyTo?: string;
+};
+
+type SendLoginCodeEmailInput = {
+  to: string;
+  code: string;
+  expiresInMinutes?: number;
+};
+
+@Injectable()
+export class EmailService {
+  private readonly logger = new Logger(EmailService.name);
+  private transporter: nodemailer.Transporter | null = null;
+  private transporterConfigSignature: string | null = null;
+
+  constructor(private readonly appSettingsService: AppSettingsService) {}
+
+  async sendEmail(input: SendEmailInput): Promise<void> {
+    const config = await this.getActiveGmailSmtpConfigOrThrow();
+    const transporter = await this.getTransporter(config);
+
+    await transporter.sendMail({
+      from: this.formatFrom(config.fromName, config.fromEmail),
+      to: input.to,
+      subject: input.subject,
+      text: input.text,
+      html: input.html,
+      replyTo: input.replyTo,
+    });
+
+    this.logger.debug(`Email sent to ${input.to}`);
+  }
+
+  async sendLoginCodeEmail(input: SendLoginCodeEmailInput): Promise<void> {
+    const expiresInMinutes = input.expiresInMinutes ?? 5;
+
+    const subject = "Your Negin Heal login code";
+    const text = [
+      "Your login code:",
+      input.code,
+      "",
+      `This code expires in ${expiresInMinutes} minutes.`,
+      "",
+      "If you did not request this code, you can safely ignore this email.",
+      "Negin Heal Security Team",
+    ].join("\n");
+
+    const html = `
+      <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111827;max-width:560px;margin:0 auto;">
+        <h2 style="margin-bottom:12px;">Negin Heal Sign-In Verification</h2>
+        <p style="margin:0 0 16px;">Use the one-time code below to complete your login:</p>
+        <div style="display:inline-block;font-size:28px;font-weight:700;letter-spacing:6px;padding:10px 16px;border:1px solid #E5E7EB;border-radius:8px;background:#F9FAFB;">
+          ${input.code}
+        </div>
+        <p style="margin:16px 0 0;">This code expires in <strong>${expiresInMinutes} minutes</strong>.</p>
+        <p style="margin:16px 0 0;">If you did not request this code, please ignore this email.</p>
+        <p style="margin:20px 0 0;color:#6B7280;">Negin Heal Security Team</p>
+      </div>
+    `;
+
+    await this.sendEmail({
+      to: input.to,
+      subject,
+      text,
+      html,
+    });
+  }
+
+  private async getTransporter(
+    config: NormalizedEmailGmailSmtpConfig,
+  ): Promise<nodemailer.Transporter> {
+    const signature = this.buildTransportSignature(config);
+    if (this.transporter && this.transporterConfigSignature === signature) {
+      return this.transporter;
+    }
+
+    const transporter = nodemailer.createTransport({
+      host: config.host,
+      port: config.port,
+      secure: config.secure,
+      auth: {
+        user: config.username,
+        pass: config.password,
+      },
+    });
+
+    await transporter.verify();
+    this.logger.log("Gmail SMTP transporter verified successfully");
+
+    this.transporter = transporter;
+    this.transporterConfigSignature = signature;
+    return transporter;
+  }
+
+  private async getActiveGmailSmtpConfigOrThrow(): Promise<NormalizedEmailGmailSmtpConfig> {
+    const storedConfig =
+      await this.appSettingsService.getActiveJsonSettingValue<StoredEmailGmailSmtpConfig>(
+        APP_SETTING_KEY.EMAIL_GMAIL_SMTP_CONFIG,
+      );
+
+    if (!storedConfig) {
+      throw new Error("Active Gmail SMTP app setting is not configured");
+    }
+
+    const username = this.normalizeString(storedConfig.username);
+    const password = this.normalizeSecret(storedConfig.password);
+    const fromEmail =
+      this.normalizeString(storedConfig.fromEmail) ||
+      this.normalizeString(storedConfig.username);
+
+    if (!username || !password || !fromEmail) {
+      throw new Error("Incomplete Gmail SMTP app setting configuration");
+    }
+
+    return {
+      host: this.normalizeString(storedConfig.host) || "smtp.gmail.com",
+      port: this.normalizePositiveNumber(storedConfig.port, 587),
+      secure: this.normalizeBoolean(storedConfig.secure, false),
+      username,
+      password,
+      fromName: this.normalizeString(storedConfig.fromName) || "Negin Heal",
+      fromEmail,
+    };
+  }
+
+  private normalizeString(value: unknown): string {
+    return typeof value === "string" ? value.trim() : "";
+  }
+
+  private normalizeSecret(value: unknown): string {
+    const secret = this.normalizeString(value);
+    return secret.replace(/\s+/g, "");
+  }
+
+  private normalizePositiveNumber(value: unknown, fallback: number): number {
+    const numericValue = Number(value);
+    return Number.isFinite(numericValue) && numericValue > 0
+      ? numericValue
+      : fallback;
+  }
+
+  private normalizeBoolean(value: unknown, fallback: boolean): boolean {
+    if (typeof value === "boolean") {
+      return value;
+    }
+    if (typeof value === "string") {
+      if (value.toLowerCase() === "true") {
+        return true;
+      }
+      if (value.toLowerCase() === "false") {
+        return false;
+      }
+    }
+    return fallback;
+  }
+
+  private formatFrom(name: string, email: string): string {
+    const escapedName = name.replace(/"/g, '\\"');
+    return `"${escapedName}" <${email}>`;
+  }
+
+  private buildTransportSignature(config: NormalizedEmailGmailSmtpConfig): string {
+    return JSON.stringify({
+      host: config.host,
+      port: config.port,
+      secure: config.secure,
+      username: config.username,
+      password: config.password,
+    });
+  }
+}

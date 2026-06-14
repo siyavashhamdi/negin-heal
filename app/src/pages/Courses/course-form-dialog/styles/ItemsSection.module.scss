@@ -1,0 +1,103 @@
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.itemsTitle {
+  margin: 0;
+  font-size: 0.88rem !important;
+  font-weight: 800 !important;
+}
+
+.itemsStack {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.itemCard {
+  overflow: hidden;
+  border-radius: 0.8rem !important;
+}
+
+.itemCard :global(.MuiAccordionDetails-root) {
+  padding: 0 0.72rem 0.72rem !important;
+}
+
+.itemCard :global(.MuiGrid-item) {
+  margin-bottom: 0.35rem;
+}
+
+.itemSummary {
+  min-height: 2.5rem !important;
+}
+
+.itemSummary :global(.MuiAccordionSummary-content) {
+  margin: 0.55rem 0 !important;
+}
+
+.itemHead {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.itemTitle {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.84rem !important;
+  font-weight: 800 !important;
+}
+
+.itemSubtitle {
+  margin: 0;
+  flex: 1;
+  color: var(--text-secondary);
+  font-size: 0.8rem !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.itemActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.expandHandle {
+  transition: transform 0.18s ease !important;
+}
+
+.expandHandleOpen {
+  transform: rotate(180deg);
+}
+
+.dragHandle {
+  cursor: grab;
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+.itemSeparator {
+  opacity: 0.72;
+}
+
+.uploaderRow {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.addItemFooter {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.25rem;
+}

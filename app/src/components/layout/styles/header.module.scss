@@ -1,0 +1,162 @@
+@use "../../../styles/variables" as variables;
+
+// 56.25rem ≈ 900px — brand row vs two-column header
+$layout-break: 56.25rem;
+$shadow-elevated: 0 1.5rem 3rem rgba(15, 23, 42, 0.12);
+$hairline: 0.0625rem solid;
+
+@mixin surface-well {
+  border: $hairline color-mix(in srgb, var(--app-surface-border) 70%, transparent);
+  background: color-mix(in srgb, var(--app-surface-bg) 92%, variables.$color-grey-100);
+}
+
+.header {
+  border: $hairline color-mix(in srgb, var(--app-surface-border) 74%, transparent);
+  border-radius: variables.$spacing-3;
+  background:
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.1), transparent 50%),
+    var(--app-surface-bg);
+  box-shadow: $shadow-elevated;
+  padding: clamp(variables.$spacing-2, 2vw, 1.2rem);
+  display: grid;
+  gap: variables.$spacing-2;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 0.5rem;
+  transition: opacity 0.15s ease;
+
+  &:hover {
+    opacity: 0.88;
+  }
+
+  &:focus-visible {
+    outline: 0.125rem solid var(--app-focus-ring, #2563eb);
+    outline-offset: 0.125rem;
+  }
+}
+
+.logo {
+  inline-size: 3rem;
+  block-size: 3rem;
+  object-fit: contain;
+}
+
+.brandText {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.title {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: clamp(1.05rem, 2.1vw, 1.35rem);
+}
+
+.titleBadge {
+  position: relative;
+  top: -0.22rem;
+  border: $hairline #bfdbfe;
+  background: #eff6ff;
+  color: #1e3a8a;
+  border-radius: 50em;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.75rem;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: variables.$font-size-sm;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: variables.$spacing-1;
+}
+
+.quickActions {
+  @include surface-well;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  border-radius: variables.$border-radius-xl;
+  padding-inline: 0.3rem;
+}
+
+.iconButton {
+  color: var(--text-secondary);
+}
+
+.userChip {
+  @include surface-well;
+  font: inherit;
+  font-family: var(--app-font-family);
+  color: var(--text-primary);
+  border-radius: variables.$border-radius-lg;
+  padding: 0.14rem 0.35rem 0.14rem 0.14rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  text-align: start;
+}
+
+.userChip strong {
+  font-size: variables.$font-size-sm;
+}
+
+.avatar {
+  inline-size: variables.$spacing-4;
+  block-size: variables.$spacing-4;
+}
+
+.signoutButton {
+  min-width: 5.8rem;
+}
+
+.popoverPanel {
+  display: grid;
+  gap: variables.$spacing-1;
+  padding: variables.$spacing-2;
+  min-width: 16rem;
+}
+
+.popoverTitle {
+  margin: 0;
+  font-weight: variables.$font-weight-bold;
+}
+
+.popoverItem {
+  margin: 0;
+  font-size: variables.$font-size-sm;
+}
+
+.popoverDashboardButton {
+  justify-self: start;
+  margin-top: 0.15rem;
+}
+
+@media (min-width: $layout-break) {
+  .header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+}
+
+body[data-theme="dark"] {
+  .titleBadge {
+    border-color: color-mix(in srgb, var(--app-surface-border) 80%, #38bdf8);
+    background: color-mix(in srgb, var(--app-surface-bg) 85%, #0ea5e9 15%);
+    color: #bae6fd;
+  }
+}

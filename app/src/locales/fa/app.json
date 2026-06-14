@@ -1,0 +1,16 @@
+{
+    "app": {
+        "pageTitles": {
+            "dashboard": "داشبورد",
+            "courses": "دوره‌ها",
+            "more": "سایر",
+            "notifications": "اعلان‌ها",
+            "payments": "پرداخت‌ها",
+            "profile": "پروفایل",
+            "support": "پشتیبانی",
+            "usersManagement": "کاربران",
+            "login": "ورود به سیستم",
+            "genericPage": "صفحه"
+        }
+    }
+}

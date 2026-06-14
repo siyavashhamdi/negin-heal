@@ -1,0 +1,482 @@
+import { parseJalaliParamDate } from "../../utilities/jalali-date-param.util";
+
+export type UserCoursePaymentMethod =
+  | "GATEWAY"
+  | "CARD_TO_CARD"
+  | "CRYPTOCURRENCY"
+  | "FREE";
+
+export type UserCoursePurchaseStatus = "PENDING" | "PAID" | "FAILED" | "REFUNDED" | "CANCELLED";
+
+export type UserCoursePurchaseCurrency = "IRT" | "USDT";
+
+export type PaymentCouponDiscountType = "PERCENTAGE" | "FIXED_AMOUNT";
+
+export type CoursePaymentRelatedUser = {
+  readonly id: string;
+  readonly fullName?: string | null;
+  readonly username?: string | null;
+  readonly email?: string | null;
+  readonly phone?: string | null;
+};
+
+export type CoursePaymentStoredFile = {
+  readonly id: string;
+  readonly name?: string | null;
+  readonly title?: string | null;
+  readonly mimeType?: string | null;
+  readonly sizeBytes?: number | null;
+  readonly path?: string | null;
+  readonly accessUrl?: string | null;
+};
+
+export type CoursePaymentListRow = {
+  readonly id: string;
+  readonly userId: string;
+  readonly courseId: string;
+  readonly user: {
+    readonly id: string;
+    readonly fullName: string;
+    readonly username: string;
+    readonly email: string;
+    readonly phone?: string | null;
+    readonly mobilePhone?: string | null;
+  };
+  readonly course: {
+    readonly id: string;
+    readonly title: string;
+    readonly priceIrt: number;
+  };
+  readonly status: UserCoursePurchaseStatus;
+  readonly paymentMethod: UserCoursePaymentMethod;
+  readonly currency: UserCoursePurchaseCurrency;
+  readonly paymentProvider?: string | null;
+  readonly paymentReference?: string | null;
+  readonly transactionId?: string | null;
+  readonly amountIrt: number;
+  readonly discountPercentage?: number | null;
+  readonly discountAmountIrt?: number | null;
+  readonly finalAmountIrt: number;
+  readonly coupon?: {
+    readonly id: string;
+    readonly couponId: string;
+    readonly code: string;
+    readonly title: string;
+    readonly discountType: PaymentCouponDiscountType;
+    readonly discountValue: number;
+  } | null;
+  readonly uploadedReceiptFileId?: string | null;
+  readonly uploadedReceiptFile?: CoursePaymentStoredFile | null;
+  readonly receiptUploadedBy?: string | null;
+  readonly receiptUploader?: CoursePaymentRelatedUser | null;
+  readonly isManualStatusChange: boolean;
+  readonly submittedInitiallyByAdmin: boolean;
+  readonly manualStatusChangedBy?: string | null;
+  readonly manualStatusChanger?: CoursePaymentRelatedUser | null;
+  readonly manualStatusChangedDescription?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+  readonly pendingAt?: string | null;
+  readonly paidAt?: string | null;
+  readonly failedAt?: string | null;
+  readonly refundedAt?: string | null;
+  readonly cancelledAt?: string | null;
+};
+
+export type CoursePaymentListQuery = {
+  coursePaymentList: {
+    items: CoursePaymentListRow[];
+    pagination: {
+      limit: number;
+      skip: number;
+      total: number;
+      count: number;
+    };
+  };
+};
+
+export type CoursePaymentListFilters = {
+  query: string;
+  id: string;
+  userId: string;
+  courseId: string;
+  userFullName: string;
+  username: string;
+  userEmail: string;
+  userPhone: string;
+  courseTitle: string;
+  status: UserCoursePurchaseStatus | "ALL";
+  paymentMethod: UserCoursePaymentMethod | "ALL";
+  currency: UserCoursePurchaseCurrency | "ALL";
+  paymentProvider: string;
+  paymentReference: string;
+  transactionId: string;
+  amountIrtMin: string;
+  amountIrtMax: string;
+  discountPercentageMin: string;
+  discountPercentageMax: string;
+  discountAmountIrtMin: string;
+  discountAmountIrtMax: string;
+  finalAmountIrtMin: string;
+  finalAmountIrtMax: string;
+  isManualStatusChange: "ALL" | "true" | "false";
+  manualStatusChangedBy: string;
+  manualStatusChangedDescription: string;
+  uploadedReceiptFileId: string;
+  receiptUploadedBy: string;
+  couponId: string;
+  couponCode: string;
+  couponDiscountType: PaymentCouponDiscountType | "ALL";
+  couponDiscountValueMin: string;
+  couponDiscountValueMax: string;
+  createdAtFrom: string;
+  createdAtTo: string;
+  updatedAtFrom: string;
+  updatedAtTo: string;
+  pendingAtFrom: string;
+  pendingAtTo: string;
+  paidAtFrom: string;
+  paidAtTo: string;
+  failedAtFrom: string;
+  failedAtTo: string;
+  refundedAtFrom: string;
+  refundedAtTo: string;
+  cancelledAtFrom: string;
+  cancelledAtTo: string;
+};
+
+export const EMPTY_COURSE_PAYMENT_LIST_FILTERS: CoursePaymentListFilters = {
+  query: "",
+  id: "",
+  userId: "",
+  courseId: "",
+  userFullName: "",
+  username: "",
+  userEmail: "",
+  userPhone: "",
+  courseTitle: "",
+  status: "ALL",
+  paymentMethod: "ALL",
+  currency: "ALL",
+  paymentProvider: "",
+  paymentReference: "",
+  transactionId: "",
+  amountIrtMin: "",
+  amountIrtMax: "",
+  discountPercentageMin: "",
+  discountPercentageMax: "",
+  discountAmountIrtMin: "",
+  discountAmountIrtMax: "",
+  finalAmountIrtMin: "",
+  finalAmountIrtMax: "",
+  isManualStatusChange: "ALL",
+  manualStatusChangedBy: "",
+  manualStatusChangedDescription: "",
+  uploadedReceiptFileId: "",
+  receiptUploadedBy: "",
+  couponId: "",
+  couponCode: "",
+  couponDiscountType: "ALL",
+  couponDiscountValueMin: "",
+  couponDiscountValueMax: "",
+  createdAtFrom: "",
+  createdAtTo: "",
+  updatedAtFrom: "",
+  updatedAtTo: "",
+  pendingAtFrom: "",
+  pendingAtTo: "",
+  paidAtFrom: "",
+  paidAtTo: "",
+  failedAtFrom: "",
+  failedAtTo: "",
+  refundedAtFrom: "",
+  refundedAtTo: "",
+  cancelledAtFrom: "",
+  cancelledAtTo: "",
+};
+
+export type CoursePaymentListQueryVariables = {
+  input: {
+    filters?: {
+      query?: string | null;
+      fullName?: string | null;
+      email?: string | null;
+      mobilePhone?: string | null;
+      id?: string | null;
+      userId?: string | null;
+      courseId?: string | null;
+      userFullName?: string | null;
+      username?: string | null;
+      userEmail?: string | null;
+      userPhone?: string | null;
+      courseTitle?: string | null;
+      status?: UserCoursePurchaseStatus | null;
+      paymentMethod?: UserCoursePaymentMethod | null;
+      currency?: UserCoursePurchaseCurrency | null;
+      paymentProvider?: string | null;
+      paymentReference?: string | null;
+      transactionId?: string | null;
+      amountIrtMin?: number | null;
+      amountIrtMax?: number | null;
+      discountPercentageMin?: number | null;
+      discountPercentageMax?: number | null;
+      discountAmountIrtMin?: number | null;
+      discountAmountIrtMax?: number | null;
+      finalAmountIrtMin?: number | null;
+      finalAmountIrtMax?: number | null;
+      isManualStatusChange?: boolean | null;
+      manualStatusChangedBy?: string | null;
+      manualStatusChangedDescription?: string | null;
+      uploadedReceiptFileId?: string | null;
+      receiptUploadedBy?: string | null;
+      couponId?: string | null;
+      couponCode?: string | null;
+      couponDiscountType?: PaymentCouponDiscountType | null;
+      couponDiscountValueMin?: number | null;
+      couponDiscountValueMax?: number | null;
+      createdAtFrom?: string | null;
+      createdAtTo?: string | null;
+      updatedAtFrom?: string | null;
+      updatedAtTo?: string | null;
+      pendingAtFrom?: string | null;
+      pendingAtTo?: string | null;
+      paidAtFrom?: string | null;
+      paidAtTo?: string | null;
+      failedAtFrom?: string | null;
+      failedAtTo?: string | null;
+      refundedAtFrom?: string | null;
+      refundedAtTo?: string | null;
+      cancelledAtFrom?: string | null;
+      cancelledAtTo?: string | null;
+    };
+    options: {
+      limit: number;
+      skip: number;
+    };
+  };
+};
+
+export type CoursePaymentRecord = {
+  readonly id: string;
+  readonly userId: string;
+  readonly courseId: string;
+  readonly userFullName: string;
+  readonly username: string;
+  readonly userEmail: string;
+  readonly userPhone: string;
+  readonly courseTitle: string;
+  readonly status: UserCoursePurchaseStatus;
+  readonly paymentMethod: UserCoursePaymentMethod;
+  readonly currency: UserCoursePurchaseCurrency;
+  readonly paymentProvider: string;
+  readonly paymentReference: string;
+  readonly transactionId: string;
+  readonly amountIrt: number;
+  readonly discountPercentage: number | null;
+  readonly discountAmountIrt: number | null;
+  readonly finalAmountIrt: number;
+  readonly couponId: string;
+  readonly couponCode: string;
+  readonly couponTitle: string;
+  readonly couponDiscountType: PaymentCouponDiscountType | null;
+  readonly couponDiscountValue: number | null;
+  readonly uploadedReceiptFileId: string;
+  readonly uploadedReceiptFileTitle: string;
+  readonly uploadedReceiptFileName: string;
+  readonly uploadedReceiptFileMimeType: string;
+  readonly uploadedReceiptFileSizeBytes: number | null;
+  readonly uploadedReceiptFilePath: string;
+  readonly uploadedReceiptFileAccessUrl: string;
+  readonly receiptUploadedBy: string;
+  readonly receiptUploaderName: string;
+  readonly receiptUploaderUsername: string;
+  readonly isManualStatusChange: boolean;
+  readonly submittedInitiallyByAdmin: boolean;
+  readonly manualStatusChangedBy: string;
+  readonly manualStatusChangerName: string;
+  readonly manualStatusChangerUsername: string;
+  readonly manualStatusChangedDescription: string;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+  readonly pendingAt: string;
+  readonly paidAt: string;
+  readonly failedAt: string;
+  readonly refundedAt: string;
+  readonly cancelledAt: string;
+};
+
+const EMPTY_DISPLAY = "-";
+
+function trimToNull(value: string): string | null {
+  const trimmed = value.trim();
+  return trimmed === "" ? null : trimmed;
+}
+
+function display(value: string | null | undefined): string {
+  return value?.trim() || EMPTY_DISPLAY;
+}
+
+function enumToNull<TValue extends string>(value: TValue | "ALL"): TValue | null {
+  return value === "ALL" ? null : value;
+}
+
+function numberToNull(value: string): number | null {
+  const trimmed = value.trim();
+  if (trimmed === "") {
+    return null;
+  }
+  const parsed = Number(trimmed);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function dateFilterToIsoDate(value: string): string | null {
+  const trimmed = value.trim();
+  if (trimmed === "") {
+    return null;
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return trimmed;
+  }
+
+  const jalaliDate = parseJalaliParamDate(trimmed);
+  if (!jalaliDate) {
+    return trimmed;
+  }
+
+  const gregorianDate = jalaliDate.toDate();
+  const year = String(gregorianDate.getFullYear()).padStart(4, "0");
+  const month = String(gregorianDate.getMonth() + 1).padStart(2, "0");
+  const day = String(gregorianDate.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+export function mapCoursePaymentListRowToRecord(row: CoursePaymentListRow): CoursePaymentRecord {
+  return {
+    id: String(row.id),
+    userId: String(row.userId),
+    courseId: String(row.courseId),
+    userFullName: display(row.user.fullName),
+    username: display(row.user.username),
+    userEmail: display(row.user.email),
+    userPhone: display(row.user.mobilePhone ?? row.user.phone),
+    courseTitle: display(row.course.title),
+    status: row.status,
+    paymentMethod: row.paymentMethod,
+    currency: row.currency,
+    paymentProvider: display(row.paymentProvider),
+    paymentReference: display(row.paymentReference),
+    transactionId: display(row.transactionId),
+    amountIrt: row.amountIrt,
+    discountPercentage: row.discountPercentage ?? null,
+    discountAmountIrt: row.discountAmountIrt ?? null,
+    finalAmountIrt: row.finalAmountIrt,
+    couponId: display(row.coupon?.couponId),
+    couponCode: display(row.coupon?.code),
+    couponTitle: display(row.coupon?.title),
+    couponDiscountType: row.coupon?.discountType ?? null,
+    couponDiscountValue: row.coupon?.discountValue ?? null,
+    uploadedReceiptFileId: display(row.uploadedReceiptFileId),
+    uploadedReceiptFileTitle: display(row.uploadedReceiptFile?.title ?? row.uploadedReceiptFile?.name),
+    uploadedReceiptFileName: display(row.uploadedReceiptFile?.name),
+    uploadedReceiptFileMimeType: display(row.uploadedReceiptFile?.mimeType),
+    uploadedReceiptFileSizeBytes: row.uploadedReceiptFile?.sizeBytes ?? null,
+    uploadedReceiptFilePath: display(row.uploadedReceiptFile?.path),
+    uploadedReceiptFileAccessUrl: row.uploadedReceiptFile?.accessUrl?.trim() ?? "",
+    receiptUploadedBy: display(row.receiptUploadedBy),
+    receiptUploaderName: display(row.receiptUploader?.fullName ?? row.receiptUploader?.username),
+    receiptUploaderUsername: display(row.receiptUploader?.username),
+    isManualStatusChange: row.isManualStatusChange,
+    submittedInitiallyByAdmin: row.submittedInitiallyByAdmin === true,
+    manualStatusChangedBy: display(row.manualStatusChangedBy),
+    manualStatusChangerName: display(
+      row.manualStatusChanger?.fullName ?? row.manualStatusChanger?.username
+    ),
+    manualStatusChangerUsername: display(row.manualStatusChanger?.username),
+    manualStatusChangedDescription: display(row.manualStatusChangedDescription),
+    createdAt: row.createdAt ?? "",
+    updatedAt: row.updatedAt ?? "",
+    pendingAt: row.pendingAt ?? "",
+    paidAt: row.paidAt ?? "",
+    failedAt: row.failedAt ?? "",
+    refundedAt: row.refundedAt ?? "",
+    cancelledAt: row.cancelledAt ?? "",
+  };
+}
+
+export function buildCoursePaymentListQueryVariables(
+  search: string,
+  filters: CoursePaymentListFilters,
+  page: number,
+  pageSize: number
+): CoursePaymentListQueryVariables {
+  return {
+    input: {
+      filters: {
+        query: trimToNull(search),
+        fullName: trimToNull(filters.userFullName),
+        email: trimToNull(filters.userEmail),
+        mobilePhone: trimToNull(filters.userPhone),
+        id: trimToNull(filters.id),
+        userId: trimToNull(filters.userId),
+        courseId: trimToNull(filters.courseId),
+        userFullName: trimToNull(filters.userFullName),
+        username: trimToNull(filters.username),
+        userEmail: trimToNull(filters.userEmail),
+        userPhone: trimToNull(filters.userPhone),
+        courseTitle: trimToNull(filters.courseTitle),
+        status: enumToNull(filters.status),
+        paymentMethod: enumToNull(filters.paymentMethod),
+        currency: enumToNull(filters.currency),
+        paymentProvider: trimToNull(filters.paymentProvider),
+        paymentReference: trimToNull(filters.paymentReference),
+        transactionId: trimToNull(filters.transactionId),
+        amountIrtMin: numberToNull(filters.amountIrtMin),
+        amountIrtMax: numberToNull(filters.amountIrtMax),
+        discountPercentageMin: numberToNull(filters.discountPercentageMin),
+        discountPercentageMax: numberToNull(filters.discountPercentageMax),
+        discountAmountIrtMin: numberToNull(filters.discountAmountIrtMin),
+        discountAmountIrtMax: numberToNull(filters.discountAmountIrtMax),
+        finalAmountIrtMin: numberToNull(filters.finalAmountIrtMin),
+        finalAmountIrtMax: numberToNull(filters.finalAmountIrtMax),
+        isManualStatusChange:
+          filters.isManualStatusChange === "ALL" ? null : filters.isManualStatusChange === "true",
+        manualStatusChangedBy: trimToNull(filters.manualStatusChangedBy),
+        manualStatusChangedDescription: trimToNull(filters.manualStatusChangedDescription),
+        uploadedReceiptFileId: trimToNull(filters.uploadedReceiptFileId),
+        receiptUploadedBy: trimToNull(filters.receiptUploadedBy),
+        couponId: trimToNull(filters.couponId),
+        couponCode: trimToNull(filters.couponCode),
+        couponDiscountType: enumToNull(filters.couponDiscountType),
+        couponDiscountValueMin: numberToNull(filters.couponDiscountValueMin),
+        couponDiscountValueMax: numberToNull(filters.couponDiscountValueMax),
+        createdAtFrom: dateFilterToIsoDate(filters.createdAtFrom),
+        createdAtTo: dateFilterToIsoDate(filters.createdAtTo),
+        updatedAtFrom: dateFilterToIsoDate(filters.updatedAtFrom),
+        updatedAtTo: dateFilterToIsoDate(filters.updatedAtTo),
+        pendingAtFrom: dateFilterToIsoDate(filters.pendingAtFrom),
+        pendingAtTo: dateFilterToIsoDate(filters.pendingAtTo),
+        paidAtFrom: dateFilterToIsoDate(filters.paidAtFrom),
+        paidAtTo: dateFilterToIsoDate(filters.paidAtTo),
+        failedAtFrom: dateFilterToIsoDate(filters.failedAtFrom),
+        failedAtTo: dateFilterToIsoDate(filters.failedAtTo),
+        refundedAtFrom: dateFilterToIsoDate(filters.refundedAtFrom),
+        refundedAtTo: dateFilterToIsoDate(filters.refundedAtTo),
+        cancelledAtFrom: dateFilterToIsoDate(filters.cancelledAtFrom),
+        cancelledAtTo: dateFilterToIsoDate(filters.cancelledAtTo),
+      },
+      options: {
+        limit: pageSize,
+        skip: (page - 1) * pageSize,
+      },
+    },
+  };
+}
+
+export function hasCoursePaymentFiltersApplied(filters: CoursePaymentListFilters): boolean {
+  return Object.entries(filters).some(([key, value]) => {
+    if (key === "query") {
+      return false;
+    }
+    return value !== "" && value !== "ALL";
+  });
+}

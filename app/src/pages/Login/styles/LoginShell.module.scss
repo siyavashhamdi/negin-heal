@@ -1,0 +1,289 @@
+@use "../../../styles/variables" as variables;
+@use "../../../styles/mixins" as mixins;
+
+.loginPageWrapper {
+  inline-size: 100%;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  direction: rtl;
+  text-align: right;
+  background:
+    radial-gradient(
+      circle at bottom right,
+      color-mix(in srgb, var(--app-layout-glow-2) 12%, transparent) 0%,
+      transparent 48%
+    ),
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.1), transparent 50%),
+    var(--app-surface-bg);
+}
+
+.loginContainer {
+  inline-size: 100%;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: variables.$spacing-2;
+  @include mixins.respond-below(md) {
+    padding: variables.$spacing-1;
+  }
+}
+
+.loginWrapper {
+  inline-size: 100%;
+  max-width: 85rem;
+  height: 90vh;
+  max-height: 50rem;
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: stretch;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 74%, transparent);
+  border-radius: variables.$border-radius-lg;
+  background:
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.1), transparent 50%),
+    var(--app-surface-bg);
+  box-shadow: 0 1.5rem 3rem rgba(15, 23, 42, 0.12);
+  overflow: hidden;
+  @include mixins.respond-below(md) {
+    flex-direction: column;
+    height: auto;
+    max-height: none;
+  }
+}
+
+.formSection {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  min-height: 0;
+  padding: variables.$spacing-4;
+  background: transparent;
+  position: relative;
+  z-index: 1;
+  @include mixins.respond-below(md) {
+    padding: variables.$spacing-3;
+    min-height: 60vh;
+    flex: 1 1 auto;
+  }
+}
+
+.formSectionMain {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 0;
+  inline-size: 100%;
+}
+
+.formContainer {
+  align-self: stretch;
+  inline-size: 100%;
+  max-width: 36rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.formColumnBody {
+  flex: 0 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-height: 0;
+  inline-size: 100%;
+}
+
+.loginFooterSlot {
+  flex: 0 0 auto;
+  inline-size: 100%;
+  margin-top: variables.$spacing-1-5;
+  padding-top: 0;
+
+  :global(footer) {
+    margin-top: 0;
+  }
+}
+
+.themeToggleContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  margin-top: variables.$spacing-2;
+  margin-left: variables.$spacing-2;
+  @include mixins.respond-below(md) {
+    margin-top: variables.$spacing-1;
+    margin-left: variables.$spacing-1;
+  }
+}
+
+.themeToggleButton {
+  color: variables.$color-text-primary;
+  background-color: rgba(255, 255, 255, 0.9);
+  box-shadow: variables.$shadow-md;
+  transition: all variables.$transition-duration-standard variables.$transition-easing-ease-in-out;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 1);
+    box-shadow: variables.$shadow-lg;
+    transform: scale(1.05);
+  }
+
+  [data-theme="dark"] & {
+    color: #ffffff;
+    background-color: rgba(0, 0, 0, 0.7);
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.9);
+    }
+  }
+}
+
+.logoSection {
+  text-align: center;
+  margin-bottom: variables.$spacing-4;
+}
+
+.logo {
+  margin-bottom: variables.$spacing-3;
+  height: 6.75rem;
+  width: auto;
+  max-width: 16rem;
+  object-fit: contain;
+  @include mixins.transition(transform);
+
+  &:hover {
+    transform: scale(1.05);
+  }
+
+  @include mixins.respond-below(md) {
+    height: 5rem;
+    max-width: 12rem;
+  }
+}
+
+.welcomeTitle {
+  font-weight: variables.$font-weight-bold;
+  color: variables.$color-text-primary;
+  margin-bottom: variables.$spacing-1;
+  background: linear-gradient(
+    135deg,
+    variables.$color-primary-main 0%,
+    variables.$color-secondary-main 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.welcomeSubtitle {
+  color: variables.$color-text-secondary;
+  font-size: variables.$font-size-sm;
+}
+
+.loginFormHolder {
+  display: flex;
+  flex-direction: column;
+  gap: variables.$spacing-2;
+  inline-size: 100%;
+  padding: variables.$spacing-4;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 74%, transparent);
+  border-radius: variables.$border-radius-lg;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--app-surface-bg) 96%, white) 0%,
+      var(--app-surface-bg) 100%
+    );
+  box-shadow:
+    0 1.5rem 3rem rgba(15, 23, 42, 0.12),
+    inset 0 0.0625rem 0 rgba(255, 255, 255, 0.45);
+  @include mixins.respond-below(md) {
+    padding: variables.$spacing-3;
+  }
+}
+
+.imageSection {
+  flex: 1 1 0;
+  min-width: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  @include mixins.respond-below(md) {
+    display: none;
+  }
+}
+
+.backgroundImage {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  object-position: center;
+}
+
+.backgroundImageHidden {
+  display: none;
+}
+
+.imageOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(25, 118, 210, 0.15) 0%, rgba(0, 172, 193, 0.15) 100%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.imageContent {
+  position: relative;
+  z-index: 3;
+  text-align: center;
+  color: variables.$color-primary-dark;
+  padding: variables.$spacing-4;
+  margin: variables.$spacing-4;
+  direction: rtl;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: variables.$border-radius-xl;
+  backdrop-filter: blur(0.25rem);
+  -webkit-backdrop-filter: blur(0.25rem);
+  box-shadow: 0 0.1rem 1.5rem rgba(0, 0, 0, 0.8);
+}
+
+.imageTitle {
+  font-weight: variables.$font-weight-bold;
+  margin-bottom: variables.$spacing-2;
+  color: #0d47a1;
+  text-shadow:
+    0 0.125rem 0.25rem rgba(57, 84, 79, 0.1),
+    0 0.0625rem 0.125rem rgba(192, 95, 95, 0.08);
+  line-height: 1.3;
+  direction: rtl;
+  text-align: center;
+}
+
+.imageSubtitle {
+  font-weight: variables.$font-weight-normal;
+  font-size: 1.1rem !important;
+  color: #0d47a1;
+  text-shadow:
+    0 0.0625rem 0.1875rem rgba(106, 54, 54, 0.1),
+    0 0.0625rem 0.125rem rgba(172, 93, 93, 0.08);
+  line-height: 1.8;
+  max-width: 42rem;
+  margin: 0 auto;
+  direction: rtl;
+  text-align: justify;
+}

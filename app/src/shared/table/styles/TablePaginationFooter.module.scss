@@ -1,0 +1,10 @@
+$breakpoint-sm: 600px;
+
+.bar {
+  flex-shrink: 0;
+  padding: 10px 10px;
+
+  @media (min-width: $breakpoint-sm) {
+    padding: 10px 16px;
+  }
+}

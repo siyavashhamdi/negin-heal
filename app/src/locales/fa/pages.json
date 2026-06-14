@@ -1,0 +1,102 @@
+{
+    "pages": {
+        "dashboard": {
+            "comingSoonSnackbar": "بخش «{{label}}» به زودی فعال می‌شود.",
+            "uploader": {
+                "title": "آپلود نمونه فایل",
+                "description": "این بخش نمونه، فایل را به MinIO می‌فرستد و اطلاعات آن را در کالکشن files ذخیره می‌کند.",
+                "fieldLabel": "فایل",
+                "allowedFormats": "همه فرمت‌ها",
+                "maxSize": "برای نمونه فایل‌های کوچک انتخاب کنید",
+                "dropTitle": "فایل را اینجا رها کنید یا برای انتخاب کلیک کنید",
+                "dropHint": "فایل انتخاب‌شده به MinIO ارسال می‌شود.",
+                "removeLabel": "حذف فایل",
+                "invalidLabel": "فایل انتخاب‌شده معتبر نیست.",
+                "uploadButton": "آپلود فایل",
+                "uploadingButton": "در حال آپلود...",
+                "success": "فایل با موفقیت آپلود شد.",
+                "missingFile": "ابتدا یک فایل انتخاب کنید.",
+                "lastUpload": "آخرین فایل ذخیره‌شده",
+                "path": "مسیر",
+                "mimeType": "نوع فایل",
+                "size": "حجم"
+            },
+            "menuCard": {
+                "submenuTooltipAria": "نمایش توضیحات",
+                "sectionIconAlt": "آیکون بخش {{title}}",
+                "submenuIconAlt": "آیکون زیرمنوی {{label}}",
+                "enterSection": "ورود به {{title}}"
+            }
+        },
+        "courses": {
+            "heroTitle": "دوره‌ها",
+            "heroDescription": "مدیریت کامل دوره‌ها با نمای کارت، فیلترهای پیشرفته، مرتب‌سازی و صفحه‌بندی."
+        },
+        "payments": {
+            "title": "پرداخت‌ها",
+            "subtitle": "مشاهده و پیگیری همه پرداخت‌های ثبت‌شده دوره‌ها با تمام وضعیت‌ها."
+        },
+        "usersManagement": {
+            "title": "کاربران",
+            "createEntityTitle": "کاربر",
+            "subtitle": "مشاهده و فیلتر همه کاربران ثبت‌شده در سامانه.",
+            "create": {
+                "title": "ایجاد کاربر",
+                "password": "رمز عبور",
+                "passwordHelp": "رمز عبور باید با سیاست امنیتی سامانه سازگار باشد.",
+                "passwordRequired": "رمز عبور الزامی است.",
+                "success": "کاربر با موفقیت ایجاد شد.",
+                "save": "ایجاد کاربر"
+            },
+            "edit": {
+                "title": "ویرایش کاربر",
+                "password": "رمز عبور جدید",
+                "passwordHelp": "در صورت خالی بودن، رمز عبور تغییر نمی‌کند.",
+                "usernameRequired": "نام کاربری الزامی است.",
+                "rolesRequired": "حداقل یک نقش باید انتخاب شود.",
+                "success": "اطلاعات کاربر با موفقیت بروزرسانی شد.",
+                "cancel": "انصراف",
+                "save": "ذخیره تغییرات",
+                "saving": "در حال ذخیره..."
+            },
+      "avatarUpload": {
+        "label": "تصویر پروفایل",
+        "allowedFormats": "تصویر",
+        "maxSize": "فایل تصویر پروفایل",
+        "dropTitle": "تصویر پروفایل را انتخاب کنید",
+        "mobileDropTitle": "انتخاب تصویر پروفایل",
+        "dropHint": "تصویر را بکشید و اینجا رها کنید یا کلیک کنید.",
+        "mobileDropHint": "برای انتخاب تصویر لمس کنید.",
+        "removeLabel": "حذف تصویر",
+        "invalidLabel": "تصویر انتخاب‌شده معتبر نیست.",
+        "error": "آپلود تصویر پروفایل انجام نشد."
+      },
+            "flagLabels": {
+                "yes": "فعال",
+                "no": "غیرفعال"
+            },
+            "staffFilter": {
+                "all": "همه",
+                "applicant": "متقاضی",
+                "organizational": "سازمانی"
+            },
+            "superuserLabels": {
+                "yes": "بله",
+                "no": "خیر"
+            },
+            "viewModal": {
+                "firstName": "نام",
+                "lastName": "نام خانوادگی",
+                "username": "نام کاربری",
+                "email": "ایمیل",
+                "mobile": "شماره همراه",
+                "avatarFileId": "تصویر پروفایل",
+                "bio": "بیوگرافی",
+                "roleDesc": "نقش",
+                "status": "وضعیت",
+                "createdAt": "تاریخ ایجاد",
+                "updatedAt": "آخرین بروزرسانی"
+            }
+        }
+    }
+}

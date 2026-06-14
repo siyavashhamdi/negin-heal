@@ -1,0 +1,146 @@
+@use "../../../styles/variables" as variables;
+
+.page {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.hero {
+  padding: 1rem;
+  border-radius: 1.15rem;
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--app-layout-glow) 14%, transparent), transparent 58%),
+    color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+}
+
+.hero p,
+.hero h2,
+.hero span {
+  margin: 0;
+}
+
+.hero p {
+  color: #1976d2;
+  font-size: 0.78rem;
+  font-weight: variables.$font-weight-semibold;
+}
+
+.hero h2 {
+  margin-block: 0.18rem;
+  font-size: clamp(1.15rem, 4vw, 1.45rem);
+}
+
+.hero span {
+  color: var(--text-secondary);
+}
+
+.themeCard {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  border-radius: 1rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  background: color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+}
+
+.themeIcon {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 2.55rem;
+  block-size: 2.55rem;
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, #1976d2 12%, transparent);
+  color: #1976d2;
+}
+
+.themeCard strong,
+.themeCard small {
+  display: block;
+}
+
+.themeCard small {
+  margin-top: 0.12rem;
+  color: var(--text-secondary);
+}
+
+.linkGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.linkCard {
+  display: grid;
+  place-items: center;
+  gap: 0.4rem;
+  min-block-size: 6.2rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+  color: var(--text-primary);
+  font: inherit;
+  font-weight: variables.$font-weight-semibold;
+  cursor: pointer;
+}
+
+.linkCard svg {
+  color: #1976d2;
+}
+
+.bugReportCard {
+  border-color: color-mix(in srgb, #ef4444 24%, var(--app-surface-border));
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, #ef4444 8%, var(--app-surface-bg)) 0%,
+      color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff) 100%
+    );
+}
+
+.bugReportCard svg {
+  color: #dc2626;
+}
+
+.versionBlock {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 0.35rem;
+}
+
+.versionBlock span {
+  display: block;
+  block-size: 0.0625rem;
+  background: color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+}
+
+.versionBlock p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+body[data-theme="dark"] {
+  .hero,
+  .themeCard,
+  .linkCard {
+    background: color-mix(in srgb, var(--app-surface-bg) 86%, #0f172a);
+  }
+
+  .bugReportCard {
+    border-color: color-mix(in srgb, #f87171 28%, var(--app-surface-border));
+    background:
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, #ef4444 14%, #1e293b) 0%,
+        color-mix(in srgb, var(--app-surface-bg) 86%, #0f172a) 100%
+      );
+  }
+
+  .bugReportCard svg {
+    color: #fca5a5;
+  }
+}

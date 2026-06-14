@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none" role="img" aria-label="Negin Heal logo">
+  <defs>
+    <linearGradient id="ng-ring" x1="36" y1="30" x2="220" y2="226" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1D4ED8" />
+      <stop offset="1" stop-color="#0E7490" />
+    </linearGradient>
+    <linearGradient id="ng-core" x1="78" y1="66" x2="176" y2="182" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FAFC" />
+      <stop offset="1" stop-color="#DDEAF8" />
+    </linearGradient>
+    <linearGradient id="ng-cross" x1="102" y1="98" x2="154" y2="158" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#06B6D4" />
+      <stop offset="1" stop-color="#14B8A6" />
+    </linearGradient>
+    <filter id="ng-shadow" x="0" y="0" width="256" height="256" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="9" flood-color="#0F172A" flood-opacity="0.22" />
+    </filter>
+  </defs>
+
+  <g filter="url(#ng-shadow)">
+    <circle cx="128" cy="128" r="102" fill="url(#ng-ring)" />
+    <circle cx="128" cy="128" r="78" fill="url(#ng-core)" />
+
+    <path
+      d="M88 172V84H102L150 142V84H168V172H154L106 114V172H88Z"
+      fill="#0F2A4A"
+    />
+    <path
+      d="M165 90H177V114H201V126H177V150H165V126H141V114H165V90Z"
+      fill="url(#ng-cross)"
+    />
+
+    <circle cx="128" cy="128" r="102" stroke="rgba(255,255,255,0.55)" stroke-width="2" />
+  </g>
+</svg>

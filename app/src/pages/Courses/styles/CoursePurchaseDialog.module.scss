@@ -1,0 +1,500 @@
+@use "../../../styles/variables" as variables;
+
+.dialogPaper {
+  border-radius: 1.25rem !important;
+  overflow: hidden;
+  font-family: var(--app-font-family);
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, #fbcfe8 24%, transparent), transparent 34%),
+    radial-gradient(circle at 0% 100%, color-mix(in srgb, #bae6fd 18%, transparent), transparent 32%),
+    color-mix(in srgb, var(--app-surface-bg) 98%, #ffffff) !important;
+}
+
+.dialogPaper :global(.MuiButton-root),
+.dialogPaper :global(.MuiInputBase-root),
+.dialogPaper :global(.MuiInputLabel-root),
+.dialogPaper :global(.MuiTypography-root) {
+  font-family: var(--app-font-family) !important;
+}
+
+.latinText {
+  direction: ltr;
+  display: inline-block;
+  font-family: variables.$font-family-latin !important;
+}
+
+.latinInput {
+  direction: ltr;
+  font-family: variables.$font-family-latin !important;
+  text-align: left;
+}
+
+.dialogHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.1rem 0.35rem;
+}
+
+.dialogHeaderText {
+  display: grid;
+  gap: 0.2rem;
+  min-inline-size: 0;
+}
+
+.dialogHeaderText span {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.dialogHeaderText h2 {
+  margin: 0;
+  font-size: clamp(1.1rem, 2.4vw, 1.45rem);
+  line-height: 1.5;
+}
+
+.dialogContent {
+  padding: 0.75rem 1.1rem 1rem !important;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(15rem, 0.9fr) minmax(0, 1.4fr);
+  gap: 1rem;
+}
+
+.summaryPanel,
+.checkoutPanel {
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 72%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+}
+
+.summaryPanel {
+  display: grid;
+  gap: 0.85rem;
+  align-content: start;
+  padding: 0.9rem;
+}
+
+.summaryHero {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.summaryCover,
+.summaryCoverFallback {
+  inline-size: 4.5rem;
+  block-size: 4.5rem;
+  border-radius: 0.85rem;
+  object-fit: cover;
+}
+
+.summaryCoverFallback {
+  background: linear-gradient(135deg, #ec4899, #38bdf8);
+}
+
+.summaryHero span {
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.summaryHero strong {
+  display: block;
+  margin-block-start: 0.15rem;
+  color: color-mix(in srgb, variables.$color-info-dark 82%, #0f172a);
+  font-size: 1.35rem;
+  line-height: 1.25;
+}
+
+.summaryDiscount {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-block-start: 0.2rem;
+}
+
+.summaryDiscount small {
+  color: var(--text-secondary);
+  text-decoration: line-through;
+  font-weight: 800;
+}
+
+.summaryDiscount b {
+  padding: 0.08rem 0.38rem;
+  border-radius: 999rem;
+  background: color-mix(in srgb, #16a34a 16%, #ffffff);
+  color: #15803d;
+  font-size: 0.68rem;
+}
+
+.summaryCryptoPrice {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-block-start: 0.25rem;
+}
+
+.summaryCryptoPrice small {
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  font-weight: 850;
+  text-decoration: line-through;
+}
+
+.summaryCryptoPrice b {
+  color: #be185d;
+  font-size: 0.84rem;
+  font-weight: 950;
+}
+
+.summaryRows {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.summaryRows > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, #f8fafc 72%, var(--app-surface-bg));
+}
+
+.summaryRows span {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.summaryRows strong {
+  font-size: 0.84rem;
+}
+
+.summaryTrust {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  padding: 0.7rem;
+  border-radius: 0.8rem;
+  color: var(--text-secondary);
+  background: color-mix(in srgb, variables.$color-info-dark 8%, var(--app-surface-bg));
+  font-size: 0.78rem;
+  line-height: 1.7;
+}
+
+.checkoutPanel {
+  display: grid;
+  gap: 0.85rem;
+  padding: 0.9rem;
+}
+
+.couponSection {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.85rem;
+  border-radius: 0.95rem;
+  background: color-mix(in srgb, #fdf2f8 58%, var(--app-surface-bg));
+  border: 0.0625rem solid color-mix(in srgb, #f472b6 24%, var(--app-surface-border));
+}
+
+.couponForm {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.55rem;
+  align-items: start;
+}
+
+.couponForm :global(.MuiButton-root) {
+  align-self: start;
+  block-size: 2.5rem;
+  min-block-size: 2.5rem;
+  padding-block: 0;
+}
+
+.couponApplied {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.7rem 0.75rem;
+  border-radius: 0.8rem;
+  background: color-mix(in srgb, #22c55e 12%, #ffffff);
+  color: #15803d;
+}
+
+.couponApplied strong {
+  display: block;
+  font-size: 0.84rem;
+}
+
+.couponApplied small {
+  display: block;
+  margin-block-start: 0.12rem;
+  color: color-mix(in srgb, #15803d 78%, #0f172a);
+  font-size: 0.74rem;
+  line-height: 1.6;
+}
+
+.freePurchaseNotice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem 0.8rem;
+  border: 0.0625rem solid color-mix(in srgb, #22c55e 24%, transparent);
+  border-radius: 0.85rem;
+  background: color-mix(in srgb, #22c55e 10%, #ffffff);
+  color: #15803d;
+  font-size: 0.82rem;
+  font-weight: 850;
+  line-height: 1.7;
+}
+
+.sectionHeading h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.sectionHeading p {
+  margin: 0.2rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.84rem;
+}
+
+.methodGrid {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.methodCard {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.7rem;
+  inline-size: 100%;
+  padding: 0.8rem 0.85rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 78%, transparent);
+  border-radius: 0.95rem;
+  background: color-mix(in srgb, var(--app-surface-bg) 96%, #ffffff);
+  color: inherit;
+  font-family: var(--app-font-family);
+  text-align: start;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.methodCard:hover {
+  transform: translateY(-0.05rem);
+  border-color: color-mix(in srgb, #f472b6 34%, var(--app-surface-border));
+}
+
+.methodCardActive {
+  border-color: color-mix(in srgb, #ec4899 48%, #c084fc);
+  box-shadow: 0 0.65rem 1.5rem color-mix(in srgb, #ec4899 12%, transparent);
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, #fbcfe8 24%, transparent), transparent 38%),
+    color-mix(in srgb, var(--app-surface-bg) 96%, #ffffff);
+}
+
+.methodCardDisabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.methodCardDisabled:hover {
+  transform: none;
+  border-color: color-mix(in srgb, var(--app-surface-border) 78%, transparent);
+}
+
+.methodIcon {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 2.35rem;
+  block-size: 2.35rem;
+  border-radius: 0.8rem;
+  color: #be185d;
+  background: color-mix(in srgb, #fbcfe8 42%, var(--app-surface-bg));
+}
+
+.methodText {
+  display: grid;
+  gap: 0.1rem;
+  min-inline-size: 0;
+}
+
+.methodText strong {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  font-size: 0.92rem;
+}
+
+.methodText small {
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+}
+
+.methodBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.42rem;
+  border-radius: 999rem;
+  background: color-mix(in srgb, #22c55e 18%, #ffffff);
+  color: #15803d;
+  font-size: 0.66rem;
+  font-weight: 950;
+}
+
+.methodSelectedIcon {
+  color: #16a34a !important;
+}
+
+.methodDetails {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  border-radius: 0.95rem;
+  background: color-mix(in srgb, #f8fafc 70%, var(--app-surface-bg));
+}
+
+.methodDetailsTitle {
+  margin: 0;
+  font-size: 0.95rem !important;
+  font-weight: 950 !important;
+}
+
+.methodDetailsDescription {
+  margin: 0 !important;
+  color: var(--text-secondary) !important;
+  line-height: 1.8 !important;
+}
+
+.gatewayPanel,
+.manualPaymentPanel {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.gatewayFeature {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+.gatewayHint,
+.cryptoHint {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.7;
+}
+
+.copyRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  inline-size: 100%;
+  padding: 0.75rem 0.8rem;
+  border: 0.0625rem dashed color-mix(in srgb, #c084fc 34%, var(--app-surface-border));
+  border-radius: 0.85rem;
+  background: color-mix(in srgb, #ffffff 72%, var(--app-surface-bg));
+  color: inherit;
+  font-family: var(--app-font-family);
+  text-align: start;
+  cursor: pointer;
+}
+
+.copyRow div {
+  display: grid;
+  gap: 0.12rem;
+  min-inline-size: 0;
+}
+
+.copyRow span {
+  color: var(--text-secondary);
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.copyRow strong {
+  font-size: 0.88rem;
+  word-break: break-all;
+}
+
+.copyRow small {
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+}
+
+.dialogActions {
+  padding: 0.65rem 1.1rem 1rem !important;
+  gap: 0.5rem;
+}
+
+body[data-theme="dark"] {
+  .dialogPaper,
+  .summaryPanel,
+  .checkoutPanel,
+  .methodCard,
+  .methodDetails,
+  .copyRow,
+  .couponSection {
+    background: color-mix(in srgb, var(--app-surface-bg) 90%, #1e293b);
+    border-color: color-mix(in srgb, #94a3b8 18%, transparent);
+  }
+
+  .couponApplied {
+    background: color-mix(in srgb, #14532d 28%, var(--app-surface-bg));
+    color: #bbf7d0;
+  }
+
+  .freePurchaseNotice {
+    border-color: color-mix(in srgb, #86efac 22%, transparent);
+    background: color-mix(in srgb, #14532d 24%, var(--app-surface-bg));
+    color: #bbf7d0;
+  }
+
+  .couponApplied small {
+    color: color-mix(in srgb, #bbf7d0 82%, #ffffff);
+  }
+
+  .summaryHero strong,
+  .methodDetailsTitle {
+    color: #dbeafe;
+  }
+
+  .summaryRows > div {
+    background: color-mix(in srgb, #0f172a 72%, var(--app-surface-bg));
+  }
+}
+
+@media (max-width: variables.$breakpoint-sm) {
+  .dialogPaper {
+    border-radius: 0 !important;
+  }
+
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .dialogActions {
+    position: sticky;
+    inset-block-end: 0;
+    background: color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+    border-block-start: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 70%, transparent);
+  }
+}

@@ -1,0 +1,40 @@
+@use "../../../../styles/variables" as variables;
+
+.dialogPaper {
+  border-radius: 1rem !important;
+  overflow: hidden;
+}
+
+.dialogTitle {
+  padding: 1rem 1.1rem !important;
+  font-weight: 900 !important;
+  border-bottom: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 70%, transparent);
+}
+
+.dialogContent {
+  display: grid;
+  gap: 0.95rem;
+  padding: 1rem 1.1rem !important;
+}
+
+.dialogActions {
+  gap: 0.55rem;
+  padding: 0.85rem 1.1rem 1rem !important;
+  border-top: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 70%, transparent);
+}
+
+@media (max-width: (variables.$breakpoint-sm - 0.0625rem)) {
+  .dialogPaper {
+    border-radius: 0 !important;
+  }
+
+  .dialogContent {
+    padding: 0.85rem !important;
+  }
+
+  .dialogActions {
+    display: grid !important;
+    grid-template-columns: 1fr;
+    padding: 0.85rem !important;
+  }
+}

@@ -1,0 +1,191 @@
+@use "../../../styles/variables" as variables;
+
+.loginForm {
+  display: flex;
+  flex-direction: column;
+  gap: variables.$spacing-3;
+}
+
+.formLead {
+  margin: 0;
+  color: variables.$color-text-secondary;
+  font-size: variables.$font-size-sm;
+  line-height: 1.8;
+  text-align: right;
+}
+
+.textField {
+  direction: rtl;
+
+  :global {
+    .MuiOutlinedInput-root {
+      position: relative;
+      border-radius: variables.$border-radius-md;
+      background-color: transparent !important;
+      transition: all variables.$transition-duration-standard
+        variables.$transition-easing-ease-in-out;
+
+      [data-theme="dark"] & {
+        background-color: transparent !important;
+        color: #ffffff !important;
+      }
+
+      &:hover {
+        background-color: transparent !important;
+
+        [data-theme="dark"] & {
+          background-color: transparent !important;
+        }
+
+        .MuiOutlinedInput-notchedOutline {
+          border-color: variables.$color-primary-light;
+          border-width: 0.125rem;
+        }
+      }
+
+      &.Mui-focused {
+        background-color: transparent !important;
+
+        [data-theme="dark"] & {
+          background-color: transparent !important;
+        }
+
+        .MuiOutlinedInput-notchedOutline {
+          border-color: variables.$color-primary-main;
+          border-width: 0.125rem;
+        }
+      }
+
+      &:has(input:-webkit-autofill) {
+        background-color: transparent !important;
+
+        [data-theme="dark"] & {
+          background-color: transparent !important;
+        }
+      }
+    }
+
+    .MuiInputLabel-root {
+      direction: rtl;
+      left: auto;
+      right: 1rem;
+      text-align: right;
+      transform-origin: top right;
+      transform: translate(0, 1rem) scale(1);
+
+      &.MuiInputLabel-shrink {
+        transform: translate(0, -0.5625rem) scale(0.75);
+      }
+
+      [data-theme="dark"] & {
+        color: #ffffff !important;
+      }
+    }
+
+    .MuiInputAdornment-positionStart {
+      position: absolute;
+      left: 0.85rem;
+      margin: 0;
+    }
+
+    .MuiInputBase-input {
+      direction: ltr;
+      text-align: left;
+      padding-left: 2.65rem !important;
+      background-color: transparent !important;
+
+      [data-theme="dark"] & {
+        background-color: transparent !important;
+        color: #ffffff !important;
+      }
+
+      &:-webkit-autofill,
+      &:-webkit-autofill:hover,
+      &:-webkit-autofill:focus,
+      &:-webkit-autofill:active {
+        -webkit-box-shadow: 0 0 0 1.875rem transparent inset !important;
+        -webkit-text-fill-color: variables.$color-text-primary !important;
+        box-shadow: 0 0 0 1.875rem transparent inset !important;
+        caret-color: variables.$color-text-primary !important;
+        background-color: transparent !important;
+        background-clip: content-box !important;
+        transition:
+          background-color 5000s ease-in-out 0s,
+          color 5000s ease-in-out 0s,
+          background-clip 5000s ease-in-out 0s;
+
+        [data-theme="dark"] & {
+          -webkit-box-shadow: 0 0 0 1.875rem transparent inset !important;
+          -webkit-text-fill-color: #ffffff !important;
+          box-shadow: 0 0 0 1.875rem transparent inset !important;
+          caret-color: #ffffff !important;
+          background-color: transparent !important;
+          background-clip: content-box !important;
+        }
+      }
+
+      &:-moz-autofill {
+        background-color: transparent !important;
+        color: variables.$color-text-primary !important;
+
+        [data-theme="dark"] & {
+          background-color: transparent !important;
+          color: #ffffff !important;
+        }
+      }
+
+      &::selection {
+        background-color: variables.$color-primary-light;
+        color: variables.$color-primary-contrast;
+      }
+    }
+  }
+}
+
+.inputIcon {
+  color: variables.$color-primary-main;
+  font-size: 1.25rem !important;
+}
+
+.loginButton {
+  margin-top: variables.$spacing-2;
+  padding: variables.$spacing-2 variables.$spacing-4;
+  font-size: variables.$font-size-base;
+  font-weight: variables.$font-weight-semibold;
+  border-radius: variables.$border-radius-md;
+  background: linear-gradient(
+    135deg,
+    variables.$color-primary-main 0%,
+    variables.$color-primary-dark 100%
+  );
+  text-transform: none;
+  box-shadow: variables.$shadow-md;
+  transition: all variables.$transition-duration-standard variables.$transition-easing-ease-in-out;
+
+  &:hover {
+    background: linear-gradient(
+      135deg,
+      variables.$color-primary-dark 0%,
+      variables.$color-primary-main 100%
+    );
+    box-shadow: variables.$shadow-lg;
+    transform: translateY(-0.125rem);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: variables.$shadow-md;
+  }
+
+  :global {
+    .MuiButton-startIcon {
+      margin-right: variables.$spacing-2;
+      margin-left: 0;
+    }
+  }
+}
+
+.loginButtonSpinner:global(.MuiCircularProgress-root) {
+  width: 1.25rem;
+  height: 1.25rem;
+}

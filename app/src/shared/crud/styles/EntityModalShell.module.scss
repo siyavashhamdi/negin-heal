@@ -1,0 +1,114 @@
+@use "../../../styles/variables" as variables;
+@use "../../../styles/mixins" as mixins;
+
+.modalFormRootMobile {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.modalPaperMobileFlex {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 100%;
+}
+
+.modalDialogTitle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: variables.$spacing-2;
+  flex-shrink: 0;
+}
+
+.modalTitleTypography {
+  font-weight: variables.$font-weight-semibold;
+}
+
+.modalDialogContent {
+  padding-top: variables.$spacing-3;
+  padding-bottom: variables.$spacing-2;
+}
+
+.modalDialogContentScrollMobile {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+}
+
+.modalDialogContentScrollDesktop {
+  max-height: min(80vh, 45rem);
+  overflow-y: auto;
+}
+
+.modalFieldsStack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-top: variables.$spacing-1;
+}
+
+.confirmDialogContentDesktop {
+  padding-top: variables.$spacing-2;
+  padding-bottom: variables.$spacing-1;
+}
+
+.confirmDialogContentMobile {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-top: variables.$spacing-3;
+  padding-bottom: variables.$spacing-3;
+}
+
+.confirmDialogBody {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: variables.$spacing-2;
+  width: 100%;
+  max-width: 22rem;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.confirmDialogIconWrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: variables.$spacing-1;
+}
+
+.confirmDialogSubject {
+  font-weight: variables.$font-weight-bold;
+  margin: 0;
+  word-break: break-word;
+}
+
+.confirmDialogActions {
+  width: 100%;
+  flex-direction: column;
+  align-items: stretch;
+
+  @include mixins.respond-to(md) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+  }
+}
+
+.modalProvinceCityRow {
+  display: flex;
+  gap: variables.$spacing-2;
+  flex-direction: column;
+
+  @include mixins.respond-to(sm) {
+    flex-direction: row;
+  }
+}

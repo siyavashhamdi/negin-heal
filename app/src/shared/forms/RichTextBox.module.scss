@@ -1,0 +1,264 @@
+@use "../../styles/variables" as variables;
+
+.root {
+  position: relative;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  direction: ltr;
+  gap: 0.5rem;
+  min-block-size: 2.35rem;
+  flex-wrap: wrap;
+}
+
+.label {
+  position: absolute;
+  z-index: 1;
+  inset-block-start: 3.65rem;
+  inset-inline-start: 0.78rem;
+  transform: translateY(0) scale(1);
+  transform-origin: right center;
+  padding-inline: 0.28rem;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 400 !important;
+  line-height: 1;
+  pointer-events: none;
+  transition:
+    inset-block-start 0.18s ease,
+    transform 0.18s ease,
+    background-color 0.18s ease,
+    color 0.18s ease,
+    font-size 0.18s ease;
+}
+
+.rootFloating .label {
+  inset-block-start: 2.48rem;
+  transform: translateY(-50%) scale(1);
+  background: var(--app-surface-bg);
+  color: #1976d2;
+  font-size: 0.86rem;
+}
+
+.requiredMark {
+  color: #d32f2f;
+}
+
+.optionalMark {
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  direction: rtl;
+  gap: 0.15rem;
+  max-inline-size: 100%;
+}
+
+.modeSwitch {
+  position: absolute;
+  z-index: 2;
+  inset-block-start: 0.5rem;
+  left: 0.55rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  inline-size: 4.85rem;
+  block-size: 1.9rem;
+  padding-inline: 0.18rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--text-primary) 12%, transparent);
+  border-radius: 999rem;
+  background: color-mix(in srgb, var(--app-surface-bg) 76%, transparent);
+  opacity: 0.72;
+  transition:
+    opacity 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.modeSwitch:hover,
+.modeSwitch:focus-within {
+  background: color-mix(in srgb, var(--app-surface-bg) 92%, transparent);
+  opacity: 1;
+}
+
+.modeButton {
+  inline-size: 1.55rem !important;
+  block-size: 1.55rem !important;
+}
+
+.fontSizeSelect {
+  min-inline-size: 5.8rem !important;
+}
+
+.fontSizeSelect :global(.MuiSelect-select) {
+  padding-block: 0.28rem !important;
+  font-size: 0.78rem;
+}
+
+.toolbarDivider {
+  margin: 0.25rem 0.18rem !important;
+}
+
+.inputFrame {
+  position: relative;
+}
+
+.editor,
+.markupEditor {
+  border: 0.0625rem solid color-mix(in srgb, var(--text-primary) 23%, transparent);
+  border-radius: variables.$border-radius-md;
+  background: transparent;
+  padding: 1rem 0.88rem 0.6rem;
+  line-height: 1.7;
+  font-size: 0.92rem;
+  outline: none;
+  overflow-wrap: anywhere;
+}
+
+.editor {
+  white-space: pre-wrap;
+}
+
+.markupEditor {
+  box-sizing: border-box;
+  inline-size: 100%;
+  resize: vertical;
+  color: var(--text-primary);
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    "Liberation Mono",
+    "Courier New",
+    monospace;
+}
+
+.editor:focus,
+.markupEditor:focus {
+  border-color: #1976d2;
+  border-width: 0.125rem;
+  padding: calc(1rem - 0.0625rem) calc(0.88rem - 0.0625rem) calc(0.6rem - 0.0625rem);
+}
+
+.editor:hover:not(:focus),
+.markupEditor:hover:not(:focus) {
+  border-color: var(--text-primary);
+}
+
+.editor :global(ul),
+.editor :global(ol) {
+  margin: 0.35rem 0;
+  padding-inline-start: 1.35rem;
+  padding-inline-end: 1.35rem;
+  list-style-position: inside;
+}
+
+.editor :global(li) {
+  margin-block: 0.18rem;
+}
+
+.editor :global(blockquote) {
+  margin: 0.45rem 0;
+  padding: 0.45rem 0.75rem;
+  border-inline-start: 0.22rem solid #1976d2;
+  border-radius: 0.35rem;
+  background: color-mix(in srgb, #1976d2 7%, transparent);
+  color: var(--text-secondary);
+}
+
+.editor :global(div[style*="margin-left"]),
+.editor :global(div[style*="margin-right"]) {
+  border-inline-start: 0.125rem solid color-mix(in srgb, #1976d2 24%, transparent);
+  padding-inline-start: 0.5rem;
+}
+
+.editor:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+@media (max-width: 600px) {
+  .rootExpanded {
+    position: fixed;
+    z-index: 1400;
+    inset: 0.65rem;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 0.55rem;
+    padding: 0.8rem;
+    border: 0.0625rem solid color-mix(in srgb, #1976d2 24%, transparent);
+    border-radius: variables.$border-radius-md;
+    background: var(--app-surface-bg);
+    box-shadow: 0 1rem 2.5rem color-mix(in srgb, #000 22%, transparent);
+  }
+
+  .rootExpanded .header {
+    min-block-size: 4.9rem;
+    padding-block-start: 2.35rem;
+    overflow: visible;
+  }
+
+  .rootExpanded .actions {
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+
+  .rootExpanded .inputFrame {
+    display: grid;
+    min-block-size: 0;
+    position: static;
+  }
+
+  .rootExpanded .modeSwitch {
+    inset-block-start: 0.92rem;
+    left: 0.92rem;
+    opacity: 1;
+  }
+
+  .rootExpanded .editor,
+  .rootExpanded .markupEditor {
+    block-size: 100%;
+    min-block-size: 0 !important;
+    overflow: auto;
+  }
+
+  .rootExpanded .label,
+  .rootExpanded.rootFloating .label {
+    inset-block-start: 7.7rem;
+    inset-inline-start: 1.2rem;
+  }
+
+  .modeSwitchMobile {
+    inline-size: 6.55rem;
+  }
+
+  .label {
+    inset-block-start: 2.62rem;
+    transform: translateY(-50%) scale(1);
+    background: var(--app-surface-bg);
+    color: #1976d2;
+    font-size: 0.86rem;
+  }
+
+  .rootFloating .label {
+    inset-block-start: 4.3rem;
+    transform: translateY(-50%) scale(1);
+    background: var(--app-surface-bg);
+    color: #1976d2;
+    font-size: 0.86rem;
+  }
+}

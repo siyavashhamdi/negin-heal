@@ -1,0 +1,75 @@
+@use "../../../styles/variables" as variables;
+@use "../../../styles/mixins" as mixins;
+
+.viewModalContentStack {
+  display: flex;
+  flex-direction: column;
+  gap: variables.$spacing-1-5;
+}
+
+.viewModalTabPanel {
+  padding-top: variables.$spacing-1;
+}
+
+.viewModalSection {
+  display: flex;
+  flex-direction: column;
+}
+
+.viewModalSectionBody {
+  padding-inline: variables.$spacing-0-5;
+}
+
+.viewModalFieldBlock {
+  padding-top: variables.$spacing-1;
+}
+
+.viewModalLabel {
+  display: block;
+  margin-bottom: variables.$spacing-1;
+  font-weight: variables.$font-weight-medium;
+  font-size: variables.$font-size-xs;
+  text-transform: uppercase;
+  letter-spacing: 0.03125rem;
+}
+
+.viewModalIdValue {
+  font-weight: variables.$font-weight-medium;
+  word-break: break-all;
+}
+
+.viewModalNameValue {
+  font-weight: variables.$font-weight-semibold;
+}
+
+.chipMediumWeight {
+  font-weight: variables.$font-weight-medium;
+}
+
+.dialogActionsWrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: variables.$spacing-1;
+  flex-shrink: 0;
+  align-items: stretch;
+  flex-direction: column;
+  justify-content: stretch;
+
+  @include mixins.respond-to(sm) {
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+  }
+}
+
+.buttonMinWidthSm {
+  @include mixins.respond-to(sm) {
+    min-width: 6.25rem;
+  }
+}
+
+.buttonMinWidthSmWide {
+  @include mixins.respond-to(sm) {
+    min-width: 7.5rem;
+  }
+}

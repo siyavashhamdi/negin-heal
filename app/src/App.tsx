@@ -1,0 +1,80 @@
+import { type ReactElement } from "react";
+import { ThemeProvider as MuiThemeProvider, CssBaseline } from "@mui/material";
+import { BrowserRouter, useLocation, Navigate } from "react-router-dom";
+import { CacheProvider } from "@emotion/react";
+import createCache from "@emotion/cache";
+import rtlPlugin from "stylis-plugin-rtl";
+import { ApolloProvider } from "@apollo/client/react";
+import { createAppTheme } from "./theme";
+import { ThemeProvider, useThemeMode } from "./contexts/ThemeContext";
+import { AuthProvider } from "./contexts/AuthContext";
+import { SnackbarProvider } from "./contexts/SnackbarContext";
+import { LoadingProvider } from "./contexts/LoadingContext";
+import { ApolloErrorHandler } from "./components/ApolloErrorHandler";
+import { LoadingBar } from "./components/LoadingBar";
+import { apolloClient } from "./lib/apollo-client";
+import { MainLayout } from "./layouts/MainLayout";
+import { LOCAL_STORAGE_KEYS } from "./constants";
+import { DashboardAppRoutes, APP_SHELL_ROUTES } from "./routing/DashboardAppRoutes";
+
+const emotionRtlCache = createCache({
+  key: "muirtl",
+  stylisPlugins: [rtlPlugin],
+});
+
+const AppShell = (): ReactElement => {
+  const location = useLocation();
+  const isLoginPage = location.pathname === APP_SHELL_ROUTES.login;
+  const isPublicCoursesPage = location.pathname.startsWith(APP_SHELL_ROUTES.courses);
+  const isPaymentCallbackPage =
+    location.pathname === APP_SHELL_ROUTES.paymentZarinPalCallback;
+  const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+
+  if (!token && !isLoginPage && !isPublicCoursesPage && !isPaymentCallbackPage) {
+    return <Navigate to={APP_SHELL_ROUTES.login} state={{ from: location }} replace />;
+  }
+
+  if (isLoginPage) {
+    return <DashboardAppRoutes />;
+  }
+
+  return (
+    <MainLayout showSessionTools={Boolean(token)}>
+      <DashboardAppRoutes />
+    </MainLayout>
+  );
+};
+
+const ThemedAppTree = (): ReactElement => {
+  const { mode } = useThemeMode();
+  const theme = createAppTheme(mode);
+
+  return (
+    <MuiThemeProvider theme={theme}>
+      <CssBaseline />
+      <SnackbarProvider>
+        <ApolloErrorHandler />
+        <LoadingBar />
+        <AppShell />
+      </SnackbarProvider>
+    </MuiThemeProvider>
+  );
+};
+
+const App = (): ReactElement => (
+  <CacheProvider value={emotionRtlCache}>
+    <ApolloProvider client={apolloClient}>
+      <ThemeProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <LoadingProvider>
+              <ThemedAppTree />
+            </LoadingProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </ThemeProvider>
+    </ApolloProvider>
+  </CacheProvider>
+);
+
+export default App;

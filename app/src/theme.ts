@@ -1,0 +1,387 @@
+import { createTheme, type Theme } from "@mui/material/styles";
+
+type PaletteMode = "light" | "dark";
+
+const colors = {
+  primary: {
+    main: "#1976d2",
+    light: "#42a5f5",
+    dark: "#1565c0",
+    contrastText: "#ffffff",
+  },
+  secondary: {
+    main: "#00acc1",
+    light: "#4dd0e1",
+    dark: "#00838f",
+    contrastText: "#ffffff",
+  },
+  success: {
+    main: "#10b981",
+    light: "#34d399",
+    dark: "#059669",
+  },
+  warning: {
+    main: "#f59e0b",
+    light: "#fbbf24",
+    dark: "#d97706",
+  },
+  error: {
+    main: "#ef4444",
+    light: "#f87171",
+    dark: "#dc2626",
+  },
+  info: {
+    main: "#3b82f6",
+    light: "#60a5fa",
+    dark: "#2563eb",
+  },
+  grey: {
+    50: "#f9fafb",
+    100: "#f3f4f6",
+    200: "#e5e7eb",
+    300: "#d1d5db",
+    400: "#9ca3af",
+    500: "#6b7280",
+    600: "#4b5563",
+    700: "#374151",
+    800: "#1f2937",
+    900: "#111827",
+  },
+} as const;
+
+const FONT_FAMILY_STACK = [
+  "B Yekan",
+  "-apple-system",
+  "BlinkMacSystemFont",
+  "Arial",
+  "sans-serif",
+].join(",");
+
+const lightShadows = {
+  sm: "0 0.0625rem 0.125rem 0 rgba(0, 0, 0, 0.05)",
+  md: "0 0.125rem 0.5rem rgba(0, 0, 0, 0.08)",
+  lg: "0 0.25rem 1rem rgba(0, 0, 0, 0.12)",
+  xl: "0 0.625rem 1.5rem rgba(0, 0, 0, 0.15)",
+} as const;
+
+const darkShadows = {
+  sm: "0 0.0625rem 0.125rem 0 rgba(0, 0, 0, 0.3)",
+  md: "0 0.125rem 0.5rem rgba(0, 0, 0, 0.4)",
+  lg: "0 0.25rem 1rem rgba(0, 0, 0, 0.5)",
+  xl: "0 0.625rem 1.5rem rgba(0, 0, 0, 0.6)",
+} as const;
+
+const transparentInputChrome = {
+  backgroundColor: "transparent",
+  background: "none",
+  backgroundImage: "none",
+} as const;
+
+export const createAppTheme = (mode: PaletteMode): Theme => {
+  const isDark = mode === "dark";
+  const shadows = isDark ? darkShadows : lightShadows;
+
+  return createTheme({
+    palette: {
+      mode,
+      primary: colors.primary,
+      secondary: colors.secondary,
+      success: colors.success,
+      warning: colors.warning,
+      error: colors.error,
+      info: colors.info,
+      background: {
+        default: isDark ? "#121212" : "#f5f7fa",
+        paper: isDark ? "#1e1e1e" : "#ffffff",
+      },
+      text: {
+        primary: isDark ? "#ffffff" : "#1a1a1a",
+        secondary: isDark ? colors.grey[400] : colors.grey[500],
+        disabled: colors.grey[400],
+      },
+      divider: isDark ? "rgba(255, 255, 255, 0.12)" : colors.grey[200],
+      grey: colors.grey,
+    },
+    direction: "rtl",
+    typography: {
+      fontFamily: FONT_FAMILY_STACK,
+      h1: {
+        fontWeight: 700,
+        fontSize: "2.5rem",
+        lineHeight: 1.2,
+        letterSpacing: "-0.02em",
+      },
+      h2: {
+        fontWeight: 700,
+        fontSize: "2rem",
+        lineHeight: 1.3,
+        letterSpacing: "-0.01em",
+      },
+      h3: {
+        fontWeight: 600,
+        fontSize: "1.75rem",
+        lineHeight: 1.4,
+      },
+      h4: {
+        fontWeight: 600,
+        fontSize: "1.5rem",
+        lineHeight: 1.4,
+      },
+      h5: {
+        fontWeight: 600,
+        fontSize: "1.25rem",
+        lineHeight: 1.5,
+      },
+      h6: {
+        fontWeight: 600,
+        fontSize: "1rem",
+        lineHeight: 1.5,
+      },
+      subtitle1: {
+        fontSize: "1rem",
+        lineHeight: 1.5,
+        fontWeight: 500,
+      },
+      subtitle2: {
+        fontSize: "0.875rem",
+        lineHeight: 1.5,
+        fontWeight: 500,
+      },
+      body1: {
+        fontSize: "1rem",
+        lineHeight: 1.6,
+      },
+      body2: {
+        fontSize: "0.875rem",
+        lineHeight: 1.5,
+      },
+      button: {
+        textTransform: "none",
+        fontWeight: 500,
+        letterSpacing: "0.02em",
+      },
+      caption: {
+        fontSize: "0.75rem",
+        lineHeight: 1.4,
+      },
+      overline: {
+        fontSize: "0.75rem",
+        lineHeight: 1.4,
+        textTransform: "uppercase",
+        letterSpacing: "0.1em",
+      },
+    },
+    shape: {
+      borderRadius: 8,
+    },
+    spacing: 8,
+    breakpoints: {
+      values: {
+        xs: 0,
+        sm: 600,
+        md: 960,
+        lg: 1280,
+        xl: 1920,
+      },
+    },
+    zIndex: {
+      mobileStepper: 1000,
+      speedDial: 1050,
+      appBar: 1100,
+      drawer: 1200,
+      modal: 1300,
+      snackbar: 1400,
+      tooltip: 1500,
+    },
+    transitions: {
+      duration: {
+        shortest: 150,
+        shorter: 200,
+        short: 250,
+        standard: 300,
+        complex: 375,
+        enteringScreen: 225,
+        leavingScreen: 195,
+      },
+      easing: {
+        easeInOut: "cubic-bezier(0.4, 0, 0.2, 1)",
+        easeOut: "cubic-bezier(0.0, 0, 0.2, 1)",
+        easeIn: "cubic-bezier(0.4, 0, 1, 1)",
+        sharp: "cubic-bezier(0.4, 0, 0.6, 1)",
+      },
+    },
+    components: {
+      MuiButton: {
+        styleOverrides: {
+          root: {
+            borderRadius: "0.5rem",
+            padding: "0.625rem 1.5rem",
+            fontWeight: 500,
+            textTransform: "none",
+            transition: "all 0.2s ease-in-out",
+          },
+          contained: {
+            boxShadow: shadows.sm,
+            "&:hover": {
+              boxShadow: shadows.md,
+              transform: "translateY(-0.0625rem)",
+            },
+            "&:active": {
+              boxShadow: shadows.sm,
+              transform: "translateY(0)",
+            },
+          },
+          outlined: {
+            borderWidth: "0.09375rem",
+            "&:hover": {
+              borderWidth: "0.09375rem",
+            },
+          },
+          sizeLarge: {
+            padding: "0.75rem 2rem",
+            fontSize: "1rem",
+          },
+          sizeSmall: {
+            padding: "0.375rem 1rem",
+            fontSize: "0.875rem",
+          },
+        },
+      },
+      MuiCard: {
+        styleOverrides: {
+          root: {
+            boxShadow: shadows.md,
+            borderRadius: "0.75rem",
+            transition: "box-shadow 0.3s ease-in-out, transform 0.2s ease-in-out",
+            "&:hover": {
+              boxShadow: shadows.lg,
+              transform: "translateY(-0.125rem)",
+            },
+          },
+        },
+      },
+      MuiPaper: {
+        styleOverrides: {
+          root: {
+            borderRadius: "0.75rem",
+            backgroundImage: "none",
+          },
+          elevation1: {
+            boxShadow: shadows.md,
+          },
+          elevation2: {
+            boxShadow: shadows.lg,
+          },
+          elevation3: {
+            boxShadow: shadows.xl,
+          },
+        },
+      },
+      MuiAppBar: {
+        styleOverrides: {
+          root: {
+            boxShadow: shadows.md,
+            backgroundImage: "none",
+            borderRadius: 0,
+            backgroundColor: isDark ? "#1e1e1e" : "#f5f5f5",
+            color: isDark ? "#ffffff" : "#000000",
+            "& .MuiIconButton-root": {
+              color: isDark ? "#ffffff" : "#000000",
+            },
+            "& .MuiTypography-root": {
+              color: isDark ? "#ffffff" : "#000000",
+            },
+          },
+        },
+      },
+      MuiDrawer: {
+        styleOverrides: {
+          paper: {
+            borderLeft: "none",
+            borderRight: isDark
+              ? "0.0625rem solid rgba(255, 255, 255, 0.12)"
+              : "0.0625rem solid rgba(0, 0, 0, 0.12)",
+            backgroundImage: "none",
+          },
+        },
+      },
+      MuiInputBase: {
+        styleOverrides: {
+          root: {
+            ...transparentInputChrome,
+            "& .MuiInputBase-input": {
+              ...transparentInputChrome,
+            },
+          },
+        },
+      },
+      MuiOutlinedInput: {
+        styleOverrides: {
+          root: {
+            borderRadius: "0.5rem",
+            ...transparentInputChrome,
+            "&:hover": {
+              ...transparentInputChrome,
+            },
+            "&.Mui-focused": {
+              ...transparentInputChrome,
+            },
+            "&.Mui-disabled": {
+              ...transparentInputChrome,
+            },
+            "& .MuiInputBase-input": {
+              ...transparentInputChrome,
+            },
+          },
+        },
+      },
+      MuiTextField: {
+        styleOverrides: {
+          root: {
+            "& .MuiOutlinedInput-root": {
+              "&:hover": {
+                ".MuiOutlinedInput-notchedOutline": {
+                  borderColor: colors.primary.main,
+                },
+              },
+            },
+          },
+        },
+      },
+      MuiChip: {
+        styleOverrides: {
+          root: {
+            borderRadius: "0.375rem",
+            fontWeight: 500,
+          },
+        },
+      },
+      MuiListItemButton: {
+        styleOverrides: {
+          root: {
+            borderRadius: "0.5rem",
+            "&.Mui-selected": {
+              backgroundColor: colors.primary.main,
+              color: "#ffffff",
+              "&:hover": {
+                backgroundColor: colors.primary.dark,
+              },
+              "& .MuiListItemIcon-root": {
+                color: "#ffffff",
+              },
+            },
+          },
+        },
+      },
+      MuiTooltip: {
+        styleOverrides: {
+          tooltip: {
+            backgroundColor: isDark ? colors.grey[700] : colors.grey[800],
+            fontSize: "0.75rem",
+            padding: "0.5rem 0.75rem",
+          },
+        },
+      },
+    },
+  });
+};
