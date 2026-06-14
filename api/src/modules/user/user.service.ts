@@ -212,6 +212,57 @@ export class UserService {
     };
   }
 
+  async sendSampleEmail(
+    userId: Types.ObjectId,
+    to?: string,
+  ): Promise<UserRequestLoginCodeGqlResponse> {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+
+    const recipientEmail = this.normalizeUsernameOrEmail(
+      to?.trim() || user.profile?.email?.trim() || "",
+    );
+
+    if (!recipientEmail || !this.looksLikeEmail(recipientEmail)) {
+      throw new BadRequestException(
+        "A valid recipient email is required to send a sample email",
+      );
+    }
+
+    const requestedBy =
+      user.profile?.firstName?.trim() ||
+      user.profile?.lastName?.trim() ||
+      user.username;
+    const sentAt = new Date().toISOString();
+
+    await this.emailService.sendEmail({
+      to: recipientEmail,
+      subject: "Negin Heal - Sample Email",
+      text: [
+        "Hello,",
+        "",
+        "This is a sample email sent successfully from Negin Heal dashboard.",
+        `Requested by: ${requestedBy}`,
+        `Sent at: ${sentAt}`,
+      ].join("\n"),
+      html: `
+        <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111827;max-width:560px;margin:0 auto;">
+          <h2 style="margin-bottom:12px;">Negin Heal</h2>
+          <p style="margin:0 0 12px;">This is a sample email sent successfully from dashboard.</p>
+          <p style="margin:0;"><strong>Requested by:</strong> ${requestedBy}</p>
+          <p style="margin:0;"><strong>Sent at:</strong> ${sentAt}</p>
+        </div>
+      `,
+    });
+
+    return {
+      success: true,
+      message: `Sample email sent to ${recipientEmail}.`,
+    };
+  }
+
   async signup(
     input: UserSignupGqlInput,
     deviceInfo?: string,

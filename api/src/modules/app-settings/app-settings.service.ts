@@ -72,7 +72,7 @@ export class AppSettingsService {
       paymentCards: this.buildPaymentCards(settingsByKey),
       cryptoWallets: this.buildCryptoWallets(settingsByKey),
       paymentMethods: this.parsePaymentMethods(
-        settingsByKey.get(APP_SETTING_KEY.PAYMENT_METHODS_CONFIG)?.value,
+        settingsByKey.get(APP_SETTING_KEY.PAYMENT_METHODS)?.value,
       ),
       usdtIrtRate: this.parseUsdtIrtRate(
         settingsByKey.get(APP_SETTING_KEY.USDT_IRT_RATE)?.value,

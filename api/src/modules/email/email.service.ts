@@ -5,7 +5,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { APP_SETTING_KEY } from "../../constants";
 import { AppSettingsService } from "../app-settings";
 
-type StoredEmailGmailSmtpConfig = {
+type StoredEmailSmtpConfig = {
   host?: unknown;
   port?: unknown;
   secure?: unknown;
@@ -15,7 +15,7 @@ type StoredEmailGmailSmtpConfig = {
   fromEmail?: unknown;
 };
 
-type NormalizedEmailGmailSmtpConfig = {
+type NormalizedEmailSmtpConfig = {
   host: string;
   port: number;
   secure: boolean;
@@ -48,7 +48,7 @@ export class EmailService {
   constructor(private readonly appSettingsService: AppSettingsService) {}
 
   async sendEmail(input: SendEmailInput): Promise<void> {
-    const config = await this.getActiveGmailSmtpConfigOrThrow();
+    const config = await this.getActiveSmtpConfigOrThrow();
     const transporter = await this.getTransporter(config);
 
     await transporter.sendMail({
@@ -99,7 +99,7 @@ export class EmailService {
   }
 
   private async getTransporter(
-    config: NormalizedEmailGmailSmtpConfig,
+    config: NormalizedEmailSmtpConfig,
   ): Promise<nodemailer.Transporter> {
     const signature = this.buildTransportSignature(config);
     if (this.transporter && this.transporterConfigSignature === signature) {
@@ -117,21 +117,21 @@ export class EmailService {
     });
 
     await transporter.verify();
-    this.logger.log("Gmail SMTP transporter verified successfully");
+    this.logger.log("SMTP transporter verified successfully");
 
     this.transporter = transporter;
     this.transporterConfigSignature = signature;
     return transporter;
   }
 
-  private async getActiveGmailSmtpConfigOrThrow(): Promise<NormalizedEmailGmailSmtpConfig> {
+  private async getActiveSmtpConfigOrThrow(): Promise<NormalizedEmailSmtpConfig> {
     const storedConfig =
-      await this.appSettingsService.getActiveJsonSettingValue<StoredEmailGmailSmtpConfig>(
-        APP_SETTING_KEY.EMAIL_GMAIL_SMTP_CONFIG,
+      await this.appSettingsService.getActiveJsonSettingValue<StoredEmailSmtpConfig>(
+        APP_SETTING_KEY.EMAIL_SMTP_CONFIG,
       );
 
     if (!storedConfig) {
-      throw new Error("Active Gmail SMTP app setting is not configured");
+      throw new Error("Active SMTP app setting is not configured");
     }
 
     const username = this.normalizeString(storedConfig.username);
@@ -141,7 +141,7 @@ export class EmailService {
       this.normalizeString(storedConfig.username);
 
     if (!username || !password || !fromEmail) {
-      throw new Error("Incomplete Gmail SMTP app setting configuration");
+      throw new Error("Incomplete SMTP app setting configuration");
     }
 
     return {
@@ -191,7 +191,7 @@ export class EmailService {
     return `"${escapedName}" <${email}>`;
   }
 
-  private buildTransportSignature(config: NormalizedEmailGmailSmtpConfig): string {
+  private buildTransportSignature(config: NormalizedEmailSmtpConfig): string {
     return JSON.stringify({
       host: config.host,
       port: config.port,

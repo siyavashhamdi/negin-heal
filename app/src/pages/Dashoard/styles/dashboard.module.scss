@@ -4,11 +4,16 @@ $layout-md: 56.25rem;
 $layout-sm: variables.$breakpoint-sm;
 
 .page {
-  display: block;
+  display: grid;
+  gap: 1rem;
 }
 
 .uploaderCard {
   max-inline-size: 42rem;
+}
+
+.mailSection {
+  padding-bottom: 0.2rem;
 }
 
 .uploaderDescription {

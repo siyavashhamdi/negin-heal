@@ -55,7 +55,7 @@ const DEFAULT_ZARINPAL_CONFIG_VALUE = {
   minAmountIrr: 10000,
 };
 
-const DEFAULT_EMAIL_GMAIL_SMTP_CONFIG_VALUE = {
+const DEFAULT_EMAIL_SMTP_CONFIG_VALUE = {
   host: "smtp.gmail.com",
   port: 587,
   secure: false,
@@ -65,7 +65,7 @@ const DEFAULT_EMAIL_GMAIL_SMTP_CONFIG_VALUE = {
   fromEmail: "neginheal.manager@gmail.com",
 };
 
-export const DEFAULT_PAYMENT_METHODS_CONFIG_VALUE = [
+export const DEFAULT_PAYMENT_METHODS_VALUE = [
   {
     method: UserCoursePaymentMethod.GATEWAY,
     isVisible: true,
@@ -96,9 +96,9 @@ const DEFAULT_APP_SETTINGS: readonly DefaultAppSettingSeed[] = [
     isActive: true,
   },
   {
-    key: APP_SETTING_KEY.PAYMENT_METHODS_CONFIG,
+    key: APP_SETTING_KEY.PAYMENT_METHODS,
     label: "روش‌های پرداخت",
-    value: DEFAULT_PAYMENT_METHODS_CONFIG_VALUE,
+    value: DEFAULT_PAYMENT_METHODS_VALUE,
     valueType: AppSettingValueType.JSON,
     description: "وضعیت نمایش، فعال بودن و پیشنهادی بودن روش‌های پرداخت",
     isActive: true,
@@ -130,12 +130,11 @@ const DEFAULT_APP_SETTINGS: readonly DefaultAppSettingSeed[] = [
     isActive: true,
   },
   {
-    key: APP_SETTING_KEY.EMAIL_GMAIL_SMTP_CONFIG,
-    label: "تنظیمات سرویس ایمیل Gmail",
-    value: DEFAULT_EMAIL_GMAIL_SMTP_CONFIG_VALUE,
+    key: APP_SETTING_KEY.EMAIL_SMTP_CONFIG,
+    label: "تنظیمات سرویس ایمیل",
+    value: DEFAULT_EMAIL_SMTP_CONFIG_VALUE,
     valueType: AppSettingValueType.JSON,
-    description:
-      "تنظیمات ارسال ایمیل شامل SMTP جیمیل، نام فرستنده و ایمیل فرستنده",
+    description: "تنظیمات ارسال ایمیل شامل SMTP، نام فرستنده و ایمیل فرستنده",
     isActive: true,
   },
 ] as const;

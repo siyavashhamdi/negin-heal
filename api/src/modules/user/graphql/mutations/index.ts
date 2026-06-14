@@ -7,3 +7,4 @@ export * from "./user-resolve-auth-identity.mutation";
 export * from "./user-request-signup-code.mutation";
 export * from "./user-signup.mutation";
 export * from "./user-update.mutation";
+export * from "./user-send-sample-email.mutation";

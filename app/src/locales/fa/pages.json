@@ -21,6 +21,14 @@
                 "mimeType": "نوع فایل",
                 "size": "حجم"
             },
+            "mailTest": {
+                "title": "ارسال ایمیل تستی",
+                "description": "برای تست سرویس ایمیل، آدرس مقصد را وارد کنید. اگر خالی باشد، ایمیل کاربر لاگین‌شده استفاده می‌شود.",
+                "emailLabel": "ایمیل مقصد (اختیاری)",
+                "emailPlaceholder": "example@gmail.com",
+                "sendButton": "ارسال ایمیل تستی",
+                "sendingButton": "در حال ارسال..."
+            },
             "menuCard": {
                 "submenuTooltipAria": "نمایش توضیحات",
                 "sectionIconAlt": "آیکون بخش {{title}}",

@@ -1,8 +1,12 @@
 import { useEffect, useState, type FormEvent, type ReactElement } from "react";
-import { Button, Card, CardContent, Stack, Typography } from "@mui/material";
-import { CloudUploadRounded as UploadIcon } from "@mui/icons-material";
+import { Button, Card, CardContent, Stack, TextField, Typography } from "@mui/material";
+import {
+  CloudUploadRounded as UploadIcon,
+  SendRounded as SendIcon,
+} from "@mui/icons-material";
 import { useSearchParams } from "react-router-dom";
 import { FILE_UPLOAD_MUTATION } from "../../graphql/mutations/fileUpload.mutation";
+import { USER_SEND_SAMPLE_EMAIL_MUTATION } from "../../graphql/mutations/userSendSampleEmail.mutation";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
@@ -29,6 +33,17 @@ type FileUploadMutationVariables = {
   };
 };
 
+type UserSendSampleEmailMutationResponse = {
+  userSendSampleEmail: {
+    success: boolean;
+    message: string;
+  };
+};
+
+type UserSendSampleEmailMutationVariables = {
+  to?: string;
+};
+
 function readFileAsBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -46,6 +61,7 @@ const Dashboard = (): ReactElement => {
   const { showError, showSuccess, showWarning } = useSnackbar();
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [sampleEmailTo, setSampleEmailTo] = useState<string>("");
   const [lastUpload, setLastUpload] = useState<FileUploadMutationResponse["fileUpload"] | null>(
     null,
   );
@@ -74,7 +90,7 @@ const Dashboard = (): ReactElement => {
     setSearchParams({}, { replace: true });
   }, [searchParams, setSearchParams, showError, showSuccess, showWarning]);
 
-  const [uploadFile, { loading }] = useMutationWithSnackbar<
+  const [uploadFile, { loading: uploadLoading }] = useMutationWithSnackbar<
     FileUploadMutationResponse,
     FileUploadMutationVariables
   >(FILE_UPLOAD_MUTATION, {
@@ -82,6 +98,15 @@ const Dashboard = (): ReactElement => {
     onSuccess: (data) => {
       setLastUpload(data.fileUpload);
       setSelectedFile(null);
+    },
+  });
+
+  const [sendSampleEmail, { loading: sampleEmailLoading }] = useMutationWithSnackbar<
+    UserSendSampleEmailMutationResponse,
+    UserSendSampleEmailMutationVariables
+  >(USER_SEND_SAMPLE_EMAIL_MUTATION, {
+    onSuccess: (data) => {
+      showSuccess(data.userSendSampleEmail.message);
     },
   });
 
@@ -105,8 +130,59 @@ const Dashboard = (): ReactElement => {
     });
   };
 
+  const handleSendSampleEmail = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
+    event.preventDefault();
+
+    const normalizedEmail = sampleEmailTo.trim();
+    await sendSampleEmail({
+      variables: {
+        to: normalizedEmail || undefined,
+      },
+    });
+  };
+
   return (
     <section className={styles.page} aria-label="داشبورد">
+      <Card className={styles.uploaderCard}>
+        <CardContent>
+          <form onSubmit={handleSendSampleEmail}>
+            <Stack spacing={2} className={styles.mailSection}>
+              <div>
+                <Typography component="h2" variant="h6">
+                  {t("pages.dashboard.mailTest.title")}
+                </Typography>
+                <Typography color="text.secondary" className={styles.uploaderDescription}>
+                  {t("pages.dashboard.mailTest.description")}
+                </Typography>
+              </div>
+
+              <TextField
+                label={t("pages.dashboard.mailTest.emailLabel")}
+                placeholder={t("pages.dashboard.mailTest.emailPlaceholder")}
+                value={sampleEmailTo}
+                onChange={(event) => setSampleEmailTo(event.target.value)}
+                type="email"
+                autoComplete="email"
+                fullWidth
+              />
+
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  startIcon={<SendIcon />}
+                  disabled={sampleEmailLoading}
+                >
+                  {sampleEmailLoading
+                    ? t("pages.dashboard.mailTest.sendingButton")
+                    : t("pages.dashboard.mailTest.sendButton")}
+                </Button>
+              </Stack>
+            </Stack>
+          </form>
+        </CardContent>
+      </Card>
+
       <Card className={styles.uploaderCard}>
         <CardContent>
           <form onSubmit={handleSubmit}>
@@ -138,9 +214,9 @@ const Dashboard = (): ReactElement => {
                   type="submit"
                   variant="contained"
                   startIcon={<UploadIcon />}
-                  disabled={loading}
+                  disabled={uploadLoading}
                 >
-                  {loading
+                  {uploadLoading
                     ? t("pages.dashboard.uploader.uploadingButton")
                     : t("pages.dashboard.uploader.uploadButton")}
                 </Button>

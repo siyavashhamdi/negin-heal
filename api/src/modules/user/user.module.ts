@@ -16,6 +16,7 @@ import {
   UserRequestSignupCodeMutation,
   UserResolveAuthIdentityMutation,
   UserSignupMutation,
+  UserSendSampleEmailMutation,
   UserUpdateMutation,
   UserVerifyLoginCodeMutation,
 } from "./graphql/mutations";
@@ -44,6 +45,7 @@ import * as UserQueries from "./graphql/queries";
     UserRequestSignupCodeMutation,
     UserResolveAuthIdentityMutation,
     UserSignupMutation,
+    UserSendSampleEmailMutation,
     UserUpdateMutation,
     UserVerifyLoginCodeMutation,
     UserQueries.UserMeQuery,
