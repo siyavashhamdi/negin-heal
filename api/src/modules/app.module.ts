@@ -21,6 +21,7 @@ import { DatabaseModule } from "./database";
 import { AppSettingsModule } from "./app-settings";
 import { PaymentCouponModule } from "./payment-coupon";
 import { EmailModule } from "./email";
+import { TicketModule } from "./ticket";
 import { UserRole, NodeEnv } from "../enums";
 import {
   AuditInterceptor,
@@ -156,6 +157,7 @@ import { GraphQLError } from "graphql";
     AppSettingsModule,
     PaymentCouponModule,
     EmailModule,
+    TicketModule,
     CourseModule,
     UserModule,
   ],

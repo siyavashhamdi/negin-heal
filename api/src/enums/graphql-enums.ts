@@ -9,6 +9,10 @@ import { CourseDiscountType } from "./course-discount-type.enum";
 import { CourseItemType } from "./course-item-type.enum";
 import { CourseReleaseType } from "./course-release-type.enum";
 import { PaymentCouponDiscountType } from "./payment-coupon-discount-type.enum";
+import { TicketCategory } from "./ticket-category.enum";
+import { TicketClosedBy } from "./ticket-closed-by.enum";
+import { TicketPriority } from "./ticket-priority.enum";
+import { TicketStatus } from "./ticket-status.enum";
 import { UserRole } from "./user-role.enum";
 import { UserStatus } from "./user-status.enum";
 import { UserCoursePaymentMethod } from "./user-course-payment-method.enum";
@@ -40,6 +44,26 @@ registerEnumType(CourseDiscountType, {
 registerEnumType(PaymentCouponDiscountType, {
   name: "PaymentCouponDiscountType",
   description: "Payment coupon discount calculation kind",
+});
+
+registerEnumType(TicketCategory, {
+  name: "TicketCategory",
+  description: "Support ticket category",
+});
+
+registerEnumType(TicketPriority, {
+  name: "TicketPriority",
+  description: "Support ticket priority",
+});
+
+registerEnumType(TicketStatus, {
+  name: "TicketStatus",
+  description: "Support ticket lifecycle status",
+});
+
+registerEnumType(TicketClosedBy, {
+  name: "TicketClosedBy",
+  description: "Actor type that closed a support ticket",
 });
 
 // Register UserRole as GraphQL enum

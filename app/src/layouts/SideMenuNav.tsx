@@ -44,7 +44,7 @@ export const SIDE_MENU_ITEMS: readonly SideMenuItemDefinition[] = [
   { id: "course-definition", title: "تعریف دوره‌ها", Icon: PostAddRoundedIcon },
   { id: "courses", title: "دوره‌ها", path: "/courses", Icon: MenuBookRoundedIcon },
   { id: "notifications", title: "اعلان‌ها", Icon: NotificationsRoundedIcon },
-  { id: "ticketing", title: "تیکتینگ", Icon: ConfirmationNumberRoundedIcon },
+  { id: "support", title: "پشتیبانی", path: "/support", Icon: ConfirmationNumberRoundedIcon },
   { id: "website-settings", title: "تنظیمات وبسایت", Icon: LanguageRoundedIcon },
   { id: "static-pages", title: "صفحات استاتیک", Icon: ArticleRoundedIcon },
 ];

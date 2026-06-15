@@ -141,6 +141,33 @@
                     "refundedAt": "تاریخ مرجوعی",
                     "cancelledAt": "تاریخ لغو"
                 }
+            },
+            "support": {
+                "columns": {
+                    "id": "شناسه",
+                    "title": "عنوان",
+                    "category": "دسته‌بندی",
+                    "priority": "اولویت",
+                    "status": "وضعیت",
+                    "closedBy": "بسته‌شده توسط",
+                    "closedByUserName": "کاربر بستن",
+                    "closedAt": "تاریخ بسته‌شدن",
+                    "createdByUserName": "ثبت‌کننده",
+                    "updatedByUserName": "آخرین بروزرسانی توسط",
+                    "messageCount": "تعداد پیام",
+                    "lastMessageBody": "آخرین پیام",
+                    "attachmentCount": "پیوست‌ها",
+                    "createdAt": "تاریخ ثبت",
+                    "updatedAt": "آخرین بروزرسانی"
+                },
+                "filters": {
+                    "createdAtFrom": "ثبت از تاریخ",
+                    "createdAtTo": "ثبت تا تاریخ",
+                    "updatedAtFrom": "بروزرسانی از تاریخ",
+                    "updatedAtTo": "بروزرسانی تا تاریخ",
+                    "closedAtFrom": "بسته‌شدن از تاریخ",
+                    "closedAtTo": "بسته‌شدن تا تاریخ"
+                }
             }
         }
     }

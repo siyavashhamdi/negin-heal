@@ -12,6 +12,7 @@ import PaymentsIndex from "../pages/Payments/Index";
 import ZarinPalCallback from "../pages/Payments/ZarinPalCallback";
 import Profile from "../pages/Profile/Index";
 import Support from "../pages/Support/Index";
+import SupportTicketsIndex from "../pages/Support/TicketsIndex";
 import UsersManagementIndex from "../pages/UsersManagement/Index";
 
 const ROUTES = {
@@ -25,6 +26,7 @@ const ROUTES = {
   paymentZarinPalCallback: "/payment/zarinpal/callback",
   profile: "/profile",
   support: "/support",
+  supportTickets: "/support/tickets",
   users: "/users",
   usersManagement: "/users-management",
   home: "/",
@@ -49,6 +51,7 @@ export const DashboardAppRoutes = (): ReactElement => {
       <Route path={ROUTES.paymentZarinPalCallback} element={<ZarinPalCallback />} />
       <Route path={ROUTES.profile} element={wrapProtected(<Profile />)} />
       <Route path={ROUTES.support} element={wrapProtected(<Support />)} />
+      <Route path={ROUTES.supportTickets} element={wrapProtected(<SupportTicketsIndex />)} />
       <Route path={ROUTES.users} element={wrapProtected(<UsersManagementIndex />)} />
       <Route path={ROUTES.usersManagement} element={wrapProtected(<UsersManagementIndex />)} />
       <Route path={ROUTES.home} element={<Navigate to={ROUTES.dashboard} replace />} />

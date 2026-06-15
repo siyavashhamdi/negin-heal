@@ -44,6 +44,53 @@
             "title": "پرداخت‌ها",
             "subtitle": "مشاهده و پیگیری همه پرداخت‌های ثبت‌شده دوره‌ها با تمام وضعیت‌ها."
         },
+        "support": {
+            "title": "تیکت پشتیبانی",
+            "subtitle": "ثبت، پیگیری و پاسخ به درخواست‌های پشتیبانی.",
+            "createEntityTitle": "تیکت",
+            "actions": {
+                "view": "مشاهده و پاسخ",
+                "cancel": "انصراف",
+                "closeTicket": "بستن تیکت"
+            },
+            "create": {
+                "title": "ثبت تیکت جدید",
+                "endUserIdLabel": "شناسه کاربر نهایی",
+                "endUserIdHelp": "این تیکت در فهرست تیکت‌های این کاربر نمایش داده می‌شود.",
+                "messageLabel": "متن پیام",
+                "submit": "ارسال تیکت"
+            },
+            "reply": {
+                "messageLabel": "پاسخ شما",
+                "submit": "ارسال پاسخ"
+            },
+            "view": {
+                "title": "جزئیات تیکت",
+                "messagesTitle": "گفتگو",
+                "noMessages": "هنوز پیامی ثبت نشده است."
+            },
+            "send": {
+                "success": "تیکت با موفقیت ثبت شد.",
+                "error": "ارسال تیکت انجام نشد."
+            },
+            "closeTicket": {
+                "success": "تیکت با موفقیت بسته شد.",
+                "error": "بستن تیکت انجام نشد."
+            },
+            "attachments": {
+                "label": "پیوست",
+                "optionalLabel": "اختیاری",
+                "allowedFormats": "تصویر، PDF یا فایل متنی",
+                "maxSize": "حداکثر ۱۰ مگابایت",
+                "dropTitle": "فایل پیوست را انتخاب کنید",
+                "mobileDropTitle": "انتخاب پیوست",
+                "dropHint": "فایل را بکشید و اینجا رها کنید یا کلیک کنید.",
+                "mobileDropHint": "برای انتخاب فایل لمس کنید.",
+                "removeLabel": "حذف پیوست",
+                "invalidLabel": "فایل انتخاب‌شده معتبر نیست.",
+                "uploadError": "آپلود پیوست انجام نشد."
+            }
+        },
         "usersManagement": {
             "title": "کاربران",
             "createEntityTitle": "کاربر",
