@@ -5,6 +5,7 @@
 
 import { registerEnumType } from "@nestjs/graphql";
 
+import { AdminNotificationMode } from "./admin-notification-mode.enum";
 import { AppSettingValueType } from "./app-setting-value-type.enum";
 import { CourseDiscountType } from "./course-discount-type.enum";
 import { CourseItemType } from "./course-item-type.enum";
@@ -14,6 +15,7 @@ import { TicketCategory } from "./ticket-category.enum";
 import { TicketClosedBy } from "./ticket-closed-by.enum";
 import { TicketPriority } from "./ticket-priority.enum";
 import { TicketStatus } from "./ticket-status.enum";
+import { GeneralSubscriptionUpdateType } from "./general-subscription-update-type.enum";
 import { UserRole } from "./user-role.enum";
 import { UserStatus } from "./user-status.enum";
 import { UserCoursePaymentMethod } from "./user-course-payment-method.enum";
@@ -25,6 +27,11 @@ import { SortingOrder } from "../common/pagination/input/sorting-order.enum";
 registerEnumType(SortingOrder, {
   name: "SortingOrder",
   description: "Sorting order",
+});
+
+registerEnumType(AdminNotificationMode, {
+  name: "AdminNotificationMode",
+  description: "Visual mode for admin notifications",
 });
 
 registerEnumType(AppSettingValueType, {
@@ -70,6 +77,11 @@ registerEnumType(TicketStatus, {
 registerEnumType(TicketClosedBy, {
   name: "TicketClosedBy",
   description: "Actor type that closed a support ticket",
+});
+
+registerEnumType(GeneralSubscriptionUpdateType, {
+  name: "GeneralSubscriptionUpdateType",
+  description: "Type of real-time update in general subscription channel",
 });
 
 // Register UserRole as GraphQL enum

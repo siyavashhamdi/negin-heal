@@ -1,4 +1,4 @@
-import { Types } from "mongoose";
+import { randomUUID } from "crypto";
 import * as winston from "winston";
 
 import { Module } from "@nestjs/common";
@@ -14,7 +14,7 @@ import GraphQLJSON from "graphql-type-json";
 import "../enums/graphql-enums";
 import { env } from "../config";
 import { AuthModule } from "./auth";
-import { UserModule } from "./user";
+import { UserModule, UserSubscriptionService } from "./user";
 import { FileModule } from "./file";
 import { CourseModule } from "./course";
 import { HealthModule } from "./health";
@@ -23,7 +23,8 @@ import { AppSettingsModule } from "./app-settings";
 import { PaymentCouponModule } from "./payment-coupon";
 import { EmailModule } from "./email";
 import { TicketModule } from "./ticket";
-import { UserRole, NodeEnv } from "../enums";
+import { NodeEnv } from "../enums";
+import { AuthenticatedRequest } from "../types/graphql-context.types";
 import {
   AuditInterceptor,
   LoggingInterceptor,
@@ -54,73 +55,154 @@ import { GraphQLError } from "graphql";
     // GraphQL
     GraphQLModule.forRootAsync<ApolloDriverConfig>({
       driver: ApolloDriver,
-      imports: [ConfigModule],
-      useFactory: async () => ({
-        autoSchemaFile: true, // Generate schema in memory, no file output
-        sortSchema: true,
-        path: "/graphql",
-        resolvers: { JSON: GraphQLJSON },
-        playground: env.GRAPHQL_PLAYGROUND ? { endpoint: "/graphql" } : false,
-        introspection: env.GRAPHQL_INTROSPECTION !== false, // Always enable in development
-        csrfPrevention: false, // Disable CSRF protection for development
-        allowBatchedHttpRequests: true,
-        formatError: (error: GraphQLError) => {
-          const exceptionName =
-            error.extensions?.stacktrace?.[0]?.match(/^(\w+Exception):/)?.[1];
+      imports: [ConfigModule, UserModule],
+      useFactory: async (userSubscriptionService: UserSubscriptionService) => {
+        const wsConnectionIds = new WeakMap<object, string>();
 
-          const isDevelopment = env.NODE_ENV === NodeEnv.DEVELOPMENT;
+        const resolveAuthorizationHeader = (
+          connectionParams?: Record<string, unknown>,
+        ): string | undefined => {
+          const value =
+            connectionParams?.authorization || connectionParams?.Authorization;
 
-          // Check if error code is UNAUTHENTICATED from extensions
-          const extensions = error.extensions as
-            | { code?: string; exception?: { code?: string } }
-            | undefined;
-          const errorCode = extensions?.code || extensions?.exception?.code;
-
-          if (exceptionName) {
-            const exception = ExceptionRegistry.createException(
-              exceptionName,
-              error.message,
-            );
-            if (exception) {
-              return {
-                message: exception.getMessage(),
-                code: exception.getCode(),
-                name: exception.name,
-                payload: exception.payload,
-                ...(isDevelopment && { extensions: error.extensions }),
-              };
-            }
+          if (typeof value === "string" && value.trim().length > 0) {
+            return value;
           }
 
-          // Extract message from "Unexpected error value: \"...\"" format
-          const message =
-            error.message.match(/Unexpected error value:\s*"([^"]+)"/)?.[1] ||
-            error.message;
+          return undefined;
+        };
 
-          return {
-            message,
-            code:
-              errorCode === "UNAUTHENTICATED"
-                ? EXCEPTION_CONSTANT.UNAUTHENTICATED.code
-                : EXCEPTION_CONSTANT.INTERNAL_SERVER_ERROR.code,
-            ...(isDevelopment && { extensions: error.extensions }),
-          };
-        },
-        context: ({ req }) => ({
-          req,
-          user: (
-            req as {
-              user?: {
-                userId: Types.ObjectId;
-                username: string;
-                roles: UserRole[];
-                sessionId: string;
+        const resolveWsSocketRef = (extra?: {
+          socket?: object;
+          request?: { socket?: object };
+        }): object | undefined => {
+          if (extra?.socket) {
+            return extra.socket;
+          }
+
+          if (extra?.request?.socket) {
+            return extra.request.socket;
+          }
+
+          return undefined;
+        };
+
+        return {
+          autoSchemaFile: true, // Generate schema in memory, no file output
+          sortSchema: true,
+          path: "/graphql",
+          resolvers: { JSON: GraphQLJSON },
+          playground: env.GRAPHQL_PLAYGROUND ? { endpoint: "/graphql" } : false,
+          introspection: env.GRAPHQL_INTROSPECTION !== false, // Always enable in development
+          csrfPrevention: false, // Disable CSRF protection for development
+          allowBatchedHttpRequests: true,
+          subscriptions: {
+            "graphql-ws": {
+              onDisconnect: async (context: {
+                extra?: { socket?: object; request?: { socket?: object } };
+              }) => {
+                const socketRef = resolveWsSocketRef(context?.extra);
+                if (!socketRef) {
+                  return;
+                }
+
+                const connectionId = wsConnectionIds.get(socketRef);
+                if (!connectionId) {
+                  return;
+                }
+
+                userSubscriptionService.unregisterConnection(connectionId);
+                wsConnectionIds.delete(socketRef);
+              },
+            },
+          },
+          formatError: (error: GraphQLError) => {
+            const exceptionName =
+              error.extensions?.stacktrace?.[0]?.match(/^(\w+Exception):/)?.[1];
+
+            const isDevelopment = env.NODE_ENV === NodeEnv.DEVELOPMENT;
+
+            // Check if error code is UNAUTHENTICATED from extensions
+            const extensions = error.extensions as
+              | { code?: string; exception?: { code?: string } }
+              | undefined;
+            const errorCode = extensions?.code || extensions?.exception?.code;
+
+            if (exceptionName) {
+              const exception = ExceptionRegistry.createException(
+                exceptionName,
+                error.message,
+              );
+              if (exception) {
+                return {
+                  message: exception.getMessage(),
+                  code: exception.getCode(),
+                  name: exception.name,
+                  payload: exception.payload,
+                  ...(isDevelopment && { extensions: error.extensions }),
+                };
+              }
+            }
+
+            // Extract message from "Unexpected error value: \"...\"" format
+            const message =
+              error.message.match(/Unexpected error value:\s*"([^"]+)"/)?.[1] ||
+              error.message;
+
+            return {
+              message,
+              code:
+                errorCode === "UNAUTHENTICATED"
+                  ? EXCEPTION_CONSTANT.UNAUTHENTICATED.code
+                  : EXCEPTION_CONSTANT.INTERNAL_SERVER_ERROR.code,
+              ...(isDevelopment && { extensions: error.extensions }),
+            };
+          },
+          context: ({
+            req,
+            extra,
+            connectionParams,
+          }: {
+            req?: AuthenticatedRequest;
+            extra?: {
+              socket?: object;
+              request?: { socket?: { remoteAddress?: string } };
+            };
+            connectionParams?: Record<string, unknown>;
+          }) => {
+            if (req) {
+              return {
+                req,
+                user: req.user,
               };
             }
-          ).user,
-        }),
-      }),
-      inject: [],
+
+            const socketRef = resolveWsSocketRef(extra);
+            let connectionId =
+              (socketRef && wsConnectionIds.get(socketRef)) || undefined;
+
+            if (!connectionId) {
+              connectionId = randomUUID();
+              if (socketRef) {
+                wsConnectionIds.set(socketRef, connectionId);
+              }
+            }
+
+            const authorization = resolveAuthorizationHeader(connectionParams);
+            const wsReq = {
+              headers: authorization ? { authorization } : {},
+              ip: extra?.request?.socket?.remoteAddress,
+              subscriptionConnectionId: connectionId,
+            } as AuthenticatedRequest;
+
+            return {
+              req: wsReq,
+              user: wsReq.user,
+            };
+          },
+        };
+      },
+      inject: [UserSubscriptionService],
     }),
 
     // Logging

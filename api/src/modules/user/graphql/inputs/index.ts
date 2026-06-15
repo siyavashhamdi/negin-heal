@@ -10,3 +10,4 @@ export * from "./user-signup.gql.input";
 export * from "./user-request-signup-code.gql.input";
 export * from "./user-forgot-password.gql.input";
 export * from "./user-reset-password.gql.input";
+export * from "./admin-notification-send.gql.input";

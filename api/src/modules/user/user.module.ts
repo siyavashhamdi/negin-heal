@@ -4,6 +4,7 @@ import { Module, forwardRef } from "@nestjs/common";
 import { UserService } from "./user.service";
 import { UserSecurityService } from "./user.security.service";
 import { UserCaptchaService } from "./user-captcha.service";
+import { UserSubscriptionService } from "./user-subscription.service";
 import { AuthModule } from "../auth";
 import { AppSettingsModule } from "../app-settings";
 import { DatabaseModule } from "../database";
@@ -24,8 +25,10 @@ import {
   UserSendSampleEmailMutation,
   UserUpdateMutation,
   UserVerifyLoginCodeMutation,
+    AdminNotificationSendMutation,
 } from "./graphql/mutations";
 import * as UserQueries from "./graphql/queries";
+import * as UserSubscriptions from "./graphql/subscriptions";
 
 @Module({
   imports: [
@@ -45,6 +48,7 @@ import * as UserQueries from "./graphql/queries";
     UserService,
     UserSecurityService,
     UserCaptchaService,
+    UserSubscriptionService,
     UserLoginMutation,
     UserLogoutMutation,
     UserCreateMutation,
@@ -58,10 +62,12 @@ import * as UserQueries from "./graphql/queries";
     UserSendSampleEmailMutation,
     UserUpdateMutation,
     UserVerifyLoginCodeMutation,
+    AdminNotificationSendMutation,
     UserQueries.UserMeQuery,
     UserQueries.UserListQuery,
     UserQueries.UserLoginCaptchaQuery,
+    UserSubscriptions.GeneralUpdatesSubscription,
   ],
-  exports: [UserService],
+  exports: [UserService, UserSubscriptionService],
 })
 export class UserModule {}

@@ -18,6 +18,7 @@ export default defineConfig(({ mode }) => {
         "/graphql": {
           target: env.VITE_API_BASE_URL,
           changeOrigin: true,
+          ws: true,
         },
       },
     },

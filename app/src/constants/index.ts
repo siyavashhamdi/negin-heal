@@ -1,4 +1,8 @@
 export { LOCAL_STORAGE_KEYS, type LocalStorageKey } from "./local-storage.constants";
+export {
+  GENERAL_SUBSCRIPTION_UPDATE_TYPES,
+  type GeneralSubscriptionUpdateType,
+} from "./general-updates.constants";
 export { REMEMBER_ME_SESSION_DAYS } from "./session.constants";
 export {
   LOGIN_CAPTCHA_FAILED_ATTEMPTS_THRESHOLD,

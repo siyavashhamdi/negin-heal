@@ -1,7 +1,10 @@
-import { ApolloClient, ApolloLink, HttpLink, InMemoryCache } from "@apollo/client";
+import { ApolloClient, ApolloLink, HttpLink, InMemoryCache, split } from "@apollo/client";
 import { CombinedGraphQLErrors, ServerError } from "@apollo/client/errors";
 import { SetContextLink } from "@apollo/client/link/context";
 import { ErrorLink } from "@apollo/client/link/error";
+import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
+import { getMainDefinition } from "@apollo/client/utilities";
+import { createClient } from "graphql-ws";
 import { LOCAL_STORAGE_KEYS } from "../constants";
 import { queueApolloError, queueRedirectToLogin } from "../components/apollo-error-queue";
 import { extractGraphQLErrorMessage, type ApolloErrorLike, type GraphQLErrorExtensions } from "../utilities/graphql-error.util";
@@ -22,6 +25,23 @@ const authLink = new SetContextLink((prevContext) => {
     },
   };
 });
+
+const wsLink =
+  typeof window !== "undefined"
+    ? new GraphQLWsLink(
+        createClient({
+          url: `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/graphql`,
+          lazy: true,
+          retryAttempts: 3,
+          connectionParams: () => {
+            const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+            return {
+              authorization: token ? `Bearer ${token}` : "",
+            };
+          },
+        })
+      )
+    : null;
 
 function logGraphQlDiagnostic(message: string, locations: unknown, path: unknown): void {
   const loc = JSON.stringify(locations);
@@ -44,7 +64,28 @@ function apolloLikeFromGraphQlField(graphQLError: {
   };
 }
 
+function isIgnorableSocketClosedError(error: unknown): boolean {
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === "object" && error !== null && "message" in error
+        ? String((error as { message?: unknown }).message ?? "")
+        : String(error ?? "");
+
+  const normalizedMessage = message.toLowerCase();
+  return (
+    normalizedMessage.includes("socket closed") ||
+    normalizedMessage.includes("websocket closed") ||
+    normalizedMessage.includes("connection closed") ||
+    normalizedMessage.includes("closed before the connection was established")
+  );
+}
+
 const errorLink = new ErrorLink(({ error }) => {
+  if (isIgnorableSocketClosedError(error)) {
+    return;
+  }
+
   if (CombinedGraphQLErrors.is(error)) {
     for (const graphQLError of error.errors) {
       logGraphQlDiagnostic(graphQLError.message, graphQLError.locations, graphQLError.path);
@@ -91,7 +132,23 @@ const errorLink = new ErrorLink(({ error }) => {
 });
 
 export const apolloClient = new ApolloClient({
-  link: ApolloLink.from([errorLink, authLink, httpLink]),
+  link: ApolloLink.from([
+    errorLink,
+    authLink,
+    wsLink
+      ? split(
+          ({ query }) => {
+            const definition = getMainDefinition(query);
+            return (
+              definition.kind === "OperationDefinition" &&
+              definition.operation === "subscription"
+            );
+          },
+          wsLink,
+          httpLink
+        )
+      : httpLink,
+  ]),
   cache: new InMemoryCache({
     typePolicies: paginatedQueryTypePolicies,
   }),

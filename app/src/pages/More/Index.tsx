@@ -1,4 +1,5 @@
 import BugReportRoundedIcon from "@mui/icons-material/BugReportRounded";
+import CampaignRoundedIcon from "@mui/icons-material/CampaignRounded";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
 import GavelRoundedIcon from "@mui/icons-material/GavelRounded";
@@ -261,6 +262,14 @@ const More = (): ReactElement => {
             >
               <SettingsRoundedIcon />
               <span>تنظیمات سامانه</span>
+            </button>
+            <button
+              type="button"
+              className={`${styles.linkCard} ${styles.adminNotificationCard}`}
+              onClick={() => navigate(APP_SHELL_ROUTES.moreAdminNotification)}
+            >
+              <CampaignRoundedIcon />
+              <span>اعلان عمومی مدیر</span>
             </button>
           </>
         ) : null}

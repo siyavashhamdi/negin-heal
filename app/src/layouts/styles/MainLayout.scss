@@ -198,6 +198,134 @@ $hairline: 0.0625rem solid;
   transform: translate(-15%, -25%);
 }
 
+.main-layout__general-update-popup {
+  --general-update-popup-accent: #2563eb;
+  --general-update-popup-fg: #1d4ed8;
+  --general-update-popup-accent-soft: color-mix(
+    in srgb,
+    var(--general-update-popup-accent) 13%,
+    transparent
+  );
+
+  position: fixed;
+  inset-block-start: 1.1rem;
+  inset-inline-end: 1.1rem;
+  z-index: 1500;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.65rem;
+  inline-size: min(23rem, calc(100vw - 2rem));
+  padding: 0.9rem 0.82rem 0.82rem;
+  border: $hairline color-mix(in srgb, var(--general-update-popup-accent) 24%, var(--app-surface-border));
+  border-radius: 1.05rem;
+  background:
+    radial-gradient(circle at top left, var(--general-update-popup-accent-soft), transparent 58%),
+    color-mix(in srgb, var(--app-surface-bg) 96%, #ffffff);
+  color: var(--text-primary);
+  box-shadow:
+    0 1.1rem 2.6rem color-mix(in srgb, #0f172a 18%, transparent),
+    inset 0 0.0625rem 0 rgba(255, 255, 255, 0.7);
+  animation: main-layout-popup-enter 180ms ease-out;
+}
+
+.main-layout__general-update-popup--success {
+  --general-update-popup-accent: #16a34a;
+  --general-update-popup-fg: #15803d;
+}
+
+.main-layout__general-update-popup--warning {
+  --general-update-popup-accent: #d97706;
+  --general-update-popup-fg: #b45309;
+}
+
+.main-layout__general-update-popup--error {
+  --general-update-popup-accent: #dc2626;
+  --general-update-popup-fg: #b91c1c;
+}
+
+.main-layout__general-update-popup-glow {
+  position: absolute;
+  inset-block: 0.65rem;
+  inset-inline-start: 0;
+  inline-size: 0.22rem;
+  border-radius: 999rem;
+  background: var(--general-update-popup-accent);
+  box-shadow: 0 0 1.2rem var(--general-update-popup-accent);
+}
+
+.main-layout__general-update-popup-content {
+  display: grid;
+  gap: 0.28rem;
+  min-width: 0;
+}
+
+.main-layout__general-update-popup-kicker {
+  color: var(--general-update-popup-fg);
+  font-size: 0.68rem;
+  font-weight: variables.$font-weight-semibold;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.main-layout__general-update-popup h3,
+.main-layout__general-update-popup p {
+  margin: 0;
+}
+
+.main-layout__general-update-popup h3 {
+  font-size: 0.92rem;
+  line-height: 1.7;
+  font-weight: variables.$font-weight-semibold;
+  color: var(--text-primary);
+}
+
+.main-layout__general-update-popup p {
+  color: var(--text-secondary);
+  font-size: 0.79rem;
+  line-height: 1.8;
+}
+
+.main-layout__general-update-popup-icon {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 2rem;
+  block-size: 2rem;
+  border-radius: 0.68rem;
+  color: var(--general-update-popup-fg);
+  background: color-mix(in srgb, var(--general-update-popup-accent) 14%, transparent);
+  border: $hairline color-mix(in srgb, var(--general-update-popup-accent) 30%, transparent);
+}
+
+.main-layout__general-update-popup-icon svg {
+  font-size: 1rem;
+}
+
+.main-layout__general-update-popup-close.MuiIconButton-root {
+  align-self: start;
+  inline-size: 1.85rem;
+  block-size: 1.85rem;
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--app-surface-bg) 86%, var(--general-update-popup-accent) 8%);
+}
+
+.main-layout__general-update-popup-close.MuiIconButton-root:hover {
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--general-update-popup-accent) 14%, transparent);
+}
+
+@keyframes main-layout-popup-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -0.45rem, 0) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
 .main-layout__avatar.MuiAvatar-root {
   width: 2.25rem;
   height: 2.25rem;
@@ -733,6 +861,13 @@ $hairline: 0.0625rem solid;
     padding-bottom: calc(4.8rem + env(safe-area-inset-bottom));
   }
 
+  .main-layout__general-update-popup {
+    inset-block-start: auto;
+    inset-block-end: calc(5.7rem + env(safe-area-inset-bottom));
+    inset-inline: max(0.85rem, env(safe-area-inset-left)) max(0.85rem, env(safe-area-inset-right));
+    inline-size: auto;
+  }
+
   .main-layout__body,
   .main-layout--side-menu-collapsed .main-layout__body {
     grid-template-columns: minmax(0, 1fr);
@@ -891,6 +1026,23 @@ body[data-theme="dark"] {
 
   .main-layout__notification-item {
     background: color-mix(in srgb, var(--app-surface-bg) 88%, var(--text-secondary) 8%);
+  }
+
+  .main-layout__general-update-popup {
+    background:
+      radial-gradient(circle at top left, var(--general-update-popup-accent-soft), transparent 58%),
+      color-mix(in srgb, var(--app-surface-bg) 90%, #0f172a);
+    box-shadow:
+      0 1.1rem 2.6rem rgba(0, 0, 0, 0.42),
+      inset 0 0.0625rem 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .main-layout__general-update-popup-icon {
+    background: color-mix(in srgb, var(--general-update-popup-accent) 20%, transparent);
+  }
+
+  .main-layout__general-update-popup-close.MuiIconButton-root {
+    background: color-mix(in srgb, var(--app-surface-bg) 82%, #0f172a);
   }
 
   .main-layout__settings-popover {

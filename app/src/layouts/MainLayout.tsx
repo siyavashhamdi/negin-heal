@@ -1,7 +1,11 @@
 import AccountBalanceWalletRoundedIcon from "@mui/icons-material/AccountBalanceWalletRounded";
+import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
+import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
 import ConfirmationNumberRoundedIcon from "@mui/icons-material/ConfirmationNumberRounded";
 import HelpOutlineRoundedIcon from "@mui/icons-material/HelpOutlineRounded";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
@@ -9,6 +13,7 @@ import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
+import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import {
   Avatar,
   Badge,
@@ -21,7 +26,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import { useQuery } from "@apollo/client/react";
-import { useMemo, useState, type ReactElement, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactElement, type ReactNode } from "react";
 import { Link as RouterLink, NavLink, useLocation } from "react-router-dom";
 import Footer from "../components/layout/Footer";
 import { useAuth } from "../contexts/AuthContext";
@@ -31,17 +36,19 @@ import { USER_COURSE_LIST_QUERY } from "../graphql/queries/userCourseList.query"
 import { useMe } from "../hooks/useMe";
 import { useTranslation } from "../hooks/useTranslation";
 import {
+  GENERAL_SUBSCRIPTION_UPDATE_TYPES,
+} from "../constants";
+import {
   buildCourseListQueryVariables,
   DEFAULT_COURSE_LIST_FILTERS,
   DEFAULT_COURSE_LIST_SORT,
   type CourseListQuery,
   type CourseListQueryVariables,
 } from "../pages/Courses/courses-list.api";
+import { useGeneralUpdatesSubscription, type GeneralUpdateEvent } from "../hooks/useGeneralUpdatesSubscription";
 import { APP_SHELL_ROUTES } from "../routing/app-shell-routes";
 import { SideMenuNav } from "./SideMenuNav";
 import "./styles/MainLayout.scss";
-
-const NOTIFICATION_BADGE_COUNT = 3;
 
 const POPOVER_ANCHOR_ORIGIN = { vertical: "bottom", horizontal: "left" } as const;
 const POPOVER_TRANSFORM_ORIGIN = { vertical: "top", horizontal: "left" } as const;
@@ -52,6 +59,22 @@ const ADMIN_ROLE_BADGE_LABELS = {
 
 type TitleDescItem = { readonly id: string; readonly title: string; readonly description: string };
 type NotificationSample = TitleDescItem & { readonly timeLabel: string };
+type NotificationPayload = Partial<TitleDescItem> & {
+  readonly mode?: string;
+};
+type GeneralUpdatePopupMode = "info" | "success" | "warning" | "error";
+type GeneralUpdatePopup = {
+  readonly id: string;
+  readonly title: string;
+  readonly description: string;
+  readonly mode: GeneralUpdatePopupMode;
+};
+type GeneralCountsPayload = {
+  readonly courses?: number;
+  readonly notifications?: number;
+  readonly others?: number;
+  readonly support?: number;
+};
 
 type MainLayoutProps = {
   readonly children: ReactNode;
@@ -62,6 +85,66 @@ type MainLayoutProps = {
 
 function asRecordArray<T>(value: unknown): readonly T[] {
   return Array.isArray(value) ? (value as T[]) : [];
+}
+
+function asGeneralCountsPayload(value: unknown): GeneralCountsPayload | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  return value as GeneralCountsPayload;
+}
+
+function asNonNegativeInteger(value: unknown): number | null {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return null;
+  }
+
+  return Math.max(0, Math.floor(value));
+}
+
+function asNotificationPayload(value: unknown): NotificationPayload | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  return value as NotificationPayload;
+}
+
+function resolvePopupMode(value: unknown): GeneralUpdatePopupMode {
+  if (typeof value !== "string") {
+    return "info";
+  }
+
+  switch (value.toUpperCase()) {
+    case "SUCCESS":
+      return "success";
+    case "WARN":
+    case "WARNING":
+      return "warning";
+    case "ERROR":
+      return "error";
+    case "INFO":
+    default:
+      return "info";
+  }
+}
+
+function formatGeneralUpdateTimeLabel(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "همین الان";
+  }
+
+  const diffSeconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
+  if (diffSeconds < 60) {
+    return "همین الان";
+  }
+
+  return new Intl.DateTimeFormat("fa-IR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
 }
 
 function LayoutPopover(props: {
@@ -107,6 +190,8 @@ export function MainLayout({
   const [helpAnchorEl, setHelpAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [userAnchorEl, setUserAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [isSideMenuCollapsed, setIsSideMenuCollapsed] = useState(false);
+  const [generalUpdatePopup, setGeneralUpdatePopup] =
+    useState<GeneralUpdatePopup | null>(null);
 
   const isNotificationOpen = Boolean(notificationAnchorEl);
   const isSettingsOpen = Boolean(settingsAnchorEl);
@@ -145,7 +230,12 @@ export function MainLayout({
       fetchPolicy: "cache-first",
     }
   );
-  const coursesBadgeCount = courseBadgeData?.courseList.pagination.total ?? 0;
+  const [liveCounts, setLiveCounts] = useState<{
+    readonly courses?: number;
+    readonly notifications?: number;
+    readonly support?: number;
+    readonly others?: number;
+  }>({});
 
   const sampleNotifications = useMemo(
     () =>
@@ -154,6 +244,90 @@ export function MainLayout({
       ),
     [t]
   );
+  const [liveNotifications, setLiveNotifications] =
+    useState<readonly NotificationSample[]>(sampleNotifications);
+
+  useEffect(() => {
+    setLiveNotifications(sampleNotifications);
+  }, [sampleNotifications]);
+
+  const handleGeneralCountsUpdate = useCallback((event: GeneralUpdateEvent): void => {
+    const payload = asGeneralCountsPayload(event.payload);
+    if (!payload) {
+      return;
+    }
+
+    const courses = asNonNegativeInteger(payload.courses);
+    const notifications = asNonNegativeInteger(payload.notifications);
+    const support = asNonNegativeInteger(payload.support);
+    const others = asNonNegativeInteger(payload.others);
+
+    setLiveCounts((previous) => ({
+      courses: courses ?? previous.courses,
+      notifications: notifications ?? previous.notifications,
+      support: support ?? previous.support,
+      others: others ?? previous.others,
+    }));
+  }, []);
+
+  const handleNotificationUpdate = useCallback((event: GeneralUpdateEvent): void => {
+    const payload = asNotificationPayload(event.payload);
+    const incomingTitle =
+      typeof payload?.title === "string" && payload.title.trim().length > 0
+        ? payload.title
+        : "اعلان جدید";
+    const incomingDescription =
+      typeof payload?.description === "string" && payload.description.trim().length > 0
+        ? payload.description
+        : "رویداد جدیدی برای حساب شما ثبت شد.";
+    const incomingTimeLabel = formatGeneralUpdateTimeLabel(event.createdAt);
+    const popupId = event.targetId || `${event.updateType}-${event.createdAt}`;
+    const popupMode = resolvePopupMode(payload?.mode);
+
+    setLiveNotifications((previous) => [
+      {
+        id: popupId,
+        title: incomingTitle,
+        description: incomingDescription,
+        timeLabel: incomingTimeLabel,
+      },
+      ...previous.slice(0, 19),
+    ]);
+    setLiveCounts((previous) => {
+      if (typeof previous.notifications !== "number") {
+        return previous;
+      }
+
+      return {
+        ...previous,
+        notifications: previous.notifications + 1,
+      };
+    });
+    setGeneralUpdatePopup({
+      id: popupId,
+      title: incomingTitle,
+      description: incomingDescription,
+      mode: popupMode,
+    });
+  }, []);
+
+  useGeneralUpdatesSubscription({
+    enabled: Boolean(authUser),
+    updateTypes: [
+      GENERAL_SUBSCRIPTION_UPDATE_TYPES.NOTIFICATION,
+      GENERAL_SUBSCRIPTION_UPDATE_TYPES.GENERAL_COUNTS,
+      GENERAL_SUBSCRIPTION_UPDATE_TYPES.ADMIN_NOTIFICATION,
+      GENERAL_SUBSCRIPTION_UPDATE_TYPES.SUPPORT_UPDATE,
+    ],
+    onNotification: handleNotificationUpdate,
+    onGeneralCounts: handleGeneralCountsUpdate,
+    onAdminNotification: handleNotificationUpdate,
+    onSupportUpdate: handleNotificationUpdate,
+  });
+
+  const fetchedCourseBadgeCount = courseBadgeData?.courseList.pagination.total ?? 0;
+  const coursesBadgeCount = liveCounts.courses ?? fetchedCourseBadgeCount;
+  const notificationBadgeCount = liveCounts.notifications ?? liveNotifications.length;
 
   const sampleSettings = useMemo(
     () =>
@@ -237,6 +411,42 @@ export function MainLayout({
         .filter(Boolean)
         .join(" ")}
     >
+      {generalUpdatePopup ? (
+        <aside
+          className={[
+            "main-layout__general-update-popup",
+            `main-layout__general-update-popup--${generalUpdatePopup.mode}`,
+          ].join(" ")}
+          role={generalUpdatePopup.mode === "error" ? "alert" : "status"}
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          <div className="main-layout__general-update-popup-glow" aria-hidden="true" />
+          <div className="main-layout__general-update-popup-icon" aria-hidden="true">
+            {generalUpdatePopup.mode === "success" ? (
+              <CheckCircleOutlineRoundedIcon fontSize="small" />
+            ) : generalUpdatePopup.mode === "warning" ? (
+              <WarningAmberRoundedIcon fontSize="small" />
+            ) : generalUpdatePopup.mode === "error" ? (
+              <ErrorOutlineRoundedIcon fontSize="small" />
+            ) : (
+              <InfoOutlinedIcon fontSize="small" />
+            )}
+          </div>
+          <div className="main-layout__general-update-popup-content">
+            <h3>{generalUpdatePopup.title}</h3>
+            <p>{generalUpdatePopup.description}</p>
+          </div>
+          <IconButton
+            className="main-layout__general-update-popup-close"
+            aria-label="بستن اعلان"
+            size="small"
+            onClick={() => setGeneralUpdatePopup(null)}
+          >
+            <CloseRoundedIcon fontSize="small" />
+          </IconButton>
+        </aside>
+      ) : null}
       <Container maxWidth="lg" className="main-layout__container">
         {showHeader ? (
           <header className="main-layout__header">
@@ -292,7 +502,7 @@ export function MainLayout({
                   <Tooltip title={t("layout.header.actions.notifications")}>
                     <Badge
                       className="main-layout__notification-badge"
-                      badgeContent={NOTIFICATION_BADGE_COUNT}
+                      badgeContent={notificationBadgeCount}
                       color="error"
                       anchorOrigin={{ vertical: "top", horizontal: "left" }}
                     >
@@ -322,13 +532,13 @@ export function MainLayout({
                         </div>
                         <span>
                           {t("layout.header.panels.notifications.countLabel", {
-                            count: NOTIFICATION_BADGE_COUNT,
+                        count: notificationBadgeCount,
                           })}
                         </span>
                       </div>
                       <Divider />
                       <div className="main-layout__notifications-list">
-                        {sampleNotifications.map((notification) => (
+                        {liveNotifications.map((notification) => (
                           <article key={notification.id} className="main-layout__notification-item">
                             <div className="main-layout__notification-dot" />
                             <div>
@@ -610,7 +820,7 @@ export function MainLayout({
               }
             >
               <Badge
-                badgeContent={NOTIFICATION_BADGE_COUNT}
+                badgeContent={notificationBadgeCount}
                 color="error"
                 className="main-layout__mobile-bottom-badge"
               >

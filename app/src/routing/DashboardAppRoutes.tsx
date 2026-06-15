@@ -7,6 +7,7 @@ import CourseDetail from "../pages/Courses/CourseDetail";
 import CoursesIndex from "../pages/Courses/Index";
 import Login from "../pages/Login/Login";
 import AboutPage from "../pages/More/About";
+import AdminNotificationPage from "../pages/More/AdminNotification";
 import More from "../pages/More/Index";
 import PrivacyPolicyPage from "../pages/More/PrivacyPolicy";
 import TermsOfUsePage from "../pages/More/TermsOfUse";
@@ -58,6 +59,10 @@ export const DashboardAppRoutes = (): ReactElement => {
       <Route
         path={APP_SHELL_ROUTES.moreSystemSettings}
         element={wrapProtected(<SystemSettingsIndex />)}
+      />
+      <Route
+        path={APP_SHELL_ROUTES.moreAdminNotification}
+        element={wrapProtected(<AdminNotificationPage />)}
       />
       <Route
         path={APP_SHELL_ROUTES.notifications}
