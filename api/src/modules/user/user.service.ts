@@ -43,6 +43,7 @@ import {
   UserCreateGqlInput,
   UserListGqlInput,
   UserListSortOptionInput,
+  UserProfileUpdateGqlInput,
   UserUpdateGqlInput,
 } from "./graphql/inputs";
 import {
@@ -71,7 +72,7 @@ type UserListSortField = Extract<keyof UserListSortOptionInput, string>;
 
 type UserListRecord = Pick<
   User,
-  "_id" | "username" | "roles" | "status" | "profile" | "audit"
+  "_id" | "username" | "roles" | "status" | "profile" | "preferences" | "audit"
 >;
 
 type UserUpdateOperation = {
@@ -298,7 +299,7 @@ export class UserService {
     }
 
     if (password) {
-      await this.userSecurityService.throwIfPasswordIsInvalid(password);
+      await this.userSecurityService.throwIfPasswordPolicyIsViolated(password);
     }
 
     await this.throwIfAnyIdentityAlreadyExists({ username, email, mobile });
@@ -729,7 +730,7 @@ export class UserService {
       this.normalizeRequiredText(input.username, "Username"),
     );
     const password = this.normalizeRequiredText(input.password, "Password");
-    await this.userSecurityService.throwIfPasswordIsInvalid(password);
+    await this.userSecurityService.throwIfPasswordPolicyIsViolated(password);
 
     const profile = await this.buildUserCreateProfile(input.profile);
     const email = profile.email;
@@ -757,7 +758,9 @@ export class UserService {
       },
     ]);
 
-    return this.toUserMutationResponse(createdUser.toObject() as UserListRecord);
+    return this.toUserMutationResponse(
+      createdUser.toObject() as UserListRecord,
+    );
   }
 
   async update(input: UserUpdateGqlInput): Promise<UserMutationGqlResponse> {
@@ -781,7 +784,9 @@ export class UserService {
       await this.buildUserUpdate(input, existingUser);
 
     if (!update.$set && !update.$unset) {
-      return this.toUserMutationResponse(existingUser.toObject() as UserListRecord);
+      return this.toUserMutationResponse(
+        existingUser.toObject() as UserListRecord,
+      );
     }
 
     const updatedUser = await this.userModel
@@ -801,6 +806,109 @@ export class UserService {
     }
 
     return this.toUserMutationResponse(updatedUser);
+  }
+
+  async updateProfile(
+    userId: Types.ObjectId,
+    input: UserProfileUpdateGqlInput,
+  ): Promise<UserMutationGqlResponse> {
+    if (this.hasOwnInputField(input, "password")) {
+      await this.throwIfCurrentPasswordIsInvalid(userId, input.currentPassword);
+    }
+
+    await this.throwIfLockedProfileIdentityIsUpdated(userId, input);
+
+    const updateInput = {
+      ...input,
+      id: userId,
+    } as UserUpdateGqlInput;
+
+    return this.update({
+      ...updateInput,
+      id: userId,
+    });
+  }
+
+  private async throwIfLockedProfileIdentityIsUpdated(
+    userId: Types.ObjectId,
+    input: UserProfileUpdateGqlInput,
+  ): Promise<void> {
+    if (!input.profile) {
+      return;
+    }
+
+    const updatesEmail = this.hasOwnInputField(input.profile, "email");
+    const updatesPhoneNumber = this.hasOwnInputField(
+      input.profile,
+      "phoneNumber",
+    );
+    if (!updatesEmail && !updatesPhoneNumber) {
+      return;
+    }
+
+    const user = await this.userModel
+      .findOne({
+        _id: userId,
+        $or: [
+          { "audit.deletedAt": null },
+          { "audit.deletedAt": { $exists: false } },
+        ],
+      })
+      .select({ "profile.email": 1, "profile.phoneNumber": 1 })
+      .lean<Pick<User, "profile">>()
+      .exec();
+
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+
+    if (updatesEmail && this.normalizeOptionalText(user.profile?.email)) {
+      throw new BadRequestException(
+        "Email is already set. Please contact support to change it.",
+      );
+    }
+
+    if (
+      updatesPhoneNumber &&
+      this.normalizeOptionalText(user.profile?.phoneNumber)
+    ) {
+      throw new BadRequestException(
+        "Phone number is already set. Please contact support to change it.",
+      );
+    }
+  }
+
+  private async throwIfCurrentPasswordIsInvalid(
+    userId: Types.ObjectId,
+    currentPassword: string | null | undefined,
+  ): Promise<void> {
+    const normalizedCurrentPassword = this.normalizeRequiredText(
+      currentPassword,
+      "Current password",
+    );
+    const user = await this.userModel
+      .findOne({
+        _id: userId,
+        $or: [
+          { "audit.deletedAt": null },
+          { "audit.deletedAt": { $exists: false } },
+        ],
+      })
+      .select({ authentication: 1 })
+      .exec();
+
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+
+    const isCurrentPasswordValid = await bcrypt.compare(
+      normalizedCurrentPassword,
+      user.authentication.passwordHash,
+    );
+
+    if (!isCurrentPasswordValid) {
+      throw new InvalidCredentialsException();
+    }
   }
 
   async list(
@@ -990,7 +1098,7 @@ export class UserService {
 
     if (this.hasOwnInputField(input, "password")) {
       const password = this.normalizeRequiredText(input.password, "Password");
-      await this.userSecurityService.throwIfPasswordIsInvalid(password);
+      await this.userSecurityService.throwIfPasswordPolicyIsViolated(password);
 
       const passwordSalt = await bcrypt.genSalt(this.SALT_ROUNDS);
       set["authentication.passwordSalt"] = passwordSalt;
@@ -1282,7 +1390,9 @@ export class UserService {
     };
   }
 
-  private toUserMutationResponse(user: UserListRecord): UserMutationGqlResponse {
+  private toUserMutationResponse(
+    user: UserListRecord,
+  ): UserMutationGqlResponse {
     return {
       id: user._id,
       username: user.username,
@@ -1296,6 +1406,14 @@ export class UserService {
             phoneNumber: user.profile.phoneNumber,
             avatarFileId: user.profile.avatarFileId,
             bio: user.profile.bio,
+          }
+        : undefined,
+      preferences: user.preferences
+        ? {
+            language: user.preferences.language,
+            timezone: user.preferences.timezone,
+            notificationsEnabled: user.preferences.notificationsEnabled ?? true,
+            theme: user.preferences.theme,
           }
         : undefined,
     };

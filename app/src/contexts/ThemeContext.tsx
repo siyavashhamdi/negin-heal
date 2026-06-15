@@ -11,6 +11,7 @@ import { LOCAL_STORAGE_KEYS } from "../constants";
 
 interface ThemeContextType {
   mode: PaletteMode;
+  setThemeMode: (mode: PaletteMode) => void;
   toggleTheme: () => void;
 }
 
@@ -48,5 +49,9 @@ export const ThemeProvider = ({ children }: ThemeProviderProps): ReactElement =>
     setMode((prevMode) => (prevMode === "light" ? "dark" : "light"));
   };
 
-  return <ThemeContext.Provider value={{ mode, toggleTheme }}>{children}</ThemeContext.Provider>;
+  return (
+    <ThemeContext.Provider value={{ mode, setThemeMode: setMode, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
 };

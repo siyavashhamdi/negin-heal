@@ -1,12 +1,8 @@
 import { gql } from "@apollo/client";
 
-/**
- * User Me Query
- * Fetches the currently authenticated user's information including profile
- */
-export const USER_ME_QUERY = gql`
-  query Me {
-    me {
+export const USER_PROFILE_UPDATE_MUTATION = gql`
+  mutation UserProfileUpdate($input: UserProfileUpdateGqlInput!) {
+    userProfileUpdate(input: $input) {
       id
       username
       roles
@@ -20,6 +16,7 @@ export const USER_ME_QUERY = gql`
         bio
       }
       preferences {
+        language
         timezone
         notificationsEnabled
         theme

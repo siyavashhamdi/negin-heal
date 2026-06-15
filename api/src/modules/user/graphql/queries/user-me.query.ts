@@ -43,7 +43,10 @@ export class UserMeQuery {
         ? {
             firstName: userObj.profile.firstName,
             lastName: userObj.profile.lastName,
+            email: userObj.profile.email,
+            phoneNumber: userObj.profile.phoneNumber,
             avatarFileId: userObj.profile.avatarFileId,
+            bio: userObj.profile.bio,
           }
         : undefined,
       preferences: userObj.preferences

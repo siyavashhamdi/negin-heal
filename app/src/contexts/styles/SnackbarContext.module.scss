@@ -50,6 +50,12 @@
     max-height: min(40vh, 11rem);
     overflow-y: auto;
     padding-inline-end: variables.$spacing-0-5;
+
+    @include mixins.respond-below(sm) {
+      max-height: none;
+      overflow-y: visible;
+      padding-inline-end: 0;
+    }
   }
 
   :global(.MuiAlert-icon) {
@@ -58,5 +64,18 @@
 
   :global(.MuiAlert-action) {
     font-family: variables.$font-family !important;
+  }
+}
+
+.alertMobile {
+  @include mixins.respond-below(sm) {
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    transition: transform 200ms ease, opacity 200ms ease;
+
+    &:active {
+      cursor: grabbing;
+    }
   }
 }

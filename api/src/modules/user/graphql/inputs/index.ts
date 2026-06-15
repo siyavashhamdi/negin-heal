@@ -5,5 +5,6 @@ export * from "./user-create.gql.input";
 export * from "./user-list.gql.input";
 export * from "./user-list-sort-option.gql.input";
 export * from "./user-update.gql.input";
+export * from "./user-profile-update.gql.input";
 export * from "./user-signup.gql.input";
 export * from "./user-request-signup-code.gql.input";

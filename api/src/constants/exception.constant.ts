@@ -65,6 +65,11 @@ export const EXCEPTION_CONSTANT = {
     message: "Password validation failed!",
   },
 
+  PASSWORD_POLICY_VIOLATION: {
+    code: "PASSWORD_POLICY_VIOLATION",
+    message: "Password does not meet the required policy!",
+  },
+
   UNKNOWN_ERROR_OCCURRED: {
     code: "UNKNOWN_ERROR_OCCURRED",
     message: "An unknown error occurred!",

@@ -99,7 +99,7 @@ export function MainLayout({
   const { t } = useTranslation();
   const { mode, toggleTheme } = useThemeMode();
   const { logout, user: authUser } = useAuth();
-  const { user, loading: userLoading } = useMe();
+  const { user, avatarUrl, loading: userLoading } = useMe();
   const location = useLocation();
 
   const [notificationAnchorEl, setNotificationAnchorEl] = useState<HTMLButtonElement | null>(null);
@@ -176,7 +176,10 @@ export function MainLayout({
 
   const fallbackUser = t("layout.mainLayout.fallbackUser");
 
-  const userRoleTitle = user?.roles?.join("، ") ?? "";
+  const userRoleTitle =
+    user?.roles
+      ?.filter((role) => role !== "END_USER")
+      .join("، ") ?? "";
   const adminRoleBadgeLabel = authUser?.roles?.includes("SUPER_ADMIN")
     ? ADMIN_ROLE_BADGE_LABELS.SUPER_ADMIN
     : authUser?.roles?.includes("ADMIN")
@@ -464,7 +467,13 @@ export function MainLayout({
                   aria-describedby={userPopoverId}
                   onClick={(event) => setUserAnchorEl(event.currentTarget)}
                 >
-                  <Avatar className="main-layout__avatar">{userInitial}</Avatar>
+                  <Avatar
+                    className="main-layout__avatar"
+                    src={avatarUrl ?? undefined}
+                    alt={userDisplayName}
+                  >
+                    {userInitial}
+                  </Avatar>
                   <div className="main-layout__user-meta">
                     <strong className="main-layout__user-name">{userDisplayName}</strong>
                   </div>
@@ -478,7 +487,11 @@ export function MainLayout({
                 >
                   <div className="main-layout__user-panel">
                     <div className="main-layout__user-header">
-                      <Avatar className="main-layout__avatar main-layout__avatar--lg">
+                      <Avatar
+                        className="main-layout__avatar main-layout__avatar--lg"
+                        src={avatarUrl ?? undefined}
+                        alt={userDisplayName}
+                      >
                         {userInitial}
                       </Avatar>
                       <div>

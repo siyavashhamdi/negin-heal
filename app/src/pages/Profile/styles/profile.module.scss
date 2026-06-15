@@ -24,6 +24,41 @@
   font-weight: variables.$font-weight-bold !important;
 }
 
+.avatarWrap {
+  position: relative;
+  flex: 0 0 auto;
+  inline-size: 4rem;
+  block-size: 4rem;
+}
+
+.avatarInput {
+  display: none;
+}
+
+.avatarEditTooltipAnchor {
+  position: absolute;
+  right: -0.2rem;
+  bottom: -0.2rem;
+}
+
+.avatarEditButton {
+  inline-size: 1.75rem !important;
+  block-size: 1.75rem !important;
+  border: 0.125rem solid var(--app-surface-bg) !important;
+  background: #1976d2 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0.45rem 1rem color-mix(in srgb, #0f172a 22%, transparent) !important;
+}
+
+.avatarEditButton:disabled {
+  background: color-mix(in srgb, #1976d2 72%, #ffffff) !important;
+  color: #ffffff !important;
+}
+
+.avatarEditButton :global(.MuiCircularProgress-root) {
+  color: currentColor;
+}
+
 .hero h2,
 .hero p {
   margin: 0;
@@ -81,6 +116,23 @@
 .actionCard small {
   color: var(--text-secondary);
   line-height: 1.6;
+}
+
+.editForm {
+  display: flex;
+  flex-direction: column;
+  block-size: 100%;
+}
+
+.editDialogContent {
+  flex: 1 1 auto;
+}
+
+.supportLink {
+  color: inherit;
+  font-weight: variables.$font-weight-bold;
+  text-decoration: underline;
+  text-underline-offset: 0.18rem;
 }
 
 .logoutButton {

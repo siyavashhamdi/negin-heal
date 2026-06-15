@@ -53,7 +53,7 @@ function HeaderPopover(props: {
 const Header = (): ReactElement => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { user, loading: userLoading } = useMe();
+  const { user, avatarUrl, loading: userLoading } = useMe();
   const { logout, user: authUser } = useAuth();
   const [notificationAnchor, setNotificationAnchor] = useState<HTMLButtonElement | null>(null);
   const [settingsAnchor, setSettingsAnchor] = useState<HTMLButtonElement | null>(null);
@@ -157,7 +157,9 @@ const Header = (): ReactElement => {
           className={styles.userChip}
           onClick={(event) => setUserAnchor(event.currentTarget)}
         >
-          <Avatar className={styles.avatar}>{avatarLetter}</Avatar>
+          <Avatar className={styles.avatar} src={avatarUrl ?? undefined} alt={displayName}>
+            {avatarLetter}
+          </Avatar>
           <strong>{displayName}</strong>
         </button>
 

@@ -7,7 +7,7 @@ import { User, UserDocument } from "../../database/schemas";
 import {
   UserNotFoundException,
   AccountLockedException,
-  PassworkIsInvalidException,
+  PasswordPolicyViolationException,
 } from "../../exceptions";
 import { PasswordValidator } from "@/utils";
 
@@ -33,10 +33,10 @@ export class UserSecurityService {
     }
   }
 
-  async throwIfPasswordIsInvalid(password: string) {
+  async throwIfPasswordPolicyIsViolated(password: string) {
     const passwordValidation = PasswordValidator.validate(password);
     if (!passwordValidation.valid) {
-      throw new PassworkIsInvalidException();
+      throw new PasswordPolicyViolationException();
     }
 
     return passwordValidation;

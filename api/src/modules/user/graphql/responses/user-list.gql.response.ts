@@ -3,6 +3,7 @@ import { Types } from "mongoose";
 
 import { UserRole, UserStatus } from "../../../../enums";
 import { PaginationOffsetResponse } from "../../../../common/pagination/response";
+import { UserPreferencesGqlResponse } from "./user-me.gql.response";
 
 @ObjectType()
 export class UserListProfileGqlResponse {
@@ -74,6 +75,12 @@ export class UserMutationGqlResponse {
     description: "User profile details",
   })
   profile?: UserListProfileGqlResponse;
+
+  @Field(() => UserPreferencesGqlResponse, {
+    nullable: true,
+    description: "User preferences",
+  })
+  preferences?: UserPreferencesGqlResponse;
 }
 
 @ObjectType()

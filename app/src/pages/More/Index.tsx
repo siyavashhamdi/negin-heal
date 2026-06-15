@@ -6,15 +6,19 @@ import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
 import NotificationsRoundedIcon from "@mui/icons-material/NotificationsRounded";
 import PrivacyTipRoundedIcon from "@mui/icons-material/PrivacyTipRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
+import { useApolloClient } from "@apollo/client/react";
 import { useQuery } from "@apollo/client/react";
 import { useEffect, useState, type ReactElement } from "react";
 import { useNavigate } from "react-router-dom";
-import { LOCAL_STORAGE_KEYS } from "../../constants";
 import { useAuth } from "../../contexts/AuthContext";
 import { useThemeMode } from "../../contexts/ThemeContext";
+import { USER_PROFILE_UPDATE_MUTATION } from "../../graphql/mutations/userProfileUpdate.mutation";
 import { APP_PRIVACY_POLICY_PAGE_QUERY } from "../../graphql/queries/appPrivacyPolicyPageConfig.query";
 import { APP_TERMS_OF_USE_PAGE_QUERY } from "../../graphql/queries/appTermsOfUsePageConfig.query";
 import { APP_VERSION_QUERY } from "../../graphql/queries/appVersionConfig.query";
+import { USER_ME_QUERY } from "../../graphql/queries/userMe.query";
+import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
+import type { UserMeResponse } from "../../hooks/useMe";
 import TicketDialog from "../Support/TicketDialog";
 import { EMPTY_APP_VERSION, type AppVersionConfigQuery } from "./app-version.api";
 import {
@@ -28,11 +32,39 @@ import {
 import styles from "./styles/more.module.scss";
 
 const hasText = (value: string): boolean => value.trim().length > 0;
+type ThemePreference = "dark" | "light";
+
+type UserProfilePreferencesMutationResult = {
+  readonly userProfileUpdate: {
+    readonly id: string;
+    readonly preferences?: {
+      readonly notificationsEnabled: boolean;
+      readonly theme?: string | null;
+    } | null;
+  };
+};
+
+type UserProfilePreferencesMutationVariables = {
+  readonly input: {
+    readonly preferences: {
+      readonly notificationsEnabled?: boolean;
+      readonly theme?: ThemePreference;
+    };
+  };
+};
+
+function resolveThemePreference(value: string | null | undefined): ThemePreference | null {
+  return value === "dark" || value === "light" ? value : null;
+}
 
 const More = (): ReactElement => {
   const navigate = useNavigate();
+  const apolloClient = useApolloClient();
   const { user } = useAuth();
-  const { mode, toggleTheme } = useThemeMode();
+  const { mode, setThemeMode } = useThemeMode();
+  const cachedMe = apolloClient.readQuery<UserMeResponse>({ query: USER_ME_QUERY })?.me ?? null;
+  const initialThemePreference = resolveThemePreference(cachedMe?.preferences?.theme) ?? mode;
+  const initialNotificationsEnabled = cachedMe?.preferences?.notificationsEnabled ?? true;
   const { data } = useQuery<AppPrivacyPolicyPageConfigQuery>(APP_PRIVACY_POLICY_PAGE_QUERY, {
     fetchPolicy: "cache-and-network",
   });
@@ -45,12 +77,20 @@ const More = (): ReactElement => {
   const { data: versionData } = useQuery<AppVersionConfigQuery>(APP_VERSION_QUERY, {
     fetchPolicy: "cache-and-network",
   });
-  const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(() => {
-    const savedValue = localStorage.getItem(LOCAL_STORAGE_KEYS.NOTIFICATIONS_ENABLED);
-    return savedValue === null ? true : savedValue === "true";
+  const [preferredTheme, setPreferredTheme] =
+    useState<ThemePreference>(initialThemePreference);
+  const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(
+    initialNotificationsEnabled,
+  );
+  const [updatePreferences, updatePreferencesResult] = useMutationWithSnackbar<
+    UserProfilePreferencesMutationResult,
+    UserProfilePreferencesMutationVariables
+  >(USER_PROFILE_UPDATE_MUTATION, {
+    errorMessage: "به‌روزرسانی تنظیمات انجام نشد.",
   });
   const [bugReportDialogOpen, setBugReportDialogOpen] = useState(false);
-  const isDarkMode = mode === "dark";
+  const isDarkMode = preferredTheme === "dark";
+  const isUpdatingPreferences = updatePreferencesResult.loading;
   const isSuperAdmin = user?.roles?.includes("SUPER_ADMIN") === true;
   const privacyPolicyPage = data?.appPrivacyPolicyPageConfig ?? EMPTY_APP_PRIVACY_POLICY_PAGE;
   const termsOfUsePage = termsOfUseData?.appTermsOfUsePageConfig ?? EMPTY_APP_TERMS_OF_USE_PAGE;
@@ -60,8 +100,65 @@ const More = (): ReactElement => {
   const shouldShowVersion = hasText(appVersion.value);
 
   useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEYS.NOTIFICATIONS_ENABLED, String(notificationsEnabled));
-  }, [notificationsEnabled]);
+    if (mode !== preferredTheme) {
+      setThemeMode(preferredTheme);
+    }
+  }, [mode, preferredTheme, setThemeMode]);
+
+  const refreshMe = async (): Promise<void> => {
+    await apolloClient.query<UserMeResponse>({
+      query: USER_ME_QUERY,
+      fetchPolicy: "network-only",
+    });
+  };
+
+  const handleThemeToggle = async (): Promise<void> => {
+    const previousTheme = preferredTheme;
+    const nextTheme: ThemePreference = previousTheme === "dark" ? "light" : "dark";
+    setPreferredTheme(nextTheme);
+    setThemeMode(nextTheme);
+
+    const result = await updatePreferences({
+      variables: {
+        input: {
+          preferences: {
+            theme: nextTheme,
+          },
+        },
+      },
+    }).catch(() => null);
+
+    if (result?.data?.userProfileUpdate) {
+      await refreshMe();
+      return;
+    }
+
+    setPreferredTheme(previousTheme);
+    setThemeMode(previousTheme);
+  };
+
+  const handleNotificationsToggle = async (): Promise<void> => {
+    const previousValue = notificationsEnabled;
+    const nextValue = !previousValue;
+    setNotificationsEnabled(nextValue);
+
+    const result = await updatePreferences({
+      variables: {
+        input: {
+          preferences: {
+            notificationsEnabled: nextValue,
+          },
+        },
+      },
+    }).catch(() => null);
+
+    if (result?.data?.userProfileUpdate) {
+      await refreshMe();
+      return;
+    }
+
+    setNotificationsEnabled(previousValue);
+  };
 
   return (
     <section className={styles.page}>
@@ -85,7 +182,8 @@ const More = (): ReactElement => {
           role="switch"
           aria-checked={isDarkMode}
           aria-label="تغییر حالت نمایش"
-          onClick={toggleTheme}
+          disabled={isUpdatingPreferences}
+          onClick={() => void handleThemeToggle()}
         >
           <span className={styles.switchTrack} aria-hidden="true">
             <span className={styles.switchThumb}>
@@ -109,7 +207,8 @@ const More = (): ReactElement => {
           role="switch"
           aria-checked={notificationsEnabled}
           aria-label={notificationsEnabled ? "غیرفعال کردن اعلان‌ها" : "فعال کردن اعلان‌ها"}
-          onClick={() => setNotificationsEnabled((isEnabled) => !isEnabled)}
+          disabled={isUpdatingPreferences}
+          onClick={() => void handleNotificationsToggle()}
         >
           <span className={styles.switchTrack} aria-hidden="true">
             <span className={styles.switchThumb}>

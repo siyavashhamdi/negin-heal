@@ -1,4 +1,13 @@
-import { useState, useCallback, useMemo, type ReactElement, type ReactNode } from "react";
+import {
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  useRef,
+  type PointerEvent as ReactPointerEvent,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import { Snackbar, Alert, Slide, useMediaQuery, useTheme } from "@mui/material";
 import type { SlideProps } from "@mui/material/Slide";
 import {
@@ -39,11 +48,32 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
     };
   }, [isMobile]);
   const [open, setOpen] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [snackbarData, setSnackbarData] = useState<SnackbarMessage>({
     message: "",
     severity: "info",
     duration: 6000,
   });
+  const dragStateRef = useRef({
+    pointerId: -1,
+    startX: 0,
+    startY: 0,
+    x: 0,
+    y: 0,
+  });
+
+  const resetDrag = useCallback(() => {
+    setIsDragging(false);
+    setDragOffset({ x: 0, y: 0 });
+    dragStateRef.current = {
+      pointerId: -1,
+      startX: 0,
+      startY: 0,
+      x: 0,
+      y: 0,
+    };
+  }, []);
 
   /**
    * Show snackbar with custom severity
@@ -53,7 +83,7 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
       setSnackbarData({ message, severity, duration });
       setOpen(true);
     },
-    []
+    [],
   );
 
   /**
@@ -63,7 +93,7 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
     (message: string, duration: number = 6000) => {
       showSnackbar(message, "success", duration);
     },
-    [showSnackbar]
+    [showSnackbar],
   );
 
   /**
@@ -73,7 +103,7 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
     (message: string, duration: number = 6000) => {
       showSnackbar(message, "error", duration);
     },
-    [showSnackbar]
+    [showSnackbar],
   );
 
   /**
@@ -83,7 +113,7 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
     (message: string, duration: number = 6000) => {
       showSnackbar(message, "warning", duration);
     },
-    [showSnackbar]
+    [showSnackbar],
   );
 
   /**
@@ -93,18 +123,124 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
     (message: string, duration: number = 6000) => {
       showSnackbar(message, "info", duration);
     },
-    [showSnackbar]
+    [showSnackbar],
   );
 
   /**
    * Handle snackbar close
    */
-  const handleClose = useCallback((_event?: React.SyntheticEvent | Event, reason?: string) => {
-    if (reason === "clickaway") {
+  const handleClose = useCallback(
+    (_event?: React.SyntheticEvent | Event, reason?: string) => {
+      if (reason === "clickaway") {
+        return;
+      }
+      setOpen(false);
+      resetDrag();
+    },
+    [resetDrag],
+  );
+
+  const handlePointerDown = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      if (!isMobile || !open) {
+        return;
+      }
+      dragStateRef.current = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        x: 0,
+        y: 0,
+      };
+      setIsDragging(true);
+      event.currentTarget.setPointerCapture(event.pointerId);
+    },
+    [isMobile, open],
+  );
+
+  const handlePointerMove = useCallback(
+    (event: PointerEvent) => {
+      if (!isMobile || !isDragging) {
+        return;
+      }
+
+      const dragState = dragStateRef.current;
+      if (dragState.pointerId !== event.pointerId) {
+        return;
+      }
+
+      const deltaX = event.clientX - dragState.startX;
+      const deltaY = event.clientY - dragState.startY;
+      dragState.x = deltaX;
+      dragState.y = deltaY;
+      setDragOffset({ x: deltaX, y: deltaY });
+    },
+    [isDragging, isMobile],
+  );
+
+  const handlePointerEnd = useCallback(
+    (event?: PointerEvent) => {
+      if (!isMobile) {
+        return;
+      }
+      const dragState = dragStateRef.current;
+      if (event && dragState.pointerId !== event.pointerId) {
+        return;
+      }
+
+      const horizontalDismissed = Math.abs(dragState.x) > 96;
+      const verticalDismissed = dragState.y < -72;
+      const tapDismissed = Math.abs(dragState.x) < 8 && Math.abs(dragState.y) < 8;
+
+      if (horizontalDismissed || verticalDismissed || tapDismissed) {
+        handleClose();
+        return;
+      }
+
+      resetDrag();
+    },
+    [handleClose, isMobile, resetDrag],
+  );
+
+  const dragTransform = useMemo(() => {
+    if (!isMobile || !isDragging) {
+      return undefined;
+    }
+
+    const horizontalPriority = Math.abs(dragOffset.x) >= Math.abs(dragOffset.y);
+    if (horizontalPriority) {
+      return `translate3d(${dragOffset.x}px, 0, 0)`;
+    }
+
+    const upwardOnlyY = Math.min(dragOffset.y, 0);
+    return `translate3d(0, ${upwardOnlyY}px, 0)`;
+  }, [dragOffset.x, dragOffset.y, isDragging, isMobile]);
+
+  const dragDistance = Math.max(Math.abs(dragOffset.x), Math.abs(Math.min(dragOffset.y, 0)));
+  const dragOpacity = isMobile && isDragging ? Math.max(0.45, 1 - dragDistance / 180) : 1;
+
+  useEffect(() => {
+    if (!isDragging || !isMobile) {
       return;
     }
-    setOpen(false);
-  }, []);
+
+    const onPointerMove = (event: PointerEvent): void => {
+      handlePointerMove(event);
+    };
+    const onPointerEnd = (event: PointerEvent): void => {
+      handlePointerEnd(event);
+    };
+
+    window.addEventListener("pointermove", onPointerMove, { passive: true });
+    window.addEventListener("pointerup", onPointerEnd);
+    window.addEventListener("pointercancel", onPointerEnd);
+
+    return () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerEnd);
+      window.removeEventListener("pointercancel", onPointerEnd);
+    };
+  }, [handlePointerEnd, handlePointerMove, isDragging, isMobile]);
 
   const value: SnackbarContextValue = {
     showSnackbar,
@@ -129,6 +265,7 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
         TransitionComponent={SnackbarSlide}
         TransitionProps={{
           timeout: 360,
+          onExited: resetDrag,
         }}
         className={styles.snackbar}
         sx={{
@@ -137,10 +274,15 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
         }}
       >
         <Alert
-          onClose={handleClose}
+          onClose={isMobile ? undefined : handleClose}
           severity={snackbarData.severity}
           variant="filled"
-          className={styles.alert}
+          className={[styles.alert, isMobile ? styles.alertMobile : ""].filter(Boolean).join(" ")}
+          onPointerDown={handlePointerDown}
+          style={{
+            transform: dragTransform,
+            opacity: dragOpacity,
+          }}
         >
           {snackbarData.message}
         </Alert>

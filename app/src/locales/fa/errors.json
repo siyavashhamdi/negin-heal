@@ -25,6 +25,7 @@
             "SIGNUP_CREDENTIAL_REQUIRED": "برای ثبت‌نام باید گذرواژه یا کد تایید پیامکی وارد کنید.",
             "INVALID_SIGNUP_VERIFICATION_CODE": "کد تایید ثبت‌نام نامعتبر یا منقضی شده است.",
             "PASSWORD_VALIDATION_FAILED": "اعتبارسنجی گذرواژه ناموفق بود!",
+            "PASSWORD_POLICY_VIOLATION": "گذرواژه با سیاست امنیتی مطابقت ندارد. لطفاً شرایط درج‌شده در فرم تغییر گذرواژه را رعایت کنید.",
             "UNKNOWN_ERROR_OCCURRED": "خطای ناشناخته رخ داد!",
             "INTERNAL_SERVER_ERROR": "خطای داخلی سرور رخ داد!",
             "UNAUTHENTICATED": "دسترسی غیرمجاز!",

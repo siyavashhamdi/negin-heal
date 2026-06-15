@@ -9,11 +9,20 @@ export class UserProfileMinimalGqlResponse {
   @Field({ nullable: true, description: "User's last name" })
   lastName?: string;
 
+  @Field({ nullable: true, description: "User's email address" })
+  email?: string;
+
+  @Field({ nullable: true, description: "User's phone number" })
+  phoneNumber?: string;
+
   @Field(() => ID, {
     nullable: true,
     description: "Stored file ID used as the user's avatar",
   })
   avatarFileId?: Types.ObjectId;
+
+  @Field({ nullable: true, description: "User biography" })
+  bio?: string;
 }
 
 @ObjectType()
