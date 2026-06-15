@@ -69,7 +69,7 @@ export const UserProfileSchema = new MongooseSchema(
 
 export const UserPreferencesSchema = new MongooseSchema(
   {
-    language: { type: String, default: "en" },
+    language: { type: String, default: "fa" },
     timezone: { type: String, default: "UTC" },
     notificationsEnabled: { type: Boolean, default: true },
     theme: { type: String, default: "light" },

@@ -1,0 +1,51 @@
+import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import { useQuery } from "@apollo/client/react";
+import { type ReactElement } from "react";
+import { useNavigate } from "react-router-dom";
+import { APP_ABOUT_PAGE_QUERY } from "../../graphql/queries/appAboutPageConfig.query";
+import { EMPTY_APP_ABOUT_PAGE, type AppAboutPageConfigQuery } from "./about-page.api";
+import styles from "./styles/more.module.scss";
+
+const hasText = (value: string): boolean => value.trim().length > 0;
+
+const AboutPage = (): ReactElement => {
+  const navigate = useNavigate();
+  const { data, loading } = useQuery<AppAboutPageConfigQuery>(APP_ABOUT_PAGE_QUERY, {
+    fetchPolicy: "cache-and-network",
+  });
+  const aboutPage = data?.appAboutPageConfig ?? EMPTY_APP_ABOUT_PAGE;
+
+  return (
+    <section className={styles.page} aria-busy={loading}>
+      <div className={styles.hero}>
+        <p>درباره سامانه</p>
+        <h2>Negin Heal</h2>
+        <span>معرفی کوتاه امکانات، هدف و تجربه کاربری سامانه</span>
+      </div>
+
+      <div className={styles.aboutPanel}>
+        <div className={styles.aboutHeader}>
+          <span className={styles.aboutIcon}>
+            <InfoOutlinedIcon />
+          </span>
+          <button type="button" onClick={() => navigate("/more")}>
+            بازگشت
+            <ArrowBackRoundedIcon />
+          </button>
+        </div>
+
+        {hasText(aboutPage.html) ? (
+          <div
+            className={styles.aboutContent}
+            dangerouslySetInnerHTML={{ __html: aboutPage.html }}
+          />
+        ) : (
+          <p className={styles.aboutEmpty}>محتوای درباره سامانه هنوز تنظیم نشده است.</p>
+        )}
+      </div>
+    </section>
+  );
+};
+
+export default AboutPage;

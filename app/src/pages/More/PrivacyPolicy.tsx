@@ -1,0 +1,57 @@
+import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
+import PrivacyTipRoundedIcon from "@mui/icons-material/PrivacyTipRounded";
+import { useQuery } from "@apollo/client/react";
+import { type ReactElement } from "react";
+import { useNavigate } from "react-router-dom";
+import { APP_PRIVACY_POLICY_PAGE_QUERY } from "../../graphql/queries/appPrivacyPolicyPageConfig.query";
+import {
+  EMPTY_APP_PRIVACY_POLICY_PAGE,
+  type AppPrivacyPolicyPageConfigQuery,
+} from "./privacy-policy-page.api";
+import styles from "./styles/more.module.scss";
+
+const hasText = (value: string): boolean => value.trim().length > 0;
+
+const PrivacyPolicyPage = (): ReactElement => {
+  const navigate = useNavigate();
+  const { data, loading } = useQuery<AppPrivacyPolicyPageConfigQuery>(
+    APP_PRIVACY_POLICY_PAGE_QUERY,
+    {
+      fetchPolicy: "cache-and-network",
+    },
+  );
+  const privacyPolicyPage = data?.appPrivacyPolicyPageConfig ?? EMPTY_APP_PRIVACY_POLICY_PAGE;
+
+  return (
+    <section className={styles.page} aria-busy={loading}>
+      <div className={styles.hero}>
+        <p>حریم خصوصی</p>
+        <h2>سیاست حریم خصوصی</h2>
+        <span>شفافیت درباره نگهداری، استفاده و حفاظت از اطلاعات کاربران</span>
+      </div>
+
+      <div className={styles.aboutPanel}>
+        <div className={styles.aboutHeader}>
+          <span className={styles.aboutIcon}>
+            <PrivacyTipRoundedIcon />
+          </span>
+          <button type="button" onClick={() => navigate("/more")}>
+            بازگشت
+            <ArrowBackRoundedIcon />
+          </button>
+        </div>
+
+        {hasText(privacyPolicyPage.html) ? (
+          <div
+            className={styles.aboutContent}
+            dangerouslySetInnerHTML={{ __html: privacyPolicyPage.html }}
+          />
+        ) : (
+          <p className={styles.aboutEmpty}>محتوای سیاست حریم خصوصی هنوز تنظیم نشده است.</p>
+        )}
+      </div>
+    </section>
+  );
+};
+
+export default PrivacyPolicyPage;

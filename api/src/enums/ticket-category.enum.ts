@@ -3,5 +3,6 @@ export enum TicketCategory {
   COURSE = "COURSE",
   ACCOUNT = "ACCOUNT",
   TECHNICAL = "TECHNICAL",
+  BUG = "BUG",
   OTHER = "OTHER",
 }

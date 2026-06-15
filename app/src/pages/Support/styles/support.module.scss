@@ -2,95 +2,510 @@
 
 .page {
   display: grid;
-  gap: 0.9rem;
+  gap: 1.1rem;
 }
 
 .hero {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  padding: 1rem;
+  display: grid;
+  gap: 1.2rem;
+  overflow: hidden;
+  position: relative;
+  padding: clamp(1.1rem, 3vw, 1.65rem);
   border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
-  border-radius: 1.15rem;
+  border-radius: 1.5rem;
   background:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--app-layout-glow) 14%, transparent), transparent 58%),
+    radial-gradient(circle at top left, color-mix(in srgb, #1976d2 24%, transparent), transparent 44%),
+    linear-gradient(135deg, color-mix(in srgb, var(--app-layout-glow) 12%, transparent), transparent 52%),
     color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+  box-shadow: 0 1.5rem 4rem color-mix(in srgb, #0f172a 8%, transparent);
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  inset-block-start: -6rem;
+  inset-inline-start: -3rem;
+  inline-size: 14rem;
+  block-size: 14rem;
+  border-radius: 999rem;
+  background: color-mix(in srgb, #1976d2 10%, transparent);
+  pointer-events: none;
+}
+
+.heroContent {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.9rem;
+  position: relative;
+  z-index: 1;
 }
 
 .heroIcon {
   display: inline-grid;
   place-items: center;
-  inline-size: 3rem;
-  block-size: 3rem;
-  border-radius: 1rem;
-  background: color-mix(in srgb, #1976d2 12%, transparent);
+  inline-size: 3.6rem;
+  block-size: 3.6rem;
+  border-radius: 1.2rem;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, #1976d2 22%, transparent), color-mix(in srgb, #2dd4bf 16%, transparent)),
+    color-mix(in srgb, var(--app-surface-bg) 78%, #ffffff);
   color: #1976d2;
+  box-shadow: inset 0 0 0 0.0625rem color-mix(in srgb, #1976d2 18%, transparent);
 }
 
-.hero p,
-.hero h2,
-.hero span {
+.heroText p,
+.heroText h2,
+.heroText span,
+.sectionHeading p,
+.sectionHeading h3,
+.panelIntro p,
+.panelIntro h3 {
   margin: 0;
 }
 
-.hero p {
+.heroText p,
+.sectionHeading p,
+.panelIntro p {
   color: #1976d2;
   font-size: 0.78rem;
   font-weight: variables.$font-weight-semibold;
 }
 
-.hero h2 {
+.heroText h2 {
   margin-block: 0.16rem;
-  font-size: clamp(1.15rem, 4vw, 1.45rem);
+  font-size: clamp(1.35rem, 4vw, 2rem);
+  letter-spacing: -0.03em;
 }
 
-.hero span {
+.heroText span {
+  display: block;
+  max-inline-size: 45rem;
   color: var(--text-secondary);
-  line-height: 1.7;
+  line-height: 1.85;
+}
+
+.heroMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  position: relative;
+  z-index: 1;
+}
+
+.heroMeta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.52rem 0.75rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 74%, transparent);
+  border-radius: 999rem;
+  background: color-mix(in srgb, var(--app-surface-bg) 78%, #ffffff);
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.heroMeta svg {
+  color: #1976d2;
+  font-size: 1.08rem;
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-block-start: 0.2rem;
+}
+
+.sectionHeading h3,
+.panelIntro h3 {
+  margin-block-start: 0.12rem;
+  font-size: 1.05rem;
+}
+
+.sectionHeading > span {
+  color: var(--text-secondary);
+  font-size: 0.84rem;
 }
 
 .grid {
   display: grid;
-  gap: 0.65rem;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.75rem;
 }
 
 .card {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.8rem;
   inline-size: 100%;
-  padding: 0.85rem;
+  min-block-size: 10rem;
+  padding: 1rem;
   border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
-  border-radius: 1rem;
+  border-radius: 1.2rem;
   background: color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
   color: var(--text-primary);
   font: inherit;
   text-align: start;
   cursor: pointer;
+  box-shadow: 0 0.8rem 2rem color-mix(in srgb, #0f172a 5%, transparent);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
 }
 
-.card svg {
-  flex: 0 0 auto;
+.card:hover,
+.card:focus-visible {
+  transform: translateY(-0.125rem);
+  border-color: color-mix(in srgb, #1976d2 48%, var(--app-surface-border));
+  outline: none;
+  box-shadow:
+    0 1.2rem 2.8rem color-mix(in srgb, #1976d2 18%, transparent),
+    0 0 0 0.18rem color-mix(in srgb, #1976d2 12%, transparent);
+}
+
+.cardPrimary {
+  border-color: color-mix(in srgb, #1976d2 42%, var(--app-surface-border));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, #1976d2 10%, transparent), transparent 62%),
+    color-mix(in srgb, var(--app-surface-bg) 96%, #ffffff);
+}
+
+.cardIcon {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 2.7rem;
+  block-size: 2.7rem;
+  border-radius: 0.95rem;
+  background: color-mix(in srgb, #1976d2 11%, transparent);
   color: #1976d2;
 }
 
-.card span {
+.cardIcon svg {
+  font-size: 1.35rem;
+}
+
+.cardArrow {
+  color: #1976d2;
+  font-size: 1.05rem;
+  opacity: 0.72;
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.card:hover .cardArrow,
+.card:focus-visible .cardArrow {
+  opacity: 1;
+  transform: translateX(-0.18rem);
+}
+
+.cardBody {
   display: grid;
-  gap: 0.15rem;
+  gap: 0.32rem;
 }
 
-.card strong {
-  font-size: 0.92rem;
+.cardBody strong {
+  font-size: 1rem;
 }
 
-.card small {
+.cardBody small {
   color: var(--text-secondary);
   line-height: 1.6;
 }
 
+.cardBody b {
+  overflow-wrap: anywhere;
+  color: #1976d2;
+  direction: ltr;
+  unicode-bidi: isolate;
+  font-family: variables.$font-family-latin;
+  font-size: 0.88rem;
+  text-align: start;
+}
+
+.supportPanel {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  border-radius: 1.25rem;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, #2dd4bf 10%, transparent), transparent 64%),
+    color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+}
+
+.panelIntro {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.panelIntro > svg {
+  flex: 0 0 auto;
+  padding: 0.55rem;
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, #2dd4bf 15%, transparent);
+  color: #0f766e;
+  font-size: 2.25rem;
+}
+
+.tipList {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tipList li {
+  position: relative;
+  padding-inline-start: 1.35rem;
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+
+.tipList li::before {
+  content: "";
+  position: absolute;
+  inset-block-start: 0.75rem;
+  inset-inline-start: 0.35rem;
+  inline-size: 0.42rem;
+  block-size: 0.42rem;
+  border-radius: 999rem;
+  background: #0f766e;
+}
+
+.faqToolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+  padding: 0.85rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  border-radius: 1.25rem;
+  background: color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+  box-shadow: 0 0.8rem 2rem color-mix(in srgb, #0f172a 5%, transparent);
+}
+
+.faqSearch {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.72rem 0.85rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--app-surface-bg) 88%, #ffffff);
+  color: var(--text-secondary);
+}
+
+.faqSearch > svg {
+  color: #1976d2;
+}
+
+.faqSearch > span {
+  overflow: hidden;
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.faqSearch input {
+  min-inline-size: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+}
+
+.faqSearch input::placeholder {
+  color: color-mix(in srgb, var(--text-secondary) 78%, transparent);
+}
+
+.faqEmpty button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 2.35rem;
+  padding: 0.5rem 0.85rem;
+  border: 0.0625rem solid color-mix(in srgb, #1976d2 28%, var(--app-surface-border));
+  border-radius: 999rem;
+  background: color-mix(in srgb, #1976d2 8%, transparent);
+  color: #1976d2;
+  font: inherit;
+  font-weight: variables.$font-weight-semibold;
+  cursor: pointer;
+}
+
+.faqResultMeta {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.faqSections {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.faqSection {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  border-radius: 1.25rem;
+  background: color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+  box-shadow: 0 0.8rem 2rem color-mix(in srgb, #0f172a 5%, transparent);
+}
+
+.faqSectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.faqSectionIcon {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  inline-size: 2.8rem;
+  block-size: 2.8rem;
+  border-radius: 1rem;
+  background: color-mix(in srgb, #1976d2 10%, transparent);
+  color: #1976d2;
+}
+
+.faqSectionHeader h3,
+.faqSectionHeader p,
+.faqItem h4,
+.faqAnswer p,
+.faqEmpty h3,
+.faqEmpty p {
+  margin: 0;
+}
+
+.faqSectionHeader h3 {
+  font-size: 1.05rem;
+}
+
+.faqSectionHeader p {
+  margin-block-start: 0.15rem;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.7;
+}
+
+.faqItems {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.faqItem {
+  overflow: hidden;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 72%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--app-surface-bg) 90%, #ffffff);
+}
+
+.faqItem h4 button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  inline-size: 100%;
+  padding: 0.9rem 1rem;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-weight: variables.$font-weight-semibold;
+  text-align: start;
+  cursor: pointer;
+}
+
+.faqItem h4 button:hover,
+.faqItem h4 button:focus-visible {
+  outline: none;
+  background: color-mix(in srgb, #1976d2 7%, transparent);
+}
+
+.faqItem h4 button svg {
+  flex: 0 0 auto;
+  color: #1976d2;
+  transition: transform 160ms ease;
+}
+
+.faqItem h4 button[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+
+.faqAnswer {
+  padding: 0 1rem 1rem;
+  color: var(--text-secondary);
+  line-height: 1.9;
+}
+
+.faqEmpty {
+  display: grid;
+  justify-items: center;
+  gap: 0.65rem;
+  padding: 1.3rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  border-radius: 1.25rem;
+  background: color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+  text-align: center;
+}
+
+.faqEmpty > svg {
+  padding: 0.65rem;
+  border-radius: 1rem;
+  background: color-mix(in srgb, #1976d2 10%, transparent);
+  color: #1976d2;
+  font-size: 3rem;
+}
+
 body[data-theme="dark"] {
   .hero,
-  .card {
+  .card,
+  .supportPanel,
+  .faqToolbar,
+  .faqSection,
+  .faqEmpty {
     background: color-mix(in srgb, var(--app-surface-bg) 86%, #0f172a);
+  }
+
+  .heroMeta span,
+  .faqSearch,
+  .faqItem {
+    background: color-mix(in srgb, var(--app-surface-bg) 82%, #0f172a);
+  }
+}
+
+@media (min-width: 48rem) {
+  .heroContent {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .faqToolbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+}
+
+@media (max-width: 42rem) {
+  .sectionHeading {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .heroMeta span {
+    inline-size: 100%;
   }
 }

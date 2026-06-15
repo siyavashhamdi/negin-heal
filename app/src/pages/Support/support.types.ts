@@ -1,4 +1,4 @@
-export type TicketCategory = "PAYMENT" | "COURSE" | "ACCOUNT" | "TECHNICAL" | "OTHER";
+export type TicketCategory = "PAYMENT" | "COURSE" | "ACCOUNT" | "TECHNICAL" | "BUG" | "OTHER";
 export type TicketPriority = "LOW" | "MEDIUM" | "HIGH";
 export type TicketStatus = "OPEN" | "ANSWERED" | "CLOSED";
 export type TicketClosedBy = "SUPPORT" | "END_USER" | "SYSTEM";

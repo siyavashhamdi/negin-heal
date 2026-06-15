@@ -66,6 +66,103 @@
   color: var(--text-secondary);
 }
 
+.switchButton {
+  box-sizing: border-box;
+  inline-size: 3.6rem;
+  block-size: 2.1rem;
+  padding: 0.16rem;
+  border: 0.0625rem solid color-mix(in srgb, #1976d2 28%, var(--app-surface-border));
+  border-radius: 999rem;
+  background: color-mix(in srgb, var(--text-secondary) 15%, transparent);
+  color: #64748b;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.switchButton:hover {
+  box-shadow: 0 0.35rem 0.95rem color-mix(in srgb, #1976d2 14%, transparent);
+}
+
+.switchButton:focus-visible {
+  outline: 0.16rem solid color-mix(in srgb, #1976d2 42%, transparent);
+  outline-offset: 0.18rem;
+}
+
+.switchTrack {
+  position: relative;
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.switchThumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: inline-grid;
+  place-items: center;
+  inline-size: 1.7rem;
+  block-size: 1.7rem;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0.25rem 0.65rem color-mix(in srgb, #0f172a 20%, transparent);
+  transform: translateX(0);
+  transition:
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.switchThumb svg {
+  font-size: 0.95rem;
+}
+
+.switchButtonActive {
+  border-color: color-mix(in srgb, #1976d2 45%, var(--app-surface-border));
+  background: color-mix(in srgb, #1976d2 24%, transparent);
+  color: #1976d2;
+}
+
+.switchButtonActive .switchThumb {
+  transform: translateX(1.5rem);
+}
+
+.preferenceRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  border-radius: 1rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  background: color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+}
+
+.preferenceIcon {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 2.35rem;
+  block-size: 2.35rem;
+  border-radius: 0.85rem;
+  background: color-mix(in srgb, #1976d2 11%, transparent);
+  color: #1976d2;
+}
+
+.preferenceText {
+  display: grid;
+}
+
+.preferenceText strong,
+.preferenceText small {
+  margin: 0;
+}
+
+.preferenceText small {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+}
+
 .linkGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -104,6 +201,97 @@
   color: #dc2626;
 }
 
+.aboutPanel {
+  display: grid;
+  gap: 1rem;
+  padding: clamp(1rem, 3vw, 1.35rem);
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  border-radius: 1.2rem;
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, #1976d2 11%, transparent), transparent 42%),
+    color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+  box-shadow: 0 0.8rem 2rem color-mix(in srgb, #0f172a 5%, transparent);
+}
+
+.aboutHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.aboutIcon {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
+  border-radius: 1rem;
+  background: color-mix(in srgb, #1976d2 12%, transparent);
+  color: #1976d2;
+}
+
+.aboutHeader button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-block-size: 2.3rem;
+  padding: 0.45rem 0.75rem;
+  border: 0.0625rem solid color-mix(in srgb, #1976d2 26%, var(--app-surface-border));
+  border-radius: 999rem;
+  background: color-mix(in srgb, #1976d2 7%, transparent);
+  color: #1976d2;
+  font: inherit;
+  font-weight: variables.$font-weight-semibold;
+  cursor: pointer;
+}
+
+.aboutHeader button svg {
+  font-size: 1.05rem;
+}
+
+.aboutContent {
+  display: grid;
+  gap: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.95;
+}
+
+.aboutContent h2,
+.aboutContent h3,
+.aboutContent p,
+.aboutContent ul {
+  margin: 0;
+}
+
+.aboutContent h2,
+.aboutContent h3 {
+  color: var(--text-primary);
+}
+
+.aboutContent h2 {
+  font-size: clamp(1.35rem, 4vw, 1.8rem);
+}
+
+.aboutContent h3 {
+  margin-block-start: 0.4rem;
+  font-size: 1.05rem;
+}
+
+.aboutContent ul {
+  display: grid;
+  gap: 0.45rem;
+  padding-inline-start: 1.2rem;
+}
+
+.aboutContent li::marker {
+  color: #1976d2;
+}
+
+.aboutEmpty {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
 .versionBlock {
   display: grid;
   gap: 0.65rem;
@@ -126,7 +314,9 @@
 body[data-theme="dark"] {
   .hero,
   .themeCard,
-  .linkCard {
+  .preferenceRow,
+  .linkCard,
+  .aboutPanel {
     background: color-mix(in srgb, var(--app-surface-bg) 86%, #0f172a);
   }
 
@@ -142,5 +332,9 @@ body[data-theme="dark"] {
 
   .bugReportCard svg {
     color: #fca5a5;
+  }
+
+  .switchThumb {
+    background: color-mix(in srgb, var(--app-surface-bg) 92%, #ffffff);
   }
 }
