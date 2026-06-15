@@ -7,6 +7,8 @@ import { useSnackbar } from "./useSnackbar";
 
 export interface ForgotPasswordInput {
   identity: string;
+  captchaId?: string;
+  captchaValue?: string;
 }
 
 export interface ResetPasswordInput {
@@ -50,6 +52,8 @@ export const usePasswordReset = () => {
         variables: {
           input: {
             identity: input.identity.trim(),
+            captchaId: input.captchaId,
+            captchaValue: input.captchaValue,
           },
         },
       });

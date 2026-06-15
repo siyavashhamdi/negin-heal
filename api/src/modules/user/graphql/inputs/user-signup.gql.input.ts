@@ -67,6 +67,22 @@ export class UserSignupGqlInput {
 
   @Field({
     nullable: true,
+    description: "Captcha challenge identifier issued by the backend",
+  })
+  @IsOptional()
+  @IsString({ message: "Captcha ID must be a string" })
+  captchaId?: string;
+
+  @Field({
+    nullable: true,
+    description: "Captcha answer entered by the user",
+  })
+  @IsOptional()
+  @IsString({ message: "Captcha value must be a string" })
+  captchaValue?: string;
+
+  @Field({
+    nullable: true,
     description:
       "If true, the newly-created session will be remembered longer (e.g. 30 days)",
     defaultValue: false,

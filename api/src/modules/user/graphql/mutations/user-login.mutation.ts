@@ -34,6 +34,8 @@ export class UserLoginMutation {
     const loginResult = await this.userService.login(
       input.identity,
       input.password,
+      input.captchaId,
+      input.captchaValue,
       input.rememberMe || false,
       deviceInfo,
       ipAddress,

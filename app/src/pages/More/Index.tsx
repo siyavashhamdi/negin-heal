@@ -4,6 +4,7 @@ import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
 import GavelRoundedIcon from "@mui/icons-material/GavelRounded";
 import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
 import NotificationsRoundedIcon from "@mui/icons-material/NotificationsRounded";
+import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
 import PrivacyTipRoundedIcon from "@mui/icons-material/PrivacyTipRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import { useApolloClient } from "@apollo/client/react";
@@ -244,14 +245,24 @@ const More = (): ReactElement => {
 
       <div className={styles.linkGrid}>
         {isSuperAdmin ? (
-          <button
-            type="button"
-            className={styles.linkCard}
-            onClick={() => navigate(APP_SHELL_ROUTES.moreSystemSettings)}
-          >
-            <SettingsRoundedIcon />
-            <span>تنظیمات سامانه</span>
-          </button>
+          <>
+            <button
+              type="button"
+              className={styles.linkCard}
+              onClick={() => navigate(APP_SHELL_ROUTES.users)}
+            >
+              <PeopleAltRoundedIcon />
+              <span>کاربران</span>
+            </button>
+            <button
+              type="button"
+              className={styles.linkCard}
+              onClick={() => navigate(APP_SHELL_ROUTES.moreSystemSettings)}
+            >
+              <SettingsRoundedIcon />
+              <span>تنظیمات سامانه</span>
+            </button>
+          </>
         ) : null}
         {shouldShowPrivacyPolicy ? (
           <button

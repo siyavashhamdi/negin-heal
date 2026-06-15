@@ -27,8 +27,14 @@ export interface VerifyLoginCodeInput {
 export interface PasswordLoginInput {
   identity: string;
   password: string;
-  captchaToken?: string;
+  captchaId?: string;
+  captchaValue?: string;
   rememberMe?: boolean;
+}
+
+export interface PasswordLoginResult {
+  success: boolean;
+  errorCode?: string;
 }
 
 export interface SignupInput {
@@ -41,6 +47,8 @@ export interface SignupInput {
   };
   password?: string;
   signupCode?: string;
+  captchaId?: string;
+  captchaValue?: string;
   rememberMe?: boolean;
 }
 
@@ -107,13 +115,29 @@ function mapMeToUser(me: UserMeGqlResponse): User {
   };
 }
 
+function extractGraphQLErrorCode(error: unknown): string | undefined {
+  if (typeof error !== "object" || error === null) {
+    return undefined;
+  }
+
+  const graphQLErrors = (error as {
+    errors?: Array<{ code?: string; extensions?: { code?: string } }>;
+    graphQLErrors?: Array<{ code?: string; extensions?: { code?: string } }>;
+  }).errors ?? (error as {
+    graphQLErrors?: Array<{ code?: string; extensions?: { code?: string } }>;
+  }).graphQLErrors;
+  const firstGraphQLError = graphQLErrors?.[0];
+
+  return firstGraphQLError?.code || firstGraphQLError?.extensions?.code;
+}
+
 async function establishSession(
   accessToken: string,
   login: (token: string, user: User) => void,
   showSuccess: (message: string) => void,
   showError: (message: string) => void,
   successMessage: string,
-  failureMessage: string
+  failureMessage: string,
 ): Promise<boolean> {
   localStorage.setItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN, accessToken);
 
@@ -249,7 +273,7 @@ export const useLogin = () => {
         showSuccess,
         showError,
         t("auth.login.success.loginSuccessful"),
-        t("auth.login.errors.failed")
+        t("auth.login.errors.failed"),
       );
     } catch (err) {
       localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
@@ -283,14 +307,15 @@ export const useLogin = () => {
     }
   };
 
-  const loginWithPassword = async (input: PasswordLoginInput): Promise<boolean> => {
+  const loginWithPassword = async (input: PasswordLoginInput): Promise<PasswordLoginResult> => {
     try {
       const result = await loginMutation({
         variables: {
           input: {
             identity: input.identity.trim(),
             password: input.password,
-            captchaToken: input.captchaToken,
+            captchaId: input.captchaId,
+            captchaValue: input.captchaValue,
             rememberMe: input.rememberMe === true,
           },
         },
@@ -298,28 +323,35 @@ export const useLogin = () => {
 
       if (result.error) {
         showErrorIfNotQueued(showError, result.error);
-        return false;
+        return {
+          success: false,
+          errorCode: extractGraphQLErrorCode(result.error),
+        };
       }
 
       const accessToken = result.data?.userLogin?.accessToken?.trim();
 
       if (!accessToken) {
         showError(t("auth.login.errors.failed"));
-        return false;
+        return { success: false };
       }
 
-      return establishSession(
+      const success = await establishSession(
         accessToken,
         login,
         showSuccess,
         showError,
         t("auth.login.success.loginSuccessful"),
-        t("auth.login.errors.failed")
+        t("auth.login.errors.failed"),
       );
+      return { success };
     } catch (err) {
       localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
       showErrorIfNotQueued(showError, err);
-      return false;
+      return {
+        success: false,
+        errorCode: extractGraphQLErrorCode(err),
+      };
     }
   };
 
@@ -337,6 +369,8 @@ export const useLogin = () => {
             },
             password: input.password?.trim() || undefined,
             signupCode: input.signupCode?.trim() || undefined,
+            captchaId: input.captchaId,
+            captchaValue: input.captchaValue,
             rememberMe: input.rememberMe === true,
           },
         },
@@ -359,7 +393,7 @@ export const useLogin = () => {
         showSuccess,
         showError,
         t("auth.login.success.signupSuccessful"),
-        t("auth.login.errors.failed")
+        t("auth.login.errors.failed"),
       );
     } catch (err) {
       localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);

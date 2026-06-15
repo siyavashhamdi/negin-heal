@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactElement } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactElement } from "react";
 import {
   Box,
   Button,
@@ -23,7 +23,7 @@ import { useTranslation } from "../../hooks/useTranslation";
 import { useLogin } from "../../hooks/useLogin";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { API_CONFIG } from "../../config/env";
-import { LOGIN_CAPTCHA_DISABLED_TOKEN } from "../../lib/login-captcha.util";
+import { LOGIN_CAPTCHA_FAILED_ATTEMPTS_THRESHOLD } from "../../constants";
 import { toPersianDigits, toWesternDigits } from "../../utilities/persian-digits.util";
 import LoginShell from "./LoginShell";
 import { LoginCaptchaField } from "./components/LoginCaptchaField";
@@ -34,6 +34,11 @@ import verifyStyles from "./styles/VerifyLoginCode.module.scss";
 const VERIFICATION_CODE_LENGTH = 6;
 const VERIFICATION_CODE_REGEX = /^\d{4,6}$/;
 const EMPTY_DIGITS: readonly string[] = Array.from({ length: VERIFICATION_CODE_LENGTH }, () => "");
+const CAPTCHA_ERROR_CODES = new Set([
+  "CAPTCHA_REQUIRED",
+  "CAPTCHA_EXPIRED",
+  "CAPTCHA_INVALID",
+]);
 
 type CredentialMode = "password" | "otp";
 
@@ -57,8 +62,11 @@ export const VerifyLoginCodeForm = ({
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaId, setCaptchaId] = useState("");
+  const [captchaValue, setCaptchaValue] = useState("");
   const [captchaValid, setCaptchaValid] = useState(false);
+  const [captchaVersion, setCaptchaVersion] = useState(0);
+  const [failedPasswordAttempts, setFailedPasswordAttempts] = useState(0);
   const [hasError, setHasError] = useState(false);
   const [codeRequested, setCodeRequested] = useState(false);
   const [verificationDigits, setVerificationDigits] = useState<string[]>(() => [...EMPTY_DIGITS]);
@@ -66,8 +74,10 @@ export const VerifyLoginCodeForm = ({
 
   const verificationCode = verificationDigits.join("");
   const captchaEnabled = API_CONFIG.CAPTCHA_ENABLED;
+  const shouldShowCaptcha =
+    captchaEnabled && failedPasswordAttempts >= LOGIN_CAPTCHA_FAILED_ATTEMPTS_THRESHOLD;
   const passwordReady =
-    password.trim().length > 0 && (!captchaEnabled || captchaValid);
+    password.trim().length > 0 && (!shouldShowCaptcha || captchaValid);
   const otpReady = codeRequested && VERIFICATION_CODE_REGEX.test(verificationCode.trim());
 
   useEffect(() => {
@@ -172,19 +182,46 @@ export const VerifyLoginCodeForm = ({
       return;
     }
 
-    if (captchaEnabled && !captchaValid) {
+    if (shouldShowCaptcha && !captchaValid) {
       setHasError(true);
       showError(t("auth.login.errors.captchaRequired"));
       return;
     }
 
     setHasError(false);
-    await loginWithPassword({
+    const loginResult = await loginWithPassword({
       identity: identity.identity,
       password,
       rememberMe,
-      captchaToken: captchaEnabled ? captchaToken : LOGIN_CAPTCHA_DISABLED_TOKEN,
+      captchaId: shouldShowCaptcha ? captchaId : undefined,
+      captchaValue: shouldShowCaptcha ? captchaValue : undefined,
     });
+
+    if (loginResult.success) {
+      return;
+    }
+
+    const nextFailedPasswordAttempts =
+      loginResult.errorCode === "INVALID_CREDENTIALS"
+        ? failedPasswordAttempts + 1
+        : failedPasswordAttempts;
+    if (
+      loginResult.errorCode === "CAPTCHA_REQUIRED" ||
+      nextFailedPasswordAttempts >= LOGIN_CAPTCHA_FAILED_ATTEMPTS_THRESHOLD
+    ) {
+      setFailedPasswordAttempts(
+        Math.max(nextFailedPasswordAttempts, LOGIN_CAPTCHA_FAILED_ATTEMPTS_THRESHOLD),
+      );
+    } else {
+      setFailedPasswordAttempts(nextFailedPasswordAttempts);
+    }
+
+    if (captchaEnabled && (shouldShowCaptcha || CAPTCHA_ERROR_CODES.has(loginResult.errorCode || ""))) {
+      setCaptchaId("");
+      setCaptchaValue("");
+      setCaptchaValid(false);
+      setCaptchaVersion((previous) => previous + 1);
+    }
   };
 
   const handleOtpSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
@@ -227,6 +264,23 @@ export const VerifyLoginCodeForm = ({
     setMode(nextMode);
     setHasError(false);
   };
+
+  const handleCaptchaChange = useCallback(
+    ({
+      captchaId: nextCaptchaId,
+      value,
+      isValid,
+    }: {
+      captchaId: string;
+      value: string;
+      isValid: boolean;
+    }): void => {
+      setCaptchaId(nextCaptchaId);
+      setCaptchaValue(value);
+      setCaptchaValid(isValid);
+    },
+    [],
+  );
 
   return (
     <LoginShell subtitle={t("auth.login.credentialSubtitle")}>
@@ -303,12 +357,12 @@ export const VerifyLoginCodeForm = ({
             error={hasError}
           />
 
-          {captchaEnabled ? (
+          {shouldShowCaptcha ? (
             <LoginCaptchaField
+              key={`login-captcha-${captchaVersion}`}
               disabled={loading}
               error={hasError}
-              onTokenChange={setCaptchaToken}
-              onValidityChange={setCaptchaValid}
+              onCaptchaChange={handleCaptchaChange}
             />
           ) : null}
 

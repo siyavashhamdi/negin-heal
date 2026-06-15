@@ -7,12 +7,12 @@ import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
 import MenuOpenRoundedIcon from "@mui/icons-material/MenuOpenRounded";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import NotificationsRoundedIcon from "@mui/icons-material/NotificationsRounded";
-import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
 import PostAddRoundedIcon from "@mui/icons-material/PostAddRounded";
 import { IconButton, Tooltip } from "@mui/material";
 import { NavLink } from "react-router-dom";
 import type { ComponentType, ReactElement } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { APP_SHELL_ROUTES } from "../routing/app-shell-routes";
 import "./styles/SideMenuNav.scss";
 
 export type SideMenuIcon = ComponentType<{ className?: string }>;
@@ -27,13 +27,6 @@ export type SideMenuItemDefinition = {
 
 export const SIDE_MENU_ITEMS: readonly SideMenuItemDefinition[] = [
   { id: "dashboard", title: "داشبورد", path: "/dashboard", Icon: DashboardRoundedIcon },
-  {
-    id: "users-management",
-    title: "کاربران",
-    path: "/users",
-    Icon: PeopleAltRoundedIcon,
-    requiredRoles: ["SUPER_ADMIN"],
-  },
   {
     id: "payments",
     title: "پرداخت‌ها",
@@ -61,11 +54,13 @@ export function SideMenuNav({
   showCollapseToggle = false,
 }: SideMenuNavProps): ReactElement {
   const { user } = useAuth();
+  const roles = user?.roles ?? [];
+  const shouldOpenSupportTickets = roles.includes("SUPER_ADMIN") || roles.includes("ADMIN");
   const visibleItems = SIDE_MENU_ITEMS.filter((item) => {
     if (!item.requiredRoles || item.requiredRoles.length === 0) {
       return true;
     }
-    return item.requiredRoles.some((role) => user?.roles?.includes(role));
+    return item.requiredRoles.some((role) => roles.includes(role));
   });
 
   return (
@@ -95,12 +90,16 @@ export function SideMenuNav({
         {visibleItems.map((item) => {
           const ItemIcon = item.Icon;
           const itemClassName = "side-menu-nav__item";
+          const itemPath =
+            item.id === "support" && shouldOpenSupportTickets
+              ? APP_SHELL_ROUTES.supportTickets
+              : item.path;
 
-          if (item.path) {
+          if (itemPath) {
             return (
               <NavLink
                 key={item.id}
-                to={item.path}
+                to={itemPath}
                 className={({ isActive }) =>
                   `${itemClassName} ${isActive ? "side-menu-nav__item--active" : ""}`
                 }

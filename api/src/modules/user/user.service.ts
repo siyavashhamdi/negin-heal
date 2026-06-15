@@ -31,15 +31,25 @@ import {
 } from "../../database/schemas";
 import { UserSecurityService } from "./user.security.service";
 import {
+  CaptchaVerificationStatus,
+  UserCaptchaService,
+} from "./user-captcha.service";
+import {
   ExpiredPasswordResetTokenException,
   IdentityAlreadyExistsException,
   IdentityRequiredException,
   InvalidCredentialsException,
+  CaptchaExpiredException,
+  CaptchaInvalidException,
+  CaptchaRequiredException,
   InvalidPasswordResetTokenException,
   InvalidSignupVerificationCodeException,
   SignupCredentialRequiredException,
 } from "../../exceptions";
-import { APP_SETTING_KEY } from "../../constants";
+import {
+  APP_SETTING_KEY,
+  LOGIN_CAPTCHA_FAILED_ATTEMPTS_THRESHOLD,
+} from "../../constants";
 import { PAGINATION_CONSTANT } from "../../constants/pagination.constant";
 import { SortingOrder } from "../../common/pagination/input";
 import { buildSortOptions } from "../../common/pagination/utils";
@@ -110,17 +120,24 @@ export class UserService {
     private readonly sessionService: SessionService,
     private readonly emailService: EmailService,
     private readonly appSettingsService: AppSettingsService,
+    private readonly userCaptchaService: UserCaptchaService,
   ) {}
 
   async login(
     identity: string,
     password: string,
+    captchaId?: string,
+    captchaValue?: string,
     rememberMe: boolean = false,
     deviceInfo?: string,
     ipAddress?: string,
   ): Promise<UserLoginGqlResponse> {
     const user = await this.findByIdentityOrThrow(identity);
     this.userSecurityService.throwIfAccountIsLocked(user);
+
+    if (this.shouldRequireLoginCaptcha(user)) {
+      this.throwIfCaptchaIsInvalid(captchaId, captchaValue);
+    }
 
     // Verify password
     const isPasswordValid = await bcrypt.compare(
@@ -134,6 +151,36 @@ export class UserService {
     }
 
     return this.createLoginSession(user, rememberMe, deviceInfo, ipAddress);
+  }
+
+  private shouldRequireLoginCaptcha(user: UserDocument): boolean {
+    return (
+      env.CAPTCHA_ENABLED &&
+      (user.authentication?.failedLoginAttempts || 0) >=
+        LOGIN_CAPTCHA_FAILED_ATTEMPTS_THRESHOLD
+    );
+  }
+
+  private throwIfCaptchaIsInvalid(
+    captchaId?: string,
+    captchaValue?: string,
+  ): void {
+    if (!captchaId?.trim() || !captchaValue?.trim()) {
+      throw new CaptchaRequiredException();
+    }
+
+    const verificationStatus = this.userCaptchaService.verifyCaptcha(
+      captchaId,
+      captchaValue,
+    );
+
+    if (verificationStatus === CaptchaVerificationStatus.EXPIRED) {
+      throw new CaptchaExpiredException();
+    }
+
+    if (verificationStatus === CaptchaVerificationStatus.INVALID) {
+      throw new CaptchaInvalidException();
+    }
   }
 
   async requestLoginCode(
@@ -192,6 +239,10 @@ export class UserService {
   async forgotPassword(
     input: UserForgotPasswordGqlInput,
   ): Promise<UserPasswordResetGqlResponse> {
+    if (env.CAPTCHA_ENABLED) {
+      this.throwIfCaptchaIsInvalid(input.captchaId, input.captchaValue);
+    }
+
     const genericResponse = this.buildPasswordResetRequestedResponse();
     const filter = this.buildPasswordResetIdentityFilter(input);
     const user = await this.userModel.findOne(filter).exec();
@@ -386,6 +437,10 @@ export class UserService {
     deviceInfo?: string,
     ipAddress?: string,
   ): Promise<UserLoginGqlResponse> {
+    if (env.CAPTCHA_ENABLED) {
+      this.throwIfCaptchaIsInvalid(input.captchaId, input.captchaValue);
+    }
+
     const username = input.username?.trim()
       ? this.normalizeUsernameOrEmail(input.username)
       : undefined;

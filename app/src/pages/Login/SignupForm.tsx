@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ReactElement } from "react";
+import { useCallback, useMemo, useRef, useState, type ReactElement } from "react";
 import {
   Box,
   Button,
@@ -23,7 +23,9 @@ import { useTranslation } from "../../hooks/useTranslation";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { toPersianDigits, toWesternDigits } from "../../utilities/persian-digits.util";
 import { useLogin } from "../../hooks/useLogin";
+import { API_CONFIG } from "../../config/env";
 import LoginShell from "./LoginShell";
+import { LoginCaptchaField } from "./components/LoginCaptchaField";
 import { type LoginNavState } from "./login-nav-state";
 import formStyles from "./styles/LoginFormShared.module.scss";
 import verifyStyles from "./styles/VerifyLoginCode.module.scss";
@@ -32,7 +34,7 @@ const VERIFICATION_CODE_LENGTH = 6;
 const VERIFICATION_CODE_REGEX = /^\d{4,6}$/;
 const EMPTY_DIGITS: readonly string[] = Array.from(
   { length: VERIFICATION_CODE_LENGTH },
-  () => ""
+  () => "",
 );
 
 type SignupCredentialMode = "password" | "otp";
@@ -58,15 +60,20 @@ export const SignupForm = ({ identity, onEditIdentity }: SignupFormProps): React
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [captchaId, setCaptchaId] = useState("");
+  const [captchaValue, setCaptchaValue] = useState("");
+  const [captchaValid, setCaptchaValid] = useState(false);
+  const [captchaVersion, setCaptchaVersion] = useState(0);
   const [signupCodeRequested, setSignupCodeRequested] = useState(false);
   const [verificationDigits, setVerificationDigits] = useState<string[]>(() => [...EMPTY_DIGITS]);
   const [hasError, setHasError] = useState(false);
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   const verificationCode = verificationDigits.join("");
+  const captchaEnabled = API_CONFIG.CAPTCHA_ENABLED;
   const hasAnyIdentity = useMemo(
     () => Boolean(username.trim() || email.trim() || mobile.trim()),
-    [email, mobile, username]
+    [email, mobile, username],
   );
   const passwordReady = password.trim().length > 0 && confirmPassword.trim().length > 0;
   const otpReady = signupCodeRequested && VERIFICATION_CODE_REGEX.test(verificationCode.trim());
@@ -74,7 +81,8 @@ export const SignupForm = ({ identity, onEditIdentity }: SignupFormProps): React
     firstName.trim().length > 0 &&
     lastName.trim().length > 0 &&
     hasAnyIdentity &&
-    (mode === "password" ? passwordReady : otpReady);
+    (mode === "password" ? passwordReady : otpReady) &&
+    (!captchaEnabled || captchaValid);
 
   const updateDigits = (updater: (digits: string[]) => string[]): void => {
     setVerificationDigits((previous) => updater([...previous]));
@@ -215,8 +223,14 @@ export const SignupForm = ({ identity, onEditIdentity }: SignupFormProps): React
       }
     }
 
+    if (captchaEnabled && !captchaValid) {
+      setHasError(true);
+      showError(t("auth.login.errors.captchaRequired"));
+      return;
+    }
+
     setHasError(false);
-    await signup({
+    const success = await signup({
       username: username.trim() || undefined,
       email: email.trim() || undefined,
       mobile: mobile.trim() || undefined,
@@ -226,9 +240,35 @@ export const SignupForm = ({ identity, onEditIdentity }: SignupFormProps): React
       },
       password: mode === "password" ? password : undefined,
       signupCode: mode === "otp" ? verificationCode.trim() : undefined,
+      captchaId: captchaEnabled ? captchaId : undefined,
+      captchaValue: captchaEnabled ? captchaValue : undefined,
       rememberMe,
     });
+
+    if (!success && captchaEnabled) {
+      setCaptchaId("");
+      setCaptchaValue("");
+      setCaptchaValid(false);
+      setCaptchaVersion((previous) => previous + 1);
+    }
   };
+
+  const handleCaptchaChange = useCallback(
+    ({
+      captchaId: nextCaptchaId,
+      value,
+      isValid,
+    }: {
+      captchaId: string;
+      value: string;
+      isValid: boolean;
+    }): void => {
+      setCaptchaId(nextCaptchaId);
+      setCaptchaValue(value);
+      setCaptchaValid(isValid);
+    },
+    [],
+  );
 
   return (
     <LoginShell subtitle={t("auth.login.signupSubtitle")}>
@@ -419,6 +459,15 @@ export const SignupForm = ({ identity, onEditIdentity }: SignupFormProps): React
             </Box>
           </Box>
         )}
+
+        {captchaEnabled ? (
+          <LoginCaptchaField
+            key={`signup-captcha-${captchaVersion}`}
+            disabled={loading}
+            error={hasError}
+            onCaptchaChange={handleCaptchaChange}
+          />
+        ) : null}
 
         <Box className={verifyStyles.rememberMeContainer}>
           <FormControlLabel

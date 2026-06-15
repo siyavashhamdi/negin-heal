@@ -15,3 +15,6 @@ export * from "./signup-credential-required.exception";
 export * from "./invalid-signup-verification-code.exception";
 export * from "./invalid-password-reset-token.exception";
 export * from "./expired-password-reset-token.exception";
+export * from "./captcha-required.exception";
+export * from "./captcha-expired.exception";
+export * from "./captcha-invalid.exception";

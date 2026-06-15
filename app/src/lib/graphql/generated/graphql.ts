@@ -884,6 +884,8 @@ export type Query = {
   userCourseList: UserCourseListPaginatedCursorGqlResponse;
   /** Get a paginated, filterable, sortable super-admin list of users using offset-based pagination */
   userList: UserListPaginatedOffsetGqlResponse;
+  /** Generate a captcha challenge for password login */
+  userLoginCaptcha: UserLoginCaptchaGqlResponse;
 };
 
 export type QueryCourseListArgs = {
@@ -1185,8 +1187,10 @@ export type UserListSortOptionInput = {
 };
 
 export type UserLoginGqlInput = {
-  /** Captcha token submitted by the client for password login */
-  captchaToken?: InputMaybe<Scalars["String"]["input"]>;
+  /** Captcha challenge identifier issued by the backend */
+  captchaId?: InputMaybe<Scalars["String"]["input"]>;
+  /** Captcha answer entered by the user */
+  captchaValue?: InputMaybe<Scalars["String"]["input"]>;
   /** User identity: registered username, email, or phone number */
   identity: Scalars["String"]["input"];
   /** User password */
@@ -1201,6 +1205,18 @@ export type UserLoginGqlResponse = {
   accessToken: Scalars["String"]["output"];
   /** User information */
   user: UserLoginUserGqlResponse;
+};
+
+export type UserLoginCaptchaGqlResponse = {
+  __typename?: "UserLoginCaptchaGqlResponse";
+  /** Unique captcha identifier used for verification */
+  captchaId: Scalars["String"]["output"];
+  /** Captcha expiration time as ISO timestamp */
+  expiresAtIso: Scalars["String"]["output"];
+  /** Captcha image bytes encoded as Base64 string */
+  imageBase64: Scalars["String"]["output"];
+  /** Captcha image MIME type */
+  imageMimeType: Scalars["String"]["output"];
 };
 
 export type UserLoginUserGqlResponse = {
@@ -1298,6 +1314,10 @@ export const UserRole = {
 
 export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 export type UserSignupGqlInput = {
+  /** Captcha challenge identifier issued by the backend */
+  captchaId?: InputMaybe<Scalars["String"]["input"]>;
+  /** Captcha answer entered by the user */
+  captchaValue?: InputMaybe<Scalars["String"]["input"]>;
   /** Email address */
   email?: InputMaybe<Scalars["String"]["input"]>;
   /** Mobile phone number */

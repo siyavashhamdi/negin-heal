@@ -9,6 +9,21 @@ export const EXCEPTION_CONSTANT = {
     message: "Invalid username or password!",
   },
 
+  CAPTCHA_REQUIRED: {
+    code: "CAPTCHA_REQUIRED",
+    message: "Captcha is required after multiple failed login attempts!",
+  },
+
+  CAPTCHA_EXPIRED: {
+    code: "CAPTCHA_EXPIRED",
+    message: "Captcha has expired. Please request a new captcha!",
+  },
+
+  CAPTCHA_INVALID: {
+    code: "CAPTCHA_INVALID",
+    message: "Captcha value is incorrect!",
+  },
+
   IDENTITY_REQUIRED: {
     code: "IDENTITY_REQUIRED",
     message:

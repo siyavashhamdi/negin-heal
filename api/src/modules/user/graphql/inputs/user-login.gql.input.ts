@@ -17,11 +17,19 @@ export class UserLoginGqlInput {
 
   @Field({
     nullable: true,
-    description: "Captcha token submitted by the client for password login",
+    description: "Captcha challenge identifier issued by the backend",
   })
   @IsOptional()
-  @IsString({ message: "Captcha token must be a string" })
-  captchaToken?: string;
+  @IsString({ message: "Captcha ID must be a string" })
+  captchaId?: string;
+
+  @Field({
+    nullable: true,
+    description: "Captcha answer entered by the user",
+  })
+  @IsOptional()
+  @IsString({ message: "Captcha value must be a string" })
+  captchaValue?: string;
 
   @Field({
     nullable: true,

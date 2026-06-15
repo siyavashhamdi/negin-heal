@@ -15,6 +15,9 @@ export const env = {
   // JWT Configuration
   JWT_SECRET: process.env.JWT_SECRET,
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "24h",
+  CAPTCHA_ENABLED: process.env.CAPTCHA_ENABLED !== "false",
+  CAPTCHA_TTL_SECONDS: parseInt(process.env.CAPTCHA_TTL_SECONDS || "120", 10),
+  CAPTCHA_MAX_ATTEMPTS: parseInt(process.env.CAPTCHA_MAX_ATTEMPTS || "5", 10),
 
   // Logging Configuration
   LOG_LEVEL: process.env.LOG_LEVEL || "info",

@@ -82,7 +82,7 @@ type SupportListViewMode = "staff" | "endUser";
 
 const COLUMN_WIDTH_BY_ID: Record<string, string> = {
   id: "14rem",
-  title: "16rem",
+  title: "8rem",
   category: "9rem",
   priority: "8rem",
   status: "10rem",
@@ -107,7 +107,7 @@ const TABLE_TOOLBAR_OPTIONS = {
 } as const;
 
 const EMPTY_DISPLAY = "—";
-const TITLE_CELL_MAX_WIDTH = "14rem";
+const TITLE_CELL_MAX_WIDTH = "7rem";
 const LAST_MESSAGE_CELL_MAX_WIDTH = "18rem";
 
 const STATUS_COLOR: Record<
@@ -269,15 +269,15 @@ function SupportTicketListInner({
       : {
           id: false,
           title: true,
-          category: true,
-          priority: true,
-          status: true,
+          category: false,
+          priority: false,
+          status: false,
           closedBy: false,
           closedAt: false,
-          messageCount: true,
+          messageCount: false,
           lastMessageBody: false,
           attachmentCount: false,
-          createdAt: true,
+          createdAt: false,
           updatedAt: true,
         },
   );

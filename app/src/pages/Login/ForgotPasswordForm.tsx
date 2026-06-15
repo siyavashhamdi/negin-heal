@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactElement } from "react";
+import { useCallback, useMemo, useState, type ReactElement } from "react";
 import {
   Alert,
   Button,
@@ -18,7 +18,9 @@ import {
 import { useTranslation } from "../../hooks/useTranslation";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { usePasswordReset } from "../../hooks/usePasswordReset";
+import { API_CONFIG } from "../../config/env";
 import LoginShell from "./LoginShell";
+import { LoginCaptchaField } from "./components/LoginCaptchaField";
 import { type LoginNavState } from "./login-nav-state";
 import {
   createForgotPasswordPrefill,
@@ -45,12 +47,17 @@ export const ForgotPasswordForm = ({
   );
 
   const [identity, setIdentity] = useState(initialValues);
+  const [captchaId, setCaptchaId] = useState("");
+  const [captchaValue, setCaptchaValue] = useState("");
+  const [captchaValid, setCaptchaValid] = useState(false);
+  const [captchaVersion, setCaptchaVersion] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [fieldError, setFieldError] = useState<"identity" | "email" | null>(null);
 
   const trimmedIdentity = identity.trim();
   const identityKind = detectPasswordResetIdentityKind(identity);
-  const canSubmit = trimmedIdentity.length > 0;
+  const captchaEnabled = API_CONFIG.CAPTCHA_ENABLED;
+  const canSubmit = trimmedIdentity.length > 0 && (!captchaEnabled || captchaValid);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
@@ -67,15 +74,47 @@ export const ForgotPasswordForm = ({
       return;
     }
 
+    if (captchaEnabled && !captchaValid) {
+      showError(t("auth.login.errors.captchaRequired"));
+      return;
+    }
+
     setFieldError(null);
     const success = await requestResetLink({
       identity: trimmedIdentity,
+      captchaId: captchaEnabled ? captchaId : undefined,
+      captchaValue: captchaEnabled ? captchaValue : undefined,
     });
 
     if (success) {
       setSubmitted(true);
+      return;
+    }
+
+    if (captchaEnabled) {
+      setCaptchaId("");
+      setCaptchaValue("");
+      setCaptchaValid(false);
+      setCaptchaVersion((previous) => previous + 1);
     }
   };
+
+  const handleCaptchaChange = useCallback(
+    ({
+      captchaId: nextCaptchaId,
+      value,
+      isValid,
+    }: {
+      captchaId: string;
+      value: string;
+      isValid: boolean;
+    }): void => {
+      setCaptchaId(nextCaptchaId);
+      setCaptchaValue(value);
+      setCaptchaValid(isValid);
+    },
+    [],
+  );
 
   if (submitted) {
     return (
@@ -157,6 +196,15 @@ export const ForgotPasswordForm = ({
         <Alert severity="info" className={formStyles.formAlert}>
           {t("auth.login.forgotPasswordPrivacyHint")}
         </Alert>
+
+        {captchaEnabled ? (
+          <LoginCaptchaField
+            key={`forgot-password-captcha-${captchaVersion}`}
+            disabled={requestingResetLink}
+            error={false}
+            onCaptchaChange={handleCaptchaChange}
+          />
+        ) : null}
 
         <Button
           type="submit"

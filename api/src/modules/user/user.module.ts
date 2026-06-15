@@ -3,6 +3,7 @@ import { Module, forwardRef } from "@nestjs/common";
 
 import { UserService } from "./user.service";
 import { UserSecurityService } from "./user.security.service";
+import { UserCaptchaService } from "./user-captcha.service";
 import { AuthModule } from "../auth";
 import { AppSettingsModule } from "../app-settings";
 import { DatabaseModule } from "../database";
@@ -43,6 +44,7 @@ import * as UserQueries from "./graphql/queries";
   providers: [
     UserService,
     UserSecurityService,
+    UserCaptchaService,
     UserLoginMutation,
     UserLogoutMutation,
     UserCreateMutation,
@@ -58,6 +60,7 @@ import * as UserQueries from "./graphql/queries";
     UserVerifyLoginCodeMutation,
     UserQueries.UserMeQuery,
     UserQueries.UserListQuery,
+    UserQueries.UserLoginCaptchaQuery,
   ],
   exports: [UserService],
 })

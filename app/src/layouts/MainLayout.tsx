@@ -7,7 +7,6 @@ import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneRounded";
-import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import {
@@ -38,6 +37,7 @@ import {
   type CourseListQuery,
   type CourseListQueryVariables,
 } from "../pages/Courses/courses-list.api";
+import { APP_SHELL_ROUTES } from "../routing/app-shell-routes";
 import { SideMenuNav } from "./SideMenuNav";
 import "./styles/MainLayout.scss";
 
@@ -120,8 +120,13 @@ export function MainLayout({
   const helpPopoverId = isHelpOpen ? "main-layout-help-popover" : undefined;
   const userPopoverId = isUserOpen ? "main-layout-user-popover" : undefined;
   const isCoursesRoute = location.pathname.startsWith("/courses");
-  const isEndUser = authUser?.roles?.includes("END_USER") === true;
-  const isSuperAdmin = authUser?.roles?.includes("SUPER_ADMIN") === true;
+  const roles = authUser?.roles ?? [];
+  const isEndUser = roles.includes("END_USER");
+  const isSuperAdmin = roles.includes("SUPER_ADMIN");
+  const shouldOpenSupportTickets = isSuperAdmin || roles.includes("ADMIN");
+  const supportNavPath = shouldOpenSupportTickets
+    ? APP_SHELL_ROUTES.supportTickets
+    : APP_SHELL_ROUTES.support;
   const usesPublicCourseList = !authUser || isEndUser;
   const brandTagline = usesPublicCourseList
     ? t("layout.header.brand.publicTagline")
@@ -614,7 +619,7 @@ export function MainLayout({
               <span>اعلان‌ها</span>
             </NavLink>
             <NavLink
-              to="/support"
+              to={supportNavPath}
               className={({ isActive }) =>
                 `main-layout__mobile-bottom-item${
                   isActive ? " main-layout__mobile-bottom-item--active" : ""
@@ -626,21 +631,6 @@ export function MainLayout({
               </span>
               <span>پشتیبانی</span>
             </NavLink>
-            {isSuperAdmin ? (
-              <NavLink
-                to="/users"
-                className={({ isActive }) =>
-                  `main-layout__mobile-bottom-item${
-                    isActive || location.pathname === "/users-management"
-                      ? " main-layout__mobile-bottom-item--active"
-                      : ""
-                  }`
-                }
-              >
-                <PeopleAltRoundedIcon />
-                <span>کاربران</span>
-              </NavLink>
-            ) : null}
             <NavLink
               to="/profile"
               className={({ isActive }) =>
