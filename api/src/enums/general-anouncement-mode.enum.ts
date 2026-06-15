@@ -1,4 +1,4 @@
-export enum AdminNotificationMode {
+export enum GeneralAnouncementMode {
   INFO = "INFO",
   SUCCESS = "SUCCESS",
   WARNING = "WARNING",

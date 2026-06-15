@@ -4,49 +4,49 @@ import { BadRequestException, UseGuards } from "@nestjs/common";
 import { Args, Mutation, Resolver } from "@nestjs/graphql";
 
 import {
-  AdminNotificationMode,
+  GeneralAnouncementMode,
   GeneralSubscriptionUpdateType,
   UserRole,
 } from "../../../../enums";
 import { GqlAuthGuard, Roles, RolesGuard } from "../../../auth";
 import { UserSubscriptionService } from "../../user-subscription.service";
-import { AdminNotificationSendGqlInput } from "../inputs";
-import { AdminNotificationSendGqlResponse } from "../responses";
+import { GeneralAnouncementSendGqlInput } from "../inputs";
+import { GeneralAnouncementSendGqlResponse } from "../responses";
 
-@Resolver(() => AdminNotificationSendGqlResponse)
+@Resolver(() => GeneralAnouncementSendGqlResponse)
 @UseGuards(GqlAuthGuard, RolesGuard)
 @Roles(UserRole.SUPER_ADMIN)
-export class AdminNotificationSendMutation {
+export class GeneralAnouncementSendMutation {
   constructor(
     private readonly userSubscriptionService: UserSubscriptionService,
   ) {}
 
-  @Mutation(() => AdminNotificationSendGqlResponse, {
-    name: "adminNotificationSend",
+  @Mutation(() => GeneralAnouncementSendGqlResponse, {
+    name: "generalAnouncementSend",
     description:
-      "Broadcast an admin notification to active users subscribed to general updates",
+      "Broadcast a general anouncement to active users subscribed to general updates",
   })
-  async sendAdminNotification(
-    @Args("input") input: AdminNotificationSendGqlInput,
-  ): Promise<AdminNotificationSendGqlResponse> {
+  async sendGeneralAnouncement(
+    @Args("input") input: GeneralAnouncementSendGqlInput,
+  ): Promise<GeneralAnouncementSendGqlResponse> {
     const title = input.title.trim();
     const description = input.description.trim();
-    const mode = input.mode ?? AdminNotificationMode.INFO;
+    const mode = input.mode ?? GeneralAnouncementMode.INFO;
 
     if (!title || !description) {
       throw new BadRequestException(
-        "Admin notification title and description are required",
+        "General anouncement title and description are required",
       );
     }
 
     const activeSubscribedUsers =
       this.userSubscriptionService.getActiveSubscribedUserIds(
-        GeneralSubscriptionUpdateType.ADMIN_NOTIFICATION,
+        GeneralSubscriptionUpdateType.GENERAL_ANOUNCEMENT,
       ).length;
 
     const deliveredUsers =
       await this.userSubscriptionService.publishToActiveUsers({
-        updateType: GeneralSubscriptionUpdateType.ADMIN_NOTIFICATION,
+        updateType: GeneralSubscriptionUpdateType.GENERAL_ANOUNCEMENT,
         targetId: randomUUID(),
         payload: {
           ...input.payload,

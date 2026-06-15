@@ -5,7 +5,7 @@
 
 import { registerEnumType } from "@nestjs/graphql";
 
-import { AdminNotificationMode } from "./admin-notification-mode.enum";
+import { GeneralAnouncementMode } from "./general-anouncement-mode.enum";
 import { AppSettingValueType } from "./app-setting-value-type.enum";
 import { CourseDiscountType } from "./course-discount-type.enum";
 import { CourseItemType } from "./course-item-type.enum";
@@ -29,9 +29,9 @@ registerEnumType(SortingOrder, {
   description: "Sorting order",
 });
 
-registerEnumType(AdminNotificationMode, {
-  name: "AdminNotificationMode",
-  description: "Visual mode for admin notifications",
+registerEnumType(GeneralAnouncementMode, {
+  name: "GeneralAnouncementMode",
+  description: "Visual mode for general anouncements",
 });
 
 registerEnumType(AppSettingValueType, {

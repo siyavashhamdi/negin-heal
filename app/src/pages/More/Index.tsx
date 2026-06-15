@@ -265,11 +265,11 @@ const More = (): ReactElement => {
             </button>
             <button
               type="button"
-              className={`${styles.linkCard} ${styles.adminNotificationCard}`}
-              onClick={() => navigate(APP_SHELL_ROUTES.moreAdminNotification)}
+              className={`${styles.linkCard} ${styles.generalAnouncementCard}`}
+              onClick={() => navigate(APP_SHELL_ROUTES.moreGeneralAnouncement)}
             >
               <CampaignRoundedIcon />
-              <span>اعلان عمومی مدیر</span>
+              <span>اعلام عمومی</span>
             </button>
           </>
         ) : null}

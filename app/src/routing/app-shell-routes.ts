@@ -9,7 +9,7 @@ export const APP_SHELL_ROUTES = {
   morePrivacyPolicy: "/more/privacy-policy",
   moreTermsOfUse: "/more/terms-of-use",
   moreSystemSettings: "/more/system-settings",
-  moreAdminNotification: "/more/admin-notification",
+  moreGeneralAnouncement: "/more/general-anouncement",
   notifications: "/notifications",
   payments: "/payments",
   paymentZarinPalCallback: "/payment/zarinpal/callback",

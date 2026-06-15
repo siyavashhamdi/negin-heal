@@ -25,7 +25,7 @@ interface UseGeneralUpdatesSubscriptionProps {
   readonly updateTypes?: readonly GeneralSubscriptionUpdateType[];
   readonly onNotification?: (event: GeneralUpdateEvent) => void;
   readonly onGeneralCounts?: (event: GeneralUpdateEvent) => void;
-  readonly onAdminNotification?: (event: GeneralUpdateEvent) => void;
+  readonly onGeneralAnouncement?: (event: GeneralUpdateEvent) => void;
   readonly onSupportUpdate?: (event: GeneralUpdateEvent) => void;
   readonly onAnyUpdate?: (event: GeneralUpdateEvent) => void;
 }
@@ -35,7 +35,7 @@ export const useGeneralUpdatesSubscription = ({
   updateTypes,
   onNotification,
   onGeneralCounts,
-  onAdminNotification,
+  onGeneralAnouncement,
   onSupportUpdate,
   onAnyUpdate,
 }: UseGeneralUpdatesSubscriptionProps): void => {
@@ -61,8 +61,8 @@ export const useGeneralUpdatesSubscription = ({
           case GENERAL_SUBSCRIPTION_UPDATE_TYPES.GENERAL_COUNTS:
             onGeneralCounts?.(update);
             break;
-          case GENERAL_SUBSCRIPTION_UPDATE_TYPES.ADMIN_NOTIFICATION:
-            onAdminNotification?.(update);
+          case GENERAL_SUBSCRIPTION_UPDATE_TYPES.GENERAL_ANOUNCEMENT:
+            onGeneralAnouncement?.(update);
             break;
           case GENERAL_SUBSCRIPTION_UPDATE_TYPES.SUPPORT_UPDATE:
             onSupportUpdate?.(update);
