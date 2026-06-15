@@ -4,6 +4,7 @@ import { Module, forwardRef } from "@nestjs/common";
 import { UserService } from "./user.service";
 import { UserSecurityService } from "./user.security.service";
 import { AuthModule } from "../auth";
+import { AppSettingsModule } from "../app-settings";
 import { DatabaseModule } from "../database";
 import { EmailModule } from "../email";
 import { SecurityConfig } from "../../config/security.config";
@@ -15,8 +16,10 @@ import {
   UserRequestLoginCodeMutation,
   UserRequestSignupCodeMutation,
   UserResolveAuthIdentityMutation,
+  UserForgotPasswordMutation,
   UserSignupMutation,
   UserProfileUpdateMutation,
+  UserResetPasswordMutation,
   UserSendSampleEmailMutation,
   UserUpdateMutation,
   UserVerifyLoginCodeMutation,
@@ -25,6 +28,7 @@ import * as UserQueries from "./graphql/queries";
 
 @Module({
   imports: [
+    AppSettingsModule,
     DatabaseModule,
     EmailModule,
     forwardRef(() => AuthModule),
@@ -45,8 +49,10 @@ import * as UserQueries from "./graphql/queries";
     UserRequestLoginCodeMutation,
     UserRequestSignupCodeMutation,
     UserResolveAuthIdentityMutation,
+    UserForgotPasswordMutation,
     UserSignupMutation,
     UserProfileUpdateMutation,
+    UserResetPasswordMutation,
     UserSendSampleEmailMutation,
     UserUpdateMutation,
     UserVerifyLoginCodeMutation,

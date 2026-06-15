@@ -8,6 +8,7 @@ import { ApolloProvider } from "@apollo/client/react";
 import { createAppTheme } from "./theme";
 import { ThemeProvider, useThemeMode } from "./contexts/ThemeContext";
 import { AuthProvider } from "./contexts/AuthContext";
+import { AppSettingsProvider } from "./contexts/AppSettingsContext";
 import { SnackbarProvider } from "./contexts/SnackbarContext";
 import { LoadingProvider } from "./contexts/LoadingContext";
 import { ApolloErrorHandler } from "./components/ApolloErrorHandler";
@@ -15,7 +16,8 @@ import { LoadingBar } from "./components/LoadingBar";
 import { apolloClient } from "./lib/apollo-client";
 import { MainLayout } from "./layouts/MainLayout";
 import { LOCAL_STORAGE_KEYS } from "./constants";
-import { DashboardAppRoutes, APP_SHELL_ROUTES } from "./routing/DashboardAppRoutes";
+import { DashboardAppRoutes } from "./routing/DashboardAppRoutes";
+import { APP_SHELL_ROUTES } from "./routing/app-shell-routes";
 
 const emotionRtlCache = createCache({
   key: "muirtl",
@@ -25,16 +27,23 @@ const emotionRtlCache = createCache({
 const AppShell = (): ReactElement => {
   const location = useLocation();
   const isLoginPage = location.pathname === APP_SHELL_ROUTES.login;
+  const isResetPasswordPage = location.pathname === APP_SHELL_ROUTES.resetPassword;
   const isPublicCoursesPage = location.pathname.startsWith(APP_SHELL_ROUTES.courses);
   const isPaymentCallbackPage =
     location.pathname === APP_SHELL_ROUTES.paymentZarinPalCallback;
   const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
 
-  if (!token && !isLoginPage && !isPublicCoursesPage && !isPaymentCallbackPage) {
+  if (
+    !token &&
+    !isLoginPage &&
+    !isResetPasswordPage &&
+    !isPublicCoursesPage &&
+    !isPaymentCallbackPage
+  ) {
     return <Navigate to={APP_SHELL_ROUTES.login} state={{ from: location }} replace />;
   }
 
-  if (isLoginPage) {
+  if (isLoginPage || isResetPasswordPage) {
     return <DashboardAppRoutes />;
   }
 
@@ -67,9 +76,11 @@ const App = (): ReactElement => (
       <ThemeProvider>
         <BrowserRouter>
           <AuthProvider>
-            <LoadingProvider>
-              <ThemedAppTree />
-            </LoadingProvider>
+            <AppSettingsProvider>
+              <LoadingProvider>
+                <ThemedAppTree />
+              </LoadingProvider>
+            </AppSettingsProvider>
           </AuthProvider>
         </BrowserRouter>
       </ThemeProvider>

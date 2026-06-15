@@ -17,10 +17,8 @@ import { useSnackbar } from "../../hooks/useSnackbar";
 import { useLogin } from "../../hooks/useLogin";
 import LoginShell from "./LoginShell";
 import { type LoginNavState } from "./login-nav-state";
+import { EMAIL_REGEX, MOBILE_REGEX } from "./password-reset-form.util";
 import formStyles from "./styles/LoginFormShared.module.scss";
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MOBILE_REGEX = /^(?:\+?98|0)?9\d{9}$/;
 
 const detectIdentityKind = (identity: string): LoginNavState["identityKind"] => {
   const trimmedIdentity = identity.trim();
@@ -41,12 +39,14 @@ export interface RequestLoginCodeProps {
   readonly initialPrefill?: LoginNavState | null;
   readonly onIdentityResolved: (identity: LoginNavState) => void;
   readonly onSignupRequired: (identity: LoginNavState) => void;
+  readonly onForgotPassword: (identity?: LoginNavState | null) => void;
 }
 
 const RequestLoginCode = ({
   initialPrefill = null,
   onIdentityResolved,
   onSignupRequired,
+  onForgotPassword,
 }: RequestLoginCodeProps): ReactElement => {
   const { t } = useTranslation();
   const { showError } = useSnackbar();
@@ -56,6 +56,19 @@ const RequestLoginCode = ({
   const [fieldError, setFieldError] = useState(false);
 
   const canSubmit = identity.trim().length > 0;
+
+  const handleForgotPasswordClick = (): void => {
+    const trimmedIdentity = identity.trim();
+    if (!trimmedIdentity) {
+      onForgotPassword(null);
+      return;
+    }
+
+    onForgotPassword({
+      identity: trimmedIdentity,
+      identityKind: detectIdentityKind(trimmedIdentity),
+    });
+  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
@@ -149,6 +162,15 @@ const RequestLoginCode = ({
           }
         >
           {loading ? t("auth.login.resolvingIdentity") : t("auth.login.nextStep")}
+        </Button>
+
+        <Button
+          type="button"
+          variant="text"
+          className={formStyles.formTextButton}
+          onClick={handleForgotPasswordClick}
+        >
+          {t("auth.login.forgotPasswordLink")}
         </Button>
       </form>
     </LoginShell>

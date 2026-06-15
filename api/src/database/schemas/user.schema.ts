@@ -35,6 +35,14 @@ function normalizePhoneNumber(value?: string | null): string | undefined {
  * Mongoose Schemas for nested objects
  * These define the database structure and validation rules
  */
+export const UserPasswordResetTokenSchema = new MongooseSchema(
+  {
+    hash: { type: String },
+    createdAt: { type: Date },
+  },
+  { _id: false },
+);
+
 export const UserAuthenticationSchema = new MongooseSchema(
   {
     passwordHash: { type: String, required: true },
@@ -42,6 +50,7 @@ export const UserAuthenticationSchema = new MongooseSchema(
     lastLoginAt: { type: Date },
     failedLoginAttempts: { type: Number, default: 0 },
     lockedUntil: { type: Date },
+    passwordResetToken: { type: UserPasswordResetTokenSchema },
   },
   { _id: false },
 );
@@ -81,12 +90,18 @@ export const UserPreferencesSchema = new MongooseSchema(
  * TypeScript Types (derived from Mongoose schemas)
  * These provide compile-time type checking and IntelliSense
  */
+export type UserPasswordResetToken = {
+  hash?: string | null;
+  createdAt?: Date;
+};
+
 export type UserAuthentication = {
   passwordHash: string;
   passwordSalt: string;
   lastLoginAt?: Date;
   failedLoginAttempts: number;
   lockedUntil?: Date;
+  passwordResetToken?: UserPasswordResetToken;
 };
 
 export type UserProfile = {
@@ -188,3 +203,15 @@ UserSchema.index({ roles: 1 });
 UserSchema.index({ status: 1 });
 UserSchema.index({ "profile.avatarFileId": 1 });
 UserSchema.index({ "audit.createdAt": -1 }); // Index for sorting by creation date (descending)
+UserSchema.index(
+  { "authentication.passwordResetToken.hash": 1 },
+  {
+    name: "idx_auth_password_reset_token_hash",
+    partialFilterExpression: {
+      "authentication.passwordResetToken.hash": {
+        $exists: true,
+        $type: "string",
+      },
+    },
+  },
+);

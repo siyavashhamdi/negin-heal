@@ -40,11 +40,13 @@ type CredentialMode = "password" | "otp";
 interface VerifyLoginCodeFormProps {
   readonly identity: LoginNavState;
   readonly onEditIdentity: (identity: LoginNavState) => void;
+  readonly onForgotPassword: (identity: LoginNavState) => void;
 }
 
 export const VerifyLoginCodeForm = ({
   identity,
   onEditIdentity,
+  onForgotPassword,
 }: VerifyLoginCodeFormProps): ReactElement => {
   const { t } = useTranslation();
   const { requestLoginCode, verifyLoginCode, loginWithPassword, loading } = useLogin();
@@ -217,7 +219,7 @@ export const VerifyLoginCodeForm = ({
 
   const handleModeChange = (
     _event: React.MouseEvent<HTMLElement>,
-    nextMode: CredentialMode | null
+    nextMode: CredentialMode | null,
   ): void => {
     if (!nextMode || nextMode === mode) {
       return;
@@ -324,6 +326,16 @@ export const VerifyLoginCodeForm = ({
               className={verifyStyles.rememberMeLabel}
             />
           </Box>
+
+          <Button
+            type="button"
+            variant="text"
+            size="small"
+            className={verifyStyles.forgotPasswordButton}
+            onClick={() => onForgotPassword(identity)}
+          >
+            {t("auth.login.forgotPasswordLink")}
+          </Button>
 
           <Button
             type="submit"

@@ -11,16 +11,15 @@ import { useQuery } from "@apollo/client/react";
 import { useEffect, useState, type ReactElement } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { useAppSettings } from "../../contexts/AppSettingsContext";
 import { useThemeMode } from "../../contexts/ThemeContext";
 import { USER_PROFILE_UPDATE_MUTATION } from "../../graphql/mutations/userProfileUpdate.mutation";
 import { APP_PRIVACY_POLICY_PAGE_QUERY } from "../../graphql/queries/appPrivacyPolicyPageConfig.query";
 import { APP_TERMS_OF_USE_PAGE_QUERY } from "../../graphql/queries/appTermsOfUsePageConfig.query";
-import { APP_VERSION_QUERY } from "../../graphql/queries/appVersionConfig.query";
 import { USER_ME_QUERY } from "../../graphql/queries/userMe.query";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import type { UserMeResponse } from "../../hooks/useMe";
 import TicketDialog from "../Support/TicketDialog";
-import { EMPTY_APP_VERSION, type AppVersionConfigQuery } from "./app-version.api";
 import {
   EMPTY_APP_PRIVACY_POLICY_PAGE,
   type AppPrivacyPolicyPageConfigQuery,
@@ -61,6 +60,7 @@ const More = (): ReactElement => {
   const navigate = useNavigate();
   const apolloClient = useApolloClient();
   const { user } = useAuth();
+  const { appVersion } = useAppSettings();
   const { mode, setThemeMode } = useThemeMode();
   const cachedMe = apolloClient.readQuery<UserMeResponse>({ query: USER_ME_QUERY })?.me ?? null;
   const initialThemePreference = resolveThemePreference(cachedMe?.preferences?.theme) ?? mode;
@@ -74,9 +74,6 @@ const More = (): ReactElement => {
       fetchPolicy: "cache-and-network",
     },
   );
-  const { data: versionData } = useQuery<AppVersionConfigQuery>(APP_VERSION_QUERY, {
-    fetchPolicy: "cache-and-network",
-  });
   const [preferredTheme, setPreferredTheme] =
     useState<ThemePreference>(initialThemePreference);
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(
@@ -94,7 +91,6 @@ const More = (): ReactElement => {
   const isSuperAdmin = user?.roles?.includes("SUPER_ADMIN") === true;
   const privacyPolicyPage = data?.appPrivacyPolicyPageConfig ?? EMPTY_APP_PRIVACY_POLICY_PAGE;
   const termsOfUsePage = termsOfUseData?.appTermsOfUsePageConfig ?? EMPTY_APP_TERMS_OF_USE_PAGE;
-  const appVersion = versionData?.appVersionConfig ?? EMPTY_APP_VERSION;
   const shouldShowPrivacyPolicy = hasText(privacyPolicyPage.html);
   const shouldShowTermsOfUse = hasText(termsOfUsePage.html);
   const shouldShowVersion = hasText(appVersion.value);

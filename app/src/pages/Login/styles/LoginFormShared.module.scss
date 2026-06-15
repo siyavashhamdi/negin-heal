@@ -14,6 +14,68 @@
   text-align: right;
 }
 
+.formIntroPanel,
+.successPanel {
+  display: flex;
+  flex-direction: column;
+  gap: variables.$spacing-1;
+  padding: variables.$spacing-3;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 72%, transparent);
+  border-radius: variables.$border-radius-lg;
+  background:
+    radial-gradient(circle at top left, rgba(25, 118, 210, 0.08), transparent 48%),
+    color-mix(in srgb, var(--app-surface-bg) 94%, white);
+
+  [data-theme="dark"] & {
+    background:
+      radial-gradient(circle at top left, rgba(56, 189, 248, 0.08), transparent 48%),
+      color-mix(in srgb, var(--app-surface-bg) 94%, black);
+  }
+}
+
+.successPanel {
+  align-items: center;
+  text-align: center;
+}
+
+.panelTitle {
+  margin: 0;
+  color: variables.$color-text-primary;
+  font-size: 1.125rem;
+  font-weight: variables.$font-weight-bold;
+  line-height: 1.6;
+
+  [data-theme="dark"] & {
+    color: rgba(255, 255, 255, 0.95);
+  }
+}
+
+.successIcon {
+  align-self: center;
+  color: variables.$color-success-main;
+  font-size: 3rem !important;
+}
+
+.formAlert:global(.MuiAlert-root) {
+  direction: rtl;
+  align-items: center;
+  border-radius: variables.$border-radius-md;
+  text-align: right;
+
+  :global(.MuiAlert-icon) {
+    margin-left: variables.$spacing-1;
+    margin-right: 0;
+  }
+}
+
+.formActionRow {
+  display: flex;
+  flex-direction: column;
+  gap: variables.$spacing-2;
+  width: 100%;
+  margin-top: variables.$spacing-1;
+}
+
 .textField {
   direction: rtl;
 
@@ -180,7 +242,14 @@
   :global {
     .MuiButton-startIcon {
       margin-right: variables.$spacing-2;
+      margin-left: variables.$spacing-1;
+      padding-inline-end: variables.$spacing-0-5;
+    }
+
+    .MuiButton-endIcon {
       margin-left: 0;
+      margin-right: variables.$spacing-1;
+      padding-inline-start: variables.$spacing-0-5;
     }
   }
 }
@@ -188,4 +257,44 @@
 .loginButtonSpinner:global(.MuiCircularProgress-root) {
   width: 1.25rem;
   height: 1.25rem;
+}
+
+.secondaryButton:global(.MuiButton-root) {
+  border-radius: variables.$border-radius-md;
+  font-weight: variables.$font-weight-semibold;
+  text-transform: none;
+}
+
+.formTextButton:global(.MuiButton-root) {
+  align-self: center;
+  color: variables.$color-primary-main;
+  font-weight: variables.$font-weight-semibold;
+  text-transform: none;
+
+  :global(.MuiButton-startIcon) {
+    margin-inline: 0 0.25rem;
+  }
+}
+
+.passwordChecklist {
+  display: grid;
+  gap: variables.$spacing-1;
+  padding: variables.$spacing-2;
+  border-radius: variables.$border-radius-md;
+  background: color-mix(in srgb, var(--app-surface-border) 24%, transparent);
+}
+
+.passwordRule,
+.passwordRulePassed {
+  display: inline-flex;
+  align-items: center;
+  gap: variables.$spacing-1;
+  color: variables.$color-text-secondary;
+  font-size: variables.$font-size-sm;
+  line-height: 1.6;
+}
+
+.passwordRulePassed {
+  color: variables.$color-success-main;
+  font-weight: variables.$font-weight-semibold;
 }

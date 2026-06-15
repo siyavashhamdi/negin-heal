@@ -26,7 +26,7 @@
   justify-content: center;
   padding: variables.$spacing-2;
   @include mixins.respond-below(md) {
-    padding: variables.$spacing-1;
+    padding: variables.$spacing-0-5;
   }
 }
 
@@ -64,8 +64,16 @@
   background: transparent;
   position: relative;
   z-index: 1;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
   @include mixins.respond-below(md) {
-    padding: variables.$spacing-3;
+    padding: variables.$spacing-1;
     min-height: 60vh;
     flex: 1 1 auto;
   }
@@ -85,7 +93,8 @@
 .formContainer {
   align-self: stretch;
   inline-size: 100%;
-  max-width: 36rem;
+  max-width: 48rem;
+  padding-inline: 0 !important;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -208,7 +217,7 @@
     0 1.5rem 3rem rgba(15, 23, 42, 0.12),
     inset 0 0.0625rem 0 rgba(255, 255, 255, 0.45);
   @include mixins.respond-below(md) {
-    padding: variables.$spacing-3;
+    padding: variables.$spacing-2;
   }
 }
 

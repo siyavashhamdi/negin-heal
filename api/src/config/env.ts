@@ -6,6 +6,7 @@ export const env = {
   PORT: parseInt(process.env.PORT || "3000", 10),
   API_PREFIX: process.env.API_PREFIX || "api/v1",
   BASE_URL: process.env.BASE_URL,
+  APP_URL: process.env.APP_URL,
 
   // Database Configuration
   MONGODB_URI: process.env.MONGODB_URI,

@@ -8,3 +8,5 @@ export * from "./user-update.gql.input";
 export * from "./user-profile-update.gql.input";
 export * from "./user-signup.gql.input";
 export * from "./user-request-signup-code.gql.input";
+export * from "./user-forgot-password.gql.input";
+export * from "./user-reset-password.gql.input";

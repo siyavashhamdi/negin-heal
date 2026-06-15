@@ -13,3 +13,5 @@ export * from "./identity-required.exception";
 export * from "./identity-already-exists.exception";
 export * from "./signup-credential-required.exception";
 export * from "./invalid-signup-verification-code.exception";
+export * from "./invalid-password-reset-token.exception";
+export * from "./expired-password-reset-token.exception";

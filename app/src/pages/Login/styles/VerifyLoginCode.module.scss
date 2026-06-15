@@ -69,7 +69,8 @@
 
 .rememberMeContainer {
   display: flex;
-  justify-content: start;
+  align-items: center;
+  justify-content: flex-start;
   width: fit-content;
   max-width: 100%;
   margin-top: variables.$spacing-1;
@@ -195,4 +196,15 @@
   :global(.MuiButton-startIcon) {
     margin-inline: 0 0.25rem;
   }
+}
+
+.forgotPasswordButton:global(.MuiButton-root) {
+  align-self: center;
+  width: auto;
+  margin-top: -0.25rem;
+  padding-inline: 0;
+  color: variables.$color-primary-main;
+  font-size: variables.$font-size-sm;
+  font-weight: variables.$font-weight-semibold;
+  text-transform: none;
 }

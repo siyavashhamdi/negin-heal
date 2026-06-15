@@ -1,6 +1,6 @@
 import { Box, Typography } from "@mui/material";
 import { type ReactElement } from "react";
-import { APP_VERSION } from "../../constants/general.constant";
+import { useAppSettings } from "../../contexts/AppSettingsContext";
 import { useTranslation } from "../../hooks/useTranslation";
 import styles from "./styles/footer.module.scss";
 
@@ -14,6 +14,7 @@ export interface FooterProps {
 
 const Footer = ({ embedded = false }: FooterProps): ReactElement => {
   const { t } = useTranslation();
+  const { appVersion } = useAppSettings();
 
   return (
     <Box
@@ -40,7 +41,7 @@ const Footer = ({ embedded = false }: FooterProps): ReactElement => {
           </a>
         </Box>
         <Typography component="p" className={styles.footerVersion}>
-          {t("layout.footer.version", { version: APP_VERSION })}
+          {t("layout.footer.version", { version: appVersion.value })}
         </Typography>
       </Box>
     </Box>

@@ -22,6 +22,7 @@ import {
 } from "../../enums";
 import { SortingOrder } from "../../common/pagination/input";
 import { buildSortOptions } from "../../common/pagination/utils";
+import { env } from "../../config";
 import {
   CourseChapterItemRequiredException,
   CourseChapterRequiredException,
@@ -159,7 +160,6 @@ type StoredZarinPalConfig = {
   requestUrl?: unknown;
   verifyUrl?: unknown;
   startPayUrl?: unknown;
-  callbackBaseUrl?: unknown;
   minAmountIrr?: unknown;
 };
 type ZarinPalConfig = {
@@ -1734,12 +1734,13 @@ export class CourseService {
         parsedConfig.startPayUrl,
         "startPayUrl",
       ),
-      callbackBaseUrl: this.resolveZarinPalConfigUrl(
-        parsedConfig.callbackBaseUrl,
-        "callbackBaseUrl",
-      ).replace(/\/+$/, ""),
+      callbackBaseUrl: this.resolveAppUrlForZarinPalCallback(),
       minAmountIrr: Math.round(minAmountIrr),
     };
+  }
+
+  private resolveAppUrlForZarinPalCallback(): string {
+    return this.resolveZarinPalConfigUrl(env.APP_URL, "APP_URL");
   }
 
   private resolveZarinPalConfigUrl(value: unknown, fieldName: string): string {

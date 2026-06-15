@@ -24,6 +24,8 @@
             "IDENTITY_ALREADY_EXISTS": "یکی از شناسه‌های واردشده قبلاً ثبت شده است.",
             "SIGNUP_CREDENTIAL_REQUIRED": "برای ثبت‌نام باید گذرواژه یا کد تایید پیامکی وارد کنید.",
             "INVALID_SIGNUP_VERIFICATION_CODE": "کد تایید ثبت‌نام نامعتبر یا منقضی شده است.",
+            "INVALID_PASSWORD_RESET_TOKEN": "لینک بازیابی نامعتبر است یا قبلاً استفاده شده است.",
+            "EXPIRED_PASSWORD_RESET_TOKEN": "مهلت استفاده از لینک بازیابی تمام شده است. لطفاً دوباره درخواست بازیابی ثبت کنید.",
             "PASSWORD_VALIDATION_FAILED": "اعتبارسنجی گذرواژه ناموفق بود!",
             "PASSWORD_POLICY_VIOLATION": "گذرواژه با سیاست امنیتی مطابقت ندارد. لطفاً شرایط درج‌شده در فرم تغییر گذرواژه را رعایت کنید.",
             "UNKNOWN_ERROR_OCCURRED": "خطای ناشناخته رخ داد!",

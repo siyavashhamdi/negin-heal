@@ -30,6 +30,16 @@ export const EXCEPTION_CONSTANT = {
     message: "Invalid or expired signup verification code!",
   },
 
+  INVALID_PASSWORD_RESET_TOKEN: {
+    code: "INVALID_PASSWORD_RESET_TOKEN",
+    message: "Password reset link is invalid or has already been used!",
+  },
+
+  EXPIRED_PASSWORD_RESET_TOKEN: {
+    code: "EXPIRED_PASSWORD_RESET_TOKEN",
+    message: "Password reset link has expired!",
+  },
+
   ACCOUNT_LOCKED: {
     code: "ACCOUNT_LOCKED",
     message: "Account is locked. Please try again later!",

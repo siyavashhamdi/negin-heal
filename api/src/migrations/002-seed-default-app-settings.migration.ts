@@ -51,7 +51,6 @@ const DEFAULT_ZARINPAL_CONFIG_VALUE = {
   requestUrl: "https://sandbox.zarinpal.com/pg/v4/payment/request.json",
   verifyUrl: "https://sandbox.zarinpal.com/pg/v4/payment/verify.json",
   startPayUrl: "https://sandbox.zarinpal.com/pg/StartPay",
-  callbackBaseUrl: "http://localhost:8080",
   minAmountIrr: 10000,
 };
 
@@ -64,6 +63,55 @@ const DEFAULT_EMAIL_SMTP_CONFIG_VALUE = {
   fromName: "Negin Heal",
   fromEmail: "neginheal.manager@gmail.com",
 };
+
+const DEFAULT_EMAIL_TEMPLATES_VALUE = [
+  {
+    name: "LOGIN_CODE",
+    subject: "Your @@@<APP_NAME>@@@ login code",
+    html: `
+<div style="font-family:Arial,sans-serif;line-height:1.6;color:#111827;max-width:560px;margin:0 auto;">
+  <h2 style="margin-bottom:12px;">@@@<APP_NAME>@@@ Sign-In Verification</h2>
+  <p style="margin:0 0 16px;">Use the one-time code below to complete your login:</p>
+  <div style="display:inline-block;font-size:28px;font-weight:700;letter-spacing:6px;padding:10px 16px;border:1px solid #E5E7EB;border-radius:8px;background:#F9FAFB;">
+    @@@<LOGIN_CODE>@@@
+  </div>
+  <p style="margin:16px 0 0;">This code expires in <strong>@@@<EXPIRES_IN_MINUTES>@@@ minutes</strong>.</p>
+  <p style="margin:16px 0 0;">If you did not request this code, please ignore this email.</p>
+  <p style="margin:20px 0 0;color:#6B7280;">@@@<SECURITY_TEAM_NAME>@@@</p>
+</div>
+`.trim(),
+  },
+  {
+    name: "PASSWORD_RESET",
+    subject: "Reset your @@@<APP_NAME>@@@ password",
+    html: `
+<div style="font-family:Arial,sans-serif;line-height:1.6;color:#111827;max-width:560px;margin:0 auto;">
+  <h2 style="margin-bottom:12px;">Reset Your Password</h2>
+  <p style="margin:0 0 16px;">We received a request to reset your @@@<APP_NAME>@@@ password.</p>
+  <p style="margin:0 0 20px;">
+    <a href="@@@<RESET_LINK>@@@" style="display:inline-block;background:#2563EB;color:#FFFFFF;text-decoration:none;padding:10px 16px;border-radius:8px;font-weight:700;">
+      Reset password
+    </a>
+  </p>
+  <p style="margin:0;">This link expires in <strong>@@@<EXPIRES_IN_MINUTES>@@@ minutes</strong>.</p>
+  <p style="margin:16px 0 0;">If you did not request a password reset, please ignore this email.</p>
+  <p style="margin:20px 0 0;color:#6B7280;">@@@<SECURITY_TEAM_NAME>@@@</p>
+</div>
+`.trim(),
+  },
+  {
+    name: "SAMPLE",
+    subject: "@@@<APP_NAME>@@@ - Sample Email",
+    html: `
+<div style="font-family:Arial,sans-serif;line-height:1.6;color:#111827;max-width:560px;margin:0 auto;">
+  <h2 style="margin-bottom:12px;">@@@<APP_NAME>@@@</h2>
+  <p style="margin:0 0 12px;">This is a sample email sent successfully from dashboard.</p>
+  <p style="margin:0;"><strong>Requested by:</strong> @@@<REQUESTED_BY>@@@</p>
+  <p style="margin:0;"><strong>Sent at:</strong> @@@<SENT_AT>@@@</p>
+</div>
+`.trim(),
+  },
+];
 
 const DEFAULT_SUPPORT_FAQ_PAGE_VALUE = {
   eyebrow: "راهنمای سریع",
@@ -323,7 +371,8 @@ const DEFAULT_SUPPORT_CONTACT_VALUE = {
   faqTitle: "سوالات پرتکرار",
   faqDescription: "پاسخ سریع به سوال‌های رایج قبل از ارسال درخواست پشتیبانی.",
   ticketTitle: "ثبت تیکت پشتیبانی",
-  ticketDescription: "برای مسائل حساب، دوره‌ها و پرداخت که نیاز به پیگیری دقیق دارند.",
+  ticketDescription:
+    "برای مسائل حساب، دوره‌ها و پرداخت که نیاز به پیگیری دقیق دارند.",
   contactSectionEyebrow: "راه‌های ارتباطی",
   contactSectionHeading: "مسیر مناسب را انتخاب کنید",
   contactSectionSubtitle: "پشتیبانی دقیق، سریع و قابل پیگیری",
@@ -495,7 +544,7 @@ const DEFAULT_APP_SETTINGS: readonly DefaultAppSettingSeed[] = [
     value: DEFAULT_ZARINPAL_CONFIG_VALUE,
     valueType: AppSettingValueType.JSON,
     description:
-      "تنظیمات اتصال زرین‌پال شامل مرچنت آیدی، آدرس‌های request، verify، StartPay، callback و حداقل مبلغ ریالی",
+      "تنظیمات اتصال زرین‌پال شامل مرچنت آیدی، آدرس‌های request، verify، StartPay و حداقل مبلغ ریالی",
     isActive: true,
   },
   {
@@ -504,6 +553,23 @@ const DEFAULT_APP_SETTINGS: readonly DefaultAppSettingSeed[] = [
     value: DEFAULT_EMAIL_SMTP_CONFIG_VALUE,
     valueType: AppSettingValueType.JSON,
     description: "تنظیمات ارسال ایمیل شامل SMTP، نام فرستنده و ایمیل فرستنده",
+    isActive: true,
+  },
+  {
+    key: APP_SETTING_KEY.EMAIL_TEMPLATES,
+    label: "قالب‌های ایمیل",
+    value: DEFAULT_EMAIL_TEMPLATES_VALUE,
+    valueType: AppSettingValueType.JSON,
+    description:
+      "لیست قالب‌های ایمیل شامل نام، موضوع و HTML با جای‌گذارهای @@@<PLACE_HOLDER>@@@",
+    isActive: true,
+  },
+  {
+    key: APP_SETTING_KEY.PASSWORD_RESET_TOKEN_TTL_MINUTES,
+    label: "مدت اعتبار لینک بازیابی رمز عبور",
+    value: 30,
+    valueType: AppSettingValueType.NUMBER,
+    description: "مدت اعتبار لینک بازیابی رمز عبور به دقیقه",
     isActive: true,
   },
   {

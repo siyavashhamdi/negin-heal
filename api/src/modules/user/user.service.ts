@@ -1,5 +1,5 @@
 import * as bcrypt from "bcrypt";
-import { randomBytes } from "crypto";
+import { createHash, randomBytes } from "crypto";
 import { FilterQuery, Model, Types } from "mongoose";
 
 import { JwtService } from "@nestjs/jwt";
@@ -19,9 +19,10 @@ import {
   UserSignupGqlInput,
   UserVerifyLoginCodeGqlResponse,
 } from "./graphql";
-import { UserRole, UserStatus } from "../../enums";
+import { AppSettingValueType, UserRole, UserStatus } from "../../enums";
 import { SessionService } from "../auth/session.service";
 import { EmailService } from "../email";
+import { AppSettingsService } from "../app-settings";
 import {
   StoredFile,
   StoredFileDocument,
@@ -30,26 +31,33 @@ import {
 } from "../../database/schemas";
 import { UserSecurityService } from "./user.security.service";
 import {
+  ExpiredPasswordResetTokenException,
   IdentityAlreadyExistsException,
   IdentityRequiredException,
   InvalidCredentialsException,
+  InvalidPasswordResetTokenException,
   InvalidSignupVerificationCodeException,
   SignupCredentialRequiredException,
 } from "../../exceptions";
+import { APP_SETTING_KEY } from "../../constants";
 import { PAGINATION_CONSTANT } from "../../constants/pagination.constant";
 import { SortingOrder } from "../../common/pagination/input";
 import { buildSortOptions } from "../../common/pagination/utils";
+import { env } from "../../config";
 import {
   UserCreateGqlInput,
+  UserForgotPasswordGqlInput,
   UserListGqlInput,
   UserListSortOptionInput,
   UserProfileUpdateGqlInput,
+  UserResetPasswordGqlInput,
   UserUpdateGqlInput,
 } from "./graphql/inputs";
 import {
   UserListGqlResponse,
   UserListPaginatedOffsetGqlResponse,
   UserMutationGqlResponse,
+  UserPasswordResetGqlResponse,
 } from "./graphql/responses";
 
 export interface JwtPayload {
@@ -88,6 +96,7 @@ export class UserService {
   private readonly MAX_LOGIN_CODE_ATTEMPTS = 5;
   private readonly MAX_SIGNUP_CODE_ATTEMPTS = 5;
   private readonly LOGIN_CODE_TTL_MINUTES = 5;
+  private readonly DEFAULT_PASSWORD_RESET_TOKEN_TTL_MINUTES = 30;
   private readonly loginCodesByUserId = new Map<string, PendingLoginCode>();
   private readonly signupCodesByMobile = new Map<string, PendingSignupCode>();
 
@@ -100,6 +109,7 @@ export class UserService {
     @Inject(forwardRef(() => SessionService))
     private readonly sessionService: SessionService,
     private readonly emailService: EmailService,
+    private readonly appSettingsService: AppSettingsService,
   ) {}
 
   async login(
@@ -179,6 +189,127 @@ export class UserService {
     };
   }
 
+  async forgotPassword(
+    input: UserForgotPasswordGqlInput,
+  ): Promise<UserPasswordResetGqlResponse> {
+    const genericResponse = this.buildPasswordResetRequestedResponse();
+    const filter = this.buildPasswordResetIdentityFilter(input);
+    const user = await this.userModel.findOne(filter).exec();
+
+    if (!user || user.status !== UserStatus.ACTIVE) {
+      return genericResponse;
+    }
+
+    const recipientEmail = this.normalizeOptionalText(user.profile?.email);
+    if (!recipientEmail || !this.looksLikeEmail(recipientEmail)) {
+      return genericResponse;
+    }
+
+    const resetToken = randomBytes(32).toString("base64url");
+    const resetTokenHash = this.hashPasswordResetToken(resetToken);
+    const resetTokenTtlMinutes = await this.getPasswordResetTokenTtlMinutes();
+
+    await this.userModel.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          "authentication.passwordResetToken.hash": resetTokenHash,
+          "authentication.passwordResetToken.createdAt": new Date(),
+        },
+      },
+    );
+
+    await this.emailService.sendPasswordResetEmail({
+      to: recipientEmail,
+      resetLink: this.buildPasswordResetLink(resetToken),
+      expiresInMinutes: resetTokenTtlMinutes,
+    });
+
+    return genericResponse;
+  }
+
+  async resetPassword(
+    resetLink: UserResetPasswordGqlInput["resetLink"],
+    newPassword: UserResetPasswordGqlInput["newPassword"],
+  ): Promise<UserPasswordResetGqlResponse> {
+    const token = this.extractPasswordResetToken(resetLink);
+    if (!token) {
+      throw new InvalidPasswordResetTokenException();
+    }
+
+    const password = this.normalizeRequiredText(newPassword, "Password");
+    await this.userSecurityService.throwIfPasswordPolicyIsViolated(password);
+
+    const resetTokenTtlMinutes = await this.getPasswordResetTokenTtlMinutes();
+    const oldestValidCreatedAt = new Date(
+      Date.now() - resetTokenTtlMinutes * 60 * 1000,
+    );
+    const resetTokenHash = this.hashPasswordResetToken(token);
+    const tokenOwner = await this.userModel.findOne({
+      "authentication.passwordResetToken.hash": resetTokenHash,
+      status: UserStatus.ACTIVE,
+      $or: [
+        { "audit.deletedAt": null },
+        { "audit.deletedAt": { $exists: false } },
+      ],
+    });
+
+    if (!tokenOwner) {
+      throw new InvalidPasswordResetTokenException();
+    }
+
+    const resetTokenCreatedAt =
+      tokenOwner.authentication.passwordResetToken?.createdAt;
+    if (!resetTokenCreatedAt || resetTokenCreatedAt < oldestValidCreatedAt) {
+      await this.userModel.updateOne(
+        { _id: tokenOwner._id },
+        {
+          $set: {
+            "authentication.passwordResetToken.hash": null,
+          },
+        },
+      );
+      throw new ExpiredPasswordResetTokenException();
+    }
+
+    const passwordSalt = await bcrypt.genSalt(this.SALT_ROUNDS);
+    const passwordHash = await bcrypt.hash(password, passwordSalt);
+    const user = await this.userModel.findOneAndUpdate(
+      {
+        _id: tokenOwner._id,
+        "authentication.passwordResetToken.hash": resetTokenHash,
+        status: UserStatus.ACTIVE,
+        $or: [
+          { "audit.deletedAt": null },
+          { "audit.deletedAt": { $exists: false } },
+        ],
+      },
+      {
+        $set: {
+          "authentication.passwordSalt": passwordSalt,
+          "authentication.passwordHash": passwordHash,
+          "authentication.failedLoginAttempts": 0,
+          "authentication.passwordResetToken.hash": null,
+        },
+        $unset: {
+          "authentication.lockedUntil": 1,
+        },
+      },
+      { new: true },
+    );
+
+    if (!user) {
+      throw new InvalidPasswordResetTokenException();
+    }
+
+    await this.sessionService.revokeAllUserSessions(user._id);
+
+    return {
+      success: true,
+      message: "Password reset successfully.",
+    };
+  }
+
   async requestSignupCode(
     mobile: string,
   ): Promise<UserRequestLoginCodeGqlResponse> {
@@ -238,24 +369,10 @@ export class UserService {
       user.username;
     const sentAt = new Date().toISOString();
 
-    await this.emailService.sendEmail({
+    await this.emailService.sendSampleEmail({
       to: recipientEmail,
-      subject: "Negin Heal - Sample Email",
-      text: [
-        "Hello,",
-        "",
-        "This is a sample email sent successfully from Negin Heal dashboard.",
-        `Requested by: ${requestedBy}`,
-        `Sent at: ${sentAt}`,
-      ].join("\n"),
-      html: `
-        <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111827;max-width:560px;margin:0 auto;">
-          <h2 style="margin-bottom:12px;">Negin Heal</h2>
-          <p style="margin:0 0 12px;">This is a sample email sent successfully from dashboard.</p>
-          <p style="margin:0;"><strong>Requested by:</strong> ${requestedBy}</p>
-          <p style="margin:0;"><strong>Sent at:</strong> ${sentAt}</p>
-        </div>
-      `,
+      requestedBy,
+      sentAtIso: sentAt,
     });
 
     return {
@@ -478,6 +595,74 @@ export class UserService {
     }
 
     return { $and: [{ $or: conditions }] };
+  }
+
+  private buildPasswordResetIdentityFilter(
+    input: UserForgotPasswordGqlInput,
+  ): FilterQuery<User> {
+    const identity = this.normalizeOptionalText(input.identity);
+    if (!identity) {
+      throw new IdentityRequiredException();
+    }
+
+    return this.buildIdentityFilter(identity);
+  }
+
+  private buildPasswordResetRequestedResponse(): UserPasswordResetGqlResponse {
+    return {
+      success: true,
+      message:
+        "If an account matches the provided information, a password reset link will be sent.",
+    };
+  }
+
+  private buildPasswordResetLink(token: string): string {
+    const configuredResetUrl = `${this.resolveAppUrl()}/reset-password`;
+
+    const resetUrl = new URL(configuredResetUrl);
+    resetUrl.searchParams.set("token", token);
+    return resetUrl.toString();
+  }
+
+  private resolveAppUrl(): string {
+    return (env.APP_URL || `http://localhost:${env.PORT}`).replace(/\/+$/, "");
+  }
+
+  private extractPasswordResetToken(resetLink: string): string {
+    const trimmedResetLink = resetLink.trim();
+    if (!trimmedResetLink) {
+      return "";
+    }
+
+    try {
+      const resetUrl = new URL(trimmedResetLink);
+      const tokenFromQuery =
+        resetUrl.searchParams.get("token") ||
+        resetUrl.searchParams.get("resetToken");
+      if (tokenFromQuery?.trim()) {
+        return tokenFromQuery.trim();
+      }
+    } catch {
+      // The input can be the raw token rather than a full URL.
+    }
+
+    return trimmedResetLink;
+  }
+
+  private hashPasswordResetToken(token: string): string {
+    return createHash("sha256").update(token).digest("hex");
+  }
+
+  private async getPasswordResetTokenTtlMinutes(): Promise<number> {
+    const storedValue = await this.appSettingsService.getActiveSettingValue(
+      APP_SETTING_KEY.PASSWORD_RESET_TOKEN_TTL_MINUTES,
+      AppSettingValueType.NUMBER,
+    );
+    const ttlMinutes = Number(storedValue);
+
+    return Number.isFinite(ttlMinutes) && ttlMinutes > 0
+      ? Math.round(ttlMinutes)
+      : this.DEFAULT_PASSWORD_RESET_TOKEN_TTL_MINUTES;
   }
 
   private async throwIfAnyIdentityAlreadyExists(identity: {

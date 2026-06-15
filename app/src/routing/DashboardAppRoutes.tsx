@@ -14,31 +14,12 @@ import Notifications from "../pages/Notifications/Index";
 import PaymentsIndex from "../pages/Payments/Index";
 import ZarinPalCallback from "../pages/Payments/ZarinPalCallback";
 import Profile from "../pages/Profile/Index";
+import ResetPassword from "../pages/Login/ResetPassword";
 import SupportFaq from "../pages/Support/Faq";
 import Support from "../pages/Support/Index";
 import SupportTicketsIndex from "../pages/Support/TicketsIndex";
 import UsersManagementIndex from "../pages/UsersManagement/Index";
-
-const ROUTES = {
-  login: "/login",
-  dashboard: "/dashboard",
-  courses: "/courses",
-  courseDetail: "/courses/:courseId",
-  more: "/more",
-  moreAbout: "/more/about",
-  morePrivacyPolicy: "/more/privacy-policy",
-  moreTermsOfUse: "/more/terms-of-use",
-  notifications: "/notifications",
-  payments: "/payments",
-  paymentZarinPalCallback: "/payment/zarinpal/callback",
-  profile: "/profile",
-  support: "/support",
-  supportFaq: "/support/faq",
-  supportTickets: "/support/tickets",
-  users: "/users",
-  usersManagement: "/users-management",
-  home: "/",
-} as const;
+import { APP_SHELL_ROUTES } from "./app-shell-routes";
 
 const wrapProtected = (element: ReactElement): ReactElement => (
   <ProtectedRoute>{element}</ProtectedRoute>
@@ -49,26 +30,61 @@ export const DashboardAppRoutes = (): ReactElement => {
 
   return (
     <Routes>
-      <Route path={ROUTES.login} element={<Login />} />
-      <Route path={ROUTES.dashboard} element={wrapProtected(<Dashboard />)} />
-      <Route path={ROUTES.courseDetail} element={<CourseDetail />} />
-      <Route path={ROUTES.courses} element={<CoursesIndex />} />
-      <Route path={ROUTES.more} element={wrapProtected(<More />)} />
-      <Route path={ROUTES.moreAbout} element={wrapProtected(<AboutPage />)} />
-      <Route path={ROUTES.morePrivacyPolicy} element={wrapProtected(<PrivacyPolicyPage />)} />
-      <Route path={ROUTES.moreTermsOfUse} element={wrapProtected(<TermsOfUsePage />)} />
-      <Route path={ROUTES.notifications} element={wrapProtected(<Notifications />)} />
-      <Route path={ROUTES.payments} element={wrapProtected(<PaymentsIndex />)} />
-      <Route path={ROUTES.paymentZarinPalCallback} element={<ZarinPalCallback />} />
-      <Route path={ROUTES.profile} element={wrapProtected(<Profile />)} />
-      <Route path={ROUTES.support} element={wrapProtected(<Support />)} />
-      <Route path={ROUTES.supportFaq} element={wrapProtected(<SupportFaq />)} />
-      <Route path={ROUTES.supportTickets} element={wrapProtected(<SupportTicketsIndex />)} />
-      <Route path={ROUTES.users} element={wrapProtected(<UsersManagementIndex />)} />
-      <Route path={ROUTES.usersManagement} element={wrapProtected(<UsersManagementIndex />)} />
-      <Route path={ROUTES.home} element={<Navigate to={ROUTES.dashboard} replace />} />
+      <Route path={APP_SHELL_ROUTES.login} element={<Login />} />
+      <Route
+        path={APP_SHELL_ROUTES.resetPassword}
+        element={<ResetPassword />}
+      />
+      <Route
+        path={APP_SHELL_ROUTES.dashboard}
+        element={wrapProtected(<Dashboard />)}
+      />
+      <Route path={APP_SHELL_ROUTES.courseDetail} element={<CourseDetail />} />
+      <Route path={APP_SHELL_ROUTES.courses} element={<CoursesIndex />} />
+      <Route path={APP_SHELL_ROUTES.more} element={wrapProtected(<More />)} />
+      <Route
+        path={APP_SHELL_ROUTES.moreAbout}
+        element={wrapProtected(<AboutPage />)}
+      />
+      <Route
+        path={APP_SHELL_ROUTES.morePrivacyPolicy}
+        element={wrapProtected(<PrivacyPolicyPage />)}
+      />
+      <Route
+        path={APP_SHELL_ROUTES.moreTermsOfUse}
+        element={wrapProtected(<TermsOfUsePage />)}
+      />
+      <Route
+        path={APP_SHELL_ROUTES.notifications}
+        element={wrapProtected(<Notifications />)}
+      />
+      <Route
+        path={APP_SHELL_ROUTES.payments}
+        element={wrapProtected(<PaymentsIndex />)}
+      />
+      <Route
+        path={APP_SHELL_ROUTES.paymentZarinPalCallback}
+        element={<ZarinPalCallback />}
+      />
+      <Route path={APP_SHELL_ROUTES.profile} element={wrapProtected(<Profile />)} />
+      <Route path={APP_SHELL_ROUTES.support} element={wrapProtected(<Support />)} />
+      <Route path={APP_SHELL_ROUTES.supportFaq} element={wrapProtected(<SupportFaq />)} />
+      <Route
+        path={APP_SHELL_ROUTES.supportTickets}
+        element={wrapProtected(<SupportTicketsIndex />)}
+      />
+      <Route
+        path={APP_SHELL_ROUTES.users}
+        element={wrapProtected(<UsersManagementIndex />)}
+      />
+      <Route
+        path={APP_SHELL_ROUTES.usersManagement}
+        element={wrapProtected(<UsersManagementIndex />)}
+      />
+      <Route
+        path={APP_SHELL_ROUTES.home}
+        element={<Navigate to={APP_SHELL_ROUTES.dashboard} replace />}
+      />
     </Routes>
   );
 };
-
-export { ROUTES as APP_SHELL_ROUTES };

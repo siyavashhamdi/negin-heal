@@ -4,6 +4,7 @@ import { Injectable, Logger } from "@nestjs/common";
 
 import { APP_SETTING_KEY } from "../../constants";
 import { AppSettingsService } from "../app-settings";
+import { EmailTemplate, EmailTemplateInputs } from "./email-template";
 
 type StoredEmailSmtpConfig = {
   host?: unknown;
@@ -28,8 +29,7 @@ type NormalizedEmailSmtpConfig = {
 type SendEmailInput = {
   to: string;
   subject: string;
-  text: string;
-  html?: string;
+  html: string;
   replyTo?: string;
 };
 
@@ -39,11 +39,61 @@ type SendLoginCodeEmailInput = {
   expiresInMinutes?: number;
 };
 
+type SendPasswordResetEmailInput = {
+  to: string;
+  resetLink: string;
+  expiresInMinutes?: number;
+};
+
+type SendSampleEmailInput = {
+  to: string;
+  requestedBy: string;
+  sentAtIso: string;
+};
+
+type LoginCodeTemplateInputs = {
+  APP_NAME: string;
+  LOGIN_CODE: string;
+  EXPIRES_IN_MINUTES: number;
+  SECURITY_TEAM_NAME: string;
+};
+
+type PasswordResetTemplateInputs = {
+  APP_NAME: string;
+  RESET_LINK: string;
+  EXPIRES_IN_MINUTES: number;
+  SECURITY_TEAM_NAME: string;
+};
+
+type SampleTemplateInputs = {
+  APP_NAME: string;
+  REQUESTED_BY: string;
+  SENT_AT: string;
+};
+
+type StoredEmailTemplateConfig = {
+  name?: unknown;
+  subject?: unknown;
+  html?: unknown;
+};
+
+type RenderedEmailTemplate = {
+  subject: string;
+  html: string;
+};
+
+const EMAIL_TEMPLATE_NAME = {
+  LOGIN_CODE: "LOGIN_CODE",
+  PASSWORD_RESET: "PASSWORD_RESET",
+  SAMPLE: "SAMPLE",
+} as const;
+
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
   private transporter: nodemailer.Transporter | null = null;
   private transporterConfigSignature: string | null = null;
+  private readonly appName = "Negin Heal";
 
   constructor(private readonly appSettingsService: AppSettingsService) {}
 
@@ -55,7 +105,6 @@ export class EmailService {
       from: this.formatFrom(config.fromName, config.fromEmail),
       to: input.to,
       subject: input.subject,
-      text: input.text,
       html: input.html,
       replyTo: input.replyTo,
     });
@@ -66,35 +115,59 @@ export class EmailService {
   async sendLoginCodeEmail(input: SendLoginCodeEmailInput): Promise<void> {
     const expiresInMinutes = input.expiresInMinutes ?? 5;
 
-    const subject = "Your Negin Heal login code";
-    const text = [
-      "Your login code:",
-      input.code,
-      "",
-      `This code expires in ${expiresInMinutes} minutes.`,
-      "",
-      "If you did not request this code, you can safely ignore this email.",
-      "Negin Heal Security Team",
-    ].join("\n");
-
-    const html = `
-      <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111827;max-width:560px;margin:0 auto;">
-        <h2 style="margin-bottom:12px;">Negin Heal Sign-In Verification</h2>
-        <p style="margin:0 0 16px;">Use the one-time code below to complete your login:</p>
-        <div style="display:inline-block;font-size:28px;font-weight:700;letter-spacing:6px;padding:10px 16px;border:1px solid #E5E7EB;border-radius:8px;background:#F9FAFB;">
-          ${input.code}
-        </div>
-        <p style="margin:16px 0 0;">This code expires in <strong>${expiresInMinutes} minutes</strong>.</p>
-        <p style="margin:16px 0 0;">If you did not request this code, please ignore this email.</p>
-        <p style="margin:20px 0 0;color:#6B7280;">Negin Heal Security Team</p>
-      </div>
-    `;
+    const template = await this.renderConfiguredEmailTemplate(
+      EMAIL_TEMPLATE_NAME.LOGIN_CODE,
+      {
+        APP_NAME: this.appName,
+        LOGIN_CODE: input.code,
+        EXPIRES_IN_MINUTES: expiresInMinutes,
+        SECURITY_TEAM_NAME: `${this.appName} Security Team`,
+      } satisfies LoginCodeTemplateInputs,
+    );
 
     await this.sendEmail({
       to: input.to,
-      subject,
-      text,
-      html,
+      subject: template.subject,
+      html: template.html,
+    });
+  }
+
+  async sendPasswordResetEmail(
+    input: SendPasswordResetEmailInput,
+  ): Promise<void> {
+    const expiresInMinutes = input.expiresInMinutes ?? 30;
+
+    const template = await this.renderConfiguredEmailTemplate(
+      EMAIL_TEMPLATE_NAME.PASSWORD_RESET,
+      {
+        APP_NAME: this.appName,
+        RESET_LINK: input.resetLink,
+        EXPIRES_IN_MINUTES: expiresInMinutes,
+        SECURITY_TEAM_NAME: `${this.appName} Security Team`,
+      } satisfies PasswordResetTemplateInputs,
+    );
+
+    await this.sendEmail({
+      to: input.to,
+      subject: template.subject,
+      html: template.html,
+    });
+  }
+
+  async sendSampleEmail(input: SendSampleEmailInput): Promise<void> {
+    const template = await this.renderConfiguredEmailTemplate(
+      EMAIL_TEMPLATE_NAME.SAMPLE,
+      {
+        APP_NAME: this.appName,
+        REQUESTED_BY: input.requestedBy,
+        SENT_AT: input.sentAtIso,
+      } satisfies SampleTemplateInputs,
+    );
+
+    await this.sendEmail({
+      to: input.to,
+      subject: template.subject,
+      html: template.html,
     });
   }
 
@@ -199,5 +272,40 @@ export class EmailService {
       username: config.username,
       password: config.password,
     });
+  }
+
+  private async renderConfiguredEmailTemplate<
+    TInputs extends EmailTemplateInputs,
+  >(templateName: string, inputs: TInputs): Promise<RenderedEmailTemplate> {
+    const storedTemplates =
+      await this.appSettingsService.getActiveJsonSettingValue<
+        StoredEmailTemplateConfig[]
+      >(APP_SETTING_KEY.EMAIL_TEMPLATES);
+
+    if (!Array.isArray(storedTemplates) || storedTemplates.length === 0) {
+      throw new Error("Active email templates app setting is not configured");
+    }
+
+    const storedTemplate = storedTemplates.find(
+      (template) => this.normalizeString(template.name) === templateName,
+    );
+
+    if (!storedTemplate) {
+      throw new Error(`Email template ${templateName} is not configured`);
+    }
+
+    const subjectTemplate = this.normalizeString(storedTemplate.subject);
+    const htmlTemplate = this.normalizeString(storedTemplate.html);
+
+    if (!subjectTemplate || !htmlTemplate) {
+      throw new Error(`Email template ${templateName} is incomplete`);
+    }
+
+    return {
+      subject: new EmailTemplate(subjectTemplate, inputs, {
+        escapeHtml: false,
+      }).render(),
+      html: new EmailTemplate(htmlTemplate, inputs).render(),
+    };
   }
 }
