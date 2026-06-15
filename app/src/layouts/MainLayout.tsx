@@ -316,12 +316,12 @@ export function MainLayout({
     updateTypes: [
       GENERAL_SUBSCRIPTION_UPDATE_TYPES.NOTIFICATION,
       GENERAL_SUBSCRIPTION_UPDATE_TYPES.GENERAL_COUNTS,
-      GENERAL_SUBSCRIPTION_UPDATE_TYPES.GENERAL_ANOUNCEMENT,
+      GENERAL_SUBSCRIPTION_UPDATE_TYPES.GLOBAL_ANOUNCEMENT,
       GENERAL_SUBSCRIPTION_UPDATE_TYPES.SUPPORT_UPDATE,
     ],
     onNotification: handleNotificationUpdate,
     onGeneralCounts: handleGeneralCountsUpdate,
-    onGeneralAnouncement: handleNotificationUpdate,
+    onGlobalAnouncement: handleNotificationUpdate,
     onSupportUpdate: handleNotificationUpdate,
   });
 

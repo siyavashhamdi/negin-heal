@@ -7,4 +7,4 @@ export * from "./user-resolve-auth-identity.gql.response";
 export * from "./user-password-reset.gql.response";
 export * from "./user-login-captcha.gql.response";
 export * from "./general-subscription.gql.response";
-export * from "./general-anouncement-send.gql.response";
+export * from "./global-anouncement-send.gql.response";

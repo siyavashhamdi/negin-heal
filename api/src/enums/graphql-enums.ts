@@ -5,7 +5,7 @@
 
 import { registerEnumType } from "@nestjs/graphql";
 
-import { GeneralAnouncementMode } from "./general-anouncement-mode.enum";
+import { GlobalAnouncementMode } from "./global-anouncement-mode.enum";
 import { AppSettingValueType } from "./app-setting-value-type.enum";
 import { CourseDiscountType } from "./course-discount-type.enum";
 import { CourseItemType } from "./course-item-type.enum";
@@ -29,9 +29,9 @@ registerEnumType(SortingOrder, {
   description: "Sorting order",
 });
 
-registerEnumType(GeneralAnouncementMode, {
-  name: "GeneralAnouncementMode",
-  description: "Visual mode for general anouncements",
+registerEnumType(GlobalAnouncementMode, {
+  name: "GlobalAnouncementMode",
+  description: "Visual mode for global anouncements",
 });
 
 registerEnumType(AppSettingValueType, {

@@ -19,33 +19,33 @@ import { useState, type FormEvent, type ReactElement } from "react";
 import { Navigate } from "react-router-dom";
 
 import { useAuth } from "../../contexts/AuthContext";
-import { GENERAL_ANOUNCEMENT_SEND_MUTATION } from "../../graphql/mutations/generalAnouncementSend.mutation";
+import { GLOBAL_ANOUNCEMENT_SEND_MUTATION } from "../../graphql/mutations/globalAnouncementSend.mutation";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
 import DashboardMenuHeader from "../../shared/DashboardMenuHeader";
 import styles from "./styles/more.module.scss";
 
-type GeneralAnouncementSendMutationResult = {
-  readonly generalAnouncementSend: {
+type GlobalAnouncementSendMutationResult = {
+  readonly globalAnouncementSend: {
     readonly deliveredUsers: number;
     readonly activeSubscribedUsers: number;
   };
 };
 
-type GeneralAnouncementSendMutationVariables = {
+type GlobalAnouncementSendMutationVariables = {
   readonly input: {
     readonly title: string;
     readonly description: string;
-    readonly mode: GeneralAnouncementMode;
+    readonly mode: GlobalAnouncementMode;
   };
 };
 
-type GeneralAnouncementMode = "INFO" | "SUCCESS" | "WARNING" | "ERROR";
+type GlobalAnouncementMode = "INFO" | "SUCCESS" | "WARNING" | "ERROR";
 
 const MAX_TITLE_LENGTH = 90;
 const MAX_DESCRIPTION_LENGTH = 400;
 const ANOUNCEMENT_MODE_OPTIONS: readonly {
-  readonly value: GeneralAnouncementMode;
+  readonly value: GlobalAnouncementMode;
   readonly label: string;
 }[] = [
   { value: "INFO", label: "اطلاع‌رسانی" },
@@ -54,7 +54,7 @@ const ANOUNCEMENT_MODE_OPTIONS: readonly {
   { value: "ERROR", label: "خطا" },
 ];
 
-function renderModeIcon(mode: GeneralAnouncementMode): ReactElement {
+function renderModeIcon(mode: GlobalAnouncementMode): ReactElement {
   switch (mode) {
     case "SUCCESS":
       return <CheckCircleOutlineRoundedIcon fontSize="small" />;
@@ -68,22 +68,22 @@ function renderModeIcon(mode: GeneralAnouncementMode): ReactElement {
   }
 }
 
-const GeneralAnouncement = (): ReactElement => {
+const GlobalAnouncement = (): ReactElement => {
   const { user } = useAuth();
   const isSuperAdmin = user?.roles?.includes("SUPER_ADMIN") === true;
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [mode, setMode] = useState<GeneralAnouncementMode>("INFO");
+  const [mode, setMode] = useState<GlobalAnouncementMode>("INFO");
   const [lastDelivery, setLastDelivery] =
-    useState<GeneralAnouncementSendMutationResult["generalAnouncementSend"] | null>(null);
-  const [sendGeneralAnouncement, sendResult] = useMutationWithSnackbar<
-    GeneralAnouncementSendMutationResult,
-    GeneralAnouncementSendMutationVariables
-  >(GENERAL_ANOUNCEMENT_SEND_MUTATION, {
+    useState<GlobalAnouncementSendMutationResult["globalAnouncementSend"] | null>(null);
+  const [sendGlobalAnouncement, sendResult] = useMutationWithSnackbar<
+    GlobalAnouncementSendMutationResult,
+    GlobalAnouncementSendMutationVariables
+  >(GLOBAL_ANOUNCEMENT_SEND_MUTATION, {
     successMessage: "اعلام عمومی برای کاربران فعال ارسال شد.",
     errorMessage: "ارسال اعلام عمومی انجام نشد.",
     onSuccess: (data) => {
-      setLastDelivery(data.generalAnouncementSend);
+      setLastDelivery(data.globalAnouncementSend);
       setTitle("");
       setDescription("");
       setMode("INFO");
@@ -99,7 +99,7 @@ const GeneralAnouncement = (): ReactElement => {
   const previewTitle = trimmedTitle || "عنوان اعلام اینجا نمایش داده می‌شود";
   const previewDescription =
     trimmedDescription || "متن اعلام قبل از ارسال، با همین ظاهر برای کاربران نمایش داده می‌شود.";
-  const previewModeClassName = styles[`generalAnouncementPreview${mode}`] ?? "";
+  const previewModeClassName = styles[`globalAnouncementPreview${mode}`] ?? "";
   const canSubmit =
     trimmedTitle.length > 0 &&
     trimmedDescription.length > 0 &&
@@ -114,7 +114,7 @@ const GeneralAnouncement = (): ReactElement => {
       return;
     }
 
-    void sendGeneralAnouncement({
+    void sendGlobalAnouncement({
       variables: {
         input: {
           title: trimmedTitle,
@@ -134,8 +134,8 @@ const GeneralAnouncement = (): ReactElement => {
         backLabel="بازگشت به سایر"
       />
 
-      <Paper className={styles.generalAnouncementPanel} component="form" onSubmit={handleSubmit}>
-        <Box className={styles.generalAnouncementIcon}>
+      <Paper className={styles.globalAnouncementPanel} component="form" onSubmit={handleSubmit}>
+        <Box className={styles.globalAnouncementIcon}>
           <CampaignRoundedIcon />
         </Box>
 
@@ -175,7 +175,7 @@ const GeneralAnouncement = (): ReactElement => {
             select
             label="نوع نمایش پاپ‌آپ"
             value={mode}
-            onChange={(event) => setMode(event.target.value as GeneralAnouncementMode)}
+            onChange={(event) => setMode(event.target.value as GlobalAnouncementMode)}
             fullWidth
           >
             {ANOUNCEMENT_MODE_OPTIONS.map((option) => (
@@ -185,16 +185,16 @@ const GeneralAnouncement = (): ReactElement => {
             ))}
           </TextField>
 
-          <Box className={styles.generalAnouncementPreviewBlock}>
+          <Box className={styles.globalAnouncementPreviewBlock}>
             <Typography variant="subtitle2" fontWeight={800}>
               پیش‌نمایش اعلام
             </Typography>
-            <div className={`${styles.generalAnouncementPreview} ${previewModeClassName}`}>
-              <span className={styles.generalAnouncementPreviewGlow} aria-hidden="true" />
-              <span className={styles.generalAnouncementPreviewIcon} aria-hidden="true">
+            <div className={`${styles.globalAnouncementPreview} ${previewModeClassName}`}>
+              <span className={styles.globalAnouncementPreviewGlow} aria-hidden="true" />
+              <span className={styles.globalAnouncementPreviewIcon} aria-hidden="true">
                 {renderModeIcon(mode)}
               </span>
-              <div className={styles.generalAnouncementPreviewContent}>
+              <div className={styles.globalAnouncementPreviewContent}>
                 <strong>{previewTitle}</strong>
                 <p>{previewDescription}</p>
               </div>
@@ -228,4 +228,4 @@ const GeneralAnouncement = (): ReactElement => {
   );
 };
 
-export default GeneralAnouncement;
+export default GlobalAnouncement;

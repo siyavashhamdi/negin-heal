@@ -201,7 +201,7 @@
   color: #dc2626;
 }
 
-.generalAnouncementCard {
+.globalAnouncementCard {
   border-color: color-mix(in srgb, #7c3aed 24%, var(--app-surface-border));
   background:
     linear-gradient(
@@ -211,11 +211,11 @@
     );
 }
 
-.generalAnouncementCard svg {
+.globalAnouncementCard svg {
   color: #7c3aed;
 }
 
-.generalAnouncementPanel {
+.globalAnouncementPanel {
   display: grid;
   gap: 1rem;
   padding: clamp(1rem, 3vw, 1.4rem);
@@ -227,7 +227,7 @@
   box-shadow: 0 0.8rem 2rem color-mix(in srgb, #0f172a 5%, transparent);
 }
 
-.generalAnouncementIcon {
+.globalAnouncementIcon {
   display: inline-grid;
   place-items: center;
   inline-size: 3rem;
@@ -237,14 +237,14 @@
   color: #7c3aed;
 }
 
-.generalAnouncementPreviewBlock {
+.globalAnouncementPreviewBlock {
   display: grid;
   gap: 0.55rem;
 }
 
-.generalAnouncementPreview {
-  --general-anouncement-preview-accent: #2563eb;
-  --general-anouncement-preview-fg: #1d4ed8;
+.globalAnouncementPreview {
+  --global-anouncement-preview-accent: #2563eb;
+  --global-anouncement-preview-fg: #1d4ed8;
 
   position: relative;
   display: grid;
@@ -252,12 +252,12 @@
   gap: 0.65rem;
   padding: 0.9rem 0.85rem;
   border: 0.0625rem solid
-    color-mix(in srgb, var(--general-anouncement-preview-accent) 24%, var(--app-surface-border));
+    color-mix(in srgb, var(--global-anouncement-preview-accent) 24%, var(--app-surface-border));
   border-radius: 1.05rem;
   background:
     radial-gradient(
       circle at top left,
-      color-mix(in srgb, var(--general-anouncement-preview-accent) 13%, transparent),
+      color-mix(in srgb, var(--global-anouncement-preview-accent) 13%, transparent),
       transparent 58%
     ),
     color-mix(in srgb, var(--app-surface-bg) 96%, #ffffff);
@@ -266,56 +266,56 @@
     inset 0 0.0625rem 0 rgba(255, 255, 255, 0.65);
 }
 
-.generalAnouncementPreviewSUCCESS {
-  --general-anouncement-preview-accent: #16a34a;
-  --general-anouncement-preview-fg: #15803d;
+.globalAnouncementPreviewSUCCESS {
+  --global-anouncement-preview-accent: #16a34a;
+  --global-anouncement-preview-fg: #15803d;
 }
 
-.generalAnouncementPreviewWARNING {
-  --general-anouncement-preview-accent: #d97706;
-  --general-anouncement-preview-fg: #b45309;
+.globalAnouncementPreviewWARNING {
+  --global-anouncement-preview-accent: #d97706;
+  --global-anouncement-preview-fg: #b45309;
 }
 
-.generalAnouncementPreviewERROR {
-  --general-anouncement-preview-accent: #dc2626;
-  --general-anouncement-preview-fg: #b91c1c;
+.globalAnouncementPreviewERROR {
+  --global-anouncement-preview-accent: #dc2626;
+  --global-anouncement-preview-fg: #b91c1c;
 }
 
-.generalAnouncementPreviewGlow {
+.globalAnouncementPreviewGlow {
   position: absolute;
   inset-block: 0.65rem;
   inset-inline-start: 0;
   inline-size: 0.22rem;
   border-radius: 999rem;
-  background: var(--general-anouncement-preview-accent);
-  box-shadow: 0 0 1.2rem var(--general-anouncement-preview-accent);
+  background: var(--global-anouncement-preview-accent);
+  box-shadow: 0 0 1.2rem var(--global-anouncement-preview-accent);
 }
 
-.generalAnouncementPreviewIcon {
+.globalAnouncementPreviewIcon {
   display: inline-grid;
   place-items: center;
   inline-size: 2rem;
   block-size: 2rem;
   border-radius: 0.68rem;
-  color: var(--general-anouncement-preview-fg);
-  background: color-mix(in srgb, var(--general-anouncement-preview-accent) 14%, transparent);
+  color: var(--global-anouncement-preview-fg);
+  background: color-mix(in srgb, var(--global-anouncement-preview-accent) 14%, transparent);
   border: 0.0625rem solid
-    color-mix(in srgb, var(--general-anouncement-preview-accent) 30%, transparent);
+    color-mix(in srgb, var(--global-anouncement-preview-accent) 30%, transparent);
 }
 
-.generalAnouncementPreviewContent {
+.globalAnouncementPreviewContent {
   display: grid;
   gap: 0.28rem;
   min-width: 0;
 }
 
-.generalAnouncementPreviewContent strong {
+.globalAnouncementPreviewContent strong {
   color: var(--text-primary);
   font-size: 0.92rem;
   line-height: 1.7;
 }
 
-.generalAnouncementPreviewContent p {
+.globalAnouncementPreviewContent p {
   margin: 0;
   color: var(--text-secondary);
   font-size: 0.79rem;
@@ -437,7 +437,7 @@ body[data-theme="dark"] {
   .themeCard,
   .preferenceRow,
   .linkCard,
-  .generalAnouncementPanel,
+  .globalAnouncementPanel,
   .aboutPanel {
     background: color-mix(in srgb, var(--app-surface-bg) 86%, #0f172a);
   }
@@ -456,7 +456,7 @@ body[data-theme="dark"] {
     color: #fca5a5;
   }
 
-  .generalAnouncementCard {
+  .globalAnouncementCard {
     border-color: color-mix(in srgb, #a78bfa 30%, var(--app-surface-border));
     background:
       linear-gradient(
@@ -466,16 +466,16 @@ body[data-theme="dark"] {
       );
   }
 
-  .generalAnouncementCard svg,
-  .generalAnouncementIcon {
+  .globalAnouncementCard svg,
+  .globalAnouncementIcon {
     color: #c4b5fd;
   }
 
-  .generalAnouncementPreview {
+  .globalAnouncementPreview {
     background:
       radial-gradient(
         circle at top left,
-        color-mix(in srgb, var(--general-anouncement-preview-accent) 16%, transparent),
+        color-mix(in srgb, var(--global-anouncement-preview-accent) 16%, transparent),
         transparent 58%
       ),
       color-mix(in srgb, var(--app-surface-bg) 90%, #0f172a);
@@ -484,8 +484,8 @@ body[data-theme="dark"] {
       inset 0 0.0625rem 0 rgba(255, 255, 255, 0.08);
   }
 
-  .generalAnouncementPreviewIcon {
-    background: color-mix(in srgb, var(--general-anouncement-preview-accent) 20%, transparent);
+  .globalAnouncementPreviewIcon {
+    background: color-mix(in srgb, var(--global-anouncement-preview-accent) 20%, transparent);
   }
 
   .switchThumb {

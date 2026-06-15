@@ -265,8 +265,8 @@ const More = (): ReactElement => {
             </button>
             <button
               type="button"
-              className={`${styles.linkCard} ${styles.generalAnouncementCard}`}
-              onClick={() => navigate(APP_SHELL_ROUTES.moreGeneralAnouncement)}
+              className={`${styles.linkCard} ${styles.globalAnouncementCard}`}
+              onClick={() => navigate(APP_SHELL_ROUTES.moreGlobalAnouncement)}
             >
               <CampaignRoundedIcon />
               <span>اعلام عمومی</span>

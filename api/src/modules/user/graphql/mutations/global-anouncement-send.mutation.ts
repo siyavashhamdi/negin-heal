@@ -4,49 +4,49 @@ import { BadRequestException, UseGuards } from "@nestjs/common";
 import { Args, Mutation, Resolver } from "@nestjs/graphql";
 
 import {
-  GeneralAnouncementMode,
+  GlobalAnouncementMode,
   GeneralSubscriptionUpdateType,
   UserRole,
 } from "../../../../enums";
 import { GqlAuthGuard, Roles, RolesGuard } from "../../../auth";
 import { UserSubscriptionService } from "../../user-subscription.service";
-import { GeneralAnouncementSendGqlInput } from "../inputs";
-import { GeneralAnouncementSendGqlResponse } from "../responses";
+import { GlobalAnouncementSendGqlInput } from "../inputs";
+import { GlobalAnouncementSendGqlResponse } from "../responses";
 
-@Resolver(() => GeneralAnouncementSendGqlResponse)
+@Resolver(() => GlobalAnouncementSendGqlResponse)
 @UseGuards(GqlAuthGuard, RolesGuard)
 @Roles(UserRole.SUPER_ADMIN)
-export class GeneralAnouncementSendMutation {
+export class GlobalAnouncementSendMutation {
   constructor(
     private readonly userSubscriptionService: UserSubscriptionService,
   ) {}
 
-  @Mutation(() => GeneralAnouncementSendGqlResponse, {
-    name: "generalAnouncementSend",
+  @Mutation(() => GlobalAnouncementSendGqlResponse, {
+    name: "globalAnouncementSend",
     description:
-      "Broadcast a general anouncement to active users subscribed to general updates",
+      "Broadcast a global anouncement to active users subscribed to general updates",
   })
-  async sendGeneralAnouncement(
-    @Args("input") input: GeneralAnouncementSendGqlInput,
-  ): Promise<GeneralAnouncementSendGqlResponse> {
+  async sendGlobalAnouncement(
+    @Args("input") input: GlobalAnouncementSendGqlInput,
+  ): Promise<GlobalAnouncementSendGqlResponse> {
     const title = input.title.trim();
     const description = input.description.trim();
-    const mode = input.mode ?? GeneralAnouncementMode.INFO;
+    const mode = input.mode ?? GlobalAnouncementMode.INFO;
 
     if (!title || !description) {
       throw new BadRequestException(
-        "General anouncement title and description are required",
+        "Global anouncement title and description are required",
       );
     }
 
     const activeSubscribedUsers =
       this.userSubscriptionService.getActiveSubscribedUserIds(
-        GeneralSubscriptionUpdateType.GENERAL_ANOUNCEMENT,
+        GeneralSubscriptionUpdateType.GLOBAL_ANOUNCEMENT,
       ).length;
 
     const deliveredUsers =
       await this.userSubscriptionService.publishToActiveUsers({
-        updateType: GeneralSubscriptionUpdateType.GENERAL_ANOUNCEMENT,
+        updateType: GeneralSubscriptionUpdateType.GLOBAL_ANOUNCEMENT,
         targetId: randomUUID(),
         payload: {
           ...input.payload,

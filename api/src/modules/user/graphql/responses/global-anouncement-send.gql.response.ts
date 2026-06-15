@@ -1,7 +1,7 @@
 import { Field, Int, ObjectType } from "@nestjs/graphql";
 
 @ObjectType()
-export class GeneralAnouncementSendGqlResponse {
+export class GlobalAnouncementSendGqlResponse {
   @Field(() => Int, {
     description: "Number of active subscribed users that received the update",
   })

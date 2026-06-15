@@ -8,10 +8,10 @@ import {
 } from "class-validator";
 import GraphQLJSON from "graphql-type-json";
 
-import { GeneralAnouncementMode } from "../../../../enums";
+import { GlobalAnouncementMode } from "../../../../enums";
 
 @InputType()
-export class GeneralAnouncementSendGqlInput {
+export class GlobalAnouncementSendGqlInput {
   @Field(() => String, {
     description: "Anouncement title shown to subscribed users",
   })
@@ -26,16 +26,16 @@ export class GeneralAnouncementSendGqlInput {
   @IsNotEmpty({ message: "Anouncement description is required" })
   description: string;
 
-  @Field(() => GeneralAnouncementMode, {
-    defaultValue: GeneralAnouncementMode.INFO,
+  @Field(() => GlobalAnouncementMode, {
+    defaultValue: GlobalAnouncementMode.INFO,
     nullable: true,
     description: "Popup mode used by clients when displaying the anouncement",
   })
   @IsOptional()
-  @IsEnum(GeneralAnouncementMode, {
+  @IsEnum(GlobalAnouncementMode, {
     message: "Anouncement mode must be valid",
   })
-  mode?: GeneralAnouncementMode;
+  mode?: GlobalAnouncementMode;
 
   @Field(() => GraphQLJSON, {
     nullable: true,
