@@ -5,6 +5,7 @@
 
 import { registerEnumType } from "@nestjs/graphql";
 
+import { AppSettingValueType } from "./app-setting-value-type.enum";
 import { CourseDiscountType } from "./course-discount-type.enum";
 import { CourseItemType } from "./course-item-type.enum";
 import { CourseReleaseType } from "./course-release-type.enum";
@@ -24,6 +25,11 @@ import { SortingOrder } from "../common/pagination/input/sorting-order.enum";
 registerEnumType(SortingOrder, {
   name: "SortingOrder",
   description: "Sorting order",
+});
+
+registerEnumType(AppSettingValueType, {
+  name: "AppSettingValueType",
+  description: "Stored app setting value type",
 });
 
 registerEnumType(CourseItemType, {

@@ -9,6 +9,7 @@ import { GraphQLModule } from "@nestjs/graphql";
 import { MongooseModule } from "@nestjs/mongoose";
 import { ApolloDriver, ApolloDriverConfig } from "@nestjs/apollo";
 import { ScheduleModule } from "@nestjs/schedule";
+import GraphQLJSON from "graphql-type-json";
 
 import "../enums/graphql-enums";
 import { env } from "../config";
@@ -58,6 +59,7 @@ import { GraphQLError } from "graphql";
         autoSchemaFile: true, // Generate schema in memory, no file output
         sortSchema: true,
         path: "/graphql",
+        resolvers: { JSON: GraphQLJSON },
         playground: env.GRAPHQL_PLAYGROUND ? { endpoint: "/graphql" } : false,
         introspection: env.GRAPHQL_INTROSPECTION !== false, // Always enable in development
         csrfPrevention: false, // Disable CSRF protection for development

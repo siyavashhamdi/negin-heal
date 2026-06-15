@@ -10,6 +10,7 @@ import AboutPage from "../pages/More/About";
 import More from "../pages/More/Index";
 import PrivacyPolicyPage from "../pages/More/PrivacyPolicy";
 import TermsOfUsePage from "../pages/More/TermsOfUse";
+import SystemSettingsIndex from "../pages/SystemSettings/Index";
 import Notifications from "../pages/Notifications/Index";
 import PaymentsIndex from "../pages/Payments/Index";
 import ZarinPalCallback from "../pages/Payments/ZarinPalCallback";
@@ -53,6 +54,10 @@ export const DashboardAppRoutes = (): ReactElement => {
       <Route
         path={APP_SHELL_ROUTES.moreTermsOfUse}
         element={wrapProtected(<TermsOfUsePage />)}
+      />
+      <Route
+        path={APP_SHELL_ROUTES.moreSystemSettings}
+        element={wrapProtected(<SystemSettingsIndex />)}
       />
       <Route
         path={APP_SHELL_ROUTES.notifications}

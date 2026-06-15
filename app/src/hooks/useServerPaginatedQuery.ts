@@ -39,6 +39,8 @@ export interface UseServerPaginatedQueryOptions<
   accumulatePages?: boolean;
   /** When any value changes, reset to page 1 (e.g. debounced search, applied filters). */
   resetPageDeps?: readonly unknown[];
+  /** Skip the backing GraphQL query while keeping table state initialized. */
+  skip?: boolean;
 }
 
 export interface UseServerPaginatedQueryResult<TRow> {
@@ -80,6 +82,7 @@ export function useServerPaginatedQuery<
     initialPageSize = 10,
     accumulatePages = false,
     resetPageDeps = [],
+    skip = false,
   } = options;
 
   const [page, setPage] = useState(1);
@@ -105,9 +108,10 @@ export function useServerPaginatedQuery<
     variables,
     fetchPolicy: "network-only",
     notifyOnNetworkStatusChange: true,
+    skip,
   });
 
-  const pageResult = selectPage(data);
+  const pageResult = skip ? null : selectPage(data);
   const isMatchingPage = pageResult != null && pageResult.page === page;
 
   useEffect(() => {
@@ -176,7 +180,7 @@ export function useServerPaginatedQuery<
     setPage,
     setPageSize,
     items,
-    loading: loading || isPageTransition,
+    loading: !skip && (loading || isPageTransition),
     isPageTransition,
     error,
     refetch: () => {

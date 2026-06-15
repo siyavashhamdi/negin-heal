@@ -9,6 +9,7 @@ const STATIC_ROUTE_TITLE_KEYS: Readonly<Record<string, string>> = {
   "/more/about": "app.pageTitles.moreAbout",
   "/more/privacy-policy": "app.pageTitles.morePrivacyPolicy",
   "/more/terms-of-use": "app.pageTitles.moreTermsOfUse",
+  "/more/system-settings": "app.pageTitles.moreSystemSettings",
   "/notifications": "app.pageTitles.notifications",
   "/payments": "app.pageTitles.payments",
   "/profile": "app.pageTitles.profile",

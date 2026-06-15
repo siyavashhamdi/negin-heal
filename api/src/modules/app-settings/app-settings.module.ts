@@ -2,8 +2,11 @@ import { Module } from "@nestjs/common";
 
 import { DatabaseModule } from "../database";
 import { AppSettingsService } from "./app-settings.service";
+import { AppSettingUpdateMutation } from "./graphql/mutations";
 import {
   AppAboutPageConfigQuery,
+  AppSettingDetailQuery,
+  AppSettingKeyListQuery,
   AppPrivacyPolicyPageConfigQuery,
   AppTermsOfUsePageConfigQuery,
   AppVersionConfigQuery,
@@ -16,6 +19,9 @@ import {
   providers: [
     AppSettingsService,
     AppAboutPageConfigQuery,
+    AppSettingDetailQuery,
+    AppSettingKeyListQuery,
+    AppSettingUpdateMutation,
     AppPrivacyPolicyPageConfigQuery,
     AppTermsOfUsePageConfigQuery,
     AppVersionConfigQuery,

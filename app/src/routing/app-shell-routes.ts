@@ -8,6 +8,7 @@ export const APP_SHELL_ROUTES = {
   moreAbout: "/more/about",
   morePrivacyPolicy: "/more/privacy-policy",
   moreTermsOfUse: "/more/terms-of-use",
+  moreSystemSettings: "/more/system-settings",
   notifications: "/notifications",
   payments: "/payments",
   paymentZarinPalCallback: "/payment/zarinpal/callback",

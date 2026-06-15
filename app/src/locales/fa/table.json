@@ -168,6 +168,24 @@
                     "closedAtFrom": "بسته‌شدن از تاریخ",
                     "closedAtTo": "بسته‌شدن تا تاریخ"
                 }
+            },
+            "appSettings": {
+                "columns": {
+                    "id": "شناسه",
+                    "key": "کلید",
+                    "label": "عنوان",
+                    "valueType": "نوع مقدار",
+                    "description": "توضیحات",
+                    "isActive": "وضعیت",
+                    "createdAt": "تاریخ ایجاد",
+                    "updatedAt": "آخرین بروزرسانی"
+                },
+                "filters": {
+                    "createdAtFrom": "ایجاد از تاریخ",
+                    "createdAtTo": "ایجاد تا تاریخ",
+                    "updatedAtFrom": "بروزرسانی از تاریخ",
+                    "updatedAtTo": "بروزرسانی تا تاریخ"
+                }
             }
         }
     }

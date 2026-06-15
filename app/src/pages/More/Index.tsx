@@ -8,7 +8,7 @@ import PrivacyTipRoundedIcon from "@mui/icons-material/PrivacyTipRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import { useApolloClient } from "@apollo/client/react";
 import { useQuery } from "@apollo/client/react";
-import { useEffect, useState, type ReactElement } from "react";
+import { useEffect, useRef, useState, type ReactElement } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useAppSettings } from "../../contexts/AppSettingsContext";
@@ -20,6 +20,7 @@ import { USER_ME_QUERY } from "../../graphql/queries/userMe.query";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import type { UserMeResponse } from "../../hooks/useMe";
 import TicketDialog from "../Support/TicketDialog";
+import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
 import {
   EMPTY_APP_PRIVACY_POLICY_PAGE,
   type AppPrivacyPolicyPageConfigQuery,
@@ -62,9 +63,14 @@ const More = (): ReactElement => {
   const { user } = useAuth();
   const { appVersion } = useAppSettings();
   const { mode, setThemeMode } = useThemeMode();
-  const cachedMe = apolloClient.readQuery<UserMeResponse>({ query: USER_ME_QUERY })?.me ?? null;
-  const initialThemePreference = resolveThemePreference(cachedMe?.preferences?.theme) ?? mode;
-  const initialNotificationsEnabled = cachedMe?.preferences?.notificationsEnabled ?? true;
+  const { data: meData } = useQuery<UserMeResponse>(USER_ME_QUERY, {
+    fetchPolicy: "cache-only",
+    returnPartialData: true,
+  });
+  const serverThemePreference = resolveThemePreference(meData?.me?.preferences?.theme);
+  const serverNotificationsEnabled = meData?.me?.preferences?.notificationsEnabled;
+  const initialThemePreference = serverThemePreference ?? mode;
+  const initialNotificationsEnabled = serverNotificationsEnabled ?? true;
   const { data } = useQuery<AppPrivacyPolicyPageConfigQuery>(APP_PRIVACY_POLICY_PAGE_QUERY, {
     fetchPolicy: "cache-and-network",
   });
@@ -78,6 +84,10 @@ const More = (): ReactElement => {
     useState<ThemePreference>(initialThemePreference);
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(
     initialNotificationsEnabled,
+  );
+  const lastSyncedThemePreferenceRef = useRef<ThemePreference | null>(serverThemePreference);
+  const lastSyncedNotificationsEnabledRef = useRef<boolean | undefined>(
+    serverNotificationsEnabled,
   );
   const [updatePreferences, updatePreferencesResult] = useMutationWithSnackbar<
     UserProfilePreferencesMutationResult,
@@ -100,6 +110,24 @@ const More = (): ReactElement => {
       setThemeMode(preferredTheme);
     }
   }, [mode, preferredTheme, setThemeMode]);
+
+  useEffect(() => {
+    if (
+      serverThemePreference &&
+      lastSyncedThemePreferenceRef.current !== serverThemePreference
+    ) {
+      lastSyncedThemePreferenceRef.current = serverThemePreference;
+      setPreferredTheme(serverThemePreference);
+    }
+
+    if (
+      serverNotificationsEnabled !== undefined &&
+      lastSyncedNotificationsEnabledRef.current !== serverNotificationsEnabled
+    ) {
+      lastSyncedNotificationsEnabledRef.current = serverNotificationsEnabled;
+      setNotificationsEnabled(serverNotificationsEnabled);
+    }
+  }, [serverNotificationsEnabled, serverThemePreference]);
 
   const refreshMe = async (): Promise<void> => {
     await apolloClient.query<UserMeResponse>({
@@ -216,7 +244,11 @@ const More = (): ReactElement => {
 
       <div className={styles.linkGrid}>
         {isSuperAdmin ? (
-          <button type="button" className={styles.linkCard}>
+          <button
+            type="button"
+            className={styles.linkCard}
+            onClick={() => navigate(APP_SHELL_ROUTES.moreSystemSettings)}
+          >
             <SettingsRoundedIcon />
             <span>تنظیمات سامانه</span>
           </button>

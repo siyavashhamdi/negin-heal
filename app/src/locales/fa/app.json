@@ -15,7 +15,8 @@
             "supportTickets": "تیکت پشتیبانی",
             "usersManagement": "کاربران",
             "login": "ورود به سیستم",
-            "genericPage": "صفحه"
+            "genericPage": "صفحه",
+            "moreSystemSettings": "تنظیمات سامانه"
         }
     }
 }
