@@ -34,9 +34,12 @@ import { useThemeMode } from "../contexts/ThemeContext";
 import { COURSE_LIST_QUERY } from "../graphql/queries/courseList.query";
 import { USER_COURSE_LIST_QUERY } from "../graphql/queries/userCourseList.query";
 import { useMe } from "../hooks/useMe";
+import { useSnackbar } from "../hooks/useSnackbar";
 import { useTranslation } from "../hooks/useTranslation";
 import {
+  GENERAL_NOTIFICATION_MESSAGE_TYPES,
   GENERAL_SUBSCRIPTION_UPDATE_TYPES,
+  type GeneralNotificationMessageType,
 } from "../constants";
 import {
   buildCourseListQueryVariables,
@@ -60,16 +63,18 @@ const ADMIN_ROLE_BADGE_LABELS = {
 type TitleDescItem = { readonly id: string; readonly title: string; readonly description: string };
 type NotificationSample = TitleDescItem & { readonly timeLabel: string };
 type NotificationPayload = Partial<TitleDescItem> & {
+  readonly messageType?: GeneralNotificationMessageType;
+  readonly isPushNotification?: boolean;
   readonly mode?: string;
 };
 type GeneralUpdatePopupMode = "info" | "success" | "warning" | "error";
 type GeneralUpdatePopup = {
   readonly id: string;
-  readonly title: string;
+  readonly title?: string;
   readonly description: string;
   readonly mode: GeneralUpdatePopupMode;
 };
-type GeneralCountsPayload = {
+type BadgeCountsPayload = {
   readonly courses?: number;
   readonly notifications?: number;
   readonly others?: number;
@@ -87,12 +92,12 @@ function asRecordArray<T>(value: unknown): readonly T[] {
   return Array.isArray(value) ? (value as T[]) : [];
 }
 
-function asGeneralCountsPayload(value: unknown): GeneralCountsPayload | null {
+function asBadgeCountsPayload(value: unknown): BadgeCountsPayload | null {
   if (!value || typeof value !== "object") {
     return null;
   }
 
-  return value as GeneralCountsPayload;
+  return value as BadgeCountsPayload;
 }
 
 function asNonNegativeInteger(value: unknown): number | null {
@@ -112,6 +117,25 @@ function asNotificationPayload(value: unknown): NotificationPayload | null {
 }
 
 function resolvePopupMode(value: unknown): GeneralUpdatePopupMode {
+  if (typeof value !== "string") {
+    return "info";
+  }
+
+  switch (value.toUpperCase()) {
+    case "SUCCESS":
+      return "success";
+    case "WARN":
+    case "WARNING":
+      return "warning";
+    case "ERROR":
+      return "error";
+    case "INFO":
+    default:
+      return "info";
+  }
+}
+
+function resolveSnackbarSeverity(value: unknown): "info" | "success" | "warning" | "error" {
   if (typeof value !== "string") {
     return "info";
   }
@@ -179,6 +203,7 @@ export function MainLayout({
   showHeader = true,
   showFooter = true,
 }: MainLayoutProps): ReactElement {
+  const { showSnackbar } = useSnackbar();
   const { t } = useTranslation();
   const { mode, toggleTheme } = useThemeMode();
   const { logout, user: authUser } = useAuth();
@@ -251,8 +276,8 @@ export function MainLayout({
     setLiveNotifications(sampleNotifications);
   }, [sampleNotifications]);
 
-  const handleGeneralCountsUpdate = useCallback((event: GeneralUpdateEvent): void => {
-    const payload = asGeneralCountsPayload(event.payload);
+  const handleBadgeCountsUpdate = useCallback((event: GeneralUpdateEvent): void => {
+    const payload = asBadgeCountsPayload(event.payload);
     if (!payload) {
       return;
     }
@@ -275,7 +300,7 @@ export function MainLayout({
     const incomingTitle =
       typeof payload?.title === "string" && payload.title.trim().length > 0
         ? payload.title
-        : "اعلان جدید";
+        : undefined;
     const incomingDescription =
       typeof payload?.description === "string" && payload.description.trim().length > 0
         ? payload.description
@@ -283,11 +308,15 @@ export function MainLayout({
     const incomingTimeLabel = formatGeneralUpdateTimeLabel(event.createdAt);
     const popupId = event.targetId || `${event.updateType}-${event.createdAt}`;
     const popupMode = resolvePopupMode(payload?.mode);
+    const messageType =
+      typeof payload?.messageType === "string"
+        ? payload.messageType.toUpperCase()
+        : GENERAL_NOTIFICATION_MESSAGE_TYPES.POPUP;
 
     setLiveNotifications((previous) => [
       {
         id: popupId,
-        title: incomingTitle,
+        title: incomingTitle ?? "اعلان جدید",
         description: incomingDescription,
         timeLabel: incomingTimeLabel,
       },
@@ -303,26 +332,30 @@ export function MainLayout({
         notifications: previous.notifications + 1,
       };
     });
+    if (messageType === GENERAL_NOTIFICATION_MESSAGE_TYPES.SNACKBAR) {
+      showSnackbar(
+        incomingTitle ? `${incomingTitle}: ${incomingDescription}` : incomingDescription,
+        resolveSnackbarSeverity(payload?.mode)
+      );
+      return;
+    }
+
     setGeneralUpdatePopup({
       id: popupId,
       title: incomingTitle,
       description: incomingDescription,
       mode: popupMode,
     });
-  }, []);
+  }, [showSnackbar]);
 
   useGeneralUpdatesSubscription({
     enabled: Boolean(authUser),
     updateTypes: [
       GENERAL_SUBSCRIPTION_UPDATE_TYPES.NOTIFICATION,
-      GENERAL_SUBSCRIPTION_UPDATE_TYPES.GENERAL_COUNTS,
-      GENERAL_SUBSCRIPTION_UPDATE_TYPES.GLOBAL_ANOUNCEMENT,
-      GENERAL_SUBSCRIPTION_UPDATE_TYPES.SUPPORT_UPDATE,
+      GENERAL_SUBSCRIPTION_UPDATE_TYPES.BADGE_COUNTS,
     ],
     onNotification: handleNotificationUpdate,
-    onGeneralCounts: handleGeneralCountsUpdate,
-    onGlobalAnouncement: handleNotificationUpdate,
-    onSupportUpdate: handleNotificationUpdate,
+    onBadgeCounts: handleBadgeCountsUpdate,
   });
 
   const fetchedCourseBadgeCount = courseBadgeData?.courseList.pagination.total ?? 0;
@@ -434,7 +467,7 @@ export function MainLayout({
             )}
           </div>
           <div className="main-layout__general-update-popup-content">
-            <h3>{generalUpdatePopup.title}</h3>
+            {generalUpdatePopup.title ? <h3>{generalUpdatePopup.title}</h3> : null}
             <p>{generalUpdatePopup.description}</p>
           </div>
           <IconButton

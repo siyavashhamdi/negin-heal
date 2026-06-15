@@ -5,6 +5,7 @@
 
 import { registerEnumType } from "@nestjs/graphql";
 
+import { GlobalAnouncementMessageType } from "./global-anouncement-message-type.enum";
 import { GlobalAnouncementMode } from "./global-anouncement-mode.enum";
 import { AppSettingValueType } from "./app-setting-value-type.enum";
 import { CourseDiscountType } from "./course-discount-type.enum";
@@ -32,6 +33,11 @@ registerEnumType(SortingOrder, {
 registerEnumType(GlobalAnouncementMode, {
   name: "GlobalAnouncementMode",
   description: "Visual mode for global anouncements",
+});
+
+registerEnumType(GlobalAnouncementMessageType, {
+  name: "GlobalAnouncementMessageType",
+  description: "Display type used for global anouncements",
 });
 
 registerEnumType(AppSettingValueType, {

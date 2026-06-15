@@ -24,9 +24,7 @@ interface UseGeneralUpdatesSubscriptionProps {
   readonly enabled: boolean;
   readonly updateTypes?: readonly GeneralSubscriptionUpdateType[];
   readonly onNotification?: (event: GeneralUpdateEvent) => void;
-  readonly onGeneralCounts?: (event: GeneralUpdateEvent) => void;
-  readonly onGlobalAnouncement?: (event: GeneralUpdateEvent) => void;
-  readonly onSupportUpdate?: (event: GeneralUpdateEvent) => void;
+  readonly onBadgeCounts?: (event: GeneralUpdateEvent) => void;
   readonly onAnyUpdate?: (event: GeneralUpdateEvent) => void;
 }
 
@@ -34,9 +32,7 @@ export const useGeneralUpdatesSubscription = ({
   enabled,
   updateTypes,
   onNotification,
-  onGeneralCounts,
-  onGlobalAnouncement,
-  onSupportUpdate,
+  onBadgeCounts,
   onAnyUpdate,
 }: UseGeneralUpdatesSubscriptionProps): void => {
   useSubscription<GeneralUpdatesSubscriptionData, GeneralUpdatesSubscriptionVariables>(
@@ -58,14 +54,8 @@ export const useGeneralUpdatesSubscription = ({
           case GENERAL_SUBSCRIPTION_UPDATE_TYPES.NOTIFICATION:
             onNotification?.(update);
             break;
-          case GENERAL_SUBSCRIPTION_UPDATE_TYPES.GENERAL_COUNTS:
-            onGeneralCounts?.(update);
-            break;
-          case GENERAL_SUBSCRIPTION_UPDATE_TYPES.GLOBAL_ANOUNCEMENT:
-            onGlobalAnouncement?.(update);
-            break;
-          case GENERAL_SUBSCRIPTION_UPDATE_TYPES.SUPPORT_UPDATE:
-            onSupportUpdate?.(update);
+          case GENERAL_SUBSCRIPTION_UPDATE_TYPES.BADGE_COUNTS:
+            onBadgeCounts?.(update);
             break;
           default:
             break;

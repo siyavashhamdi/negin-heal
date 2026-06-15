@@ -1,23 +1,38 @@
 import { Field, InputType } from "@nestjs/graphql";
 import {
+  IsBoolean,
   IsEnum,
   IsNotEmpty,
   IsObject,
   IsOptional,
   IsString,
+  ValidateIf,
 } from "class-validator";
 import GraphQLJSON from "graphql-type-json";
 
-import { GlobalAnouncementMode } from "../../../../enums";
+import {
+  GlobalAnouncementMessageType,
+  GlobalAnouncementMode,
+} from "../../../../enums";
 
 @InputType()
 export class GlobalAnouncementSendGqlInput {
   @Field(() => String, {
+    nullable: true,
     description: "Anouncement title shown to subscribed users",
   })
+  @ValidateIf(
+    (input: GlobalAnouncementSendGqlInput) =>
+      input.messageType === GlobalAnouncementMessageType.POPUP ||
+      input.title !== undefined,
+  )
   @IsString({ message: "Anouncement title must be a string" })
-  @IsNotEmpty({ message: "Anouncement title is required" })
-  title: string;
+  @ValidateIf(
+    (input: GlobalAnouncementSendGqlInput) =>
+      input.messageType === GlobalAnouncementMessageType.POPUP,
+  )
+  @IsNotEmpty({ message: "Anouncement title is required for popup messages" })
+  title?: string;
 
   @Field(() => String, {
     description: "Anouncement message shown to subscribed users",
@@ -36,6 +51,26 @@ export class GlobalAnouncementSendGqlInput {
     message: "Anouncement mode must be valid",
   })
   mode?: GlobalAnouncementMode;
+
+  @Field(() => GlobalAnouncementMessageType, {
+    defaultValue: GlobalAnouncementMessageType.POPUP,
+    nullable: true,
+    description: "Target message renderer on clients (popup or snackbar)",
+  })
+  @IsOptional()
+  @IsEnum(GlobalAnouncementMessageType, {
+    message: "Anouncement message type must be valid",
+  })
+  messageType?: GlobalAnouncementMessageType;
+
+  @Field(() => Boolean, {
+    defaultValue: false,
+    nullable: true,
+    description: "Whether this notification should also be pushed through native push channel",
+  })
+  @IsOptional()
+  @IsBoolean({ message: "isPushNotification must be a boolean" })
+  isPushNotification?: boolean;
 
   @Field(() => GraphQLJSON, {
     nullable: true,

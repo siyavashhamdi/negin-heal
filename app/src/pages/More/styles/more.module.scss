@@ -240,6 +240,17 @@
 .globalAnouncementPreviewBlock {
   display: grid;
   gap: 0.55rem;
+  position: relative;
+  z-index: 0;
+}
+
+:global(.main-layout__general-update-popup).globalAnouncementPopupPreview {
+  position: relative;
+  inset: unset;
+  z-index: 0;
+  inline-size: 100%;
+  max-inline-size: 23rem;
+  margin-top: 0.35rem;
 }
 
 .globalAnouncementPreview {

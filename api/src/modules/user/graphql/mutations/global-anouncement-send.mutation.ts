@@ -4,6 +4,7 @@ import { BadRequestException, UseGuards } from "@nestjs/common";
 import { Args, Mutation, Resolver } from "@nestjs/graphql";
 
 import {
+  GlobalAnouncementMessageType,
   GlobalAnouncementMode,
   GeneralSubscriptionUpdateType,
   UserRole,
@@ -29,30 +30,40 @@ export class GlobalAnouncementSendMutation {
   async sendGlobalAnouncement(
     @Args("input") input: GlobalAnouncementSendGqlInput,
   ): Promise<GlobalAnouncementSendGqlResponse> {
-    const title = input.title.trim();
+    const title = input.title?.trim();
     const description = input.description.trim();
     const mode = input.mode ?? GlobalAnouncementMode.INFO;
+    const messageType = input.messageType ?? GlobalAnouncementMessageType.POPUP;
+    const isPushNotification = Boolean(input.isPushNotification);
 
-    if (!title || !description) {
+    if (!description) {
       throw new BadRequestException(
-        "Global anouncement title and description are required",
+        "Global anouncement description is required",
+      );
+    }
+
+    if (messageType === GlobalAnouncementMessageType.POPUP && !title) {
+      throw new BadRequestException(
+        "Global anouncement title is required for popup messages",
       );
     }
 
     const activeSubscribedUsers =
       this.userSubscriptionService.getActiveSubscribedUserIds(
-        GeneralSubscriptionUpdateType.GLOBAL_ANOUNCEMENT,
+        GeneralSubscriptionUpdateType.NOTIFICATION,
       ).length;
 
     const deliveredUsers =
       await this.userSubscriptionService.publishToActiveUsers({
-        updateType: GeneralSubscriptionUpdateType.GLOBAL_ANOUNCEMENT,
+        updateType: GeneralSubscriptionUpdateType.NOTIFICATION,
         targetId: randomUUID(),
         payload: {
           ...input.payload,
-          title,
+          ...(title ? { title } : {}),
           description,
           mode,
+          messageType,
+          isPushNotification,
         },
       });
 

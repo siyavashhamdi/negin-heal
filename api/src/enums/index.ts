@@ -1,4 +1,5 @@
 export * from "./app-setting-value-type.enum";
+export * from "./global-anouncement-message-type.enum";
 export * from "./global-anouncement-mode.enum";
 export * from "./course-discount-type.enum";
 export * from "./course-item-type.enum";

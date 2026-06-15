@@ -269,7 +269,7 @@ const More = (): ReactElement => {
               onClick={() => navigate(APP_SHELL_ROUTES.moreGlobalAnouncement)}
             >
               <CampaignRoundedIcon />
-              <span>اعلام عمومی</span>
+              <span>اعلان عمومی</span>
             </button>
           </>
         ) : null}
