@@ -21,6 +21,7 @@ import { HealthModule } from "./health";
 import { DatabaseModule } from "./database";
 import { AppSettingsModule } from "./app-settings";
 import { PaymentCouponModule } from "./payment-coupon";
+import { NotificationModule } from "./notification";
 import { EmailModule } from "./email";
 import { TicketModule } from "./ticket";
 import { NodeEnv } from "../enums";
@@ -240,6 +241,7 @@ import { GraphQLError } from "graphql";
     FileModule,
     AppSettingsModule,
     PaymentCouponModule,
+    NotificationModule,
     EmailModule,
     TicketModule,
     CourseModule,

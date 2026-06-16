@@ -26,7 +26,6 @@ import {
   UserUpdateMutation,
   UserVerifyLoginCodeMutation,
   GlobalAnouncementSendMutation,
-  NotificationUpdateMutation,
 } from "./graphql/mutations";
 import * as UserQueries from "./graphql/queries";
 import * as UserSubscriptions from "./graphql/subscriptions";
@@ -64,11 +63,9 @@ import * as UserSubscriptions from "./graphql/subscriptions";
     UserUpdateMutation,
     UserVerifyLoginCodeMutation,
     GlobalAnouncementSendMutation,
-    NotificationUpdateMutation,
     UserQueries.UserMeQuery,
     UserQueries.UserListQuery,
     UserQueries.UserLoginCaptchaQuery,
-    UserQueries.NotificationListQuery,
     UserSubscriptions.GeneralUpdatesSubscription,
   ],
   exports: [UserService, UserSubscriptionService],

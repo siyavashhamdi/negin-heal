@@ -1,9 +1,6 @@
 import { Controller, Get, Query } from "@nestjs/common";
 
-import {
-  CourseService,
-  ZarinPalVerificationResult,
-} from "../course.service";
+import { CourseService, ZarinPalVerificationResult } from "../course.service";
 
 @Controller("courses/payment")
 export class CoursePaymentController {
@@ -14,9 +11,6 @@ export class CoursePaymentController {
     @Query("Authority") authority?: string,
     @Query("Status") status?: string,
   ): Promise<ZarinPalVerificationResult> {
-    return this.courseService.verifyZarinPalPurchase(
-      authority,
-      status,
-    );
+    return this.courseService.verifyZarinPalPurchase(authority, status);
   }
 }

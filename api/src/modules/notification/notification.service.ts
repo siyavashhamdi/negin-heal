@@ -1,26 +1,25 @@
-import { Args, Context, Query, Resolver } from "@nestjs/graphql";
-import { UseGuards } from "@nestjs/common";
+import { ForbiddenException, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { FilterQuery, Model, Types } from "mongoose";
 
+import { PAGINATION_CONSTANT } from "../../constants";
 import {
   Notification,
   NotificationDocument,
-} from "../../../../database/schemas";
-import { PAGINATION_CONSTANT } from "../../../../constants";
-import { SortingOrder } from "../../../../common/pagination/input";
-import { buildSortOptions } from "../../../../common/pagination/utils";
-import { GraphQLContext } from "../../../../types/graphql-context.types";
-import { GraphQLContextUtil } from "../../../../utils";
-import { GqlAuthGuard } from "../../../auth";
+} from "../../database/schemas";
+import { NotificationUpdateAction } from "../../enums";
+import { SortingOrder } from "../../common/pagination/input";
+import { buildSortOptions } from "../../common/pagination/utils";
 import {
   NotificationListGqlInput,
   NotificationListSortOptionInput,
-} from "../inputs";
+  NotificationUpdateGqlInput,
+} from "./graphql/inputs";
 import {
   NotificationListGqlResponse,
   NotificationListPaginatedCursorGqlResponse,
-} from "../responses";
+  NotificationUpdateGqlResponse,
+} from "./graphql/responses";
 
 type NotificationListSortField = Extract<
   keyof NotificationListSortOptionInput,
@@ -43,29 +42,26 @@ type NotificationListRecord = Pick<
   | "visibleUntil"
   | "audit"
 >;
+type NotificationUpdateOperation = {
+  $set?: Record<string, unknown>;
+  $unset?: Record<string, 1>;
+};
 
-@Resolver(() => NotificationListGqlResponse)
-@UseGuards(GqlAuthGuard)
-export class NotificationListQuery {
+@Injectable()
+export class NotificationService {
   constructor(
     @InjectModel(Notification.name)
     private readonly notificationModel: Model<NotificationDocument>,
   ) {}
 
-  @Query(() => NotificationListPaginatedCursorGqlResponse, {
-    name: "userNotificationList",
-    description:
-      "Get a cursor-paginated, filterable, sortable list of notifications visible to the current user",
-  })
-  async findUserNotifications(
-    @Args("input") input: NotificationListGqlInput,
-    @Context() context: GraphQLContext,
+  async list(
+    input: NotificationListGqlInput,
+    userId: Types.ObjectId,
   ): Promise<NotificationListPaginatedCursorGqlResponse> {
-    const user = GraphQLContextUtil.getUser(context);
     const { filters, options } = input || {};
     const limit =
       options?.limit ?? PAGINATION_CONSTANT.CURSOR_BASED.DEFAULT_LIMIT;
-    const baseFilterQuery = this.buildListFilterQuery(user.userId, filters);
+    const baseFilterQuery = this.buildListFilterQuery(userId, filters);
     const sortFieldMap = this.getSortFieldMap();
     const requestedSort = options?.sort ?? { createdAt: SortingOrder.DESC };
     const cursorSort = this.resolveNotificationCursorSort(requestedSort);
@@ -115,6 +111,56 @@ export class NotificationListQuery {
         hasNextPage,
         hasPreviousPage: Boolean(options?.startCursor),
       },
+    };
+  }
+
+  async update(
+    input: NotificationUpdateGqlInput,
+    userId: Types.ObjectId,
+  ): Promise<NotificationUpdateGqlResponse> {
+    const notificationIds = this.getUniqueNotificationIds(
+      input.notificationIds,
+    );
+    const objectIds = notificationIds.map((id) => new Types.ObjectId(id));
+    const ownershipFilter = this.buildOwnershipFilter(userId, objectIds);
+    const matchingNotifications = await this.notificationModel
+      .find(ownershipFilter)
+      .select({ _id: 1 })
+      .lean<Array<{ _id: Types.ObjectId }>>()
+      .exec();
+
+    if (matchingNotifications.length !== notificationIds.length) {
+      throw new ForbiddenException(
+        "One or more notifications do not belong to the current user",
+      );
+    }
+
+    const updateResult = await this.notificationModel
+      .updateMany(ownershipFilter, this.buildUpdateOperation(input.action))
+      .exec();
+    const updatedNotifications = await this.notificationModel
+      .find(ownershipFilter)
+      .lean<NotificationListRecord[]>()
+      .exec();
+    const updatedNotificationById = new Map(
+      updatedNotifications.map((notification) => [
+        notification._id.toString(),
+        notification,
+      ]),
+    );
+
+    return {
+      action: input.action,
+      notificationIds,
+      requestedCount: notificationIds.length,
+      matchedCount: updateResult.matchedCount,
+      modifiedCount: updateResult.modifiedCount,
+      items: notificationIds
+        .map((id) => updatedNotificationById.get(id))
+        .filter(Boolean)
+        .map((notification) =>
+          this.toNotificationListResponse(notification as NotificationListRecord),
+        ),
     };
   }
 
@@ -227,6 +273,58 @@ export class NotificationListQuery {
     );
 
     return query;
+  }
+
+  private buildOwnershipFilter(
+    userId: Types.ObjectId,
+    notificationIds: Types.ObjectId[],
+  ): FilterQuery<Notification> {
+    return {
+      $and: [
+        {
+          $or: [
+            { "audit.deletedAt": null },
+            { "audit.deletedAt": { $exists: false } },
+          ],
+        },
+        {
+          _id: { $in: notificationIds },
+          userId,
+          isGlobalAnnouncement: false,
+        },
+      ],
+    };
+  }
+
+  private buildUpdateOperation(
+    action: NotificationUpdateAction,
+  ): NotificationUpdateOperation {
+    const now = new Date();
+
+    switch (action) {
+      case NotificationUpdateAction.SET_AS_READ:
+        return {
+          $set: {
+            isRead: true,
+            readAt: now,
+          },
+        };
+      case NotificationUpdateAction.SET_AS_UNREAD:
+        return {
+          $set: {
+            isRead: false,
+          },
+          $unset: {
+            readAt: 1,
+          },
+        };
+      case NotificationUpdateAction.ARCHIVE:
+        return {
+          $set: {
+            archivedAt: now,
+          },
+        };
+    }
   }
 
   private async buildCursorFilterQuery(
@@ -374,6 +472,10 @@ export class NotificationListQuery {
       createdAt: notification.audit?.createdAt,
       updatedAt: notification.audit?.updatedAt,
     };
+  }
+
+  private getUniqueNotificationIds(notificationIds: string[]): string[] {
+    return Array.from(new Set(notificationIds));
   }
 
   private addContainsFilter(
