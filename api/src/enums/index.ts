@@ -1,4 +1,6 @@
 export * from "./app-setting-value-type.enum";
+export * from "./badge-count-trigger-action.enum";
+export * from "./badge-count-trigger-source.enum";
 export * from "./global-anouncement-message-type.enum";
 export * from "./course-discount-type.enum";
 export * from "./course-item-type.enum";

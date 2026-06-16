@@ -72,14 +72,6 @@ type GeneralUpdatePopup = {
   readonly mode: GeneralUpdatePopupMode;
   readonly action?: GeneralUpdatePopupAction;
 };
-type BadgeCountsPayload = {
-  readonly courses?: number;
-  readonly payments?: number | null;
-  readonly notifications?: number;
-  readonly others?: number;
-  readonly support?: number;
-  readonly tickets?: number;
-};
 type BadgeCountQuery = {
   readonly badgeCount: {
     readonly courses: number;
@@ -98,22 +90,6 @@ type MainLayoutProps = {
 
 function asRecordArray<T>(value: unknown): readonly T[] {
   return Array.isArray(value) ? (value as T[]) : [];
-}
-
-function asBadgeCountsPayload(value: unknown): BadgeCountsPayload | null {
-  if (!value || typeof value !== "object") {
-    return null;
-  }
-
-  return value as BadgeCountsPayload;
-}
-
-function asNonNegativeInteger(value: unknown): number | null {
-  if (typeof value !== "number" || !Number.isFinite(value)) {
-    return null;
-  }
-
-  return Math.max(0, Math.floor(value));
 }
 
 function asNotificationPayload(value: unknown): NotificationPayload | null {
@@ -250,10 +226,11 @@ export function MainLayout({
     ? t("layout.header.brand.publicTagline")
     : t("layout.header.brand.tagline");
 
-  const { data: badgeCountData } = useQuery<BadgeCountQuery>(BADGE_COUNT_QUERY, {
-    fetchPolicy: "cache-and-network",
-    skip: !authUser,
-  });
+  const { data: badgeCountData, refetch: refetchBadgeCount } =
+    useQuery<BadgeCountQuery>(BADGE_COUNT_QUERY, {
+      fetchPolicy: "cache-and-network",
+      skip: !authUser,
+    });
   const [liveCounts, setLiveCounts] = useState<{
     readonly courses?: number;
     readonly payments?: number | null;
@@ -276,26 +253,10 @@ export function MainLayout({
     setLiveNotifications(sampleNotifications);
   }, [sampleNotifications]);
 
-  const handleBadgeCountsUpdate = useCallback((event: GeneralUpdateEvent): void => {
-    const payload = asBadgeCountsPayload(event.payload);
-    if (!payload) {
-      return;
-    }
-
-    const courses = asNonNegativeInteger(payload.courses);
-    const payments = asNonNegativeInteger(payload.payments);
-    const notifications = asNonNegativeInteger(payload.notifications);
-    const tickets = asNonNegativeInteger(payload.tickets ?? payload.support);
-    const others = asNonNegativeInteger(payload.others);
-
-    setLiveCounts((previous) => ({
-      courses: courses ?? previous.courses,
-      payments: payments ?? previous.payments,
-      notifications: notifications ?? previous.notifications,
-      tickets: tickets ?? previous.tickets,
-      others: others ?? previous.others,
-    }));
-  }, []);
+  const handleBadgeCountsUpdate = useCallback((): void => {
+    setLiveCounts({});
+    void refetchBadgeCount();
+  }, [refetchBadgeCount]);
 
   const handleNotificationUpdate = useCallback((event: GeneralUpdateEvent): void => {
     const payload = asNotificationPayload(event.payload);

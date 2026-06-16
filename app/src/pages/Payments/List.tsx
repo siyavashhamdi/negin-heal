@@ -9,7 +9,6 @@ import {
 } from "react";
 import {
   ArticleRounded as ArticleRoundedIcon,
-  AddRounded as AddRoundedIcon,
   CloseFullscreenRounded as CloseFullscreenRoundedIcon,
   FullscreenRounded as FullscreenRoundedIcon,
   ImageRounded as ImageRoundedIcon,
@@ -17,13 +16,9 @@ import {
   PictureAsPdfRounded as PictureAsPdfRoundedIcon,
 } from "@mui/icons-material";
 import {
-  Autocomplete,
   Box,
-  Button,
   Chip,
-  CircularProgress,
   Dialog,
-  DialogActions,
   DialogContent,
   DialogTitle,
   IconButton,
@@ -61,10 +56,9 @@ import {
 } from "../../hooks/useServerPaginatedQuery";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
-import CrudRowActions from "../../shared/crud/CrudRowActions";
 import EntityTableShell from "../../shared/crud/EntityTableShell";
-import { crudModalFooterSx } from "../../shared/crud/modalThemeSx";
 import crudPrimitives from "../../shared/crud/styles/crudPrimitives.module.scss";
+import EntityAutocompleteField from "../../shared/forms/EntityAutocompleteField";
 import FileUploadField from "../../shared/forms/FileUploadField";
 import JalaliDateFilterField from "../../shared/table/JalaliDateFilterField";
 import {
@@ -92,6 +86,11 @@ import {
   type UserCoursePurchaseCurrency,
   type UserCoursePurchaseStatus,
 } from "./payments-list.api";
+import {
+  ManualPaymentDialogActions,
+  PaymentRowActions,
+  ReviewPaymentDialogActions,
+} from "./PaymentActions";
 
 type CoursePaymentStatusUpdateMutation = {
   readonly coursePaymentStatusUpdate: CoursePaymentListRow;
@@ -1024,9 +1023,7 @@ const PaymentsList = (): ReactElement => {
       {
         id: "actions",
         header: t("table.columns.actions"),
-        cell: ({ row }) => (
-          <CrudRowActions onView={() => setReviewTarget(row.original)} viewLabel="بررسی" />
-        ),
+        cell: ({ row }) => <PaymentRowActions onReview={() => setReviewTarget(row.original)} />,
         enableSorting: false,
         enableHiding: false,
       },
@@ -1429,94 +1426,29 @@ const PaymentsList = (): ReactElement => {
                 </Box>
 
                 <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-                  <Autocomplete
-                    fullWidth
+                  <EntityAutocompleteField
                     options={manualPaymentUserOptions}
                     value={manualPaymentUser}
                     inputValue={manualPaymentUserSearch}
                     loading={manualPaymentUsersLoading}
-                    filterOptions={(options) => options}
-                    isOptionEqualToValue={(option, value) => option.id === value.id}
-                    getOptionLabel={(option) => option.label}
-                    onInputChange={(_, value) => setManualPaymentUserSearch(value)}
-                    onChange={(_, value) => {
-                      setManualPaymentUser(value);
-                    }}
+                    onInputChange={setManualPaymentUserSearch}
+                    onChange={setManualPaymentUser}
                     noOptionsText="کاربر فعال با نقش کاربر نهایی پیدا نشد."
-                    renderOption={(props, option) => (
-                      <Box component="li" {...props} key={option.id}>
-                        <Stack spacing={0.25}>
-                          <Typography variant="body2" fontWeight={700}>
-                            {option.label}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {option.subtitle || option.id}
-                          </Typography>
-                        </Stack>
-                      </Box>
-                    )}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        required
-                        label="کاربر"
-                        placeholder="جستجو براساس نام، نام کاربری یا موبایل"
-                        InputProps={{
-                          ...params.InputProps,
-                          endAdornment: (
-                            <>
-                              {manualPaymentUsersLoading ? (
-                                <CircularProgress color="inherit" size={18} />
-                              ) : null}
-                              {params.InputProps.endAdornment}
-                            </>
-                          ),
-                        }}
-                      />
-                    )}
+                    label="کاربر"
+                    placeholder="جستجو براساس نام، نام کاربری یا موبایل"
+                    required
                   />
 
-                  <Autocomplete
-                    fullWidth
+                  <EntityAutocompleteField
                     options={manualPaymentCourseOptions}
                     value={manualPaymentCourse}
                     loading={manualPaymentCoursesLoading}
-                    isOptionEqualToValue={(option, value) => option.id === value.id}
-                    getOptionLabel={(option) => option.label}
-                    onChange={(_, value) => setManualPaymentCourse(value)}
+                    onChange={setManualPaymentCourse}
                     noOptionsText="دوره فعال پولی پیدا نشد."
-                    renderOption={(props, option) => (
-                      <Box component="li" {...props} key={option.id}>
-                        <Stack spacing={0.25}>
-                          <Typography variant="body2" fontWeight={700}>
-                            {option.label}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {option.subtitle}
-                          </Typography>
-                        </Stack>
-                      </Box>
-                    )}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        required
-                        label="دوره"
-                        placeholder="انتخاب دوره فعال پولی"
-                        helperText="همه دوره‌های فعال پولی قابل انتخاب هستند."
-                        InputProps={{
-                          ...params.InputProps,
-                          endAdornment: (
-                            <>
-                              {manualPaymentCoursesLoading ? (
-                                <CircularProgress color="inherit" size={18} />
-                              ) : null}
-                              {params.InputProps.endAdornment}
-                            </>
-                          ),
-                        }}
-                      />
-                    )}
+                    label="دوره"
+                    placeholder="انتخاب دوره فعال پولی"
+                    helperText="همه دوره‌های فعال پولی قابل انتخاب هستند."
+                    required
                   />
                 </Stack>
 
@@ -1600,45 +1532,18 @@ const PaymentsList = (): ReactElement => {
             ) : null}
           </Stack>
         </DialogContent>
-        <DialogActions
-          sx={crudModalFooterSx(theme, {
-            pinFooterToBottomOnMobile: true,
-          })}
-        >
-          <Stack
-            direction={isMobile ? "column-reverse" : "row"}
-            spacing={1.5}
-            sx={{
-              width: "100%",
-              justifyContent: isMobile ? "stretch" : "flex-end",
-              "& .MuiButton-root": {
-                width: isMobile ? "100%" : "auto",
-                minWidth: isMobile ? undefined : "8rem",
-              },
-            }}
-          >
-            <Button
-              variant="outlined"
-              color="inherit"
-              onClick={closeManualPaymentDialog}
-              disabled={createManualPaymentResult.loading || uploadManualPaymentFileResult.loading}
-            >
-              انصراف
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<AddRoundedIcon />}
-              onClick={handleSubmitManualPayment}
-              disabled={!canSubmitManualPayment}
-            >
-              {uploadManualPaymentFileResult.loading
-                ? "در حال آپلود فایل..."
-                : createManualPaymentResult.loading
-                  ? "در حال ثبت..."
-                  : "ثبت پرداخت دستی"}
-            </Button>
-          </Stack>
-        </DialogActions>
+        <ManualPaymentDialogActions
+          theme={theme}
+          isMobile={isMobile}
+          onCancel={closeManualPaymentDialog}
+          onSubmit={handleSubmitManualPayment}
+          cancelDisabled={
+            createManualPaymentResult.loading || uploadManualPaymentFileResult.loading
+          }
+          submitDisabled={!canSubmitManualPayment}
+          isUploadingFile={uploadManualPaymentFileResult.loading}
+          isSubmitting={createManualPaymentResult.loading}
+        />
       </Dialog>
 
       <Dialog
@@ -1813,40 +1718,15 @@ const PaymentsList = (): ReactElement => {
             </Stack>
           ) : null}
         </DialogContent>
-        <DialogActions
-          sx={crudModalFooterSx(theme, {
-            pinFooterToBottomOnMobile: true,
-          })}
-        >
-          <Stack
-            direction={isMobile ? "column-reverse" : "row"}
-            spacing={1.5}
-            sx={{
-              width: "100%",
-              justifyContent: isMobile ? "stretch" : "flex-end",
-              "& .MuiButton-root": {
-                width: isMobile ? "100%" : "auto",
-                minWidth: isMobile ? undefined : "6.5rem",
-              },
-            }}
-          >
-            <Button
-              variant="outlined"
-              color="inherit"
-              onClick={closeReviewDialog}
-              disabled={updatePaymentStatusResult.loading}
-            >
-              {t("table.dataGrid.toggleActiveDialog.cancel")}
-            </Button>
-            <Button
-              variant="contained"
-              onClick={handleSubmitReview}
-              disabled={!reviewTarget || updatePaymentStatusResult.loading}
-            >
-              ثبت نتیجه بررسی
-            </Button>
-          </Stack>
-        </DialogActions>
+        <ReviewPaymentDialogActions
+          theme={theme}
+          isMobile={isMobile}
+          onCancel={closeReviewDialog}
+          onSubmit={handleSubmitReview}
+          cancelDisabled={updatePaymentStatusResult.loading}
+          submitDisabled={!reviewTarget || updatePaymentStatusResult.loading}
+          cancelLabel={t("table.dataGrid.toggleActiveDialog.cancel")}
+        />
       </Dialog>
     </>
   );

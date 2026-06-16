@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { FilterQuery, Model } from "mongoose";
+import { FilterQuery, Model, Types } from "mongoose";
 
 import {
   Course,
@@ -12,9 +12,30 @@ import {
   UserCourse,
   UserCourseDocument,
 } from "../../database/schemas";
-import { TicketStatus, UserCoursePurchaseStatus, UserRole } from "../../enums";
+import {
+  BadgeCountTriggerAction,
+  BadgeCountTriggerSource,
+  GeneralSubscriptionUpdateType,
+  TicketStatus,
+  UserCoursePurchaseStatus,
+  UserRole,
+} from "../../enums";
 import { AuthenticatedUser } from "../../types/graphql-context.types";
+import { UserService, UserSubscriptionService } from "../user";
 import { BadgeCountGqlResponse } from "./graphql/responses";
+
+export type BadgeCountSignalPayload = {
+  source: BadgeCountTriggerSource;
+  action: BadgeCountTriggerAction;
+} & Record<string, unknown>;
+
+type BadgeCountSignalTargetUserIds = Types.ObjectId | Types.ObjectId[];
+
+export interface PublishBadgeCountSignalInput {
+  targetUserIds?: BadgeCountSignalTargetUserIds;
+  includeStaffUsers?: boolean;
+  payload: BadgeCountSignalPayload;
+}
 
 @Injectable()
 export class BadgeService {
@@ -27,6 +48,8 @@ export class BadgeService {
     private readonly notificationModel: Model<NotificationDocument>,
     @InjectModel(Ticket.name)
     private readonly ticketModel: Model<TicketDocument>,
+    private readonly userService: UserService,
+    private readonly userSubscriptionService: UserSubscriptionService,
   ) {}
 
   async getCount(user: AuthenticatedUser): Promise<BadgeCountGqlResponse> {
@@ -45,6 +68,38 @@ export class BadgeService {
       notifications,
       tickets,
     };
+  }
+
+  async publishCountSignal(
+    input: PublishBadgeCountSignalInput,
+  ): Promise<number> {
+    const targetUserIds = new Set(
+      this.normalizeTargetUserIds(input.targetUserIds),
+    );
+
+    if (input.includeStaffUsers) {
+      const staffUserIds = await this.userService.findActiveStaffUserIds();
+      staffUserIds.forEach((userId) => targetUserIds.add(userId));
+    }
+
+    return this.userSubscriptionService.publishToUsers([...targetUserIds], {
+      updateType: GeneralSubscriptionUpdateType.BADGE_COUNTS,
+      payload: input.payload,
+    });
+  }
+
+  private normalizeTargetUserIds(
+    targetUserIds?: BadgeCountSignalTargetUserIds,
+  ): string[] {
+    if (!targetUserIds) {
+      return [];
+    }
+
+    const userIds = Array.isArray(targetUserIds)
+      ? targetUserIds
+      : [targetUserIds];
+
+    return userIds.map((userId) => userId.toString());
   }
 
   private countCourses(isStaff: boolean): Promise<number> {

@@ -123,6 +123,19 @@ export class UserService {
     private readonly userCaptchaService: UserCaptchaService,
   ) {}
 
+  async findActiveStaffUserIds(): Promise<string[]> {
+    const staffUsers = await this.userModel
+      .find({
+        roles: { $in: [UserRole.SUPER_ADMIN, UserRole.ADMIN] },
+        status: UserStatus.ACTIVE,
+      })
+      .select({ _id: 1 })
+      .lean<Array<{ _id: Types.ObjectId }>>()
+      .exec();
+
+    return staffUsers.map((user) => user._id.toString());
+  }
+
   async login(
     identity: string,
     password: string,

@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 
+import { BadgeModule } from "../badge";
 import { DatabaseModule } from "../database";
 import { FileModule } from "../file";
 import { TicketService } from "./ticket.service";
@@ -11,7 +12,7 @@ import {
 import { TicketListQuery, UserTicketListQuery } from "./graphql/queries";
 
 @Module({
-  imports: [DatabaseModule, FileModule],
+  imports: [BadgeModule, DatabaseModule, FileModule],
   providers: [
     TicketService,
     SuperAdminTicketSendMutation,

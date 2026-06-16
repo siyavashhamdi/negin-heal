@@ -11,6 +11,8 @@ import { PAGINATION_CONSTANT } from "../../constants";
 import { SortingOrder } from "../../common/pagination/input";
 import { buildSortOptions } from "../../common/pagination/utils";
 import {
+  BadgeCountTriggerAction,
+  BadgeCountTriggerSource,
   TicketClosedBy,
   TicketStatus,
   UserRole,
@@ -23,6 +25,7 @@ import {
   User,
   UserDocument,
 } from "../../database/schemas";
+import { BadgeService } from "../badge";
 import { FileService } from "../file";
 import {
   TicketListGqlInput,
@@ -68,6 +71,7 @@ export class TicketService {
     @InjectModel(User.name)
     private readonly userModel: Model<UserDocument>,
     private readonly fileService: FileService,
+    private readonly badgeService: BadgeService,
   ) {}
 
   async list(
@@ -185,14 +189,19 @@ export class TicketService {
     );
 
     if (params.input.id) {
-      const existingTicket = await this.ticketModel.findById(params.input.id).exec();
+      const existingTicket = await this.ticketModel
+        .findById(params.input.id)
+        .exec();
       if (!existingTicket) {
         throw new NotFoundException("Ticket not found");
       }
 
       if (
         params.actorRole === UserRole.END_USER &&
-        !this.isSameObjectId(existingTicket.audit?.createdBy, params.actorUserId)
+        !this.isSameObjectId(
+          existingTicket.audit?.createdBy,
+          params.actorUserId,
+        )
       ) {
         throw new ForbiddenException(
           "You can only update your own support tickets",
@@ -228,7 +237,10 @@ export class TicketService {
       return savedTicket.toObject() as TicketListRecord;
     }
 
-    const title = this.normalizeRequiredText(params.input.title, "Ticket title");
+    const title = this.normalizeRequiredText(
+      params.input.title,
+      "Ticket title",
+    );
     if (!params.input.category) {
       throw new BadRequestException("Ticket category is required");
     }
@@ -255,6 +267,15 @@ export class TicketService {
         },
       ],
     });
+    await this.badgeService.publishCountSignal({
+      targetUserIds: assignedEndUserId,
+      includeStaffUsers: true,
+      payload: {
+        source: BadgeCountTriggerSource.TICKET,
+        action: BadgeCountTriggerAction.CREATED,
+        ticketId: createdTicket._id.toString(),
+      },
+    });
 
     return createdTicket.toObject() as TicketListRecord;
   }
@@ -273,7 +294,9 @@ export class TicketService {
       params.actorRole === UserRole.END_USER &&
       !this.isSameObjectId(ticket.audit?.createdBy, params.actorUserId)
     ) {
-      throw new ForbiddenException("You can only close your own support tickets");
+      throw new ForbiddenException(
+        "You can only close your own support tickets",
+      );
     }
 
     ticket.status = TicketStatus.CLOSED;
@@ -291,8 +314,7 @@ export class TicketService {
   private async resolveAssignedEndUserId(
     input: UserTicketSendGqlInput | SuperAdminTicketSendGqlInput,
   ): Promise<Types.ObjectId> {
-    const endUserId =
-      "endUserId" in input ? input.endUserId : undefined;
+    const endUserId = "endUserId" in input ? input.endUserId : undefined;
     if (!endUserId) {
       throw new BadRequestException("End-user ID is required");
     }
@@ -512,7 +534,9 @@ export class TicketService {
             fileObjectIds.map(
               async (fileId): Promise<TicketFileLookupRecord | undefined> => {
                 try {
-                  const file = await this.fileService.findById(fileId.toString());
+                  const file = await this.fileService.findById(
+                    fileId.toString(),
+                  );
                   return {
                     _id: file.id,
                     name: file.name,
@@ -598,7 +622,9 @@ export class TicketService {
       body: message.body,
       senderUser: this.toTicketUserMinimalResponse(
         senderUserId,
-        senderUserId ? relatedLookups.usersById.get(senderUserId.toString()) : undefined,
+        senderUserId
+          ? relatedLookups.usersById.get(senderUserId.toString())
+          : undefined,
       ),
       attachmentFileIds,
       attachmentFiles: attachmentFileIds.map((fileId) =>
@@ -660,7 +686,10 @@ export class TicketService {
   ): UserTicketListGqlResponse["messages"][number] {
     const attachmentFileIds = message.attachmentFileIds ?? [];
     const senderUserId = message.senderUserId ?? options.fallbackSenderUserId;
-    const isOwnerMessage = this.isSameObjectId(senderUserId, options.ticketOwnerUserId);
+    const isOwnerMessage = this.isSameObjectId(
+      senderUserId,
+      options.ticketOwnerUserId,
+    );
 
     return {
       body: message.body,

@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ReactElement } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type ReactElement } from "react";
 import {
   Box,
   Button,
@@ -11,6 +11,7 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material";
+import { useQuery } from "@apollo/client/react";
 import { alpha, type Theme } from "@mui/material/styles";
 
 import { useAuth } from "../../contexts/AuthContext";
@@ -19,10 +20,18 @@ import { SUPER_ADMIN_TICKET_SEND_MUTATION } from "../../graphql/mutations/superA
 import { TICKET_CLOSE_MUTATION } from "../../graphql/mutations/ticketClose.mutation";
 import { USER_TICKET_CLOSE_MUTATION } from "../../graphql/mutations/userTicketClose.mutation";
 import { USER_TICKET_SEND_MUTATION } from "../../graphql/mutations/userTicketSend.mutation";
+import { USER_LIST_QUERY } from "../../graphql/queries/userList.query";
+import { useDebounce } from "../../hooks/useDebounce";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
 import EntityModalShell from "../../shared/crud/EntityModalShell";
+import EntityAutocompleteField from "../../shared/forms/EntityAutocompleteField";
 import FileUploadField from "../../shared/forms/FileUploadField";
+import {
+  type UserListQuery,
+  type UserListQueryVariables,
+  type UserListRow,
+} from "../UsersManagement/users-management-list.api";
 import {
   TICKET_CATEGORY_LABEL,
   TICKET_CATEGORY_OPTIONS,
@@ -111,6 +120,13 @@ type TicketCloseMutationVariables = {
   readonly id: string;
 };
 
+type EndUserOption = {
+  readonly id: string;
+  readonly label: string;
+  readonly subtitle: string;
+  readonly row: UserListRow;
+};
+
 type PreviewableAttachment = SupportTicketAttachment & {
   readonly accessUrl: string;
 };
@@ -130,6 +146,8 @@ export type TicketDialogProps = {
 };
 
 const EMPTY_DISPLAY = "—";
+const END_USER_DEFAULT_OPTIONS_LIMIT = 10;
+const END_USER_SEARCH_OPTIONS_LIMIT = 200;
 
 function readFileAsBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -184,7 +202,7 @@ function isPreviewableMedia(file: SupportTicketAttachment): file is PreviewableA
   const mimeType = file.mimeType?.trim() ?? "";
   return Boolean(
     accessUrl &&
-    (isImageMimeType(mimeType) || isVideoMimeType(mimeType) || isAudioMimeType(mimeType)),
+    (isImageMimeType(mimeType) || isVideoMimeType(mimeType) || isAudioMimeType(mimeType))
   );
 }
 
@@ -193,7 +211,7 @@ function formatUserDisplayName(user: SupportTicketMessage["senderUser"]): string
     return "فرستنده نامشخص";
   }
   const parts = [user.profile?.firstName?.trim(), user.profile?.lastName?.trim()].filter(
-    (part): part is string => Boolean(part),
+    (part): part is string => Boolean(part)
   );
   if (parts.length > 0) {
     return parts.join(" ");
@@ -201,10 +219,30 @@ function formatUserDisplayName(user: SupportTicketMessage["senderUser"]): string
   return user.username?.trim() || "فرستنده نامشخص";
 }
 
+function getUserFullName(row: UserListRow): string {
+  const parts = [row.profile?.firstName?.trim(), row.profile?.lastName?.trim()].filter(
+    (part): part is string => Boolean(part)
+  );
+
+  return parts.length > 0 ? parts.join(" ") : row.username;
+}
+
+function userToEndUserOption(row: UserListRow): EndUserOption {
+  const phone = row.profile?.phoneNumber?.trim();
+  const email = row.profile?.email?.trim();
+
+  return {
+    id: row.id,
+    label: getUserFullName(row),
+    subtitle: [row.username, phone || email].filter(Boolean).join(" · "),
+    row,
+  };
+}
+
 function renderAttachmentLinks(
   attachments: readonly SupportTicketAttachment[],
   onPreviewAttachment: (file: PreviewableAttachment) => void,
-  isOwnMessage: boolean,
+  isOwnMessage: boolean
 ): ReactElement | null {
   if (attachments.length === 0) {
     return null;
@@ -247,18 +285,18 @@ function renderAttachmentLinks(
                 bgcolor: (theme) =>
                   alpha(
                     isOwnMessage ? theme.palette.primary.main : theme.palette.secondary.main,
-                    theme.palette.mode === "dark" ? 0.1 : 0.05,
+                    theme.palette.mode === "dark" ? 0.1 : 0.05
                   ),
                 borderColor: (theme) =>
                   alpha(
                     isOwnMessage ? theme.palette.primary.main : theme.palette.secondary.main,
-                    theme.palette.mode === "dark" ? 0.34 : 0.18,
+                    theme.palette.mode === "dark" ? 0.34 : 0.18
                   ),
                 "&:hover": {
                   bgcolor: (theme) =>
                     alpha(
                       isOwnMessage ? theme.palette.primary.main : theme.palette.secondary.main,
-                      theme.palette.mode === "dark" ? 0.16 : 0.09,
+                      theme.palette.mode === "dark" ? 0.16 : 0.09
                     ),
                 },
               }}
@@ -275,7 +313,7 @@ function renderAttachmentLinks(
                   bgcolor: (theme) =>
                     alpha(
                       isOwnMessage ? theme.palette.primary.main : theme.palette.secondary.main,
-                      0.16,
+                      0.16
                     ),
                   fontWeight: 900,
                 }}
@@ -400,12 +438,12 @@ function MessageBubble({
           borderColor: (theme) =>
             alpha(
               isOwnMessage ? theme.palette.primary.main : theme.palette.secondary.main,
-              theme.palette.mode === "dark" ? 0.42 : 0.22,
+              theme.palette.mode === "dark" ? 0.42 : 0.22
             ),
           bgcolor: (theme) =>
             alpha(
               isOwnMessage ? theme.palette.primary.main : theme.palette.secondary.main,
-              theme.palette.mode === "dark" ? 0.2 : 0.07,
+              theme.palette.mode === "dark" ? 0.2 : 0.07
             ),
           boxShadow: (theme) =>
             theme.palette.mode === "dark"
@@ -433,7 +471,7 @@ function MessageBubble({
               bgcolor: (theme) =>
                 alpha(
                   isOwnMessage ? theme.palette.primary.main : theme.palette.secondary.main,
-                  theme.palette.mode === "dark" ? 0.24 : 0.12,
+                  theme.palette.mode === "dark" ? 0.24 : 0.12
                 ),
               color: isOwnMessage ? "primary.dark" : "secondary.dark",
             }}
@@ -479,16 +517,19 @@ const TicketDialog = ({
   const [category, setCategory] = useState<TicketCategory>(defaultCategory);
   const [priority, setPriority] = useState<TicketPriority>("MEDIUM");
   const [messageBody, setMessageBody] = useState("");
-  const [endUserId, setEndUserId] = useState("");
+  const [selectedEndUser, setSelectedEndUser] = useState<EndUserOption | null>(null);
+  const [endUserSearch, setEndUserSearch] = useState("");
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
   const [previewAttachment, setPreviewAttachment] = useState<PreviewableAttachment | null>(null);
+  const debouncedEndUserSearch = useDebounce(endUserSearch, 400);
 
   const resetForm = (): void => {
     setTitle("");
     setCategory(defaultCategory);
     setPriority("MEDIUM");
     setMessageBody("");
-    setEndUserId("");
+    setSelectedEndUser(null);
+    setEndUserSearch("");
     setAttachmentFile(null);
   };
 
@@ -510,6 +551,39 @@ const TicketDialog = ({
   >(FILE_UPLOAD_MUTATION, {
     errorMessage: t("pages.support.attachments.uploadError"),
   });
+
+  const endUserOptionsVariables = useMemo<UserListQueryVariables>(() => {
+    const query = debouncedEndUserSearch.trim();
+
+    return {
+      input: {
+        filters: {
+          query: query || null,
+          role: "END_USER",
+          status: "ACTIVE",
+        },
+        options: {
+          limit: query ? END_USER_SEARCH_OPTIONS_LIMIT : END_USER_DEFAULT_OPTIONS_LIMIT,
+          skip: 0,
+          sort: { createdAt: "DESC" },
+        },
+      },
+    };
+  }, [debouncedEndUserSearch]);
+
+  const { data: endUserOptionsData, loading: endUserOptionsLoading } = useQuery<
+    UserListQuery,
+    UserListQueryVariables
+  >(USER_LIST_QUERY, {
+    variables: endUserOptionsVariables,
+    fetchPolicy: "cache-first",
+    skip: !open || mode !== "create" || !isSuperAdmin,
+  });
+
+  const endUserOptions = useMemo(
+    () => (endUserOptionsData?.userList.items ?? []).map(userToEndUserOption),
+    [endUserOptionsData]
+  );
 
   const [sendUserTicket, sendUserTicketResult] = useMutationWithSnackbar<
     UserTicketSendMutation,
@@ -608,8 +682,7 @@ const TicketDialog = ({
       if (!trimmedTitle) {
         return;
       }
-      const trimmedEndUserId = endUserId.trim();
-      if (isSuperAdmin && !trimmedEndUserId) {
+      if (isSuperAdmin && !selectedEndUser) {
         return;
       }
 
@@ -625,7 +698,7 @@ const TicketDialog = ({
 
       if (isSuperAdmin) {
         void sendSuperAdminTicket({
-          variables: { input: { ...input, endUserId: trimmedEndUserId } },
+          variables: { input: { ...input, endUserId: selectedEndUser?.id } },
         });
       } else {
         void sendUserTicket({ variables: { input } });
@@ -737,14 +810,18 @@ const TicketDialog = ({
           {mode === "create" ? (
             <>
               {isSuperAdmin ? (
-                <TextField
+                <EntityAutocompleteField
+                  options={endUserOptions}
+                  value={selectedEndUser}
+                  inputValue={endUserSearch}
+                  loading={endUserOptionsLoading}
+                  onInputChange={setEndUserSearch}
+                  onChange={setSelectedEndUser}
+                  noOptionsText={t("pages.support.create.endUserNoOptions")}
                   label={t("pages.support.create.endUserIdLabel")}
                   helperText={t("pages.support.create.endUserIdHelp")}
-                  value={endUserId}
-                  onChange={(event) => setEndUserId(event.target.value)}
+                  placeholder={t("pages.support.create.endUserSearchPlaceholder")}
                   required
-                  fullWidth
-                  size="small"
                 />
               ) : null}
               <TextField
@@ -838,7 +915,7 @@ const TicketDialog = ({
                         {record.closedBy !== "-"
                           ? (TICKET_CLOSED_BY_LABEL[
                               record.closedBy as keyof typeof TICKET_CLOSED_BY_LABEL
-                          ] ?? record.closedBy)
+                            ] ?? record.closedBy)
                           : EMPTY_DISPLAY}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
