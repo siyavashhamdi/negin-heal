@@ -12,7 +12,6 @@ export type NotificationFilterTab = "all" | "unread" | "read" | "archived";
 export type NotificationListItemRow = {
   readonly id: string;
   readonly userId?: string | null;
-  readonly isGlobalAnnouncement: boolean;
   readonly source: NotificationSource;
   readonly mode: NotificationMode;
   readonly title?: string | null;
@@ -82,7 +81,6 @@ export type NotificationUpdateMutationVariables = {
 export type NotificationRecord = {
   readonly id: string;
   readonly userId: string | null;
-  readonly isGlobalAnnouncement: boolean;
   readonly source: NotificationSource;
   readonly mode: NotificationMode;
   readonly title: string;
@@ -142,7 +140,6 @@ export const mapNotificationListRowToRecord = (
 ): NotificationRecord => ({
   id: item.id,
   userId: item.userId ?? null,
-  isGlobalAnnouncement: item.isGlobalAnnouncement,
   source: item.source,
   mode: item.mode,
   title: item.title?.trim() || item.message,

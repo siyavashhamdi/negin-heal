@@ -14,6 +14,9 @@ import {
   CourseItemType,
   CourseReleaseType,
   CouponDiscountType,
+  GeneralSubscriptionUpdateType,
+  NotificationMode,
+  NotificationSource,
   UserRole,
   UserCoursePaymentMethod,
   UserCoursePurchaseCurrency,
@@ -37,6 +40,8 @@ import {
   CourseItem,
   StoredFile,
   StoredFileDocument,
+  Notification,
+  NotificationDocument,
   User,
   UserCourse,
   UserCourseDocument,
@@ -80,6 +85,7 @@ import {
 import { CoursePurchaseSubmitGqlResponse } from "./graphql/responses/course-purchase-submit.gql.response";
 import { AppSettingsService } from "../app-settings";
 import { CouponService } from "../coupon";
+import { UserSubscriptionService } from "../user";
 
 type PlainCourse = Course & {
   _id: Types.ObjectId;
@@ -188,9 +194,12 @@ export class CourseService {
     private readonly storedFileModel: Model<StoredFileDocument>,
     @InjectModel(User.name)
     private readonly userModel: Model<UserDocument>,
+    @InjectModel(Notification.name)
+    private readonly notificationModel: Model<NotificationDocument>,
     private readonly fileService: FileService,
     private readonly appSettingsService: AppSettingsService,
     private readonly couponService: CouponService,
+    private readonly userSubscriptionService: UserSubscriptionService,
   ) {}
 
   async create(input: CourseCreateGqlInput): Promise<CourseListGqlResponse> {
@@ -449,10 +458,12 @@ export class CourseService {
         };
       }
 
+      const previousStatus = userCourse.purchase.status;
       userCourse.purchase.status = UserCoursePurchaseStatus.PAID;
       userCourse.purchase.paidAt = new Date();
       userCourse.purchase.transactionId = verification.ref_id?.toString();
       await userCourse.save();
+      await this.notifyCoursePurchasePaid(userCourse, previousStatus);
 
       return {
         status: "success",
@@ -521,6 +532,7 @@ export class CourseService {
       throw new NotFoundException("Payment record not found");
     }
 
+    const previousStatus = userCourse.purchase.status;
     const now = new Date();
     userCourse.purchase.status = input.status;
     userCourse.purchase.isManualStatusChange = true;
@@ -531,6 +543,9 @@ export class CourseService {
     this.setPurchaseStatusTimestamp(userCourse, input.status, now);
 
     await userCourse.save();
+    await this.notifyCoursePurchasePaid(userCourse, previousStatus, {
+      approvedByInvestigationTeam: true,
+    });
 
     const relatedLookups = await this.buildCoursePaymentRelatedLookups([
       userCourse.toObject() as CoursePaymentListRecord,
@@ -1827,14 +1842,13 @@ export class CourseService {
   ): Promise<PurchasePriceSummary> {
     const couponCode = this.normalizeOptionalText(input.couponCode);
     if (couponCode) {
-      const couponResult =
-        await this.couponService.validateForCoursePurchase(
-          {
-            courseId: course._id,
-            code: couponCode,
-          },
-          userId,
-        );
+      const couponResult = await this.couponService.validateForCoursePurchase(
+        {
+          courseId: course._id,
+          code: couponCode,
+        },
+        userId,
+      );
 
       if (!couponResult.isValid) {
         throw new BadRequestException(
@@ -2340,7 +2354,9 @@ export class CourseService {
                 fileId,
               ): Promise<CoursePaymentFileLookupRecord | undefined> => {
                 try {
-                  const file = await this.fileService.findById(fileId.toString());
+                  const file = await this.fileService.findById(
+                    fileId.toString(),
+                  );
                   return {
                     _id: file.id,
                     name: file.name,
@@ -2419,7 +2435,9 @@ export class CourseService {
     const uploadedReceiptFile = this.toCoursePaymentStoredFileResponse(
       purchase.uploadedReceiptFileId,
       purchase.uploadedReceiptFileId
-        ? relatedLookups.filesById.get(purchase.uploadedReceiptFileId.toString())
+        ? relatedLookups.filesById.get(
+            purchase.uploadedReceiptFileId.toString(),
+          )
         : undefined,
     );
     const receiptUploader = this.toCoursePaymentRelatedUserResponse(
@@ -2431,7 +2449,9 @@ export class CourseService {
     const manualStatusChanger = this.toCoursePaymentRelatedUserResponse(
       purchase.manualStatusChangedBy,
       purchase.manualStatusChangedBy
-        ? relatedLookups.usersById.get(purchase.manualStatusChangedBy.toString())
+        ? relatedLookups.usersById.get(
+            purchase.manualStatusChangedBy.toString(),
+          )
         : undefined,
     );
 
@@ -2522,6 +2542,62 @@ export class CourseService {
     if (status === UserCoursePurchaseStatus.CANCELLED) {
       userCourse.purchase.cancelledAt = timestamp;
     }
+  }
+
+  private async notifyCoursePurchasePaid(
+    userCourse: UserCourseDocument,
+    previousStatus: UserCoursePurchaseStatus,
+    options?: { approvedByInvestigationTeam?: boolean },
+  ): Promise<void> {
+    if (userCourse.purchase.status !== UserCoursePurchaseStatus.PAID) {
+      return;
+    }
+
+    const approvedByInvestigationTeam =
+      options?.approvedByInvestigationTeam === true;
+
+    if (approvedByInvestigationTeam) {
+      if (previousStatus === UserCoursePurchaseStatus.PAID) {
+        return;
+      }
+    } else if (previousStatus !== UserCoursePurchaseStatus.PENDING) {
+      return;
+    }
+
+    const courseId = userCourse.courseId.toString();
+    const courseTitle =
+      this.normalizeOptionalText(userCourse.courseSnapshot?.title) || "دوره";
+    const title = "دسترسی به دوره فعال شد";
+    const message = approvedByInvestigationTeam
+      ? `پرداخت دوره «${courseTitle}» توسط تیم بررسی تأیید شد و اکنون می‌توانید به محتوای دوره دسترسی داشته باشید.`
+      : `خرید دوره «${courseTitle}» با موفقیت انجام شد.`;
+    const notificationPayload: Record<string, unknown> = {
+      courseId,
+      approvedByInvestigationTeam,
+    };
+    const subscriptionPayload: Record<string, unknown> = {
+      ...notificationPayload,
+      title,
+      description: message,
+      mode: NotificationMode.SUCCESS,
+    };
+
+    const notification = await this.notificationModel.create({
+      userId: userCourse.userId,
+      isGlobalAnnouncement: false,
+      source: NotificationSource.PAYMENT,
+      mode: NotificationMode.SUCCESS,
+      title,
+      message,
+      payload: notificationPayload,
+    });
+
+    await this.userSubscriptionService.publishToUser({
+      userId: userCourse.userId.toString(),
+      updateType: GeneralSubscriptionUpdateType.NOTIFICATION,
+      targetId: notification._id.toString(),
+      payload: subscriptionPayload,
+    });
   }
 
   private toCoursePurchaseSubmitResponse(

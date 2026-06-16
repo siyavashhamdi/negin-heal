@@ -4,6 +4,7 @@ import { AppSettingsModule } from "../app-settings";
 import { DatabaseModule } from "../database";
 import { FileModule } from "../file";
 import { CouponModule } from "../coupon";
+import { UserModule } from "../user";
 import { CoursePaymentController } from "./api/course-payment.controller";
 import { CourseService } from "./course.service";
 import {
@@ -22,7 +23,7 @@ import {
 } from "./graphql/queries";
 
 @Module({
-  imports: [AppSettingsModule, DatabaseModule, FileModule, CouponModule],
+  imports: [AppSettingsModule, DatabaseModule, FileModule, CouponModule, UserModule],
   controllers: [CoursePaymentController],
   providers: [
     CourseService,

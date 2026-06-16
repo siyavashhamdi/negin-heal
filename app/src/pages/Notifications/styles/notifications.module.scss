@@ -197,6 +197,46 @@
   line-height: 1.75;
 }
 
+.cardMessageLinkWrap {
+  display: inline-flex;
+  align-items: center;
+  margin-inline-start: 0.45rem;
+  padding: 0.08rem;
+  border: 0.0625rem solid color-mix(in srgb, #10b981 24%, var(--app-surface-border));
+  border-radius: 999rem;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, #10b981 8%, transparent),
+      color-mix(in srgb, #10b981 3%, transparent)
+    ),
+    color-mix(in srgb, var(--app-surface-bg) 96%, #ffffff);
+  vertical-align: middle;
+}
+
+.cardMessageLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.16rem 0.58rem;
+  border-radius: 999rem;
+  background: color-mix(in srgb, #10b981 10%, var(--app-surface-bg));
+  color: #047857;
+  font-size: 0.78rem;
+  font-weight: variables.$font-weight-semibold;
+  line-height: 1.25;
+  text-decoration: none;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.cardMessageLink:hover,
+.cardMessageLink:focus-visible {
+  background: color-mix(in srgb, #10b981 16%, var(--app-surface-bg));
+  color: #065f46;
+}
+
 .cardActions {
   display: flex;
   align-items: center;
@@ -340,5 +380,20 @@ body[data-theme="dark"] {
 
   .actionIconButton {
     background: color-mix(in srgb, var(--app-surface-bg) 88%, #020617) !important;
+  }
+
+  .cardMessageLinkWrap {
+    background:
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, #10b981 12%, transparent),
+        color-mix(in srgb, #10b981 4%, transparent)
+      ),
+      color-mix(in srgb, var(--app-surface-bg) 86%, #0f172a);
+  }
+
+  .cardMessageLink {
+    background: color-mix(in srgb, #10b981 14%, var(--app-surface-bg));
+    color: #6ee7b7;
   }
 }

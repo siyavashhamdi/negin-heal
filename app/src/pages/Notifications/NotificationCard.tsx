@@ -1,4 +1,5 @@
 import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
+import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
@@ -6,9 +7,11 @@ import MarkEmailUnreadOutlinedIcon from "@mui/icons-material/MarkEmailUnreadOutl
 import UnarchiveOutlinedIcon from "@mui/icons-material/UnarchiveOutlined";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import { IconButton, Tooltip } from "@mui/material";
-import { type ReactElement } from "react";
+import { type ReactElement, useMemo } from "react";
+import { Link as RouterLink } from "react-router-dom";
 
 import { useTranslation } from "../../hooks/useTranslation";
+import { resolveNotificationCourseLink } from "../../utilities/notification-course-link.util";
 import { formatRelativeTimeLabel } from "../../utilities/relative-time.util";
 import { type NotificationMode, type NotificationRecord } from "./notifications-list.api";
 import styles from "./styles/notifications.module.scss";
@@ -49,6 +52,10 @@ const NotificationCard = ({
   const timeLabel = formatRelativeTimeLabel(notification.createdAt ?? notification.updatedAt);
   const isArchived = Boolean(notification.archivedAt);
   const shouldShowMessage = notification.message.trim() !== notification.title.trim();
+  const courseLink = useMemo(
+    () => resolveNotificationCourseLink(notification.source, notification.payload),
+    [notification.payload, notification.source],
+  );
   const readActionLabel = t(
     !notification.isRead
       ? "pages.notifications.actions.markRead"
@@ -100,8 +107,26 @@ const NotificationCard = ({
           </div>
         </div>
 
-        {shouldShowMessage ? (
-          <p className={styles.cardMessage}>{notification.message}</p>
+        {shouldShowMessage || courseLink ? (
+          <p className={styles.cardMessage}>
+            {shouldShowMessage ? notification.message : null}
+            {courseLink ? (
+              <span className={styles.cardMessageLinkWrap}>
+                <RouterLink
+                  to={courseLink.href}
+                  className={styles.cardMessageLink}
+                  onClick={() => {
+                    if (!notification.isRead) {
+                      onMarkRead(notification.id);
+                    }
+                  }}
+                >
+                  <span>{t("pages.notifications.paymentApproved.action")}</span>
+                  <ArrowBackRoundedIcon fontSize="inherit" />
+                </RouterLink>
+              </span>
+            ) : null}
+          </p>
         ) : null}
 
         <div className={styles.cardFooter}>

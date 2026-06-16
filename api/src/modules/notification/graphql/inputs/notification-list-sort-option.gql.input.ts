@@ -85,11 +85,4 @@ export class NotificationListSortOptionInput {
   @IsEnum(SortingOrder, { message: "Sort order must be ASC or DESC" })
   isRead?: SortingOrder;
 
-  @Field(() => SortingOrder, {
-    nullable: true,
-    description: "Sort by global announcement state",
-  })
-  @IsOptional()
-  @IsEnum(SortingOrder, { message: "Sort order must be ASC or DESC" })
-  isGlobalAnnouncement?: SortingOrder;
 }

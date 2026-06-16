@@ -75,14 +75,6 @@ export class NotificationListFilterInput {
 
   @Field(() => Boolean, {
     nullable: true,
-    description: "Filter global announcements or direct user notifications",
-  })
-  @IsOptional()
-  @IsBoolean({ message: "isGlobalAnnouncement filter must be a boolean" })
-  isGlobalAnnouncement?: boolean;
-
-  @Field(() => Boolean, {
-    nullable: true,
     description: "Filter by whether the notification is archived",
   })
   @IsOptional()

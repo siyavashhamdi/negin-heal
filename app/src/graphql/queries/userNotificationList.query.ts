@@ -6,7 +6,6 @@ export const USER_NOTIFICATION_LIST_QUERY = gql`
       items {
         id
         userId
-        isGlobalAnnouncement
         source
         mode
         title

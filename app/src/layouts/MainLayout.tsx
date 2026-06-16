@@ -275,7 +275,7 @@ export function MainLayout({
     const messageType =
       typeof payload?.messageType === "string"
         ? payload.messageType.toUpperCase()
-        : GENERAL_NOTIFICATION_MESSAGE_TYPES.POPUP;
+        : undefined;
 
     setLiveNotifications((previous) => [
       {
@@ -296,6 +296,10 @@ export function MainLayout({
         notifications: previous.notifications + 1,
       };
     });
+    if (!messageType) {
+      return;
+    }
+
     if (messageType === GENERAL_NOTIFICATION_MESSAGE_TYPES.SNACKBAR) {
       showSnackbar(
         incomingTitle ? `${incomingTitle}: ${incomingDescription}` : incomingDescription,

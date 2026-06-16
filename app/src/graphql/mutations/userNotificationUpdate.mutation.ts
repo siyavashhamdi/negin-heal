@@ -11,7 +11,6 @@ export const USER_NOTIFICATION_UPDATE_MUTATION = gql`
       items {
         id
         userId
-        isGlobalAnnouncement
         source
         mode
         title

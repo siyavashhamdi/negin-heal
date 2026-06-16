@@ -30,7 +30,6 @@ type NotificationListRecord = Pick<
   Notification,
   | "_id"
   | "userId"
-  | "isGlobalAnnouncement"
   | "source"
   | "mode"
   | "title"
@@ -586,7 +585,6 @@ export class NotificationService {
       source: "source",
       mode: "mode",
       isRead: "isRead",
-      isGlobalAnnouncement: "isGlobalAnnouncement",
     };
   }
 
@@ -596,7 +594,6 @@ export class NotificationService {
     return {
       id: notification._id,
       userId: notification.userId,
-      isGlobalAnnouncement: notification.isGlobalAnnouncement,
       source: notification.source,
       mode: notification.mode,
       title: notification.title,

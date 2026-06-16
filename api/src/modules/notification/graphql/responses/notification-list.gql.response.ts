@@ -16,9 +16,6 @@ export class NotificationListGqlResponse {
   })
   userId?: Types.ObjectId;
 
-  @Field({ description: "Whether this notification is a global announcement" })
-  isGlobalAnnouncement: boolean;
-
   @Field(() => NotificationSource, {
     description: "Domain source that produced this notification",
   })
