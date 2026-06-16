@@ -16,7 +16,8 @@
             "usersManagement": "کاربران",
             "login": "ورود به سیستم",
             "genericPage": "صفحه",
-            "moreSystemSettings": "تنظیمات سامانه"
+            "moreSystemSettings": "تنظیمات سامانه",
+            "morePaymentCoupons": "کدهای تخفیف"
         }
     }
 }

@@ -50,6 +50,7 @@ import {
 } from "../pages/Courses/courses-list.api";
 import { useGeneralUpdatesSubscription, type GeneralUpdateEvent } from "../hooks/useGeneralUpdatesSubscription";
 import { APP_SHELL_ROUTES } from "../routing/app-shell-routes";
+import { resolveNotificationActionPayload } from "../utilities/notification-action.util";
 import { SideMenuNav } from "./SideMenuNav";
 import "./styles/MainLayout.scss";
 
@@ -68,11 +69,16 @@ type NotificationPayload = Partial<TitleDescItem> & {
   readonly mode?: string;
 };
 type GeneralUpdatePopupMode = "info" | "success" | "warning" | "error";
+type GeneralUpdatePopupAction = {
+  readonly label: string;
+  readonly href: string;
+};
 type GeneralUpdatePopup = {
   readonly id: string;
   readonly title?: string;
   readonly description: string;
   readonly mode: GeneralUpdatePopupMode;
+  readonly action?: GeneralUpdatePopupAction;
 };
 type BadgeCountsPayload = {
   readonly courses?: number;
@@ -308,6 +314,7 @@ export function MainLayout({
     const incomingTimeLabel = formatGeneralUpdateTimeLabel(event.createdAt);
     const popupId = event.targetId || `${event.updateType}-${event.createdAt}`;
     const popupMode = resolvePopupMode(payload?.mode);
+    const action = resolveNotificationActionPayload(payload) ?? undefined;
     const messageType =
       typeof payload?.messageType === "string"
         ? payload.messageType.toUpperCase()
@@ -345,6 +352,7 @@ export function MainLayout({
       title: incomingTitle,
       description: incomingDescription,
       mode: popupMode,
+      action,
     });
   }, [showSnackbar]);
 
@@ -469,6 +477,33 @@ export function MainLayout({
           <div className="main-layout__general-update-popup-content">
             {generalUpdatePopup.title ? <h3>{generalUpdatePopup.title}</h3> : null}
             <p>{generalUpdatePopup.description}</p>
+            {generalUpdatePopup.action ? (
+              generalUpdatePopup.action.href.startsWith("/") ? (
+                <Button
+                  size="small"
+                  variant="contained"
+                  className="main-layout__general-update-popup-action"
+                  component={RouterLink}
+                  to={generalUpdatePopup.action.href}
+                  onClick={() => setGeneralUpdatePopup(null)}
+                >
+                  {generalUpdatePopup.action.label}
+                </Button>
+              ) : (
+                <Button
+                  size="small"
+                  variant="contained"
+                  className="main-layout__general-update-popup-action"
+                  component="a"
+                  href={generalUpdatePopup.action.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setGeneralUpdatePopup(null)}
+                >
+                  {generalUpdatePopup.action.label}
+                </Button>
+              )
+            ) : null}
           </div>
           <IconButton
             className="main-layout__general-update-popup-close"

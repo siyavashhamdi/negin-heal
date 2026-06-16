@@ -286,6 +286,24 @@ $hairline: 0.0625rem solid;
   line-height: 1.8;
 }
 
+.main-layout__general-update-popup-action.MuiButton-root {
+  justify-self: start;
+  margin-block-start: 0.35rem;
+  min-height: 1.85rem;
+  padding-inline: 0.75rem;
+  border-radius: 999rem;
+  font-size: 0.74rem;
+  font-weight: variables.$font-weight-semibold;
+  text-transform: none;
+  box-shadow: none;
+  background: var(--general-update-popup-accent);
+}
+
+.main-layout__general-update-popup-action.MuiButton-root:hover {
+  background: color-mix(in srgb, var(--general-update-popup-accent) 88%, #000000 12%);
+  box-shadow: none;
+}
+
 .main-layout__general-update-popup-icon {
   display: inline-grid;
   place-items: center;

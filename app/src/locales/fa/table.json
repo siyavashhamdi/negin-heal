@@ -186,6 +186,39 @@
                     "updatedAtFrom": "بروزرسانی از تاریخ",
                     "updatedAtTo": "بروزرسانی تا تاریخ"
                 }
+            },
+            "paymentCoupons": {
+                "columns": {
+                    "id": "شناسه",
+                    "code": "کد",
+                    "title": "عنوان",
+                    "description": "توضیحات",
+                    "discountType": "نوع تخفیف",
+                    "discountValue": "مقدار تخفیف",
+                    "startsAt": "شروع اعتبار",
+                    "expiresAt": "پایان اعتبار",
+                    "totalUsageLimit": "سقف کل استفاده",
+                    "perUserUsageLimit": "سقف هر کاربر",
+                    "applicableCourseIds": "دوره‌های قابل استفاده",
+                    "isFirstPurchaseOnly": "فقط خرید اول",
+                    "isActive": "وضعیت",
+                    "totalUsageCount": "دفعات استفاده",
+                    "remainingTotalUsageCount": "باقی‌مانده",
+                    "createdBy": "ایجادکننده",
+                    "updatedBy": "بروزرسان",
+                    "createdAt": "تاریخ ایجاد",
+                    "updatedAt": "آخرین بروزرسانی"
+                },
+                "filters": {
+                    "startsAtFrom": "شروع از تاریخ",
+                    "startsAtTo": "شروع تا تاریخ",
+                    "expiresAtFrom": "انقضا از تاریخ",
+                    "expiresAtTo": "انقضا تا تاریخ",
+                    "createdAtFrom": "ایجاد از تاریخ",
+                    "createdAtTo": "ایجاد تا تاریخ",
+                    "updatedAtFrom": "بروزرسانی از تاریخ",
+                    "updatedAtTo": "بروزرسانی تا تاریخ"
+                }
             }
         }
     }

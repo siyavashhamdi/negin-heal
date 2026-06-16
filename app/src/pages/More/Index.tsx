@@ -1,5 +1,6 @@
 import BugReportRoundedIcon from "@mui/icons-material/BugReportRounded";
 import CampaignRoundedIcon from "@mui/icons-material/CampaignRounded";
+import ConfirmationNumberRoundedIcon from "@mui/icons-material/ConfirmationNumberRounded";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
 import GavelRoundedIcon from "@mui/icons-material/GavelRounded";
@@ -80,17 +81,14 @@ const More = (): ReactElement => {
     APP_TERMS_OF_USE_PAGE_QUERY,
     {
       fetchPolicy: "cache-and-network",
-    },
+    }
   );
-  const [preferredTheme, setPreferredTheme] =
-    useState<ThemePreference>(initialThemePreference);
+  const [preferredTheme, setPreferredTheme] = useState<ThemePreference>(initialThemePreference);
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(
-    initialNotificationsEnabled,
+    initialNotificationsEnabled
   );
   const lastSyncedThemePreferenceRef = useRef<ThemePreference | null>(serverThemePreference);
-  const lastSyncedNotificationsEnabledRef = useRef<boolean | undefined>(
-    serverNotificationsEnabled,
-  );
+  const lastSyncedNotificationsEnabledRef = useRef<boolean | undefined>(serverNotificationsEnabled);
   const [updatePreferences, updatePreferencesResult] = useMutationWithSnackbar<
     UserProfilePreferencesMutationResult,
     UserProfilePreferencesMutationVariables
@@ -101,6 +99,7 @@ const More = (): ReactElement => {
   const isDarkMode = preferredTheme === "dark";
   const isUpdatingPreferences = updatePreferencesResult.loading;
   const isSuperAdmin = user?.roles?.includes("SUPER_ADMIN") === true;
+  const shouldShowBugReport = !isSuperAdmin;
   const privacyPolicyPage = data?.appPrivacyPolicyPageConfig ?? EMPTY_APP_PRIVACY_POLICY_PAGE;
   const termsOfUsePage = termsOfUseData?.appTermsOfUsePageConfig ?? EMPTY_APP_TERMS_OF_USE_PAGE;
   const shouldShowPrivacyPolicy = hasText(privacyPolicyPage.html);
@@ -114,10 +113,7 @@ const More = (): ReactElement => {
   }, [mode, preferredTheme, setThemeMode]);
 
   useEffect(() => {
-    if (
-      serverThemePreference &&
-      lastSyncedThemePreferenceRef.current !== serverThemePreference
-    ) {
+    if (serverThemePreference && lastSyncedThemePreferenceRef.current !== serverThemePreference) {
       lastSyncedThemePreferenceRef.current = serverThemePreference;
       setPreferredTheme(serverThemePreference);
     }
@@ -271,6 +267,14 @@ const More = (): ReactElement => {
               <CampaignRoundedIcon />
               <span>اعلان عمومی</span>
             </button>
+            <button
+              type="button"
+              className={`${styles.linkCard} ${styles.paymentCouponsCard}`}
+              onClick={() => navigate(APP_SHELL_ROUTES.morePaymentCoupons)}
+            >
+              <ConfirmationNumberRoundedIcon />
+              <span>کدهای تخفیف</span>
+            </button>
           </>
         ) : null}
         {shouldShowPrivacyPolicy ? (
@@ -297,14 +301,16 @@ const More = (): ReactElement => {
           <InfoOutlinedIcon />
           <span>درباره سامانه</span>
         </button>
-        <button
-          type="button"
-          className={`${styles.linkCard} ${styles.bugReportCard}`}
-          onClick={() => setBugReportDialogOpen(true)}
-        >
-          <BugReportRoundedIcon />
-          <span>گزارش باگ</span>
-        </button>
+        {shouldShowBugReport ? (
+          <button
+            type="button"
+            className={`${styles.linkCard} ${styles.bugReportCard}`}
+            onClick={() => setBugReportDialogOpen(true)}
+          >
+            <BugReportRoundedIcon />
+            <span>گزارش باگ</span>
+          </button>
+        ) : null}
       </div>
 
       {shouldShowVersion ? (
