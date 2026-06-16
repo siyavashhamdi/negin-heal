@@ -6,11 +6,12 @@
 import { registerEnumType } from "@nestjs/graphql";
 
 import { GlobalAnouncementMessageType } from "./global-anouncement-message-type.enum";
-import { GlobalAnouncementMode } from "./global-anouncement-mode.enum";
 import { AppSettingValueType } from "./app-setting-value-type.enum";
 import { CourseDiscountType } from "./course-discount-type.enum";
 import { CourseItemType } from "./course-item-type.enum";
 import { CourseReleaseType } from "./course-release-type.enum";
+import { NotificationMode } from "./notification-mode.enum";
+import { NotificationSource } from "./notification-source.enum";
 import { PaymentCouponDiscountType } from "./payment-coupon-discount-type.enum";
 import { TicketCategory } from "./ticket-category.enum";
 import { TicketClosedBy } from "./ticket-closed-by.enum";
@@ -30,14 +31,19 @@ registerEnumType(SortingOrder, {
   description: "Sorting order",
 });
 
-registerEnumType(GlobalAnouncementMode, {
-  name: "GlobalAnouncementMode",
-  description: "Visual mode for global anouncements",
+registerEnumType(NotificationMode, {
+  name: "NotificationMode",
+  description: "Visual mode for notifications",
 });
 
 registerEnumType(GlobalAnouncementMessageType, {
   name: "GlobalAnouncementMessageType",
   description: "Display type used for global anouncements",
+});
+
+registerEnumType(NotificationSource, {
+  name: "NotificationSource",
+  description: "Domain source that produced a notification",
 });
 
 registerEnumType(AppSettingValueType, {

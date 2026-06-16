@@ -1,4 +1,4 @@
-export enum GlobalAnouncementMode {
+export enum NotificationMode {
   INFO = "INFO",
   SUCCESS = "SUCCESS",
   WARNING = "WARNING",

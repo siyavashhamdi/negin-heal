@@ -12,7 +12,7 @@ import GraphQLJSON from "graphql-type-json";
 
 import {
   GlobalAnouncementMessageType,
-  GlobalAnouncementMode,
+  NotificationMode,
 } from "../../../../enums";
 
 @InputType()
@@ -41,16 +41,16 @@ export class GlobalAnouncementSendGqlInput {
   @IsNotEmpty({ message: "Anouncement description is required" })
   description: string;
 
-  @Field(() => GlobalAnouncementMode, {
-    defaultValue: GlobalAnouncementMode.INFO,
+  @Field(() => NotificationMode, {
+    defaultValue: NotificationMode.INFO,
     nullable: true,
     description: "Popup mode used by clients when displaying the anouncement",
   })
   @IsOptional()
-  @IsEnum(GlobalAnouncementMode, {
+  @IsEnum(NotificationMode, {
     message: "Anouncement mode must be valid",
   })
-  mode?: GlobalAnouncementMode;
+  mode?: NotificationMode;
 
   @Field(() => GlobalAnouncementMessageType, {
     defaultValue: GlobalAnouncementMessageType.POPUP,

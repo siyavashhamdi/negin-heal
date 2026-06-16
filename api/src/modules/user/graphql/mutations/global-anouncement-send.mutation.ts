@@ -5,8 +5,8 @@ import { Args, Mutation, Resolver } from "@nestjs/graphql";
 
 import {
   GlobalAnouncementMessageType,
-  GlobalAnouncementMode,
   GeneralSubscriptionUpdateType,
+  NotificationMode,
   UserRole,
 } from "../../../../enums";
 import { GqlAuthGuard, Roles, RolesGuard } from "../../../auth";
@@ -32,7 +32,7 @@ export class GlobalAnouncementSendMutation {
   ): Promise<GlobalAnouncementSendGqlResponse> {
     const title = input.title?.trim();
     const description = input.description.trim();
-    const mode = input.mode ?? GlobalAnouncementMode.INFO;
+    const mode = input.mode ?? NotificationMode.INFO;
     const messageType = input.messageType ?? GlobalAnouncementMessageType.POPUP;
     const isPushNotification = Boolean(input.isPushNotification);
 

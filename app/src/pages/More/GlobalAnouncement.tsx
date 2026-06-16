@@ -40,19 +40,19 @@ type GlobalAnouncementSendMutationVariables = {
   readonly input: {
     readonly title?: string;
     readonly description: string;
-    readonly mode: GlobalAnouncementMode;
+    readonly mode: NotificationMode;
     readonly messageType: GlobalAnouncementMessageType;
     readonly isPushNotification: boolean;
   };
 };
 
-type GlobalAnouncementMode = "INFO" | "SUCCESS" | "WARNING" | "ERROR";
+type NotificationMode = "INFO" | "SUCCESS" | "WARNING" | "ERROR";
 type GlobalAnouncementMessageType = "POPUP" | "SNACKBAR";
 
 const MAX_TITLE_LENGTH = 90;
 const MAX_DESCRIPTION_LENGTH = 400;
 const ANOUNCEMENT_MODE_OPTIONS: readonly {
-  readonly value: GlobalAnouncementMode;
+  readonly value: NotificationMode;
   readonly label: string;
 }[] = [
   { value: "INFO", label: "اطلاع‌رسانی" },
@@ -74,7 +74,7 @@ const GlobalAnouncement = (): ReactElement => {
   const isSuperAdmin = user?.roles?.includes("SUPER_ADMIN") === true;
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [mode, setMode] = useState<GlobalAnouncementMode>("INFO");
+  const [mode, setMode] = useState<NotificationMode>("INFO");
   const [messageType, setMessageType] = useState<GlobalAnouncementMessageType>("POPUP");
   const [isPushNotification, setIsPushNotification] = useState(false);
   const [lastDelivery, setLastDelivery] =
@@ -197,7 +197,7 @@ const GlobalAnouncement = (): ReactElement => {
             select
             label="حالت نمایش"
             value={mode}
-            onChange={(event) => setMode(event.target.value as GlobalAnouncementMode)}
+            onChange={(event) => setMode(event.target.value as NotificationMode)}
             fullWidth
           >
             {ANOUNCEMENT_MODE_OPTIONS.map((option) => (
