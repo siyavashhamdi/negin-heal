@@ -1,0 +1,12 @@
+{
+  "name": "negin-heal",
+  "private": true,
+  "scripts": {
+    "build": "npm run build --prefix api && npm run build --prefix app",
+    "start": "pm2 start ecosystem.config.cjs",
+    "stop": "pm2 stop ecosystem.config.cjs",
+    "restart": "pm2 restart ecosystem.config.cjs",
+    "logs": "pm2 logs",
+    "deploy": "bash scripts/deploy.sh"
+  }
+}
