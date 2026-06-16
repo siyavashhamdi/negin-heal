@@ -45,6 +45,7 @@ import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { useDebounce } from "../../hooks/useDebounce";
+import { useBadgeCountFirstPageReload } from "../../hooks/useBadgeCountFirstPageReload";
 import { useAuth } from "../../contexts/AuthContext";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
@@ -147,6 +148,7 @@ const CoursesIndex = (): ReactElement => {
   const lastMobileScrollYRef = useRef(0);
   const mobileFilterOpenGuardUntilRef = useRef(0);
   const [items, setItems] = useState<CourseListRecord[]>([]);
+  const [isOnFirstPage, setIsOnFirstPage] = useState(true);
   const [pagination, setPagination] = useState({
     totalFiltered: 0,
     hasNextPage: false,
@@ -239,6 +241,10 @@ const CoursesIndex = (): ReactElement => {
     };
   }, [isMobile, isMobileFilterOpen]);
 
+  useEffect(() => {
+    setIsOnFirstPage(true);
+  }, [filters, sort]);
+
   const courseListVariables = useMemo(
     () => buildCourseListQueryVariables(filters, sort, COURSE_LIST_PAGE_SIZE, null),
     [filters, sort],
@@ -286,6 +292,12 @@ const CoursesIndex = (): ReactElement => {
     void refetchCourseList();
   }, [refetchCourseList]);
 
+  useBadgeCountFirstPageReload({
+    enabled: Boolean(authUser),
+    isOnFirstPage,
+    reload: onRefresh,
+  });
+
   const loadNextPage = useCallback(async (): Promise<void> => {
     const nextCursor = pagination.endCursor ?? items[items.length - 1]?.id ?? null;
     if (
@@ -328,6 +340,7 @@ const CoursesIndex = (): ReactElement => {
           };
         },
       });
+      setIsOnFirstPage(false);
     } finally {
       fetchingMoreRef.current = false;
     }

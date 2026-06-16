@@ -41,6 +41,7 @@ import {
   type GeneralNotificationMessageType,
 } from "../constants";
 import { useGeneralUpdatesSubscription, type GeneralUpdateEvent } from "../hooks/useGeneralUpdatesSubscription";
+import { notifyBadgeCountUpdateListeners } from "../lib/badge-count-update-listeners";
 import { APP_SHELL_ROUTES } from "../routing/app-shell-routes";
 import { resolveNotificationActionPayload } from "../utilities/notification-action.util";
 import { SideMenuNav } from "./SideMenuNav";
@@ -256,6 +257,7 @@ export function MainLayout({
   const handleBadgeCountsUpdate = useCallback((): void => {
     setLiveCounts({});
     void refetchBadgeCount();
+    notifyBadgeCountUpdateListeners();
   }, [refetchBadgeCount]);
 
   const handleNotificationUpdate = useCallback((event: GeneralUpdateEvent): void => {

@@ -12,6 +12,7 @@ import {
 import { USER_NOTIFICATION_LIST_QUERY } from "../../graphql/queries/userNotificationList.query";
 import { USER_NOTIFICATION_UPDATE_MUTATION } from "../../graphql/mutations/userNotificationUpdate.mutation";
 import { useSnackbar } from "../../hooks/useSnackbar";
+import { useBadgeCountFirstPageReload } from "../../hooks/useBadgeCountFirstPageReload";
 import { showErrorIfNotQueued } from "../../utilities/graphql-error.util";
 import {
   buildNotificationListQueryVariables,
@@ -45,11 +46,13 @@ type UseNotificationListResult = {
   readonly markAllLoadedAsRead: () => Promise<void>;
   readonly isUpdating: boolean;
   readonly canMarkAllAsRead: boolean;
+  readonly isOnFirstPage: boolean;
 };
 
 export const useNotificationList = (): UseNotificationListResult => {
   const [activeTab, setActiveTab] = useState<NotificationFilterTab>("all");
   const [items, setItems] = useState<NotificationRecord[]>([]);
+  const [isOnFirstPage, setIsOnFirstPage] = useState(true);
   const [pagination, setPagination] = useState({
     total: 0,
     hasNextPage: false,
@@ -65,6 +68,7 @@ export const useNotificationList = (): UseNotificationListResult => {
   );
 
   useEffect(() => {
+    setIsOnFirstPage(true);
     setItems([]);
     setPagination({
       total: 0,
@@ -169,6 +173,7 @@ export const useNotificationList = (): UseNotificationListResult => {
           };
         },
       });
+      setIsOnFirstPage(false);
     } finally {
       fetchingMoreRef.current = false;
     }
@@ -202,6 +207,16 @@ export const useNotificationList = (): UseNotificationListResult => {
       observer.disconnect();
     };
   }, [items.length, loadNextPage, pagination.hasNextPage]);
+
+  const refetchList = useCallback((): void => {
+    void refetch();
+  }, [refetch]);
+
+  useBadgeCountFirstPageReload({
+    enabled: true,
+    isOnFirstPage,
+    reload: refetchList,
+  });
 
   const applyMutationResult = useCallback(
     (result: NotificationUpdateMutation | undefined | null): void => {
@@ -293,9 +308,7 @@ export const useNotificationList = (): UseNotificationListResult => {
     loading: isInitialLoading,
     isFetchingMore,
     error,
-    refetch: () => {
-      void refetch();
-    },
+    refetch: refetchList,
     hasNextPage: pagination.hasNextPage,
     loadMoreRef,
     markAsRead,
@@ -305,5 +318,6 @@ export const useNotificationList = (): UseNotificationListResult => {
     markAllLoadedAsRead,
     isUpdating: updateResult.loading,
     canMarkAllAsRead: actionableUnreadIds.length > 0,
+    isOnFirstPage,
   };
 };

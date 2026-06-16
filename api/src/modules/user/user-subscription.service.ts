@@ -189,7 +189,7 @@ export class UserSubscriptionService {
     update: Omit<PublishGeneralUpdateInput, "userId">,
   ): Promise<number> {
     let publishedCount = 0;
-    const uniqueUserIds = new Set(userIds);
+    const uniqueUserIds = new Set([...userIds]);
 
     for (const userId of uniqueUserIds) {
       const didPublish = await this.publishToUser({

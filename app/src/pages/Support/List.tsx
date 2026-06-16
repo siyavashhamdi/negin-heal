@@ -33,6 +33,7 @@ import type { Theme } from "@mui/material/styles";
 import { TICKET_LIST_QUERY } from "../../graphql/queries/ticketList.query";
 import { USER_TICKET_LIST_QUERY } from "../../graphql/queries/userTicketList.query";
 import { useAuth } from "../../contexts/AuthContext";
+import { useBadgeCountFirstPageReload } from "../../hooks/useBadgeCountFirstPageReload";
 import { useDebounce } from "../../hooks/useDebounce";
 import {
   useServerPaginatedQuery,
@@ -79,6 +80,56 @@ import {
 } from "./support.types";
 
 type SupportListViewMode = "staff" | "endUser";
+
+function getSupportTicketColumnVisibility(
+  viewMode: SupportListViewMode,
+  isMobile: boolean,
+): VisibilityState {
+  const staffDefaults: VisibilityState = {
+    id: false,
+    title: true,
+    category: true,
+    priority: true,
+    status: true,
+    closedBy: false,
+    closedByUserName: false,
+    closedAt: false,
+    createdByUserName: true,
+    updatedByUserName: false,
+    messageCount: true,
+    lastMessageBody: false,
+    attachmentCount: false,
+    createdAt: false,
+    updatedAt: true,
+  };
+
+  const endUserDefaults: VisibilityState = {
+    id: false,
+    title: true,
+    category: false,
+    priority: false,
+    status: false,
+    closedBy: false,
+    closedAt: false,
+    messageCount: false,
+    lastMessageBody: false,
+    attachmentCount: false,
+    createdAt: false,
+    updatedAt: true,
+  };
+
+  const defaults = viewMode === "staff" ? staffDefaults : endUserDefaults;
+
+  if (!isMobile) {
+    return defaults;
+  }
+
+  return {
+    ...defaults,
+    status: true,
+    updatedAt: false,
+  };
+}
 
 const COLUMN_WIDTH_BY_ID: Record<string, string> = {
   id: "14rem",
@@ -247,39 +298,8 @@ function SupportTicketListInner({
   const hasShownLoadErrorRef = useRef(false);
 
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
-    viewMode === "staff"
-      ? {
-          id: false,
-          title: true,
-          category: true,
-          priority: true,
-          status: true,
-          closedBy: false,
-          closedByUserName: false,
-          closedAt: false,
-          createdByUserName: true,
-          updatedByUserName: false,
-          messageCount: true,
-          lastMessageBody: false,
-          attachmentCount: false,
-          createdAt: false,
-          updatedAt: true,
-        }
-      : {
-          id: false,
-          title: true,
-          category: false,
-          priority: false,
-          status: false,
-          closedBy: false,
-          closedAt: false,
-          messageCount: false,
-          lastMessageBody: false,
-          attachmentCount: false,
-          createdAt: false,
-          updatedAt: true,
-        },
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(() =>
+    getSupportTicketColumnVisibility(viewMode, isMobile),
   );
   const [showColumnFilters, setShowColumnFilters] = useState(false);
   const applyFiltersRef = useRef<(() => void) | null>(null);
@@ -296,6 +316,10 @@ function SupportTicketListInner({
       ? hasSupportTicketFiltersApplied(appliedFilters as SupportTicketListFilters)
       : hasUserSupportTicketFiltersApplied(appliedFilters as UserSupportTicketListFilters);
   }, [appliedFilters, searchQuery, viewMode]);
+
+  useEffect(() => {
+    setColumnVisibility(getSupportTicketColumnVisibility(viewMode, isMobile));
+  }, [isMobile, viewMode]);
 
   useEffect(() => {
     applyFiltersRef.current = onApplyFilters;
@@ -806,7 +830,7 @@ function StaffSupportTicketList({
     [appliedFilters, debouncedSearchQuery],
   );
 
-  const { items: rows, loading, error, onRefresh, pagination } = useServerPaginatedQuery<
+  const { items: rows, loading, error, onRefresh, pagination, page } = useServerPaginatedQuery<
     TicketListQuery,
     TicketListQueryVariables,
     SupportTicketListRow,
@@ -817,6 +841,12 @@ function StaffSupportTicketList({
     selectPage: selectTicketListPage,
     mapItem: mapSupportTicketListRowToRecord,
     resetPageDeps: [debouncedSearchQuery, appliedFilters],
+  });
+
+  useBadgeCountFirstPageReload({
+    enabled: true,
+    isOnFirstPage: page === 1,
+    reload: onRefresh,
   });
 
   return (
@@ -871,7 +901,7 @@ function EndUserSupportTicketList({
     [appliedFilters, debouncedSearchQuery],
   );
 
-  const { items: rows, loading, error, onRefresh, pagination } = useServerPaginatedQuery<
+  const { items: rows, loading, error, onRefresh, pagination, page } = useServerPaginatedQuery<
     UserTicketListQuery,
     UserTicketListQueryVariables,
     SupportTicketListRow,
@@ -882,6 +912,12 @@ function EndUserSupportTicketList({
     selectPage: selectUserTicketListPage,
     mapItem: mapSupportTicketListRowToRecord,
     resetPageDeps: [debouncedSearchQuery, appliedFilters],
+  });
+
+  useBadgeCountFirstPageReload({
+    enabled: true,
+    isOnFirstPage: page === 1,
+    reload: onRefresh,
   });
 
   return (

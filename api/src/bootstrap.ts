@@ -3,6 +3,7 @@ import mongoose, { Schema } from "mongoose";
 import * as compression from "compression";
 
 import { NestFactory } from "@nestjs/core";
+import { NestExpressApplication } from "@nestjs/platform-express";
 import { Logger, ValidationPipe, ArgumentMetadata } from "@nestjs/common";
 
 import { NodeEnv } from "./enums";
@@ -21,7 +22,16 @@ export async function bootstrap() {
   // This applies automatically to all schemas created in the application
   mongoose.plugin(hideVersionKeyPlugin);
 
-  const app = await NestFactory.create(AppModule);
+  const maxRequestSizeBytes = SecurityConfig.getMaxRequestSize();
+
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bodyParser: false,
+  });
+  app.useBodyParser("json", { limit: maxRequestSizeBytes });
+  app.useBodyParser("urlencoded", {
+    limit: maxRequestSizeBytes,
+    extended: true,
+  });
   const logger = new Logger("Bootstrap");
 
   // Security middleware - High Security Mode
