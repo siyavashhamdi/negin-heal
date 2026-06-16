@@ -22,7 +22,9 @@ import SupportFaq from "../pages/Support/Faq";
 import Support from "../pages/Support/Index";
 import SupportTicketsIndex from "../pages/Support/TicketsIndex";
 import UsersManagementIndex from "../pages/UsersManagement/Index";
+import UnderConstruction from "../pages/UnderConstruction/UnderConstruction";
 import { APP_SHELL_ROUTES } from "./app-shell-routes";
+import { API_CONFIG } from "../config";
 
 const wrapProtected = (element: ReactElement): ReactElement => (
   <ProtectedRoute>{element}</ProtectedRoute>
@@ -74,7 +76,13 @@ export const DashboardAppRoutes = (): ReactElement => {
       />
       <Route
         path={APP_SHELL_ROUTES.home}
-        element={<Navigate to={APP_SHELL_ROUTES.dashboard} replace />}
+        element={
+          API_CONFIG.UNDER_CONSTRUCTION ? (
+            <UnderConstruction />
+          ) : (
+            <Navigate to={APP_SHELL_ROUTES.dashboard} replace />
+          )
+        }
       />
     </Routes>
   );

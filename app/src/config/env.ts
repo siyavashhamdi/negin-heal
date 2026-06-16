@@ -17,6 +17,6 @@ export const API_CONFIG = {
   /** When false, login captcha UI is hidden and a bypass token is sent. */
   CAPTCHA_ENABLED: import.meta.env.VITE_CAPTCHA_ENABLED !== "false",
 
-  /** When true, the app shows a full-screen under-construction page instead of the dashboard. */
+  /** When true, the root route shows a full-screen under-construction page. */
   UNDER_CONSTRUCTION: import.meta.env.VITE_UNDER_CONSTRUCTION === "true",
 } as const;

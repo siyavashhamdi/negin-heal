@@ -19,7 +19,6 @@ import { LOCAL_STORAGE_KEYS } from "./constants";
 import { DashboardAppRoutes } from "./routing/DashboardAppRoutes";
 import { APP_SHELL_ROUTES } from "./routing/app-shell-routes";
 import { API_CONFIG } from "./config";
-import UnderConstruction from "./pages/UnderConstruction/UnderConstruction";
 
 const emotionRtlCache = createCache({
   key: "muirtl",
@@ -33,6 +32,8 @@ const AppShell = (): ReactElement => {
   const isPublicCoursesPage = location.pathname.startsWith(APP_SHELL_ROUTES.courses);
   const isPaymentCallbackPage =
     location.pathname === APP_SHELL_ROUTES.paymentZarinPalCallback;
+  const isUnderConstructionHome =
+    API_CONFIG.UNDER_CONSTRUCTION && location.pathname === APP_SHELL_ROUTES.home;
   const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
 
   if (
@@ -40,12 +41,13 @@ const AppShell = (): ReactElement => {
     !isLoginPage &&
     !isResetPasswordPage &&
     !isPublicCoursesPage &&
-    !isPaymentCallbackPage
+    !isPaymentCallbackPage &&
+    !isUnderConstructionHome
   ) {
     return <Navigate to={APP_SHELL_ROUTES.login} state={{ from: location }} replace />;
   }
 
-  if (isLoginPage || isResetPasswordPage) {
+  if (isLoginPage || isResetPasswordPage || isUnderConstructionHome) {
     return <DashboardAppRoutes />;
   }
 
@@ -59,15 +61,6 @@ const AppShell = (): ReactElement => {
 const ThemedAppTree = (): ReactElement => {
   const { mode } = useThemeMode();
   const theme = createAppTheme(mode);
-
-  if (API_CONFIG.UNDER_CONSTRUCTION) {
-    return (
-      <MuiThemeProvider theme={theme}>
-        <CssBaseline />
-        <UnderConstruction />
-      </MuiThemeProvider>
-    );
-  }
 
   return (
     <MuiThemeProvider theme={theme}>
