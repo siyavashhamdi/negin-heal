@@ -159,7 +159,7 @@ export type CouponFormState = {
   expiresAt: string;
   totalUsageLimit: string;
   perUserUsageLimit: string;
-  applicableCourseIds: string;
+  applicableCourseIds: string[];
   isFirstPurchaseOnly: boolean;
   isActive: boolean;
 };
@@ -230,7 +230,7 @@ export const EMPTY_COUPON_FORM: CouponFormState = {
   expiresAt: "",
   totalUsageLimit: "",
   perUserUsageLimit: "",
-  applicableCourseIds: "",
+  applicableCourseIds: [],
   isFirstPurchaseOnly: false,
   isActive: true,
 };
@@ -323,12 +323,8 @@ function nullableNumberInput(value: string): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function parseCourseIds(value: string): string[] | null {
-  const ids = value
-    .split(/[\n,،]/)
-    .map((item) => item.trim())
-    .filter(Boolean);
-
+function normalizeCourseIds(value: readonly string[]): string[] | null {
+  const ids = value.map((item) => item.trim()).filter(Boolean);
   return ids.length > 0 ? Array.from(new Set(ids)) : null;
 }
 
@@ -431,7 +427,7 @@ export function buildInitialCouponForm(
     expiresAt: isoToDateTimeLocal(record.expiresAt),
     totalUsageLimit: record.totalUsageLimit == null ? "" : String(record.totalUsageLimit),
     perUserUsageLimit: record.perUserUsageLimit == null ? "" : String(record.perUserUsageLimit),
-    applicableCourseIds: record.applicableCourseIds.join("\n"),
+    applicableCourseIds: [...record.applicableCourseIds],
     isFirstPurchaseOnly: record.isFirstPurchaseOnly,
     isActive: record.isActive,
   };
@@ -451,7 +447,7 @@ export function buildCouponCreateVariables(
       expiresAt: dateTimeLocalToIso(form.expiresAt),
       totalUsageLimit: nullableNumberInput(form.totalUsageLimit),
       perUserUsageLimit: nullableNumberInput(form.perUserUsageLimit),
-      applicableCourseIds: parseCourseIds(form.applicableCourseIds),
+      applicableCourseIds: normalizeCourseIds(form.applicableCourseIds),
       isFirstPurchaseOnly: form.isFirstPurchaseOnly,
       isActive: form.isActive,
     },

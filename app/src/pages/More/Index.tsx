@@ -66,6 +66,10 @@ const More = (): ReactElement => {
   const { user } = useAuth();
   const { appVersion } = useAppSettings();
   const { mode, setThemeMode } = useThemeMode();
+  const roles = user?.roles ?? [];
+  const isSuperAdmin = roles.includes("SUPER_ADMIN");
+  const isAdmin = roles.includes("ADMIN");
+  const shouldShowPublicInfoCards = !isSuperAdmin && !isAdmin;
   const { data: meData } = useQuery<UserMeResponse>(USER_ME_QUERY, {
     fetchPolicy: "cache-only",
     returnPartialData: true,
@@ -76,11 +80,13 @@ const More = (): ReactElement => {
   const initialNotificationsEnabled = serverNotificationsEnabled ?? true;
   const { data } = useQuery<AppPrivacyPolicyPageConfigQuery>(APP_PRIVACY_POLICY_PAGE_QUERY, {
     fetchPolicy: "cache-and-network",
+    skip: !shouldShowPublicInfoCards,
   });
   const { data: termsOfUseData } = useQuery<AppTermsOfUsePageConfigQuery>(
     APP_TERMS_OF_USE_PAGE_QUERY,
     {
       fetchPolicy: "cache-and-network",
+      skip: !shouldShowPublicInfoCards,
     }
   );
   const [preferredTheme, setPreferredTheme] = useState<ThemePreference>(initialThemePreference);
@@ -98,12 +104,11 @@ const More = (): ReactElement => {
   const [bugReportDialogOpen, setBugReportDialogOpen] = useState(false);
   const isDarkMode = preferredTheme === "dark";
   const isUpdatingPreferences = updatePreferencesResult.loading;
-  const isSuperAdmin = user?.roles?.includes("SUPER_ADMIN") === true;
   const shouldShowBugReport = !isSuperAdmin;
   const privacyPolicyPage = data?.appPrivacyPolicyPageConfig ?? EMPTY_APP_PRIVACY_POLICY_PAGE;
   const termsOfUsePage = termsOfUseData?.appTermsOfUsePageConfig ?? EMPTY_APP_TERMS_OF_USE_PAGE;
-  const shouldShowPrivacyPolicy = hasText(privacyPolicyPage.html);
-  const shouldShowTermsOfUse = hasText(termsOfUsePage.html);
+  const shouldShowPrivacyPolicy = shouldShowPublicInfoCards && hasText(privacyPolicyPage.html);
+  const shouldShowTermsOfUse = shouldShowPublicInfoCards && hasText(termsOfUsePage.html);
   const shouldShowVersion = hasText(appVersion.value);
 
   useEffect(() => {
@@ -297,10 +302,12 @@ const More = (): ReactElement => {
             <span>شرایط استفاده</span>
           </button>
         ) : null}
-        <button type="button" className={styles.linkCard} onClick={() => navigate("/more/about")}>
-          <InfoOutlinedIcon />
-          <span>درباره سامانه</span>
-        </button>
+        {shouldShowPublicInfoCards ? (
+          <button type="button" className={styles.linkCard} onClick={() => navigate("/more/about")}>
+            <InfoOutlinedIcon />
+            <span>درباره سامانه</span>
+          </button>
+        ) : null}
         {shouldShowBugReport ? (
           <button
             type="button"

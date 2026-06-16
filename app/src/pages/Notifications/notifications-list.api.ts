@@ -2,7 +2,11 @@ import type { SortOrder } from "../Courses/courses-list.api";
 
 export type NotificationMode = "INFO" | "SUCCESS" | "WARNING" | "ERROR";
 export type NotificationSource = "COURSE" | "PAYMENT" | "USER" | "TICKET" | "OTHER";
-export type NotificationUpdateAction = "SET_AS_READ" | "SET_AS_UNREAD" | "ARCHIVE";
+export type NotificationUpdateAction =
+  | "SET_AS_READ"
+  | "SET_AS_UNREAD"
+  | "ARCHIVE"
+  | "UNARCHIVE";
 export type NotificationFilterTab = "all" | "unread" | "read" | "archived";
 
 export type NotificationListItemRow = {
@@ -115,7 +119,7 @@ export const buildNotificationListFilters = (
       return { isArchived: true };
     case "all":
     default:
-      return { isArchived: false };
+      return undefined;
   }
 };
 
@@ -129,7 +133,6 @@ export const buildNotificationListQueryVariables = (
     options: {
       limit,
       startCursor: startCursor ?? null,
-      sort: { createdAt: "DESC" },
     },
   },
 });
@@ -142,7 +145,7 @@ export const mapNotificationListRowToRecord = (
   isGlobalAnnouncement: item.isGlobalAnnouncement,
   source: item.source,
   mode: item.mode,
-  title: item.title?.trim() || "اعلان جدید",
+  title: item.title?.trim() || item.message,
   message: item.message,
   payload:
     item.payload && typeof item.payload === "object" ? item.payload : null,
@@ -152,7 +155,7 @@ export const mapNotificationListRowToRecord = (
   visibleUntil: item.visibleUntil ?? null,
   createdAt: item.createdAt ?? null,
   updatedAt: item.updatedAt ?? null,
-  isActionable: !item.isGlobalAnnouncement,
+  isActionable: true,
 });
 
 export const mergeUpdatedNotificationRecords = (
@@ -184,6 +187,6 @@ const shouldKeepNotificationInTab = (
       return !isArchived && item.isRead;
     case "all":
     default:
-      return !isArchived;
+      return true;
   }
 };

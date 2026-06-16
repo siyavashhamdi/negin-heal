@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { FilterQuery, Model, Types } from "mongoose";
+import { FilterQuery, Model, PipelineStage, Types } from "mongoose";
 
 import { PAGINATION_CONSTANT } from "../../constants";
 import {
@@ -62,35 +62,22 @@ export class NotificationService {
     const limit =
       options?.limit ?? PAGINATION_CONSTANT.CURSOR_BASED.DEFAULT_LIMIT;
     const baseFilterQuery = this.buildListFilterQuery(userId, filters);
-    const sortFieldMap = this.getSortFieldMap();
-    const requestedSort = options?.sort ?? { createdAt: SortingOrder.DESC };
-    const cursorSort = this.resolveNotificationCursorSort(requestedSort);
-    const sortOptions = {
-      ...buildSortOptions<NotificationListSortField>(
-        requestedSort,
-        sortFieldMap,
-        { createdAt: SortingOrder.DESC },
-      ),
-      _id: cursorSort.direction,
-    };
-    const cursorFilterQuery = await this.buildCursorFilterQuery(
-      options?.startCursor,
-      baseFilterQuery,
-      cursorSort.path,
-      cursorSort.direction,
-    );
-    const filterQuery =
-      cursorFilterQuery == null
-        ? baseFilterQuery
-        : { $and: [baseFilterQuery, cursorFilterQuery] };
+    const requestedSort = options?.sort;
+    const usesDefaultSort = !this.hasCustomListSort(requestedSort);
 
     const [notificationsWithExtra, total] = await Promise.all([
-      this.notificationModel
-        .find(filterQuery)
-        .sort(sortOptions)
-        .limit(limit + 1)
-        .lean<NotificationListRecord[]>()
-        .exec(),
+      usesDefaultSort
+        ? this.findNotificationsWithDefaultSort(
+            baseFilterQuery,
+            options?.startCursor,
+            limit,
+          )
+        : this.findNotificationsWithCustomSort(
+            baseFilterQuery,
+            requestedSort,
+            options?.startCursor,
+            limit,
+          ),
       this.notificationModel.countDocuments(baseFilterQuery).exec(),
     ]);
     const hasNextPage = notificationsWithExtra.length > limit;
@@ -164,6 +151,69 @@ export class NotificationService {
     };
   }
 
+  private async findNotificationsWithDefaultSort(
+    baseFilterQuery: FilterQuery<Notification>,
+    startCursor: string | undefined,
+    limit: number,
+  ): Promise<NotificationListRecord[]> {
+    const pipeline: PipelineStage[] = [
+      { $match: baseFilterQuery },
+      { $addFields: { statusOrder: this.getStatusOrderExpression() } },
+    ];
+    const cursorFilterQuery = await this.buildDefaultSortCursorFilterQuery(
+      startCursor,
+      baseFilterQuery,
+    );
+
+    if (cursorFilterQuery) {
+      pipeline.push({ $match: cursorFilterQuery });
+    }
+
+    pipeline.push(
+      { $sort: { statusOrder: 1, "audit.createdAt": -1, _id: -1 } },
+      { $limit: limit + 1 },
+    );
+
+    return this.notificationModel
+      .aggregate<NotificationListRecord>(pipeline)
+      .exec();
+  }
+
+  private async findNotificationsWithCustomSort(
+    baseFilterQuery: FilterQuery<Notification>,
+    requestedSort: NotificationListSortOptionInput | undefined,
+    startCursor: string | undefined,
+    limit: number,
+  ): Promise<NotificationListRecord[]> {
+    const sortFieldMap = this.getSortFieldMap();
+    const cursorSort = this.resolveNotificationCursorSort(requestedSort);
+    const sortOptions = {
+      ...buildSortOptions<NotificationListSortField>(
+        requestedSort ?? {},
+        sortFieldMap,
+        { createdAt: SortingOrder.DESC },
+      ),
+      _id: cursorSort.direction,
+    };
+    const cursorFilterQuery = await this.buildCursorFilterQuery(
+      startCursor,
+      baseFilterQuery,
+      cursorSort.path,
+      cursorSort.direction,
+    );
+    const filterQuery =
+      cursorFilterQuery == null
+        ? baseFilterQuery
+        : { $and: [baseFilterQuery, cursorFilterQuery] };
+
+    return this.notificationModel
+      .find(filterQuery)
+      .sort(sortOptions)
+      .limit(limit + 1)
+      .lean<NotificationListRecord[]>()
+      .exec();
+  }
+
   private buildListFilterQuery(
     userId: Types.ObjectId,
     filters?: NotificationListGqlInput["filters"],
@@ -177,7 +227,8 @@ export class NotificationService {
           ],
         },
         {
-          $or: [{ userId }, { isGlobalAnnouncement: true }],
+          userId,
+          isGlobalAnnouncement: false,
         },
       ],
     };
@@ -210,10 +261,6 @@ export class NotificationService {
 
     if (typeof filters.isRead === "boolean") {
       query.isRead = filters.isRead;
-    }
-
-    if (typeof filters.isGlobalAnnouncement === "boolean") {
-      query.isGlobalAnnouncement = filters.isGlobalAnnouncement;
     }
 
     if (typeof filters.isArchived === "boolean") {
@@ -324,6 +371,12 @@ export class NotificationService {
             archivedAt: now,
           },
         };
+      case NotificationUpdateAction.UNARCHIVE:
+        return {
+          $unset: {
+            archivedAt: 1,
+          },
+        };
     }
   }
 
@@ -413,6 +466,90 @@ export class NotificationService {
         missingValueQuery,
       ],
     };
+  }
+
+  private hasCustomListSort(
+    sort?: NotificationListSortOptionInput,
+  ): boolean {
+    if (!sort) {
+      return false;
+    }
+
+    return Object.values(sort).some((sortOrder) => sortOrder != null);
+  }
+
+  private computeStatusOrder(notification: NotificationListRecord): number {
+    if (notification.archivedAt) {
+      return 2;
+    }
+
+    return notification.isRead ? 1 : 0;
+  }
+
+  private getStatusOrderExpression(): Record<string, unknown> {
+    return {
+      $cond: [
+        { $eq: [{ $type: "$archivedAt" }, "date"] },
+        2,
+        { $cond: ["$isRead", 1, 0] },
+      ],
+    };
+  }
+
+  private async buildDefaultSortCursorFilterQuery(
+    startCursor: string | undefined,
+    baseFilterQuery: FilterQuery<Notification>,
+  ): Promise<FilterQuery<Notification & { statusOrder: number }> | null> {
+    if (!startCursor || !Types.ObjectId.isValid(startCursor)) {
+      return null;
+    }
+
+    const cursorId = new Types.ObjectId(startCursor);
+    const cursorNotification = await this.notificationModel
+      .findOne({ $and: [baseFilterQuery, { _id: cursorId }] })
+      .lean<NotificationListRecord>()
+      .exec();
+
+    if (!cursorNotification) {
+      return null;
+    }
+
+    const statusOrder = this.computeStatusOrder(cursorNotification);
+    const createdAt = cursorNotification.audit?.createdAt ?? null;
+    const conditions: Array<FilterQuery<Notification & { statusOrder: number }>> =
+      [{ statusOrder: { $gt: statusOrder } }];
+
+    if (createdAt == null) {
+      conditions.push({
+        statusOrder,
+        $or: [
+          { "audit.createdAt": { $exists: true, $ne: null } },
+          {
+            $and: [
+              {
+                $or: [
+                  { "audit.createdAt": null },
+                  { "audit.createdAt": { $exists: false } },
+                ],
+              },
+              { _id: { $lt: cursorId } },
+            ],
+          },
+        ],
+      });
+    } else {
+      conditions.push({
+        statusOrder,
+        "audit.createdAt": { $lt: createdAt },
+      });
+      conditions.push({
+        statusOrder,
+        "audit.createdAt": createdAt,
+        _id: { $lt: cursorId },
+      });
+    }
+
+    return { $or: conditions };
   }
 
   private resolveNotificationCursorSort(

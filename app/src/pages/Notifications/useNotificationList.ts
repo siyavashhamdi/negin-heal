@@ -41,6 +41,7 @@ type UseNotificationListResult = {
   readonly markAsRead: (id: string) => Promise<void>;
   readonly markAsUnread: (id: string) => Promise<void>;
   readonly archive: (id: string) => Promise<void>;
+  readonly unarchive: (id: string) => Promise<void>;
   readonly markAllLoadedAsRead: () => Promise<void>;
   readonly isUpdating: boolean;
   readonly canMarkAllAsRead: boolean;
@@ -265,6 +266,13 @@ export const useNotificationList = (): UseNotificationListResult => {
     [runUpdate],
   );
 
+  const unarchive = useCallback(
+    async (id: string): Promise<void> => {
+      await runUpdate([id], "UNARCHIVE");
+    },
+    [runUpdate],
+  );
+
   const actionableUnreadIds = useMemo(
     () =>
       items
@@ -293,6 +301,7 @@ export const useNotificationList = (): UseNotificationListResult => {
     markAsRead,
     markAsUnread,
     archive,
+    unarchive,
     markAllLoadedAsRead,
     isUpdating: updateResult.loading,
     canMarkAllAsRead: actionableUnreadIds.length > 0,

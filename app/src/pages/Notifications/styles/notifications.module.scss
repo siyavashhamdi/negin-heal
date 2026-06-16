@@ -3,76 +3,18 @@
 .page {
   display: grid;
   gap: 1rem;
+  width: 100%;
+  min-width: 0;
   max-width: 52rem;
   margin-inline: auto;
 }
 
-.hero {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 0.9rem 1rem;
-  padding: 1.15rem;
-  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
-  border-radius: 1.25rem;
-  background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, #1976d2 14%, transparent),
-      transparent 58%
-    ),
-    color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
-  box-shadow: 0 0.75rem 2rem rgba(15, 23, 42, 0.06);
-}
-
-.heroIcon {
-  display: inline-grid;
-  place-items: center;
-  inline-size: 3.25rem;
-  block-size: 3.25rem;
-  border-radius: 1rem;
-  background: linear-gradient(135deg, rgba(25, 118, 210, 0.16), rgba(14, 165, 233, 0.08));
-  color: #1976d2;
-}
-
-.heroContent {
-  min-width: 0;
-}
-
-.heroContent p,
-.heroContent h1,
-.heroContent span {
-  margin: 0;
-}
-
-.heroContent p {
-  color: #1976d2;
-  font-size: 0.78rem;
-  font-weight: variables.$font-weight-semibold;
-}
-
-.heroContent h1 {
-  margin-block: 0.18rem 0.28rem;
-  font-size: clamp(1.25rem, 4vw, 1.65rem);
-  line-height: 1.35;
-}
-
-.heroContent span {
-  color: var(--text-secondary);
-  font-size: 0.88rem;
-  line-height: 1.7;
-}
-
-.heroActions {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-}
-
 .filterTabs {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
+  align-items: stretch;
   gap: 0.35rem;
+  width: 100%;
+  min-width: 0;
   padding: 0.35rem;
   border-radius: 999rem;
   background: color-mix(in srgb, var(--app-surface-bg) 88%, var(--text-secondary) 4%);
@@ -80,25 +22,27 @@
 }
 
 .filterTab {
-  display: inline-flex;
+  display: flex;
+  flex: 1 1 0;
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
+  min-width: 0;
   min-height: 2.5rem;
   padding-inline: 0.75rem;
-  border: none;
+  border: 0.0625rem solid transparent;
   border-radius: 999rem;
   background: transparent;
   color: var(--text-secondary);
   font: inherit;
   font-size: 0.82rem;
   font-weight: variables.$font-weight-semibold;
+  white-space: nowrap;
   cursor: pointer;
   transition:
     background-color 0.2s ease,
     color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
+    border-color 0.2s ease;
 }
 
 .filterTab:hover {
@@ -108,19 +52,7 @@
 .filterTabActive {
   background: var(--app-surface-bg);
   color: var(--text-primary);
-  box-shadow: 0 0.35rem 1rem rgba(15, 23, 42, 0.08);
-}
-
-.filterTabCount {
-  display: inline-grid;
-  place-items: center;
-  min-inline-size: 1.35rem;
-  block-size: 1.35rem;
-  padding-inline: 0.35rem;
-  border-radius: 999rem;
-  background: color-mix(in srgb, #1976d2 12%, transparent);
-  color: #1976d2;
-  font-size: 0.72rem;
+  border-color: color-mix(in srgb, var(--app-surface-border) 72%, transparent);
 }
 
 .feed {
@@ -137,6 +69,8 @@
   position: relative;
   display: grid;
   grid-template-columns: 0.28rem minmax(0, 1fr);
+  width: 100%;
+  min-width: 0;
   overflow: hidden;
   border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
   border-radius: 1.1rem;
@@ -199,14 +133,17 @@
 }
 
 .cardHeader {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  display: flex;
+  align-items: center;
   gap: 0.75rem;
+  min-width: 0;
 }
 
 .cardIconWrap {
-  display: inline-grid;
-  place-items: center;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
   inline-size: 2.35rem;
   block-size: 2.35rem;
   border-radius: 0.85rem;
@@ -214,61 +151,43 @@
   color: inherit;
 }
 
-.cardHeading {
-  min-width: 0;
-}
-
 .cardTitleRow {
   display: flex;
-  align-items: flex-start;
-  gap: 0.45rem;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .cardTitleRow h3 {
   margin: 0;
+  min-width: 0;
   font-size: 0.96rem;
-  line-height: 1.55;
+  line-height: 1.2;
 }
 
 .unreadDot {
   flex-shrink: 0;
   inline-size: 0.55rem;
   block-size: 0.55rem;
-  margin-top: 0.45rem;
   border-radius: 999rem;
   background: #1976d2;
   box-shadow: 0 0 0 0.2rem rgba(25, 118, 210, 0.14);
 }
 
-.cardMeta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.45rem;
-  margin-top: 0.35rem;
+.cardTime {
+  flex-shrink: 0;
   color: var(--text-secondary);
   font-size: 0.74rem;
 }
 
-.sourceChip,
-.globalChip {
-  display: inline-flex;
+.cardFooter {
+  display: flex;
   align-items: center;
-  gap: 0.2rem;
-  padding: 0.12rem 0.5rem;
-  border-radius: 999rem;
-  font-size: 0.72rem;
-  font-weight: variables.$font-weight-semibold;
-}
-
-.sourceChip {
-  background: color-mix(in srgb, var(--text-secondary) 10%, transparent);
-  color: var(--text-secondary);
-}
-
-.globalChip {
-  background: color-mix(in srgb, #7c3aed 12%, transparent);
-  color: #7c3aed;
+  gap: 0.35rem;
+  width: fit-content;
+  margin-left: 0.45rem;
+  margin-right: auto;
 }
 
 .cardMessage {
@@ -279,26 +198,21 @@
 }
 
 .cardActions {
-  position: absolute;
-  inset-block-start: 0.85rem;
-  inset-inline-start: 0.85rem;
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.3rem;
-  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 70%, transparent);
-  border-radius: 0.9rem;
-  background: color-mix(in srgb, var(--app-surface-bg) 88%, transparent);
-  box-shadow: 0 0.65rem 1.45rem rgba(15, 23, 42, 0.12);
   opacity: 0;
   pointer-events: none;
-  transform: translateY(-0.25rem) scale(0.97);
+  transform: translateY(0.25rem) scale(0.97);
   transition:
     opacity 0.18s ease,
-    transform 0.18s ease,
-    background-color 0.18s ease;
-  backdrop-filter: blur(0.75rem);
-  z-index: 2;
+    transform 0.18s ease;
+}
+
+.mobileActions {
+  display: none;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .actionIconButton {
@@ -321,12 +235,6 @@
   border-color: color-mix(in srgb, #1976d2 40%, var(--app-surface-border)) !important;
   background: color-mix(in srgb, #1976d2 10%, var(--app-surface-bg)) !important;
   color: #1976d2 !important;
-}
-
-.cardHint {
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: 0.76rem;
 }
 
 .emptyState {
@@ -382,47 +290,44 @@
   font-size: 0.82rem;
 }
 
-.endMessage {
-  margin: 0;
-  text-align: center;
-  color: var(--text-secondary);
-  font-size: 0.8rem;
-}
-
 @media (max-width: 720px) {
-  .hero {
-    grid-template-columns: 1fr;
-  }
-
-  .heroIcon {
-    inline-size: 2.85rem;
-    block-size: 2.85rem;
-  }
-
   .filterTabs {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.25rem;
+    padding: 0.25rem;
     border-radius: 1rem;
   }
 
   .filterTab {
     min-height: 2.35rem;
-    font-size: 0.78rem;
+    padding-inline: 0.3rem;
+    font-size: 0.72rem;
   }
 
+  .cardTime {
+    direction: rtl;
+    font-size: 0.7rem;
+  }
+
+  .cardFooter {
+    direction: ltr;
+    justify-content: space-between;
+    width: 100%;
+    margin-inline: 0;
+  }
+
+  .card:hover .cardActions,
+  .card:focus-within .cardActions,
   .cardActions {
-    position: static;
-    justify-self: start;
-    opacity: 1;
-    pointer-events: auto;
-    transform: none;
-    box-shadow: none;
-    background: transparent;
-    padding: 0;
+    display: none;
+  }
+
+  .mobileActions {
+    display: flex;
+    direction: rtl;
   }
 }
 
 body[data-theme="dark"] {
-  .hero,
   .card {
     background: color-mix(in srgb, var(--app-surface-bg) 86%, #0f172a);
   }
@@ -431,15 +336,6 @@ body[data-theme="dark"] {
     background:
       linear-gradient(90deg, color-mix(in srgb, #1976d2 10%, transparent), transparent 18%),
       color-mix(in srgb, var(--app-surface-bg) 86%, #0f172a);
-  }
-
-  .filterTabActive {
-    box-shadow: 0 0.35rem 1rem rgba(0, 0, 0, 0.24);
-  }
-
-  .cardActions {
-    background: color-mix(in srgb, var(--app-surface-bg) 84%, #020617);
-    box-shadow: 0 0.65rem 1.45rem rgba(0, 0, 0, 0.28);
   }
 
   .actionIconButton {

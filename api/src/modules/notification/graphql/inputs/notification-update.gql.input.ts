@@ -28,7 +28,7 @@ export class NotificationUpdateGqlInput {
     description: "Action to apply to the selected notifications",
   })
   @IsEnum(NotificationUpdateAction, {
-    message: "Action must be SET_AS_READ, SET_AS_UNREAD, or ARCHIVE",
+    message: "Action must be SET_AS_READ, SET_AS_UNREAD, ARCHIVE, or UNARCHIVE",
   })
   action: NotificationUpdateAction;
 }

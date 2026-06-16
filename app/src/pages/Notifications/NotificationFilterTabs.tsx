@@ -1,22 +1,19 @@
 import { type ReactElement } from "react";
 
 import { useTranslation } from "../../hooks/useTranslation";
-import { formatTableCellNumber } from "../../utilities/persian-digits.util";
 import type { NotificationFilterTab } from "./notifications-list.api";
 import styles from "./styles/notifications.module.scss";
 
 type NotificationFilterTabsProps = {
   readonly activeTab: NotificationFilterTab;
   readonly onChange: (tab: NotificationFilterTab) => void;
-  readonly totalCount?: number;
 };
 
-const TAB_ORDER: NotificationFilterTab[] = ["all", "unread", "read", "archived"];
+const TAB_ORDER: NotificationFilterTab[] = ["unread", "read", "archived", "all"];
 
 const NotificationFilterTabs = ({
   activeTab,
   onChange,
-  totalCount,
 }: NotificationFilterTabsProps): ReactElement => {
   const { t } = useTranslation();
 
@@ -39,11 +36,6 @@ const NotificationFilterTabs = ({
             onClick={() => onChange(tab)}
           >
             <span>{t(`pages.notifications.filters.${tab}`)}</span>
-            {isActive && typeof totalCount === "number" ? (
-              <span className={styles.filterTabCount}>
-                {formatTableCellNumber(totalCount)}
-              </span>
-            ) : null}
           </button>
         );
       })}

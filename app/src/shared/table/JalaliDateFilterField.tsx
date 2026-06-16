@@ -83,6 +83,7 @@ const JalaliDateFilterField = ({
       <DatePicker
         value={pickerValue}
         onChange={handleChange}
+        onOpenPickNewDate={false}
         calendar={persian}
         locale={persian_fa}
         format="YYYY/MM/DD"
