@@ -31,8 +31,7 @@ import { Link as RouterLink, NavLink, useLocation } from "react-router-dom";
 import Footer from "../components/layout/Footer";
 import { useAuth } from "../contexts/AuthContext";
 import { useThemeMode } from "../contexts/ThemeContext";
-import { COURSE_LIST_QUERY } from "../graphql/queries/courseList.query";
-import { USER_COURSE_LIST_QUERY } from "../graphql/queries/userCourseList.query";
+import { BADGE_COUNT_QUERY } from "../graphql/queries/badgeCount.query";
 import { useMe } from "../hooks/useMe";
 import { useSnackbar } from "../hooks/useSnackbar";
 import { useTranslation } from "../hooks/useTranslation";
@@ -41,13 +40,6 @@ import {
   GENERAL_SUBSCRIPTION_UPDATE_TYPES,
   type GeneralNotificationMessageType,
 } from "../constants";
-import {
-  buildCourseListQueryVariables,
-  DEFAULT_COURSE_LIST_FILTERS,
-  DEFAULT_COURSE_LIST_SORT,
-  type CourseListQuery,
-  type CourseListQueryVariables,
-} from "../pages/Courses/courses-list.api";
 import { useGeneralUpdatesSubscription, type GeneralUpdateEvent } from "../hooks/useGeneralUpdatesSubscription";
 import { APP_SHELL_ROUTES } from "../routing/app-shell-routes";
 import { resolveNotificationActionPayload } from "../utilities/notification-action.util";
@@ -82,9 +74,19 @@ type GeneralUpdatePopup = {
 };
 type BadgeCountsPayload = {
   readonly courses?: number;
+  readonly payments?: number | null;
   readonly notifications?: number;
   readonly others?: number;
   readonly support?: number;
+  readonly tickets?: number;
+};
+type BadgeCountQuery = {
+  readonly badgeCount: {
+    readonly courses: number;
+    readonly payments?: number | null;
+    readonly notifications: number;
+    readonly tickets: number;
+  };
 };
 
 type MainLayoutProps = {
@@ -248,23 +250,15 @@ export function MainLayout({
     ? t("layout.header.brand.publicTagline")
     : t("layout.header.brand.tagline");
 
-  const courseBadgeVariables = useMemo(
-    () =>
-      buildCourseListQueryVariables(DEFAULT_COURSE_LIST_FILTERS, DEFAULT_COURSE_LIST_SORT, 1, null),
-    []
-  );
-
-  const { data: courseBadgeData } = useQuery<CourseListQuery, CourseListQueryVariables>(
-    usesPublicCourseList ? USER_COURSE_LIST_QUERY : COURSE_LIST_QUERY,
-    {
-      variables: courseBadgeVariables,
-      fetchPolicy: "cache-first",
-    }
-  );
+  const { data: badgeCountData } = useQuery<BadgeCountQuery>(BADGE_COUNT_QUERY, {
+    fetchPolicy: "cache-and-network",
+    skip: !authUser,
+  });
   const [liveCounts, setLiveCounts] = useState<{
     readonly courses?: number;
+    readonly payments?: number | null;
     readonly notifications?: number;
-    readonly support?: number;
+    readonly tickets?: number;
     readonly others?: number;
   }>({});
 
@@ -289,14 +283,16 @@ export function MainLayout({
     }
 
     const courses = asNonNegativeInteger(payload.courses);
+    const payments = asNonNegativeInteger(payload.payments);
     const notifications = asNonNegativeInteger(payload.notifications);
-    const support = asNonNegativeInteger(payload.support);
+    const tickets = asNonNegativeInteger(payload.tickets ?? payload.support);
     const others = asNonNegativeInteger(payload.others);
 
     setLiveCounts((previous) => ({
       courses: courses ?? previous.courses,
+      payments: payments ?? previous.payments,
       notifications: notifications ?? previous.notifications,
-      support: support ?? previous.support,
+      tickets: tickets ?? previous.tickets,
       others: others ?? previous.others,
     }));
   }, []);
@@ -366,9 +362,11 @@ export function MainLayout({
     onBadgeCounts: handleBadgeCountsUpdate,
   });
 
-  const fetchedCourseBadgeCount = courseBadgeData?.courseList.pagination.total ?? 0;
-  const coursesBadgeCount = liveCounts.courses ?? fetchedCourseBadgeCount;
-  const notificationBadgeCount = liveCounts.notifications ?? liveNotifications.length;
+  const coursesBadgeCount = liveCounts.courses ?? badgeCountData?.badgeCount.courses ?? 0;
+  const paymentBadgeCount = liveCounts.payments ?? badgeCountData?.badgeCount.payments ?? 0;
+  const notificationBadgeCount =
+    liveCounts.notifications ?? badgeCountData?.badgeCount.notifications ?? 0;
+  const supportBadgeCount = liveCounts.tickets ?? badgeCountData?.badgeCount.tickets ?? 0;
 
   const sampleSettings = useMemo(
     () =>
@@ -881,7 +879,14 @@ export function MainLayout({
                   }`
                 }
               >
-                <AccountBalanceWalletRoundedIcon />
+                <Badge
+                  badgeContent={paymentBadgeCount}
+                  color="warning"
+                  max={999}
+                  className="main-layout__mobile-bottom-badge main-layout__mobile-bottom-badge--payments"
+                >
+                  <AccountBalanceWalletRoundedIcon />
+                </Badge>
                 <span>پرداخت‌ها</span>
               </NavLink>
             ) : null}
@@ -910,7 +915,16 @@ export function MainLayout({
                 }`
               }
             >
-              <span className="main-layout__mobile-bottom-icon-wrap main-layout__mobile-bottom-icon-wrap--attention">
+              <span
+                className={[
+                  "main-layout__mobile-bottom-icon-wrap",
+                  supportBadgeCount > 0
+                    ? "main-layout__mobile-bottom-icon-wrap--attention"
+                    : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+              >
                 <ConfirmationNumberRoundedIcon />
               </span>
               <span>پشتیبانی</span>

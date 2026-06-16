@@ -24,6 +24,7 @@ import { CouponModule } from "./coupon";
 import { NotificationModule } from "./notification";
 import { EmailModule } from "./email";
 import { TicketModule } from "./ticket";
+import { BadgeModule } from "./badge";
 import { NodeEnv } from "../enums";
 import { AuthenticatedRequest } from "../types/graphql-context.types";
 import {
@@ -244,6 +245,7 @@ import { GraphQLError } from "graphql";
     NotificationModule,
     EmailModule,
     TicketModule,
+    BadgeModule,
     CourseModule,
     UserModule,
   ],
