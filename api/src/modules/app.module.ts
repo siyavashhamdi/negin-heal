@@ -20,7 +20,7 @@ import { CourseModule } from "./course";
 import { HealthModule } from "./health";
 import { DatabaseModule } from "./database";
 import { AppSettingsModule } from "./app-settings";
-import { PaymentCouponModule } from "./payment-coupon";
+import { CouponModule } from "./coupon";
 import { NotificationModule } from "./notification";
 import { EmailModule } from "./email";
 import { TicketModule } from "./ticket";
@@ -240,7 +240,7 @@ import { GraphQLError } from "graphql";
     HealthModule,
     FileModule,
     AppSettingsModule,
-    PaymentCouponModule,
+    CouponModule,
     NotificationModule,
     EmailModule,
     TicketModule,

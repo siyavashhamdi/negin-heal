@@ -13,7 +13,7 @@ import { CourseReleaseType } from "./course-release-type.enum";
 import { NotificationMode } from "./notification-mode.enum";
 import { NotificationSource } from "./notification-source.enum";
 import { NotificationUpdateAction } from "./notification-update-action.enum";
-import { PaymentCouponDiscountType } from "./payment-coupon-discount-type.enum";
+import { CouponDiscountType } from "./coupon-discount-type.enum";
 import { TicketCategory } from "./ticket-category.enum";
 import { TicketClosedBy } from "./ticket-closed-by.enum";
 import { TicketPriority } from "./ticket-priority.enum";
@@ -72,9 +72,9 @@ registerEnumType(CourseDiscountType, {
   description: "Course discount calculation type",
 });
 
-registerEnumType(PaymentCouponDiscountType, {
-  name: "PaymentCouponDiscountType",
-  description: "Payment coupon discount calculation kind",
+registerEnumType(CouponDiscountType, {
+  name: "CouponDiscountType",
+  description: "Coupon discount calculation kind",
 });
 
 registerEnumType(TicketCategory, {

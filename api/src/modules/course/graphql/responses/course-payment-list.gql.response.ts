@@ -3,7 +3,7 @@ import { Types } from "mongoose";
 
 import { PaginationOffsetResponse } from "../../../../common/pagination/response";
 import {
-  PaymentCouponDiscountType,
+  CouponDiscountType,
   UserCoursePaymentMethod,
   UserCoursePurchaseCurrency,
   UserCoursePurchaseStatus,
@@ -46,7 +46,7 @@ export class CoursePaymentCourseSnapshotGqlResponse {
 }
 
 @ObjectType()
-export class CoursePaymentCouponSnapshotGqlResponse {
+export class CourseCouponSnapshotGqlResponse {
   @Field(() => ID, { description: "Coupon ID" })
   id: Types.ObjectId;
 
@@ -59,10 +59,10 @@ export class CoursePaymentCouponSnapshotGqlResponse {
   @Field({ description: "Coupon display title" })
   title: string;
 
-  @Field(() => PaymentCouponDiscountType, {
+  @Field(() => CouponDiscountType, {
     description: "Coupon discount type",
   })
-  discountType: PaymentCouponDiscountType;
+  discountType: CouponDiscountType;
 
   @Field(() => Float, {
     description:
@@ -173,11 +173,11 @@ export class CoursePaymentListGqlResponse {
   @Field(() => Float, { description: "Final payable amount in IRT" })
   finalAmountIrt: number;
 
-  @Field(() => CoursePaymentCouponSnapshotGqlResponse, {
+  @Field(() => CourseCouponSnapshotGqlResponse, {
     nullable: true,
     description: "Applied coupon snapshot, if any",
   })
-  coupon?: CoursePaymentCouponSnapshotGqlResponse;
+  coupon?: CourseCouponSnapshotGqlResponse;
 
   @Field(() => ID, { nullable: true, description: "Receipt stored file ID" })
   uploadedReceiptFileId?: Types.ObjectId;

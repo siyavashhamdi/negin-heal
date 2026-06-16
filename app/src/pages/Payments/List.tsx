@@ -87,7 +87,7 @@ import {
   type CoursePaymentListQueryVariables,
   type CoursePaymentListRow,
   type CoursePaymentRecord,
-  type PaymentCouponDiscountType,
+  type CouponDiscountType,
   type UserCoursePaymentMethod,
   type UserCoursePurchaseCurrency,
   type UserCoursePurchaseStatus,
@@ -246,7 +246,7 @@ const CURRENCY_LABEL: Record<UserCoursePurchaseCurrency, string> = {
   USDT: "تتر",
 };
 
-const COUPON_DISCOUNT_TYPE_LABEL: Record<PaymentCouponDiscountType, string> = {
+const COUPON_DISCOUNT_TYPE_LABEL: Record<CouponDiscountType, string> = {
   PERCENTAGE: "درصدی",
   FIXED_AMOUNT: "مبلغ ثابت",
 };
@@ -624,7 +624,7 @@ const PaymentsList = (): ReactElement => {
   const [manualPaymentMethod, setManualPaymentMethod] =
     useState<UserCoursePaymentMethod>("CARD_TO_CARD");
   const [manualPaymentStatus, setManualPaymentStatus] = useState<UserCoursePurchaseStatus>("PAID");
-  const [manualPaymentCouponCode, setManualPaymentCouponCode] = useState("");
+  const [manualCouponCode, setManualCouponCode] = useState("");
   const [manualPaymentDescription, setManualPaymentDescription] = useState("");
   const [manualPaymentEvidenceFile, setManualPaymentEvidenceFile] = useState<File | null>(null);
   const debouncedManualPaymentUserSearch = useDebounce(manualPaymentUserSearch, 400);
@@ -741,7 +741,7 @@ const PaymentsList = (): ReactElement => {
       setManualPaymentCourse(null);
       setManualPaymentMethod("CARD_TO_CARD");
       setManualPaymentStatus("PAID");
-      setManualPaymentCouponCode("");
+      setManualCouponCode("");
       setManualPaymentDescription("");
       setManualPaymentEvidenceFile(null);
       onRefresh();
@@ -945,7 +945,7 @@ const PaymentsList = (): ReactElement => {
         accessorKey: "couponDiscountType",
         header: t("table.pages.payments.columns.couponDiscountType"),
         cell: (info) => {
-          const value = info.getValue() as PaymentCouponDiscountType | null;
+          const value = info.getValue() as CouponDiscountType | null;
           return textCell(value ? COUPON_DISCOUNT_TYPE_LABEL[value] : EMPTY_DISPLAY);
         },
       },
@@ -1076,7 +1076,7 @@ const PaymentsList = (): ReactElement => {
     setManualPaymentCourse(null);
     setManualPaymentMethod("CARD_TO_CARD");
     setManualPaymentStatus("PAID");
-    setManualPaymentCouponCode("");
+    setManualCouponCode("");
     setManualPaymentDescription("");
     setManualPaymentEvidenceFile(null);
   };
@@ -1147,7 +1147,7 @@ const PaymentsList = (): ReactElement => {
           courseId: manualPaymentCourse.id,
           paymentMethod: manualPaymentMethod,
           status: manualPaymentStatus,
-          couponCode: manualPaymentCouponCode.trim() || null,
+          couponCode: manualCouponCode.trim() || null,
           uploadedReceiptFileId,
           manualStatusChangedDescription: manualPaymentDescription.trim() || null,
         },
@@ -1297,11 +1297,11 @@ const PaymentsList = (): ReactElement => {
           })),
         );
       case "couponDiscountType":
-        return renderSelectFilter<PaymentCouponDiscountType>(
+        return renderSelectFilter<CouponDiscountType>(
           "couponDiscountType",
           label,
           Object.entries(COUPON_DISCOUNT_TYPE_LABEL).map(([value, optionLabel]) => ({
-            value: value as PaymentCouponDiscountType,
+            value: value as CouponDiscountType,
             label: optionLabel,
           })),
         );
@@ -1559,8 +1559,8 @@ const PaymentsList = (): ReactElement => {
                 <TextField
                   fullWidth
                   label="کد تخفیف"
-                  value={manualPaymentCouponCode}
-                  onChange={(event) => setManualPaymentCouponCode(event.target.value)}
+                  value={manualCouponCode}
+                  onChange={(event) => setManualCouponCode(event.target.value)}
                   placeholder="اختیاری"
                 />
 

@@ -269,8 +269,8 @@ const More = (): ReactElement => {
             </button>
             <button
               type="button"
-              className={`${styles.linkCard} ${styles.paymentCouponsCard}`}
-              onClick={() => navigate(APP_SHELL_ROUTES.morePaymentCoupons)}
+              className={`${styles.linkCard} ${styles.couponsCard}`}
+              onClick={() => navigate(APP_SHELL_ROUTES.moreCoupons)}
             >
               <ConfirmationNumberRoundedIcon />
               <span>کدهای تخفیف</span>

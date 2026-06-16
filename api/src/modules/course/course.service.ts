@@ -13,7 +13,7 @@ import {
   CourseDiscountType,
   CourseItemType,
   CourseReleaseType,
-  PaymentCouponDiscountType,
+  CouponDiscountType,
   UserRole,
   UserCoursePaymentMethod,
   UserCoursePurchaseCurrency,
@@ -79,7 +79,7 @@ import {
 } from "./graphql/responses/course-payment-list.gql.response";
 import { CoursePurchaseSubmitGqlResponse } from "./graphql/responses/course-purchase-submit.gql.response";
 import { AppSettingsService } from "../app-settings";
-import { PaymentCouponService } from "../payment-coupon";
+import { CouponService } from "../coupon";
 
 type PlainCourse = Course & {
   _id: Types.ObjectId;
@@ -128,7 +128,7 @@ type PurchasePriceSummary = {
   couponSnapshot?: {
     couponId: Types.ObjectId;
     code: string;
-    discountType: PaymentCouponDiscountType;
+    discountType: CouponDiscountType;
     discountValue: number;
   };
 };
@@ -190,7 +190,7 @@ export class CourseService {
     private readonly userModel: Model<UserDocument>,
     private readonly fileService: FileService,
     private readonly appSettingsService: AppSettingsService,
-    private readonly paymentCouponService: PaymentCouponService,
+    private readonly couponService: CouponService,
   ) {}
 
   async create(input: CourseCreateGqlInput): Promise<CourseListGqlResponse> {
@@ -1828,7 +1828,7 @@ export class CourseService {
     const couponCode = this.normalizeOptionalText(input.couponCode);
     if (couponCode) {
       const couponResult =
-        await this.paymentCouponService.validateForCoursePurchase(
+        await this.couponService.validateForCoursePurchase(
           {
             courseId: course._id,
             code: couponCode,
@@ -1859,7 +1859,7 @@ export class CourseService {
       return {
         amountIrt: couponResult.amountIrt,
         discountPercentage:
-          couponResult.discountType === PaymentCouponDiscountType.PERCENTAGE
+          couponResult.discountType === CouponDiscountType.PERCENTAGE
             ? couponResult.discountValue
             : undefined,
         discountAmountIrt: couponResult.couponDiscountAmountIrt,

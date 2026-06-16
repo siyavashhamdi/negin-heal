@@ -217,7 +217,7 @@
   color: #7c3aed;
 }
 
-.paymentCouponsCard {
+.couponsCard {
   border-color: color-mix(in srgb, #f59e0b 28%, var(--app-surface-border));
   background: linear-gradient(
     135deg,
@@ -226,7 +226,7 @@
   );
 }
 
-.paymentCouponsCard svg {
+.couponsCard svg {
   color: #d97706;
 }
 
@@ -503,7 +503,7 @@ body[data-theme="dark"] {
     color: #c4b5fd;
   }
 
-  .paymentCouponsCard {
+  .couponsCard {
     border-color: color-mix(in srgb, #fbbf24 32%, var(--app-surface-border));
     background: linear-gradient(
       135deg,
@@ -512,7 +512,7 @@ body[data-theme="dark"] {
     );
   }
 
-  .paymentCouponsCard svg {
+  .couponsCard svg {
     color: #fcd34d;
   }
 

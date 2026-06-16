@@ -22,7 +22,8 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "kill:port": "lsof -ti:3000 | xargs kill -9 2>/dev/null || echo \"No process found on port 3000\"",
-    "seed:courses": "tsx -r tsconfig-paths/register src/scripts/seed-real-courses.ts"
+    "seed:courses": "tsx -r tsconfig-paths/register src/scripts/seed-real-courses.ts",
+    "seed:coupons": "tsx -r tsconfig-paths/register src/scripts/seed-real-coupons.ts"
   },
   "dependencies": {
     "@apollo/server": "^4.9.5",

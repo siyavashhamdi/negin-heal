@@ -26,7 +26,7 @@ import { useSnackbar } from "../../hooks/useSnackbar";
 import { COURSE_PURCHASE_SUBMIT_MUTATION } from "../../graphql/mutations/coursePurchaseSubmit.mutation";
 import { FILE_UPLOAD_MUTATION } from "../../graphql/mutations/fileUpload.mutation";
 import { PAYMENT_CHECKOUT_CONFIG_QUERY } from "../../graphql/queries/paymentCheckoutConfig.query";
-import { PAYMENT_COUPON_VALIDATE_QUERY } from "../../graphql/queries/paymentCouponValidate.query";
+import { COUPON_VALIDATE_QUERY } from "../../graphql/queries/couponValidate.query";
 import { showErrorIfNotQueued } from "../../utilities/graphql-error.util";
 import {
   formatCoursePrice,
@@ -34,9 +34,9 @@ import {
   type CoursePurchaseSubmitMutation,
   type CoursePurchaseSubmitMutationVariables,
   type PaymentCheckoutConfigQuery,
-  type PaymentCouponValidateQuery,
-  type PaymentCouponValidateQueryVariables,
-  type PaymentCouponValidateRecord,
+  type CouponValidateQuery,
+  type CouponValidateQueryVariables,
+  type CouponValidateRecord,
   type UsdtIrtRateConfig,
   type UserCoursePaymentMethod,
 } from "./course-detail.api";
@@ -142,7 +142,7 @@ function formatUsdtPrice(price?: number | null): string {
   })} USDT`;
 }
 
-function formatCouponDiscountLabel(coupon: PaymentCouponValidateRecord): string {
+function formatCouponDiscountLabel(coupon: CouponValidateRecord): string {
   if (coupon.discountType === "PERCENTAGE" && coupon.discountValue != null) {
     return `${Math.min(coupon.discountValue, 100).toLocaleString("fa-IR")}٪ تخفیف`;
   }
@@ -195,7 +195,7 @@ export function CoursePurchaseDialog({
   const [cryptoTransactionHash, setCryptoTransactionHash] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [couponCode, setCouponCode] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState<PaymentCouponValidateRecord | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<CouponValidateRecord | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
   const { data: checkoutConfigData, loading: isCheckoutConfigLoading } =
     useQuery<PaymentCheckoutConfigQuery>(PAYMENT_CHECKOUT_CONFIG_QUERY, {
@@ -203,9 +203,9 @@ export function CoursePurchaseDialog({
       fetchPolicy: "network-only",
     });
   const [validateCoupon, { loading: isCouponValidating }] = useLazyQuery<
-    PaymentCouponValidateQuery,
-    PaymentCouponValidateQueryVariables
-  >(PAYMENT_COUPON_VALIDATE_QUERY, {
+    CouponValidateQuery,
+    CouponValidateQueryVariables
+  >(COUPON_VALIDATE_QUERY, {
     fetchPolicy: "network-only",
   });
   const [submitPurchase] = useMutationWithSnackbar<
@@ -362,7 +362,7 @@ export function CoursePurchaseDialog({
         return;
       }
 
-      const result = data?.paymentCouponValidate;
+      const result = data?.couponValidate;
       if (!result?.isValid) {
         setAppliedCoupon(null);
         setCouponError(result?.message || "کد تخفیف معتبر نیست.");

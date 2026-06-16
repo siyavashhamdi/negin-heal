@@ -9,7 +9,7 @@ import Login from "../pages/Login/Login";
 import AboutPage from "../pages/More/About";
 import GlobalAnouncementPage from "../pages/More/GlobalAnouncement";
 import More from "../pages/More/Index";
-import PaymentCouponsIndex from "../pages/PaymentCoupons/Index";
+import CouponsIndex from "../pages/Coupons/Index";
 import PrivacyPolicyPage from "../pages/More/PrivacyPolicy";
 import TermsOfUsePage from "../pages/More/TermsOfUse";
 import SystemSettingsIndex from "../pages/SystemSettings/Index";
@@ -54,8 +54,8 @@ export const DashboardAppRoutes = (): ReactElement => {
         element={wrapProtected(<GlobalAnouncementPage />)}
       />
       <Route
-        path={APP_SHELL_ROUTES.morePaymentCoupons}
-        element={wrapProtected(<PaymentCouponsIndex />)}
+        path={APP_SHELL_ROUTES.moreCoupons}
+        element={wrapProtected(<CouponsIndex />)}
       />
       <Route path={APP_SHELL_ROUTES.notifications} element={wrapProtected(<Notifications />)} />
       <Route path={APP_SHELL_ROUTES.payments} element={wrapProtected(<PaymentsIndex />)} />

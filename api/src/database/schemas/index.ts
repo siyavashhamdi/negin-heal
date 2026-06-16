@@ -2,7 +2,7 @@ export * from "./app-setting.schema";
 export * from "./course.schema";
 export * from "./migration.schema";
 export * from "./notification.schema";
-export * from "./payment-coupon.schema";
+export * from "./coupon.schema";
 export * from "./session.schema";
 export * from "./stored-file.schema";
 export * from "./ticket.schema";

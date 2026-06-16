@@ -10,7 +10,7 @@ export const APP_SHELL_ROUTES = {
   moreTermsOfUse: "/more/terms-of-use",
   moreSystemSettings: "/more/system-settings",
   moreGlobalAnouncement: "/more/global-anouncement",
-  morePaymentCoupons: "/more/payment-coupons",
+  moreCoupons: "/more/coupons",
   notifications: "/notifications",
   payments: "/payments",
   paymentZarinPalCallback: "/payment/zarinpal/callback",

@@ -235,14 +235,14 @@ export type CourseListSortOptionInput = {
   updatedAt?: InputMaybe<SortingOrder>;
 };
 
-export type CoursePaymentCouponSnapshotGqlResponse = {
-  __typename?: "CoursePaymentCouponSnapshotGqlResponse";
+export type CourseCouponSnapshotGqlResponse = {
+  __typename?: "CourseCouponSnapshotGqlResponse";
   /** Coupon code */
   code: Scalars["String"]["output"];
   /** Coupon ID */
   couponId: Scalars["ID"]["output"];
   /** Coupon discount type */
-  discountType: PaymentCouponDiscountType;
+  discountType: CouponDiscountType;
   /** Coupon discount value. Percentage or fixed amount based on discountType */
   discountValue: Scalars["Float"]["output"];
   /** Coupon ID */
@@ -275,7 +275,7 @@ export type CoursePaymentListFilterInput = {
   /** Filter by coupon code */
   couponCode?: InputMaybe<Scalars["String"]["input"]>;
   /** Filter by coupon discount type */
-  couponDiscountType?: InputMaybe<PaymentCouponDiscountType>;
+  couponDiscountType?: InputMaybe<CouponDiscountType>;
   /** Maximum coupon discount value */
   couponDiscountValueMax?: InputMaybe<Scalars["Float"]["input"]>;
   /** Minimum coupon discount value */
@@ -380,7 +380,7 @@ export type CoursePaymentListGqlResponse = {
   /** Cancelled status date */
   cancelledAt?: Maybe<Scalars["DateTime"]["output"]>;
   /** Applied coupon snapshot, if any */
-  coupon?: Maybe<CoursePaymentCouponSnapshotGqlResponse>;
+  coupon?: Maybe<CourseCouponSnapshotGqlResponse>;
   /** Course snapshot captured when the purchase was submitted */
   course: CoursePaymentCourseSnapshotGqlResponse;
   /** Course ID */
@@ -821,23 +821,23 @@ export type PaymentCheckoutUsdtIrtRateGqlResponse = {
   valueIrt: Scalars["Float"]["output"];
 };
 
-/** Payment coupon discount calculation kind */
-export const PaymentCouponDiscountType = {
+/** Coupon discount calculation kind */
+export const CouponDiscountType = {
   FIXED_AMOUNT: "FIXED_AMOUNT",
   PERCENTAGE: "PERCENTAGE",
 } as const;
 
-export type PaymentCouponDiscountType =
-  (typeof PaymentCouponDiscountType)[keyof typeof PaymentCouponDiscountType];
-export type PaymentCouponValidateGqlInput = {
+export type CouponDiscountType =
+  (typeof CouponDiscountType)[keyof typeof CouponDiscountType];
+export type CouponValidateGqlInput = {
   /** Coupon code */
   code: Scalars["String"]["input"];
   /** Course ID */
   courseId: Scalars["ID"]["input"];
 };
 
-export type PaymentCouponValidateGqlResponse = {
-  __typename?: "PaymentCouponValidateGqlResponse";
+export type CouponValidateGqlResponse = {
+  __typename?: "CouponValidateGqlResponse";
   /** Course amount before any discount */
   amountIrt?: Maybe<Scalars["Float"]["output"]>;
   /** Normalized coupon code */
@@ -849,7 +849,7 @@ export type PaymentCouponValidateGqlResponse = {
   /** Built-in course discount amount */
   courseDiscountAmountIrt?: Maybe<Scalars["Float"]["output"]>;
   /** Coupon discount type */
-  discountType?: Maybe<PaymentCouponDiscountType>;
+  discountType?: Maybe<CouponDiscountType>;
   /** Coupon discount value */
   discountValue?: Maybe<Scalars["Float"]["output"]>;
   /** Final payable amount after coupon */
@@ -876,8 +876,8 @@ export type Query = {
   me: UserMeGqlResponse;
   /** Get payment checkout settings for course purchases */
   paymentCheckoutConfig: PaymentCheckoutConfigGqlResponse;
-  /** Validate a payment coupon for the current user's course purchase */
-  paymentCouponValidate: PaymentCouponValidateGqlResponse;
+  /** Validate a coupon for the current user's course purchase */
+  couponValidate: CouponValidateGqlResponse;
   /** Get active course details for anonymous users and END_USER accounts with locked content redacted */
   userCourseDetail: UserCourseDetailGqlResponse;
   /** Get active courses for anonymous users and END_USER views with purchase state */
@@ -900,8 +900,8 @@ export type QueryFileDetailArgs = {
   input: FileDetailGqlInput;
 };
 
-export type QueryPaymentCouponValidateArgs = {
-  input: PaymentCouponValidateGqlInput;
+export type QueryCouponValidateArgs = {
+  input: CouponValidateGqlInput;
 };
 
 export type QueryUserCourseDetailArgs = {
@@ -1513,12 +1513,12 @@ export type CoursePaymentManualCreateMutation = {
       priceIrt: number;
     };
     coupon?: {
-      __typename?: "CoursePaymentCouponSnapshotGqlResponse";
+      __typename?: "CourseCouponSnapshotGqlResponse";
       id: string;
       couponId: string;
       code: string;
       title: string;
-      discountType: PaymentCouponDiscountType;
+      discountType: CouponDiscountType;
       discountValue: number;
     } | null;
     uploadedReceiptFile?: {
@@ -1599,12 +1599,12 @@ export type CoursePaymentStatusUpdateMutation = {
       priceIrt: number;
     };
     coupon?: {
-      __typename?: "CoursePaymentCouponSnapshotGqlResponse";
+      __typename?: "CourseCouponSnapshotGqlResponse";
       id: string;
       couponId: string;
       code: string;
       title: string;
-      discountType: PaymentCouponDiscountType;
+      discountType: CouponDiscountType;
       discountValue: number;
     } | null;
     uploadedReceiptFile?: {
@@ -1966,12 +1966,12 @@ export type CoursePaymentListQuery = {
         priceIrt: number;
       };
       coupon?: {
-        __typename?: "CoursePaymentCouponSnapshotGqlResponse";
+        __typename?: "CourseCouponSnapshotGqlResponse";
         id: string;
         couponId: string;
         code: string;
         title: string;
-        discountType: PaymentCouponDiscountType;
+        discountType: CouponDiscountType;
         discountValue: number;
       } | null;
       uploadedReceiptFile?: {
@@ -2062,20 +2062,20 @@ export type PaymentCheckoutConfigQuery = {
   };
 };
 
-export type PaymentCouponValidateQueryVariables = Exact<{
-  input: PaymentCouponValidateGqlInput;
+export type CouponValidateQueryVariables = Exact<{
+  input: CouponValidateGqlInput;
 }>;
 
-export type PaymentCouponValidateQuery = {
+export type CouponValidateQuery = {
   __typename?: "Query";
-  paymentCouponValidate: {
-    __typename?: "PaymentCouponValidateGqlResponse";
+  couponValidate: {
+    __typename?: "CouponValidateGqlResponse";
     isValid: boolean;
     message?: string | null;
     couponId?: string | null;
     code?: string | null;
     title?: string | null;
-    discountType?: PaymentCouponDiscountType | null;
+    discountType?: CouponDiscountType | null;
     discountValue?: number | null;
     amountIrt?: number | null;
     courseDiscountAmountIrt?: number | null;
@@ -3698,13 +3698,13 @@ export const PaymentCheckoutConfigDocument = {
     },
   ],
 } as unknown as DocumentNode<PaymentCheckoutConfigQuery, PaymentCheckoutConfigQueryVariables>;
-export const PaymentCouponValidateDocument = {
+export const CouponValidateDocument = {
   kind: "Document",
   definitions: [
     {
       kind: "OperationDefinition",
       operation: "query",
-      name: { kind: "Name", value: "PaymentCouponValidate" },
+      name: { kind: "Name", value: "CouponValidate" },
       variableDefinitions: [
         {
           kind: "VariableDefinition",
@@ -3713,7 +3713,7 @@ export const PaymentCouponValidateDocument = {
             kind: "NonNullType",
             type: {
               kind: "NamedType",
-              name: { kind: "Name", value: "PaymentCouponValidateGqlInput" },
+              name: { kind: "Name", value: "CouponValidateGqlInput" },
             },
           },
         },
@@ -3723,7 +3723,7 @@ export const PaymentCouponValidateDocument = {
         selections: [
           {
             kind: "Field",
-            name: { kind: "Name", value: "paymentCouponValidate" },
+            name: { kind: "Name", value: "couponValidate" },
             arguments: [
               {
                 kind: "Argument",
@@ -3753,7 +3753,7 @@ export const PaymentCouponValidateDocument = {
       },
     },
   ],
-} as unknown as DocumentNode<PaymentCouponValidateQuery, PaymentCouponValidateQueryVariables>;
+} as unknown as DocumentNode<CouponValidateQuery, CouponValidateQueryVariables>;
 export const UserCourseDetailDocument = {
   kind: "Document",
   definitions: [

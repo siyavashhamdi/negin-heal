@@ -60,7 +60,7 @@ export type UserCoursePurchaseStatus =
   | "REFUNDED"
   | "CANCELLED";
 
-export type PaymentCouponDiscountType = "PERCENTAGE" | "FIXED_AMOUNT";
+export type CouponDiscountType = "PERCENTAGE" | "FIXED_AMOUNT";
 
 export type PaymentCheckoutCard = {
   readonly cardNumber: string;
@@ -97,13 +97,13 @@ export type PaymentCheckoutConfigQuery = {
   readonly paymentCheckoutConfig: PaymentCheckoutConfig;
 };
 
-export type PaymentCouponValidateRecord = {
+export type CouponValidateRecord = {
   readonly isValid: boolean;
   readonly message?: string | null;
   readonly couponId?: string | null;
   readonly code?: string | null;
   readonly title?: string | null;
-  readonly discountType?: PaymentCouponDiscountType | null;
+  readonly discountType?: CouponDiscountType | null;
   readonly discountValue?: number | null;
   readonly amountIrt?: number | null;
   readonly courseDiscountAmountIrt?: number | null;
@@ -112,11 +112,11 @@ export type PaymentCouponValidateRecord = {
   readonly finalAmountIrt?: number | null;
 };
 
-export type PaymentCouponValidateQuery = {
-  readonly paymentCouponValidate: PaymentCouponValidateRecord;
+export type CouponValidateQuery = {
+  readonly couponValidate: CouponValidateRecord;
 };
 
-export type PaymentCouponValidateQueryVariables = {
+export type CouponValidateQueryVariables = {
   readonly input: {
     readonly courseId: string;
     readonly code: string;

@@ -3,7 +3,7 @@ import { Module } from "@nestjs/common";
 import { AppSettingsModule } from "../app-settings";
 import { DatabaseModule } from "../database";
 import { FileModule } from "../file";
-import { PaymentCouponModule } from "../payment-coupon";
+import { CouponModule } from "../coupon";
 import { CoursePaymentController } from "./api/course-payment.controller";
 import { CourseService } from "./course.service";
 import {
@@ -22,7 +22,7 @@ import {
 } from "./graphql/queries";
 
 @Module({
-  imports: [AppSettingsModule, DatabaseModule, FileModule, PaymentCouponModule],
+  imports: [AppSettingsModule, DatabaseModule, FileModule, CouponModule],
   controllers: [CoursePaymentController],
   providers: [
     CourseService,

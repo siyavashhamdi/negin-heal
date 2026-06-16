@@ -187,7 +187,7 @@
                     "updatedAtTo": "بروزرسانی تا تاریخ"
                 }
             },
-            "paymentCoupons": {
+            "coupons": {
                 "columns": {
                     "id": "شناسه",
                     "code": "کد",

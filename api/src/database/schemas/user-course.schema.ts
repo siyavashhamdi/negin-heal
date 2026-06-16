@@ -1,6 +1,6 @@
 import { Document, Schema as MongooseSchema, Types } from "mongoose";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { CourseDiscountType, PaymentCouponDiscountType } from "../../enums";
+import { CourseDiscountType, CouponDiscountType } from "../../enums";
 import { UserCoursePaymentMethod } from "../../enums/user-course-payment-method.enum";
 import { UserCoursePurchaseCurrency } from "../../enums/user-course-purchase-currency.enum";
 import { UserCoursePurchaseStatus } from "../../enums/user-course-purchase-status.enum";
@@ -56,7 +56,7 @@ export type UserCoursePurchase = {
 export type UserCoursePurchaseCouponSnapshot = {
   couponId: Types.ObjectId;
   code: string;
-  discountType: PaymentCouponDiscountType;
+  discountType: CouponDiscountType;
   discountValue: number;
 };
 
@@ -116,7 +116,7 @@ export const UserCourseSnapshotSchema = new MongooseSchema(
 
 export const UserCoursePurchaseCouponSnapshotSchema = new MongooseSchema(
   {
-    couponId: { ref: "PaymentCoupon", required: true, type: Types.ObjectId },
+    couponId: { ref: "Coupon", required: true, type: Types.ObjectId },
     code: {
       required: true,
       set: (value: string) => value.trim().toUpperCase(),
@@ -124,7 +124,7 @@ export const UserCoursePurchaseCouponSnapshotSchema = new MongooseSchema(
       type: String,
     },
     discountType: {
-      enum: Object.values(PaymentCouponDiscountType),
+      enum: Object.values(CouponDiscountType),
       required: true,
       type: String,
     },

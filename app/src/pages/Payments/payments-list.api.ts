@@ -10,7 +10,7 @@ export type UserCoursePurchaseStatus = "PENDING" | "PAID" | "FAILED" | "REFUNDED
 
 export type UserCoursePurchaseCurrency = "IRT" | "USDT";
 
-export type PaymentCouponDiscountType = "PERCENTAGE" | "FIXED_AMOUNT";
+export type CouponDiscountType = "PERCENTAGE" | "FIXED_AMOUNT";
 
 export type CoursePaymentRelatedUser = {
   readonly id: string;
@@ -62,7 +62,7 @@ export type CoursePaymentListRow = {
     readonly couponId: string;
     readonly code: string;
     readonly title: string;
-    readonly discountType: PaymentCouponDiscountType;
+    readonly discountType: CouponDiscountType;
     readonly discountValue: number;
   } | null;
   readonly uploadedReceiptFileId?: string | null;
@@ -126,7 +126,7 @@ export type CoursePaymentListFilters = {
   receiptUploadedBy: string;
   couponId: string;
   couponCode: string;
-  couponDiscountType: PaymentCouponDiscountType | "ALL";
+  couponDiscountType: CouponDiscountType | "ALL";
   couponDiscountValueMin: string;
   couponDiscountValueMax: string;
   createdAtFrom: string;
@@ -231,7 +231,7 @@ export type CoursePaymentListQueryVariables = {
       receiptUploadedBy?: string | null;
       couponId?: string | null;
       couponCode?: string | null;
-      couponDiscountType?: PaymentCouponDiscountType | null;
+      couponDiscountType?: CouponDiscountType | null;
       couponDiscountValueMin?: number | null;
       couponDiscountValueMax?: number | null;
       createdAtFrom?: string | null;
@@ -278,7 +278,7 @@ export type CoursePaymentRecord = {
   readonly couponId: string;
   readonly couponCode: string;
   readonly couponTitle: string;
-  readonly couponDiscountType: PaymentCouponDiscountType | null;
+  readonly couponDiscountType: CouponDiscountType | null;
   readonly couponDiscountValue: number | null;
   readonly uploadedReceiptFileId: string;
   readonly uploadedReceiptFileTitle: string;

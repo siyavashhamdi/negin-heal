@@ -12,7 +12,7 @@ import {
 import { Field, Float, ID, InputType } from "@nestjs/graphql";
 
 import {
-  PaymentCouponDiscountType,
+  CouponDiscountType,
   UserCoursePaymentMethod,
   UserCoursePurchaseCurrency,
   UserCoursePurchaseStatus,
@@ -273,15 +273,15 @@ export class CoursePaymentListFilterInput {
   @IsString({ message: "Coupon code filter must be a string" })
   couponCode?: string;
 
-  @Field(() => PaymentCouponDiscountType, {
+  @Field(() => CouponDiscountType, {
     nullable: true,
     description: "Filter by coupon discount type",
   })
   @IsOptional()
-  @IsEnum(PaymentCouponDiscountType, {
+  @IsEnum(CouponDiscountType, {
     message: "Coupon discount type filter must be valid",
   })
-  couponDiscountType?: PaymentCouponDiscountType;
+  couponDiscountType?: CouponDiscountType;
 
   @Field(() => Float, {
     nullable: true,
