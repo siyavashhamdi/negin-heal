@@ -12,3 +12,4 @@ export * from "./user-send-sample-email.mutation";
 export * from "./user-forgot-password.mutation";
 export * from "./user-reset-password.mutation";
 export * from "./global-anouncement-send.mutation";
+export * from "./notification-update.mutation";

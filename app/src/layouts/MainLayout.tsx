@@ -584,7 +584,13 @@ export function MainLayout({
                       </div>
                       <Divider />
                       <div className="main-layout__panel-actions">
-                        <Button size="small" variant="contained">
+                        <Button
+                          size="small"
+                          variant="contained"
+                          component={RouterLink}
+                          to={APP_SHELL_ROUTES.notifications}
+                          onClick={() => setNotificationAnchorEl(null)}
+                        >
                           {t("layout.header.panels.notifications.viewAll")}
                         </Button>
                         <Button size="small" variant="text">

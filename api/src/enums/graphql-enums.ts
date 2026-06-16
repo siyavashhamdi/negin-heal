@@ -12,6 +12,7 @@ import { CourseItemType } from "./course-item-type.enum";
 import { CourseReleaseType } from "./course-release-type.enum";
 import { NotificationMode } from "./notification-mode.enum";
 import { NotificationSource } from "./notification-source.enum";
+import { NotificationUpdateAction } from "./notification-update-action.enum";
 import { PaymentCouponDiscountType } from "./payment-coupon-discount-type.enum";
 import { TicketCategory } from "./ticket-category.enum";
 import { TicketClosedBy } from "./ticket-closed-by.enum";
@@ -44,6 +45,11 @@ registerEnumType(GlobalAnouncementMessageType, {
 registerEnumType(NotificationSource, {
   name: "NotificationSource",
   description: "Domain source that produced a notification",
+});
+
+registerEnumType(NotificationUpdateAction, {
+  name: "NotificationUpdateAction",
+  description: "Bulk update action for user notifications",
 });
 
 registerEnumType(AppSettingValueType, {

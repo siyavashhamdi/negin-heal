@@ -6,6 +6,7 @@ export * from "./course-release-type.enum";
 export * from "./node-env.enum";
 export * from "./notification-mode.enum";
 export * from "./notification-source.enum";
+export * from "./notification-update-action.enum";
 export * from "./payment-coupon-discount-type.enum";
 export * from "./ticket-category.enum";
 export * from "./ticket-closed-by.enum";
