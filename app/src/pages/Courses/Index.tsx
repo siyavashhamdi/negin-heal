@@ -886,7 +886,7 @@ const CoursesIndex = (): ReactElement => {
                         return {
                           ...prev,
                           field: nextField,
-                          order: nextField === "sortOrder" ? "ASC" : prev.order,
+                          order: nextField === "sortOrder" ? "DESC" : prev.order,
                         };
                       })
                     }

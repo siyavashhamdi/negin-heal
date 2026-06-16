@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 
 import { AppSettingsModule } from "../app-settings";
+import { BadgeModule } from "../badge";
 import { DatabaseModule } from "../database";
 import { FileModule } from "../file";
 import { CouponModule } from "../coupon";
@@ -23,7 +24,14 @@ import {
 } from "./graphql/queries";
 
 @Module({
-  imports: [AppSettingsModule, DatabaseModule, FileModule, CouponModule, UserModule],
+  imports: [
+    AppSettingsModule,
+    BadgeModule,
+    DatabaseModule,
+    FileModule,
+    CouponModule,
+    UserModule,
+  ],
   controllers: [CoursePaymentController],
   providers: [
     CourseService,

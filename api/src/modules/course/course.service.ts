@@ -10,6 +10,8 @@ import {
 
 import { APP_SETTING_KEY, PAGINATION_CONSTANT } from "../../constants";
 import {
+  BadgeCountTriggerAction,
+  BadgeCountTriggerSource,
   CourseDiscountType,
   CourseItemType,
   CourseReleaseType,
@@ -84,6 +86,7 @@ import {
 } from "./graphql/responses/course-payment-list.gql.response";
 import { CoursePurchaseSubmitGqlResponse } from "./graphql/responses/course-purchase-submit.gql.response";
 import { AppSettingsService } from "../app-settings";
+import { BadgeService } from "../badge";
 import { CouponService } from "../coupon";
 import { UserSubscriptionService } from "../user";
 
@@ -198,6 +201,7 @@ export class CourseService {
     private readonly notificationModel: Model<NotificationDocument>,
     private readonly fileService: FileService,
     private readonly appSettingsService: AppSettingsService,
+    private readonly badgeService: BadgeService,
     private readonly couponService: CouponService,
     private readonly userSubscriptionService: UserSubscriptionService,
   ) {}
@@ -210,6 +214,14 @@ export class CourseService {
     await this.ensureReferencedFilesExist(normalizedInput);
 
     const course = await this.courseModel.create(normalizedInput);
+    await this.publishCourseBadgeCountSignal(
+      BadgeCountTriggerAction.CREATED,
+      course._id,
+      {
+        includeStaffUsers: true,
+        includeActiveSubscribedUsers: course.isActive,
+      },
+    );
     const fileTypeLookup = await this.buildFileTypeLookup([course]);
 
     return this.toListResponse(course, fileTypeLookup);
@@ -224,6 +236,7 @@ export class CourseService {
     }
 
     const oldFileIds = this.collectReferencedFileIds(existingCourse);
+    const existingIsActive = existingCourse.isActive;
     const normalizedInput = this.normalizeCreateInput(input);
     await this.ensureReferencedFilesExist(normalizedInput);
 
@@ -241,6 +254,13 @@ export class CourseService {
     const newFileIds = this.collectReferencedFileIds(normalizedInput);
     const fileTypeLookup = await this.buildFileTypeLookup([updatedCourse]);
     const response = this.toListResponse(updatedCourse, fileTypeLookup);
+
+    if (existingIsActive !== updatedCourse.isActive) {
+      await this.publishCourseBadgeCountSignal(
+        BadgeCountTriggerAction.UPDATED,
+        updatedCourse._id,
+      );
+    }
 
     await this.deleteDetachedFiles(input.id, oldFileIds, newFileIds);
 
@@ -263,6 +283,14 @@ export class CourseService {
       throw new CourseNotFoundException();
     }
 
+    await this.publishCourseBadgeCountSignal(
+      BadgeCountTriggerAction.DELETED,
+      deletedCourse._id,
+      {
+        includeStaffUsers: true,
+        includeActiveSubscribedUsers: deletedCourse.isActive,
+      },
+    );
     await this.deleteDetachedFiles(input.id, oldFileIds, []);
   }
 
@@ -755,7 +783,7 @@ export class CourseService {
       isActive: "isActive",
       sortOrder: "sortOrder",
     };
-    const requestedSort = options?.sort ?? { sortOrder: SortingOrder.ASC };
+    const requestedSort = options?.sort ?? { createdAt: SortingOrder.DESC };
     const cursorSort = this.resolveCourseCursorSort(requestedSort);
     const sortOptions = {
       ...buildSortOptions<CourseListSortField>(requestedSort, sortFieldMap),
@@ -986,6 +1014,25 @@ export class CourseService {
     }
 
     return value ?? null;
+  }
+
+  private async publishCourseBadgeCountSignal(
+    action: BadgeCountTriggerAction,
+    courseId: Types.ObjectId,
+    options: {
+      includeStaffUsers?: boolean;
+      includeActiveSubscribedUsers?: boolean;
+    } = { includeActiveSubscribedUsers: true },
+  ): Promise<void> {
+    await this.badgeService.publishCountSignal({
+      includeStaffUsers: options.includeStaffUsers,
+      includeActiveSubscribedUsers: options.includeActiveSubscribedUsers,
+      payload: {
+        source: BadgeCountTriggerSource.COURSE,
+        action,
+        courseId: courseId.toString(),
+      },
+    });
   }
 
   private validateCreateInput(input: CourseCreateGqlInput): void {

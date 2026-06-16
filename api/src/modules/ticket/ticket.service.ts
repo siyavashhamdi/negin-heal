@@ -232,8 +232,15 @@ export class TicketService {
         },
       ];
 
-      this.reopenTicketOnNewMessage(existingTicket);
+      this.reopenTicketOnNewMessage(existingTicket, params.actorRole);
       const savedTicket = await existingTicket.save();
+      await this.publishTicketBadgeCountSignal({
+        ticketId: savedTicket._id,
+        action: BadgeCountTriggerAction.UPDATED,
+        targetEndUserId: savedTicket.audit?.createdBy,
+        includeStaffUsers: params.actorRole === UserRole.END_USER,
+      });
+
       return savedTicket.toObject() as TicketListRecord;
     }
 
@@ -267,14 +274,10 @@ export class TicketService {
         },
       ],
     });
-    await this.badgeService.publishCountSignal({
-      targetUserIds: assignedEndUserId,
+    await this.publishTicketBadgeCountSignal({
+      ticketId: createdTicket._id,
+      action: BadgeCountTriggerAction.CREATED,
       includeStaffUsers: true,
-      payload: {
-        source: BadgeCountTriggerSource.TICKET,
-        action: BadgeCountTriggerAction.CREATED,
-        ticketId: createdTicket._id.toString(),
-      },
     });
 
     return createdTicket.toObject() as TicketListRecord;
@@ -308,7 +311,31 @@ export class TicketService {
     ticket.closedAt = new Date();
 
     const savedTicket = await ticket.save();
+    await this.publishTicketBadgeCountSignal({
+      ticketId: savedTicket._id,
+      action: BadgeCountTriggerAction.UPDATED,
+      targetEndUserId: savedTicket.audit?.createdBy,
+      includeStaffUsers: true,
+    });
+
     return savedTicket.toObject() as TicketListRecord;
+  }
+
+  private async publishTicketBadgeCountSignal(params: {
+    ticketId: Types.ObjectId;
+    action: BadgeCountTriggerAction;
+    targetEndUserId?: Types.ObjectId;
+    includeStaffUsers?: boolean;
+  }): Promise<void> {
+    await this.badgeService.publishCountSignal({
+      targetUserIds: params.targetEndUserId,
+      includeStaffUsers: params.includeStaffUsers,
+      payload: {
+        source: BadgeCountTriggerSource.TICKET,
+        action: params.action,
+        ticketId: params.ticketId.toString(),
+      },
+    });
   }
 
   private async resolveAssignedEndUserId(
@@ -745,8 +772,14 @@ export class TicketService {
     };
   }
 
-  private reopenTicketOnNewMessage(ticket: TicketDocument): void {
-    ticket.status = TicketStatus.OPEN;
+  private reopenTicketOnNewMessage(
+    ticket: TicketDocument,
+    actorRole: UserRole.END_USER | UserRole.SUPER_ADMIN | UserRole.ADMIN,
+  ): void {
+    ticket.status =
+      actorRole === UserRole.END_USER
+        ? TicketStatus.OPEN
+        : TicketStatus.ANSWERED;
     ticket.closedBy = undefined;
     ticket.closedAt = undefined;
     ticket.closedByUserId = undefined;

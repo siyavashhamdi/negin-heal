@@ -34,6 +34,7 @@ type BadgeCountSignalTargetUserIds = Types.ObjectId | Types.ObjectId[];
 export interface PublishBadgeCountSignalInput {
   targetUserIds?: BadgeCountSignalTargetUserIds;
   includeStaffUsers?: boolean;
+  includeActiveSubscribedUsers?: boolean;
   payload: BadgeCountSignalPayload;
 }
 
@@ -80,6 +81,14 @@ export class BadgeService {
     if (input.includeStaffUsers) {
       const staffUserIds = await this.userService.findActiveStaffUserIds();
       staffUserIds.forEach((userId) => targetUserIds.add(userId));
+    }
+
+    if (input.includeActiveSubscribedUsers) {
+      const activeUserIds =
+        this.userSubscriptionService.getActiveSubscribedUserIds(
+          GeneralSubscriptionUpdateType.BADGE_COUNTS,
+        );
+      activeUserIds.forEach((userId) => targetUserIds.add(userId));
     }
 
     return this.userSubscriptionService.publishToUsers([...targetUserIds], {

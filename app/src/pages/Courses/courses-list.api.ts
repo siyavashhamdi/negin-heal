@@ -157,7 +157,7 @@ export const DEFAULT_COURSE_LIST_FILTERS: CourseListFilters = {
 
 export const DEFAULT_COURSE_LIST_SORT: CourseListSort = {
   field: "sortOrder",
-  order: "ASC",
+  order: "DESC",
 };
 
 function trimToNull(value: string): string | null {
