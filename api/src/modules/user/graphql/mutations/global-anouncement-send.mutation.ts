@@ -1,14 +1,19 @@
-import { randomUUID } from "crypto";
-
 import { BadRequestException, UseGuards } from "@nestjs/common";
 import { Args, Mutation, Resolver } from "@nestjs/graphql";
+import { InjectModel } from "@nestjs/mongoose";
+import { Model } from "mongoose";
 
 import {
   GlobalAnouncementMessageType,
   GeneralSubscriptionUpdateType,
   NotificationMode,
+  NotificationSource,
   UserRole,
 } from "../../../../enums";
+import {
+  Notification,
+  NotificationDocument,
+} from "../../../../database/schemas";
 import { GqlAuthGuard, Roles, RolesGuard } from "../../../auth";
 import { UserSubscriptionService } from "../../user-subscription.service";
 import { GlobalAnouncementSendGqlInput } from "../inputs";
@@ -19,6 +24,8 @@ import { GlobalAnouncementSendGqlResponse } from "../responses";
 @Roles(UserRole.SUPER_ADMIN)
 export class GlobalAnouncementSendMutation {
   constructor(
+    @InjectModel(Notification.name)
+    private readonly notificationModel: Model<NotificationDocument>,
     private readonly userSubscriptionService: UserSubscriptionService,
   ) {}
 
@@ -53,19 +60,43 @@ export class GlobalAnouncementSendMutation {
         GeneralSubscriptionUpdateType.NOTIFICATION,
       ).length;
 
+    const notificationPayload: Record<string, unknown> = {
+      ...input.payload,
+      messageType,
+      isPushNotification,
+    };
+    const subscriptionPayload: Record<string, unknown> = {
+      ...notificationPayload,
+      ...(title ? { title } : {}),
+      description,
+      mode,
+    };
+
+    const notification = await this.notificationModel.create({
+      isGlobalAnnouncement: true,
+      source: NotificationSource.OTHER,
+      mode,
+      title,
+      message: description,
+      payload: notificationPayload,
+      visibleUntil: new Date(),
+    });
+
     const deliveredUsers =
       await this.userSubscriptionService.publishToActiveUsers({
         updateType: GeneralSubscriptionUpdateType.NOTIFICATION,
-        targetId: randomUUID(),
-        payload: {
-          ...input.payload,
-          ...(title ? { title } : {}),
-          description,
-          mode,
-          messageType,
-          isPushNotification,
-        },
+        targetId: notification._id.toString(),
+        payload: subscriptionPayload,
       });
+
+    notification.payload = {
+      ...notificationPayload,
+      delivery: {
+        deliveredUsers,
+        activeSubscribedUsers,
+      },
+    };
+    await notification.save();
 
     return {
       deliveredUsers,
