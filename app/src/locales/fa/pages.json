@@ -237,6 +237,14 @@
             "paymentApproved": {
                 "action": "مشاهده دوره"
             }
+        },
+        "underConstruction": {
+            "pageTitle": "در حال ساخت",
+            "title": "سامانه در حال ساخت است",
+            "subtitle": "به زودی با تجربه‌ای نو در دسترس شما قرار می‌گیرد",
+            "description": "تیم Negin Heal در حال آماده‌سازی نسخه جدید سامانه است. از شکیبایی شما سپاسگزاریم.",
+            "progressLabel": "در حال توسعه و بهبود زیرساخت‌ها",
+            "footer": "Negin Heal | ۱۴۰۵"
         }
     }
 }
