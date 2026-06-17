@@ -80,5 +80,15 @@ export default defineConfig(({ mode }) => {
         ),
       },
     },
+    build: {
+      sourcemap: false,
+      reportCompressedSize: false,
+      cssMinify: "esbuild",
+      minify: "esbuild",
+      rollupOptions: {
+        // Lower parallelism reduces peak memory during production builds.
+        maxParallelFileOps: 1,
+      },
+    },
   };
 });
