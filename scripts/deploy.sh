@@ -58,8 +58,10 @@ build_app_staging() {
   promote_staging_build "app" "index.html"
 }
 
-echo "Stopping PM2 processes to free memory..."
-pm2 stop ecosystem.config.cjs 2>/dev/null || true
+if ! command -v pm2 >/dev/null 2>&1; then
+  echo "PM2 is not installed. Install it globally with: npm install -g pm2"
+  exit 1
+fi
 
 echo "Installing API dependencies..."
 npm ci --prefix api
@@ -80,12 +82,7 @@ else
   npm prune --prefix app --omit=dev
 fi
 
-if ! command -v pm2 >/dev/null 2>&1; then
-  echo "PM2 is not installed. Install it globally with: npm install -g pm2"
-  exit 1
-fi
-
-echo "Starting services with PM2..."
+echo "Restarting services with PM2..."
 pm2 restart ecosystem.config.cjs 2>/dev/null || pm2 start ecosystem.config.cjs
 pm2 save
 
