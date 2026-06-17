@@ -1,6 +1,7 @@
 import { Types } from "mongoose";
 import { UserMinimalGqlResponse } from "../modules/user/graphql/responses/common";
 import { FileAccessUrlDescriptor } from "../modules/file/file.service";
+import { resolveAvatarProfileFields } from "../modules/file/file-access-url.util";
 
 /**
  * User object structure for mapping (from MongoDB document)
@@ -27,7 +28,10 @@ export function mapUserToMinimal(
     return undefined;
   }
 
-  const avatarFileId = user.profile?.avatarFileId?.toString();
+  const avatarFields = resolveAvatarProfileFields(
+    user.profile?.avatarFileId,
+    avatarAccessUrlMap,
+  );
 
   return {
     id: user._id,
@@ -35,9 +39,8 @@ export function mapUserToMinimal(
       ? {
           firstName: user.profile.firstName,
           lastName: user.profile.lastName,
-          avatarAccessUrl: avatarFileId
-            ? avatarAccessUrlMap?.get(avatarFileId)
-            : undefined,
+          avatarFileId: avatarFields.avatarFileId,
+          avatarAccessUrl: avatarFields.avatarAccessUrl,
         }
       : undefined,
   } as UserMinimalGqlResponse;

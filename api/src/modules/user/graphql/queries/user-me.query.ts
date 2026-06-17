@@ -5,6 +5,7 @@ import { Types } from "mongoose";
 import { UserRole } from "../../../../enums";
 import { UserService } from "../../user.service";
 import { FileService } from "../../../file/file.service";
+import { resolveAvatarProfileFields } from "../../../file/file-access-url.util";
 import { GraphQLContextUtil } from "../../../../utils";
 import { UserDocument } from "../../../../database/schemas";
 import { GqlAuthGuard } from "../../../auth";
@@ -44,6 +45,10 @@ export class UserMeQuery {
     const avatarAccessUrlMap = await this.fileService.getAccessUrlMap([
       avatarFileId,
     ]);
+    const avatarFields = resolveAvatarProfileFields(
+      avatarFileId,
+      avatarAccessUrlMap,
+    );
 
     return {
       id: userDoc._id,
@@ -56,9 +61,8 @@ export class UserMeQuery {
             lastName: userObj.profile.lastName,
             email: userObj.profile.email,
             phoneNumber: userObj.profile.phoneNumber,
-            avatarAccessUrl: avatarFileId
-              ? avatarAccessUrlMap.get(avatarFileId.toString())
-              : undefined,
+            avatarFileId: avatarFields.avatarFileId,
+            avatarAccessUrl: avatarFields.avatarAccessUrl,
             bio: userObj.profile.bio,
           }
         : undefined,

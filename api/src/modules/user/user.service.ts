@@ -24,6 +24,7 @@ import { SessionService } from "../auth/session.service";
 import { EmailService } from "../email";
 import { AppSettingsService } from "../app-settings";
 import { FileService, FileAccessUrlDescriptor } from "../file/file.service";
+import { resolveAvatarProfileFields } from "../file/file-access-url.util";
 import {
   StoredFile,
   StoredFileDocument,
@@ -1658,7 +1659,10 @@ export class UserService {
     user: UserListRecord,
     avatarAccessUrlMap?: Map<string, FileAccessUrlDescriptor>,
   ): UserMutationGqlResponse {
-    const avatarFileId = user.profile?.avatarFileId;
+    const avatarFields = resolveAvatarProfileFields(
+      user.profile?.avatarFileId,
+      avatarAccessUrlMap,
+    );
 
     return {
       id: user._id,
@@ -1671,9 +1675,8 @@ export class UserService {
             lastName: user.profile.lastName,
             email: user.profile.email,
             phoneNumber: user.profile.phoneNumber,
-            avatarAccessUrl: avatarFileId
-              ? avatarAccessUrlMap?.get(avatarFileId.toString())
-              : undefined,
+            avatarFileId: avatarFields.avatarFileId,
+            avatarAccessUrl: avatarFields.avatarAccessUrl,
             bio: user.profile.bio,
           }
         : undefined,

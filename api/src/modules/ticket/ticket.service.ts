@@ -27,6 +27,7 @@ import {
 } from "../../database/schemas";
 import { BadgeService } from "../badge";
 import { FileService, FileAccessUrlDescriptor } from "../file";
+import { resolveAvatarProfileFields } from "../file/file-access-url.util";
 import {
   TicketListGqlInput,
   TicketListSortOptionInput,
@@ -648,12 +649,14 @@ export class TicketService {
           : undefined,
         relatedLookups.avatarAccessUrlMap,
       ),
-      attachmentFiles: attachmentFileIds.map((fileId) =>
-        this.toTicketStoredFileMinimalResponse(
-          fileId,
-          relatedLookups.filesById.get(fileId.toString()),
-        ),
-      ),
+      attachmentFiles: attachmentFileIds
+        .map((fileId) =>
+          this.toTicketStoredFileMinimalResponse(
+            fileId,
+            relatedLookups.filesById.get(fileId.toString()),
+          ),
+        )
+        .filter((file): file is TicketStoredFileMinimalGqlResponse => file !== null),
     };
   }
 
@@ -723,12 +726,14 @@ export class TicketService {
               firstName: "پشتیبانی",
             },
           },
-      attachmentFiles: attachmentFileIds.map((fileId) =>
-        this.toTicketStoredFileMinimalResponse(
-          fileId,
-          relatedLookups.filesById.get(fileId.toString()),
-        ),
-      ),
+      attachmentFiles: attachmentFileIds
+        .map((fileId) =>
+          this.toTicketStoredFileMinimalResponse(
+            fileId,
+            relatedLookups.filesById.get(fileId.toString()),
+          ),
+        )
+        .filter((file): file is TicketStoredFileMinimalGqlResponse => file !== null),
     };
   }
 
@@ -741,7 +746,10 @@ export class TicketService {
       return undefined;
     }
 
-    const avatarFileId = user?.profile?.avatarFileId;
+    const avatarFields = resolveAvatarProfileFields(
+      user?.profile?.avatarFileId,
+      avatarAccessUrlMap,
+    );
 
     return {
       id,
@@ -750,9 +758,8 @@ export class TicketService {
         ? {
             firstName: user.profile.firstName,
             lastName: user.profile.lastName,
-            avatarAccessUrl: avatarFileId
-              ? avatarAccessUrlMap?.get(avatarFileId.toString())
-              : undefined,
+            avatarFileId: avatarFields.avatarFileId,
+            avatarAccessUrl: avatarFields.avatarAccessUrl,
           }
         : undefined,
     };
@@ -761,14 +768,17 @@ export class TicketService {
   private toTicketStoredFileMinimalResponse(
     id: Types.ObjectId,
     file?: TicketFileLookupRecord,
-  ): TicketStoredFileMinimalGqlResponse {
+  ): TicketStoredFileMinimalGqlResponse | null {
+    if (!file) {
+      return null;
+    }
+
     return {
-      name: file?.name,
-      mimeType: file?.mimeType,
-      sizeBytes: file?.sizeBytes,
-      path: file?.path,
-      accessUrl:
-        file?.accessUrl ?? this.fileService.createAccessUrlDescriptor(id),
+      name: file.name,
+      mimeType: file.mimeType,
+      sizeBytes: file.sizeBytes,
+      path: file.path,
+      accessUrl: file.accessUrl,
     };
   }
 
