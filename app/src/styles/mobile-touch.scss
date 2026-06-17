@@ -1,0 +1,18 @@
+@use "variables" as variables;
+
+// iOS auto-zooms focused inputs smaller than 16px, which can reflow the page and drop focus.
+@media (max-width: (variables.$breakpoint-sm - 0.0625rem)) {
+  .MuiInputBase-input,
+  .MuiInputBase-inputMultiline,
+  .MuiSelect-select,
+  input,
+  textarea,
+  select,
+  [contenteditable="true"] {
+    font-size: 1rem !important;
+  }
+}
+
+.MuiDialogContent-root {
+  -webkit-overflow-scrolling: touch;
+}

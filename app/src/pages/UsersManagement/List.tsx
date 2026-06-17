@@ -39,6 +39,7 @@ import {
   type VisibilityState,
 } from "@tanstack/react-table";
 import { useTheme, type Theme } from "@mui/material/styles";
+import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
 
 import { USER_CREATE_MUTATION } from "../../graphql/mutations/userCreate.mutation";
 import { USER_UPDATE_MUTATION } from "../../graphql/mutations/userUpdate.mutation";
@@ -313,6 +314,9 @@ function selectUserListPage(data: UserListQuery | undefined): ServerPageResult<U
 
 const UsersManagementList = (): ReactElement => {
   const isMobile = useMediaQuery((muiTheme: Theme) => muiTheme.breakpoints.down("md"));
+  const { dialogProps, getPaperProps, getContentProps } = useMobileDialogProps({
+    breakpoint: "md",
+  });
   const theme = useTheme();
   const { t } = useTranslation();
   const { showError } = useSnackbar();
@@ -909,8 +913,8 @@ const UsersManagementList = (): ReactElement => {
         open={Boolean(editForm)}
         onClose={handleCloseEditDialog}
         maxWidth="lg"
-        fullWidth
-        fullScreen={isMobile}
+        {...dialogProps}
+        PaperProps={getPaperProps()}
       >
         <Box component="form" onSubmit={handleSubmitEdit}>
           <DialogTitle>
@@ -918,7 +922,7 @@ const UsersManagementList = (): ReactElement => {
               ? t("pages.usersManagement.create.title")
               : t("pages.usersManagement.edit.title")}
           </DialogTitle>
-          <DialogContent dividers>
+          <DialogContent dividers {...getContentProps()}>
             {editForm ? (
               <Stack spacing={3}>
                 <Stack direction={{ xs: "column", md: "row" }} spacing={2}>

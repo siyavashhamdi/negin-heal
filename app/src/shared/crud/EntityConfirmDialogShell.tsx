@@ -7,12 +7,12 @@ import {
   DialogTitle,
   IconButton,
   Typography,
-  useMediaQuery,
   useTheme,
   type Breakpoint,
 } from "@mui/material";
 import { Close as CloseIcon } from "@mui/icons-material";
 import { useTranslation } from "../../hooks/useTranslation";
+import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
 import { crudModalFooterSx, crudModalTitleSx } from "./modalThemeSx";
 import styles from "./styles/EntityModalShell.module.scss";
 
@@ -40,7 +40,7 @@ const EntityConfirmDialogShell = ({
   maxWidth = "xs",
 }: EntityConfirmDialogShellProps): ReactElement => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const { isCompact, dialogProps, getPaperProps, getContentProps } = useMobileDialogProps();
   const { t } = useTranslation();
 
   return (
@@ -48,15 +48,10 @@ const EntityConfirmDialogShell = ({
       open={open}
       onClose={onClose}
       maxWidth={maxWidth}
-      fullWidth
-      fullScreen={isMobile}
-      PaperProps={{
-        className: isMobile ? styles.modalPaperMobileFlex : undefined,
-        sx: {
-          borderRadius: isMobile ? 0 : 2,
-          m: isMobile ? 0 : 2,
-        },
-      }}
+      {...dialogProps}
+      PaperProps={getPaperProps({
+        className: isCompact ? styles.modalPaperMobileFlex : undefined,
+      })}
     >
       <DialogTitle className={styles.modalDialogTitle} sx={crudModalTitleSx(theme)}>
         <Typography variant="h6" component="div" className={styles.modalTitleTypography}>
@@ -68,7 +63,11 @@ const EntityConfirmDialogShell = ({
       </DialogTitle>
 
       <DialogContent
-        className={isMobile ? styles.confirmDialogContentMobile : styles.confirmDialogContentDesktop}
+        {...getContentProps({
+          className: isCompact
+            ? styles.confirmDialogContentMobile
+            : styles.confirmDialogContentDesktop,
+        })}
       >
         <Box className={styles.confirmDialogBody}>
           {icon ? <Box className={styles.confirmDialogIconWrap}>{icon}</Box> : null}

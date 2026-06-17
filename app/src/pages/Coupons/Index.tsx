@@ -47,6 +47,7 @@ import { COUPON_LIST_QUERY } from "../../graphql/queries/couponList.query";
 import { COURSE_LIST_QUERY } from "../../graphql/queries/courseList.query";
 import { useAuth } from "../../contexts/AuthContext";
 import { useDebounce } from "../../hooks/useDebounce";
+import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import {
   useServerPaginatedQuery,
@@ -248,6 +249,9 @@ function sortingToServerSort(
 const CouponsIndex = (): ReactElement => {
   const theme = useTheme();
   const isMobile = useMediaQuery((muiTheme: Theme) => muiTheme.breakpoints.down("md"));
+  const { isCompact, dialogProps, getPaperProps, getContentProps } = useMobileDialogProps({
+    breakpoint: "md",
+  });
   const { user } = useAuth();
   const { t } = useTranslation();
   const { showError } = useSnackbar();
@@ -917,9 +921,9 @@ const CouponsIndex = (): ReactElement => {
       <Dialog
         open={form != null}
         onClose={isSaving ? undefined : closeDialog}
-        fullWidth
         maxWidth="lg"
-        fullScreen={isMobile}
+        {...dialogProps}
+        PaperProps={getPaperProps()}
       >
         <Box
           component="form"
@@ -927,7 +931,7 @@ const CouponsIndex = (): ReactElement => {
           sx={{
             display: "flex",
             flexDirection: "column",
-            minHeight: isMobile ? "100%" : undefined,
+            minHeight: isCompact ? "100%" : undefined,
           }}
         >
           <DialogTitle>
@@ -935,7 +939,7 @@ const CouponsIndex = (): ReactElement => {
               ? t("pages.coupons.create.title")
               : t("pages.coupons.edit.title")}
           </DialogTitle>
-          <DialogContent dividers sx={{ bgcolor: "background.default" }}>
+          <DialogContent dividers {...getContentProps({ sx: { bgcolor: "background.default" } })}>
             {form ? (
               <Stack spacing={2.5}>
                 <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
@@ -1173,7 +1177,6 @@ const CouponsIndex = (): ReactElement => {
         onCancel={() => setDeleteTarget(null)}
         onConfirm={handleConfirmDelete}
         loading={deleteCouponResult.loading}
-        fullScreen={isMobile}
       />
     </>
   );

@@ -8,7 +8,6 @@ import {
   InputAdornment,
   TextField,
   Typography,
-  useMediaQuery,
 } from "@mui/material";
 import { useLazyQuery, useQuery } from "@apollo/client/react";
 import AccountBalanceRoundedIcon from "@mui/icons-material/AccountBalanceRounded";
@@ -22,6 +21,7 @@ import LockRoundedIcon from "@mui/icons-material/LockRounded";
 import ShieldRoundedIcon from "@mui/icons-material/ShieldRounded";
 import FileUploadField from "../../shared/forms/FileUploadField";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
+import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { COURSE_PURCHASE_SUBMIT_MUTATION } from "../../graphql/mutations/coursePurchaseSubmit.mutation";
 import { PAYMENT_CHECKOUT_CONFIG_QUERY } from "../../graphql/queries/paymentCheckoutConfig.query";
@@ -160,7 +160,9 @@ export function CoursePurchaseDialog({
   discountLabel,
   coverImageUrl,
 }: CoursePurchaseDialogProps): ReactElement {
-  const isFullScreen = useMediaQuery("(max-width:600px)");
+  const { dialogProps, getPaperProps, getContentProps } = useMobileDialogProps({
+    breakpoint: "sm",
+  });
   const { showSuccess, showError } = useSnackbar();
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<UserCoursePaymentMethod>("GATEWAY");
@@ -527,10 +529,9 @@ export function CoursePurchaseDialog({
     <Dialog
       open={open}
       onClose={onClose}
-      fullScreen={isFullScreen}
       maxWidth="md"
-      fullWidth
-      PaperProps={{ className: styles.dialogPaper }}
+      {...dialogProps}
+      PaperProps={getPaperProps({ className: styles.dialogPaper })}
     >
       <div className={styles.dialogHeader}>
         <div className={styles.dialogHeaderText}>
@@ -542,7 +543,7 @@ export function CoursePurchaseDialog({
         </IconButton>
       </div>
 
-      <DialogContent className={styles.dialogContent}>
+      <DialogContent {...getContentProps({ className: styles.dialogContent })}>
         <div className={styles.layout}>
           <aside className={styles.summaryPanel}>
             <div className={styles.summaryHero}>

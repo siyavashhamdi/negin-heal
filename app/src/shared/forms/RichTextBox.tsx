@@ -112,6 +112,7 @@ const RichTextBox = ({
   optionalLabel,
 }: RichTextBoxProps): ReactElement => {
   const isMobile = useMediaQuery("(max-width:600px)");
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const editableRef = useRef<HTMLDivElement | null>(null);
   const [isFocused, setIsFocused] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -324,6 +325,12 @@ const RichTextBox = ({
   };
 
   const handleBlur = (event: FocusEvent<HTMLDivElement>): void => {
+    const root = rootRef.current;
+    const next = event.relatedTarget;
+    if (root && next instanceof Node && root.contains(next)) {
+      return;
+    }
+
     setIsFocused(false);
     const editable = event.currentTarget;
     onChange(editable.innerHTML.trim());
@@ -350,7 +357,7 @@ const RichTextBox = ({
     .join(" ");
 
   return (
-    <Box className={rootClassName}>
+    <Box ref={rootRef} className={rootClassName}>
       <span className={styles.label}>
         {label}
         {required ? <span className={styles.requiredMark}> *</span> : null}

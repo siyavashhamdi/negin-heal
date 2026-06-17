@@ -19,6 +19,7 @@ import type { Theme } from "@mui/material/styles";
 import { APP_SETTING_UPDATE_MUTATION } from "../../graphql/mutations/appSettingUpdate.mutation";
 import { APP_SETTING_DETAIL_QUERY } from "../../graphql/queries/appSettingDetail.query";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
+import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
 import { crudModalFooterSx } from "../../shared/crud/modalThemeSx";
@@ -52,6 +53,9 @@ const SystemSettingEditDialog = ({
 }: SystemSettingEditDialogProps): ReactElement => {
   const theme = useTheme();
   const isMobile = useMediaQuery((muiTheme: Theme) => muiTheme.breakpoints.down("md"));
+  const { dialogProps, getPaperProps, getContentProps } = useMobileDialogProps({
+    breakpoint: "md",
+  });
   const { t } = useTranslation();
   const { showError } = useSnackbar();
   const [form, setForm] = useState<AppSettingEditFormState | null>(null);
@@ -122,9 +126,9 @@ const SystemSettingEditDialog = ({
     <Dialog
       open={open}
       onClose={isSaving ? undefined : onClose}
-      fullWidth
       maxWidth="lg"
-      fullScreen={isMobile}
+      {...dialogProps}
+      PaperProps={getPaperProps()}
     >
       <Box component="form" onSubmit={handleSubmit}>
         <DialogTitle sx={{ pb: 1 }}>
@@ -137,7 +141,7 @@ const SystemSettingEditDialog = ({
             </Typography>
           </Stack>
         </DialogTitle>
-        <DialogContent dividers sx={{ bgcolor: "background.default" }}>
+        <DialogContent dividers {...getContentProps({ sx: { bgcolor: "background.default" } })}>
           {detailLoading || !detail || !form ? (
             <Stack alignItems="center" justifyContent="center" sx={{ minHeight: 260 }} spacing={2}>
               <CircularProgress />

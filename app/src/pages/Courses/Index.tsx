@@ -45,6 +45,7 @@ import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { useDebounce } from "../../hooks/useDebounce";
+import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
 import { useBadgeCountFirstPageReload } from "../../hooks/useBadgeCountFirstPageReload";
 import { useAuth } from "../../contexts/AuthContext";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
@@ -113,6 +114,9 @@ const CoursesIndex = (): ReactElement => {
   const { user: authUser } = useAuth();
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width:600px)");
+  const { dialogProps, getPaperProps, getContentProps } = useMobileDialogProps({
+    breakpoint: "sm",
+  });
   const isEndUser = authUser?.roles?.includes("END_USER") === true;
   const isPublicCourseView = !authUser || isEndUser;
 
@@ -968,10 +972,9 @@ const CoursesIndex = (): ReactElement => {
       <Dialog
         open={Boolean(deleteTarget)}
         onClose={() => (deleteCourseResult.loading ? undefined : setDeleteTarget(null))}
-        fullScreen={isMobile}
-        fullWidth
         maxWidth="xs"
-        PaperProps={{ className: styles.deleteDialogPaper }}
+        {...dialogProps}
+        PaperProps={getPaperProps({ className: styles.deleteDialogPaper })}
       >
         <DialogTitle className={styles.deleteDialogTitle}>
           <span className={styles.deleteDialogIcon}>
@@ -979,7 +982,7 @@ const CoursesIndex = (): ReactElement => {
           </span>
           حذف دوره
         </DialogTitle>
-        <DialogContent className={styles.deleteDialogContent}>
+        <DialogContent {...getContentProps({ className: styles.deleteDialogContent })}>
           <Typography variant="body1" className={styles.deleteDialogMessage}>
             آیا از حذف این دوره مطمئن هستید؟
           </Typography>

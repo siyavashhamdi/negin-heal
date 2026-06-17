@@ -126,6 +126,13 @@
   overflow-wrap: anywhere;
 }
 
+@media (max-width: 600px) {
+  .editor,
+  .markupEditor {
+    font-size: 1rem;
+  }
+}
+
 .editor {
   white-space: pre-wrap;
 }

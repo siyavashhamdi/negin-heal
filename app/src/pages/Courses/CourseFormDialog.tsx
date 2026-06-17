@@ -7,10 +7,10 @@ import {
   DialogContentText,
   DialogTitle,
   Divider,
-  useMediaQuery,
 } from "@mui/material";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
+import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { COURSE_CREATE_MUTATION } from "../../graphql/mutations/courseCreate.mutation";
 import { COURSE_UPDATE_MUTATION } from "../../graphql/mutations/courseUpdate.mutation";
@@ -245,7 +245,9 @@ const CourseFormDialog = ({
   course,
 }: CourseFormDialogProps): ReactElement => {
   const { showError } = useSnackbar();
-  const isMobile = useMediaQuery("(max-width: 600px)");
+  const { dialogProps, getPaperProps, getContentProps } = useMobileDialogProps({
+    breakpoint: "sm",
+  });
   const isEditMode = course != null;
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -700,15 +702,14 @@ const CourseFormDialog = ({
       <Dialog
         open={open}
         onClose={() => (isSubmitting ? undefined : closeDialog())}
-        fullScreen={isMobile}
-        fullWidth
         maxWidth="lg"
-        PaperProps={{ className: styles.dialogPaper }}
+        {...dialogProps}
+        PaperProps={getPaperProps({ className: styles.dialogPaper })}
       >
         <DialogTitle className={styles.dialogTitle}>
           {isEditMode ? "ویرایش دوره" : "دوره جدید"}
         </DialogTitle>
-        <DialogContent className={styles.dialogContent}>
+        <DialogContent {...getContentProps({ className: styles.dialogContent })}>
           <MainInfoSection
             title={title}
             onTitleChange={setTitle}
@@ -781,8 +782,8 @@ const CourseFormDialog = ({
       <Dialog
         open={freeCourseConfirmOpen}
         onClose={() => setFreeCourseConfirmOpen(false)}
-        fullWidth
         maxWidth="xs"
+        disableScrollLock
       >
         <DialogTitle>
           {isEditMode ? "تایید ویرایش دوره رایگان" : "تایید ایجاد دوره رایگان"}

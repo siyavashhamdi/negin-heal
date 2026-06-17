@@ -10,6 +10,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
+import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
 import { useTranslation } from "../../hooks/useTranslation";
 import { crudModalFooterSx } from "./modalThemeSx";
 
@@ -19,7 +20,6 @@ interface EntityDeleteDialogProps {
   onCancel: () => void;
   onConfirm: () => void;
   loading?: boolean;
-  fullScreen?: boolean;
 }
 
 const EntityDeleteDialog = ({
@@ -28,40 +28,49 @@ const EntityDeleteDialog = ({
   onCancel,
   onConfirm,
   loading = false,
-  fullScreen = false,
 }: EntityDeleteDialogProps): ReactElement => {
   const { t } = useTranslation();
   const theme = useTheme();
+  const { isCompact, dialogProps, getPaperProps, getContentProps } = useMobileDialogProps();
 
   return (
-    <Dialog open={open} onClose={loading ? undefined : onCancel} maxWidth="xs" fullWidth fullScreen={fullScreen}>
+    <Dialog
+      open={open}
+      onClose={loading ? undefined : onCancel}
+      maxWidth="xs"
+      {...dialogProps}
+      PaperProps={getPaperProps()}
+    >
       <Box
         sx={{
           display: "flex",
           flexDirection: "column",
-          minHeight: fullScreen ? "100%" : undefined,
+          minHeight: isCompact ? "100%" : undefined,
         }}
       >
         <DialogTitle>{t("table.dataGrid.deleteDialog.title")}</DialogTitle>
-        <DialogContent dividers={fullScreen} sx={{ flex: fullScreen ? "1 1 auto" : undefined }}>
+        <DialogContent
+          dividers={isCompact}
+          {...getContentProps({ sx: isCompact ? { flex: "1 1 auto" } : undefined })}
+        >
           <Typography variant="body2" color="text.secondary">
             {t("table.entity.deleteConfirmMessage", { title: entityTitle })}
           </Typography>
         </DialogContent>
         <DialogActions
           sx={crudModalFooterSx(theme, {
-            pinFooterToBottomOnMobile: fullScreen,
+            pinFooterToBottomOnMobile: isCompact,
           })}
         >
           <Stack
-            direction={fullScreen ? "column-reverse" : "row"}
+            direction={isCompact ? "column-reverse" : "row"}
             spacing={1.5}
             sx={{
               width: "100%",
-              justifyContent: fullScreen ? "stretch" : "flex-end",
+              justifyContent: isCompact ? "stretch" : "flex-end",
               "& .MuiButton-root": {
-                width: fullScreen ? "100%" : "auto",
-                minWidth: fullScreen ? undefined : "8rem",
+                width: isCompact ? "100%" : "auto",
+                minWidth: isCompact ? undefined : "8rem",
               },
             }}
           >

@@ -48,6 +48,7 @@ import { COURSE_PAYMENT_LIST_QUERY } from "../../graphql/queries/coursePaymentLi
 import { COURSE_LIST_QUERY } from "../../graphql/queries/courseList.query";
 import { USER_LIST_QUERY } from "../../graphql/queries/userList.query";
 import { useDebounce } from "../../hooks/useDebounce";
+import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import {
   useServerPaginatedQuery,
@@ -537,6 +538,9 @@ function PaymentDetailSection({
 const PaymentsList = (): ReactElement => {
   const theme = useTheme();
   const isMobile = useMediaQuery((muiTheme: Theme) => muiTheme.breakpoints.down("md"));
+  const { dialogProps, getPaperProps, getContentProps } = useMobileDialogProps({
+    breakpoint: "md",
+  });
   const { t } = useTranslation();
   const { showError } = useSnackbar();
   const hasShownLoadErrorRef = useRef(false);
@@ -1352,9 +1356,9 @@ const PaymentsList = (): ReactElement => {
       <Dialog
         open={isManualPaymentDialogOpen}
         onClose={closeManualPaymentDialog}
-        fullWidth
         maxWidth="md"
-        fullScreen={isMobile}
+        {...dialogProps}
+        PaperProps={getPaperProps()}
       >
         <DialogTitle sx={{ pb: 1 }}>
           <Stack spacing={0.5}>
@@ -1366,7 +1370,10 @@ const PaymentsList = (): ReactElement => {
             </Typography>
           </Stack>
         </DialogTitle>
-        <DialogContent dividers sx={{ bgcolor: "background.default" }}>
+        <DialogContent
+          dividers
+          {...getContentProps({ sx: { bgcolor: "background.default" } })}
+        >
           <Stack spacing={2}>
             <Paper
               variant="outlined"
@@ -1506,9 +1513,9 @@ const PaymentsList = (): ReactElement => {
       <Dialog
         open={reviewTarget != null}
         onClose={closeReviewDialog}
-        fullWidth
         maxWidth="lg"
-        fullScreen={isMobile}
+        {...dialogProps}
+        PaperProps={getPaperProps()}
       >
         <DialogTitle sx={{ pb: 1 }}>
           <Stack spacing={1}>
@@ -1529,7 +1536,10 @@ const PaymentsList = (): ReactElement => {
             </Stack>
           </Stack>
         </DialogTitle>
-        <DialogContent dividers sx={{ bgcolor: "background.default" }}>
+        <DialogContent
+          dividers
+          {...getContentProps({ sx: { bgcolor: "background.default" } })}
+        >
           {reviewTarget ? (
             <Stack spacing={2}>
               <PaymentDetailSection

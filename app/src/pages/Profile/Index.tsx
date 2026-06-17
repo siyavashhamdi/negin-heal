@@ -30,6 +30,7 @@ import { Link as RouterLink } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { USER_PROFILE_UPDATE_MUTATION } from "../../graphql/mutations/userProfileUpdate.mutation";
 import { useMe } from "../../hooks/useMe";
+import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
 import { getFileIdFromAccessUrl } from "../../utils/fileAccessUrl.util";
 import { uploadFile } from "../../utils/fileUpload.util";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
@@ -102,6 +103,9 @@ function optionalTextInput(value: string): string | null {
 const Profile = (): ReactElement => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const { dialogProps, getPaperProps, getContentProps } = useMobileDialogProps({
+    breakpoint: "sm",
+  });
   const { logout, user: authUser } = useAuth();
   const { showError, showSuccess } = useSnackbar();
   const { user, avatarUrl, loading, refetch } = useMe();
@@ -398,13 +402,13 @@ const Profile = (): ReactElement => {
       <Dialog
         open={isEditDialogOpen}
         onClose={closeEditDialog}
-        fullScreen={isMobile}
-        fullWidth
         maxWidth="sm"
+        {...dialogProps}
+        PaperProps={getPaperProps()}
       >
         <form className={styles.editForm} onSubmit={handleSubmitEdit}>
           <DialogTitle>ویرایش اطلاعات کاربری</DialogTitle>
-          <DialogContent dividers className={styles.editDialogContent}>
+          <DialogContent dividers {...getContentProps({ className: styles.editDialogContent })}>
             <Stack spacing={2}>
               <TextField
                 label="نام کاربری"
@@ -514,13 +518,13 @@ const Profile = (): ReactElement => {
       <Dialog
         open={isPasswordDialogOpen}
         onClose={closePasswordDialog}
-        fullScreen={isMobile}
-        fullWidth
         maxWidth="sm"
+        {...dialogProps}
+        PaperProps={getPaperProps()}
       >
         <form className={styles.editForm} onSubmit={handleSubmitPassword}>
           <DialogTitle>تغییر رمز عبور</DialogTitle>
-          <DialogContent dividers className={styles.editDialogContent}>
+          <DialogContent dividers {...getContentProps({ className: styles.editDialogContent })}>
             <Stack spacing={2}>
               <Alert severity="info">
                 رمز عبور جدید باید حداقل ۸ کاراکتر و حداقل شامل یک حرف بزرگ

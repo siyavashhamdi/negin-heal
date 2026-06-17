@@ -7,12 +7,12 @@ import {
   DialogTitle,
   IconButton,
   Typography,
-  useMediaQuery,
   useTheme,
   type Breakpoint,
 } from "@mui/material";
 import { Close as CloseIcon } from "@mui/icons-material";
 import { useTranslation } from "../../hooks/useTranslation";
+import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
 import { crudModalFooterSx, crudModalTitleSx } from "./modalThemeSx";
 import styles from "./styles/EntityModalShell.module.scss";
 
@@ -42,11 +42,11 @@ const EntityModalShell = ({
   pinFooterToBottomOnMobile = false,
 }: EntityModalShellProps): ReactElement => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const { isCompact, dialogProps, getPaperProps, getContentProps } = useMobileDialogProps();
   const { t } = useTranslation();
 
   const dialogContentClassName = `${styles.modalDialogContent} ${
-    isMobile ? styles.modalDialogContentScrollMobile : styles.modalDialogContentScrollDesktop
+    isCompact ? styles.modalDialogContentScrollMobile : styles.modalDialogContentScrollDesktop
   }`;
 
   const body = (
@@ -60,7 +60,9 @@ const EntityModalShell = ({
         </IconButton>
       </DialogTitle>
 
-      <DialogContent className={dialogContentClassName}>{children}</DialogContent>
+      <DialogContent {...getContentProps({ className: dialogContentClassName })}>
+        {children}
+      </DialogContent>
 
       <DialogActions
         sx={crudModalFooterSx(theme, {
@@ -77,21 +79,17 @@ const EntityModalShell = ({
       open={open}
       onClose={onClose}
       maxWidth={maxWidth}
+      {...dialogProps}
       fullWidth={fullWidth}
-      fullScreen={isMobile}
-      PaperProps={{
-        className: isMobile ? styles.modalPaperMobileFlex : undefined,
-        sx: {
-          borderRadius: isMobile ? 0 : 2,
-          m: isMobile ? 0 : 2,
-        },
-      }}
+      PaperProps={getPaperProps({
+        className: isCompact ? styles.modalPaperMobileFlex : undefined,
+      })}
     >
       {useFormWrapper ? (
         <Box
           component="form"
           onSubmit={onSubmit}
-          className={isMobile ? styles.modalFormRootMobile : undefined}
+          className={isCompact ? styles.modalFormRootMobile : undefined}
         >
           {body}
         </Box>
