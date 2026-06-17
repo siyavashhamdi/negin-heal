@@ -199,13 +199,22 @@ const CoursesIndex = (): ReactElement => {
       const didScroll = Math.abs(scrollY - lastMobileScrollYRef.current) > 1;
       lastMobileScrollYRef.current = scrollY;
       const isOpeningMobileFilter = performance.now() < mobileFilterOpenGuardUntilRef.current;
+      const activeElement = document.activeElement;
+      const hasOpenDialog =
+        document.querySelector(".MuiModal-root:not([aria-hidden='true'])") !== null;
+      const isDialogFocused =
+        activeElement instanceof HTMLElement &&
+        activeElement.closest(".MuiDialog-root, [role='dialog']") !== null;
+      const shouldIgnoreScrollForDialog = hasOpenDialog || isDialogFocused;
 
-      if (didScroll && !isOpeningMobileFilter) {
+      if (didScroll && !isOpeningMobileFilter && !shouldIgnoreScrollForDialog) {
         setShowFilterSections(false);
         setIsMobileFilterOpen(hasActiveFilters);
       }
-      if (didScroll && !isOpeningMobileFilter && document.activeElement instanceof HTMLElement) {
-        document.activeElement.blur();
+      if (didScroll && !isOpeningMobileFilter && !shouldIgnoreScrollForDialog) {
+        if (activeElement === searchInputRef.current) {
+          activeElement.blur();
+        }
       }
     };
 

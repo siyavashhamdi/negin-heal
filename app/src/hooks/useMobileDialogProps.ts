@@ -31,8 +31,9 @@ export function useMobileDialogProps(options?: UseMobileDialogPropsOptions) {
   const dialogProps = {
     fullScreen: false as const,
     fullWidth: true as const,
-    disableScrollLock: true,
+    disableScrollLock: false,
     scroll: "paper" as const,
+    disableRestoreFocus: false,
   };
 
   const getPaperProps = ({ className, sx }: PaperPropsOptions = {}) => ({
@@ -46,8 +47,8 @@ export function useMobileDialogProps(options?: UseMobileDialogPropsOptions) {
             m: 0,
             width: "100%",
             maxWidth: "100%",
-            height: "100dvh",
-            maxHeight: "100dvh",
+            height: "100svh",
+            maxHeight: "100svh",
             borderRadius: 0,
           }
         : {

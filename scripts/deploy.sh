@@ -15,31 +15,48 @@ if [[ ! -f app/.env ]]; then
   exit 1
 fi
 
-# The frontend build needs ~768MB+ Node heap. On a 1GB VPS it will OOM.
-# Default: never build the app on the server — upload app/dist from your machine.
-# To force an on-server build (only on machines with enough RAM):
-#   BUILD_APP_ON_SERVER=1 npm run deploy
-SKIP_APP_BUILD="${SKIP_APP_BUILD:-1}"
+# Frontend build needs ~768MB+ Node heap. Set SKIP_APP_BUILD=1 only if the VPS OOMs
+# and you upload app/dist separately.
+SKIP_APP_BUILD="${SKIP_APP_BUILD:-0}"
 APP_BUILD_HEAP_MB="${APP_BUILD_HEAP_MB:-768}"
+STAGING_DIR="dist.next"
 
-if [[ "${BUILD_APP_ON_SERVER:-0}" == "1" ]]; then
-  SKIP_APP_BUILD=0
-fi
+promote_staging_build() {
+  local package_dir="$1"
+  local marker_file="$2"
+  local staging="${package_dir}/${STAGING_DIR}"
+  local live="${package_dir}/dist"
 
-if [[ "$SKIP_APP_BUILD" == "1" ]]; then
-  if [[ ! -f app/dist/index.html ]]; then
-    echo "app/dist is missing. Build the frontend on your machine and upload it first:"
-    echo
-    echo "  DEPLOY_HOST=root@your-server npm run publish:app"
-    echo
-    echo "Or manually:"
-    echo "  npm run build:app"
-    echo "  rsync -avz --delete app/dist/ root@your-server:/siya/negin-heal/app/dist/"
-    echo "  ssh root@your-server 'cd /siya/negin-heal && npm run deploy'"
+  if [[ ! -f "${staging}/${marker_file}" ]]; then
+    echo "Build verification failed: ${staging}/${marker_file} is missing."
     exit 1
   fi
-  echo "Using uploaded app/dist (skipping frontend build on server)."
-fi
+
+  rm -rf "${live}.old"
+  if [[ -d "$live" ]]; then
+    mv "$live" "${live}.old"
+  fi
+
+  mv "$staging" "$live"
+  rm -rf "${live}.old"
+  echo "Promoted ${staging} -> ${live}"
+}
+
+build_api_staging() {
+  rm -rf "api/${STAGING_DIR}"
+  npm run build --prefix api -- -p tsconfig.deploy.json
+  promote_staging_build "api" "main.js"
+}
+
+build_app_staging() {
+  rm -rf "app/${STAGING_DIR}"
+
+  export NODE_OPTIONS="--max-old-space-size=${APP_BUILD_HEAP_MB}"
+  npm run build --prefix app -- --outDir "${STAGING_DIR}"
+  unset NODE_OPTIONS
+
+  promote_staging_build "app" "index.html"
+}
 
 echo "Stopping PM2 processes to free memory..."
 pm2 stop ecosystem.config.cjs 2>/dev/null || true
@@ -47,21 +64,20 @@ pm2 stop ecosystem.config.cjs 2>/dev/null || true
 echo "Installing API dependencies..."
 npm ci --prefix api
 
-echo "Building API..."
-npm run build --prefix api
+echo "Building API into staging directory..."
+build_api_staging
 
 if [[ "$SKIP_APP_BUILD" == "1" ]]; then
+  echo "Skipping frontend build (using existing app/dist)."
   echo "Installing production app dependencies only..."
   npm ci --prefix app --omit=dev
 else
   echo "Installing app dependencies..."
   npm ci --prefix app
 
-  echo "Building app on server (heap limit: ${APP_BUILD_HEAP_MB}MB)..."
-  export NODE_OPTIONS="--max-old-space-size=${APP_BUILD_HEAP_MB}"
-  npm run build --prefix app
+  echo "Building app into staging directory (heap limit: ${APP_BUILD_HEAP_MB}MB)..."
+  build_app_staging
   npm prune --prefix app --omit=dev
-  unset NODE_OPTIONS
 fi
 
 if ! command -v pm2 >/dev/null 2>&1; then

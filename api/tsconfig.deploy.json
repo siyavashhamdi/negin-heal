@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist.next"
+  },
+  "exclude": ["node_modules", "dist", "dist.next", "src/common_temp"]
+}

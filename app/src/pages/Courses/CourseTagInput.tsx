@@ -69,7 +69,16 @@ const CourseTagInput = ({
   return (
     <div className={`${styles.root}${shouldFloatLabel ? ` ${styles.rootFloating}` : ""}`}>
       <span className={styles.label}>{label}</span>
-      <div className={styles.inputShell} onClick={() => inputRef.current?.focus()}>
+      <div
+        className={styles.inputShell}
+        onMouseDown={(event) => {
+          if (event.target === inputRef.current) {
+            return;
+          }
+          event.preventDefault();
+          inputRef.current?.focus();
+        }}
+      >
         {value.map((tag) => (
           <Chip
             key={tag}

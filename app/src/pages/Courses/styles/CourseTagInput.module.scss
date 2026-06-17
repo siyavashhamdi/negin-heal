@@ -39,20 +39,18 @@
   flex-wrap: wrap;
   gap: 0.35rem;
   min-block-size: 3.5rem;
-  border: 0.0625rem solid color-mix(in srgb, var(--text-primary) 23%, transparent);
+  border: 0.125rem solid color-mix(in srgb, var(--text-primary) 23%, transparent);
   border-radius: variables.$border-radius-md;
   padding: 0.52rem 0.68rem;
   background: transparent;
   transition:
     border-color 0.18s ease,
-    border-width 0.18s ease,
-    padding 0.18s ease;
+    box-shadow 0.18s ease;
 }
 
 .inputShell:focus-within {
   border-color: #1976d2;
-  border-width: 0.125rem;
-  padding: calc(0.52rem - 0.0625rem) calc(0.68rem - 0.0625rem);
+  box-shadow: 0 0 0 0.0625rem #1976d2;
 }
 
 .inputShell:hover:not(:focus-within) {

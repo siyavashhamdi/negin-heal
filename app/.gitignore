@@ -5,6 +5,8 @@ node_modules
 
 # Build outputs
 dist
+dist.next
+dist.old
 dist-ssr
 build
 *.local
