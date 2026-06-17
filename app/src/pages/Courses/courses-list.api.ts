@@ -1,3 +1,5 @@
+import type { FileAccessUrl } from "../../utils/fileAccessUrl.util";
+
 export type CourseItemType = "ARTICLE" | "VIDEO" | "VOICE" | "IMAGE";
 export type CourseReleaseType = "IMMEDIATE" | "GRADUAL";
 export type CourseDiscountType = "PERCENTAGE" | "FIXED_AMOUNT_IRT";
@@ -7,7 +9,7 @@ export type CourseListItemRow = {
   readonly id: string;
   readonly title: string;
   readonly description?: string | null;
-  readonly coverImageFileId?: string | null;
+  readonly coverImageAccessUrl?: FileAccessUrl | null;
   readonly priceIrt?: number | null;
   readonly discount?: {
     readonly type: CourseDiscountType;
@@ -20,14 +22,14 @@ export type CourseListItemRow = {
   readonly chapters?: Array<{
     readonly title: string;
     readonly description?: string | null;
-    readonly iconFileId?: string | null;
+    readonly iconAccessUrl?: FileAccessUrl | null;
     readonly visibleAfterMinutes?: number | null;
     readonly isFree: boolean;
     readonly sortOrder?: number | null;
     readonly items: Array<{
       readonly title: string;
       readonly sortOrder?: number | null;
-      readonly fileId?: string | null;
+      readonly fileAccessUrl?: FileAccessUrl | null;
       readonly article?: string | null;
       readonly type: CourseItemType;
     }>;
@@ -91,7 +93,7 @@ export type CourseListRecord = {
   readonly id: string;
   readonly title: string;
   readonly description: string;
-  readonly coverImageFileId: string | null;
+  readonly coverImageAccessUrl: FileAccessUrl | null;
   readonly priceIrt: number | null;
   readonly discount: {
     readonly type: CourseDiscountType;
@@ -104,14 +106,14 @@ export type CourseListRecord = {
   readonly chapters: Array<{
     readonly title: string;
     readonly description: string;
-    readonly iconFileId: string | null;
+    readonly iconAccessUrl: FileAccessUrl | null;
     readonly visibleAfterMinutes: number | null;
     readonly isFree: boolean;
     readonly sortOrder: number | null;
     readonly items: Array<{
       readonly title: string;
       readonly sortOrder: number | null;
-      readonly fileId: string | null;
+      readonly fileAccessUrl: FileAccessUrl | null;
       readonly article: string;
       readonly type: CourseItemType;
     }>;
@@ -199,7 +201,7 @@ export function mapCourseListRowToRecord(row: CourseListItemRow): CourseListReco
     id: row.id,
     title: row.title,
     description: row.description?.trim() || "",
-    coverImageFileId: row.coverImageFileId || null,
+    coverImageAccessUrl: row.coverImageAccessUrl ?? null,
     priceIrt: typeof row.priceIrt === "number" ? row.priceIrt : null,
     discount:
       row.discount && typeof row.discount.value === "number"
@@ -215,7 +217,7 @@ export function mapCourseListRowToRecord(row: CourseListItemRow): CourseListReco
     chapters: chapters.map((chapter) => ({
       title: chapter.title,
       description: chapter.description?.trim() || "",
-      iconFileId: chapter.iconFileId || null,
+      iconAccessUrl: chapter.iconAccessUrl ?? null,
       visibleAfterMinutes:
         typeof chapter.visibleAfterMinutes === "number" ? chapter.visibleAfterMinutes : null,
       isFree: chapter.isFree,
@@ -223,7 +225,7 @@ export function mapCourseListRowToRecord(row: CourseListItemRow): CourseListReco
       items: chapter.items.map((item) => ({
         title: item.title,
         sortOrder: typeof item.sortOrder === "number" ? item.sortOrder : null,
-        fileId: item.fileId || null,
+        fileAccessUrl: item.fileAccessUrl ?? null,
         article: item.article?.trim() || "",
         type: item.type,
       })),

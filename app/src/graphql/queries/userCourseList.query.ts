@@ -1,5 +1,7 @@
 import { gql } from "@apollo/client";
 
+import { FILE_ACCESS_URL_FIELDS } from "../fragments/fileAccessUrl.fragment";
+
 export const USER_COURSE_LIST_QUERY = gql`
   query UserCourseList($input: CourseListGqlInput!) {
     courseList: userCourseList(input: $input) {
@@ -7,7 +9,9 @@ export const USER_COURSE_LIST_QUERY = gql`
         id
         title
         description
-        coverImageFileId
+        coverImageAccessUrl {
+          ${FILE_ACCESS_URL_FIELDS}
+        }
         priceIrt
         discount {
           type

@@ -44,7 +44,6 @@ import type { Theme } from "@mui/material/styles";
 
 import { COURSE_PAYMENT_MANUAL_CREATE_MUTATION } from "../../graphql/mutations/coursePaymentManualCreate.mutation";
 import { COURSE_PAYMENT_STATUS_UPDATE_MUTATION } from "../../graphql/mutations/coursePaymentStatusUpdate.mutation";
-import { FILE_UPLOAD_MUTATION } from "../../graphql/mutations/fileUpload.mutation";
 import { COURSE_PAYMENT_LIST_QUERY } from "../../graphql/queries/coursePaymentList.query";
 import { COURSE_LIST_QUERY } from "../../graphql/queries/courseList.query";
 import { USER_LIST_QUERY } from "../../graphql/queries/userList.query";
@@ -60,6 +59,8 @@ import EntityTableShell from "../../shared/crud/EntityTableShell";
 import crudPrimitives from "../../shared/crud/styles/crudPrimitives.module.scss";
 import EntityAutocompleteField from "../../shared/forms/EntityAutocompleteField";
 import FileUploadField from "../../shared/forms/FileUploadField";
+import { getFileIdFromAccessUrl } from "../../utils/fileAccessUrl.util";
+import { uploadFile } from "../../utils/fileUpload.util";
 import JalaliDateFilterField from "../../shared/table/JalaliDateFilterField";
 import {
   type CourseListQuery,
@@ -117,21 +118,6 @@ type CoursePaymentManualCreateMutationVariables = {
     readonly couponCode?: string | null;
     readonly uploadedReceiptFileId?: string | null;
     readonly manualStatusChangedDescription?: string | null;
-  };
-};
-
-type FileUploadMutationResult = {
-  readonly fileUpload: {
-    readonly id: string;
-  };
-};
-
-type FileUploadMutationVariables = {
-  readonly input: {
-    readonly name: string;
-    readonly mimeType: string;
-    readonly sizeBytes: number;
-    readonly contentBase64: string;
   };
 };
 
@@ -333,18 +319,6 @@ function formatFileSize(value: number | null | undefined): string {
   return `${(value / (1024 * 1024)).toLocaleString("fa-IR", {
     maximumFractionDigits: 1,
   })} مگابایت`;
-}
-
-function readFileAsBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = String(reader.result ?? "");
-      resolve(result.replace(/^data:.*;base64,/, ""));
-    };
-    reader.onerror = () => reject(reader.error ?? new Error("Unable to read file"));
-    reader.readAsDataURL(file);
-  });
 }
 
 function isUploadedReceiptPresent(record: CoursePaymentRecord): boolean {
@@ -747,12 +721,7 @@ const PaymentsList = (): ReactElement => {
     },
   });
 
-  const [uploadManualPaymentFile, uploadManualPaymentFileResult] = useMutationWithSnackbar<
-    FileUploadMutationResult,
-    FileUploadMutationVariables
-  >(FILE_UPLOAD_MUTATION, {
-    errorMessage: "آپلود فایل پرداخت انجام نشد.",
-  });
+  const [isManualPaymentFileUploading, setIsManualPaymentFileUploading] = useState(false);
 
   const manualPaymentUserOptions = useMemo(
     () => (manualPaymentUsersData?.userList.items ?? []).map(userToManualPaymentOption),
@@ -1100,27 +1069,15 @@ const PaymentsList = (): ReactElement => {
   };
 
   const uploadManualPaymentEvidence = async (file: File): Promise<string | null> => {
+    setIsManualPaymentFileUploading(true);
     try {
-      const contentBase64 = await readFileAsBase64(file);
-      const { data, error } = await uploadManualPaymentFile({
-        variables: {
-          input: {
-            name: file.name,
-            mimeType: file.type || "application/octet-stream",
-            sizeBytes: file.size,
-            contentBase64,
-          },
-        },
-      });
-
-      if (error) {
-        return null;
-      }
-
-      return data?.fileUpload.id ?? null;
+      const uploadedFile = await uploadFile(file);
+      return getFileIdFromAccessUrl(uploadedFile.accessUrl);
     } catch {
       showError("آپلود فایل پرداخت انجام نشد.");
       return null;
+    } finally {
+      setIsManualPaymentFileUploading(false);
     }
   };
 
@@ -1364,7 +1321,7 @@ const PaymentsList = (): ReactElement => {
     manualPaymentUser != null &&
     manualPaymentCourse != null &&
     !createManualPaymentResult.loading &&
-    !uploadManualPaymentFileResult.loading;
+    !isManualPaymentFileUploading;
 
   return (
     <>
@@ -1538,10 +1495,10 @@ const PaymentsList = (): ReactElement => {
           onCancel={closeManualPaymentDialog}
           onSubmit={handleSubmitManualPayment}
           cancelDisabled={
-            createManualPaymentResult.loading || uploadManualPaymentFileResult.loading
+            createManualPaymentResult.loading || isManualPaymentFileUploading
           }
           submitDisabled={!canSubmitManualPayment}
-          isUploadingFile={uploadManualPaymentFileResult.loading}
+          isUploadingFile={isManualPaymentFileUploading}
           isSubmitting={createManualPaymentResult.loading}
         />
       </Dialog>

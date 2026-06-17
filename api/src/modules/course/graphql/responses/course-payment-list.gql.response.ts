@@ -1,6 +1,7 @@
 import { Field, Float, ID, ObjectType } from "@nestjs/graphql";
 import { Types } from "mongoose";
 
+import { FileAccessUrlGqlResponse } from "../../../file/graphql/responses";
 import { PaginationOffsetResponse } from "../../../../common/pagination/response";
 import {
   CouponDiscountType,
@@ -91,9 +92,6 @@ export class CoursePaymentRelatedUserGqlResponse {
 
 @ObjectType()
 export class CoursePaymentStoredFileGqlResponse {
-  @Field(() => ID, { description: "Stored file ID" })
-  id: Types.ObjectId;
-
   @Field({ nullable: true, description: "Stored file name" })
   name?: string;
 
@@ -103,14 +101,20 @@ export class CoursePaymentStoredFileGqlResponse {
   @Field({ nullable: true, description: "Stored file MIME type" })
   mimeType?: string;
 
-  @Field(() => Float, { nullable: true, description: "Stored file size in bytes" })
+  @Field(() => Float, {
+    nullable: true,
+    description: "Stored file size in bytes",
+  })
   sizeBytes?: number;
 
   @Field({ nullable: true, description: "Stored file path" })
   path?: string;
 
-  @Field({ nullable: true, description: "Temporary URL for reading the stored file" })
-  accessUrl?: string;
+  @Field(() => FileAccessUrlGqlResponse, {
+    nullable: true,
+    description: "Signed access descriptor for reading the stored file",
+  })
+  accessUrl?: FileAccessUrlGqlResponse;
 }
 
 @ObjectType()
@@ -179,9 +183,6 @@ export class CoursePaymentListGqlResponse {
   })
   coupon?: CourseCouponSnapshotGqlResponse;
 
-  @Field(() => ID, { nullable: true, description: "Receipt stored file ID" })
-  uploadedReceiptFileId?: Types.ObjectId;
-
   @Field(() => CoursePaymentStoredFileGqlResponse, {
     nullable: true,
     description: "Uploaded receipt file metadata",
@@ -204,7 +205,8 @@ export class CoursePaymentListGqlResponse {
   isManualStatusChange: boolean;
 
   @Field({
-    description: "Whether this payment record was initially submitted by an admin",
+    description:
+      "Whether this payment record was initially submitted by an admin",
   })
   submittedInitiallyByAdmin: boolean;
 

@@ -28,9 +28,10 @@ import {
 } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import { FILE_UPLOAD_MUTATION } from "../../graphql/mutations/fileUpload.mutation";
 import { USER_PROFILE_UPDATE_MUTATION } from "../../graphql/mutations/userProfileUpdate.mutation";
 import { useMe } from "../../hooks/useMe";
+import { getFileIdFromAccessUrl } from "../../utils/fileAccessUrl.util";
+import { uploadFile } from "../../utils/fileUpload.util";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { crudModalFooterSx } from "../../shared/crud/modalThemeSx";
@@ -69,21 +70,6 @@ type UserProfileUpdateMutationVariables = {
   };
 };
 
-type FileUploadMutationResult = {
-  readonly fileUpload: {
-    readonly id: string;
-  };
-};
-
-type FileUploadMutationVariables = {
-  readonly input: {
-    readonly name: string;
-    readonly mimeType: string;
-    readonly sizeBytes: number;
-    readonly contentBase64: string;
-  };
-};
-
 type ProfileEditForm = {
   username: string;
   firstName: string;
@@ -113,18 +99,6 @@ function optionalTextInput(value: string): string | null {
   return trimmed ? trimmed : null;
 }
 
-function readFileAsBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = String(reader.result ?? "");
-      resolve(result.replace(/^data:.*;base64,/, ""));
-    };
-    reader.onerror = () => reject(reader.error ?? new Error("خواندن فایل ناموفق بود."));
-    reader.readAsDataURL(file);
-  });
-}
-
 const Profile = (): ReactElement => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -148,17 +122,12 @@ const Profile = (): ReactElement => {
     confirmPassword: "",
   });
   const [logoutCountdown, setLogoutCountdown] = useState<number | null>(null);
+  const [isAvatarUploading, setIsAvatarUploading] = useState(false);
   const [updateProfile, updateProfileResult] = useMutationWithSnackbar<
     UserProfileUpdateMutationResult,
     UserProfileUpdateMutationVariables
   >(USER_PROFILE_UPDATE_MUTATION, {
     errorMessage: "به‌روزرسانی پروفایل انجام نشد.",
-  });
-  const [uploadAvatarFile, uploadAvatarFileResult] = useMutationWithSnackbar<
-    FileUploadMutationResult,
-    FileUploadMutationVariables
-  >(FILE_UPLOAD_MUTATION, {
-    errorMessage: "آپلود تصویر پروفایل انجام نشد.",
   });
 
   const displayName =
@@ -171,7 +140,7 @@ const Profile = (): ReactElement => {
     authUser?.roles?.filter((role) => role !== "END_USER") ??
     [];
   const roleLabel = displayRoles.join("، ");
-  const isAvatarUpdating = uploadAvatarFileResult.loading || updateProfileResult.loading;
+  const isAvatarUpdating = isAvatarUploading || updateProfileResult.loading;
   const isSavingProfile = updateProfileResult.loading;
   const isChangingPassword = updateProfileResult.loading;
   const isEmailLocked = Boolean(user?.profile?.email?.trim());
@@ -269,25 +238,16 @@ const Profile = (): ReactElement => {
       return;
     }
 
-    let contentBase64: string;
+    setIsAvatarUploading(true);
+    let avatarFileId: string | null = null;
     try {
-      contentBase64 = await readFileAsBase64(file);
+      const uploadResult = await uploadFile(file);
+      avatarFileId = getFileIdFromAccessUrl(uploadResult.accessUrl);
     } catch {
-      showError("خواندن تصویر پروفایل ناموفق بود.");
-      return;
+      showError("آپلود تصویر پروفایل انجام نشد.");
+    } finally {
+      setIsAvatarUploading(false);
     }
-
-    const uploadResult = await uploadAvatarFile({
-      variables: {
-        input: {
-          name: file.name,
-          mimeType: file.type,
-          sizeBytes: file.size,
-          contentBase64,
-        },
-      },
-    }).catch(() => null);
-    const avatarFileId = uploadResult?.data?.fileUpload.id;
 
     if (!avatarFileId) {
       return;

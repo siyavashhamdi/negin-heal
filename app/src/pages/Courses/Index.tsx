@@ -9,7 +9,7 @@ import {
   type ReactElement,
 } from "react";
 import { NetworkStatus } from "@apollo/client";
-import { useApolloClient, useQuery } from "@apollo/client/react";
+import { useQuery } from "@apollo/client/react";
 import { useNavigate } from "react-router-dom";
 import {
   Alert,
@@ -52,7 +52,6 @@ import { useTranslation } from "../../hooks/useTranslation";
 import { COURSE_LIST_QUERY } from "../../graphql/queries/courseList.query";
 import { USER_COURSE_LIST_QUERY } from "../../graphql/queries/userCourseList.query";
 import { COURSE_DELETE_MUTATION } from "../../graphql/mutations/courseDelete.mutation";
-import { FILE_DETAIL_QUERY } from "../../graphql/queries/fileDetail.query";
 import CourseCard from "./CourseCard";
 import CourseFormDialog from "./CourseFormDialog";
 import {
@@ -68,6 +67,7 @@ import {
   type CourseListSort,
   type CourseSortField,
 } from "./courses-list.api";
+import { resolveFileAccessUrl } from "../../utils/fileAccessUrl.util";
 import styles from "./styles/courses.module.scss";
 
 const COURSE_LIST_PAGE_SIZE = 6;
@@ -77,19 +77,6 @@ type CourseDeleteMutationResult = {
 };
 
 type CourseDeleteMutationVariables = {
-  input: {
-    id: string;
-  };
-};
-
-type FileDetailQueryResult = {
-  fileDetail?: {
-    id: string;
-    accessUrl?: string | null;
-  } | null;
-};
-
-type FileDetailQueryVariables = {
   input: {
     id: string;
   };
@@ -124,7 +111,6 @@ const SORT_ORDER_LABEL: Record<"ASC" | "DESC", string> = {
 const CoursesIndex = (): ReactElement => {
   const { t } = useTranslation();
   const { user: authUser } = useAuth();
-  const apolloClient = useApolloClient();
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width:600px)");
   const isEndUser = authUser?.roles?.includes("END_USER") === true;
@@ -134,8 +120,6 @@ const CoursesIndex = (): ReactElement => {
   const [filters, setFilters] = useState<CourseListFilters>(DEFAULT_COURSE_LIST_FILTERS);
   const [searchQuery, setSearchQuery] = useState(DEFAULT_COURSE_LIST_FILTERS.query);
   const [sort, setSort] = useState<CourseListSort>(DEFAULT_COURSE_LIST_SORT);
-  const [coverImageByFileId, setCoverImageByFileId] = useState<Record<string, string>>({});
-  const loadingCoverImageIdsRef = useRef<Set<string>>(new Set());
   const [deleteTarget, setDeleteTarget] = useState<CourseListRecord | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<CourseListRecord | null>(null);
@@ -501,44 +485,6 @@ const CoursesIndex = (): ReactElement => {
 
     return chips;
   }, [filters]);
-
-  useEffect(() => {
-    const coverIdsToLoad = Array.from(
-      new Set(
-        items
-          .map((item) => item.coverImageFileId)
-          .filter((id): id is string => Boolean(id))
-          .filter((id) => !(id in coverImageByFileId))
-          .filter((id) => !loadingCoverImageIdsRef.current.has(id)),
-      ),
-    );
-
-    if (coverIdsToLoad.length === 0) {
-      return;
-    }
-
-    coverIdsToLoad.forEach((id) => loadingCoverImageIdsRef.current.add(id));
-
-    void Promise.all(
-      coverIdsToLoad.map(async (fileId) => {
-        try {
-          const result = await apolloClient.query<FileDetailQueryResult, FileDetailQueryVariables>({
-            query: FILE_DETAIL_QUERY,
-            variables: { input: { id: fileId } },
-            fetchPolicy: "network-only",
-          });
-          const accessUrl = result.data?.fileDetail?.accessUrl?.trim();
-          if (accessUrl) {
-            setCoverImageByFileId((prev) => ({ ...prev, [fileId]: accessUrl }));
-          }
-        } catch {
-          // Silently keep fallback icon on cover load failures.
-        } finally {
-          loadingCoverImageIdsRef.current.delete(fileId);
-        }
-      }),
-    );
-  }, [apolloClient, coverImageByFileId, items]);
 
   useEffect(() => {
     if (!flippedItemId) {
@@ -987,9 +933,7 @@ const CoursesIndex = (): ReactElement => {
             >
               <CourseCard
                 item={item}
-                coverImageUrl={
-                  item.coverImageFileId ? coverImageByFileId[item.coverImageFileId] : undefined
-                }
+                coverImageUrl={resolveFileAccessUrl(item.coverImageAccessUrl) ?? undefined}
                 variant={isPublicCourseView ? "public" : "management"}
                 isFlipped={!isPublicCourseView && flippedItemId === item.id}
                 onOpen={() => navigate(`/courses/${item.id}`)}

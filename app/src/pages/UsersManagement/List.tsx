@@ -8,7 +8,6 @@ import {
   type FormEvent,
   type ReactElement,
 } from "react";
-import { useQuery } from "@apollo/client/react";
 import { AddRounded as AddRoundedIcon, Clear as ClearIcon } from "@mui/icons-material";
 import {
   Avatar,
@@ -41,10 +40,15 @@ import {
 } from "@tanstack/react-table";
 import { useTheme, type Theme } from "@mui/material/styles";
 
-import { FILE_UPLOAD_MUTATION } from "../../graphql/mutations/fileUpload.mutation";
 import { USER_CREATE_MUTATION } from "../../graphql/mutations/userCreate.mutation";
 import { USER_UPDATE_MUTATION } from "../../graphql/mutations/userUpdate.mutation";
-import { FILE_DETAIL_QUERY } from "../../graphql/queries/fileDetail.query";
+import {
+  buildExistingFilePreview,
+  getFileIdFromAccessUrl,
+  resolveFileAccessUrl,
+  type FileAccessUrl,
+} from "../../utils/fileAccessUrl.util";
+import { uploadFile } from "../../utils/fileUpload.util";
 import { USER_LIST_QUERY } from "../../graphql/queries/userList.query";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
@@ -83,7 +87,7 @@ const COLUMN_WIDTH_BY_ID: Record<string, string> = {
   fullName: "13rem",
   email: "15rem",
   phoneNumber: "11rem",
-  avatarFileId: "14rem",
+  avatarAccessUrl: "14rem",
   bio: "16rem",
   roles: "14rem",
   createdAt: "10rem",
@@ -99,7 +103,7 @@ const MOBILE_COLUMN_WIDTH_BY_ID: Record<string, string> = {
   fullName: "26rem",
   email: "30rem",
   phoneNumber: "22rem",
-  avatarFileId: "28rem",
+  avatarAccessUrl: "28rem",
   bio: "32rem",
   roles: "28rem",
   createdAt: "20rem",
@@ -147,34 +151,17 @@ type UserUpdateMutation = {
   readonly userUpdate: UserListRow;
 };
 
-type FileUploadMutationResult = {
-  readonly fileUpload: {
-    readonly id: string;
-  };
-};
-
-type FileUploadMutationVariables = {
-  readonly input: {
-    readonly name: string;
-    readonly mimeType: string;
-    readonly sizeBytes: number;
-    readonly contentBase64: string;
-  };
-};
-
-type AvatarFileDetailQuery = {
-  readonly fileDetail: {
-    readonly id: string;
-    readonly name: string;
-    readonly mimeType: string;
-    readonly accessUrl?: string | null;
-  };
-};
-
-type AvatarFileDetailVariables = {
-  readonly input: {
-    readonly id: string;
-  };
+type UserEditFormState = {
+  username: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+  avatarAccessUrl: FileAccessUrl | null;
+  bio: string;
+  roles: UserRole[];
+  status: UserStatus;
+  password: string;
 };
 
 type UserCreateMutation = {
@@ -216,19 +203,6 @@ type UserUpdateMutationVariables = {
   };
 };
 
-type UserEditFormState = {
-  username: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phoneNumber: string;
-  avatarFileId: string;
-  bio: string;
-  roles: UserRole[];
-  status: UserStatus;
-  password: string;
-};
-
 type UserDialogMode = "create" | "edit";
 
 function orEmpty(value: string): string {
@@ -246,22 +220,6 @@ function optionalInput(value: string): string | null {
   return trimmed === "" ? null : trimmed;
 }
 
-function readFileAsBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result;
-      if (typeof result === "string") {
-        resolve(result);
-        return;
-      }
-      reject(new Error("FileReader result is not a string."));
-    };
-    reader.onerror = () => reject(reader.error ?? new Error("File read failed."));
-    reader.readAsDataURL(file);
-  });
-}
-
 function buildCreateFormState(): UserEditFormState {
   return {
     username: "",
@@ -269,7 +227,7 @@ function buildCreateFormState(): UserEditFormState {
     lastName: "",
     email: "",
     phoneNumber: "",
-    avatarFileId: "",
+    avatarAccessUrl: null,
     bio: "",
     roles: ["END_USER"],
     status: "ACTIVE",
@@ -284,7 +242,7 @@ function buildEditFormState(record: ManagedUserRecord): UserEditFormState {
     lastName: editableValue(record.lastName),
     email: editableValue(record.email),
     phoneNumber: editableValue(record.phoneNumber),
-    avatarFileId: editableValue(record.avatarFileId),
+    avatarAccessUrl: record.avatarAccessUrl,
     bio: editableValue(record.bio),
     roles: record.roles.filter((role): role is UserRole => ROLE_OPTIONS.includes(role as UserRole)),
     status: STATUS_OPTIONS.includes(record.status as UserStatus)
@@ -305,28 +263,14 @@ function formatDate(value: string): string {
   return date.toLocaleDateString("fa-IR");
 }
 
-function isEmptyDisplayValue(value: string): boolean {
-  const trimmed = value.trim();
-  return trimmed === "" || trimmed === "-" || trimmed === EMPTY_DISPLAY;
-}
+function UserAvatarCell({
+  avatarAccessUrl,
+}: {
+  readonly avatarAccessUrl?: FileAccessUrl | null;
+}): ReactElement {
+  const resolvedUrl = resolveFileAccessUrl(avatarAccessUrl);
 
-function isImageMimeType(mimeType: string): boolean {
-  return mimeType.startsWith("image/");
-}
-
-function UserAvatarCell({ fileId }: { readonly fileId: string }): ReactElement {
-  const normalizedFileId = fileId.trim();
-  const shouldFetchFile = !isEmptyDisplayValue(normalizedFileId);
-  const { data, loading } = useQuery<AvatarFileDetailQuery, AvatarFileDetailVariables>(
-    FILE_DETAIL_QUERY,
-    {
-      variables: { input: { id: normalizedFileId } },
-      skip: !shouldFetchFile,
-      fetchPolicy: "cache-first",
-    }
-  );
-
-  if (!shouldFetchFile) {
+  if (!resolvedUrl) {
     return (
       <Typography variant="body2" color="text.secondary">
         {EMPTY_DISPLAY}
@@ -334,23 +278,16 @@ function UserAvatarCell({ fileId }: { readonly fileId: string }): ReactElement {
     );
   }
 
-  const file = data?.fileDetail;
-  const accessUrl = file?.accessUrl?.trim();
-  const canPreviewImage = Boolean(accessUrl && file?.mimeType && isImageMimeType(file.mimeType));
-
   return (
     <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
       <Avatar
-        src={canPreviewImage ? accessUrl : undefined}
-        alt={file?.name ?? ""}
+        src={resolvedUrl}
+        alt=""
         sx={{ width: 32, height: 32, bgcolor: "action.hover" }}
         variant="rounded"
       >
-        {loading ? "" : "?"}
+        ?
       </Avatar>
-      <Typography variant="body2" color="text.secondary" noWrap>
-        {loading ? "..." : file?.name || EMPTY_DISPLAY}
-      </Typography>
     </Stack>
   );
 }
@@ -389,7 +326,7 @@ const UsersManagementList = (): ReactElement => {
     fullName: true,
     email: true,
     phoneNumber: true,
-    avatarFileId: false,
+    avatarAccessUrl: false,
     bio: false,
     roles: true,
     status: true,
@@ -470,15 +407,10 @@ const UsersManagementList = (): ReactElement => {
     },
   });
 
-  const [uploadAvatarFile, uploadAvatarFileResult] = useMutationWithSnackbar<
-    FileUploadMutationResult,
-    FileUploadMutationVariables
-  >(FILE_UPLOAD_MUTATION, {
-    errorMessage: t("pages.usersManagement.avatarUpload.error"),
-  });
+  const [isAvatarUploading, setIsAvatarUploading] = useState(false);
 
   const isSavingUser =
-    createUserResult.loading || updateUserResult.loading || uploadAvatarFileResult.loading;
+    createUserResult.loading || updateUserResult.loading || isAvatarUploading;
 
   useEffect(() => {
     if (!error) {
@@ -588,9 +520,11 @@ const UsersManagementList = (): ReactElement => {
         ),
       },
       {
-        accessorKey: "avatarFileId",
+        accessorKey: "avatarAccessUrl",
         header: t("table.pages.usersManagement.columns.avatarFileId"),
-        cell: (info) => <UserAvatarCell fileId={info.getValue() as string} />,
+        cell: (info) => (
+          <UserAvatarCell avatarAccessUrl={info.getValue() as FileAccessUrl | null} />
+        ),
       },
       {
         accessorKey: "bio",
@@ -852,27 +786,15 @@ const UsersManagementList = (): ReactElement => {
   };
 
   const uploadSelectedAvatar = async (file: File): Promise<string | null> => {
+    setIsAvatarUploading(true);
     try {
-      const contentBase64 = await readFileAsBase64(file);
-      const { data, error } = await uploadAvatarFile({
-        variables: {
-          input: {
-            name: file.name,
-            mimeType: file.type || "application/octet-stream",
-            sizeBytes: file.size,
-            contentBase64,
-          },
-        },
-      });
-
-      if (error) {
-        return null;
-      }
-
-      return data?.fileUpload.id ?? null;
+      const uploadedFile = await uploadFile(file);
+      return getFileIdFromAccessUrl(uploadedFile.accessUrl);
     } catch {
       showError(t("pages.usersManagement.avatarUpload.error"));
       return null;
+    } finally {
+      setIsAvatarUploading(false);
     }
   };
 
@@ -894,7 +816,7 @@ const UsersManagementList = (): ReactElement => {
       return;
     }
 
-    let avatarFileId = optionalInput(editForm.avatarFileId);
+    let avatarFileId = getFileIdFromAccessUrl(editForm.avatarAccessUrl);
     if (avatarFile) {
       avatarFileId = await uploadSelectedAvatar(avatarFile);
       if (!avatarFileId) {
@@ -1055,10 +977,14 @@ const UsersManagementList = (): ReactElement => {
                   label={t("pages.usersManagement.avatarUpload.label")}
                   file={avatarFile}
                   onChange={setAvatarFile}
-                  existingFileId={editForm.avatarFileId || null}
+                  existingFile={buildExistingFilePreview(
+                    editForm.avatarAccessUrl,
+                    editForm.username.trim() || "آواتار",
+                    "image/*",
+                  )}
                   onExistingFileClear={() => {
                     setAvatarFile(null);
-                    setEditField("avatarFileId", "");
+                    setEditField("avatarAccessUrl", null);
                   }}
                   accept="image/*"
                   allowedFormatsLabel={t("pages.usersManagement.avatarUpload.allowedFormats")}

@@ -1,5 +1,7 @@
 import { gql } from "@apollo/client";
 
+import { FILE_ACCESS_URL_FIELDS } from "../fragments/fileAccessUrl.fragment";
+
 export const SUPER_ADMIN_TICKET_SEND_MUTATION = gql`
   mutation SuperAdminTicketSend($input: SuperAdminTicketSendGqlInput!) {
     superAdminTicketSend(input: $input) {
@@ -16,7 +18,9 @@ export const SUPER_ADMIN_TICKET_SEND_MUTATION = gql`
         profile {
           firstName
           lastName
-          avatarFileId
+          avatarAccessUrl {
+            ${FILE_ACCESS_URL_FIELDS}
+          }
         }
       }
       closedAt
@@ -28,17 +32,19 @@ export const SUPER_ADMIN_TICKET_SEND_MUTATION = gql`
           profile {
             firstName
             lastName
-            avatarFileId
+            avatarAccessUrl {
+              ${FILE_ACCESS_URL_FIELDS}
+            }
           }
         }
-        attachmentFileIds
         attachmentFiles {
-          id
           name
           mimeType
           sizeBytes
           path
-          accessUrl
+          accessUrl {
+            ${FILE_ACCESS_URL_FIELDS}
+          }
         }
       }
       createdByUserId
@@ -48,7 +54,9 @@ export const SUPER_ADMIN_TICKET_SEND_MUTATION = gql`
         profile {
           firstName
           lastName
-          avatarFileId
+          avatarAccessUrl {
+            ${FILE_ACCESS_URL_FIELDS}
+          }
         }
       }
       updatedByUserId
@@ -58,7 +66,9 @@ export const SUPER_ADMIN_TICKET_SEND_MUTATION = gql`
         profile {
           firstName
           lastName
-          avatarFileId
+          avatarAccessUrl {
+            ${FILE_ACCESS_URL_FIELDS}
+          }
         }
       }
       createdAt

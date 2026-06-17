@@ -1,5 +1,7 @@
 import { gql } from "@apollo/client";
 
+import { FILE_ACCESS_URL_FIELDS } from "../fragments/fileAccessUrl.fragment";
+
 export const TICKET_LIST_QUERY = gql`
   query TicketList($input: TicketListGqlInput!) {
     ticketList(input: $input) {
@@ -17,7 +19,9 @@ export const TICKET_LIST_QUERY = gql`
           profile {
             firstName
             lastName
-            avatarFileId
+            avatarAccessUrl {
+              ${FILE_ACCESS_URL_FIELDS}
+            }
           }
         }
         closedAt
@@ -29,17 +33,19 @@ export const TICKET_LIST_QUERY = gql`
             profile {
               firstName
               lastName
-              avatarFileId
+              avatarAccessUrl {
+                ${FILE_ACCESS_URL_FIELDS}
+              }
             }
           }
-          attachmentFileIds
           attachmentFiles {
-            id
             name
             mimeType
             sizeBytes
             path
-            accessUrl
+            accessUrl {
+              ${FILE_ACCESS_URL_FIELDS}
+            }
           }
         }
         createdByUserId
@@ -49,7 +55,9 @@ export const TICKET_LIST_QUERY = gql`
           profile {
             firstName
             lastName
-            avatarFileId
+            avatarAccessUrl {
+              ${FILE_ACCESS_URL_FIELDS}
+            }
           }
         }
         updatedByUserId
@@ -59,7 +67,9 @@ export const TICKET_LIST_QUERY = gql`
           profile {
             firstName
             lastName
-            avatarFileId
+            avatarAccessUrl {
+              ${FILE_ACCESS_URL_FIELDS}
+            }
           }
         }
         createdAt

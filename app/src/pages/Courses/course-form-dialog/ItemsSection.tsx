@@ -19,6 +19,7 @@ import DragIndicatorRoundedIcon from "@mui/icons-material/DragIndicatorRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import PlaylistAddRoundedIcon from "@mui/icons-material/PlaylistAddRounded";
 import FileUploadField from "../../../shared/forms/FileUploadField";
+import { buildExistingFilePreview } from "../../../utils/fileAccessUrl.util";
 import RichTextBox from "../../../shared/forms/RichTextBox";
 import type { DraftChapter, DraftItem, DraftItemContentType } from "./types";
 import styles from "./styles/ItemsSection.module.scss";
@@ -43,7 +44,7 @@ function getContentTypePatch(nextContentType: DraftItemContentType): Partial<Dra
     : {
         contentType: nextContentType,
         file: null,
-        fileId: "",
+        fileAccessUrl: null,
       };
 }
 
@@ -170,8 +171,14 @@ const ItemsSection = ({
                             label="فایل آیتم"
                             file={item.file}
                             onChange={(file) => updateCurrentItem({ file })}
-                            existingFileId={item.fileId || null}
-                            onExistingFileClear={() => updateCurrentItem({ fileId: "" })}
+                            existingFile={buildExistingFilePreview(
+                              item.fileAccessUrl,
+                              item.title.trim() || "فایل آیتم",
+                              "application/octet-stream",
+                            )}
+                            onExistingFileClear={() =>
+                              updateCurrentItem({ fileAccessUrl: null })
+                            }
                             accept="*/*"
                             allowedFormatsLabel="فرمت مجاز: همه"
                             maxSizeLabel="حداکثر: ۵۰MB"

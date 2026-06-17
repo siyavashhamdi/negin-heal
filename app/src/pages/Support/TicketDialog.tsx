@@ -15,7 +15,6 @@ import { useQuery } from "@apollo/client/react";
 import { alpha, type Theme } from "@mui/material/styles";
 
 import { useAuth } from "../../contexts/AuthContext";
-import { FILE_UPLOAD_MUTATION } from "../../graphql/mutations/fileUpload.mutation";
 import { SUPER_ADMIN_TICKET_SEND_MUTATION } from "../../graphql/mutations/superAdminTicketSend.mutation";
 import { TICKET_CLOSE_MUTATION } from "../../graphql/mutations/ticketClose.mutation";
 import { USER_TICKET_CLOSE_MUTATION } from "../../graphql/mutations/userTicketClose.mutation";
@@ -27,6 +26,11 @@ import { useTranslation } from "../../hooks/useTranslation";
 import EntityModalShell from "../../shared/crud/EntityModalShell";
 import EntityAutocompleteField from "../../shared/forms/EntityAutocompleteField";
 import FileUploadField from "../../shared/forms/FileUploadField";
+import {
+  getFileIdFromAccessUrl,
+  resolveFileAccessUrl,
+} from "../../utils/fileAccessUrl.util";
+import { uploadFile as uploadFileToApi } from "../../utils/fileUpload.util";
 import {
   type UserListQuery,
   type UserListQueryVariables,
@@ -47,21 +51,6 @@ import type {
   TicketCategory,
   TicketPriority,
 } from "./support.types";
-
-type FileUploadMutationResult = {
-  readonly fileUpload: {
-    readonly id: string;
-  };
-};
-
-type FileUploadMutationVariables = {
-  readonly input: {
-    readonly name: string;
-    readonly mimeType: string;
-    readonly sizeBytes: number;
-    readonly contentBase64: string;
-  };
-};
 
 type UserTicketSendMutation = {
   readonly userTicketSend: {
@@ -127,7 +116,7 @@ type EndUserOption = {
   readonly row: UserListRow;
 };
 
-type PreviewableAttachment = SupportTicketAttachment & {
+type PreviewableAttachment = Omit<SupportTicketAttachment, "accessUrl"> & {
   readonly accessUrl: string;
 };
 
@@ -148,18 +137,6 @@ export type TicketDialogProps = {
 const EMPTY_DISPLAY = "—";
 const END_USER_DEFAULT_OPTIONS_LIMIT = 10;
 const END_USER_SEARCH_OPTIONS_LIMIT = 200;
-
-function readFileAsBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = String(reader.result ?? "");
-      resolve(result.replace(/^data:.*;base64,/, ""));
-    };
-    reader.onerror = () => reject(reader.error ?? new Error("Unable to read file"));
-    reader.readAsDataURL(file);
-  });
-}
 
 function formatDateTime(value: string): string {
   if (!value.trim()) {
@@ -197,9 +174,20 @@ function isAudioMimeType(mimeType: string): boolean {
   return mimeType.startsWith("audio/");
 }
 
-function isPreviewableMedia(file: SupportTicketAttachment): file is PreviewableAttachment {
-  const accessUrl = file.accessUrl?.trim();
+function toResolvedPreviewAttachment(
+  file: SupportTicketAttachment,
+): PreviewableAttachment | null {
+  const accessUrl = resolveFileAccessUrl(file.accessUrl);
+  if (!accessUrl) {
+    return null;
+  }
+
+  return { ...file, accessUrl };
+}
+
+function isPreviewableMedia(file: SupportTicketAttachment): boolean {
   const mimeType = file.mimeType?.trim() ?? "";
+  const accessUrl = resolveFileAccessUrl(file.accessUrl);
   return Boolean(
     accessUrl &&
     (isImageMimeType(mimeType) || isVideoMimeType(mimeType) || isAudioMimeType(mimeType))
@@ -252,7 +240,8 @@ function renderAttachmentLinks(
     <Stack spacing={0.75} sx={{ mt: 1.5 }}>
       {attachments.map((file) => {
         const label = file.name?.trim() || file.id;
-        const href = file.accessUrl?.trim();
+        const href = resolveFileAccessUrl(file.accessUrl);
+        const previewFile = isPreviewableMedia(file) ? toResolvedPreviewAttachment(file) : null;
         const attachmentContent = (
           <>
             <Typography variant="body2" fontWeight={800} sx={{ overflowWrap: "anywhere" }}>
@@ -264,13 +253,13 @@ function renderAttachmentLinks(
           </>
         );
 
-        if (isPreviewableMedia(file)) {
+        if (previewFile) {
           return (
             <Paper
               key={file.id}
               component="button"
               type="button"
-              onClick={() => onPreviewAttachment(file)}
+              onClick={() => onPreviewAttachment(previewFile)}
               variant="outlined"
               sx={{
                 display: "flex",
@@ -545,12 +534,7 @@ const TicketDialog = ({
     onClose();
   };
 
-  const [uploadFile, uploadFileResult] = useMutationWithSnackbar<
-    FileUploadMutationResult,
-    FileUploadMutationVariables
-  >(FILE_UPLOAD_MUTATION, {
-    errorMessage: t("pages.support.attachments.uploadError"),
-  });
+  const [isAttachmentUploading, setIsAttachmentUploading] = useState(false);
 
   const endUserOptionsVariables = useMemo<UserListQueryVariables>(() => {
     const query = debouncedEndUserSearch.trim();
@@ -634,7 +618,7 @@ const TicketDialog = ({
   });
 
   const isSubmitting =
-    uploadFileResult.loading ||
+    isAttachmentUploading ||
     sendUserTicketResult.loading ||
     sendSuperAdminTicketResult.loading ||
     closeStaffTicketResult.loading ||
@@ -645,23 +629,19 @@ const TicketDialog = ({
       return undefined;
     }
 
-    const contentBase64 = await readFileAsBase64(attachmentFile);
-    const { data, error } = await uploadFile({
-      variables: {
-        input: {
-          name: attachmentFile.name,
-          mimeType: attachmentFile.type || "application/octet-stream",
-          sizeBytes: attachmentFile.size,
-          contentBase64,
-        },
-      },
-    });
-
-    if (error || !data?.fileUpload.id) {
+    setIsAttachmentUploading(true);
+    try {
+      const uploadedFile = await uploadFileToApi(attachmentFile);
+      const fileId = getFileIdFromAccessUrl(uploadedFile.accessUrl);
+      if (!fileId) {
+        return undefined;
+      }
+      return [fileId];
+    } catch {
       return undefined;
+    } finally {
+      setIsAttachmentUploading(false);
     }
-
-    return [data.fileUpload.id];
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {

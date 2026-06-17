@@ -26,7 +26,7 @@ import {
   UserDocument,
 } from "../../database/schemas";
 import { BadgeService } from "../badge";
-import { FileService } from "../file";
+import { FileService, FileAccessUrlDescriptor } from "../file";
 import {
   TicketListGqlInput,
   TicketListSortOptionInput,
@@ -55,12 +55,12 @@ type TicketFileLookupRecord = Pick<
   StoredFile,
   "mimeType" | "name" | "path" | "sizeBytes"
 > & {
-  _id: Types.ObjectId;
-  accessUrl?: string;
+  accessUrl?: FileAccessUrlDescriptor;
 };
 type TicketRelatedLookups = {
   usersById: Map<string, TicketUserLookupRecord>;
   filesById: Map<string, TicketFileLookupRecord>;
+  avatarAccessUrlMap: Map<string, FileAccessUrlDescriptor>;
 };
 
 @Injectable()
@@ -557,37 +557,28 @@ export class TicketService {
             .exec()
         : Promise.resolve([]),
       fileObjectIds.length > 0
-        ? Promise.all(
-            fileObjectIds.map(
-              async (fileId): Promise<TicketFileLookupRecord | undefined> => {
-                try {
-                  const file = await this.fileService.findById(
-                    fileId.toString(),
-                  );
-                  return {
-                    _id: file.id,
-                    name: file.name,
-                    mimeType: file.mimeType,
-                    sizeBytes: file.sizeBytes,
-                    path: file.path,
-                    accessUrl: file.accessUrl,
-                  };
-                } catch {
-                  return undefined;
-                }
-              },
-            ),
-          ).then((files) =>
-            files.filter(
-              (file): file is TicketFileLookupRecord => file != null,
-            ),
-          )
-        : Promise.resolve([]),
+        ? this.fileService.getFileSummariesByIds(fileObjectIds)
+        : Promise.resolve(new Map()),
     ]);
+    const avatarAccessUrlMap = await this.fileService.getAccessUrlMap(
+      users.map((user) => user.profile?.avatarFileId),
+    );
 
     return {
       usersById: new Map(users.map((user) => [user._id.toString(), user])),
-      filesById: new Map(files.map((file) => [file._id.toString(), file])),
+      filesById: new Map(
+        [...files.entries()].map(([id, file]) => [
+          id,
+          {
+            name: file.name,
+            mimeType: file.mimeType,
+            sizeBytes: file.sizeBytes,
+            path: file.path,
+            accessUrl: file.accessUrl,
+          },
+        ]),
+      ),
+      avatarAccessUrlMap,
     };
   }
 
@@ -611,6 +602,7 @@ export class TicketService {
         ticket.closedByUserId
           ? relatedLookups.usersById.get(ticket.closedByUserId.toString())
           : undefined,
+        relatedLookups.avatarAccessUrlMap,
       ),
       closedAt: ticket.closedAt,
       messages: (ticket.messages ?? []).map((message, index) =>
@@ -624,6 +616,7 @@ export class TicketService {
         createdByUserId
           ? relatedLookups.usersById.get(createdByUserId.toString())
           : undefined,
+        relatedLookups.avatarAccessUrlMap,
       ),
       updatedByUserId,
       updatedByUser: this.toTicketUserMinimalResponse(
@@ -631,6 +624,7 @@ export class TicketService {
         updatedByUserId
           ? relatedLookups.usersById.get(updatedByUserId.toString())
           : undefined,
+        relatedLookups.avatarAccessUrlMap,
       ),
       createdAt: ticket.audit?.createdAt,
       updatedAt: ticket.audit?.updatedAt,
@@ -652,8 +646,8 @@ export class TicketService {
         senderUserId
           ? relatedLookups.usersById.get(senderUserId.toString())
           : undefined,
+        relatedLookups.avatarAccessUrlMap,
       ),
-      attachmentFileIds,
       attachmentFiles: attachmentFileIds.map((fileId) =>
         this.toTicketStoredFileMinimalResponse(
           fileId,
@@ -690,6 +684,7 @@ export class TicketService {
         createdByUserId
           ? relatedLookups.usersById.get(createdByUserId.toString())
           : undefined,
+        relatedLookups.avatarAccessUrlMap,
       ),
       updatedByUserId,
       updatedByUser: this.toTicketUserMinimalResponse(
@@ -697,6 +692,7 @@ export class TicketService {
         updatedByUserId
           ? relatedLookups.usersById.get(updatedByUserId.toString())
           : undefined,
+        relatedLookups.avatarAccessUrlMap,
       ),
       createdAt: ticket.audit?.createdAt,
       updatedAt: ticket.audit?.updatedAt,
@@ -727,7 +723,6 @@ export class TicketService {
               firstName: "پشتیبانی",
             },
           },
-      attachmentFileIds,
       attachmentFiles: attachmentFileIds.map((fileId) =>
         this.toTicketStoredFileMinimalResponse(
           fileId,
@@ -740,10 +735,13 @@ export class TicketService {
   private toTicketUserMinimalResponse(
     id?: Types.ObjectId,
     user?: TicketUserLookupRecord,
+    avatarAccessUrlMap?: Map<string, FileAccessUrlDescriptor>,
   ): TicketUserMinimalGqlResponse | undefined {
     if (!id) {
       return undefined;
     }
+
+    const avatarFileId = user?.profile?.avatarFileId;
 
     return {
       id,
@@ -752,7 +750,9 @@ export class TicketService {
         ? {
             firstName: user.profile.firstName,
             lastName: user.profile.lastName,
-            avatarFileId: user.profile.avatarFileId,
+            avatarAccessUrl: avatarFileId
+              ? avatarAccessUrlMap?.get(avatarFileId.toString())
+              : undefined,
           }
         : undefined,
     };
@@ -763,12 +763,12 @@ export class TicketService {
     file?: TicketFileLookupRecord,
   ): TicketStoredFileMinimalGqlResponse {
     return {
-      id,
       name: file?.name,
       mimeType: file?.mimeType,
       sizeBytes: file?.sizeBytes,
       path: file?.path,
-      accessUrl: file?.accessUrl,
+      accessUrl:
+        file?.accessUrl ?? this.fileService.createAccessUrlDescriptor(id),
     };
   }
 

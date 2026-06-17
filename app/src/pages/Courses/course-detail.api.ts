@@ -1,10 +1,11 @@
 import type { CourseDiscountType, CourseItemType, CourseReleaseType } from "./courses-list.api";
+import type { FileAccessUrl } from "../../utils/fileAccessUrl.util";
 
 export type CourseDetailItem = {
   readonly title: string;
   readonly type: CourseItemType;
   readonly isLocked: boolean;
-  readonly fileId?: string | null;
+  readonly fileAccessUrl?: FileAccessUrl | null;
   readonly article?: string | null;
 };
 
@@ -12,7 +13,6 @@ export type CourseDetailChapter = {
   readonly key: string;
   readonly title: string;
   readonly description?: string | null;
-  readonly iconFileId?: string | null;
   readonly visibleAfterMinutes?: number | null;
   readonly isFree: boolean;
   readonly isLocked: boolean;
@@ -23,7 +23,7 @@ export type CourseDetailRecord = {
   readonly id: string;
   readonly title: string;
   readonly description?: string | null;
-  readonly coverImageFileId?: string | null;
+  readonly coverImageAccessUrl?: FileAccessUrl | null;
   readonly priceIrt?: number | null;
   readonly discount?: {
     readonly type: CourseDiscountType;

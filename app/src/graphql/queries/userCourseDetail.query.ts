@@ -1,12 +1,16 @@
 import { gql } from "@apollo/client";
 
+import { FILE_ACCESS_URL_FIELDS } from "../fragments/fileAccessUrl.fragment";
+
 export const USER_COURSE_DETAIL_QUERY = gql`
   query UserCourseDetail($input: UserCourseDetailGqlInput!) {
     course: userCourseDetail(input: $input) {
       id
       title
       description
-      coverImageFileId
+      coverImageAccessUrl {
+        ${FILE_ACCESS_URL_FIELDS}
+      }
       priceIrt
       discount {
         type
@@ -21,7 +25,6 @@ export const USER_COURSE_DETAIL_QUERY = gql`
         key
         title
         description
-        iconFileId
         visibleAfterMinutes
         isFree
         isLocked
@@ -29,7 +32,9 @@ export const USER_COURSE_DETAIL_QUERY = gql`
           title
           type
           isLocked
-          fileId
+          fileAccessUrl {
+            ${FILE_ACCESS_URL_FIELDS}
+          }
           article
         }
       }

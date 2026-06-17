@@ -1,5 +1,7 @@
 import { gql } from "@apollo/client";
 
+import { FILE_ACCESS_URL_FIELDS } from "../fragments/fileAccessUrl.fragment";
+
 export const USER_LIST_QUERY = gql`
   query UserList($input: UserListGqlInput!) {
     userList(input: $input) {
@@ -13,7 +15,9 @@ export const USER_LIST_QUERY = gql`
           lastName
           email
           phoneNumber
-          avatarFileId
+          avatarAccessUrl {
+            ${FILE_ACCESS_URL_FIELDS}
+          }
           bio
         }
         createdAt

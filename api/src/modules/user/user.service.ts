@@ -23,6 +23,7 @@ import { AppSettingValueType, UserRole, UserStatus } from "../../enums";
 import { SessionService } from "../auth/session.service";
 import { EmailService } from "../email";
 import { AppSettingsService } from "../app-settings";
+import { FileService, FileAccessUrlDescriptor } from "../file/file.service";
 import {
   StoredFile,
   StoredFileDocument,
@@ -121,6 +122,7 @@ export class UserService {
     private readonly emailService: EmailService,
     private readonly appSettingsService: AppSettingsService,
     private readonly userCaptchaService: UserCaptchaService,
+    private readonly fileService: FileService,
   ) {}
 
   async findActiveStaffUserIds(): Promise<string[]> {
@@ -1185,8 +1187,14 @@ export class UserService {
       this.userModel.countDocuments(filterQuery).exec(),
     ]);
 
+    const avatarAccessUrlMap = await this.fileService.getAccessUrlMap(
+      users.map((user) => user.profile?.avatarFileId),
+    );
+
     return {
-      items: users.map((user) => this.toUserListResponse(user)),
+      items: users.map((user) =>
+        this.toUserListResponse(user, avatarAccessUrlMap),
+      ),
       pagination: {
         limit,
         skip,
@@ -1635,9 +1643,12 @@ export class UserService {
     return sortOptions;
   }
 
-  private toUserListResponse(user: UserListRecord): UserListGqlResponse {
+  private toUserListResponse(
+    user: UserListRecord,
+    avatarAccessUrlMap?: Map<string, FileAccessUrlDescriptor>,
+  ): UserListGqlResponse {
     return {
-      ...this.toUserMutationResponse(user),
+      ...this.toUserMutationResponse(user, avatarAccessUrlMap),
       createdAt: user.audit?.createdAt,
       updatedAt: user.audit?.updatedAt,
     };
@@ -1645,7 +1656,10 @@ export class UserService {
 
   private toUserMutationResponse(
     user: UserListRecord,
+    avatarAccessUrlMap?: Map<string, FileAccessUrlDescriptor>,
   ): UserMutationGqlResponse {
+    const avatarFileId = user.profile?.avatarFileId;
+
     return {
       id: user._id,
       username: user.username,
@@ -1657,7 +1671,9 @@ export class UserService {
             lastName: user.profile.lastName,
             email: user.profile.email,
             phoneNumber: user.profile.phoneNumber,
-            avatarFileId: user.profile.avatarFileId,
+            avatarAccessUrl: avatarFileId
+              ? avatarAccessUrlMap?.get(avatarFileId.toString())
+              : undefined,
             bio: user.profile.bio,
           }
         : undefined,

@@ -9,8 +9,7 @@ import {
   type DragEvent,
   type ReactElement,
 } from "react";
-import { useQuery } from "@apollo/client/react";
-import { Box, CircularProgress, IconButton, Typography, useMediaQuery } from "@mui/material";
+import { Box, IconButton, Typography, useMediaQuery } from "@mui/material";
 import {
   ArticleRounded,
   AudiotrackRounded,
@@ -21,26 +20,8 @@ import {
   MovieRounded,
   PictureAsPdfRounded,
 } from "@mui/icons-material";
-import { FILE_DETAIL_QUERY } from "../../graphql/queries/fileDetail.query";
+import type { ExistingFilePreview } from "../../utils/fileAccessUrl.util";
 import styles from "./FileUploadField.module.scss";
-
-type FileDetailResponse = {
-  fileDetail: {
-    id: string;
-    name: string;
-    mimeType: string;
-    sizeBytes: number;
-    path: string;
-    uploadedAt?: string | null;
-    accessUrl?: string | null;
-  };
-};
-
-type FileDetailVariables = {
-  input: {
-    id: string;
-  };
-};
 
 interface FilePreviewSource {
   name: string;
@@ -53,7 +34,7 @@ interface FileUploadFieldProps {
   label: string;
   file: File | null;
   onChange: (file: File | null) => void;
-  existingFileId?: string | null;
+  existingFile?: ExistingFilePreview | null;
   onExistingFileClear?: () => void;
   accept: string;
   allowedFormatsLabel: string;
@@ -139,7 +120,7 @@ const FileUploadField = ({
   label,
   file,
   onChange,
-  existingFileId,
+  existingFile,
   onExistingFileClear,
   accept,
   allowedFormatsLabel,
@@ -163,15 +144,6 @@ const FileUploadField = ({
   const effectiveDropTitle = isMobile ? mobileDropTitle : dropTitle;
   const effectiveDropHint = isMobile ? mobileDropHint : dropHint;
 
-  const { data, loading: existingFileLoading } = useQuery<FileDetailResponse, FileDetailVariables>(
-    FILE_DETAIL_QUERY,
-    {
-      variables: { input: { id: existingFileId ?? "" } },
-      skip: !existingFileId || file != null,
-      fetchPolicy: "cache-first",
-    }
-  );
-
   useEffect(() => {
     return () => {
       if (selectedPreviewUrl) {
@@ -190,16 +162,16 @@ const FileUploadField = ({
     : undefined;
 
   const existingFileSource: FilePreviewSource | undefined =
-    file == null && data?.fileDetail
+    file == null && existingFile
       ? {
-          name: data.fileDetail.name,
-          mimeType: data.fileDetail.mimeType,
-          sizeBytes: data.fileDetail.sizeBytes,
-          previewUrl: data.fileDetail.accessUrl,
+          name: existingFile.name,
+          mimeType: existingFile.mimeType,
+          sizeBytes: existingFile.sizeBytes,
+          previewUrl: existingFile.accessUrl,
         }
       : undefined;
   const previewSource = selectedFileSource ?? existingFileSource;
-  const hasFile = previewSource != null || existingFileLoading;
+  const hasFile = previewSource != null;
 
   const handlePick = useCallback(
     (nextFile: File | null) => {
@@ -287,11 +259,7 @@ const FileUploadField = ({
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
-        {existingFileLoading ? (
-          <Box className={styles.loadingState}>
-            <CircularProgress size={22} />
-          </Box>
-        ) : previewSource == null ? (
+        {previewSource == null ? (
           <>
             <CloudUploadOutlined className={styles.icon} aria-hidden />
             {effectiveDropTitle ? (

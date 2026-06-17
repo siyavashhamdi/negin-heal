@@ -18,6 +18,7 @@ import {
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
 import FileUploadField from "../../../shared/forms/FileUploadField";
+import { buildExistingFilePreview } from "../../../utils/fileAccessUrl.util";
 import ItemsSection from "./ItemsSection";
 import type {
   DraftChapter,
@@ -262,8 +263,14 @@ const ChaptersSection = ({
                   label="آیکن فصل"
                   file={activeChapter.iconFile}
                   onChange={handleActiveChapterIconChange}
-                existingFileId={activeChapter.iconFileId || null}
-                onExistingFileClear={() => updateActiveChapter({ iconFileId: "" })}
+                  existingFile={buildExistingFilePreview(
+                    activeChapter.iconAccessUrl,
+                    activeChapter.title.trim() || "آیکن فصل",
+                    "image/*",
+                  )}
+                  onExistingFileClear={() =>
+                    updateActiveChapter({ iconAccessUrl: null })
+                  }
                   accept="image/*"
                   allowedFormatsLabel="فرمت مجاز: تصویر"
                   maxSizeLabel="حداکثر: ۲۰MB"

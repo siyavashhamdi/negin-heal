@@ -116,6 +116,7 @@ export async function bootstrap() {
     allowedHeaders: [
       "Content-Type",
       "Authorization",
+      "X-File-Name",
       "X-Apollo-Operation-Name",
       "apollo-require-preflight",
     ],

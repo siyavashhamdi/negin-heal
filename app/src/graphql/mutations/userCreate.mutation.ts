@@ -1,5 +1,7 @@
 import { gql } from "@apollo/client";
 
+import { FILE_ACCESS_URL_FIELDS } from "../fragments/fileAccessUrl.fragment";
+
 export const USER_CREATE_MUTATION = gql`
   mutation UserCreate($input: UserCreateGqlInput!) {
     userCreate(input: $input) {
@@ -12,7 +14,9 @@ export const USER_CREATE_MUTATION = gql`
         lastName
         email
         phoneNumber
-        avatarFileId
+        avatarAccessUrl {
+          ${FILE_ACCESS_URL_FIELDS}
+        }
         bio
       }
     }

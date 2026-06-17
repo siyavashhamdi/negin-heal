@@ -1,3 +1,5 @@
+import type { FileAccessUrl } from "../../utils/fileAccessUrl.util";
+
 export interface ManagedUserRecord {
   readonly id: string;
   readonly username: string;
@@ -6,7 +8,7 @@ export interface ManagedUserRecord {
   readonly fullName: string;
   readonly email: string;
   readonly phoneNumber: string;
-  readonly avatarFileId: string;
+  readonly avatarAccessUrl: FileAccessUrl | null;
   readonly bio: string;
   readonly roles: readonly string[];
   readonly roleDesc: string;

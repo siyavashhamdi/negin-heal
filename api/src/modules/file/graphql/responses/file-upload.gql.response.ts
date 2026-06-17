@@ -1,11 +1,9 @@
-import { Field, Float, ID, ObjectType } from "@nestjs/graphql";
-import { Types } from "mongoose";
+import { Field, Float, ObjectType } from "@nestjs/graphql";
+
+import { FileAccessUrlGqlResponse } from "./file-access-url.gql.response";
 
 @ObjectType()
 export class FileUploadGqlResponse {
-  @Field(() => ID, { description: "Stored file ID" })
-  id: Types.ObjectId;
-
   @Field({ description: "Original file name" })
   name: string;
 
@@ -21,9 +19,9 @@ export class FileUploadGqlResponse {
   @Field(() => Date, { description: "Upload completion date" })
   uploadedAt: Date;
 
-  @Field({
+  @Field(() => FileAccessUrlGqlResponse, {
     nullable: true,
-    description: "Temporary URL for reading the stored file",
+    description: "Signed file access descriptor for reading the stored file",
   })
-  accessUrl?: string;
+  accessUrl?: FileAccessUrlGqlResponse;
 }

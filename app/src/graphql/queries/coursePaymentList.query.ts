@@ -1,5 +1,7 @@
 import { gql } from "@apollo/client";
 
+import { FILE_ACCESS_URL_FIELDS } from "../fragments/fileAccessUrl.fragment";
+
 export const COURSE_PAYMENT_LIST_QUERY = gql`
   query CoursePaymentList($input: CoursePaymentListGqlInput!) {
     coursePaymentList(input: $input) {
@@ -38,15 +40,15 @@ export const COURSE_PAYMENT_LIST_QUERY = gql`
           discountType
           discountValue
         }
-        uploadedReceiptFileId
         uploadedReceiptFile {
-          id
           name
           title
           mimeType
           sizeBytes
           path
-          accessUrl
+          accessUrl {
+            ${FILE_ACCESS_URL_FIELDS}
+          }
         }
         receiptUploadedBy
         receiptUploader {

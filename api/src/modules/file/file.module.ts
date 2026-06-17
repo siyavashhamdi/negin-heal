@@ -1,13 +1,14 @@
-import { Module } from "@nestjs/common";
+import { Module, forwardRef } from "@nestjs/common";
 
+import { AuthModule } from "../auth";
 import { DatabaseModule } from "../database";
+import { FileController } from "./api/file.controller";
 import { FileService } from "./file.service";
-import { FileUploadMutation } from "./graphql/mutations";
-import { FileDetailQuery } from "./graphql/queries";
 
 @Module({
-  imports: [DatabaseModule],
-  providers: [FileService, FileUploadMutation, FileDetailQuery],
+  imports: [DatabaseModule, forwardRef(() => AuthModule)],
+  controllers: [FileController],
+  providers: [FileService],
   exports: [FileService],
 })
 export class FileModule {}

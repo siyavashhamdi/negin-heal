@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import { useTranslation } from "../../hooks/useTranslation";
 import { useUsersManagementEntityTitle } from "./useUsersManagementEntityTitle";
+import { getFileIdFromAccessUrl } from "../../utils/fileAccessUrl.util";
 import type { ManagedUserRecord } from "./users-management.types";
 
 interface UsersManagementViewModalProps {
@@ -59,7 +60,7 @@ const UsersManagementViewModal = ({
           />
           <FieldRow
             label={t("pages.usersManagement.viewModal.avatarFileId")}
-            value={record.avatarFileId}
+            value={getFileIdFromAccessUrl(record.avatarAccessUrl) ?? "—"}
           />
           <FieldRow label={t("pages.usersManagement.viewModal.bio")} value={record.bio} />
           <FieldRow label={t("pages.usersManagement.viewModal.roleDesc")} value={record.roleDesc} />

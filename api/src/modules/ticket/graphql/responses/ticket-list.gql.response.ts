@@ -1,6 +1,7 @@
 import { Field, Float, ID, ObjectType } from "@nestjs/graphql";
 import { Types } from "mongoose";
 
+import { FileAccessUrlGqlResponse } from "../../../file/graphql/responses";
 import {
   TicketCategory,
   TicketClosedBy,
@@ -17,11 +18,11 @@ export class TicketUserProfileMinimalGqlResponse {
   @Field({ nullable: true, description: "User's last name" })
   lastName?: string;
 
-  @Field(() => ID, {
+  @Field(() => FileAccessUrlGqlResponse, {
     nullable: true,
-    description: "Stored file ID used as the user's avatar",
+    description: "Signed access descriptor for the user's avatar",
   })
-  avatarFileId?: Types.ObjectId;
+  avatarAccessUrl?: FileAccessUrlGqlResponse;
 }
 
 @ObjectType()
@@ -56,9 +57,6 @@ export class UserTicketSenderGqlResponse {
 
 @ObjectType()
 export class TicketStoredFileMinimalGqlResponse {
-  @Field(() => ID, { description: "Stored file ID" })
-  id: Types.ObjectId;
-
   @Field({ nullable: true, description: "Stored file name" })
   name?: string;
 
@@ -74,11 +72,11 @@ export class TicketStoredFileMinimalGqlResponse {
   @Field({ nullable: true, description: "Stored file path" })
   path?: string;
 
-  @Field({
+  @Field(() => FileAccessUrlGqlResponse, {
     nullable: true,
-    description: "Temporary URL for reading the stored file",
+    description: "Signed access descriptor for reading the stored file",
   })
-  accessUrl?: string;
+  accessUrl?: FileAccessUrlGqlResponse;
 }
 
 @ObjectType()
@@ -91,11 +89,6 @@ export class TicketMessageGqlResponse {
     description: "Minimal user that sent this message",
   })
   senderUser?: TicketUserMinimalGqlResponse;
-
-  @Field(() => [ID], {
-    description: "Stored file IDs attached to this message",
-  })
-  attachmentFileIds: Types.ObjectId[];
 
   @Field(() => [TicketStoredFileMinimalGqlResponse], {
     description: "Minimal stored file metadata for message attachments",
@@ -113,11 +106,6 @@ export class UserTicketMessageGqlResponse {
     description: "Sanitized sender information for the current user",
   })
   senderUser?: UserTicketSenderGqlResponse;
-
-  @Field(() => [ID], {
-    description: "Stored file IDs attached to this message",
-  })
-  attachmentFileIds: Types.ObjectId[];
 
   @Field(() => [TicketStoredFileMinimalGqlResponse], {
     description: "Minimal stored file metadata for message attachments",

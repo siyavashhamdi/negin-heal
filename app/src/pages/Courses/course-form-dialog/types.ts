@@ -1,3 +1,5 @@
+import type { FileAccessUrl } from "../../../utils/fileAccessUrl.util";
+
 export type DiscountKind = "PERCENTAGE" | "FIXED_AMOUNT_IRT";
 export type VisibleAfterUnit = "MINUTES" | "HOURS" | "DAYS";
 export type DraftItemContentType = "ARTICLE" | "FILE";
@@ -8,7 +10,7 @@ export type DraftItem = {
   contentType: DraftItemContentType;
   article: string;
   file: File | null;
-  fileId: string;
+  fileAccessUrl: FileAccessUrl | null;
 };
 
 export type DraftChapter = {
@@ -16,7 +18,7 @@ export type DraftChapter = {
   title: string;
   description: string;
   iconFile: File | null;
-  iconFileId: string;
+  iconAccessUrl: FileAccessUrl | null;
   visibleAfterMinutes: string;
   visibleAfterUnit: VisibleAfterUnit;
   isFree: boolean;

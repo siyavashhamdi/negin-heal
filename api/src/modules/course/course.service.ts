@@ -64,7 +64,7 @@ import { CoursePurchaseSubmitGqlInput } from "./graphql/inputs/course-purchase-s
 import { CourseListSortOptionInput } from "./graphql/inputs/course-list-sort-option.gql.input";
 import { CourseUpdateGqlInput } from "./graphql/inputs/course-update.gql.input";
 import { UserCourseDetailGqlInput } from "./graphql/inputs/user-course-detail.gql.input";
-import { FileService } from "../file";
+import { FileService, FileAccessUrlDescriptor } from "../file/file.service";
 import {
   CourseListChapterGqlResponse,
   CourseListGqlResponse,
@@ -118,8 +118,7 @@ type CoursePaymentFileLookupRecord = Pick<
   StoredFile,
   "mimeType" | "name" | "path" | "sizeBytes"
 > & {
-  _id: Types.ObjectId;
-  accessUrl?: string;
+  accessUrl?: FileAccessUrlDescriptor;
 };
 type CoursePaymentRelatedLookups = {
   usersById: Map<string, CoursePaymentUserLookupRecord>;
@@ -223,8 +222,9 @@ export class CourseService {
       },
     );
     const fileTypeLookup = await this.buildFileTypeLookup([course]);
+    const fileAccessUrlMap = await this.buildFileAccessUrlLookup([course]);
 
-    return this.toListResponse(course, fileTypeLookup);
+    return this.toListResponse(course, fileTypeLookup, fileAccessUrlMap);
   }
 
   async update(input: CourseUpdateGqlInput): Promise<CourseListGqlResponse> {
@@ -253,7 +253,14 @@ export class CourseService {
 
     const newFileIds = this.collectReferencedFileIds(normalizedInput);
     const fileTypeLookup = await this.buildFileTypeLookup([updatedCourse]);
-    const response = this.toListResponse(updatedCourse, fileTypeLookup);
+    const fileAccessUrlMap = await this.buildFileAccessUrlLookup([
+      updatedCourse,
+    ]);
+    const response = this.toListResponse(
+      updatedCourse,
+      fileTypeLookup,
+      fileAccessUrlMap,
+    );
 
     if (existingIsActive !== updatedCourse.isActive) {
       await this.publishCourseBadgeCountSignal(
@@ -745,12 +752,13 @@ export class CourseService {
     const courses = coursesWithExtra.slice(0, limit);
 
     const fileTypeLookup = await this.buildFileTypeLookup(courses);
+    const fileAccessUrlMap = await this.buildFileAccessUrlLookup(courses);
     const firstCourse = courses[0];
     const lastCourse = courses[courses.length - 1];
 
     return {
       items: courses.map((course) =>
-        this.toListResponse(course, fileTypeLookup),
+        this.toListResponse(course, fileTypeLookup, fileAccessUrlMap),
       ),
       pagination: {
         limit,
@@ -822,6 +830,7 @@ export class CourseService {
       this.buildFileTypeLookup(courses),
       this.buildUserCourseLookup(userId, courses),
     ]);
+    const fileAccessUrlMap = await this.buildFileAccessUrlLookup(courses);
     const firstCourse = courses[0];
     const lastCourse = courses[courses.length - 1];
 
@@ -831,6 +840,7 @@ export class CourseService {
           course,
           fileTypeLookup,
           userCourseLookup.get(course._id.toString()),
+          fileAccessUrlMap,
         ),
       ),
       pagination: {
@@ -869,9 +879,15 @@ export class CourseService {
       this.buildFileTypeLookup([course]),
       this.buildUserCourseLookup(userId, [course]),
     ]);
+    const fileAccessUrlMap = await this.buildFileAccessUrlLookup([course]);
     const userCourse = userCourseLookup.get(course._id.toString());
 
-    return this.toUserDetailResponse(course, fileTypeLookup, userCourse);
+    return this.toUserDetailResponse(
+      course,
+      fileTypeLookup,
+      userCourse,
+      fileAccessUrlMap,
+    );
   }
 
   private resolveCourseCursorSort(sort?: CourseListSortOptionInput): {
@@ -1405,17 +1421,44 @@ export class CourseService {
     );
   }
 
+  private async buildFileAccessUrlLookup(
+    courses: CourseDocument[],
+  ): Promise<Map<string, FileAccessUrlDescriptor>> {
+    const fileIds = courses.flatMap((course) => {
+      const courseObj = (course.toObject?.() ||
+        course) as CourseFileReferenceSource;
+      const ids: Array<Types.ObjectId | undefined> = [
+        courseObj.coverImageFileId,
+      ];
+
+      for (const chapter of courseObj.chapters || []) {
+        ids.push(chapter.iconFileId);
+        for (const item of chapter.items || []) {
+          ids.push(item.fileId);
+        }
+      }
+
+      return ids;
+    });
+
+    return this.fileService.getAccessUrlMap(fileIds);
+  }
+
   private toListResponse(
     course: CourseDocument,
     fileTypeLookup: FileTypeLookup,
+    fileAccessUrlMap?: Map<string, FileAccessUrlDescriptor>,
   ): CourseListGqlResponse {
     const courseObj = (course.toObject?.() || course) as PlainCourse;
+    const coverImageFileId = courseObj.coverImageFileId;
 
     return {
       id: course._id,
       title: courseObj.title,
       description: courseObj.description,
-      coverImageFileId: courseObj.coverImageFileId,
+      coverImageAccessUrl: coverImageFileId
+        ? fileAccessUrlMap?.get(coverImageFileId.toString())
+        : undefined,
       priceIrt: courseObj.priceIrt,
       discount: courseObj.discount,
       isActive: courseObj.isActive,
@@ -1423,7 +1466,7 @@ export class CourseService {
       tags: courseObj.tags || [],
       releaseType: this.calculateReleaseType(courseObj.chapters || []),
       chapters: (courseObj.chapters || []).map((chapter) =>
-        this.toChapterResponse(chapter, fileTypeLookup),
+        this.toChapterResponse(chapter, fileTypeLookup, fileAccessUrlMap),
       ),
       createdAt: courseObj.audit?.createdAt,
       updatedAt: courseObj.audit?.updatedAt,
@@ -1433,16 +1476,21 @@ export class CourseService {
   private toChapterResponse(
     chapter: CourseChapter,
     fileTypeLookup: FileTypeLookup,
+    fileAccessUrlMap?: Map<string, FileAccessUrlDescriptor>,
   ): CourseListChapterGqlResponse {
+    const iconFileId = chapter.iconFileId;
+
     return {
       title: chapter.title,
       description: chapter.description,
-      iconFileId: chapter.iconFileId,
+      iconAccessUrl: iconFileId
+        ? fileAccessUrlMap?.get(iconFileId.toString())
+        : undefined,
       visibleAfterMinutes: chapter.visibleAfterMinutes,
       isFree: chapter.isFree,
       sortOrder: chapter.sortOrder,
       items: (chapter.items || []).map((item) =>
-        this.toItemResponse(item, fileTypeLookup),
+        this.toItemResponse(item, fileTypeLookup, fileAccessUrlMap),
       ),
     };
   }
@@ -1450,14 +1498,19 @@ export class CourseService {
   private toItemResponse(
     item: CourseItem,
     fileTypeLookup: FileTypeLookup,
+    fileAccessUrlMap?: Map<string, FileAccessUrlDescriptor>,
   ): CourseListItemGqlResponse {
+    const fileId = item.fileId;
+
     return {
       title: item.title,
       sortOrder: item.sortOrder,
-      fileId: item.fileId,
+      fileAccessUrl: fileId
+        ? fileAccessUrlMap?.get(fileId.toString())
+        : undefined,
       article: item.article,
-      type: item.fileId
-        ? (fileTypeLookup.get(item.fileId.toString()) ?? CourseItemType.ARTICLE)
+      type: fileId
+        ? (fileTypeLookup.get(fileId.toString()) ?? CourseItemType.ARTICLE)
         : CourseItemType.ARTICLE,
     };
   }
@@ -1502,6 +1555,7 @@ export class CourseService {
     course: CourseDocument,
     fileTypeLookup: FileTypeLookup,
     userCourse?: UserCourseListRecord,
+    fileAccessUrlMap?: Map<string, FileAccessUrlDescriptor>,
   ): UserCourseListGqlResponse {
     const courseObj = (course.toObject?.() || course) as PlainCourse;
     const chapters = courseObj.chapters || [];
@@ -1514,12 +1568,15 @@ export class CourseService {
         ),
       ),
     );
+    const coverImageFileId = courseObj.coverImageFileId;
 
     return {
       id: course._id,
       title: courseObj.title,
       description: courseObj.description,
-      coverImageFileId: courseObj.coverImageFileId,
+      coverImageAccessUrl: coverImageFileId
+        ? fileAccessUrlMap?.get(coverImageFileId.toString())
+        : undefined,
       priceIrt: courseObj.priceIrt,
       discount: courseObj.discount,
       tags: courseObj.tags || [],
@@ -1539,6 +1596,7 @@ export class CourseService {
     course: CourseDocument,
     fileTypeLookup: FileTypeLookup,
     userCourse?: UserCourseListRecord,
+    fileAccessUrlMap?: Map<string, FileAccessUrlDescriptor>,
   ): UserCourseDetailGqlResponse {
     const courseObj = (course.toObject?.() || course) as PlainCourse;
     const chapters = this.sortChaptersForDisplay(courseObj.chapters || []);
@@ -1546,12 +1604,15 @@ export class CourseService {
     const purchaseStatus = userCourse?.purchase?.status;
     const isPurchased = purchaseStatus === UserCoursePurchaseStatus.PAID;
     const canAccessPaidContent = isFree || isPurchased;
+    const coverImageFileId = courseObj.coverImageFileId;
 
     return {
       id: course._id,
       title: courseObj.title,
       description: courseObj.description,
-      coverImageFileId: courseObj.coverImageFileId,
+      coverImageAccessUrl: coverImageFileId
+        ? fileAccessUrlMap?.get(coverImageFileId.toString())
+        : undefined,
       priceIrt: courseObj.priceIrt,
       discount: courseObj.discount,
       tags: courseObj.tags || [],
@@ -1564,6 +1625,7 @@ export class CourseService {
           chapter,
           fileTypeLookup,
           canAccessPaidContent || chapter.isFree,
+          fileAccessUrlMap,
         ),
       ),
     };
@@ -1573,17 +1635,22 @@ export class CourseService {
     chapter: CourseChapter,
     fileTypeLookup: FileTypeLookup,
     canAccessChapter: boolean,
+    fileAccessUrlMap?: Map<string, FileAccessUrlDescriptor>,
   ): UserCourseDetailChapterGqlResponse {
     return {
       key: chapter.key,
       title: chapter.title,
       description: chapter.description,
-      iconFileId: chapter.iconFileId,
       visibleAfterMinutes: chapter.visibleAfterMinutes,
       isFree: chapter.isFree,
       isLocked: !canAccessChapter,
       items: this.sortItemsForDisplay(chapter.items || []).map((item) =>
-        this.toUserDetailItemResponse(item, fileTypeLookup, canAccessChapter),
+        this.toUserDetailItemResponse(
+          item,
+          fileTypeLookup,
+          canAccessChapter,
+          fileAccessUrlMap,
+        ),
       ),
     };
   }
@@ -1592,12 +1659,18 @@ export class CourseService {
     item: CourseItem,
     fileTypeLookup: FileTypeLookup,
     canAccessItem: boolean,
+    fileAccessUrlMap?: Map<string, FileAccessUrlDescriptor>,
   ): UserCourseDetailItemGqlResponse {
+    const fileId = canAccessItem ? item.fileId : undefined;
+
     return {
       title: item.title,
       type: this.resolveItemType(item, fileTypeLookup),
       isLocked: !canAccessItem,
-      fileId: canAccessItem ? item.fileId : undefined,
+      fileAccessUrl:
+        fileId && fileAccessUrlMap
+          ? fileAccessUrlMap.get(fileId.toString())
+          : undefined,
       article: canAccessItem ? item.article : undefined,
     };
   }
@@ -2395,39 +2468,24 @@ export class CourseService {
             .exec()
         : Promise.resolve([]),
       fileObjectIds.length > 0
-        ? Promise.all(
-            fileObjectIds.map(
-              async (
-                fileId,
-              ): Promise<CoursePaymentFileLookupRecord | undefined> => {
-                try {
-                  const file = await this.fileService.findById(
-                    fileId.toString(),
-                  );
-                  return {
-                    _id: file.id,
-                    name: file.name,
-                    mimeType: file.mimeType,
-                    sizeBytes: file.sizeBytes,
-                    path: file.path,
-                    accessUrl: file.accessUrl,
-                  };
-                } catch {
-                  return undefined;
-                }
-              },
-            ),
-          ).then((files) =>
-            files.filter(
-              (file): file is CoursePaymentFileLookupRecord => file != null,
-            ),
-          )
-        : Promise.resolve([]),
+        ? this.fileService.getFileSummariesByIds(fileObjectIds)
+        : Promise.resolve(new Map()),
     ]);
 
     return {
       usersById: new Map(users.map((user) => [user._id.toString(), user])),
-      filesById: new Map(files.map((file) => [file._id.toString(), file])),
+      filesById: new Map(
+        [...files.entries()].map(([id, file]) => [
+          id,
+          {
+            name: file.name,
+            mimeType: file.mimeType,
+            sizeBytes: file.sizeBytes,
+            path: file.path,
+            accessUrl: file.accessUrl,
+          },
+        ]),
+      ),
     };
   }
 
@@ -2464,13 +2522,13 @@ export class CourseService {
     }
 
     return {
-      id,
       name: file?.name,
       title: file?.name,
       mimeType: file?.mimeType,
       sizeBytes: file?.sizeBytes,
       path: file?.path,
-      accessUrl: file?.accessUrl,
+      accessUrl:
+        file?.accessUrl ?? this.fileService.createAccessUrlDescriptor(id),
     };
   }
 
@@ -2542,7 +2600,6 @@ export class CourseService {
             discountValue: purchase.couponSnapshot.discountValue,
           }
         : undefined,
-      uploadedReceiptFileId: purchase.uploadedReceiptFileId,
       uploadedReceiptFile,
       receiptUploadedBy: purchase.receiptUploadedBy,
       receiptUploader,
@@ -2663,7 +2720,6 @@ export class CourseService {
       discountAmountIrt: purchase.discountAmountIrt,
       finalAmountIrt: purchase.finalAmountIrt,
       couponCode: purchase.couponSnapshot?.code,
-      uploadedReceiptFileId: purchase.uploadedReceiptFileId,
       paymentReference: purchase.paymentReference,
       transactionId: purchase.transactionId,
       paymentUrl,

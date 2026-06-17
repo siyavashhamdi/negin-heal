@@ -9,6 +9,7 @@ import { AuthModule } from "../auth";
 import { AppSettingsModule } from "../app-settings";
 import { DatabaseModule } from "../database";
 import { EmailModule } from "../email";
+import { FileModule } from "../file";
 import { SecurityConfig } from "../../config/security.config";
 import { env } from "../../config";
 import {
@@ -35,6 +36,7 @@ import * as UserSubscriptions from "./graphql/subscriptions";
     AppSettingsModule,
     DatabaseModule,
     EmailModule,
+    FileModule,
     forwardRef(() => AuthModule),
     JwtModule.register({
       secret: SecurityConfig.validateJwtSecret(),

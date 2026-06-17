@@ -48,12 +48,6 @@ export class CoursePurchaseSubmitGqlResponse {
   })
   couponCode?: string;
 
-  @Field(() => ID, {
-    nullable: true,
-    description: "Uploaded receipt file ID for card-to-card purchases",
-  })
-  uploadedReceiptFileId?: Types.ObjectId;
-
   @Field({
     nullable: true,
     description: "Receipt number or last source-card digits",

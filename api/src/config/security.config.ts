@@ -63,7 +63,7 @@ export class SecurityConfig {
 
   /**
    * Get max request size in bytes.
-   * Default supports up to 50MB raw files uploaded via GraphQL base64 payloads.
+   * Default supports up to 50MB binary file uploads.
    */
   static getMaxRequestSize(): number {
     const maxSize = process.env.MAX_REQUEST_SIZE;
@@ -74,8 +74,7 @@ export class SecurityConfig {
       }
     }
 
-    const maxRawFileBytes = 50 * 1024 * 1024;
-    return Math.ceil((maxRawFileBytes * 4) / 3) + 1024 * 1024;
+    return 50 * 1024 * 1024;
   }
 
   /**

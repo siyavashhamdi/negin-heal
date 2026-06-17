@@ -1,4 +1,8 @@
 import { parseJalaliParamDate } from "../../utilities/jalali-date-param.util";
+import {
+  resolveFileAccessUrl,
+  type FileAccessUrl,
+} from "../../utils/fileAccessUrl.util";
 
 export type UserCoursePaymentMethod =
   | "GATEWAY"
@@ -27,7 +31,7 @@ export type CoursePaymentStoredFile = {
   readonly mimeType?: string | null;
   readonly sizeBytes?: number | null;
   readonly path?: string | null;
-  readonly accessUrl?: string | null;
+  readonly accessUrl?: FileAccessUrl | null;
 };
 
 export type CoursePaymentListRow = {
@@ -381,7 +385,8 @@ export function mapCoursePaymentListRowToRecord(row: CoursePaymentListRow): Cour
     uploadedReceiptFileMimeType: display(row.uploadedReceiptFile?.mimeType),
     uploadedReceiptFileSizeBytes: row.uploadedReceiptFile?.sizeBytes ?? null,
     uploadedReceiptFilePath: display(row.uploadedReceiptFile?.path),
-    uploadedReceiptFileAccessUrl: row.uploadedReceiptFile?.accessUrl?.trim() ?? "",
+    uploadedReceiptFileAccessUrl:
+      resolveFileAccessUrl(row.uploadedReceiptFile?.accessUrl) ?? "",
     receiptUploadedBy: display(row.receiptUploadedBy),
     receiptUploaderName: display(row.receiptUploader?.fullName ?? row.receiptUploader?.username),
     receiptUploaderUsername: display(row.receiptUploader?.username),

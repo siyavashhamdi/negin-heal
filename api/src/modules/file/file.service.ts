@@ -1,5 +1,6 @@
-import { randomUUID } from "crypto";
+import { createHmac, randomUUID, timingSafeEqual } from "crypto";
 import { extname } from "path";
+import { Readable } from "stream";
 import { Client as MinioClient } from "minio";
 import { Model, Types } from "mongoose";
 import { InjectModel } from "@nestjs/mongoose";
@@ -12,13 +13,35 @@ import {
 
 import { env } from "../../config";
 import { StoredFile, StoredFileDocument } from "../../database/schemas";
-import { FileUploadGqlInput } from "./graphql/inputs";
+import {
+  createFileAccessUrlDescriptor,
+  FileAccessUrlDescriptor,
+} from "./file-access-url.util";
 import { FileUploadGqlResponse } from "./graphql/responses";
 
-const FILE_ACCESS_URL_TTL_SECONDS = 60 * 60;
+export type { FileAccessUrlDescriptor } from "./file-access-url.util";
+
+export type StoredFileAccessSummary = {
+  name: string;
+  mimeType: string;
+  sizeBytes: number;
+  path: string;
+  accessUrl: FileAccessUrlDescriptor;
+};
+
+export type StoredFileUploadResult = {
+  name: string;
+  mimeType: string;
+  sizeBytes: number;
+  path: string;
+  uploadedAt: Date;
+  accessUrl: FileAccessUrlDescriptor;
+};
 
 @Injectable()
 export class FileService {
+  static readonly FILE_ACCESS_URL_TTL_SECONDS = 60 * 60;
+
   private readonly minioClient: MinioClient;
 
   constructor(
@@ -34,48 +57,102 @@ export class FileService {
     });
   }
 
-  async upload(input: FileUploadGqlInput): Promise<FileUploadGqlResponse> {
-    const fileBuffer = this.decodeBase64(input.contentBase64);
-    if (fileBuffer.length !== input.sizeBytes) {
-      throw new BadRequestException(
-        "File size does not match uploaded content",
-      );
+  async uploadFromStream(params: {
+    name: string;
+    mimeType: string;
+    sizeBytes: number;
+    stream: Readable;
+  }): Promise<StoredFileUploadResult> {
+    if (!params.name.trim()) {
+      throw new BadRequestException("File name is required");
+    }
+
+    if (params.sizeBytes < 0) {
+      throw new BadRequestException("File size must be zero or greater");
     }
 
     await this.ensureBucket();
 
+    const uploadedAt = new Date();
     const bucket = env.MINIO_BUCKET;
-    const objectKey = this.buildObjectName(input.name);
+    const objectKey = this.buildObjectName(params.name, uploadedAt);
     await this.minioClient.putObject(
       bucket,
       objectKey,
-      fileBuffer,
-      fileBuffer.length,
+      params.stream,
+      params.sizeBytes,
       {
-        "Content-Type": input.mimeType,
-        "X-Amz-Meta-Original-Name": encodeURIComponent(input.name),
+        "Content-Type": params.mimeType,
+        "X-Amz-Meta-Original-Name": encodeURIComponent(params.name),
       },
     );
 
-    const uploadedAt = new Date();
     const storedFile = await this.storedFileModel.create({
-      name: input.name,
-      mimeType: input.mimeType,
-      sizeBytes: input.sizeBytes,
+      name: params.name,
+      mimeType: params.mimeType,
+      sizeBytes: params.sizeBytes,
       path: `${bucket}/${objectKey}`,
       bucket,
       objectKey,
       uploadedAt,
     });
 
-    return {
-      id: storedFile._id,
-      name: storedFile.name,
-      mimeType: storedFile.mimeType,
-      sizeBytes: storedFile.sizeBytes,
-      path: storedFile.path,
-      uploadedAt: storedFile.uploadedAt,
-    };
+    return this.toUploadResult(storedFile);
+  }
+
+  createAccessUrlDescriptor(
+    fileId: string | Types.ObjectId,
+  ): FileAccessUrlDescriptor {
+    return createFileAccessUrlDescriptor(
+      fileId,
+      this.createAccessToken(fileId.toString()),
+    );
+  }
+
+  async getAccessUrlMap(
+    fileIds: Array<string | Types.ObjectId | null | undefined>,
+  ): Promise<Map<string, FileAccessUrlDescriptor>> {
+    const uniqueIds = this.normalizeFileIds(fileIds);
+    if (uniqueIds.length === 0) {
+      return new Map();
+    }
+
+    const files = await this.storedFileModel
+      .find({ _id: { $in: uniqueIds } })
+      .exec();
+
+    return new Map(
+      files.map((file) => [
+        file._id.toString(),
+        this.createAccessUrlDescriptor(file._id),
+      ]),
+    );
+  }
+
+  async getFileSummariesByIds(
+    fileIds: Array<string | Types.ObjectId | null | undefined>,
+  ): Promise<Map<string, StoredFileAccessSummary>> {
+    const uniqueIds = this.normalizeFileIds(fileIds);
+    if (uniqueIds.length === 0) {
+      return new Map();
+    }
+
+    const files = await this.storedFileModel
+      .find({ _id: { $in: uniqueIds } })
+      .exec();
+
+    return new Map(
+      files.map((file) => [
+        file._id.toString(),
+        {
+          name: file.name,
+          mimeType: file.mimeType,
+          sizeBytes: file.sizeBytes,
+          path: file.path,
+          accessUrl: this.createAccessUrlDescriptor(file._id),
+        },
+      ]),
+    );
   }
 
   async findById(id: string): Promise<FileUploadGqlResponse> {
@@ -84,15 +161,58 @@ export class FileService {
       throw new NotFoundException("File not found");
     }
 
-    return {
-      id: storedFile._id,
-      name: storedFile.name,
-      mimeType: storedFile.mimeType,
-      sizeBytes: storedFile.sizeBytes,
-      path: storedFile.path,
-      uploadedAt: storedFile.uploadedAt,
-      accessUrl: await this.createAccessUrl(storedFile),
-    };
+    return this.toUploadResult(storedFile);
+  }
+
+  async getDownloadStreamById(id: string): Promise<{
+    storedFile: StoredFileDocument;
+    stream: Readable;
+  }> {
+    const storedFile = await this.storedFileModel.findById(id).exec();
+    if (!storedFile) {
+      throw new NotFoundException("File not found");
+    }
+
+    const { bucket, objectKey } = this.resolveStorageLocation(storedFile);
+    const stream = await this.minioClient.getObject(bucket, objectKey);
+
+    return { storedFile, stream };
+  }
+
+  verifyAccessToken(fileId: string, token: string): boolean {
+    try {
+      const decoded = Buffer.from(token, "base64url").toString("utf8");
+      const separatorIndex = decoded.lastIndexOf(":");
+      if (separatorIndex <= 0) {
+        return false;
+      }
+
+      const payload = decoded.slice(0, separatorIndex);
+      const signature = decoded.slice(separatorIndex + 1);
+      const [id, expiresAtValue] = payload.split(":");
+      if (!id || !expiresAtValue || id !== fileId) {
+        return false;
+      }
+
+      const expiresAt = Number.parseInt(expiresAtValue, 10);
+      if (
+        !Number.isFinite(expiresAt) ||
+        Math.floor(Date.now() / 1000) > expiresAt
+      ) {
+        return false;
+      }
+
+      const expectedSignature = this.signPayload(payload);
+      const signatureBuffer = Buffer.from(signature, "utf8");
+      const expectedBuffer = Buffer.from(expectedSignature, "utf8");
+      if (signatureBuffer.length !== expectedBuffer.length) {
+        return false;
+      }
+
+      return timingSafeEqual(signatureBuffer, expectedBuffer);
+    } catch {
+      return false;
+    }
   }
 
   async deleteByIds(ids: Types.ObjectId[]): Promise<void> {
@@ -116,15 +236,31 @@ export class FileService {
     }
   }
 
-  private async createAccessUrl(
+  private toUploadResult(
     storedFile: StoredFileDocument,
-  ): Promise<string> {
-    const { bucket, objectKey } = this.resolveStorageLocation(storedFile);
-    return this.minioClient.presignedGetObject(
-      bucket,
-      objectKey,
-      FILE_ACCESS_URL_TTL_SECONDS,
-    );
+  ): StoredFileUploadResult {
+    return {
+      name: storedFile.name,
+      mimeType: storedFile.mimeType,
+      sizeBytes: storedFile.sizeBytes,
+      path: storedFile.path,
+      uploadedAt: storedFile.uploadedAt ?? new Date(),
+      accessUrl: this.createAccessUrlDescriptor(storedFile._id),
+    };
+  }
+
+  private createAccessToken(fileId: string): string {
+    const expiresAt =
+      Math.floor(Date.now() / 1000) + FileService.FILE_ACCESS_URL_TTL_SECONDS;
+    const payload = `${fileId}:${expiresAt}`;
+    const signature = this.signPayload(payload);
+    return Buffer.from(`${payload}:${signature}`).toString("base64url");
+  }
+
+  private signPayload(payload: string): string {
+    return createHmac("sha256", env.JWT_SECRET ?? "")
+      .update(payload)
+      .digest("base64url");
   }
 
   private resolveStorageLocation(storedFile: StoredFileDocument): {
@@ -149,15 +285,6 @@ export class FileService {
     };
   }
 
-  private decodeBase64(contentBase64: string): Buffer {
-    const normalized = contentBase64.replace(/^data:.*;base64,/, "");
-    try {
-      return Buffer.from(normalized, "base64");
-    } catch {
-      throw new BadRequestException("Invalid base64 file content");
-    }
-  }
-
   private async ensureBucket(): Promise<void> {
     try {
       const exists = await this.minioClient.bucketExists(env.MINIO_BUCKET);
@@ -173,8 +300,26 @@ export class FileService {
     }
   }
 
-  private buildObjectName(fileName: string): string {
+  private buildObjectName(
+    fileName: string,
+    uploadedAt: Date = new Date(),
+  ): string {
     const extension = extname(fileName);
-    return `dashboard/${new Date().toISOString().slice(0, 10)}/${randomUUID()}${extension}`;
+    const year = uploadedAt.getUTCFullYear();
+    const month = String(uploadedAt.getUTCMonth() + 1).padStart(2, "0");
+    const day = String(uploadedAt.getUTCDate()).padStart(2, "0");
+    return `${year}/${month}/${day}/${randomUUID()}${extension}`;
+  }
+
+  private normalizeFileIds(
+    fileIds: Array<string | Types.ObjectId | null | undefined>,
+  ): Types.ObjectId[] {
+    return [
+      ...new Set(
+        fileIds
+          .map((id) => id?.toString?.() ?? "")
+          .filter((id) => id.length > 0 && Types.ObjectId.isValid(id)),
+      ),
+    ].map((id) => new Types.ObjectId(id));
   }
 }

@@ -1,8 +1,10 @@
 import { UseGuards, NotFoundException } from "@nestjs/common";
 import { Query, Resolver, Context } from "@nestjs/graphql";
+import { Types } from "mongoose";
 
 import { UserRole } from "../../../../enums";
 import { UserService } from "../../user.service";
+import { FileService } from "../../../file/file.service";
 import { GraphQLContextUtil } from "../../../../utils";
 import { UserDocument } from "../../../../database/schemas";
 import { GqlAuthGuard } from "../../../auth";
@@ -12,7 +14,10 @@ import { UserMeGqlResponse } from "../responses/user-me.gql.response";
 @Resolver(() => UserMeGqlResponse)
 @UseGuards(GqlAuthGuard)
 export class UserMeQuery {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly fileService: FileService,
+  ) {}
 
   @Query(() => UserMeGqlResponse, {
     name: "me",
@@ -33,6 +38,12 @@ export class UserMeQuery {
       (
         userDoc as UserDocument & { toObject?: () => Record<string, unknown> }
       ).toObject?.() || userDoc;
+    const avatarFileId = userObj.profile?.avatarFileId as
+      | Types.ObjectId
+      | undefined;
+    const avatarAccessUrlMap = await this.fileService.getAccessUrlMap([
+      avatarFileId,
+    ]);
 
     return {
       id: userDoc._id,
@@ -45,7 +56,9 @@ export class UserMeQuery {
             lastName: userObj.profile.lastName,
             email: userObj.profile.email,
             phoneNumber: userObj.profile.phoneNumber,
-            avatarFileId: userObj.profile.avatarFileId,
+            avatarAccessUrl: avatarFileId
+              ? avatarAccessUrlMap.get(avatarFileId.toString())
+              : undefined,
             bio: userObj.profile.bio,
           }
         : undefined,

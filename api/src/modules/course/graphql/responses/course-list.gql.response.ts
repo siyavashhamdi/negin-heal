@@ -1,6 +1,7 @@
 import { Field, Float, ID, Int, ObjectType } from "@nestjs/graphql";
 import { Types } from "mongoose";
 
+import { FileAccessUrlGqlResponse } from "../../../file/graphql/responses";
 import {
   CourseDiscountType,
   CourseItemType,
@@ -19,11 +20,11 @@ export class CourseListItemGqlResponse {
   })
   sortOrder?: number;
 
-  @Field(() => ID, {
+  @Field(() => FileAccessUrlGqlResponse, {
     nullable: true,
-    description: "Stored file ID attached to this item",
+    description: "Signed access descriptor for the file attached to this item",
   })
-  fileId?: Types.ObjectId;
+  fileAccessUrl?: FileAccessUrlGqlResponse;
 
   @Field({
     nullable: true,
@@ -46,11 +47,11 @@ export class CourseListChapterGqlResponse {
   @Field({ nullable: true, description: "Chapter description" })
   description?: string;
 
-  @Field(() => ID, {
+  @Field(() => FileAccessUrlGqlResponse, {
     nullable: true,
-    description: "Stored file ID used as the chapter icon",
+    description: "Signed access descriptor for the chapter icon",
   })
-  iconFileId?: Types.ObjectId;
+  iconAccessUrl?: FileAccessUrlGqlResponse;
 
   @Field(() => Int, {
     nullable: true,
@@ -98,11 +99,11 @@ export class CourseListGqlResponse {
   @Field({ nullable: true, description: "Course description" })
   description?: string;
 
-  @Field(() => ID, {
+  @Field(() => FileAccessUrlGqlResponse, {
     nullable: true,
-    description: "Stored file ID used as the course cover image",
+    description: "Signed access descriptor for the course cover image",
   })
-  coverImageFileId?: Types.ObjectId;
+  coverImageAccessUrl?: FileAccessUrlGqlResponse;
 
   @Field(() => Float, {
     nullable: true,

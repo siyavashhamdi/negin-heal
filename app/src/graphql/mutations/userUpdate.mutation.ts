@@ -1,5 +1,7 @@
 import { gql } from "@apollo/client";
 
+import { FILE_ACCESS_URL_FIELDS } from "../fragments/fileAccessUrl.fragment";
+
 export const USER_UPDATE_MUTATION = gql`
   mutation UserUpdate($input: UserUpdateGqlInput!) {
     userUpdate(input: $input) {
@@ -12,7 +14,9 @@ export const USER_UPDATE_MUTATION = gql`
         lastName
         email
         phoneNumber
-        avatarFileId
+        avatarAccessUrl {
+          ${FILE_ACCESS_URL_FIELDS}
+        }
         bio
       }
     }

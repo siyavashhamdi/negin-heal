@@ -1,6 +1,7 @@
 import { Field, Float, ID, Int, ObjectType } from "@nestjs/graphql";
 import { Types } from "mongoose";
 
+import { FileAccessUrlGqlResponse } from "../../../file/graphql/responses";
 import {
   CourseDiscountType,
   CourseItemType,
@@ -20,16 +21,15 @@ export class UserCourseDetailItemGqlResponse {
   type: CourseItemType;
 
   @Field({
-    description:
-      "Whether this item content is hidden from the current viewer",
+    description: "Whether this item content is hidden from the current viewer",
   })
   isLocked: boolean;
 
-  @Field(() => ID, {
+  @Field(() => FileAccessUrlGqlResponse, {
     nullable: true,
-    description: "Stored file ID for unlocked file-backed items",
+    description: "Signed access descriptor for an unlocked file-backed item",
   })
-  fileId?: Types.ObjectId;
+  fileAccessUrl?: FileAccessUrlGqlResponse;
 
   @Field({
     nullable: true,
@@ -48,12 +48,6 @@ export class UserCourseDetailChapterGqlResponse {
 
   @Field({ nullable: true, description: "Chapter description" })
   description?: string;
-
-  @Field(() => ID, {
-    nullable: true,
-    description: "Stored file ID used as the chapter icon",
-  })
-  iconFileId?: Types.ObjectId;
 
   @Field(() => Int, {
     nullable: true,
@@ -88,11 +82,11 @@ export class UserCourseDetailGqlResponse {
   @Field({ nullable: true, description: "Course description" })
   description?: string;
 
-  @Field(() => ID, {
+  @Field(() => FileAccessUrlGqlResponse, {
     nullable: true,
-    description: "Stored file ID used as the course cover image",
+    description: "Signed access descriptor for the course cover image",
   })
-  coverImageFileId?: Types.ObjectId;
+  coverImageAccessUrl?: FileAccessUrlGqlResponse;
 
   @Field(() => Float, {
     nullable: true,

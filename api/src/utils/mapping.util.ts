@@ -1,5 +1,6 @@
 import { Types } from "mongoose";
 import { UserMinimalGqlResponse } from "../modules/user/graphql/responses/common";
+import { FileAccessUrlDescriptor } from "../modules/file/file.service";
 
 /**
  * User object structure for mapping (from MongoDB document)
@@ -20,10 +21,13 @@ export interface UserForMapping {
  */
 export function mapUserToMinimal(
   user: UserForMapping | null | undefined,
+  avatarAccessUrlMap?: Map<string, FileAccessUrlDescriptor>,
 ): UserMinimalGqlResponse | undefined {
   if (!user) {
     return undefined;
   }
+
+  const avatarFileId = user.profile?.avatarFileId?.toString();
 
   return {
     id: user._id,
@@ -31,7 +35,9 @@ export function mapUserToMinimal(
       ? {
           firstName: user.profile.firstName,
           lastName: user.profile.lastName,
-          avatarFileId: user.profile.avatarFileId,
+          avatarAccessUrl: avatarFileId
+            ? avatarAccessUrlMap?.get(avatarFileId)
+            : undefined,
         }
       : undefined,
   } as UserMinimalGqlResponse;
@@ -41,11 +47,13 @@ export function mapUserToMinimal(
  * Maps a user ID to UserMinimalGqlResponse format using a users map
  * @param userId - User ID to look up
  * @param usersMap - Map of user IDs to user objects
+ * @param avatarAccessUrlMap - Optional map of avatar file IDs to access descriptors
  * @returns UserMinimalGqlResponse or undefined if user is not found
  */
 export function mapUserIdToMinimal(
   userId: Types.ObjectId | null | undefined,
   usersMap: Map<string, UserForMapping>,
+  avatarAccessUrlMap?: Map<string, FileAccessUrlDescriptor>,
 ): UserMinimalGqlResponse | undefined {
   if (!userId) {
     return undefined;
@@ -56,5 +64,5 @@ export function mapUserIdToMinimal(
     return undefined;
   }
 
-  return mapUserToMinimal(user);
+  return mapUserToMinimal(user, avatarAccessUrlMap);
 }

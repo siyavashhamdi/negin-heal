@@ -5,33 +5,14 @@ import {
   SendRounded as SendIcon,
 } from "@mui/icons-material";
 import { useSearchParams } from "react-router-dom";
-import { FILE_UPLOAD_MUTATION } from "../../graphql/mutations/fileUpload.mutation";
 import { USER_SEND_SAMPLE_EMAIL_MUTATION } from "../../graphql/mutations/userSendSampleEmail.mutation";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
 import FileUploadField from "../../shared/forms/FileUploadField";
+import { getFileIdFromAccessUrl } from "../../utils/fileAccessUrl.util";
+import { uploadFile, type FileUploadResult } from "../../utils/fileUpload.util";
 import styles from "./styles/dashboard.module.scss";
-
-type FileUploadMutationResponse = {
-  fileUpload: {
-    id: string;
-    name: string;
-    mimeType: string;
-    sizeBytes: number;
-    path: string;
-    uploadedAt: string;
-  };
-};
-
-type FileUploadMutationVariables = {
-  input: {
-    name: string;
-    mimeType: string;
-    sizeBytes: number;
-    contentBase64: string;
-  };
-};
 
 type UserSendSampleEmailMutationResponse = {
   userSendSampleEmail: {
@@ -44,27 +25,14 @@ type UserSendSampleEmailMutationVariables = {
   to?: string;
 };
 
-function readFileAsBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = String(reader.result ?? "");
-      resolve(result.replace(/^data:.*;base64,/, ""));
-    };
-    reader.onerror = () => reject(reader.error ?? new Error("Unable to read file"));
-    reader.readAsDataURL(file);
-  });
-}
-
 const Dashboard = (): ReactElement => {
   const { t } = useTranslation();
   const { showError, showSuccess, showWarning } = useSnackbar();
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [sampleEmailTo, setSampleEmailTo] = useState<string>("");
-  const [lastUpload, setLastUpload] = useState<FileUploadMutationResponse["fileUpload"] | null>(
-    null,
-  );
+  const [lastUpload, setLastUpload] = useState<FileUploadResult | null>(null);
+  const [uploadLoading, setUploadLoading] = useState(false);
 
   useEffect(() => {
     const paymentStatus = searchParams.get("payment");
@@ -90,17 +58,6 @@ const Dashboard = (): ReactElement => {
     setSearchParams({}, { replace: true });
   }, [searchParams, setSearchParams, showError, showSuccess, showWarning]);
 
-  const [uploadFile, { loading: uploadLoading }] = useMutationWithSnackbar<
-    FileUploadMutationResponse,
-    FileUploadMutationVariables
-  >(FILE_UPLOAD_MUTATION, {
-    successMessage: t("pages.dashboard.uploader.success"),
-    onSuccess: (data) => {
-      setLastUpload(data.fileUpload);
-      setSelectedFile(null);
-    },
-  });
-
   const [sendSampleEmail, { loading: sampleEmailLoading }] = useMutationWithSnackbar<
     UserSendSampleEmailMutationResponse,
     UserSendSampleEmailMutationVariables
@@ -117,17 +74,17 @@ const Dashboard = (): ReactElement => {
       return;
     }
 
-    const contentBase64 = await readFileAsBase64(selectedFile);
-    await uploadFile({
-      variables: {
-        input: {
-          name: selectedFile.name,
-          mimeType: selectedFile.type || "application/octet-stream",
-          sizeBytes: selectedFile.size,
-          contentBase64,
-        },
-      },
-    });
+    setUploadLoading(true);
+    try {
+      const uploadedFile = await uploadFile(selectedFile);
+      setLastUpload(uploadedFile);
+      setSelectedFile(null);
+      showSuccess(t("pages.dashboard.uploader.success"));
+    } catch {
+      showError("آپلود فایل انجام نشد.");
+    } finally {
+      setUploadLoading(false);
+    }
   };
 
   const handleSendSampleEmail = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
@@ -143,6 +100,7 @@ const Dashboard = (): ReactElement => {
 
   return (
     <section className={styles.page} aria-label="داشبورد">
+      <div>Siya-Jun 17, 2026</div>
       <Card className={styles.uploaderCard}>
         <CardContent>
           <form onSubmit={handleSendSampleEmail}>
@@ -236,6 +194,9 @@ const Dashboard = (): ReactElement => {
                   </Typography>
                   <Typography variant="body2">
                     {t("pages.dashboard.uploader.size")}: {lastUpload.sizeBytes}
+                  </Typography>
+                  <Typography variant="body2">
+                    File ID: {getFileIdFromAccessUrl(lastUpload.accessUrl) ?? "—"}
                   </Typography>
                 </div>
               ) : null}

@@ -1,3 +1,5 @@
+import type { FileAccessUrl } from "../../utils/fileAccessUrl.util";
+
 export type TicketCategory = "PAYMENT" | "COURSE" | "ACCOUNT" | "TECHNICAL" | "BUG" | "OTHER";
 export type TicketPriority = "LOW" | "MEDIUM" | "HIGH";
 export type TicketStatus = "OPEN" | "ANSWERED" | "CLOSED";
@@ -9,7 +11,6 @@ export type SupportTicketUserMinimal = {
   readonly profile?: {
     readonly firstName?: string | null;
     readonly lastName?: string | null;
-    readonly avatarFileId?: string | null;
   } | null;
 };
 
@@ -19,7 +20,7 @@ export type SupportTicketAttachment = {
   readonly mimeType?: string | null;
   readonly sizeBytes?: number | null;
   readonly path?: string | null;
-  readonly accessUrl?: string | null;
+  readonly accessUrl?: FileAccessUrl | null;
 };
 
 export type SupportTicketMessage = {

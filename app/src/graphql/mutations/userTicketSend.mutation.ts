@@ -1,5 +1,7 @@
 import { gql } from "@apollo/client";
 
+import { FILE_ACCESS_URL_FIELDS } from "../fragments/fileAccessUrl.fragment";
+
 export const USER_TICKET_SEND_MUTATION = gql`
   mutation UserTicketSend($input: UserTicketSendGqlInput!) {
     userTicketSend(input: $input) {
@@ -17,14 +19,14 @@ export const USER_TICKET_SEND_MUTATION = gql`
             firstName
           }
         }
-        attachmentFileIds
         attachmentFiles {
-          id
           name
           mimeType
           sizeBytes
           path
-          accessUrl
+          accessUrl {
+            ${FILE_ACCESS_URL_FIELDS}
+          }
         }
       }
       createdByUserId

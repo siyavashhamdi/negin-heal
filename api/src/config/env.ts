@@ -1,5 +1,14 @@
 import { NodeEnv } from "../enums";
 
+const rawMinioEndpoint = process.env.MINIO_ENDPOINT?.replace(
+  /^https?:\/\//,
+  "",
+)?.split("/")[0];
+const rawMinioPort = parseInt(process.env.MINIO_PORT || "9000", 10);
+const rawMinioUseSSL = process.env.MINIO_USE_SSL === true.toString();
+const shouldUseConsoleHostMapping =
+  rawMinioEndpoint?.startsWith("minio.") && rawMinioPort === 443;
+
 export const env = {
   // Application Configuration
   NODE_ENV: process.env.NODE_ENV as NodeEnv,
@@ -32,9 +41,13 @@ export const env = {
   GRAPHQL_INTROSPECTION: process.env.GRAPHQL_INTROSPECTION === true.toString(),
 
   // MinIO Configuration
-  MINIO_ENDPOINT: process.env.MINIO_ENDPOINT,
-  MINIO_PORT: parseInt(process.env.MINIO_PORT, 10),
-  MINIO_USE_SSL: process.env.MINIO_USE_SSL === true.toString(),
+  // minio.<domain>:443 is the Console endpoint; S3 API is available on <domain>:9000
+  // This keeps local envs simple when users set MINIO_ENDPOINT=https://minio.<domain>.
+  MINIO_ENDPOINT: shouldUseConsoleHostMapping
+    ? rawMinioEndpoint.replace(/^minio\./, "")
+    : rawMinioEndpoint,
+  MINIO_PORT: shouldUseConsoleHostMapping ? 9000 : rawMinioPort,
+  MINIO_USE_SSL: shouldUseConsoleHostMapping ? false : rawMinioUseSSL,
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
   MINIO_BUCKET: process.env.MINIO_BUCKET,

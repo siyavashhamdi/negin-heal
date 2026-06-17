@@ -30,7 +30,7 @@ import PlayCircleRoundedIcon from "@mui/icons-material/PlayCircleRounded";
 import ShoppingCartRoundedIcon from "@mui/icons-material/ShoppingCartRounded";
 import VolumeUpRoundedIcon from "@mui/icons-material/VolumeUpRounded";
 import { useAuth } from "../../contexts/AuthContext";
-import { FILE_DETAIL_QUERY } from "../../graphql/queries/fileDetail.query";
+import { resolveFileAccessUrl } from "../../utils/fileAccessUrl.util";
 import { USER_COURSE_DETAIL_QUERY } from "../../graphql/queries/userCourseDetail.query";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { CoursePurchaseDialog } from "./CoursePurchaseDialog";
@@ -51,21 +51,6 @@ const ITEM_TYPE_ICON: Record<CourseItemType, ReactElement> = {
   IMAGE: <PhotoRoundedIcon fontSize="small" />,
 };
 
-type FileDetailQueryResult = {
-  fileDetail?: {
-    id: string;
-    name?: string | null;
-    mimeType?: string | null;
-    accessUrl?: string | null;
-  } | null;
-};
-
-type FileDetailQueryVariables = {
-  input: {
-    id: string;
-  };
-};
-
 type CourseMediaViewer = {
   readonly title: string;
   readonly type: Exclude<CourseItemType, "ARTICLE">;
@@ -79,15 +64,6 @@ function CourseItemContent({
   readonly item: CourseDetailItem;
   readonly onOpenMedia: (media: CourseMediaViewer) => void;
 }): ReactElement | null {
-  const { data, loading } = useQuery<FileDetailQueryResult, FileDetailQueryVariables>(
-    FILE_DETAIL_QUERY,
-    {
-      variables: { input: { id: item.fileId || "" } },
-      skip: item.isLocked || !item.fileId || item.type === "ARTICLE",
-      fetchPolicy: "cache-first",
-    },
-  );
-
   if (item.isLocked) {
     return null;
   }
@@ -96,15 +72,7 @@ function CourseItemContent({
     return <p className={styles.articlePreview}>{item.article.trim()}</p>;
   }
 
-  if (item.fileId && loading) {
-    return (
-      <div className={styles.itemMediaLoading}>
-        <CircularProgress size={18} />
-      </div>
-    );
-  }
-
-  const fileUrl = data?.fileDetail?.accessUrl?.trim();
+  const fileUrl = resolveFileAccessUrl(item.fileAccessUrl);
   if (!fileUrl) {
     return null;
   }
@@ -169,15 +137,7 @@ const CourseDetail = (): ReactElement => {
   });
 
   const course = data?.course;
-  const { data: coverImageData } = useQuery<FileDetailQueryResult, FileDetailQueryVariables>(
-    FILE_DETAIL_QUERY,
-    {
-      variables: { input: { id: course?.coverImageFileId || "" } },
-      skip: !course?.coverImageFileId,
-      fetchPolicy: "network-only",
-    },
-  );
-  const coverImageUrl = coverImageData?.fileDetail?.accessUrl?.trim();
+  const coverImageUrl = resolveFileAccessUrl(course?.coverImageAccessUrl);
   const discountedPrice = course
     ? getDiscountedPrice(course.priceIrt, course.discount)
     : null;

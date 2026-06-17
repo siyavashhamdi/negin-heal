@@ -10,7 +10,7 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material";
-import { useLazyQuery, useMutation, useQuery } from "@apollo/client/react";
+import { useLazyQuery, useQuery } from "@apollo/client/react";
 import AccountBalanceRoundedIcon from "@mui/icons-material/AccountBalanceRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
@@ -24,10 +24,11 @@ import FileUploadField from "../../shared/forms/FileUploadField";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { COURSE_PURCHASE_SUBMIT_MUTATION } from "../../graphql/mutations/coursePurchaseSubmit.mutation";
-import { FILE_UPLOAD_MUTATION } from "../../graphql/mutations/fileUpload.mutation";
 import { PAYMENT_CHECKOUT_CONFIG_QUERY } from "../../graphql/queries/paymentCheckoutConfig.query";
 import { COUPON_VALIDATE_QUERY } from "../../graphql/queries/couponValidate.query";
 import { showErrorIfNotQueued } from "../../utilities/graphql-error.util";
+import { getFileIdFromAccessUrl } from "../../utils/fileAccessUrl.util";
+import { uploadFile } from "../../utils/fileUpload.util";
 import {
   formatCoursePrice,
   type CourseDetailRecord,
@@ -51,21 +52,6 @@ type CoursePurchaseDialogProps = {
   readonly originalPrice?: number | null;
   readonly discountLabel?: string | null;
   readonly coverImageUrl?: string | null;
-};
-
-type FileUploadMutationResult = {
-  readonly fileUpload: {
-    readonly id: string;
-  };
-};
-
-type FileUploadMutationVariables = {
-  readonly input: {
-    readonly name: string;
-    readonly mimeType: string;
-    readonly sizeBytes: number;
-    readonly contentBase64: string;
-  };
 };
 
 type PaymentMethodOption = {
@@ -164,18 +150,6 @@ async function copyToClipboard(value: string): Promise<boolean> {
   }
 }
 
-function readFileAsBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = String(reader.result ?? "");
-      resolve(result.replace(/^data:.*;base64,/, ""));
-    };
-    reader.onerror = () => reject(reader.error ?? new Error("Unable to read file"));
-    reader.readAsDataURL(file);
-  });
-}
-
 export function CoursePurchaseDialog({
   open,
   onClose,
@@ -212,9 +186,6 @@ export function CoursePurchaseDialog({
     CoursePurchaseSubmitMutation,
     CoursePurchaseSubmitMutationVariables
   >(COURSE_PURCHASE_SUBMIT_MUTATION);
-  const [uploadFile] = useMutation<FileUploadMutationResult, FileUploadMutationVariables>(
-    FILE_UPLOAD_MUTATION,
-  );
 
   const checkoutConfig = checkoutConfigData?.paymentCheckoutConfig;
   const paymentCards = checkoutConfig?.paymentCards ?? [];
@@ -409,26 +380,10 @@ export function CoursePurchaseDialog({
 
   const uploadReceiptFile = async (file: File): Promise<string | null> => {
     try {
-      const contentBase64 = await readFileAsBase64(file);
-      const { data, error } = await uploadFile({
-        variables: {
-          input: {
-            name: file.name,
-            mimeType: file.type || "application/octet-stream",
-            sizeBytes: file.size,
-            contentBase64,
-          },
-        },
-      });
-
-      if (error) {
-        showErrorIfNotQueued(showError, error);
-        return null;
-      }
-
-      return data?.fileUpload.id ?? null;
-    } catch {
-      showError("آپلود رسید انجام نشد.");
+      const uploadedFile = await uploadFile(file);
+      return getFileIdFromAccessUrl(uploadedFile.accessUrl);
+    } catch (error) {
+      showErrorIfNotQueued(showError, error);
       return null;
     }
   };

@@ -1,6 +1,8 @@
 import { Field, ID, ObjectType } from "@nestjs/graphql";
 import { Types } from "mongoose";
 
+import { FileAccessUrlGqlResponse } from "../../../../file/graphql/responses";
+
 @ObjectType()
 export class UserProfileMinimalGqlResponse {
   @Field({ nullable: true, description: "User's first name" })
@@ -15,11 +17,11 @@ export class UserProfileMinimalGqlResponse {
   @Field({ nullable: true, description: "User's phone number" })
   phoneNumber?: string;
 
-  @Field(() => ID, {
+  @Field(() => FileAccessUrlGqlResponse, {
     nullable: true,
-    description: "Stored file ID used as the user's avatar",
+    description: "Signed access descriptor for the user's avatar",
   })
-  avatarFileId?: Types.ObjectId;
+  avatarAccessUrl?: FileAccessUrlGqlResponse;
 
   @Field({ nullable: true, description: "User biography" })
   bio?: string;

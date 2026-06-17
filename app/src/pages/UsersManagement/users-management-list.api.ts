@@ -1,5 +1,6 @@
 import type { ManagedUserRecord, ManagedUsersListFilters } from "./users-management.types";
 import { parseJalaliParamDate } from "../../utilities/jalali-date-param.util";
+import type { FileAccessUrl } from "../../utils/fileAccessUrl.util";
 
 export type UserRole = "SUPER_ADMIN" | "ADMIN" | "END_USER";
 export type UserStatus = "ACTIVE" | "DEACTIVE" | "SUSPENDED" | "BANNED";
@@ -14,7 +15,7 @@ export type UserListRow = {
     readonly lastName?: string | null;
     readonly email?: string | null;
     readonly phoneNumber?: string | null;
-    readonly avatarFileId?: string | null;
+    readonly avatarAccessUrl?: FileAccessUrl | null;
     readonly bio?: string | null;
   } | null;
   readonly createdAt?: string | null;
@@ -124,7 +125,7 @@ export function mapUserListRowToRecord(row: UserListRow): ManagedUserRecord {
     fullName: joinName(row.profile?.firstName, row.profile?.lastName),
     email: display(row.profile?.email),
     phoneNumber,
-    avatarFileId: display(row.profile?.avatarFileId),
+    avatarAccessUrl: row.profile?.avatarAccessUrl ?? null,
     bio: display(row.profile?.bio),
     roles: row.roles ?? [],
     roleDesc: (row.roles ?? []).join(", ") || EMPTY_DISPLAY,

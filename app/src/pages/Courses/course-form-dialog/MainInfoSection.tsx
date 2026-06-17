@@ -12,6 +12,7 @@ import {
   Typography,
 } from "@mui/material";
 import FileUploadField from "../../../shared/forms/FileUploadField";
+import type { ExistingFilePreview } from "../../../utils/fileAccessUrl.util";
 import CourseTagInput from "../CourseTagInput";
 import type { DiscountKind } from "./types";
 import styles from "./styles/MainInfoSection.module.scss";
@@ -23,8 +24,8 @@ type MainInfoSectionProps = {
   readonly onDescriptionChange: (value: string) => void;
   readonly coverImageFile: File | null;
   readonly onCoverImageFileChange: (file: File | null) => void;
-  readonly coverImageFileId: string;
-  readonly onCoverImageFileIdClear: () => void;
+  readonly coverImageExistingFile: ExistingFilePreview | null;
+  readonly onCoverImageExistingFileClear: () => void;
   readonly priceIrt: string;
   readonly onPriceIrtChange: (value: string) => void;
   readonly tags: string[];
@@ -49,8 +50,8 @@ const MainInfoSection = ({
   onDescriptionChange,
   coverImageFile,
   onCoverImageFileChange,
-  coverImageFileId,
-  onCoverImageFileIdClear,
+  coverImageExistingFile,
+  onCoverImageExistingFileClear,
   priceIrt,
   onPriceIrtChange,
   tags,
@@ -112,8 +113,8 @@ const MainInfoSection = ({
             label="فایل کاور دوره"
             file={coverImageFile}
             onChange={onCoverImageFileChange}
-            existingFileId={coverImageFileId || null}
-            onExistingFileClear={onCoverImageFileIdClear}
+            existingFile={coverImageExistingFile}
+            onExistingFileClear={onCoverImageExistingFileClear}
             accept="image/*"
             allowedFormatsLabel="فرمت مجاز: تصویر"
             maxSizeLabel="حداکثر: ۲۰MB"

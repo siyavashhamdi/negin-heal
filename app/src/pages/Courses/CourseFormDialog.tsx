@@ -10,7 +10,6 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import { FILE_UPLOAD_MUTATION } from "../../graphql/mutations/fileUpload.mutation";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { COURSE_CREATE_MUTATION } from "../../graphql/mutations/courseCreate.mutation";
@@ -25,6 +24,12 @@ import type {
   VisibleAfterUnit,
 } from "./course-form-dialog/types";
 import styles from "./course-form-dialog/styles/DialogShell.module.scss";
+import {
+  buildExistingFilePreview,
+  getFileIdFromAccessUrl,
+  type FileAccessUrl,
+} from "../../utils/fileAccessUrl.util";
+import { uploadFile } from "../../utils/fileUpload.util";
 
 type CourseFormDialogProps = {
   readonly open: boolean;
@@ -44,21 +49,6 @@ type CourseWriteMutationResult = {
 
 type CourseWriteMutationVariables = {
   input: Record<string, unknown>;
-};
-
-type FileUploadMutationResult = {
-  fileUpload: {
-    id: string;
-  };
-};
-
-type FileUploadMutationVariables = {
-  input: {
-    name: string;
-    mimeType: string;
-    sizeBytes: number;
-    contentBase64: string;
-  };
 };
 
 type UploadedCourseFiles = {
@@ -86,7 +76,7 @@ function createDraftItem(): DraftItem {
     contentType: "FILE",
     article: "",
     file: null,
-    fileId: "",
+    fileAccessUrl: null,
   };
 }
 
@@ -96,7 +86,7 @@ function createDraftChapter(): DraftChapter {
     title: "",
     description: "",
     iconFile: null,
-    iconFileId: "",
+    iconAccessUrl: null,
     visibleAfterMinutes: "",
     visibleAfterUnit: "DAYS",
     isFree: false,
@@ -140,17 +130,17 @@ function createDraftChaptersFromCourse(course: CourseListRecord): DraftChapter[]
       title: chapter.title,
       description: chapter.description,
       iconFile: null,
-      iconFileId: chapter.iconFileId ?? "",
+      iconAccessUrl: chapter.iconAccessUrl ?? null,
       visibleAfterMinutes: visibleAfterDraft.visibleAfterMinutes,
       visibleAfterUnit: visibleAfterDraft.visibleAfterUnit,
       isFree: chapter.isFree,
       items: chapter.items.map((item) => ({
         id: createTempId("item"),
         title: item.title,
-        contentType: item.fileId ? ("FILE" as const) : ("ARTICLE" as const),
+        contentType: item.fileAccessUrl ? ("FILE" as const) : ("ARTICLE" as const),
         article: item.article,
         file: null,
-        fileId: item.fileId ?? "",
+        fileAccessUrl: item.fileAccessUrl ?? null,
       })),
     };
   });
@@ -225,18 +215,6 @@ function parseVisibleAfterMinutes(value: string, unit: VisibleAfterUnit): number
   return parsedValue;
 }
 
-function readFileAsBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = String(reader.result ?? "");
-      resolve(result.replace(/^data:.*;base64,/, ""));
-    };
-    reader.onerror = () => reject(reader.error ?? new Error("Unable to read file"));
-    reader.readAsDataURL(file);
-  });
-}
-
 function reorderById<T extends { id: string }>(
   items: T[],
   draggedId: string,
@@ -272,7 +250,7 @@ const CourseFormDialog = ({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
-  const [coverImageFileId, setCoverImageFileId] = useState("");
+  const [coverImageAccessUrl, setCoverImageAccessUrl] = useState<FileAccessUrl | null>(null);
   const [priceIrt, setPriceIrt] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [isActive, setIsActive] = useState(false);
@@ -305,7 +283,7 @@ const CourseFormDialog = ({
     setTitle(nextCourse?.title ?? "");
     setDescription(nextCourse?.description ?? "");
     setCoverImageFile(null);
-    setCoverImageFileId(nextCourse?.coverImageFileId ?? "");
+    setCoverImageAccessUrl(nextCourse?.coverImageAccessUrl ?? null);
     setPriceIrt(
       typeof nextCourse?.priceIrt === "number"
         ? formatIntegerWithThousands(String(nextCourse.priceIrt))
@@ -367,28 +345,19 @@ const CourseFormDialog = ({
     },
   });
 
-  const [uploadFile, uploadFileResult] = useMutationWithSnackbar<
-    FileUploadMutationResult,
-    FileUploadMutationVariables
-  >(FILE_UPLOAD_MUTATION, {
-    errorMessage: "آپلود فایل انجام نشد.",
-  });
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false);
   const isSubmitting =
-    createCourseResult.loading || updateCourseResult.loading || uploadFileResult.loading;
+    createCourseResult.loading ||
+    updateCourseResult.loading ||
+    isUploadingFiles;
 
   const uploadAndGetFileId = async (file: File): Promise<string | null> => {
-    const contentBase64 = await readFileAsBase64(file);
-    const result = await uploadFile({
-      variables: {
-        input: {
-          name: file.name,
-          mimeType: file.type || "application/octet-stream",
-          sizeBytes: file.size,
-          contentBase64,
-        },
-      },
-    });
-    return result.data?.fileUpload?.id ?? null;
+    try {
+      const result = await uploadFile(file);
+      return getFileIdFromAccessUrl(result.accessUrl);
+    } catch {
+      return null;
+    }
   };
 
   const mapChapterById = (
@@ -514,7 +483,7 @@ const CourseFormDialog = ({
           showError("عنوان آیتم نمی‌تواند خالی باشد.");
           return false;
         }
-        if (item.contentType === "FILE" && !item.file && !item.fileId.trim()) {
+        if (item.contentType === "FILE" && !item.file && !getFileIdFromAccessUrl(item.fileAccessUrl)) {
           showError("برای آیتم فایل‌محور باید فایل انتخاب شود.");
           return false;
         }
@@ -614,7 +583,9 @@ const CourseFormDialog = ({
         sortOrder: itemIndex + 1,
         fileId:
           item.contentType === "FILE"
-            ? uploadedFiles.itemFileIdsByItemId[item.id] || item.fileId.trim() || undefined
+            ? uploadedFiles.itemFileIdsByItemId[item.id] ||
+              getFileIdFromAccessUrl(item.fileAccessUrl) ||
+              undefined
             : undefined,
         article: item.contentType === "ARTICLE" ? item.article.trim() || undefined : undefined,
       }));
@@ -624,7 +595,7 @@ const CourseFormDialog = ({
         description: chapter.description.trim() || undefined,
         iconFileId:
           uploadedFiles.chapterIconFileIdsByChapterId[chapter.id] ||
-          chapter.iconFileId.trim() ||
+          getFileIdFromAccessUrl(chapter.iconAccessUrl) ||
           undefined,
         visibleAfterMinutes: parseVisibleAfterMinutes(
           chapter.visibleAfterMinutes,
@@ -648,7 +619,13 @@ const CourseFormDialog = ({
 
     setFreeCourseConfirmOpen(false);
     const parsedDiscountValue = parseOptionalNumber(discountValue);
-    const uploadedFiles = await uploadSelectedFiles();
+    setIsUploadingFiles(true);
+    let uploadedFiles: UploadedCourseFiles | null = null;
+    try {
+      uploadedFiles = await uploadSelectedFiles();
+    } finally {
+      setIsUploadingFiles(false);
+    }
     if (!uploadedFiles) {
       return;
     }
@@ -657,7 +634,8 @@ const CourseFormDialog = ({
     const input: Record<string, unknown> = {
       title: title.trim(),
       description: description.trim() || undefined,
-      coverImageFileId: uploadedFiles.coverImageFileId || coverImageFileId.trim() || undefined,
+      coverImageFileId:
+        uploadedFiles.coverImageFileId || getFileIdFromAccessUrl(coverImageAccessUrl) || undefined,
       priceIrt: parsedPriceIrt,
       isActive,
       tags,
@@ -738,8 +716,14 @@ const CourseFormDialog = ({
             onDescriptionChange={setDescription}
             coverImageFile={coverImageFile}
             onCoverImageFileChange={setCoverImageFile}
-            coverImageFileId={coverImageFileId}
-            onCoverImageFileIdClear={() => setCoverImageFileId("")}
+            coverImageExistingFile={buildExistingFilePreview(
+              coverImageAccessUrl,
+              title.trim() || "کاور دوره",
+              "image/*",
+            )}
+            onCoverImageExistingFileClear={() => {
+              setCoverImageAccessUrl(null);
+            }}
             priceIrt={priceIrt}
             onPriceIrtChange={setPriceIrt}
             tags={tags}

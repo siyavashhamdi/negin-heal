@@ -1,6 +1,7 @@
 import { Field, Float, ID, Int, ObjectType } from "@nestjs/graphql";
 import { Types } from "mongoose";
 
+import { FileAccessUrlGqlResponse } from "../../../file/graphql/responses";
 import { PaginationCursorResponse } from "../../../../common/pagination/response";
 import {
   CourseDiscountType,
@@ -33,11 +34,11 @@ export class UserCourseListGqlResponse {
   @Field({ nullable: true, description: "Course description" })
   description?: string;
 
-  @Field(() => ID, {
+  @Field(() => FileAccessUrlGqlResponse, {
     nullable: true,
-    description: "Stored file ID used as the course cover image",
+    description: "Signed access descriptor for the course cover image",
   })
-  coverImageFileId?: Types.ObjectId;
+  coverImageAccessUrl?: FileAccessUrlGqlResponse;
 
   @Field(() => Float, {
     nullable: true,

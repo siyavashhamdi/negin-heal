@@ -1,5 +1,7 @@
 import { gql } from "@apollo/client";
 
+import { FILE_ACCESS_URL_FIELDS } from "../fragments/fileAccessUrl.fragment";
+
 export const COURSE_LIST_QUERY = gql`
   query CourseList($input: CourseListGqlInput!) {
     courseList(input: $input) {
@@ -7,10 +9,12 @@ export const COURSE_LIST_QUERY = gql`
         id
         title
         description
-        coverImageFileId
+        coverImageAccessUrl {
+          ${FILE_ACCESS_URL_FIELDS}
+        }
         priceIrt
         discount {
-            type
+          type
           value
         }
         isActive
@@ -20,14 +24,18 @@ export const COURSE_LIST_QUERY = gql`
         chapters {
           title
           description
-          iconFileId
+          iconAccessUrl {
+            ${FILE_ACCESS_URL_FIELDS}
+          }
           visibleAfterMinutes
           isFree
           sortOrder
           items {
             title
             sortOrder
-            fileId
+            fileAccessUrl {
+              ${FILE_ACCESS_URL_FIELDS}
+            }
             article
             type
           }
