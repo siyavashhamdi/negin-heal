@@ -1,5 +1,9 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
+
+const appDir = path.dirname(fileURLToPath(import.meta.url));
 
 function parseAllowedHosts(value: string | undefined): string[] | true {
   const trimmed = value?.trim();
@@ -67,6 +71,14 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       dedupe: ["@apollo/client"],
+      // stylis-plugin-rtl's "module" entry is ESM-only; alias the CJS build so Vite's
+      // resolver does not fail when that file is missing from a broken install.
+      alias: {
+        "stylis-plugin-rtl": path.resolve(
+          appDir,
+          "node_modules/stylis-plugin-rtl/dist/cjs/stylis-rtl.js",
+        ),
+      },
     },
   };
 });

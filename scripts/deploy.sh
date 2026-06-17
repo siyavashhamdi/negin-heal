@@ -16,8 +16,8 @@ if [[ ! -f app/.env ]]; then
 fi
 
 echo "Installing dependencies..."
-npm install --prefix api
-npm install --prefix app
+npm ci --prefix api
+npm ci --prefix app
 
 echo "Building API and app..."
 npm run build --prefix api
