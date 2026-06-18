@@ -355,6 +355,9 @@ function dateFilterToIsoDate(value: string): string | null {
 }
 
 export function mapCoursePaymentListRowToRecord(row: CoursePaymentListRow): CoursePaymentRecord {
+  const receiptFile = row.uploadedReceiptFile;
+  const receiptAccessUrl = receiptFile?.accessUrl;
+
   return {
     id: String(row.id),
     userId: String(row.userId),
@@ -379,16 +382,18 @@ export function mapCoursePaymentListRowToRecord(row: CoursePaymentListRow): Cour
     couponTitle: display(row.coupon?.title),
     couponDiscountType: row.coupon?.discountType ?? null,
     couponDiscountValue: row.coupon?.discountValue ?? null,
-    uploadedReceiptFileId: display(
-      getFileIdFromAccessUrl(row.uploadedReceiptFile?.accessUrl),
+    uploadedReceiptFileId: display(getFileIdFromAccessUrl(receiptAccessUrl)),
+    uploadedReceiptFileTitle: display(
+      receiptFile?.title ?? receiptFile?.name ?? receiptAccessUrl?.name,
     ),
-    uploadedReceiptFileTitle: display(row.uploadedReceiptFile?.title ?? row.uploadedReceiptFile?.name),
-    uploadedReceiptFileName: display(row.uploadedReceiptFile?.name),
-    uploadedReceiptFileMimeType: display(row.uploadedReceiptFile?.mimeType),
-    uploadedReceiptFileSizeBytes: row.uploadedReceiptFile?.sizeBytes ?? null,
-    uploadedReceiptFilePath: display(row.uploadedReceiptFile?.path),
-    uploadedReceiptFileAccessUrl:
-      resolveFileAccessUrl(row.uploadedReceiptFile?.accessUrl) ?? "",
+    uploadedReceiptFileName: display(receiptFile?.name ?? receiptAccessUrl?.name),
+    uploadedReceiptFileMimeType: display(
+      receiptFile?.mimeType ?? receiptAccessUrl?.mimeType,
+    ),
+    uploadedReceiptFileSizeBytes:
+      receiptFile?.sizeBytes ?? receiptAccessUrl?.sizeBytes ?? null,
+    uploadedReceiptFilePath: display(receiptFile?.path),
+    uploadedReceiptFileAccessUrl: resolveFileAccessUrl(receiptAccessUrl) ?? "",
     receiptUploadedBy: display(row.receiptUploadedBy),
     receiptUploaderName: display(row.receiptUploader?.fullName ?? row.receiptUploader?.username),
     receiptUploaderUsername: display(row.receiptUploader?.username),

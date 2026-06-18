@@ -266,7 +266,6 @@ const ChaptersSection = ({
                   existingFile={buildExistingFilePreview(
                     activeChapter.iconAccessUrl,
                     activeChapter.title.trim() || "آیکن فصل",
-                    "image/*",
                   )}
                   onExistingFileClear={() =>
                     updateActiveChapter({ iconAccessUrl: null })

@@ -3,4 +3,7 @@ export const FILE_ACCESS_URL_FIELDS = `
   apiPath
   fileId
   token
+  name
+  mimeType
+  sizeBytes
 `;

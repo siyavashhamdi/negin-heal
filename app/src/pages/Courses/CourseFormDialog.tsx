@@ -720,7 +720,6 @@ const CourseFormDialog = ({
             coverImageExistingFile={buildExistingFilePreview(
               coverImageAccessUrl,
               title.trim() || "کاور دوره",
-              "image/*",
             )}
             onCoverImageExistingFileClear={() => {
               setCoverImageAccessUrl(null);

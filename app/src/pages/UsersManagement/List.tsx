@@ -984,7 +984,6 @@ const UsersManagementList = (): ReactElement => {
                   existingFile={buildExistingFilePreview(
                     editForm.avatarAccessUrl,
                     editForm.username.trim() || "آواتار",
-                    "image/*",
                   )}
                   onExistingFileClear={() => {
                     setAvatarFile(null);

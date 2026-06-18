@@ -1,4 +1,4 @@
-import { Field, ID, ObjectType } from "@nestjs/graphql";
+import { Field, Float, ID, ObjectType } from "@nestjs/graphql";
 import { Types } from "mongoose";
 
 @ObjectType()
@@ -20,4 +20,22 @@ export class FileAccessUrlGqlResponse {
 
   @Field({ description: "Signed access token for the file content endpoint" })
   token: string;
+
+  @Field({
+    nullable: true,
+    description: "Original stored file name including extension",
+  })
+  name?: string;
+
+  @Field({
+    nullable: true,
+    description: "Stored file MIME type",
+  })
+  mimeType?: string;
+
+  @Field(() => Float, {
+    nullable: true,
+    description: "Stored file size in bytes",
+  })
+  sizeBytes?: number;
 }

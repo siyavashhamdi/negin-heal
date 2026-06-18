@@ -3,6 +3,9 @@ export type FileAccessUrl = {
   readonly apiPath: string;
   readonly fileId: string;
   readonly token: string;
+  readonly name?: string | null;
+  readonly mimeType?: string | null;
+  readonly sizeBytes?: number | null;
 };
 
 export type ExistingFilePreview = {
@@ -50,8 +53,7 @@ export function getFileIdFromAccessUrl(
 
 export function buildExistingFilePreview(
   accessUrl: FileAccessUrl | null | undefined,
-  name: string,
-  mimeType: string,
+  fallbackName?: string,
 ): ExistingFilePreview | null {
   const resolved = resolveFileAccessUrl(accessUrl);
   if (!resolved) {
@@ -60,8 +62,8 @@ export function buildExistingFilePreview(
 
   return {
     accessUrl: resolved,
-    name,
-    mimeType,
-    sizeBytes: 0,
+    name: accessUrl?.name?.trim() || fallbackName?.trim() || "فایل",
+    mimeType: accessUrl?.mimeType?.trim() || "application/octet-stream",
+    sizeBytes: accessUrl?.sizeBytes ?? 0,
   };
 }

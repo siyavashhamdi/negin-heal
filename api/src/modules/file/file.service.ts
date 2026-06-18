@@ -102,10 +102,16 @@ export class FileService {
 
   createAccessUrlDescriptor(
     fileId: string | Types.ObjectId,
+    name?: string,
+    mimeType?: string,
+    sizeBytes?: number,
   ): FileAccessUrlDescriptor {
     return createFileAccessUrlDescriptor(
       fileId,
       this.createAccessToken(fileId.toString()),
+      name,
+      mimeType,
+      sizeBytes,
     );
   }
 
@@ -124,7 +130,12 @@ export class FileService {
     return new Map(
       files.map((file) => [
         file._id.toString(),
-        this.createAccessUrlDescriptor(file._id),
+        this.createAccessUrlDescriptor(
+          file._id,
+          file.name,
+          file.mimeType,
+          file.sizeBytes,
+        ),
       ]),
     );
   }
@@ -149,7 +160,12 @@ export class FileService {
           mimeType: file.mimeType,
           sizeBytes: file.sizeBytes,
           path: file.path,
-          accessUrl: this.createAccessUrlDescriptor(file._id),
+          accessUrl: this.createAccessUrlDescriptor(
+            file._id,
+            file.name,
+            file.mimeType,
+            file.sizeBytes,
+          ),
         },
       ]),
     );
@@ -245,7 +261,12 @@ export class FileService {
       sizeBytes: storedFile.sizeBytes,
       path: storedFile.path,
       uploadedAt: storedFile.uploadedAt ?? new Date(),
-      accessUrl: this.createAccessUrlDescriptor(storedFile._id),
+      accessUrl: this.createAccessUrlDescriptor(
+        storedFile._id,
+        storedFile.name,
+        storedFile.mimeType,
+        storedFile.sizeBytes,
+      ),
     };
   }
 

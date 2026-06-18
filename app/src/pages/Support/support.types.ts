@@ -15,7 +15,7 @@ export type SupportTicketUserMinimal = {
 };
 
 export type SupportTicketAttachment = {
-  readonly id: string;
+  readonly id?: string | null;
   readonly name?: string | null;
   readonly mimeType?: string | null;
   readonly sizeBytes?: number | null;

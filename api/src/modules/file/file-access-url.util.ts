@@ -30,11 +30,17 @@ export function getPublicAppBaseUrl(): string | undefined {
 export function createFileAccessUrlDescriptor(
   fileId: string | Types.ObjectId,
   token: string,
+  name?: string,
+  mimeType?: string,
+  sizeBytes?: number,
 ): FileAccessUrlDescriptor {
   return {
     baseUrl: getPublicAppBaseUrl(),
     apiPath: getFileAccessApiPath(),
     fileId: new Types.ObjectId(fileId.toString()),
     token,
+    name,
+    mimeType,
+    sizeBytes,
   };
 }

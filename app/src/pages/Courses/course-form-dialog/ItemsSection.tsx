@@ -174,7 +174,6 @@ const ItemsSection = ({
                             existingFile={buildExistingFilePreview(
                               item.fileAccessUrl,
                               item.title.trim() || "فایل آیتم",
-                              "application/octet-stream",
                             )}
                             onExistingFileClear={() =>
                               updateCurrentItem({ fileAccessUrl: null })

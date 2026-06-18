@@ -182,11 +182,23 @@ function toResolvedPreviewAttachment(
     return null;
   }
 
-  return { ...file, accessUrl };
+  return {
+    ...file,
+    name: file.accessUrl?.name?.trim() || file.name?.trim() || "فایل",
+    mimeType:
+      file.accessUrl?.mimeType?.trim() ||
+      file.mimeType?.trim() ||
+      "application/octet-stream",
+    sizeBytes: file.accessUrl?.sizeBytes ?? file.sizeBytes ?? 0,
+    accessUrl,
+  };
 }
 
 function isPreviewableMedia(file: SupportTicketAttachment): boolean {
-  const mimeType = file.mimeType?.trim() ?? "";
+  const mimeType =
+    file.accessUrl?.mimeType?.trim() ||
+    file.mimeType?.trim() ||
+    "";
   const accessUrl = resolveFileAccessUrl(file.accessUrl);
   return Boolean(
     accessUrl &&
@@ -238,8 +250,19 @@ function renderAttachmentLinks(
 
   return (
     <Stack spacing={0.75} sx={{ mt: 1.5 }}>
-      {attachments.map((file) => {
-        const label = file.name?.trim() || file.id;
+      {attachments.map((file, index) => {
+        const attachmentId =
+          file.id?.trim() ||
+          getFileIdFromAccessUrl(file.accessUrl) ||
+          file.path?.trim() ||
+          `attachment-${index}`;
+        const name = file.accessUrl?.name?.trim() || file.name?.trim() || "فایل";
+        const mimeType =
+          file.accessUrl?.mimeType?.trim() ||
+          file.mimeType?.trim() ||
+          "application/octet-stream";
+        const sizeBytes = file.accessUrl?.sizeBytes ?? file.sizeBytes ?? 0;
+        const label = name || attachmentId;
         const href = resolveFileAccessUrl(file.accessUrl);
         const previewFile = isPreviewableMedia(file) ? toResolvedPreviewAttachment(file) : null;
         const attachmentContent = (
@@ -248,7 +271,7 @@ function renderAttachmentLinks(
               {label}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {file.mimeType?.trim() || "فایل"} · {formatFileSize(file.sizeBytes)}
+              {mimeType} · {formatFileSize(sizeBytes)}
             </Typography>
           </>
         );
@@ -256,7 +279,7 @@ function renderAttachmentLinks(
         if (previewFile) {
           return (
             <Paper
-              key={file.id}
+              key={attachmentId}
               component="button"
               type="button"
               onClick={() => onPreviewAttachment(previewFile)}
@@ -307,11 +330,11 @@ function renderAttachmentLinks(
                   fontWeight: 900,
                 }}
               >
-                {isImageMimeType(file.mimeType ?? "")
+                {isImageMimeType(mimeType)
                   ? "IMG"
-                  : isVideoMimeType(file.mimeType ?? "")
+                  : isVideoMimeType(mimeType)
                     ? "VID"
-                    : isAudioMimeType(file.mimeType ?? "")
+                    : isAudioMimeType(mimeType)
                       ? "AUD"
                       : "FILE"}
               </Box>
@@ -322,7 +345,7 @@ function renderAttachmentLinks(
 
         return href ? (
           <Paper
-            key={file.id}
+            key={attachmentId}
             variant="outlined"
             sx={{
               display: "flex",
@@ -353,12 +376,12 @@ function renderAttachmentLinks(
                 {label}
               </Link>
               <Typography variant="caption" color="text.secondary" display="block">
-                {file.mimeType?.trim() || "فایل"} · {formatFileSize(file.sizeBytes)}
+                {mimeType} · {formatFileSize(sizeBytes)}
               </Typography>
             </Box>
           </Paper>
         ) : (
-          <Typography key={file.id} variant="body2" color="text.secondary">
+          <Typography key={attachmentId} variant="body2" color="text.secondary">
             {label}
           </Typography>
         );

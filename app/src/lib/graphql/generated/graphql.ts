@@ -1022,6 +1022,12 @@ export type FileAccessUrlGqlResponse = {
   baseUrl?: Maybe<Scalars["String"]["output"]>;
   /** Stored file ID */
   fileId: Scalars["ID"]["output"];
+  /** Original stored file name including extension */
+  name?: Maybe<Scalars["String"]["output"]>;
+  /** Stored file MIME type */
+  mimeType?: Maybe<Scalars["String"]["output"]>;
+  /** Stored file size in bytes */
+  sizeBytes?: Maybe<Scalars["Float"]["output"]>;
   /** Signed access token for the file content endpoint */
   token: Scalars["String"]["output"];
 };
