@@ -18,12 +18,6 @@ export class TicketUserProfileMinimalGqlResponse {
   @Field({ nullable: true, description: "User's last name" })
   lastName?: string;
 
-  @Field(() => ID, {
-    nullable: true,
-    description: "Avatar stored file ID",
-  })
-  avatarFileId?: Types.ObjectId | null;
-
   @Field(() => FileAccessUrlGqlResponse, {
     nullable: true,
     description: "Signed access descriptor for the user's avatar",

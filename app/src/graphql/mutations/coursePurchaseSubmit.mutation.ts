@@ -12,7 +12,6 @@ export const COURSE_PURCHASE_SUBMIT_MUTATION = gql`
       discountAmountIrt
       finalAmountIrt
       couponCode
-      uploadedReceiptFileId
       paymentReference
       transactionId
       paymentUrl

@@ -1,5 +1,6 @@
 import { parseJalaliParamDate } from "../../utilities/jalali-date-param.util";
 import {
+  getFileIdFromAccessUrl,
   resolveFileAccessUrl,
   type FileAccessUrl,
 } from "../../utils/fileAccessUrl.util";
@@ -69,7 +70,6 @@ export type CoursePaymentListRow = {
     readonly discountType: CouponDiscountType;
     readonly discountValue: number;
   } | null;
-  readonly uploadedReceiptFileId?: string | null;
   readonly uploadedReceiptFile?: CoursePaymentStoredFile | null;
   readonly receiptUploadedBy?: string | null;
   readonly receiptUploader?: CoursePaymentRelatedUser | null;
@@ -379,7 +379,9 @@ export function mapCoursePaymentListRowToRecord(row: CoursePaymentListRow): Cour
     couponTitle: display(row.coupon?.title),
     couponDiscountType: row.coupon?.discountType ?? null,
     couponDiscountValue: row.coupon?.discountValue ?? null,
-    uploadedReceiptFileId: display(row.uploadedReceiptFileId),
+    uploadedReceiptFileId: display(
+      getFileIdFromAccessUrl(row.uploadedReceiptFile?.accessUrl),
+    ),
     uploadedReceiptFileTitle: display(row.uploadedReceiptFile?.title ?? row.uploadedReceiptFile?.name),
     uploadedReceiptFileName: display(row.uploadedReceiptFile?.name),
     uploadedReceiptFileMimeType: display(row.uploadedReceiptFile?.mimeType),

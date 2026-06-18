@@ -27,7 +27,7 @@ import {
 } from "../../database/schemas";
 import { BadgeService } from "../badge";
 import { FileService, FileAccessUrlDescriptor } from "../file";
-import { resolveAvatarProfileFields } from "../file/file-access-url.util";
+import { resolveAvatarAccessUrl } from "../file/file-access-url.util";
 import {
   TicketListGqlInput,
   TicketListSortOptionInput,
@@ -746,7 +746,7 @@ export class TicketService {
       return undefined;
     }
 
-    const avatarFields = resolveAvatarProfileFields(
+    const avatarAccessUrl = resolveAvatarAccessUrl(
       user?.profile?.avatarFileId,
       avatarAccessUrlMap,
     );
@@ -758,8 +758,7 @@ export class TicketService {
         ? {
             firstName: user.profile.firstName,
             lastName: user.profile.lastName,
-            avatarFileId: avatarFields.avatarFileId,
-            avatarAccessUrl: avatarFields.avatarAccessUrl,
+            avatarAccessUrl,
           }
         : undefined,
     };

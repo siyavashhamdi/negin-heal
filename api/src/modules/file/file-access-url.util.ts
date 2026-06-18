@@ -5,36 +5,15 @@ import { FileAccessUrlGqlResponse } from "./graphql/responses";
 
 export type FileAccessUrlDescriptor = FileAccessUrlGqlResponse;
 
-export type AvatarProfileFields = {
-  avatarFileId?: Types.ObjectId | null;
-  avatarAccessUrl?: FileAccessUrlDescriptor | null;
-};
-
-export function resolveAvatarProfileFields(
+export function resolveAvatarAccessUrl(
   avatarFileId: Types.ObjectId | string | null | undefined,
   avatarAccessUrlMap?: Map<string, FileAccessUrlDescriptor>,
-): AvatarProfileFields {
+): FileAccessUrlDescriptor | null {
   if (!avatarFileId) {
-    return {
-      avatarFileId: null,
-      avatarAccessUrl: null,
-    };
+    return null;
   }
 
-  const fileId = avatarFileId.toString();
-  const avatarAccessUrl = avatarAccessUrlMap?.get(fileId);
-
-  if (!avatarAccessUrl) {
-    return {
-      avatarFileId: null,
-      avatarAccessUrl: null,
-    };
-  }
-
-  return {
-    avatarFileId: new Types.ObjectId(fileId),
-    avatarAccessUrl,
-  };
+  return avatarAccessUrlMap?.get(avatarFileId.toString()) ?? null;
 }
 
 export function getFileAccessApiPath(): string {

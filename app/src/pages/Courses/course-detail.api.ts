@@ -135,7 +135,6 @@ export type CoursePurchaseSubmitRecord = {
   readonly discountAmountIrt?: number | null;
   readonly finalAmountIrt: number;
   readonly couponCode?: string | null;
-  readonly uploadedReceiptFileId?: string | null;
   readonly paymentReference?: string | null;
   readonly transactionId?: string | null;
   readonly paymentUrl?: string | null;

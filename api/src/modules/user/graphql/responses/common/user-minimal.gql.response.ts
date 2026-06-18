@@ -17,12 +17,6 @@ export class UserProfileMinimalGqlResponse {
   @Field({ nullable: true, description: "User's phone number" })
   phoneNumber?: string;
 
-  @Field(() => ID, {
-    nullable: true,
-    description: "Avatar stored file ID",
-  })
-  avatarFileId?: Types.ObjectId | null;
-
   @Field(() => FileAccessUrlGqlResponse, {
     nullable: true,
     description: "Signed access descriptor for the user's avatar",

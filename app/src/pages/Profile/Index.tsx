@@ -31,7 +31,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { USER_PROFILE_UPDATE_MUTATION } from "../../graphql/mutations/userProfileUpdate.mutation";
 import { useMe } from "../../hooks/useMe";
 import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
-import { getFileIdFromAccessUrl } from "../../utils/fileAccessUrl.util";
+import { getFileIdFromAccessUrl, type FileAccessUrl } from "../../utils/fileAccessUrl.util";
 import { uploadFile } from "../../utils/fileUpload.util";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { useSnackbar } from "../../hooks/useSnackbar";
@@ -49,7 +49,7 @@ type UserProfileUpdateMutationResult = {
       readonly lastName?: string | null;
       readonly email?: string | null;
       readonly phoneNumber?: string | null;
-      readonly avatarFileId?: string | null;
+      readonly avatarAccessUrl?: FileAccessUrl | null;
       readonly bio?: string | null;
     } | null;
   };
