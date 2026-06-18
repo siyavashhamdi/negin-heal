@@ -1,0 +1,413 @@
+import { Injectable, Logger } from "@nestjs/common";
+import { InjectModel } from "@nestjs/mongoose";
+import { FilterQuery, Model, Types } from "mongoose";
+
+import {
+  Course,
+  CourseChapter,
+  CourseDocument,
+  Notification,
+  NotificationDocument,
+  UserCourse,
+  UserCourseDocument,
+} from "../../database/schemas";
+import {
+  GeneralSubscriptionUpdateType,
+  GlobalAnouncementMessageType,
+  NotificationMode,
+  NotificationSource,
+  UserCoursePurchaseStatus,
+} from "../../enums";
+import { UserSubscriptionService } from "../user";
+import { canAccessChapter } from "./chapter-access.util";
+
+const USER_COURSE_BATCH_SIZE = 200;
+const CHAPTER_RELEASE_NOTIFICATION_TTL_MS = 24 * 60 * 60 * 1000;
+
+type GradualReleaseCourse = Pick<Course, "title" | "chapters"> & {
+  _id: Types.ObjectId;
+};
+
+type PendingReleaseUserCourse = Pick<
+  UserCourse,
+  "courseId" | "courseSnapshot" | "purchase" | "chapterReleaseNotifications"
+> & {
+  _id: Types.ObjectId;
+  userId: Types.ObjectId;
+};
+
+export type ChapterReleaseNotificationRunResult = {
+  scannedUserCourses: number;
+  notifiedChapters: number;
+  skippedChapters: number;
+};
+
+@Injectable()
+export class ChapterReleaseNotificationService {
+  private readonly logger = new Logger(ChapterReleaseNotificationService.name);
+
+  constructor(
+    @InjectModel(Course.name)
+    private readonly courseModel: Model<CourseDocument>,
+    @InjectModel(UserCourse.name)
+    private readonly userCourseModel: Model<UserCourseDocument>,
+    @InjectModel(Notification.name)
+    private readonly notificationModel: Model<NotificationDocument>,
+    private readonly userSubscriptionService: UserSubscriptionService,
+  ) {}
+
+  async processPendingNotifications(): Promise<ChapterReleaseNotificationRunResult> {
+    const now = new Date();
+    const gradualCourses = await this.findGradualReleaseCourses();
+
+    if (!gradualCourses.length) {
+      return {
+        scannedUserCourses: 0,
+        notifiedChapters: 0,
+        skippedChapters: 0,
+      };
+    }
+
+    const courseById = new Map(
+      gradualCourses.map((course) => [course._id.toString(), course]),
+    );
+    const courseIds = gradualCourses.map((course) => course._id);
+
+    let scannedUserCourses = 0;
+    let notifiedChapters = 0;
+    let skippedChapters = 0;
+    let lastUserCourseId: Types.ObjectId | undefined;
+
+    while (true) {
+      const userCourses = await this.findPendingReleaseUserCourses(
+        courseIds,
+        lastUserCourseId,
+      );
+
+      if (!userCourses.length) {
+        break;
+      }
+
+      for (const userCourse of userCourses) {
+        scannedUserCourses += 1;
+
+        const course = courseById.get(userCourse.courseId.toString());
+        if (!course) {
+          continue;
+        }
+
+        const chaptersToNotify = this.findChaptersPendingReleaseNotification(
+          course,
+          userCourse,
+          now,
+        );
+
+        for (const chapter of chaptersToNotify) {
+          try {
+            const didNotify = await this.notifyChapterReleased(
+              userCourse,
+              course,
+              chapter,
+            );
+
+            if (didNotify) {
+              notifiedChapters += 1;
+            } else {
+              skippedChapters += 1;
+            }
+          } catch (error) {
+            skippedChapters += 1;
+            this.logger.error(
+              `Failed chapter release notification for userCourse=${userCourse._id.toString()} chapter=${chapter.key}`,
+              error instanceof Error ? error.stack : String(error),
+            );
+          }
+        }
+      }
+
+      lastUserCourseId = userCourses[userCourses.length - 1]?._id;
+      if (userCourses.length < USER_COURSE_BATCH_SIZE) {
+        break;
+      }
+    }
+
+    if (notifiedChapters > 0) {
+      this.logger.log(
+        `Chapter release notifications sent: ${notifiedChapters} chapter(s) across ${scannedUserCourses} user course(s)`,
+      );
+    }
+
+    return {
+      scannedUserCourses,
+      notifiedChapters,
+      skippedChapters,
+    };
+  }
+
+  private async findGradualReleaseCourses(): Promise<GradualReleaseCourse[]> {
+    return this.courseModel
+      .find({
+        chapters: {
+          $elemMatch: {
+            visibleAfterMinutes: { $type: "number" },
+          },
+        },
+      })
+      .select({ title: 1, chapters: 1 })
+      .lean<GradualReleaseCourse[]>()
+      .exec();
+  }
+
+  private async findPendingReleaseUserCourses(
+    courseIds: Types.ObjectId[],
+    lastUserCourseId?: Types.ObjectId,
+  ): Promise<PendingReleaseUserCourse[]> {
+    const query: FilterQuery<UserCourse> = {
+      courseId: { $in: courseIds },
+      "purchase.status": UserCoursePurchaseStatus.PAID,
+      "purchase.paidAt": { $exists: true, $ne: null },
+      $or: [
+        { "audit.deletedAt": null },
+        { "audit.deletedAt": { $exists: false } },
+      ],
+    };
+
+    if (lastUserCourseId) {
+      query._id = { $gt: lastUserCourseId };
+    }
+
+    return this.userCourseModel
+      .find(query)
+      .sort({ _id: 1 })
+      .limit(USER_COURSE_BATCH_SIZE)
+      .select({
+        userId: 1,
+        courseId: 1,
+        courseSnapshot: 1,
+        purchase: 1,
+        chapterReleaseNotifications: 1,
+      })
+      .lean<PendingReleaseUserCourse[]>()
+      .exec();
+  }
+
+  private findChaptersPendingReleaseNotification(
+    course: GradualReleaseCourse,
+    userCourse: PendingReleaseUserCourse,
+    now: Date,
+  ): CourseChapter[] {
+    const paidAt = userCourse.purchase.paidAt;
+    if (!paidAt) {
+      return [];
+    }
+
+    const notifiedKeys = this.getCompletedNotificationChapterKeys(userCourse);
+    const chapterAccessContext = {
+      isCourseFree: false,
+      isPurchased: true,
+      paidAt,
+      now,
+    };
+
+    return this.sortChaptersForNotification(course.chapters || []).filter(
+      (chapter) => {
+        if (
+          chapter.isFree ||
+          typeof chapter.visibleAfterMinutes !== "number" ||
+          chapter.visibleAfterMinutes <= 0
+        ) {
+          return false;
+        }
+
+        if (notifiedKeys.has(chapter.key)) {
+          return false;
+        }
+
+        return canAccessChapter(chapter, chapterAccessContext);
+      },
+    );
+  }
+
+  private getCompletedNotificationChapterKeys(
+    userCourse: PendingReleaseUserCourse,
+  ): Set<string> {
+    return new Set(
+      (userCourse.chapterReleaseNotifications?.chapters || [])
+        .filter((entry) => entry.notificationId != null)
+        .map((entry) => entry.key),
+    );
+  }
+
+  private sortChaptersForNotification(
+    chapters: CourseChapter[],
+  ): CourseChapter[] {
+    return [...chapters].sort((first, second) => {
+      const firstSortOrder = first.sortOrder ?? Number.MAX_SAFE_INTEGER;
+      const secondSortOrder = second.sortOrder ?? Number.MAX_SAFE_INTEGER;
+
+      if (firstSortOrder !== secondSortOrder) {
+        return firstSortOrder - secondSortOrder;
+      }
+
+      return first.title.localeCompare(second.title, "fa");
+    });
+  }
+
+  private async notifyChapterReleased(
+    userCourse: PendingReleaseUserCourse,
+    course: GradualReleaseCourse,
+    chapter: CourseChapter,
+  ): Promise<boolean> {
+    const courseId = userCourse.courseId.toString();
+    const courseTitle =
+      this.normalizeText(userCourse.courseSnapshot?.title) ||
+      this.normalizeText(course.title) ||
+      "دوره";
+    const chapterTitle = this.normalizeText(chapter.title) || "فصل";
+    const title = "فصل جدید در دسترس است";
+    const message = `فصل «${chapterTitle}» از دوره «${courseTitle}» اکنون برای شما قابل دسترس است.`;
+    const notificationPayload: Record<string, unknown> = {
+      courseId,
+      chapterKey: chapter.key,
+    };
+    const visibleUntil = new Date(
+      Date.now() + CHAPTER_RELEASE_NOTIFICATION_TTL_MS,
+    );
+    const subscriptionPayload: Record<string, unknown> = {
+      ...notificationPayload,
+      messageType: GlobalAnouncementMessageType.SNACKBAR,
+      isPushNotification: true,
+      title: null,
+      description: message,
+      mode: NotificationMode.INFO,
+    };
+
+    const claimed = await this.claimChapterNotificationSlot(
+      userCourse._id,
+      chapter,
+      chapterTitle,
+    );
+
+    if (!claimed) {
+      return false;
+    }
+
+    let notification: NotificationDocument;
+
+    try {
+      notification = await this.notificationModel.create({
+        userId: userCourse.userId,
+        isGlobalAnnouncement: false,
+        source: NotificationSource.COURSE_CHAPTER,
+        mode: NotificationMode.SUCCESS,
+        title,
+        message,
+        payload: notificationPayload,
+        visibleUntil,
+      });
+
+      const linkResult = await this.userCourseModel.updateOne(
+        { _id: userCourse._id },
+        {
+          $set: {
+            "chapterReleaseNotifications.chapters.$[chapter].notificationId":
+              notification._id,
+          },
+        },
+        {
+          arrayFilters: [
+            {
+              "chapter.key": chapter.key,
+              $or: [
+                { "chapter.notificationId": { $exists: false } },
+                { "chapter.notificationId": null },
+              ],
+            },
+          ],
+        },
+      );
+
+      if (linkResult.matchedCount === 0) {
+        this.logger.warn(
+          `Chapter release notification created but userCourse link failed for userCourse=${userCourse._id.toString()} chapter=${chapter.key}`,
+        );
+      }
+    } catch (error) {
+      await this.userCourseModel.updateOne(
+        { _id: userCourse._id },
+        {
+          $pull: {
+            "chapterReleaseNotifications.chapters": { key: chapter.key },
+          },
+        },
+      );
+      throw error;
+    }
+
+    await this.userSubscriptionService.publishToUser({
+      userId: userCourse.userId.toString(),
+      updateType: GeneralSubscriptionUpdateType.NOTIFICATION,
+      targetId: notification._id.toString(),
+      payload: subscriptionPayload,
+    });
+
+    return true;
+  }
+
+  private async claimChapterNotificationSlot(
+    userCourseId: Types.ObjectId,
+    chapter: CourseChapter,
+    chapterTitle: string,
+  ): Promise<boolean> {
+    const notificationSentAt = new Date();
+
+    const retryResult = await this.userCourseModel.updateOne(
+      {
+        _id: userCourseId,
+        chapterReleaseNotifications: {
+          $elemMatch: {
+            key: chapter.key,
+            $or: [
+              { notificationId: { $exists: false } },
+              { notificationId: null },
+            ],
+          },
+        },
+      },
+      {
+        $set: {
+          "chapterReleaseNotifications.chapters.$.titleSnapshot": chapterTitle,
+          "chapterReleaseNotifications.chapters.$.notificationSentAt":
+            notificationSentAt,
+        },
+      },
+    );
+
+    if (retryResult.matchedCount > 0) {
+      return true;
+    }
+
+    const claimResult = await this.userCourseModel.updateOne(
+      {
+        _id: userCourseId,
+        "chapterReleaseNotifications.chapters.key": { $ne: chapter.key },
+      },
+      {
+        $push: {
+          "chapterReleaseNotifications.chapters": {
+            key: chapter.key,
+            titleSnapshot: chapterTitle,
+            notificationSentAt,
+          },
+        },
+      },
+    );
+
+    return claimResult.modifiedCount > 0;
+  }
+
+  private normalizeText(value?: string | null): string | undefined {
+    const normalized = value?.trim();
+    return normalized || undefined;
+  }
+}

@@ -1387,6 +1387,7 @@ export type NotificationMode = (typeof NotificationMode)[keyof typeof Notificati
 /** Domain source that produced a notification */
 export const NotificationSource = {
   COURSE: "COURSE",
+  COURSE_CHAPTER: "COURSE_CHAPTER",
   OTHER: "OTHER",
   PAYMENT: "PAYMENT",
   TICKET: "TICKET",

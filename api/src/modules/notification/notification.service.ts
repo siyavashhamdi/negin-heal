@@ -233,6 +233,7 @@ export class NotificationService {
     };
 
     if (!filters) {
+      this.applyVisibleNotificationsFilter(query);
       return query;
     }
 
@@ -285,6 +286,8 @@ export class NotificationService {
             }
           : { visibleUntil: { $lt: now } },
       );
+    } else {
+      this.applyVisibleNotificationsFilter(query);
     }
 
     this.addDateRangeFilter(
@@ -663,6 +666,19 @@ export class NotificationService {
     }
 
     return date;
+  }
+
+  private applyVisibleNotificationsFilter(
+    query: FilterQuery<Notification>,
+  ): void {
+    const now = new Date();
+    this.addAndCondition(query, {
+      $or: [
+        { visibleUntil: null },
+        { visibleUntil: { $exists: false } },
+        { visibleUntil: { $gte: now } },
+      ],
+    });
   }
 
   private addAndCondition(

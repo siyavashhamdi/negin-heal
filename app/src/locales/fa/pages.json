@@ -236,6 +236,12 @@
             },
             "paymentApproved": {
                 "action": "مشاهده دوره"
+            },
+            "viewCourse": {
+                "action": "مشاهده دوره"
+            },
+            "viewChapter": {
+                "action": "مشاهده فصل"
             }
         },
         "underConstruction": {

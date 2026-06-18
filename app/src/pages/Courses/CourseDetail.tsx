@@ -218,6 +218,7 @@ const CourseDetail = (): ReactElement => {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const focusChapterKey = searchParams.get("chapter")?.trim() || null;
   const { isAuthenticated } = useAuth();
   const { showError, showSuccess, showWarning } = useSnackbar();
   const purchaseCardRef = useRef<HTMLElement | null>(null);
@@ -286,10 +287,42 @@ const CourseDetail = (): ReactElement => {
   }, [refetch]);
 
   useEffect(() => {
+    if (!course) {
+      return;
+    }
+
+    if (focusChapterKey) {
+      const chapterExists = course.chapters.some(
+        (chapter) => chapter.key === focusChapterKey,
+      );
+
+      if (chapterExists) {
+        setExpandedChapterKeys(new Set([focusChapterKey]));
+        return;
+      }
+    }
+
     setExpandedChapterKeys(
       defaultExpandedChapterKey ? new Set([defaultExpandedChapterKey]) : new Set(),
     );
-  }, [defaultExpandedChapterKey]);
+  }, [course, defaultExpandedChapterKey, focusChapterKey]);
+
+  useEffect(() => {
+    if (!focusChapterKey || !course?.chapters.some((chapter) => chapter.key === focusChapterKey)) {
+      return;
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      document.getElementById(`course-chapter-${focusChapterKey}`)?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [course, focusChapterKey, expandedChapterKeys]);
 
   useEffect(() => {
     const paymentStatus = searchParams.get("payment");
@@ -590,6 +623,7 @@ const CourseDetail = (): ReactElement => {
             return (
               <Paper
                 key={chapter.key}
+                id={`course-chapter-${chapter.key}`}
                 className={`${styles.chapterCard}${chapter.isLocked ? ` ${styles.chapterLocked}` : ""}`}
                 elevation={0}
               >

@@ -11,9 +11,16 @@ import { type ReactElement, useMemo } from "react";
 import { Link as RouterLink } from "react-router-dom";
 
 import { useTranslation } from "../../hooks/useTranslation";
-import { resolveNotificationCourseLink } from "../../utilities/notification-course-link.util";
+import {
+  resolveNotificationCourseLink,
+  type NotificationCourseLink,
+} from "../../utilities/notification-course-link.util";
 import { formatRelativeTimeLabel } from "../../utilities/relative-time.util";
-import { type NotificationMode, type NotificationRecord } from "./notifications-list.api";
+import {
+  NOTIFICATION_SOURCE_LABEL,
+  type NotificationMode,
+  type NotificationRecord,
+} from "./notifications-list.api";
 import styles from "./styles/notifications.module.scss";
 
 type NotificationCardProps = {
@@ -38,6 +45,29 @@ const MODE_META: Record<
   ERROR: { icon: ErrorOutlineRoundedIcon, accentClass: styles.cardAccentError ?? "" },
 };
 
+type CourseActionLinkProps = {
+  readonly courseLink: NotificationCourseLink;
+  readonly label: string;
+  readonly onNavigate: () => void;
+};
+
+const CourseActionLink = ({
+  courseLink,
+  label,
+  onNavigate,
+}: CourseActionLinkProps): ReactElement => (
+  <span className={styles.cardMessageLinkWrap}>
+    <RouterLink
+      to={courseLink.href}
+      className={styles.cardMessageLink}
+      onClick={onNavigate}
+    >
+      <span>{label}</span>
+      <ArrowBackRoundedIcon fontSize="inherit" />
+    </RouterLink>
+  </span>
+);
+
 const NotificationCard = ({
   notification,
   onMarkRead,
@@ -56,6 +86,18 @@ const NotificationCard = ({
     () => resolveNotificationCourseLink(notification.source, notification.payload),
     [notification.payload, notification.source],
   );
+  const courseLinkActionLabel = courseLink
+    ? t(`pages.notifications.${courseLink.actionLabel}.action`)
+    : null;
+  const isChapterReleaseNotification = notification.source === "COURSE_CHAPTER";
+  const showChapterAction = isChapterReleaseNotification && courseLink != null;
+  const showPaymentAction =
+    notification.source === "PAYMENT" && courseLink != null;
+  const handleCourseLinkClick = (): void => {
+    if (!notification.isRead) {
+      onMarkRead(notification.id);
+    }
+  };
   const readActionLabel = t(
     !notification.isRead
       ? "pages.notifications.actions.markRead"
@@ -107,24 +149,28 @@ const NotificationCard = ({
           </div>
         </div>
 
-        {shouldShowMessage || courseLink ? (
+        {showChapterAction && courseLink && courseLinkActionLabel ? (
+          <div className={styles.cardSourceRow}>
+            <span className={styles.cardSourceBadge}>
+              {NOTIFICATION_SOURCE_LABEL.COURSE_CHAPTER}
+            </span>
+            <CourseActionLink
+              courseLink={courseLink}
+              label={courseLinkActionLabel}
+              onNavigate={handleCourseLinkClick}
+            />
+          </div>
+        ) : null}
+
+        {shouldShowMessage || showPaymentAction ? (
           <p className={styles.cardMessage}>
             {shouldShowMessage ? notification.message : null}
-            {courseLink ? (
-              <span className={styles.cardMessageLinkWrap}>
-                <RouterLink
-                  to={courseLink.href}
-                  className={styles.cardMessageLink}
-                  onClick={() => {
-                    if (!notification.isRead) {
-                      onMarkRead(notification.id);
-                    }
-                  }}
-                >
-                  <span>{t("pages.notifications.paymentApproved.action")}</span>
-                  <ArrowBackRoundedIcon fontSize="inherit" />
-                </RouterLink>
-              </span>
+            {showPaymentAction && courseLink && courseLinkActionLabel ? (
+              <CourseActionLink
+                courseLink={courseLink}
+                label={courseLinkActionLabel}
+                onNavigate={handleCourseLinkClick}
+              />
             ) : null}
           </p>
         ) : null}

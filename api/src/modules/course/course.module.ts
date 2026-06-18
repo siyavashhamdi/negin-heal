@@ -6,7 +6,9 @@ import { DatabaseModule } from "../database";
 import { FileModule } from "../file";
 import { CouponModule } from "../coupon";
 import { UserModule } from "../user";
+import { ChapterReleaseNotificationCron } from "../../cron/chapter-release-notification.cron";
 import { CoursePaymentController } from "./api/course-payment.controller";
+import { ChapterReleaseNotificationService } from "./chapter-release-notification.service";
 import { CourseService } from "./course.service";
 import {
   CourseCreateMutation,
@@ -34,6 +36,8 @@ import {
   ],
   controllers: [CoursePaymentController],
   providers: [
+    ChapterReleaseNotificationCron,
+    ChapterReleaseNotificationService,
     CourseService,
     CourseCreateMutation,
     CourseDeleteMutation,
@@ -46,6 +50,6 @@ import {
     UserCourseDetailQuery,
     UserCourseListQuery,
   ],
-  exports: [CourseService],
+  exports: [ChapterReleaseNotificationService, CourseService],
 })
 export class CourseModule {}

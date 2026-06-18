@@ -126,11 +126,18 @@ export class BadgeService {
   }
 
   private countUnreadNotifications(user: AuthenticatedUser): Promise<number> {
+    const now = new Date();
+
     return this.notificationModel
       .countDocuments({
         userId: user.userId,
         isGlobalAnnouncement: false,
         isRead: false,
+        $or: [
+          { visibleUntil: null },
+          { visibleUntil: { $exists: false } },
+          { visibleUntil: { $gte: now } },
+        ],
       })
       .exec();
   }
