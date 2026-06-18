@@ -21,7 +21,7 @@ export interface EntityModalShellProps {
   title: string;
   onClose: () => void;
   children: ReactNode;
-  footer: ReactNode;
+  footer?: ReactNode;
   maxWidth?: Breakpoint;
   fullWidth?: boolean;
   useFormWrapper?: boolean;
@@ -49,7 +49,7 @@ const EntityModalShell = ({
     isCompact ? styles.modalDialogContentScrollMobile : styles.modalDialogContentScrollDesktop
   }`;
 
-  const body = (
+  const renderedBody = footer != null ? (
     <>
       <DialogTitle className={styles.modalDialogTitle} sx={crudModalTitleSx(theme)}>
         <Typography variant="h6" component="div" className={styles.modalTitleTypography}>
@@ -72,6 +72,21 @@ const EntityModalShell = ({
         {footer}
       </DialogActions>
     </>
+  ) : (
+    <>
+      <DialogTitle className={styles.modalDialogTitle} sx={crudModalTitleSx(theme)}>
+        <Typography variant="h6" component="div" className={styles.modalTitleTypography}>
+          {title}
+        </Typography>
+        <IconButton aria-label={t("table.dataGrid.modal.close")} onClick={onClose}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+
+      <DialogContent {...getContentProps({ className: dialogContentClassName })}>
+        {children}
+      </DialogContent>
+    </>
   );
 
   return (
@@ -91,10 +106,10 @@ const EntityModalShell = ({
           onSubmit={onSubmit}
           className={isCompact ? styles.modalFormRootMobile : undefined}
         >
-          {body}
+          {renderedBody}
         </Box>
       ) : (
-        body
+        renderedBody
       )}
     </Dialog>
   );
