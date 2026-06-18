@@ -1,5 +1,6 @@
 import { LOCAL_STORAGE_KEYS } from "../constants";
 import type { FileAccessUrl } from "./fileAccessUrl.util";
+import { compressImageForUpload } from "./imageCompression.util";
 
 const FILE_UPLOAD_PATH = "/api/v1/files/upload";
 
@@ -49,14 +50,16 @@ export async function uploadFile(
     throw new FileUploadError("Not authenticated", 401);
   }
 
+  const uploadFilePayload = await compressImageForUpload(file);
+
   const response = await fetch(FILE_UPLOAD_PATH, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
-      "Content-Type": file.type || "application/octet-stream",
-      "X-File-Name": encodeURIComponent(file.name),
+      "Content-Type": uploadFilePayload.type || "application/octet-stream",
+      "X-File-Name": encodeURIComponent(uploadFilePayload.name),
     },
-    body: file,
+    body: uploadFilePayload,
   });
 
   if (!response.ok) {
