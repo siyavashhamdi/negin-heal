@@ -1,2 +1,2 @@
-export * from "./chapter-release-notification.cron";
+export * from "./jobs";
 export * from "./cron.module";

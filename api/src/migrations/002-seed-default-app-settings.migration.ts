@@ -573,6 +573,15 @@ const DEFAULT_APP_SETTINGS: readonly DefaultAppSettingSeed[] = [
     isActive: true,
   },
   {
+    key: APP_SETTING_KEY.TICKET_AUTO_CLOSE_AFTER_ANSWERED_HOURS,
+    label: "بستن خودکار تیکت پاسخ‌داده‌شده",
+    value: 24,
+    valueType: AppSettingValueType.NUMBER,
+    description:
+      "مدت زمان (به ساعت) پس از پاسخ پشتیبانی تا بستن خودکار تیکت",
+    isActive: true,
+  },
+  {
     key: APP_SETTING_KEY.SUPPORT_CONTACT,
     label: "تنظیمات راه‌های ارتباطی پشتیبانی",
     value: DEFAULT_SUPPORT_CONTACT_VALUE,

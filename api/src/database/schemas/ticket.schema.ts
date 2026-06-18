@@ -83,6 +83,7 @@ TicketSchema.plugin(blameablePlugin);
 TicketSchema.plugin(softDeletePlugin);
 
 TicketSchema.index({ status: 1, priority: 1 });
+TicketSchema.index({ status: 1, "audit.updatedAt": 1 });
 TicketSchema.index({ category: 1 });
 TicketSchema.index({ closedByUserId: 1 });
 TicketSchema.index({ "audit.createdBy": 1, status: 1 });

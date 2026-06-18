@@ -3,6 +3,7 @@ import { Checkbox, FormControlLabel, TextField } from "@mui/material";
 
 import type { AppSettingEditFormState, UpdateEditFormState } from "./types";
 import { HTML_TEXTAREA_ROWS, TECHNICAL_VALUE_INPUT_SX } from "./shared";
+import { SCALAR_NUMBER_FIELD_CONFIG } from "./scalar-setting-fields";
 import SectionPaper from "./SectionPaper";
 
 interface ScalarValueEditorProps {
@@ -33,15 +34,22 @@ const ScalarValueEditor = ({
   }
 
   if (form.valueType === "NUMBER") {
+    const numberFieldConfig = SCALAR_NUMBER_FIELD_CONFIG[settingKey];
+
     return (
       <SectionPaper>
         <TextField
           fullWidth
           required
           type="number"
-          label="مقدار عددی"
+          label={numberFieldConfig?.label ?? "مقدار عددی"}
+          helperText={numberFieldConfig?.helperText}
           value={form.scalarValue}
           onChange={(event) => updateForm({ scalarValue: event.target.value })}
+          inputProps={{
+            min: numberFieldConfig?.min ?? 0,
+            step: 1,
+          }}
           sx={TECHNICAL_VALUE_INPUT_SX}
         />
       </SectionPaper>

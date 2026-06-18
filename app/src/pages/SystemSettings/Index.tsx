@@ -168,7 +168,7 @@ const SystemSettingsIndex = (): ReactElement => {
   const [sorting, setSorting] = useState<SortingState>([{ id: "createdAt", desc: true }]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
     id: false,
-    key: true,
+    key: false,
     label: true,
     valueType: true,
     description: false,

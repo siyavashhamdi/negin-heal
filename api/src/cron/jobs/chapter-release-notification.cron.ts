@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
-import { Cron } from "@nestjs/schedule";
+import { Cron, CronExpression } from "@nestjs/schedule";
 
-import { ChapterReleaseNotificationService } from "../modules/course/chapter-release-notification.service";
+import { ChapterReleaseNotificationService } from "../../modules/course/chapter-release-notification.service";
 
 @Injectable()
 export class ChapterReleaseNotificationCron implements OnModuleInit {
@@ -16,7 +16,10 @@ export class ChapterReleaseNotificationCron implements OnModuleInit {
     void this.handleChapterReleaseNotifications();
   }
 
-  @Cron("*/30 * * * * *")
+  @Cron(CronExpression.EVERY_5_MINUTES, {
+    name: "chapter-release-notification",
+    timeZone: "UTC",
+  })
   async handleChapterReleaseNotifications(): Promise<void> {
     if (this.isRunning) {
       this.logger.warn(

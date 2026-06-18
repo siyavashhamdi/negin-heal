@@ -16,6 +16,7 @@ import type {
   UsdtWalletForm,
   ZarinpalConfigForm,
 } from "./types";
+import { POSITIVE_INTEGER_NUMBER_SETTING_KEYS } from "./scalar-setting-fields";
 
 const EMPTY_SUPPORT_FAQ_PAGE: SupportFaqPageForm = {
   eyebrow: "",
@@ -318,6 +319,14 @@ function normalizeJsonForm(key: string, value: unknown): JsonFormState {
   }
 }
 
+function positiveInteger(value: string, label: string): number {
+  const parsed = finiteNumber(value, label);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new Error(`${label} باید عدد صحیح بزرگ‌تر از صفر باشد.`);
+  }
+  return parsed;
+}
+
 export function buildInitialEditForm(setting: AppSettingDetail): AppSettingEditFormState {
   return {
     label: setting.label,
@@ -469,7 +478,9 @@ export function buildUpdateVariables(
   if (form.valueType === "STRING") {
     value = form.scalarValue;
   } else if (form.valueType === "NUMBER") {
-    value = finiteNumber(form.scalarValue, "مقدار عددی");
+    value = POSITIVE_INTEGER_NUMBER_SETTING_KEYS.has(setting.key)
+      ? positiveInteger(form.scalarValue, "مقدار عددی")
+      : finiteNumber(form.scalarValue, "مقدار عددی");
   } else if (form.valueType === "BOOLEAN") {
     value = form.booleanValue;
   } else {

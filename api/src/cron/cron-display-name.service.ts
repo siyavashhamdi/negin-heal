@@ -45,7 +45,9 @@ export class CronDisplayNameService implements OnModuleInit {
       );
 
       for (const methodName of methodNames) {
-        const methodRef = instance[methodName] as (...args: unknown[]) => unknown;
+        const methodRef = instance[methodName] as (
+          ...args: unknown[]
+        ) => unknown;
         const cronMetadata = this.reflector.get<{ name?: string } | undefined>(
           SCHEDULE_CRON_OPTIONS,
           methodRef,
