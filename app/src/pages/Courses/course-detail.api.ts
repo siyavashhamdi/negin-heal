@@ -17,6 +17,8 @@ export type CourseDetailChapter = {
   readonly isFree: boolean;
   readonly isLocked: boolean;
   readonly unlocksAt?: string | null;
+  readonly isCompleted: boolean;
+  readonly userCompletedAt?: string | null;
   readonly items?: CourseDetailItem[] | null;
 };
 
@@ -35,6 +37,8 @@ export type CourseDetailRecord = {
   readonly isFree: boolean;
   readonly isPurchased: boolean;
   readonly purchaseStatus?: UserCoursePurchaseStatus | null;
+  readonly completedChapterCount: number;
+  readonly accessibleChapterCount: number;
   readonly chapters: CourseDetailChapter[];
 };
 
@@ -155,6 +159,25 @@ export type CoursePurchaseSubmitMutationVariables = {
     readonly uploadedReceiptFileId?: string | null;
     readonly paymentReference?: string | null;
     readonly transactionId?: string | null;
+  };
+};
+
+export type CourseChapterCompleteRecord = {
+  readonly key: string;
+  readonly titleSnapshot: string;
+  readonly userCompletedAt: string;
+  readonly completedChapterCount: number;
+  readonly accessibleChapterCount: number;
+};
+
+export type CourseChapterCompleteMutation = {
+  readonly courseChapterComplete: CourseChapterCompleteRecord;
+};
+
+export type CourseChapterCompleteMutationVariables = {
+  readonly input: {
+    readonly courseId: string;
+    readonly chapterKey: string;
   };
 };
 

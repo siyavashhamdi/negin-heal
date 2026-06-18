@@ -1,3 +1,4 @@
+export * from "./course-chapter-complete.gql.response";
 export * from "./course-list.gql.response";
 export * from "./course-payment-list.gql.response";
 export * from "./course-purchase-submit.gql.response";

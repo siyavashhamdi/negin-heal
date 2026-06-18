@@ -79,6 +79,18 @@ export class UserCourseDetailChapterGqlResponse {
       "Chapter items. Null when the chapter is locked for the current viewer.",
   })
   items?: UserCourseDetailItemGqlResponse[] | null;
+
+  @Field({
+    description:
+      "Whether the authenticated learner has confirmed completion of this chapter",
+  })
+  isCompleted: boolean;
+
+  @Field(() => GraphQLISODateTime, {
+    nullable: true,
+    description: "When the learner confirmed completion of this chapter",
+  })
+  userCompletedAt?: Date;
 }
 
 @ObjectType()
@@ -141,4 +153,16 @@ export class UserCourseDetailGqlResponse {
     description: "Course chapters with locked content redacted",
   })
   chapters: UserCourseDetailChapterGqlResponse[];
+
+  @Field(() => Int, {
+    description:
+      "Number of unlocked chapters the learner has confirmed complete",
+  })
+  completedChapterCount: number;
+
+  @Field(() => Int, {
+    description:
+      "Number of chapters currently unlocked and eligible for completion",
+  })
+  accessibleChapterCount: number;
 }

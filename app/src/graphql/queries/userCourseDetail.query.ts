@@ -21,6 +21,8 @@ export const USER_COURSE_DETAIL_QUERY = gql`
       isFree
       isPurchased
       purchaseStatus
+      completedChapterCount
+      accessibleChapterCount
       chapters {
         key
         title
@@ -29,6 +31,8 @@ export const USER_COURSE_DETAIL_QUERY = gql`
         isFree
         isLocked
         unlocksAt
+        isCompleted
+        userCompletedAt
         items {
           title
           type

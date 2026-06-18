@@ -61,6 +61,7 @@ import { CoursePaymentListGqlInput } from "./graphql/inputs/course-payment-list.
 import { CoursePaymentManualCreateGqlInput } from "./graphql/inputs/course-payment-manual-create.gql.input";
 import { CoursePaymentStatusUpdateGqlInput } from "./graphql/inputs/course-payment-status-update.gql.input";
 import { CoursePurchaseSubmitGqlInput } from "./graphql/inputs/course-purchase-submit.gql.input";
+import { CourseChapterCompleteGqlInput } from "./graphql/inputs/course-chapter-complete.gql.input";
 import { CourseListSortOptionInput } from "./graphql/inputs/course-list-sort-option.gql.input";
 import { CourseUpdateGqlInput } from "./graphql/inputs/course-update.gql.input";
 import { UserCourseDetailGqlInput } from "./graphql/inputs/user-course-detail.gql.input";
@@ -85,6 +86,7 @@ import {
   CoursePaymentListPaginatedOffsetGqlResponse,
 } from "./graphql/responses/course-payment-list.gql.response";
 import { CoursePurchaseSubmitGqlResponse } from "./graphql/responses/course-purchase-submit.gql.response";
+import { CourseChapterCompleteGqlResponse } from "./graphql/responses/course-chapter-complete.gql.response";
 import { AppSettingsService } from "../app-settings";
 import { BadgeService } from "../badge";
 import { CouponService } from "../coupon";
@@ -109,7 +111,7 @@ type CourseFileReferenceSource = {
     }>;
   }>;
 };
-type UserCourseListRecord = Pick<UserCourse, "courseId" | "purchase"> & {
+type UserCourseListRecord = Pick<UserCourse, "courseId" | "purchase" | "progress"> & {
   _id: Types.ObjectId;
 };
 type CoursePaymentListRecord = UserCourse & {
@@ -894,6 +896,188 @@ export class CourseService {
     );
   }
 
+  async completeChapter(
+    input: CourseChapterCompleteGqlInput,
+    userId: Types.ObjectId,
+  ): Promise<CourseChapterCompleteGqlResponse> {
+    const course = await this.courseModel
+      .findOne({ _id: input.courseId, isActive: true })
+      .select({ chapters: 1, priceIrt: 1, discount: 1 })
+      .exec();
+    if (!course) {
+      throw new CourseNotFoundException();
+    }
+
+    const userCourse = await this.userCourseModel
+      .findOne({
+        userId,
+        courseId: input.courseId,
+      })
+      .exec();
+    if (!userCourse) {
+      throw new NotFoundException("Course enrollment was not found for this user");
+    }
+
+    if (userCourse.purchase.status !== UserCoursePurchaseStatus.PAID) {
+      throw new BadRequestException(
+        "Chapter completion is only available after course purchase is confirmed",
+      );
+    }
+
+    const chapters = this.sortChaptersForDisplay(
+      ((course.toObject?.() || course) as PlainCourse).chapters || [],
+    );
+    const chapter = chapters.find(
+      (entry) => entry.key === input.chapterKey.trim(),
+    );
+    if (!chapter) {
+      throw new NotFoundException("Chapter was not found in this course");
+    }
+
+    const isCourseFree = this.isCourseFree(
+      (course.toObject?.() || course) as PlainCourse,
+    );
+    const chapterAccessContext = {
+      isCourseFree,
+      isPurchased: true,
+      paidAt: userCourse.purchase.paidAt,
+    };
+    if (!canAccessChapter(chapter, chapterAccessContext)) {
+      throw new BadRequestException(
+        "This chapter is locked and cannot be marked as completed yet",
+      );
+    }
+
+    const existingProgress = (userCourse.progress?.chapters || []).find(
+      (entry) => entry.key === chapter.key,
+    );
+    const progressCounts = this.calculateChapterProgressCounts(
+      chapters,
+      chapterAccessContext,
+      userCourse.progress?.chapters || [],
+    );
+
+    if (existingProgress) {
+      return {
+        key: existingProgress.key,
+        titleSnapshot: existingProgress.titleSnapshot,
+        userCompletedAt: existingProgress.userCompletedAt,
+        completedChapterCount: progressCounts.completedChapterCount,
+        accessibleChapterCount: progressCounts.accessibleChapterCount,
+      };
+    }
+
+    const now = new Date();
+    const progressEntry = {
+      key: chapter.key,
+      titleSnapshot: chapter.title,
+      userCompletedAt: now,
+    };
+    const updateResult = await this.userCourseModel
+      .updateOne(
+        {
+          _id: userCourse._id,
+          "progress.chapters.key": { $ne: chapter.key },
+        },
+        {
+          $push: {
+            "progress.chapters": progressEntry,
+          },
+        },
+      )
+      .exec();
+
+    if (updateResult.modifiedCount === 0) {
+      const latestUserCourse = await this.userCourseModel
+        .findById(userCourse._id)
+        .select({ progress: 1 })
+        .lean<{ progress?: UserCourse["progress"] }>()
+        .exec();
+      const latestProgress = (latestUserCourse?.progress?.chapters || []).find(
+        (entry) => entry.key === chapter.key,
+      );
+      if (!latestProgress) {
+        throw new ConflictException(
+          "Chapter completion could not be recorded. Please try again",
+        );
+      }
+
+      const latestCounts = this.calculateChapterProgressCounts(
+        chapters,
+        chapterAccessContext,
+        latestUserCourse?.progress?.chapters || [],
+      );
+
+      return {
+        key: latestProgress.key,
+        titleSnapshot: latestProgress.titleSnapshot,
+        userCompletedAt: latestProgress.userCompletedAt,
+        completedChapterCount: latestCounts.completedChapterCount,
+        accessibleChapterCount: latestCounts.accessibleChapterCount,
+      };
+    }
+
+    return {
+      key: progressEntry.key,
+      titleSnapshot: progressEntry.titleSnapshot,
+      userCompletedAt: progressEntry.userCompletedAt,
+      completedChapterCount: progressCounts.completedChapterCount + 1,
+      accessibleChapterCount: progressCounts.accessibleChapterCount,
+    };
+  }
+
+  private calculateChapterProgressCounts(
+    chapters: CourseChapter[],
+    chapterAccessContext: {
+      isCourseFree: boolean;
+      isPurchased: boolean;
+      paidAt?: Date;
+    },
+    completedChapters: Array<{ key: string }>,
+  ): {
+    completedChapterCount: number;
+    accessibleChapterCount: number;
+  } {
+    const completedKeys = new Set(completedChapters.map((entry) => entry.key));
+    let completedChapterCount = 0;
+    let accessibleChapterCount = 0;
+
+    chapters.forEach((chapter) => {
+      if (!canAccessChapter(chapter, chapterAccessContext)) {
+        return;
+      }
+
+      accessibleChapterCount += 1;
+      if (completedKeys.has(chapter.key)) {
+        completedChapterCount += 1;
+      }
+    });
+
+    return { completedChapterCount, accessibleChapterCount };
+  }
+
+  private resolveChapterProgress(
+    chapterKey: string,
+    completedChapters: Array<{
+      key: string;
+      titleSnapshot: string;
+      userCompletedAt: Date;
+    }>,
+  ): {
+    isCompleted: boolean;
+    userCompletedAt?: Date;
+  } {
+    const progress = completedChapters.find((entry) => entry.key === chapterKey);
+    if (!progress) {
+      return { isCompleted: false };
+    }
+
+    return {
+      isCompleted: true,
+      userCompletedAt: progress.userCompletedAt,
+    };
+  }
+
   private resolveCourseCursorSort(sort?: CourseListSortOptionInput): {
     field: CourseListSortField;
     path: string;
@@ -1543,6 +1727,7 @@ export class CourseService {
       .select({
         courseId: 1,
         purchase: 1,
+        progress: 1,
       })
       .lean<UserCourseListRecord[]>()
       .exec();
@@ -1613,6 +1798,12 @@ export class CourseService {
       isPurchased,
       paidAt,
     };
+    const completedChapters = userCourse?.progress?.chapters || [];
+    const progressCounts = this.calculateChapterProgressCounts(
+      chapters,
+      chapterAccessContext,
+      completedChapters,
+    );
     const coverImageFileId = courseObj.coverImageFileId;
 
     return {
@@ -1629,14 +1820,22 @@ export class CourseService {
       isFree,
       isPurchased,
       purchaseStatus,
-      chapters: chapters.map((chapter) =>
-        this.toUserDetailChapterResponse(
+      completedChapterCount: progressCounts.completedChapterCount,
+      accessibleChapterCount: progressCounts.accessibleChapterCount,
+      chapters: chapters.map((chapter) => {
+        const chapterProgress = this.resolveChapterProgress(
+          chapter.key,
+          completedChapters,
+        );
+
+        return this.toUserDetailChapterResponse(
           chapter,
           fileTypeLookup,
           chapterAccessContext,
           fileAccessUrlMap,
-        ),
-      ),
+          chapterProgress.userCompletedAt,
+        );
+      }),
     };
   }
 
@@ -1649,6 +1848,7 @@ export class CourseService {
       paidAt?: Date;
     },
     fileAccessUrlMap?: Map<string, FileAccessUrlDescriptor>,
+    userCompletedAt?: Date,
   ): UserCourseDetailChapterGqlResponse {
     const canAccessChapterContent = canAccessChapter(
       chapter,
@@ -1681,6 +1881,8 @@ export class CourseService {
             ),
           )
         : null,
+      isCompleted: Boolean(userCompletedAt),
+      userCompletedAt,
     };
   }
 

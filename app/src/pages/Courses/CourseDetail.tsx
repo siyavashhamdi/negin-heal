@@ -5,7 +5,7 @@ import {
   useParams,
   useSearchParams,
 } from "react-router-dom";
-import { useQuery } from "@apollo/client/react";
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
   Alert,
   Button,
@@ -22,6 +22,8 @@ import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import AutoStoriesRoundedIcon from "@mui/icons-material/AutoStoriesRounded";
 import CardGiftcardRoundedIcon from "@mui/icons-material/CardGiftcardRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
 import OndemandVideoRoundedIcon from "@mui/icons-material/OndemandVideoRounded";
@@ -33,7 +35,12 @@ import { CHAPTER_UNLOCK_COUNTDOWN_THRESHOLD_MS } from "../../constants/course.co
 import { useAuth } from "../../contexts/AuthContext";
 import { resolveFileAccessUrl } from "../../utils/fileAccessUrl.util";
 import { USER_COURSE_DETAIL_QUERY } from "../../graphql/queries/userCourseDetail.query";
+import { COURSE_CHAPTER_COMPLETE_MUTATION } from "../../graphql/mutations/courseChapterComplete.mutation";
 import { useSnackbar } from "../../hooks/useSnackbar";
+import {
+  ChapterCompletionCheckpoint,
+  CourseProgressSummary,
+} from "./ChapterCompletionCheckpoint";
 import { CoursePurchaseDialog } from "./CoursePurchaseDialog";
 import {
   formatChapterUnlockCountdown,
@@ -44,6 +51,8 @@ import {
   isGradualChapterLock,
   shouldShowChapterUnlockCountdown,
   type CourseDetailItem,
+  type CourseChapterCompleteMutation,
+  type CourseChapterCompleteMutationVariables,
   type UserCourseDetailQuery,
   type UserCourseDetailQueryVariables,
 } from "./course-detail.api";
@@ -273,7 +282,13 @@ const CourseDetail = (): ReactElement => {
   const [isMobilePriceBarVisible, setIsMobilePriceBarVisible] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<CourseMediaViewer | null>(null);
   const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
+  const [completingChapterKey, setCompletingChapterKey] = useState<string | null>(null);
   const isUnlockRefetchingRef = useRef(false);
+
+  const [completeChapter] = useMutation<
+    CourseChapterCompleteMutation,
+    CourseChapterCompleteMutationVariables
+  >(COURSE_CHAPTER_COMPLETE_MUTATION);
 
   const handleChapterUnlockExpired = useCallback(() => {
     if (isUnlockRefetchingRef.current) {
@@ -428,6 +443,51 @@ const CourseDetail = (): ReactElement => {
   const handlePurchaseSuccess = (): void => {
     setIsPurchaseDialogOpen(false);
     void refetch();
+  };
+
+  const canTrackChapterProgress = canAccessCourse && isAuthenticated && isPaidPurchase;
+
+  const handleChapterComplete = async (chapterKey: string, chapterTitle: string): Promise<void> => {
+    if (!courseId || completingChapterKey) {
+      return;
+    }
+
+    setCompletingChapterKey(chapterKey);
+    try {
+      const result = await completeChapter({
+        variables: {
+          input: {
+            courseId,
+            chapterKey,
+          },
+        },
+      });
+
+      const completedCount = result.data?.courseChapterComplete.completedChapterCount ?? 0;
+      const accessibleCount =
+        result.data?.courseChapterComplete.accessibleChapterCount ?? 0;
+
+      showSuccess(
+        accessibleCount > 0 && completedCount >= accessibleCount
+          ? `فصل «${chapterTitle}» تکمیل شد. همه فصل‌های در دسترس را به پایان رساندید!`
+          : `فصل «${chapterTitle}» با موفقیت تکمیل شد.`,
+      );
+      await refetch();
+    } catch {
+      showError("ثبت تکمیل فصل انجام نشد. لطفاً دوباره تلاش کنید.");
+    } finally {
+      setCompletingChapterKey(null);
+    }
+  };
+
+  const handleGoToNextChapter = (nextChapterKey: string): void => {
+    setExpandedChapterKeys(new Set([nextChapterKey]));
+    window.requestAnimationFrame(() => {
+      document.getElementById(`course-chapter-${nextChapterKey}`)?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
   };
 
   if (!courseId) {
@@ -610,6 +670,11 @@ const CourseDetail = (): ReactElement => {
                 ? " فصل‌های زمان‌بندی‌شده پس از خرید، در زمان مقرر باز می‌شوند."
                 : " فصل‌های قفل‌شده بعد از خرید دوره باز می‌شوند."}
             </p>
+            <CourseProgressSummary
+              completedChapterCount={course.completedChapterCount ?? 0}
+              accessibleChapterCount={course.accessibleChapterCount ?? 0}
+              visible={canTrackChapterProgress}
+            />
           </div>
           {loading ? <CircularProgress size={22} /> : null}
         </div>
@@ -619,12 +684,22 @@ const CourseDetail = (): ReactElement => {
             const isExpanded = expandedChapterKeys.has(chapter.key);
             const isGradualLock = isGradualChapterLock(chapter);
             const chapterItems = chapter.items ?? [];
+            const nextUnlockedChapter = course.chapters
+              .slice(chapterIndex + 1)
+              .find((entry) => !entry.isLocked);
+            const showChapterCompletion = canTrackChapterProgress && !chapter.isLocked;
 
             return (
               <Paper
                 key={chapter.key}
                 id={`course-chapter-${chapter.key}`}
-                className={`${styles.chapterCard}${chapter.isLocked ? ` ${styles.chapterLocked}` : ""}`}
+                className={[
+                  styles.chapterCard,
+                  chapter.isLocked ? styles.chapterLocked : "",
+                  chapter.isCompleted ? styles.chapterCompleted : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
                 elevation={0}
               >
                 <button
@@ -645,10 +720,22 @@ const CourseDetail = (): ReactElement => {
                   aria-expanded={isExpanded}
                   aria-controls={`chapter-panel-${chapter.key}`}
                 >
-                  <span className={styles.chapterStep}>
+                  <span
+                    className={[
+                      styles.chapterStep,
+                      chapter.isCompleted ? styles.chapterStepCompleted : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                  >
                     <span className={styles.chapterNumber}>
                       {(chapterIndex + 1).toLocaleString("fa-IR")}
                     </span>
+                    {chapter.isCompleted ? (
+                      <span className={styles.chapterStepTick} aria-label="تکمیل شده">
+                        <CheckRoundedIcon />
+                      </span>
+                    ) : null}
                   </span>
                   <span className={styles.chapterTitleBlock}>
                     <span className={styles.chapterTitle}>{chapter.title}</span>
@@ -661,6 +748,15 @@ const CourseDetail = (): ReactElement => {
                         label={isGradualLock ? "زمان‌بندی‌شده" : "قفل"}
                         variant="outlined"
                         className={styles.chapterLockChip}
+                      />
+                    ) : chapter.isCompleted ? (
+                      <Chip
+                        size="small"
+                        icon={<CheckCircleRoundedIcon />}
+                        label="تکمیل‌شده"
+                        color="success"
+                        variant="filled"
+                        className={styles.chapterCompletedChip}
                       />
                     ) : chapter.isFree ? (
                       <Chip
@@ -725,6 +821,23 @@ const CourseDetail = (): ReactElement => {
                             </article>
                           ))
                         )}
+                        {showChapterCompletion ? (
+                          <ChapterCompletionCheckpoint
+                            chapterTitle={chapter.title}
+                            chapterIndex={chapterIndex}
+                            isCompleted={chapter.isCompleted}
+                            userCompletedAt={chapter.userCompletedAt}
+                            canComplete={showChapterCompletion}
+                            isSubmitting={completingChapterKey === chapter.key}
+                            hasNextChapter={Boolean(nextUnlockedChapter)}
+                            onConfirm={() => void handleChapterComplete(chapter.key, chapter.title)}
+                            onGoToNextChapter={
+                              nextUnlockedChapter
+                                ? () => handleGoToNextChapter(nextUnlockedChapter.key)
+                                : undefined
+                            }
+                          />
+                        ) : null}
                       </div>
                     )}
                   </div>

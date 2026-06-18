@@ -11,6 +11,7 @@ import { CoursePaymentController } from "./api/course-payment.controller";
 import { ChapterReleaseNotificationService } from "./chapter-release-notification.service";
 import { CourseService } from "./course.service";
 import {
+  CourseChapterCompleteMutation,
   CourseCreateMutation,
   CourseDeleteMutation,
   CoursePaymentManualCreateMutation,
@@ -39,6 +40,7 @@ import {
     ChapterReleaseNotificationCron,
     ChapterReleaseNotificationService,
     CourseService,
+    CourseChapterCompleteMutation,
     CourseCreateMutation,
     CourseDeleteMutation,
     CoursePaymentManualCreateMutation,

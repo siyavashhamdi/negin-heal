@@ -212,8 +212,9 @@ const CoursesIndex = (): ReactElement => {
         setIsMobileFilterOpen(hasActiveFilters);
       }
       if (didScroll && !isOpeningMobileFilter && !shouldIgnoreScrollForDialog) {
-        if (activeElement === searchInputRef.current) {
-          activeElement.blur();
+        const searchInput = searchInputRef.current;
+        if (searchInput && activeElement === searchInput) {
+          searchInput.blur();
         }
       }
     };
