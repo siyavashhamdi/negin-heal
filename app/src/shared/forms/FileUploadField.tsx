@@ -25,6 +25,7 @@ import {
   PauseRounded,
   PictureAsPdfRounded,
   PlayArrowRounded,
+  VisibilityOutlined,
 } from "@mui/icons-material";
 import { getViewableMediaKind } from "../../utils/fileAccessUrl.util";
 import type { ExistingFilePreview } from "../../utils/fileAccessUrl.util";
@@ -58,6 +59,7 @@ interface FileUploadFieldProps {
   playLabel?: string;
   pauseLabel?: string;
   downloadLabel?: string;
+  viewLabel?: string;
   invalidLabel: string;
   error?: boolean;
   required?: boolean;
@@ -139,6 +141,7 @@ const FileUploadField = ({
   playLabel = "پخش",
   pauseLabel = "توقف",
   downloadLabel = "دانلود",
+  viewLabel = "مشاهده",
   invalidLabel,
   error = false,
   required = false,
@@ -155,7 +158,11 @@ const FileUploadField = ({
   const popupVideoRef = useRef<HTMLVideoElement | null>(null);
   const [isDragActive, setIsDragActive] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
+  const [isViewOpen, setIsViewOpen] = useState(false);
   const [isPlayingInline, setIsPlayingInline] = useState(false);
+  const [textPreviewContent, setTextPreviewContent] = useState<string | null>(null);
+  const [textPreviewLoading, setTextPreviewLoading] = useState(false);
+  const [textPreviewError, setTextPreviewError] = useState<string | null>(null);
   const selectedPreviewUrl = useMemo(() => (file ? URL.createObjectURL(file) : undefined), [file]);
   const effectiveDropTitle = isMobile ? mobileDropTitle : dropTitle;
   const effectiveDropHint = isMobile ? mobileDropHint : dropHint;
@@ -194,13 +201,73 @@ const FileUploadField = ({
   const previewUrl = previewSource?.previewUrl ?? null;
   const supportsMaximize =
     previewMediaKind === "image" || previewMediaKind === "video";
+  const supportsViewPopup =
+    previewMediaKind === "pdf" || previewMediaKind === "text";
   const supportsInlinePlay =
     previewMediaKind === "video" || previewMediaKind === "audio";
+  const isPreviewDialogOpen =
+    (isMaximized && supportsMaximize) || (isViewOpen && supportsViewPopup);
 
   useEffect(() => {
     setIsMaximized(false);
+    setIsViewOpen(false);
     setIsPlayingInline(false);
+    setTextPreviewContent(null);
+    setTextPreviewLoading(false);
+    setTextPreviewError(null);
   }, [previewUrl, previewMediaKind]);
+
+  useEffect(() => {
+    if (!isViewOpen || previewMediaKind !== "text") {
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadTextPreview = async (): Promise<void> => {
+      setTextPreviewLoading(true);
+      setTextPreviewError(null);
+      setTextPreviewContent(null);
+
+      try {
+        if (file) {
+          const text = await file.text();
+          if (!cancelled) {
+            setTextPreviewContent(text);
+          }
+          return;
+        }
+
+        if (!previewUrl) {
+          throw new Error("missing preview url");
+        }
+
+        const response = await fetch(previewUrl);
+        if (!response.ok) {
+          throw new Error("failed to fetch text");
+        }
+
+        const text = await response.text();
+        if (!cancelled) {
+          setTextPreviewContent(text);
+        }
+      } catch {
+        if (!cancelled) {
+          setTextPreviewError("امکان نمایش متن فایل وجود ندارد.");
+        }
+      } finally {
+        if (!cancelled) {
+          setTextPreviewLoading(false);
+        }
+      }
+    };
+
+    void loadTextPreview();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [file, isViewOpen, previewMediaKind, previewUrl]);
 
   useEffect(() => {
     if (!isMaximized) {
@@ -267,6 +334,7 @@ const FileUploadField = ({
     pauseMediaElement(inlineAudioRef.current);
     pauseMediaElement(popupVideoRef.current);
     setIsMaximized(false);
+    setIsViewOpen(false);
     setIsPlayingInline(false);
     if (file != null) {
       handlePick(null);
@@ -294,6 +362,16 @@ const FileUploadField = ({
     }
 
     mediaElement.pause();
+  };
+
+  const handleToggleView = (event: SyntheticEvent): void => {
+    stopActionEvent(event);
+    setIsViewOpen((open) => !open);
+  };
+
+  const handleClosePreviewDialog = (): void => {
+    setIsMaximized(false);
+    setIsViewOpen(false);
   };
 
   const handleDownload = (event: SyntheticEvent): void => {
@@ -437,20 +515,6 @@ const FileUploadField = ({
                 </Typography>
               </Box>
               <Box className={styles.fileActions}>
-                {supportsInlinePlay ? (
-                  <IconButton
-                    size="small"
-                    color="primary"
-                    aria-label={isPlayingInline ? pauseLabel : playLabel}
-                    onClick={handleTogglePlay}
-                  >
-                    {isPlayingInline ? (
-                      <PauseRounded fontSize="small" />
-                    ) : (
-                      <PlayArrowRounded fontSize="small" />
-                    )}
-                  </IconButton>
-                ) : null}
                 {supportsMaximize ? (
                   <IconButton
                     size="small"
@@ -473,6 +537,30 @@ const FileUploadField = ({
                     onClick={handleDownload}
                   >
                     <FileDownloadOutlined fontSize="small" />
+                  </IconButton>
+                ) : null}
+                {supportsInlinePlay ? (
+                  <IconButton
+                    size="small"
+                    color="primary"
+                    aria-label={isPlayingInline ? pauseLabel : playLabel}
+                    onClick={handleTogglePlay}
+                  >
+                    {isPlayingInline ? (
+                      <PauseRounded fontSize="small" />
+                    ) : (
+                      <PlayArrowRounded fontSize="small" />
+                    )}
+                  </IconButton>
+                ) : null}
+                {supportsViewPopup ? (
+                  <IconButton
+                    size="small"
+                    color="primary"
+                    aria-label={viewLabel}
+                    onClick={handleToggleView}
+                  >
+                    <VisibilityOutlined fontSize="small" />
                   </IconButton>
                 ) : null}
                 <IconButton
@@ -502,8 +590,8 @@ const FileUploadField = ({
         </Typography>
       ) : null}
       <Dialog
-        open={isMaximized && previewUrl != null && supportsMaximize}
-        onClose={() => setIsMaximized(false)}
+        open={isPreviewDialogOpen && previewUrl != null}
+        onClose={handleClosePreviewDialog}
         maxWidth="lg"
         {...dialogProps}
         PaperProps={getPaperProps({
@@ -532,8 +620,8 @@ const FileUploadField = ({
           <IconButton
             size="small"
             color="primary"
-            aria-label={minimizeLabel}
-            onClick={() => setIsMaximized(false)}
+            aria-label={supportsViewPopup ? viewLabel : minimizeLabel}
+            onClick={handleClosePreviewDialog}
           >
             <CloseFullscreenOutlined fontSize="small" />
           </IconButton>
@@ -609,6 +697,98 @@ const FileUploadField = ({
                   objectFit: "contain",
                 }}
               />
+            </Box>
+          ) : null}
+          {previewUrl && previewMediaKind === "pdf" ? (
+            <Box
+              sx={{
+                display: "grid",
+                placeItems: "center",
+                flex: isCompact ? 1 : undefined,
+                minHeight: isCompact ? 0 : { xs: "18rem", md: "28rem" },
+                width: "100%",
+                borderRadius: isCompact ? 0 : 2,
+                bgcolor: "action.hover",
+                overflow: "hidden",
+              }}
+            >
+              <Box
+                component="iframe"
+                src={previewUrl}
+                title={previewSource?.name ?? "PDF preview"}
+                sx={{
+                  display: "block",
+                  inlineSize: "100%",
+                  blockSize: isCompact ? "100%" : "min(72vh, 46rem)",
+                  minBlockSize: isCompact ? 0 : { xs: "18rem", md: "28rem" },
+                  border: 0,
+                  bgcolor: "background.paper",
+                }}
+              />
+            </Box>
+          ) : null}
+          {previewMediaKind === "text" ? (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                flex: isCompact ? 1 : undefined,
+                minHeight: isCompact ? 0 : { xs: "18rem", md: "28rem" },
+                width: "100%",
+                borderRadius: isCompact ? 0 : 2,
+                bgcolor: "action.hover",
+                overflow: "hidden",
+              }}
+            >
+              {textPreviewLoading ? (
+                <Box
+                  sx={{
+                    display: "grid",
+                    placeItems: "center",
+                    flex: 1,
+                    minHeight: { xs: "18rem", md: "28rem" },
+                  }}
+                >
+                  <Typography variant="body2" color="text.secondary">
+                    در حال بارگذاری...
+                  </Typography>
+                </Box>
+              ) : null}
+              {textPreviewError ? (
+                <Box
+                  sx={{
+                    display: "grid",
+                    placeItems: "center",
+                    flex: 1,
+                    minHeight: { xs: "18rem", md: "28rem" },
+                    px: 2,
+                  }}
+                >
+                  <Typography variant="body2" color="error">
+                    {textPreviewError}
+                  </Typography>
+                </Box>
+              ) : null}
+              {!textPreviewLoading && !textPreviewError && textPreviewContent != null ? (
+                <Box
+                  component="pre"
+                  sx={{
+                    flex: 1,
+                    m: 0,
+                    p: 2,
+                    overflow: "auto",
+                    maxBlockSize: isCompact ? "100%" : "min(72vh, 46rem)",
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-word",
+                    fontFamily: "monospace",
+                    fontSize: "0.875rem",
+                    lineHeight: 1.6,
+                    bgcolor: "background.paper",
+                  }}
+                >
+                  {textPreviewContent}
+                </Box>
+              ) : null}
             </Box>
           ) : null}
         </DialogContent>

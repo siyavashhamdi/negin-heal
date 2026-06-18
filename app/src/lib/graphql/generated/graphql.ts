@@ -1022,10 +1022,10 @@ export type FileAccessUrlGqlResponse = {
   baseUrl?: Maybe<Scalars["String"]["output"]>;
   /** Stored file ID */
   fileId: Scalars["ID"]["output"];
-  /** Original stored file name including extension */
-  name?: Maybe<Scalars["String"]["output"]>;
   /** Stored file MIME type */
   mimeType?: Maybe<Scalars["String"]["output"]>;
+  /** Original stored file name including extension */
+  name?: Maybe<Scalars["String"]["output"]>;
   /** Stored file size in bytes */
   sizeBytes?: Maybe<Scalars["Float"]["output"]>;
   /** Signed access token for the file content endpoint */
@@ -1954,12 +1954,14 @@ export type UserCourseDetailChapterGqlResponse = {
   isFree: Scalars["Boolean"]["output"];
   /** Whether this chapter content is hidden from the current viewer */
   isLocked: Scalars["Boolean"]["output"];
-  /** Chapter items. Locked chapters return item metadata with protected content redacted. */
-  items: Array<UserCourseDetailItemGqlResponse>;
+  /** Chapter items. Null when the chapter is locked for the current viewer. */
+  items?: Maybe<Array<UserCourseDetailItemGqlResponse>>;
   /** Stable chapter key */
   key: Scalars["String"]["output"];
   /** Chapter title */
   title: Scalars["String"]["output"];
+  /** When this chapter becomes available for a paid viewer under gradual release */
+  unlocksAt?: Maybe<Scalars["DateTime"]["output"]>;
   /** Number of minutes after purchase/enrollment when visible */
   visibleAfterMinutes?: Maybe<Scalars["Int"]["output"]>;
 };
@@ -2003,8 +2005,6 @@ export type UserCourseDetailItemGqlResponse = {
   article?: Maybe<Scalars["String"]["output"]>;
   /** Signed access descriptor for an unlocked file-backed item */
   fileAccessUrl?: Maybe<FileAccessUrlGqlResponse>;
-  /** Whether this item content is hidden from the current viewer */
-  isLocked: Scalars["Boolean"]["output"];
   /** Course item title */
   title: Scalars["String"]["output"];
   /** Calculated item content type */

@@ -1,10 +1,10 @@
 import type { CourseDiscountType, CourseItemType, CourseReleaseType } from "./courses-list.api";
 import type { FileAccessUrl } from "../../utils/fileAccessUrl.util";
+import { CHAPTER_UNLOCK_COUNTDOWN_THRESHOLD_MS } from "../../constants/course.constants";
 
 export type CourseDetailItem = {
   readonly title: string;
   readonly type: CourseItemType;
-  readonly isLocked: boolean;
   readonly fileAccessUrl?: FileAccessUrl | null;
   readonly article?: string | null;
 };
@@ -16,7 +16,8 @@ export type CourseDetailChapter = {
   readonly visibleAfterMinutes?: number | null;
   readonly isFree: boolean;
   readonly isLocked: boolean;
-  readonly items: CourseDetailItem[];
+  readonly unlocksAt?: string | null;
+  readonly items?: CourseDetailItem[] | null;
 };
 
 export type CourseDetailRecord = {
@@ -179,4 +180,106 @@ export function formatCoursePrice(priceIrt?: number | null): string {
     return "رایگان";
   }
   return `${priceIrt.toLocaleString("fa-IR").replace(/\u066c/g, ",")} تومان`;
+}
+
+function startOfLocalDay(date: Date): Date {
+  const dayStart = new Date(date);
+  dayStart.setHours(0, 0, 0, 0);
+  return dayStart;
+}
+
+function isTomorrow(unlockDate: Date, now: Date): boolean {
+  const tomorrowStart = startOfLocalDay(now);
+  tomorrowStart.setDate(tomorrowStart.getDate() + 1);
+  const dayAfterTomorrowStart = startOfLocalDay(now);
+  dayAfterTomorrowStart.setDate(dayAfterTomorrowStart.getDate() + 2);
+
+  return (
+    unlockDate.getTime() >= tomorrowStart.getTime() &&
+    unlockDate.getTime() < dayAfterTomorrowStart.getTime()
+  );
+}
+
+function diffInCalendarDays(unlockDate: Date, now: Date): number {
+  const unlockDay = startOfLocalDay(unlockDate).getTime();
+  const today = startOfLocalDay(now).getTime();
+  return Math.round((unlockDay - today) / 86_400_000);
+}
+
+export function getChapterUnlockRemainingMs(
+  unlocksAt?: string | null,
+  now: Date = new Date(),
+): number | null {
+  if (!unlocksAt) {
+    return null;
+  }
+
+  const unlockDate = new Date(unlocksAt);
+  if (Number.isNaN(unlockDate.getTime())) {
+    return null;
+  }
+
+  return unlockDate.getTime() - now.getTime();
+}
+
+export function shouldShowChapterUnlockCountdown(
+  unlocksAt?: string | null,
+  now: Date = new Date(),
+): boolean {
+  const remainingMs = getChapterUnlockRemainingMs(unlocksAt, now);
+  if (remainingMs == null) {
+    return false;
+  }
+
+  return remainingMs > 0 && remainingMs < CHAPTER_UNLOCK_COUNTDOWN_THRESHOLD_MS;
+}
+
+export function formatChapterUnlockCountdown(remainingMs: number): string {
+  const totalSeconds = Math.max(0, Math.floor(remainingMs / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const formatted = [hours, minutes, seconds]
+    .map((value) => value.toString().padStart(2, "0"))
+    .join(":");
+
+  const persianDigits = "۰۱۲۳۴۵۶۷۸۹";
+
+  return formatted.replace(/\d/g, (digit) => persianDigits.charAt(Number(digit)));
+}
+
+export function formatChapterUnlockRelativeMessage(
+  unlocksAt?: string | null,
+  now: Date = new Date(),
+): string | null {
+  if (!unlocksAt) {
+    return null;
+  }
+
+  const unlockDate = new Date(unlocksAt);
+  if (Number.isNaN(unlockDate.getTime())) {
+    return null;
+  }
+
+  const diffMs = unlockDate.getTime() - now.getTime();
+  if (diffMs <= 0 || diffMs < CHAPTER_UNLOCK_COUNTDOWN_THRESHOLD_MS) {
+    return null;
+  }
+
+  if (isTomorrow(unlockDate, now)) {
+    return "این فصل فردا در دسترس قرار می‌گیرد.";
+  }
+
+  const daysUntil = diffInCalendarDays(unlockDate, now);
+  if (daysUntil >= 2) {
+    return "این فصل در روزهای آینده در دسترس قرار می‌گیرد.";
+  }
+
+  return "این فصل به‌زودی در دسترس قرار می‌گیرد.";
+}
+
+export function isGradualChapterLock(
+  chapter: Pick<CourseDetailChapter, "isLocked" | "unlocksAt">,
+): boolean {
+  return chapter.isLocked && Boolean(chapter.unlocksAt);
 }

@@ -28,10 +28,10 @@ export const USER_COURSE_DETAIL_QUERY = gql`
         visibleAfterMinutes
         isFree
         isLocked
+        unlocksAt
         items {
           title
           type
-          isLocked
           fileAccessUrl {
             ${FILE_ACCESS_URL_FIELDS}
           }

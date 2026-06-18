@@ -254,11 +254,13 @@ const CourseCard = ({
                 {item.title}
               </OverflowTooltip>
             </h3>
-            <p>
-              <OverflowTooltip className={styles.descriptionText} title={item.description || "بدون توضیحات"}>
-                {item.description || "بدون توضیحات"}
-              </OverflowTooltip>
-            </p>
+            {item.description?.trim() ? (
+              <p>
+                <OverflowTooltip className={styles.descriptionText} title={item.description.trim()}>
+                  {item.description.trim()}
+                </OverflowTooltip>
+              </p>
+            ) : null}
             <div className={styles.itemTypeChips}>
               {item.itemTypes.map((type) => (
                 <Chip

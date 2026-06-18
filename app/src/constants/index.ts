@@ -7,6 +7,10 @@ export {
 } from "./general-updates.constants";
 export { REMEMBER_ME_SESSION_DAYS } from "./session.constants";
 export {
+  CHAPTER_UNLOCK_COUNTDOWN_THRESHOLD_HOURS,
+  CHAPTER_UNLOCK_COUNTDOWN_THRESHOLD_MS,
+} from "./course.constants";
+export {
   LOGIN_CAPTCHA_FAILED_ATTEMPTS_THRESHOLD,
   LOGIN_CAPTCHA_MAX_AUTO_REFRESHES,
 } from "./captcha.constants";

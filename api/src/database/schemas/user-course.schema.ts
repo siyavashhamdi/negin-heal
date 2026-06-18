@@ -70,6 +70,17 @@ export type UserCourseProgress = {
   chapters: UserCourseProgressChapter[];
 };
 
+export type UserCourseChapterReleaseNotification = {
+  key: string;
+  titleSnapshot: string;
+  notificationSentAt: Date;
+  notificationId?: Types.ObjectId;
+};
+
+export type UserCourseChapterReleaseNotifications = {
+  chapters: UserCourseChapterReleaseNotification[];
+};
+
 export type UserCourseDocument = UserCourse & Document;
 
 export const UserCourseUserSnapshotSchema = new MongooseSchema(
@@ -195,6 +206,26 @@ export const UserCourseProgressSchema = new MongooseSchema(
   { _id: false },
 );
 
+export const UserCourseChapterReleaseNotificationSchema = new MongooseSchema(
+  {
+    key: { required: true, trim: true, type: String },
+    titleSnapshot: { required: true, trim: true, type: String },
+    notificationSentAt: { required: true, type: Date },
+    notificationId: { ref: "Notification", type: Types.ObjectId },
+  },
+  { _id: false },
+);
+
+export const UserCourseChapterReleaseNotificationsSchema = new MongooseSchema(
+  {
+    chapters: {
+      default: [],
+      type: [UserCourseChapterReleaseNotificationSchema],
+    },
+  },
+  { _id: false },
+);
+
 @Schema({ collection: "user_courses" })
 export class UserCourse extends BaseIdTimestampableBlameableSchema {
   @Prop({ ref: "User", required: true, type: Types.ObjectId })
@@ -214,6 +245,12 @@ export class UserCourse extends BaseIdTimestampableBlameableSchema {
 
   @Prop({ default: () => ({ chapters: [] }), type: UserCourseProgressSchema })
   progress: UserCourseProgress;
+
+  @Prop({
+    default: () => ({ chapters: [] }),
+    type: UserCourseChapterReleaseNotificationsSchema,
+  })
+  chapterReleaseNotifications: UserCourseChapterReleaseNotifications;
 }
 
 export const UserCourseSchema = SchemaFactory.createForClass(UserCourse);
@@ -235,5 +272,6 @@ UserCourseSchema.index(
 UserCourseSchema.index({ "purchase.couponSnapshot.code": 1 }, { sparse: true });
 UserCourseSchema.index({ "purchase.paidAt": -1 });
 UserCourseSchema.index({ "progress.chapters.key": 1 });
+UserCourseSchema.index({ "chapterReleaseNotifications.chapters.key": 1 });
 UserCourseSchema.index({ "audit.createdAt": -1 });
 UserCourseSchema.index({ "audit.updatedAt": -1 });

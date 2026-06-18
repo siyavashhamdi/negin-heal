@@ -1,4 +1,11 @@
-import { Field, Float, ID, Int, ObjectType } from "@nestjs/graphql";
+import {
+  Field,
+  Float,
+  GraphQLISODateTime,
+  ID,
+  Int,
+  ObjectType,
+} from "@nestjs/graphql";
 import { Types } from "mongoose";
 
 import { FileAccessUrlGqlResponse } from "../../../file/graphql/responses";
@@ -19,11 +26,6 @@ export class UserCourseDetailItemGqlResponse {
     description: "Calculated item content type",
   })
   type: CourseItemType;
-
-  @Field({
-    description: "Whether this item content is hidden from the current viewer",
-  })
-  isLocked: boolean;
 
   @Field(() => FileAccessUrlGqlResponse, {
     nullable: true,
@@ -64,11 +66,19 @@ export class UserCourseDetailChapterGqlResponse {
   })
   isLocked: boolean;
 
-  @Field(() => [UserCourseDetailItemGqlResponse], {
+  @Field(() => GraphQLISODateTime, {
+    nullable: true,
     description:
-      "Chapter items. Locked chapters return item metadata with protected content redacted.",
+      "When this chapter becomes available for a paid viewer under gradual release",
   })
-  items: UserCourseDetailItemGqlResponse[];
+  unlocksAt?: Date;
+
+  @Field(() => [UserCourseDetailItemGqlResponse], {
+    nullable: true,
+    description:
+      "Chapter items. Null when the chapter is locked for the current viewer.",
+  })
+  items?: UserCourseDetailItemGqlResponse[] | null;
 }
 
 @ObjectType()

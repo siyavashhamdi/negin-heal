@@ -69,6 +69,10 @@ const VIDEO_EXTENSIONS = new Set(["mp4", "webm", "mov", "avi", "mkv", "m4v", "og
 
 const VOICE_EXTENSIONS = new Set(["mp3", "wav", "ogg", "m4a", "aac", "flac", "opus", "oga"]);
 
+const PDF_EXTENSIONS = new Set(["pdf"]);
+
+const TEXT_EXTENSIONS = new Set(["txt", "text"]);
+
 export function getFileExtension(fileName: string): string {
   const trimmed = fileName.trim();
   const dotIndex = trimmed.lastIndexOf(".");
@@ -84,7 +88,9 @@ export function isViewableFileType(mimeType: string, fileName: string): boolean 
   if (
     normalizedMime.startsWith("image/") ||
     normalizedMime.startsWith("video/") ||
-    normalizedMime.startsWith("audio/")
+    normalizedMime.startsWith("audio/") ||
+    normalizedMime === "application/pdf" ||
+    normalizedMime.startsWith("text/")
   ) {
     return true;
   }
@@ -93,14 +99,16 @@ export function isViewableFileType(mimeType: string, fileName: string): boolean 
   return (
     IMAGE_EXTENSIONS.has(extension) ||
     VIDEO_EXTENSIONS.has(extension) ||
-    VOICE_EXTENSIONS.has(extension)
+    VOICE_EXTENSIONS.has(extension) ||
+    PDF_EXTENSIONS.has(extension) ||
+    TEXT_EXTENSIONS.has(extension)
   );
 }
 
 export function getViewableMediaKind(
   mimeType: string,
   fileName: string,
-): "image" | "video" | "audio" | null {
+): "image" | "video" | "audio" | "pdf" | "text" | null {
   const normalizedMime = mimeType.trim().toLowerCase();
   if (normalizedMime.startsWith("image/")) {
     return "image";
@@ -110,6 +118,12 @@ export function getViewableMediaKind(
   }
   if (normalizedMime.startsWith("audio/")) {
     return "audio";
+  }
+  if (normalizedMime === "application/pdf") {
+    return "pdf";
+  }
+  if (normalizedMime.startsWith("text/")) {
+    return "text";
   }
 
   const extension = getFileExtension(fileName);
@@ -121,6 +135,12 @@ export function getViewableMediaKind(
   }
   if (VOICE_EXTENSIONS.has(extension)) {
     return "audio";
+  }
+  if (PDF_EXTENSIONS.has(extension)) {
+    return "pdf";
+  }
+  if (TEXT_EXTENSIONS.has(extension)) {
+    return "text";
   }
 
   return null;

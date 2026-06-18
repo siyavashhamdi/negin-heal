@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import {
   Link as RouterLink,
   useNavigate,
@@ -29,14 +29,20 @@ import PhotoRoundedIcon from "@mui/icons-material/PhotoRounded";
 import PlayCircleRoundedIcon from "@mui/icons-material/PlayCircleRounded";
 import ShoppingCartRoundedIcon from "@mui/icons-material/ShoppingCartRounded";
 import VolumeUpRoundedIcon from "@mui/icons-material/VolumeUpRounded";
+import { CHAPTER_UNLOCK_COUNTDOWN_THRESHOLD_MS } from "../../constants/course.constants";
 import { useAuth } from "../../contexts/AuthContext";
 import { resolveFileAccessUrl } from "../../utils/fileAccessUrl.util";
 import { USER_COURSE_DETAIL_QUERY } from "../../graphql/queries/userCourseDetail.query";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { CoursePurchaseDialog } from "./CoursePurchaseDialog";
 import {
+  formatChapterUnlockCountdown,
+  formatChapterUnlockRelativeMessage,
   formatCoursePrice,
+  getChapterUnlockRemainingMs,
   getDiscountedPrice,
+  isGradualChapterLock,
+  shouldShowChapterUnlockCountdown,
   type CourseDetailItem,
   type UserCourseDetailQuery,
   type UserCourseDetailQueryVariables,
@@ -64,10 +70,6 @@ function CourseItemContent({
   readonly item: CourseDetailItem;
   readonly onOpenMedia: (media: CourseMediaViewer) => void;
 }): ReactElement | null {
-  if (item.isLocked) {
-    return null;
-  }
-
   if (item.type === "ARTICLE" && item.article?.trim()) {
     return <p className={styles.articlePreview}>{item.article.trim()}</p>;
   }
@@ -120,6 +122,98 @@ function CourseItemContent({
   return null;
 }
 
+function ChapterUnlockNotice({
+  unlocksAt,
+  fallbackMessage,
+  onExpired,
+}: {
+  readonly unlocksAt?: string | null;
+  readonly fallbackMessage: string;
+  readonly onExpired: () => void;
+}): ReactElement {
+  const [now, setNow] = useState(() => new Date());
+  const hasExpiredRef = useRef(false);
+  const remainingMs = getChapterUnlockRemainingMs(unlocksAt, now);
+  const showCountdown = shouldShowChapterUnlockCountdown(unlocksAt, now);
+
+  useEffect(() => {
+    hasExpiredRef.current = false;
+  }, [unlocksAt]);
+
+  useEffect(() => {
+    if (!unlocksAt) {
+      return;
+    }
+
+    let intervalId: number | undefined;
+    let timeoutId: number | undefined;
+
+    const startTicker = (): void => {
+      setNow(new Date());
+      intervalId = window.setInterval(() => {
+        setNow(new Date());
+      }, 1000);
+    };
+
+    const remaining = getChapterUnlockRemainingMs(unlocksAt, new Date());
+    if (remaining == null || remaining <= 0) {
+      return;
+    }
+
+    if (remaining <= CHAPTER_UNLOCK_COUNTDOWN_THRESHOLD_MS) {
+      startTicker();
+    } else {
+      timeoutId = window.setTimeout(
+        startTicker,
+        remaining - CHAPTER_UNLOCK_COUNTDOWN_THRESHOLD_MS,
+      );
+    }
+
+    return () => {
+      if (intervalId) {
+        window.clearInterval(intervalId);
+      }
+      if (timeoutId) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, [unlocksAt]);
+
+  useEffect(() => {
+    if (remainingMs == null || remainingMs > 0 || hasExpiredRef.current) {
+      return;
+    }
+
+    hasExpiredRef.current = true;
+    onExpired();
+  }, [onExpired, remainingMs]);
+
+  if (showCountdown && remainingMs != null && remainingMs > 0) {
+    return (
+      <div className={styles.unlockCountdownNotice}>
+        <LockRoundedIcon />
+        <span className={styles.unlockCountdownMessage}>
+          <span className={styles.unlockCountdownLead}>
+            این فصل به‌زودی در دسترس قرار می‌گیرد.
+          </span>
+          <strong className={styles.unlockCountdown} aria-live="polite">
+            {formatChapterUnlockCountdown(remainingMs)}
+          </strong>
+        </span>
+      </div>
+    );
+  }
+
+  const relativeMessage = formatChapterUnlockRelativeMessage(unlocksAt, now);
+
+  return (
+    <>
+      <LockRoundedIcon />
+      <span>{relativeMessage ?? fallbackMessage}</span>
+    </>
+  );
+}
+
 const CourseDetail = (): ReactElement => {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
@@ -154,24 +248,42 @@ const CourseDetail = (): ReactElement => {
   const shouldShowPrice = !isPaidPurchase;
   const shouldShowMobilePinnedPriceBar = !canAccessCourse && !hasPendingPurchase;
   const totalItems =
-    course?.chapters.reduce((sum, chapter) => sum + chapter.items.length, 0) ?? 0;
+    course?.chapters.reduce((sum, chapter) => sum + (chapter.items?.length ?? 0), 0) ?? 0;
   const defaultExpandedChapterKey = useMemo(() => {
     if (!course?.chapters.length) {
       return null;
     }
 
     if (course.isPurchased) {
-      return course.chapters[course.chapters.length - 1]?.key ?? null;
+      const lastUnlockedChapter = [...course.chapters]
+        .reverse()
+        .find((chapter) => !chapter.isLocked);
+      return lastUnlockedChapter?.key ?? course.chapters[0]?.key ?? null;
     }
 
     return course.chapters[0]?.key ?? null;
   }, [course]);
+  const hasGradualLockedChapters =
+    course?.releaseType === "GRADUAL" &&
+    course.chapters.some((chapter) => isGradualChapterLock(chapter));
   const [expandedChapterKeys, setExpandedChapterKeys] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
   const [isMobilePriceBarVisible, setIsMobilePriceBarVisible] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<CourseMediaViewer | null>(null);
   const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
+  const isUnlockRefetchingRef = useRef(false);
+
+  const handleChapterUnlockExpired = useCallback(() => {
+    if (isUnlockRefetchingRef.current) {
+      return;
+    }
+
+    isUnlockRefetchingRef.current = true;
+    void refetch().finally(() => {
+      isUnlockRefetchingRef.current = false;
+    });
+  }, [refetch]);
 
   useEffect(() => {
     setExpandedChapterKeys(
@@ -370,7 +482,7 @@ const CourseDetail = (): ReactElement => {
           </div>
 
           <h1>{course.title}</h1>
-          <p>{course.description?.trim() || "توضیحاتی برای این دوره ثبت نشده است."}</p>
+          {course.description?.trim() ? <p>{course.description.trim()}</p> : null}
 
           {course.tags.length > 0 ? (
             <div className={styles.tags}>
@@ -415,7 +527,11 @@ const CourseDetail = (): ReactElement => {
             </Typography>
           ) : !canAccessCourse ? (
             <Typography variant="caption" color="text.secondary">
-              بعد از خرید، همه فصل‌ها و آیتم‌های دوره برای شما باز می‌شود.
+              بعد از خرید، فصل‌ها و آیتم‌های دوره طبق زمان‌بندی انتشار در دسترس قرار می‌گیرند.
+            </Typography>
+          ) : hasGradualLockedChapters ? (
+            <Typography variant="caption" color="text.secondary">
+              برخی فصل‌ها طبق زمان‌بندی انتشار تدریجی به‌تدریج باز می‌شوند.
             </Typography>
           ) : null}
         </aside>
@@ -455,7 +571,12 @@ const CourseDetail = (): ReactElement => {
         <div className={styles.contentHeader}>
           <div>
             <h2>مسیر یادگیری دوره</h2>
-            <p>فصل‌ها را به ترتیب جلو ببرید. فصل‌های قفل‌شده بعد از خرید دوره باز می‌شوند.</p>
+            <p>
+              فصل‌ها را به ترتیب جلو ببرید.
+              {course.releaseType === "GRADUAL"
+                ? " فصل‌های زمان‌بندی‌شده پس از خرید، در زمان مقرر باز می‌شوند."
+                : " فصل‌های قفل‌شده بعد از خرید دوره باز می‌شوند."}
+            </p>
           </div>
           {loading ? <CircularProgress size={22} /> : null}
         </div>
@@ -463,6 +584,8 @@ const CourseDetail = (): ReactElement => {
         <div className={styles.chapterList}>
           {course.chapters.map((chapter, chapterIndex) => {
             const isExpanded = expandedChapterKeys.has(chapter.key);
+            const isGradualLock = isGradualChapterLock(chapter);
+            const chapterItems = chapter.items ?? [];
 
             return (
               <Paper
@@ -501,7 +624,7 @@ const CourseDetail = (): ReactElement => {
                       <Chip
                         size="small"
                         icon={<LockRoundedIcon />}
-                        label="قفل"
+                        label={isGradualLock ? "زمان‌بندی‌شده" : "قفل"}
                         variant="outlined"
                         className={styles.chapterLockChip}
                       />
@@ -518,25 +641,42 @@ const CourseDetail = (): ReactElement => {
                       className={`${styles.expandIcon}${isExpanded ? ` ${styles.expandIconOpen}` : ""}`}
                     />
                   </span>
-                  <span className={styles.chapterDescription}>
-                    {chapter.description?.trim() || "توضیحی برای این فصل ثبت نشده است."}
-                  </span>
+                  {chapter.description?.trim() ? (
+                    <span className={styles.chapterDescription}>{chapter.description.trim()}</span>
+                  ) : null}
                 </button>
 
                 <Collapse in={isExpanded} timeout="auto" unmountOnExit>
                   <div id={`chapter-panel-${chapter.key}`} className={styles.chapterPanel}>
                     {chapter.isLocked ? (
-                      <div className={styles.lockedNotice}>
-                        <LockRoundedIcon />
-                        <span>برای مشاهده آیتم‌های این فصل، دوره را خریداری کنید.</span>
+                      <div
+                        className={`${styles.lockedNotice}${
+                          isGradualLock ? ` ${styles.gradualLockedNotice}` : ""
+                        }`}
+                      >
+                        {isGradualLock ? (
+                          <ChapterUnlockNotice
+                            unlocksAt={chapter.unlocksAt}
+                            fallbackMessage="این فصل طبق زمان‌بندی انتشار تدریجی به‌زودی در دسترس قرار می‌گیرد."
+                            onExpired={handleChapterUnlockExpired}
+                          />
+                        ) : (
+                          <>
+                            <LockRoundedIcon />
+                            <span>برای مشاهده آیتم‌های این فصل، دوره را خریداری کنید.</span>
+                          </>
+                        )}
                       </div>
                     ) : (
                       <div className={styles.itemList}>
-                        {chapter.items.length === 0 ? (
+                        {chapterItems.length === 0 ? (
                           <p className={styles.emptyItems}>آیتمی برای این فصل ثبت نشده است.</p>
                         ) : (
-                          chapter.items.map((item, itemIndex) => (
-                            <article key={`${chapter.key}-${item.title}-${itemIndex}`} className={styles.itemCard}>
+                          chapterItems.map((item, itemIndex) => (
+                            <article
+                              key={`${chapter.key}-${item.title}-${itemIndex}`}
+                              className={styles.itemCard}
+                            >
                               <div className={styles.itemMarker}>
                                 <div className={styles.itemIcon}>{ITEM_TYPE_ICON[item.type]}</div>
                               </div>

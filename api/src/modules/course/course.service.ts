@@ -89,6 +89,10 @@ import { AppSettingsService } from "../app-settings";
 import { BadgeService } from "../badge";
 import { CouponService } from "../coupon";
 import { UserSubscriptionService } from "../user";
+import {
+  canAccessChapter,
+  resolveChapterUnlocksAt,
+} from "./chapter-access.util";
 
 type PlainCourse = Course & {
   _id: Types.ObjectId;
@@ -1603,7 +1607,12 @@ export class CourseService {
     const isFree = this.isCourseFree(courseObj);
     const purchaseStatus = userCourse?.purchase?.status;
     const isPurchased = purchaseStatus === UserCoursePurchaseStatus.PAID;
-    const canAccessPaidContent = isFree || isPurchased;
+    const paidAt = userCourse?.purchase?.paidAt;
+    const chapterAccessContext = {
+      isCourseFree: isFree,
+      isPurchased,
+      paidAt,
+    };
     const coverImageFileId = courseObj.coverImageFileId;
 
     return {
@@ -1624,7 +1633,7 @@ export class CourseService {
         this.toUserDetailChapterResponse(
           chapter,
           fileTypeLookup,
-          canAccessPaidContent || chapter.isFree,
+          chapterAccessContext,
           fileAccessUrlMap,
         ),
       ),
@@ -1634,44 +1643,62 @@ export class CourseService {
   private toUserDetailChapterResponse(
     chapter: CourseChapter,
     fileTypeLookup: FileTypeLookup,
-    canAccessChapter: boolean,
+    chapterAccessContext: {
+      isCourseFree: boolean;
+      isPurchased: boolean;
+      paidAt?: Date;
+    },
     fileAccessUrlMap?: Map<string, FileAccessUrlDescriptor>,
   ): UserCourseDetailChapterGqlResponse {
+    const canAccessChapterContent = canAccessChapter(
+      chapter,
+      chapterAccessContext,
+    );
+    const unlocksAt = resolveChapterUnlocksAt(
+      chapterAccessContext.paidAt,
+      chapter.visibleAfterMinutes,
+    );
+
     return {
       key: chapter.key,
       title: chapter.title,
       description: chapter.description,
       visibleAfterMinutes: chapter.visibleAfterMinutes,
       isFree: chapter.isFree,
-      isLocked: !canAccessChapter,
-      items: this.sortItemsForDisplay(chapter.items || []).map((item) =>
-        this.toUserDetailItemResponse(
-          item,
-          fileTypeLookup,
-          canAccessChapter,
-          fileAccessUrlMap,
-        ),
-      ),
+      isLocked: !canAccessChapterContent,
+      unlocksAt:
+        !canAccessChapterContent &&
+        chapterAccessContext.isPurchased &&
+        unlocksAt
+          ? unlocksAt
+          : undefined,
+      items: canAccessChapterContent
+        ? this.sortItemsForDisplay(chapter.items || []).map((item) =>
+            this.toUserDetailItemResponse(
+              item,
+              fileTypeLookup,
+              fileAccessUrlMap,
+            ),
+          )
+        : null,
     };
   }
 
   private toUserDetailItemResponse(
     item: CourseItem,
     fileTypeLookup: FileTypeLookup,
-    canAccessItem: boolean,
     fileAccessUrlMap?: Map<string, FileAccessUrlDescriptor>,
   ): UserCourseDetailItemGqlResponse {
-    const fileId = canAccessItem ? item.fileId : undefined;
+    const fileId = item.fileId;
 
     return {
       title: item.title,
       type: this.resolveItemType(item, fileTypeLookup),
-      isLocked: !canAccessItem,
       fileAccessUrl:
         fileId && fileAccessUrlMap
           ? fileAccessUrlMap.get(fileId.toString())
           : undefined,
-      article: canAccessItem ? item.article : undefined,
+      article: item.article,
     };
   }
 
