@@ -8,15 +8,12 @@ import {
 } from "@mui/material";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import EmojiEventsRoundedIcon from "@mui/icons-material/EmojiEventsRounded";
-import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import NavigateNextRoundedIcon from "@mui/icons-material/NavigateNextRounded";
 import styles from "./styles/ChapterCompletionCheckpoint.module.scss";
 
 type ChapterCompletionCheckpointProps = {
   readonly chapterTitle: string;
-  readonly chapterIndex: number;
   readonly isCompleted: boolean;
-  readonly userCompletedAt?: string | null;
   readonly canComplete: boolean;
   readonly isSubmitting: boolean;
   readonly hasNextChapter: boolean;
@@ -24,27 +21,9 @@ type ChapterCompletionCheckpointProps = {
   readonly onGoToNextChapter?: () => void;
 };
 
-function formatCompletionDate(value?: string | null): string | null {
-  if (!value) {
-    return null;
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return null;
-  }
-
-  return new Intl.DateTimeFormat("fa-IR", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
-}
-
 export function ChapterCompletionCheckpoint({
   chapterTitle,
-  chapterIndex,
   isCompleted,
-  userCompletedAt,
   canComplete,
   isSubmitting,
   hasNextChapter,
@@ -57,8 +36,6 @@ export function ChapterCompletionCheckpoint({
     return null;
   }
 
-  const completionDateLabel = formatCompletionDate(userCompletedAt);
-
   if (isCompleted) {
     return (
       <section
@@ -66,33 +43,22 @@ export function ChapterCompletionCheckpoint({
         aria-label={`وضعیت تکمیل فصل ${chapterTitle}`}
       >
         <div className={styles.completedCard}>
-          <div className={styles.completedIconWrap} aria-hidden="true">
-            <CheckCircleRoundedIcon className={styles.completedIcon} />
-          </div>
-          <div className={styles.completedBody}>
-            <span className={styles.completedEyebrow}>فصل تکمیل شد</span>
-            <h3>آفرین! این فصل را به پایان رساندید.</h3>
-            <p>
-              «{chapterTitle}» در مسیر یادگیری شما ثبت شد
-              {completionDateLabel ? ` · ${completionDateLabel}` : ""}.
-            </p>
-          </div>
+          <span className={styles.completedMessage}>
+            <CheckCircleRoundedIcon fontSize="small" aria-hidden="true" />
+            تکمیل شد
+          </span>
           {hasNextChapter && onGoToNextChapter ? (
             <Button
-              variant="contained"
-              size="large"
+              variant="text"
+              size="small"
+              color="success"
               endIcon={<NavigateNextRoundedIcon />}
               className={styles.nextChapterButton}
               onClick={onGoToNextChapter}
             >
-              ادامه به فصل بعد
+              فصل بعد
             </Button>
-          ) : (
-            <div className={styles.courseFinishedHint}>
-              <EmojiEventsRoundedIcon fontSize="small" aria-hidden="true" />
-              <span>فصل‌های در دسترس این دوره را تکمیل کردید.</span>
-            </div>
-          )}
+          ) : null}
         </div>
       </section>
     );
@@ -104,57 +70,41 @@ export function ChapterCompletionCheckpoint({
       aria-label={`تأیید تکمیل فصل ${chapterTitle}`}
     >
       <div className={styles.pendingCard}>
-        <div className={styles.pendingHeader}>
-          <div className={styles.pendingIconWrap} aria-hidden="true">
-            <FlagRoundedIcon className={styles.pendingIcon} />
-          </div>
-          <div className={styles.pendingIntro}>
-            <span className={styles.pendingEyebrow}>
-              پایان فصل {(chapterIndex + 1).toLocaleString("fa-IR")}
-            </span>
-            <h3>آیا مطالب این فصل را کامل مرور کردید؟</h3>
-            <p>
-              با تأیید تکمیل، پیشرفت شما ذخیره می‌شود و مسیر یادگیری دوره به‌روز
-              می‌ماند.
-            </p>
-          </div>
-        </div>
-
-        <FormControlLabel
-          className={styles.acknowledgement}
-          control={
-            <Checkbox
-              checked={hasAcknowledged}
-              onChange={(event) => setHasAcknowledged(event.target.checked)}
-              disabled={isSubmitting}
-              color="success"
-            />
-          }
-          label="مطالب این فصل را مرور کردم و آماده ادامه مسیر هستم."
-        />
-
-        <div className={styles.pendingActions}>
+        <div className={styles.pendingMain}>
+          <FormControlLabel
+            className={styles.acknowledgement}
+            control={
+              <Checkbox
+                checked={hasAcknowledged}
+                onChange={(event) => setHasAcknowledged(event.target.checked)}
+                disabled={isSubmitting}
+                color="success"
+                size="small"
+              />
+            }
+            label="این فصل را کامل مرور کردم."
+          />
           <Button
             variant="contained"
-            size="large"
+            size="small"
             color="success"
             disabled={!hasAcknowledged || isSubmitting}
             onClick={onConfirm}
             startIcon={
               isSubmitting ? (
-                <CircularProgress size={18} color="inherit" />
+                <CircularProgress size={14} color="inherit" />
               ) : (
                 <CheckCircleRoundedIcon />
               )
             }
             className={styles.confirmButton}
           >
-            {isSubmitting ? "در حال ثبت..." : "تأیید تکمیل فصل"}
+            {isSubmitting ? "..." : "تأیید تکمیل"}
           </Button>
-          <span className={styles.pendingHint}>
-            این تأیید فقط برای پیگیری پیشرفت شخصی شماست.
-          </span>
         </div>
+        <span className={styles.pendingHint}>
+          این تأیید فقط برای پیگیری پیشرفت شخصی شماست.
+        </span>
       </div>
     </section>
   );
@@ -204,7 +154,7 @@ export function CourseProgressSummary({
       {isFullyComplete ? (
         <span className={styles.progressCompleteMessage}>
           <EmojiEventsRoundedIcon fontSize="inherit" aria-hidden="true" />
-          همه فصل‌های در دسترس را تکمیل کردید!
+          همه فصل‌های قابل مشاهده را تکمیل کردید!
         </span>
       ) : null}
     </div>

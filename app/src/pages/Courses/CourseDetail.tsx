@@ -824,9 +824,7 @@ const CourseDetail = (): ReactElement => {
                         {showChapterCompletion ? (
                           <ChapterCompletionCheckpoint
                             chapterTitle={chapter.title}
-                            chapterIndex={chapterIndex}
                             isCompleted={chapter.isCompleted}
-                            userCompletedAt={chapter.userCompletedAt}
                             canComplete={showChapterCompletion}
                             isSubmitting={completingChapterKey === chapter.key}
                             hasNextChapter={Boolean(nextUnlockedChapter)}
