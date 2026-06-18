@@ -2,13 +2,12 @@ import { ApolloClient, ApolloLink, HttpLink, InMemoryCache, split } from "@apoll
 import { CombinedGraphQLErrors, ServerError } from "@apollo/client/errors";
 import { SetContextLink } from "@apollo/client/link/context";
 import { ErrorLink } from "@apollo/client/link/error";
-import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
+import { GraphqlWsLink } from "./graphql-ws-link";
 import { getMainDefinition } from "@apollo/client/utilities";
-import { createClient } from "graphql-ws";
 import { LOCAL_STORAGE_KEYS } from "../constants";
+import { paginatedQueryTypePolicies } from "./apollo/paginated-query-cache.policy";
 import { queueApolloError, queueRedirectToLogin } from "../components/apollo-error-queue";
 import { extractGraphQLErrorMessage, type ApolloErrorLike, type GraphQLErrorExtensions } from "../utilities/graphql-error.util";
-import { paginatedQueryTypePolicies } from "./apollo/paginated-query-cache.policy";
 
 const httpLink = new HttpLink({
   uri: "/graphql",
@@ -26,22 +25,7 @@ const authLink = new SetContextLink((prevContext) => {
   };
 });
 
-const wsLink =
-  typeof window !== "undefined"
-    ? new GraphQLWsLink(
-        createClient({
-          url: `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/graphql`,
-          lazy: true,
-          retryAttempts: 3,
-          connectionParams: () => {
-            const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
-            return {
-              authorization: token ? `Bearer ${token}` : "",
-            };
-          },
-        })
-      )
-    : null;
+const wsLink = typeof window !== "undefined" ? new GraphqlWsLink() : null;
 
 function logGraphQlDiagnostic(message: string, locations: unknown, path: unknown): void {
   const loc = JSON.stringify(locations);

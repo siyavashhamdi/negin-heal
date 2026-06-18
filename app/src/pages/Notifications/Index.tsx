@@ -3,7 +3,7 @@ import { Alert, Button, CircularProgress, Skeleton, Stack } from "@mui/material"
 import { type ReactElement, useCallback, useEffect, useRef, useState } from "react";
 
 import { GENERAL_SUBSCRIPTION_UPDATE_TYPES } from "../../constants";
-import { useGeneralUpdatesSubscription } from "../../hooks/useGeneralUpdatesSubscription";
+import { subscribeGeneralUpdates } from "../../lib/general-updates-listeners";
 import { useTranslation } from "../../hooks/useTranslation";
 import NotificationCard from "./NotificationCard";
 import NotificationFilterTabs from "./NotificationFilterTabs";
@@ -47,13 +47,13 @@ const Notifications = (): ReactElement => {
     }
   }, [loading, activeTab]);
 
-  useGeneralUpdatesSubscription({
-    enabled: true,
-    updateTypes: [GENERAL_SUBSCRIPTION_UPDATE_TYPES.NOTIFICATION],
-    onNotification: () => {
-      refetch();
-    },
-  });
+  useEffect(() => {
+    return subscribeGeneralUpdates((update) => {
+      if (update.updateType === GENERAL_SUBSCRIPTION_UPDATE_TYPES.NOTIFICATION) {
+        void refetch();
+      }
+    });
+  }, [refetch]);
 
   const emptyMessageKey = `pages.notifications.empty.${activeTab}` as const;
 

@@ -19,7 +19,13 @@ import {
   UserCoursePurchaseStatus,
 } from "../../enums";
 import { UserSubscriptionService } from "../user";
-import { canAccessChapter } from "./chapter-access.util";
+import { coercePaidAt } from "./chapter-access.util";
+import {
+  buildChapterReleasePushClaimFilter,
+  buildChapterReleaseRetryClaimFilter,
+  findDueChapterReleaseNotifications,
+  getCompletedNotificationChapterKeys,
+} from "./chapter-release-notification.util";
 
 const USER_COURSE_BATCH_SIZE = 200;
 const CHAPTER_RELEASE_NOTIFICATION_TTL_MS = 24 * 60 * 60 * 1000;
@@ -57,10 +63,12 @@ export class ChapterReleaseNotificationService {
   ) {}
 
   async processPendingNotifications(): Promise<ChapterReleaseNotificationRunResult> {
-    const now = new Date();
     const gradualCourses = await this.findGradualReleaseCourses();
 
     if (!gradualCourses.length) {
+      this.logger.log(
+        "Chapter release check: no courses with scheduled chapter unlocks found; nothing to notify.",
+      );
       return {
         scannedUserCourses: 0,
         notifiedChapters: 0,
@@ -99,7 +107,6 @@ export class ChapterReleaseNotificationService {
         const chaptersToNotify = this.findChaptersPendingReleaseNotification(
           course,
           userCourse,
-          now,
         );
 
         for (const chapter of chaptersToNotify) {
@@ -135,6 +142,10 @@ export class ChapterReleaseNotificationService {
       this.logger.log(
         `Chapter release notifications sent: ${notifiedChapters} chapter(s) across ${scannedUserCourses} user course(s)`,
       );
+    } else {
+      this.logger.log(
+        "Chapter release check completed: no due chapter unlock notifications found.",
+      );
     }
 
     return {
@@ -147,9 +158,14 @@ export class ChapterReleaseNotificationService {
   private async findGradualReleaseCourses(): Promise<GradualReleaseCourse[]> {
     return this.courseModel
       .find({
+        $or: [
+          { "audit.deletedAt": null },
+          { "audit.deletedAt": { $exists: false } },
+        ],
         chapters: {
           $elemMatch: {
-            visibleAfterMinutes: { $type: "number" },
+            isFree: { $ne: true },
+            visibleAfterMinutes: { $gte: 0, $type: "number" },
           },
         },
       })
@@ -194,63 +210,22 @@ export class ChapterReleaseNotificationService {
   private findChaptersPendingReleaseNotification(
     course: GradualReleaseCourse,
     userCourse: PendingReleaseUserCourse,
-    now: Date,
   ): CourseChapter[] {
     const paidAt = userCourse.purchase.paidAt;
-    if (!paidAt) {
+    if (!coercePaidAt(paidAt)) {
       return [];
     }
 
-    const notifiedKeys = this.getCompletedNotificationChapterKeys(userCourse);
-    const chapterAccessContext = {
-      isCourseFree: false,
-      isPurchased: true,
+    const notifiedKeys = getCompletedNotificationChapterKeys(
+      userCourse.chapterReleaseNotifications?.chapters,
+    );
+
+    return findDueChapterReleaseNotifications(
+      course.chapters || [],
       paidAt,
-      now,
-    };
-
-    return this.sortChaptersForNotification(course.chapters || []).filter(
-      (chapter) => {
-        if (
-          chapter.isFree ||
-          typeof chapter.visibleAfterMinutes !== "number" ||
-          chapter.visibleAfterMinutes <= 0
-        ) {
-          return false;
-        }
-
-        if (notifiedKeys.has(chapter.key)) {
-          return false;
-        }
-
-        return canAccessChapter(chapter, chapterAccessContext);
-      },
+      notifiedKeys,
+      new Date(),
     );
-  }
-
-  private getCompletedNotificationChapterKeys(
-    userCourse: PendingReleaseUserCourse,
-  ): Set<string> {
-    return new Set(
-      (userCourse.chapterReleaseNotifications?.chapters || [])
-        .filter((entry) => entry.notificationId != null)
-        .map((entry) => entry.key),
-    );
-  }
-
-  private sortChaptersForNotification(
-    chapters: CourseChapter[],
-  ): CourseChapter[] {
-    return [...chapters].sort((first, second) => {
-      const firstSortOrder = first.sortOrder ?? Number.MAX_SAFE_INTEGER;
-      const secondSortOrder = second.sortOrder ?? Number.MAX_SAFE_INTEGER;
-
-      if (firstSortOrder !== secondSortOrder) {
-        return firstSortOrder - secondSortOrder;
-      }
-
-      return first.title.localeCompare(second.title, "fa");
-    });
   }
 
   private async notifyChapterReleased(
@@ -264,7 +239,7 @@ export class ChapterReleaseNotificationService {
       this.normalizeText(course.title) ||
       "دوره";
     const chapterTitle = this.normalizeText(chapter.title) || "فصل";
-    const title = "فصل جدید در دسترس است";
+    const title = "فصل جدید قابل مشاهده است";
     const message = `فصل «${chapterTitle}» از دوره «${courseTitle}» اکنون برای شما قابل دسترس است.`;
     const notificationPayload: Record<string, unknown> = {
       courseId,
@@ -284,7 +259,7 @@ export class ChapterReleaseNotificationService {
 
     const claimed = await this.claimChapterNotificationSlot(
       userCourse._id,
-      chapter,
+      chapter.key,
       chapterTitle,
     );
 
@@ -356,24 +331,18 @@ export class ChapterReleaseNotificationService {
 
   private async claimChapterNotificationSlot(
     userCourseId: Types.ObjectId,
-    chapter: CourseChapter,
+    chapterKey: string,
     chapterTitle: string,
   ): Promise<boolean> {
     const notificationSentAt = new Date();
+    const chapterEntry = {
+      key: chapterKey,
+      titleSnapshot: chapterTitle,
+      notificationSentAt,
+    };
 
     const retryResult = await this.userCourseModel.updateOne(
-      {
-        _id: userCourseId,
-        chapterReleaseNotifications: {
-          $elemMatch: {
-            key: chapter.key,
-            $or: [
-              { notificationId: { $exists: false } },
-              { notificationId: null },
-            ],
-          },
-        },
-      },
+      buildChapterReleaseRetryClaimFilter(userCourseId, chapterKey),
       {
         $set: {
           "chapterReleaseNotifications.chapters.$.titleSnapshot": chapterTitle,
@@ -388,17 +357,10 @@ export class ChapterReleaseNotificationService {
     }
 
     const claimResult = await this.userCourseModel.updateOne(
-      {
-        _id: userCourseId,
-        "chapterReleaseNotifications.chapters.key": { $ne: chapter.key },
-      },
+      buildChapterReleasePushClaimFilter(userCourseId, chapterKey),
       {
         $push: {
-          "chapterReleaseNotifications.chapters": {
-            key: chapter.key,
-            titleSnapshot: chapterTitle,
-            notificationSentAt,
-          },
+          "chapterReleaseNotifications.chapters": chapterEntry,
         },
       },
     );

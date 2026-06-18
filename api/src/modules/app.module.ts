@@ -9,6 +9,8 @@ import { GraphQLModule } from "@nestjs/graphql";
 import { MongooseModule } from "@nestjs/mongoose";
 import { ApolloDriver, ApolloDriverConfig } from "@nestjs/apollo";
 import { ScheduleModule } from "@nestjs/schedule";
+
+import { CronModule } from "../cron";
 import GraphQLJSON from "graphql-type-json";
 
 import "../enums/graphql-enums";
@@ -234,6 +236,7 @@ import { GraphQLError } from "graphql";
 
     // Scheduler (for cron jobs)
     ScheduleModule.forRoot(),
+    CronModule,
 
     // Feature modules
     DatabaseModule,

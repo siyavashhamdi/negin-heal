@@ -267,15 +267,15 @@ export function formatChapterUnlockRelativeMessage(
   }
 
   if (isTomorrow(unlockDate, now)) {
-    return "این فصل فردا در دسترس قرار می‌گیرد.";
+    return "طبق زمانبندی‌، این فصل فردا قابل مشاهده خواهد بود.";
   }
 
   const daysUntil = diffInCalendarDays(unlockDate, now);
   if (daysUntil >= 2) {
-    return "این فصل در روزهای آینده در دسترس قرار می‌گیرد.";
+    return "طبق زمانبندی‌، این فصل در روزهای آینده قابل مشاهده خواهد بود.";
   }
 
-  return "این فصل به‌زودی در دسترس قرار می‌گیرد.";
+  return "این فصل به‌زودی قابل مشاهده خواهد بود.";
 }
 
 export function isGradualChapterLock(

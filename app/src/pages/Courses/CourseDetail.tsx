@@ -194,7 +194,7 @@ function ChapterUnlockNotice({
         <LockRoundedIcon />
         <span className={styles.unlockCountdownMessage}>
           <span className={styles.unlockCountdownLead}>
-            این فصل به‌زودی در دسترس قرار می‌گیرد.
+            این فصل به‌زودی قابل مشاهده خواهد بود.
           </span>
           <strong className={styles.unlockCountdown} aria-live="polite">
             {formatChapterUnlockCountdown(remainingMs)}
@@ -691,7 +691,7 @@ const CourseDetail = (): ReactElement => {
                         {isGradualLock ? (
                           <ChapterUnlockNotice
                             unlocksAt={chapter.unlocksAt}
-                            fallbackMessage="این فصل طبق زمان‌بندی انتشار تدریجی به‌زودی در دسترس قرار می‌گیرد."
+                            fallbackMessage="این فصل طبق زمان‌بندی انتشار تدریجی به‌زودی قابل مشاهده خواهد بود."
                             onExpired={handleChapterUnlockExpired}
                           />
                         ) : (

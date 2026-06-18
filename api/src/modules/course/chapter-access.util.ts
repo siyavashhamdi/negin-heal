@@ -10,15 +10,31 @@ export type ChapterAccessContext = {
   now?: Date;
 };
 
+export function coercePaidAt(value: unknown): Date | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? undefined : value;
+  }
+
+  const parsed = new Date(value as string | number);
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+}
+
 export function resolveChapterUnlocksAt(
   paidAt: Date | undefined,
   visibleAfterMinutes: number | undefined,
 ): Date | undefined {
-  if (!paidAt || typeof visibleAfterMinutes !== "number") {
+  const normalizedPaidAt = coercePaidAt(paidAt);
+  if (!normalizedPaidAt || typeof visibleAfterMinutes !== "number") {
     return undefined;
   }
 
-  return new Date(paidAt.getTime() + visibleAfterMinutes * 60_000);
+  return new Date(
+    normalizedPaidAt.getTime() + visibleAfterMinutes * 60_000,
+  );
 }
 
 export function canAccessChapter(
@@ -38,8 +54,13 @@ export function canAccessChapter(
       return true;
     }
 
+    const paidAt = coercePaidAt(context.paidAt);
+    if (!paidAt) {
+      return false;
+    }
+
     const unlocksAt = resolveChapterUnlocksAt(
-      context.paidAt,
+      paidAt,
       chapter.visibleAfterMinutes,
     );
     if (!unlocksAt) {
