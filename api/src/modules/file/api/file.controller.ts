@@ -80,6 +80,8 @@ export class FileController {
       throw new UnauthorizedException("Invalid or expired file access token");
     }
 
+    console.log({ SL: 24.01 });
+
     const { storedFile, stream } =
       await this.fileService.getDownloadStreamById(id);
 

@@ -1,4 +1,5 @@
 import BugReportRoundedIcon from "@mui/icons-material/BugReportRounded";
+import CachedRoundedIcon from "@mui/icons-material/CachedRounded";
 import CampaignRoundedIcon from "@mui/icons-material/CampaignRounded";
 import ConfirmationNumberRoundedIcon from "@mui/icons-material/ConfirmationNumberRounded";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
@@ -24,6 +25,7 @@ import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import type { UserMeResponse } from "../../hooks/useMe";
 import TicketDialog from "../Support/TicketDialog";
 import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
+import { emptyCacheAndHardReload } from "../../utils/hardReload.util";
 import {
   EMPTY_APP_PRIVACY_POLICY_PAGE,
   type AppPrivacyPolicyPageConfigQuery,
@@ -102,6 +104,7 @@ const More = (): ReactElement => {
     errorMessage: "به‌روزرسانی تنظیمات انجام نشد.",
   });
   const [bugReportDialogOpen, setBugReportDialogOpen] = useState(false);
+  const [isHardReloading, setIsHardReloading] = useState(false);
   const isDarkMode = preferredTheme === "dark";
   const isUpdatingPreferences = updatePreferencesResult.loading;
   const shouldShowBugReport = !isSuperAdmin;
@@ -162,6 +165,17 @@ const More = (): ReactElement => {
 
     setPreferredTheme(previousTheme);
     setThemeMode(previousTheme);
+  };
+
+  const handleEmptyCacheAndHardReload = (): void => {
+    if (isHardReloading) {
+      return;
+    }
+
+    setIsHardReloading(true);
+    void emptyCacheAndHardReload().finally(() => {
+      setIsHardReloading(false);
+    });
   };
 
   const handleNotificationsToggle = async (): Promise<void> => {
@@ -318,6 +332,17 @@ const More = (): ReactElement => {
             <span>گزارش باگ</span>
           </button>
         ) : null}
+        <button
+          type="button"
+          className={styles.linkCard}
+          disabled={isHardReloading}
+          aria-busy={isHardReloading}
+          aria-label="پاکسازی کش و بارگذاری مجدد"
+          onClick={handleEmptyCacheAndHardReload}
+        >
+          <CachedRoundedIcon />
+          <span>{isHardReloading ? "در حال پاکسازی..." : "پاکسازی کش"}</span>
+        </button>
       </div>
 
       {shouldShowVersion ? (

@@ -191,6 +191,11 @@
   color: #1976d2;
 }
 
+.linkCard:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
 .bugReportCard {
   border-color: color-mix(in srgb, #ef4444 24%, var(--app-surface-border));
   background: linear-gradient(
