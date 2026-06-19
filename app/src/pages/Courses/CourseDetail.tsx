@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import {
   Link as RouterLink,
+  useLocation,
   useNavigate,
   useParams,
   useSearchParams,
@@ -33,6 +34,9 @@ import ShoppingCartRoundedIcon from "@mui/icons-material/ShoppingCartRounded";
 import VolumeUpRoundedIcon from "@mui/icons-material/VolumeUpRounded";
 import { CHAPTER_UNLOCK_COUNTDOWN_THRESHOLD_MS } from "../../constants/course.constants";
 import { useAuth } from "../../contexts/AuthContext";
+import { isMobileAppLayoutViewport } from "../../hooks/useMobileAppLayout";
+import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
+import { setPostLoginRedirect } from "../../routing/post-login-redirect";
 import { resolveFileAccessUrl } from "../../utils/fileAccessUrl.util";
 import { USER_COURSE_DETAIL_QUERY } from "../../graphql/queries/userCourseDetail.query";
 import { COURSE_CHAPTER_COMPLETE_MUTATION } from "../../graphql/mutations/courseChapterComplete.mutation";
@@ -226,6 +230,7 @@ function ChapterUnlockNotice({
 const CourseDetail = (): ReactElement => {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const focusChapterKey = searchParams.get("chapter")?.trim() || null;
   const { isAuthenticated } = useAuth();
@@ -284,6 +289,11 @@ const CourseDetail = (): ReactElement => {
   const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
   const [completingChapterKey, setCompletingChapterKey] = useState<string | null>(null);
   const isUnlockRefetchingRef = useRef(false);
+  const purchaseIntentHandledRef = useRef(false);
+
+  useEffect(() => {
+    purchaseIntentHandledRef.current = false;
+  }, [courseId]);
 
   const [completeChapter] = useMutation<
     CourseChapterCompleteMutation,
@@ -300,6 +310,35 @@ const CourseDetail = (): ReactElement => {
       isUnlockRefetchingRef.current = false;
     });
   }, [refetch]);
+
+  useEffect(() => {
+    if (purchaseIntentHandledRef.current) {
+      return;
+    }
+
+    const locationState = location.state as { openCoursePurchase?: boolean } | null;
+    if (!locationState?.openCoursePurchase) {
+      return;
+    }
+
+    if (!isAuthenticated || loading || !course || canAccessCourse || hasPendingPurchase) {
+      return;
+    }
+
+    purchaseIntentHandledRef.current = true;
+    setIsPurchaseDialogOpen(true);
+    navigate(`${location.pathname}${location.search}`, { replace: true, state: null });
+  }, [
+    canAccessCourse,
+    course,
+    hasPendingPurchase,
+    isAuthenticated,
+    loading,
+    location.pathname,
+    location.search,
+    location.state,
+    navigate,
+  ]);
 
   useEffect(() => {
     if (!course) {
@@ -421,7 +460,12 @@ const CourseDetail = (): ReactElement => {
     }
 
     if (!isAuthenticated) {
-      navigate("/login", { state: { from: `/courses/${courseId}` } });
+      const coursePath = `${APP_SHELL_ROUTES.courses}/${courseId}`;
+      setPostLoginRedirect({ pathname: coursePath, openCoursePurchase: true });
+      const loginPath = isMobileAppLayoutViewport()
+        ? APP_SHELL_ROUTES.profile
+        : APP_SHELL_ROUTES.login;
+      navigate(loginPath, { state: { from: coursePath } });
       return;
     }
 

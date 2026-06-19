@@ -5,7 +5,11 @@ import { SignupForm } from "./SignupForm";
 import { ForgotPasswordForm } from "./ForgotPasswordForm";
 import { type LoginNavState } from "./login-nav-state";
 
-const Login = (): ReactElement => {
+export type LoginProps = {
+  readonly embedded?: boolean;
+};
+
+const Login = ({ embedded = false }: LoginProps): ReactElement => {
   const [step, setStep] = useState<"request" | "verify" | "signup" | "forgot">("request");
   const [verifyIdentity, setVerifyIdentity] = useState<LoginNavState | null>(null);
   const [signupIdentity, setSignupIdentity] = useState<LoginNavState | null>(null);
@@ -53,6 +57,7 @@ const Login = (): ReactElement => {
   if (step === "verify" && verifyIdentity) {
     return (
       <VerifyLoginCodeForm
+        embedded={embedded}
         identity={verifyIdentity}
         onEditIdentity={handleEditIdentity}
         onForgotPassword={handleForgotPassword}
@@ -61,12 +66,19 @@ const Login = (): ReactElement => {
   }
 
   if (step === "signup" && signupIdentity) {
-    return <SignupForm identity={signupIdentity} onEditIdentity={handleEditIdentity} />;
+    return (
+      <SignupForm
+        embedded={embedded}
+        identity={signupIdentity}
+        onEditIdentity={handleEditIdentity}
+      />
+    );
   }
 
   if (step === "forgot") {
     return (
       <ForgotPasswordForm
+        embedded={embedded}
         initialIdentity={forgotIdentity}
         onBackToLogin={handleBackToLogin}
       />
@@ -76,6 +88,7 @@ const Login = (): ReactElement => {
   return (
     <RequestLoginCode
       key={requestFormKey}
+      embedded={embedded}
       initialPrefill={requestPrefill}
       onIdentityResolved={handleIdentityResolved}
       onSignupRequired={handleSignupRequired}

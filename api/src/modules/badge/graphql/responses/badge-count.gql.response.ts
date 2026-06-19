@@ -16,13 +16,15 @@ export class BadgeCountGqlResponse {
   payments?: number | null;
 
   @Field(() => Int, {
+    nullable: true,
     description: "Unread direct notification count for the current user.",
   })
-  notifications: number;
+  notifications?: number | null;
 
   @Field(() => Int, {
+    nullable: true,
     description:
       "Support ticket badge count. Staff users receive open tickets; end users receive answered own tickets.",
   })
-  tickets: number;
+  tickets?: number | null;
 }

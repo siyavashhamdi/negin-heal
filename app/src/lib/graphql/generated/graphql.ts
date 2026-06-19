@@ -186,11 +186,11 @@ export type BadgeCountGqlResponse = {
   /** Course badge count. Staff users receive all courses; end users receive active courses. */
   courses: Scalars["Int"]["output"];
   /** Unread direct notification count for the current user. */
-  notifications: Scalars["Int"]["output"];
+  notifications?: Maybe<Scalars["Int"]["output"]>;
   /** Pending payment badge count for staff users. Null for end users. */
   payments?: Maybe<Scalars["Int"]["output"]>;
   /** Support ticket badge count. Staff users receive open tickets; end users receive answered own tickets. */
-  tickets: Scalars["Int"]["output"];
+  tickets?: Maybe<Scalars["Int"]["output"]>;
 };
 
 export type CouponCreateGqlInput = {
@@ -3019,8 +3019,8 @@ export type BadgeCountQuery = {
     __typename?: "BadgeCountGqlResponse";
     courses: number;
     payments?: number | null;
-    notifications: number;
-    tickets: number;
+    notifications?: number | null;
+    tickets?: number | null;
   };
 };
 

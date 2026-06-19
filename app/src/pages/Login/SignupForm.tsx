@@ -40,11 +40,16 @@ const EMPTY_DIGITS: readonly string[] = Array.from(
 type SignupCredentialMode = "password" | "otp";
 
 interface SignupFormProps {
+  readonly embedded?: boolean;
   readonly identity: LoginNavState;
   readonly onEditIdentity: (identity: LoginNavState) => void;
 }
 
-export const SignupForm = ({ identity, onEditIdentity }: SignupFormProps): ReactElement => {
+export const SignupForm = ({
+  embedded = false,
+  identity,
+  onEditIdentity,
+}: SignupFormProps): ReactElement => {
   const { t } = useTranslation();
   const { showError } = useSnackbar();
   const { signup, requestSignupCode, loading } = useLogin();
@@ -271,7 +276,7 @@ export const SignupForm = ({ identity, onEditIdentity }: SignupFormProps): React
   );
 
   return (
-    <LoginShell subtitle={t("auth.login.signupSubtitle")}>
+    <LoginShell embedded={embedded} subtitle={t("auth.login.signupSubtitle")}>
       <Box className={verifyStyles.credentialHeader}>
         <Typography component="p" className={verifyStyles.identityValue}>
           {identity.identityKind === "mobile" ? toPersianDigits(identity.identity) : identity.identity}

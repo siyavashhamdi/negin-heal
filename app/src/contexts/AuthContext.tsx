@@ -8,7 +8,10 @@ import {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import { LOCAL_STORAGE_KEYS } from "../constants";
+import { isMobileAppLayoutViewport } from "../hooks/useMobileAppLayout";
 import { apolloClient } from "../lib/apollo-client";
+import { APP_SHELL_ROUTES } from "../routing/app-shell-routes";
+import { consumePostLoginRedirect } from "../routing/post-login-redirect";
 import { USER_LOGOUT_MUTATION } from "../graphql/mutations/userLogout.mutation";
 
 /**
@@ -77,14 +80,31 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
 
   /**
    * Login function
-   * Stores token and user data, then navigates to dashboard
+   * Stores token and user data, then navigates based on viewport.
    */
   const login = (token: string, userData: User): void => {
     setAccessToken(token);
     setUser(userData);
     localStorage.setItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN, token);
     localStorage.setItem("user", JSON.stringify(userData));
-    navigate("/dashboard");
+
+    const redirect = consumePostLoginRedirect();
+    if (redirect) {
+      navigate(redirect.pathname, {
+        replace: true,
+        state: redirect.openCoursePurchase ? { openCoursePurchase: true } : undefined,
+      });
+      return;
+    }
+
+    if (isMobileAppLayoutViewport()) {
+      if (window.location.pathname !== APP_SHELL_ROUTES.profile) {
+        navigate(APP_SHELL_ROUTES.profile);
+      }
+      return;
+    }
+
+    navigate(APP_SHELL_ROUTES.dashboard);
   };
 
   /**
@@ -99,7 +119,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
       setUser(null);
       localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
       localStorage.removeItem("user");
-      navigate("/login");
+      navigate(isMobileAppLayoutViewport() ? APP_SHELL_ROUTES.profile : APP_SHELL_ROUTES.login);
     };
 
     if (!token) {

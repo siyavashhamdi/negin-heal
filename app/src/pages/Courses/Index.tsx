@@ -291,7 +291,6 @@ const CoursesIndex = (): ReactElement => {
   }, [refetchCourseList]);
 
   useBadgeCountFirstPageReload({
-    enabled: Boolean(authUser),
     isOnFirstPage,
     reload: onRefresh,
   });

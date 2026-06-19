@@ -29,6 +29,9 @@ import {
 } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { useMobileAppLayout } from "../../hooks/useMobileAppLayout";
+import Login from "../Login/Login";
+import { LoginRequiredState } from "../../shared/auth/LoginRequiredState";
 import { USER_PROFILE_UPDATE_MUTATION } from "../../graphql/mutations/userProfileUpdate.mutation";
 import { useMe } from "../../hooks/useMe";
 import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
@@ -101,7 +104,7 @@ function optionalTextInput(value: string): string | null {
   return trimmed ? trimmed : null;
 }
 
-const Profile = (): ReactElement => {
+const AuthenticatedProfile = (): ReactElement => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { dialogProps, getPaperProps, getContentProps } = useMobileDialogProps({
@@ -681,6 +684,35 @@ const Profile = (): ReactElement => {
       </Button>
     </section>
   );
+};
+
+const Profile = (): ReactElement => {
+  const { isAuthenticated } = useAuth();
+  const isMobileAppLayout = useMobileAppLayout();
+
+  if (!isAuthenticated) {
+    if (isMobileAppLayout) {
+      return (
+        <section className={styles.page}>
+          <Login embedded />
+        </section>
+      );
+    }
+
+    return (
+      <section className={styles.page}>
+        <LoginRequiredState
+          eyebrow="پروفایل"
+          title="برای مدیریت حساب وارد شوید"
+          description="پس از ورود می‌توانید اطلاعات کاربری، تصویر پروفایل و تنظیمات امنیتی حساب خود را مدیریت کنید."
+          icon={<PersonRoundedIcon />}
+          actionLabel="ورود به حساب"
+        />
+      </section>
+    );
+  }
+
+  return <AuthenticatedProfile />;
 };
 
 export default Profile;

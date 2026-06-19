@@ -26,7 +26,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import { useQuery } from "@apollo/client/react";
-import { useCallback, useEffect, useMemo, useState, type ReactElement, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from "react";
 import { Link as RouterLink, NavLink, useLocation } from "react-router-dom";
 import Footer from "../components/layout/Footer";
 import { useAuth } from "../contexts/AuthContext";
@@ -78,8 +78,8 @@ type BadgeCountQuery = {
   readonly badgeCount: {
     readonly courses: number;
     readonly payments?: number | null;
-    readonly notifications: number;
-    readonly tickets: number;
+    readonly notifications?: number | null;
+    readonly tickets?: number | null;
   };
 };
 
@@ -231,8 +231,8 @@ export function MainLayout({
   const { data: badgeCountData, refetch: refetchBadgeCount } =
     useQuery<BadgeCountQuery>(BADGE_COUNT_QUERY, {
       fetchPolicy: "cache-and-network",
-      skip: !authUser,
     });
+  const previousAuthUserIdRef = useRef<string | null>(authUser?.id ?? null);
   const [liveCounts, setLiveCounts] = useState<{
     readonly courses?: number;
     readonly payments?: number | null;
@@ -254,6 +254,19 @@ export function MainLayout({
   useEffect(() => {
     setLiveNotifications(sampleNotifications);
   }, [sampleNotifications]);
+
+  useEffect(() => {
+    const currentAuthUserId = authUser?.id ?? null;
+    const previousAuthUserId = previousAuthUserIdRef.current;
+    previousAuthUserIdRef.current = currentAuthUserId;
+
+    if (currentAuthUserId === previousAuthUserId) {
+      return;
+    }
+
+    setLiveCounts({});
+    void refetchBadgeCount();
+  }, [authUser?.id, refetchBadgeCount]);
 
   const handleBadgeCountsUpdate = useCallback((): void => {
     setLiveCounts({});
@@ -534,73 +547,77 @@ export function MainLayout({
             <div className="main-layout__header-tools">
               <div className="main-layout__tools-start">
                 <div className="main-layout__quick-actions">
-                  <Tooltip title={t("layout.header.actions.notifications")}>
-                    <Badge
-                      className="main-layout__notification-badge"
-                      badgeContent={notificationBadgeCount}
-                      color="error"
-                      anchorOrigin={{ vertical: "top", horizontal: "left" }}
-                    >
-                      <IconButton
-                        id="main-layout-notification-button"
-                        aria-label={t("layout.header.actions.notifications")}
-                        aria-describedby={notificationPopoverId}
-                        className="main-layout__icon-button"
-                        onClick={(event) => setNotificationAnchorEl(event.currentTarget)}
-                      >
-                        <NotificationsNoneRoundedIcon />
-                      </IconButton>
-                    </Badge>
-                  </Tooltip>
-                  <LayoutPopover
-                    id={notificationPopoverId}
-                    open={isNotificationOpen}
-                    anchorEl={notificationAnchorEl}
-                    onClose={() => setNotificationAnchorEl(null)}
-                    paperClassName="main-layout__notifications-popover"
-                  >
-                    <div className="main-layout__notifications-panel">
-                      <div className="main-layout__panel-header main-layout__panel-header--notifications">
-                        <div>
-                          <h3>{t("layout.header.panels.notifications.popoverTitle")}</h3>
-                          <p>{t("layout.header.panels.notifications.panelSubtitle")}</p>
-                        </div>
-                        <span>
-                          {t("layout.header.panels.notifications.countLabel", {
-                        count: notificationBadgeCount,
-                          })}
-                        </span>
-                      </div>
-                      <Divider />
-                      <div className="main-layout__notifications-list">
-                        {liveNotifications.map((notification) => (
-                          <article key={notification.id} className="main-layout__notification-item">
-                            <div className="main-layout__notification-dot" />
-                            <div>
-                              <h4>{notification.title}</h4>
-                              <p>{notification.description}</p>
-                              <time>{notification.timeLabel}</time>
-                            </div>
-                          </article>
-                        ))}
-                      </div>
-                      <Divider />
-                      <div className="main-layout__panel-actions">
-                        <Button
-                          size="small"
-                          variant="contained"
-                          component={RouterLink}
-                          to={APP_SHELL_ROUTES.notifications}
-                          onClick={() => setNotificationAnchorEl(null)}
+                  {authUser ? (
+                    <>
+                      <Tooltip title={t("layout.header.actions.notifications")}>
+                        <Badge
+                          className="main-layout__notification-badge"
+                          badgeContent={notificationBadgeCount}
+                          color="error"
+                          anchorOrigin={{ vertical: "top", horizontal: "left" }}
                         >
-                          {t("layout.header.panels.notifications.viewAll")}
-                        </Button>
-                        <Button size="small" variant="text">
-                          {t("layout.header.panels.notifications.markAllRead")}
-                        </Button>
-                      </div>
-                    </div>
-                  </LayoutPopover>
+                          <IconButton
+                            id="main-layout-notification-button"
+                            aria-label={t("layout.header.actions.notifications")}
+                            aria-describedby={notificationPopoverId}
+                            className="main-layout__icon-button"
+                            onClick={(event) => setNotificationAnchorEl(event.currentTarget)}
+                          >
+                            <NotificationsNoneRoundedIcon />
+                          </IconButton>
+                        </Badge>
+                      </Tooltip>
+                      <LayoutPopover
+                        id={notificationPopoverId}
+                        open={isNotificationOpen}
+                        anchorEl={notificationAnchorEl}
+                        onClose={() => setNotificationAnchorEl(null)}
+                        paperClassName="main-layout__notifications-popover"
+                      >
+                        <div className="main-layout__notifications-panel">
+                          <div className="main-layout__panel-header main-layout__panel-header--notifications">
+                            <div>
+                              <h3>{t("layout.header.panels.notifications.popoverTitle")}</h3>
+                              <p>{t("layout.header.panels.notifications.panelSubtitle")}</p>
+                            </div>
+                            <span>
+                              {t("layout.header.panels.notifications.countLabel", {
+                                count: notificationBadgeCount,
+                              })}
+                            </span>
+                          </div>
+                          <Divider />
+                          <div className="main-layout__notifications-list">
+                            {liveNotifications.map((notification) => (
+                              <article key={notification.id} className="main-layout__notification-item">
+                                <div className="main-layout__notification-dot" />
+                                <div>
+                                  <h4>{notification.title}</h4>
+                                  <p>{notification.description}</p>
+                                  <time>{notification.timeLabel}</time>
+                                </div>
+                              </article>
+                            ))}
+                          </div>
+                          <Divider />
+                          <div className="main-layout__panel-actions">
+                            <Button
+                              size="small"
+                              variant="contained"
+                              component={RouterLink}
+                              to={APP_SHELL_ROUTES.notifications}
+                              onClick={() => setNotificationAnchorEl(null)}
+                            >
+                              {t("layout.header.panels.notifications.viewAll")}
+                            </Button>
+                            <Button size="small" variant="text">
+                              {t("layout.header.panels.notifications.markAllRead")}
+                            </Button>
+                          </div>
+                        </div>
+                      </LayoutPopover>
+                    </>
+                  ) : null}
 
                   <Tooltip title={t("layout.header.actions.settings")}>
                     <IconButton
@@ -859,23 +876,25 @@ export function MainLayout({
                 <span>پرداخت‌ها</span>
               </NavLink>
             ) : null}
-            <NavLink
-              to="/notifications"
-              className={({ isActive }) =>
-                `main-layout__mobile-bottom-item${
-                  isActive ? " main-layout__mobile-bottom-item--active" : ""
-                }`
-              }
-            >
-              <Badge
-                badgeContent={notificationBadgeCount}
-                color="error"
-                className="main-layout__mobile-bottom-badge"
+            {authUser ? (
+              <NavLink
+                to="/notifications"
+                className={({ isActive }) =>
+                  `main-layout__mobile-bottom-item${
+                    isActive ? " main-layout__mobile-bottom-item--active" : ""
+                  }`
+                }
               >
-                <NotificationsNoneRoundedIcon />
-              </Badge>
-              <span>اعلان‌ها</span>
-            </NavLink>
+                <Badge
+                  badgeContent={notificationBadgeCount}
+                  color="error"
+                  className="main-layout__mobile-bottom-badge"
+                >
+                  <NotificationsNoneRoundedIcon />
+                </Badge>
+                <span>اعلان‌ها</span>
+              </NavLink>
+            ) : null}
             <NavLink
               to={supportNavPath}
               className={({ isActive }) =>
@@ -906,7 +925,15 @@ export function MainLayout({
                 }`
               }
             >
-              <PersonRoundedIcon />
+              {authUser && avatarUrl ? (
+                <Avatar
+                  className="main-layout__mobile-bottom-avatar"
+                  src={avatarUrl}
+                  alt={userDisplayName}
+                />
+              ) : (
+                <PersonRoundedIcon />
+              )}
               <span>پروفایل</span>
             </NavLink>
             <NavLink

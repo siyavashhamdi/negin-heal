@@ -57,6 +57,10 @@ export function SideMenuNav({
   const roles = user?.roles ?? [];
   const shouldOpenSupportTickets = roles.includes("SUPER_ADMIN") || roles.includes("ADMIN");
   const visibleItems = SIDE_MENU_ITEMS.filter((item) => {
+    if (item.id === "notifications" && !user) {
+      return false;
+    }
+
     if (!item.requiredRoles || item.requiredRoles.length === 0) {
       return true;
     }

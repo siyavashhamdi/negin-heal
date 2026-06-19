@@ -53,7 +53,18 @@ export class BadgeService {
     private readonly userSubscriptionService: UserSubscriptionService,
   ) {}
 
-  async getCount(user: AuthenticatedUser): Promise<BadgeCountGqlResponse> {
+  async getCount(
+    user: AuthenticatedUser | null,
+  ): Promise<BadgeCountGqlResponse> {
+    if (!user) {
+      return {
+        courses: await this.countCourses(false),
+        payments: null,
+        notifications: null,
+        tickets: null,
+      };
+    }
+
     const isStaff = this.isStaff(user);
 
     const [courses, payments, notifications, tickets] = await Promise.all([

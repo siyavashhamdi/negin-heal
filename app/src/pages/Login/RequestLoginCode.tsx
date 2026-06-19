@@ -36,6 +36,7 @@ const detectIdentityKind = (identity: string): LoginNavState["identityKind"] => 
 };
 
 export interface RequestLoginCodeProps {
+  readonly embedded?: boolean;
   readonly initialPrefill?: LoginNavState | null;
   readonly onIdentityResolved: (identity: LoginNavState) => void;
   readonly onSignupRequired: (identity: LoginNavState) => void;
@@ -43,6 +44,7 @@ export interface RequestLoginCodeProps {
 }
 
 const RequestLoginCode = ({
+  embedded = false,
   initialPrefill = null,
   onIdentityResolved,
   onSignupRequired,
@@ -106,7 +108,7 @@ const RequestLoginCode = ({
   };
 
   return (
-    <LoginShell subtitle={t("auth.login.subtitle")}>
+    <LoginShell embedded={embedded} subtitle={t("auth.login.subtitle")}>
       <form onSubmit={handleSubmit} className={formStyles.loginForm}>
         <Typography component="p" className={formStyles.formLead}>
           {t("auth.login.identityStepLead")}

@@ -65,7 +65,7 @@ function resolveThemePreference(value: string | null | undefined): ThemePreferen
 const More = (): ReactElement => {
   const navigate = useNavigate();
   const apolloClient = useApolloClient();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { appVersion } = useAppSettings();
   const { mode, setThemeMode } = useThemeMode();
   const roles = user?.roles ?? [];
@@ -107,7 +107,7 @@ const More = (): ReactElement => {
   const [isHardReloading, setIsHardReloading] = useState(false);
   const isDarkMode = preferredTheme === "dark";
   const isUpdatingPreferences = updatePreferencesResult.loading;
-  const shouldShowBugReport = !isSuperAdmin;
+  const shouldShowBugReport = isAuthenticated && !isSuperAdmin;
   const privacyPolicyPage = data?.appPrivacyPolicyPageConfig ?? EMPTY_APP_PRIVACY_POLICY_PAGE;
   const termsOfUsePage = termsOfUseData?.appTermsOfUsePageConfig ?? EMPTY_APP_TERMS_OF_USE_PAGE;
   const shouldShowPrivacyPolicy = shouldShowPublicInfoCards && hasText(privacyPolicyPage.html);
@@ -147,6 +147,10 @@ const More = (): ReactElement => {
     const nextTheme: ThemePreference = previousTheme === "dark" ? "light" : "dark";
     setPreferredTheme(nextTheme);
     setThemeMode(nextTheme);
+
+    if (!isAuthenticated) {
+      return;
+    }
 
     const result = await updatePreferences({
       variables: {
@@ -234,30 +238,32 @@ const More = (): ReactElement => {
         </button>
       </div>
 
-      <div className={styles.preferenceRow}>
-        <div className={styles.preferenceIcon}>
-          <NotificationsRoundedIcon />
-        </div>
-        <div className={styles.preferenceText}>
-          <strong>اعلان‌ها</strong>
-          <small>{notificationsEnabled ? "فعال" : "غیرفعال"}</small>
-        </div>
-        <button
-          type="button"
-          className={`${styles.switchButton} ${notificationsEnabled ? styles.switchButtonActive : ""}`}
-          role="switch"
-          aria-checked={notificationsEnabled}
-          aria-label={notificationsEnabled ? "غیرفعال کردن اعلان‌ها" : "فعال کردن اعلان‌ها"}
-          disabled={isUpdatingPreferences}
-          onClick={() => void handleNotificationsToggle()}
-        >
-          <span className={styles.switchTrack} aria-hidden="true">
-            <span className={styles.switchThumb}>
-              <NotificationsRoundedIcon />
+      {isAuthenticated ? (
+        <div className={styles.preferenceRow}>
+          <div className={styles.preferenceIcon}>
+            <NotificationsRoundedIcon />
+          </div>
+          <div className={styles.preferenceText}>
+            <strong>اعلان‌ها</strong>
+            <small>{notificationsEnabled ? "فعال" : "غیرفعال"}</small>
+          </div>
+          <button
+            type="button"
+            className={`${styles.switchButton} ${notificationsEnabled ? styles.switchButtonActive : ""}`}
+            role="switch"
+            aria-checked={notificationsEnabled}
+            aria-label={notificationsEnabled ? "غیرفعال کردن اعلان‌ها" : "فعال کردن اعلان‌ها"}
+            disabled={isUpdatingPreferences}
+            onClick={() => void handleNotificationsToggle()}
+          >
+            <span className={styles.switchTrack} aria-hidden="true">
+              <span className={styles.switchThumb}>
+                <NotificationsRoundedIcon />
+              </span>
             </span>
-          </span>
-        </button>
-      </div>
+          </button>
+        </div>
+      ) : null}
 
       <div className={styles.linkGrid}>
         {isSuperAdmin ? (
@@ -337,11 +343,11 @@ const More = (): ReactElement => {
           className={styles.linkCard}
           disabled={isHardReloading}
           aria-busy={isHardReloading}
-          aria-label="پاکسازی کش و بارگذاری مجدد"
+          aria-label="پاکسازی کَش و بارگذاری مجدد"
           onClick={handleEmptyCacheAndHardReload}
         >
           <CachedRoundedIcon />
-          <span>{isHardReloading ? "در حال پاکسازی..." : "پاکسازی کش"}</span>
+          <span>{isHardReloading ? "در حال پاکسازی..." : "پاکسازی کَش و بارگذاری"}</span>
         </button>
       </div>
 

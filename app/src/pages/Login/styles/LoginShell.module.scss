@@ -221,6 +221,12 @@
   }
 }
 
+.embeddedShell {
+  inline-size: 100%;
+  max-width: 28rem;
+  margin-inline: auto;
+}
+
 .imageSection {
   flex: 1 1 0;
   min-width: 0;

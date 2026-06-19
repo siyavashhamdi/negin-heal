@@ -1,9 +1,12 @@
 import InboxOutlinedIcon from "@mui/icons-material/InboxOutlined";
 import { Alert, Button, CircularProgress, Skeleton, Stack } from "@mui/material";
 import { type ReactElement, useCallback, useEffect, useRef, useState } from "react";
+import { Navigate } from "react-router-dom";
 
 import { GENERAL_SUBSCRIPTION_UPDATE_TYPES } from "../../constants";
+import { useAuth } from "../../contexts/AuthContext";
 import { subscribeGeneralUpdates } from "../../lib/general-updates-listeners";
+import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
 import { useTranslation } from "../../hooks/useTranslation";
 import NotificationCard from "./NotificationCard";
 import NotificationFilterTabs from "./NotificationFilterTabs";
@@ -11,7 +14,7 @@ import type { NotificationFilterTab } from "./notifications-list.api";
 import { useNotificationList } from "./useNotificationList";
 import styles from "./styles/notifications.module.scss";
 
-const Notifications = (): ReactElement => {
+const NotificationsContent = (): ReactElement => {
   const { t } = useTranslation();
   const {
     activeTab,
@@ -59,10 +62,7 @@ const Notifications = (): ReactElement => {
 
   return (
     <section className={styles.page}>
-      <NotificationFilterTabs
-        activeTab={activeTab}
-        onChange={handleTabChange}
-      />
+      <NotificationFilterTabs activeTab={activeTab} onChange={handleTabChange} />
 
       {error ? (
         <Alert
@@ -134,6 +134,16 @@ const Notifications = (): ReactElement => {
       </div>
     </section>
   );
+};
+
+const Notifications = (): ReactElement => {
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) {
+    return <Navigate to={APP_SHELL_ROUTES.courses} replace />;
+  }
+
+  return <NotificationsContent />;
 };
 
 export default Notifications;

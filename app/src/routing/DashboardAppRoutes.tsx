@@ -5,7 +5,7 @@ import { usePageTitle } from "../hooks/usePageTitle";
 import Dashboard from "../pages/Dashoard/Dashboard";
 import CourseDetail from "../pages/Courses/CourseDetail";
 import CoursesIndex from "../pages/Courses/Index";
-import Login from "../pages/Login/Login";
+import LoginRoute from "../pages/Login/LoginRoute";
 import AboutPage from "../pages/More/About";
 import GlobalAnouncementPage from "../pages/More/GlobalAnouncement";
 import More from "../pages/More/Index";
@@ -35,7 +35,7 @@ export const DashboardAppRoutes = (): ReactElement => {
 
   return (
     <Routes>
-      <Route path={APP_SHELL_ROUTES.login} element={<Login />} />
+      <Route path={APP_SHELL_ROUTES.login} element={<LoginRoute />} />
       <Route path={APP_SHELL_ROUTES.resetPassword} element={<ResetPassword />} />
       <Route path={APP_SHELL_ROUTES.dashboard} element={wrapProtected(<Dashboard />)} />
       <Route path={APP_SHELL_ROUTES.courseDetail} element={<CourseDetail />} />
@@ -80,7 +80,7 @@ export const DashboardAppRoutes = (): ReactElement => {
           API_CONFIG.UNDER_CONSTRUCTION ? (
             <UnderConstruction />
           ) : (
-            <Navigate to={APP_SHELL_ROUTES.dashboard} replace />
+            <Navigate to={APP_SHELL_ROUTES.courses} replace />
           )
         }
       />

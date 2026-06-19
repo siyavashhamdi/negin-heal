@@ -12,6 +12,7 @@ import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import { useQuery } from "@apollo/client/react";
 import { useMemo, type ComponentType, type ReactElement } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 import { SUPPORT_CONTACT_QUERY } from "../../graphql/queries/supportContactConfig.query";
 import {
   EMPTY_SUPPORT_CONTACT,
@@ -45,12 +46,15 @@ function getVisibleChannels(config: SupportContactConfig): readonly SupportConta
 
 const Support = (): ReactElement => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const { data, loading } = useQuery<SupportContactConfigQuery>(SUPPORT_CONTACT_QUERY, {
     fetchPolicy: "cache-and-network",
   });
   const supportConfig = data?.supportContactConfig ?? EMPTY_SUPPORT_CONTACT;
   const visibleChannels = useMemo(() => getVisibleChannels(supportConfig), [supportConfig]);
-  const ticketChannel = visibleChannels.find((channel) => channel.type === "TICKET");
+  const ticketChannel = isAuthenticated
+    ? visibleChannels.find((channel) => channel.type === "TICKET")
+    : undefined;
   const contactChannels = visibleChannels.filter((channel) => channel.type !== "TICKET");
   const hasFaqCard = hasText(supportConfig.faqTitle);
   const hasMainCards = hasFaqCard || ticketChannel != null;

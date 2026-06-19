@@ -30,11 +30,13 @@ import {
 import formStyles from "./styles/LoginFormShared.module.scss";
 
 interface ForgotPasswordFormProps {
+  readonly embedded?: boolean;
   readonly initialIdentity?: LoginNavState | null;
   readonly onBackToLogin: () => void;
 }
 
 export const ForgotPasswordForm = ({
+  embedded = false,
   initialIdentity = null,
   onBackToLogin,
 }: ForgotPasswordFormProps): ReactElement => {
@@ -118,7 +120,7 @@ export const ForgotPasswordForm = ({
 
   if (submitted) {
     return (
-      <LoginShell subtitle={t("auth.login.forgotPasswordSubmittedSubtitle")}>
+      <LoginShell embedded={embedded} subtitle={t("auth.login.forgotPasswordSubmittedSubtitle")}>
         <>
           <CheckCircleIcon className={formStyles.successIcon} />
           <Typography component="h2" className={formStyles.panelTitle}>
@@ -146,7 +148,7 @@ export const ForgotPasswordForm = ({
   }
 
   return (
-    <LoginShell subtitle={t("auth.login.forgotPasswordSubtitle")}>
+    <LoginShell embedded={embedded} subtitle={t("auth.login.forgotPasswordSubtitle")}>
       <form onSubmit={handleSubmit} className={formStyles.loginForm}>
         <div className={formStyles.formIntroPanel}>
           <Typography component="h2" className={formStyles.panelTitle}>

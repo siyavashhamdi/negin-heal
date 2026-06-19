@@ -1,0 +1,83 @@
+@use "../../styles/variables" as variables;
+
+.panel {
+  display: grid;
+  justify-items: center;
+  gap: 1rem;
+  width: 100%;
+  max-width: 28rem;
+  margin-inline: auto;
+  padding: 2.25rem 1.5rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  border-radius: 1.25rem;
+  background:
+    radial-gradient(
+      circle at top center,
+      color-mix(in srgb, var(--app-layout-glow) 16%, transparent),
+      transparent 62%
+    ),
+    color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+  text-align: center;
+}
+
+.iconWrap {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 4rem;
+  block-size: 4rem;
+  border-radius: 1.15rem;
+  background: color-mix(in srgb, variables.$color-primary-main 12%, transparent);
+  color: variables.$color-primary-main;
+}
+
+.iconWrap :global(.MuiSvgIcon-root) {
+  font-size: 1.85rem;
+}
+
+.copy {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.eyebrow {
+  margin: 0;
+  color: variables.$color-primary-main;
+  font-size: 0.78rem;
+  font-weight: variables.$font-weight-semibold;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(1.05rem, 3.5vw, 1.25rem);
+  line-height: 1.45;
+}
+
+.description {
+  margin: 0;
+  max-width: 22rem;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  line-height: 1.75;
+}
+
+.action {
+  min-width: 11.5rem !important;
+  margin-top: 0.35rem;
+  border-radius: 0.9rem !important;
+  padding-inline: 1.35rem !important;
+  padding-block: 0.72rem !important;
+  font-weight: variables.$font-weight-bold !important;
+  box-shadow: 0 0.75rem 1.5rem color-mix(in srgb, variables.$color-primary-main 24%, transparent) !important;
+}
+
+body[data-theme="dark"] {
+  .panel {
+    background:
+      radial-gradient(
+        circle at top center,
+        color-mix(in srgb, var(--app-layout-glow) 18%, transparent),
+        transparent 62%
+      ),
+      color-mix(in srgb, var(--app-surface-bg) 86%, #0f172a);
+  }
+}

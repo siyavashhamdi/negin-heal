@@ -9,6 +9,8 @@ import styles from "./styles/LoginShell.module.scss";
 interface LoginShellProps {
   readonly subtitle: string;
   readonly children: ReactNode;
+  /** Form-only chrome for embedding inside app shells (e.g. mobile profile). */
+  readonly embedded?: boolean;
 }
 
 /**
@@ -16,10 +18,20 @@ interface LoginShellProps {
  * form holder and the marketing image panel. Step-specific markup is rendered
  * inside the form holder via `children`.
  */
-const LoginShell = ({ subtitle, children }: LoginShellProps): ReactElement => {
+const LoginShell = ({ subtitle, children, embedded = false }: LoginShellProps): ReactElement => {
   const { t } = useTranslation();
   const { mode, toggleTheme } = useThemeMode();
   const [marketingImageVisible, setMarketingImageVisible] = useState(true);
+
+  if (embedded) {
+    return (
+      <Box className={styles.embeddedShell}>
+        <Box component="section" className={styles.loginFormHolder}>
+          {children}
+        </Box>
+      </Box>
+    );
+  }
 
   const marketingImageClassName = [
     styles.backgroundImage,

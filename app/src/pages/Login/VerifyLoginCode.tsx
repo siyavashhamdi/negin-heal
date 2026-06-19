@@ -43,12 +43,14 @@ const CAPTCHA_ERROR_CODES = new Set([
 type CredentialMode = "password" | "otp";
 
 interface VerifyLoginCodeFormProps {
+  readonly embedded?: boolean;
   readonly identity: LoginNavState;
   readonly onEditIdentity: (identity: LoginNavState) => void;
   readonly onForgotPassword: (identity: LoginNavState) => void;
 }
 
 export const VerifyLoginCodeForm = ({
+  embedded = false,
   identity,
   onEditIdentity,
   onForgotPassword,
@@ -283,7 +285,7 @@ export const VerifyLoginCodeForm = ({
   );
 
   return (
-    <LoginShell subtitle={t("auth.login.credentialSubtitle")}>
+    <LoginShell embedded={embedded} subtitle={t("auth.login.credentialSubtitle")}>
       <Box className={verifyStyles.credentialHeader}>
         <Typography component="p" className={verifyStyles.identityValue}>
           {identity.identityKind === "mobile" ? toPersianDigits(identity.identity) : identity.identity}

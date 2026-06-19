@@ -1,6 +1,6 @@
 import { type ReactElement } from "react";
 import { ThemeProvider as MuiThemeProvider, CssBaseline } from "@mui/material";
-import { BrowserRouter, useLocation, Navigate } from "react-router-dom";
+import { BrowserRouter, useLocation } from "react-router-dom";
 import { CacheProvider } from "@emotion/react";
 import createCache from "@emotion/cache";
 import rtlPlugin from "stylis-plugin-rtl";
@@ -29,23 +29,9 @@ const AppShell = (): ReactElement => {
   const location = useLocation();
   const isLoginPage = location.pathname === APP_SHELL_ROUTES.login;
   const isResetPasswordPage = location.pathname === APP_SHELL_ROUTES.resetPassword;
-  const isPublicCoursesPage = location.pathname.startsWith(APP_SHELL_ROUTES.courses);
-  const isPaymentCallbackPage =
-    location.pathname === APP_SHELL_ROUTES.paymentZarinPalCallback;
   const isUnderConstructionHome =
     API_CONFIG.UNDER_CONSTRUCTION && location.pathname === APP_SHELL_ROUTES.home;
   const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
-
-  if (
-    !token &&
-    !isLoginPage &&
-    !isResetPasswordPage &&
-    !isPublicCoursesPage &&
-    !isPaymentCallbackPage &&
-    !isUnderConstructionHome
-  ) {
-    return <Navigate to={APP_SHELL_ROUTES.login} state={{ from: location }} replace />;
-  }
 
   if (isLoginPage || isResetPasswordPage || isUnderConstructionHome) {
     return <DashboardAppRoutes />;

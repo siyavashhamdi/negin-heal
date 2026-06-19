@@ -6,7 +6,7 @@ import { GraphqlWsLink } from "./graphql-ws-link";
 import { getMainDefinition } from "@apollo/client/utilities";
 import { LOCAL_STORAGE_KEYS } from "../constants";
 import { paginatedQueryTypePolicies } from "./apollo/paginated-query-cache.policy";
-import { queueApolloError, queueRedirectToLogin } from "../components/apollo-error-queue";
+import { queueApolloError } from "../components/apollo-error-queue";
 import { extractGraphQLErrorMessage, type ApolloErrorLike, type GraphQLErrorExtensions } from "../utilities/graphql-error.util";
 
 const httpLink = new HttpLink({
@@ -80,11 +80,8 @@ const errorLink = new ErrorLink(({ error }) => {
       const gql = graphQLError as { code?: string };
       const errorCode =
         gql.code ?? (graphQLError.extensions as { code?: string } | undefined)?.code;
-      if (errorCode === "UNAUTHENTICATED" || errorCode === "FORBIDDEN") {
+      if (errorCode === "UNAUTHENTICATED") {
         localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
-        if (errorCode === "UNAUTHENTICATED") {
-          queueRedirectToLogin();
-        }
       }
     }
     return;
@@ -100,7 +97,7 @@ const errorLink = new ErrorLink(({ error }) => {
     });
     queueApolloError(userFriendlyMessage);
 
-    if (error.statusCode === 401 || error.statusCode === 403) {
+    if (error.statusCode === 401) {
       localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
     }
     return;
