@@ -70,8 +70,14 @@ function getLastMessageBody(messages: SupportTicketListRow["messages"]): string 
   if (messages.length === 0) {
     return EMPTY_DISPLAY;
   }
-  const lastMessage = messages[messages.length - 1];
-  const body = lastMessage?.body?.trim();
+
+  const latestMessage = [...messages].sort((left, right) => {
+    const leftTimestamp = left.sentAt ? new Date(left.sentAt).getTime() : 0;
+    const rightTimestamp = right.sentAt ? new Date(right.sentAt).getTime() : 0;
+    return rightTimestamp - leftTimestamp;
+  })[0];
+
+  const body = latestMessage?.body?.trim();
   return body || EMPTY_DISPLAY;
 }
 

@@ -26,6 +26,7 @@ export const SUPER_ADMIN_TICKET_SEND_MUTATION = gql`
       closedAt
       messages {
         body
+        sentAt
         senderUser {
           id
           username

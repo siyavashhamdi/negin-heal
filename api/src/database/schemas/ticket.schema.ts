@@ -15,6 +15,7 @@ export type TicketMessage = {
   body: string;
   attachmentFileIds: Types.ObjectId[];
   senderUserId?: Types.ObjectId;
+  sentAt?: Date;
 };
 
 export type TicketDocument = Ticket & Document;
@@ -28,6 +29,7 @@ export const TicketMessageSchema = new MongooseSchema(
       type: [Types.ObjectId],
     },
     senderUserId: { ref: "User", type: Types.ObjectId },
+    sentAt: { type: Date },
   },
   { _id: false },
 );

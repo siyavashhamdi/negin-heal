@@ -65,6 +65,8 @@ interface FileUploadFieldProps {
   required?: boolean;
   optionalLabel?: string;
   fullWidth?: boolean;
+  readOnly?: boolean;
+  hideLabel?: boolean;
 }
 
 function formatFileSize(bytes: number): string {
@@ -147,6 +149,8 @@ const FileUploadField = ({
   required = false,
   optionalLabel,
   fullWidth = false,
+  readOnly = false,
+  hideLabel = false,
 }: FileUploadFieldProps): ReactElement => {
   const theme = useTheme();
   const { isCompact, dialogProps, getPaperProps, getContentProps } = useMobileDialogProps();
@@ -391,6 +395,9 @@ const FileUploadField = ({
   };
 
   const openPicker = (): void => {
+    if (readOnly) {
+      return;
+    }
     inputRef.current?.click();
   };
 
@@ -447,38 +454,49 @@ const FileUploadField = ({
     return <Box className={styles.previewIcon}>{getFileIcon(previewSource.mimeType)}</Box>;
   };
 
+  if (readOnly && !hasFile) {
+    return <></>;
+  }
+
   return (
     <Box className={[styles.root, fullWidth ? styles.rootFullWidth : ""].filter(Boolean).join(" ")}>
-      <span className={styles.label}>
-        {label}
-        {required ? <span className={styles.requiredMark}> *</span> : null}
-        {!required && optionalLabel ? (
-          <span className={styles.optionalMark}> {optionalLabel}</span>
-        ) : null}
-      </span>
+      {!hideLabel ? (
+        <span className={styles.label}>
+          {label}
+          {required ? <span className={styles.requiredMark}> *</span> : null}
+          {!required && optionalLabel ? (
+            <span className={styles.optionalMark}> {optionalLabel}</span>
+          ) : null}
+        </span>
+      ) : null}
       <Box
-        role="button"
-        tabIndex={0}
+        role={readOnly ? undefined : "button"}
+        tabIndex={readOnly ? undefined : 0}
         className={[
           styles.dropzone,
           error ? styles.dropzoneError : "",
           hasFile ? styles.dropzoneHasFile : "",
           isDragActive ? styles.dropzoneDragActive : "",
           fullWidth ? styles.dropzoneFullWidth : "",
+          readOnly ? styles.dropzoneReadOnly : "",
         ]
           .filter(Boolean)
           .join(" ")}
-        onClick={openPicker}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            openPicker();
-          }
-        }}
-        onDragEnter={handleDragEnter}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
+        onClick={readOnly ? undefined : openPicker}
+        onKeyDown={
+          readOnly
+            ? undefined
+            : (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  openPicker();
+                }
+              }
+        }
+        onDragEnter={readOnly ? undefined : handleDragEnter}
+        onDragOver={readOnly ? undefined : handleDragOver}
+        onDragLeave={readOnly ? undefined : handleDragLeave}
+        onDrop={readOnly ? undefined : handleDrop}
       >
         {previewSource == null ? (
           <>
@@ -563,27 +581,31 @@ const FileUploadField = ({
                     <VisibilityOutlined fontSize="small" />
                   </IconButton>
                 ) : null}
-                <IconButton
-                  size="small"
-                  color="error"
-                  aria-label={removeLabel}
-                  onClick={handleRemove}
-                >
-                  <DeleteOutline fontSize="small" />
-                </IconButton>
+                {!readOnly ? (
+                  <IconButton
+                    size="small"
+                    color="error"
+                    aria-label={removeLabel}
+                    onClick={handleRemove}
+                  >
+                    <DeleteOutline fontSize="small" />
+                  </IconButton>
+                ) : null}
               </Box>
             </Box>
           </Box>
         )}
       </Box>
-      <input
-        ref={inputRef}
-        id={inputId}
-        type="file"
-        className={styles.hiddenInput}
-        accept={accept}
-        onChange={handleInputChange}
-      />
+      {!readOnly ? (
+        <input
+          ref={inputRef}
+          id={inputId}
+          type="file"
+          className={styles.hiddenInput}
+          accept={accept}
+          onChange={handleInputChange}
+        />
+      ) : null}
       {error ? (
         <Typography variant="caption" color="error">
           {invalidLabel}

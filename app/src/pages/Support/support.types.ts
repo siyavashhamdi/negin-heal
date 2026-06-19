@@ -25,6 +25,7 @@ export type SupportTicketAttachment = {
 
 export type SupportTicketMessage = {
   readonly body: string;
+  readonly sentAt?: string | null;
   readonly senderUser?: SupportTicketUserMinimal | null;
   readonly attachmentFileIds: readonly string[];
   readonly attachmentFiles: readonly SupportTicketAttachment[];

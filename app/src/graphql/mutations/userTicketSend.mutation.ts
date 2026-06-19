@@ -14,6 +14,7 @@ export const USER_TICKET_SEND_MUTATION = gql`
       closedAt
       messages {
         body
+        sentAt
         senderUser {
           profile {
             firstName

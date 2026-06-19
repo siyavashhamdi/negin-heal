@@ -15,6 +15,7 @@ export const USER_TICKET_LIST_QUERY = gql`
         closedAt
         messages {
           body
+          sentAt
           senderUser {
             profile {
               firstName

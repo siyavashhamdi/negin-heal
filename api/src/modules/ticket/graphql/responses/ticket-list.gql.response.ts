@@ -84,6 +84,12 @@ export class TicketMessageGqlResponse {
   @Field({ description: "Ticket message body" })
   body: string;
 
+  @Field({
+    nullable: true,
+    description: "Date and time when the message was sent",
+  })
+  sentAt?: Date;
+
   @Field(() => TicketUserMinimalGqlResponse, {
     nullable: true,
     description: "Minimal user that sent this message",
@@ -100,6 +106,12 @@ export class TicketMessageGqlResponse {
 export class UserTicketMessageGqlResponse {
   @Field({ description: "Ticket message body" })
   body: string;
+
+  @Field({
+    nullable: true,
+    description: "Date and time when the message was sent",
+  })
+  sentAt?: Date;
 
   @Field(() => UserTicketSenderGqlResponse, {
     nullable: true,
@@ -183,7 +195,10 @@ export class TicketListGqlResponse {
   @Field({ nullable: true, description: "Date when the ticket was created" })
   createdAt?: Date;
 
-  @Field({ nullable: true, description: "Date when the ticket was last updated" })
+  @Field({
+    nullable: true,
+    description: "Date when the ticket was last updated",
+  })
   updatedAt?: Date;
 }
 
@@ -258,7 +273,10 @@ export class UserTicketListGqlResponse {
   @Field({ nullable: true, description: "Date when the ticket was created" })
   createdAt?: Date;
 
-  @Field({ nullable: true, description: "Date when the ticket was last updated" })
+  @Field({
+    nullable: true,
+    description: "Date when the ticket was last updated",
+  })
   updatedAt?: Date;
 }
 

@@ -3,7 +3,7 @@ import {
   Box,
   Button,
   Chip,
-  Link,
+  Divider,
   MenuItem,
   Paper,
   Stack,
@@ -12,7 +12,7 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import { useQuery } from "@apollo/client/react";
-import { alpha, type Theme } from "@mui/material/styles";
+import { alpha, type Theme, useTheme } from "@mui/material/styles";
 
 import { useAuth } from "../../contexts/AuthContext";
 import { SUPER_ADMIN_TICKET_SEND_MUTATION } from "../../graphql/mutations/superAdminTicketSend.mutation";
@@ -26,10 +26,7 @@ import { useTranslation } from "../../hooks/useTranslation";
 import EntityModalShell from "../../shared/crud/EntityModalShell";
 import EntityAutocompleteField from "../../shared/forms/EntityAutocompleteField";
 import FileUploadField from "../../shared/forms/FileUploadField";
-import {
-  getFileIdFromAccessUrl,
-  resolveFileAccessUrl,
-} from "../../utils/fileAccessUrl.util";
+import { buildExistingFilePreview, getFileIdFromAccessUrl } from "../../utils/fileAccessUrl.util";
 import { uploadFile as uploadFileToApi } from "../../utils/fileUpload.util";
 import {
   type UserListQuery,
@@ -116,10 +113,6 @@ type EndUserOption = {
   readonly row: UserListRow;
 };
 
-type PreviewableAttachment = Omit<SupportTicketAttachment, "accessUrl"> & {
-  readonly accessUrl: string;
-};
-
 export type TicketDialogMode = "create" | "view";
 
 export type TicketDialogProps = {
@@ -138,6 +131,16 @@ const EMPTY_DISPLAY = "—";
 const END_USER_DEFAULT_OPTIONS_LIMIT = 10;
 const END_USER_SEARCH_OPTIONS_LIMIT = 200;
 
+function formatPersianDateTime(date: Date): string {
+  const datePart = date.toLocaleDateString("fa-IR");
+  const timePart = date.toLocaleTimeString("fa-IR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  return `${timePart} · ${datePart}`;
+}
+
 function formatDateTime(value: string): string {
   if (!value.trim()) {
     return EMPTY_DISPLAY;
@@ -146,64 +149,7 @@ function formatDateTime(value: string): string {
   if (Number.isNaN(date.getTime())) {
     return EMPTY_DISPLAY;
   }
-  return date.toLocaleString("fa-IR");
-}
-
-function formatFileSize(value: number | null | undefined): string {
-  if (value == null || !Number.isFinite(value)) {
-    return EMPTY_DISPLAY;
-  }
-  if (value < 1024) {
-    return `${value.toLocaleString("fa-IR")} بایت`;
-  }
-  if (value < 1024 * 1024) {
-    return `${(value / 1024).toLocaleString("fa-IR", { maximumFractionDigits: 1 })} کیلوبایت`;
-  }
-  return `${(value / (1024 * 1024)).toLocaleString("fa-IR", { maximumFractionDigits: 1 })} مگابایت`;
-}
-
-function isImageMimeType(mimeType: string): boolean {
-  return mimeType.startsWith("image/");
-}
-
-function isVideoMimeType(mimeType: string): boolean {
-  return mimeType.startsWith("video/");
-}
-
-function isAudioMimeType(mimeType: string): boolean {
-  return mimeType.startsWith("audio/");
-}
-
-function toResolvedPreviewAttachment(
-  file: SupportTicketAttachment,
-): PreviewableAttachment | null {
-  const accessUrl = resolveFileAccessUrl(file.accessUrl);
-  if (!accessUrl) {
-    return null;
-  }
-
-  return {
-    ...file,
-    name: file.accessUrl?.name?.trim() || file.name?.trim() || "فایل",
-    mimeType:
-      file.accessUrl?.mimeType?.trim() ||
-      file.mimeType?.trim() ||
-      "application/octet-stream",
-    sizeBytes: file.accessUrl?.sizeBytes ?? file.sizeBytes ?? 0,
-    accessUrl,
-  };
-}
-
-function isPreviewableMedia(file: SupportTicketAttachment): boolean {
-  const mimeType =
-    file.accessUrl?.mimeType?.trim() ||
-    file.mimeType?.trim() ||
-    "";
-  const accessUrl = resolveFileAccessUrl(file.accessUrl);
-  return Boolean(
-    accessUrl &&
-    (isImageMimeType(mimeType) || isVideoMimeType(mimeType) || isAudioMimeType(mimeType))
-  );
+  return formatPersianDateTime(date);
 }
 
 function formatUserDisplayName(user: SupportTicketMessage["senderUser"]): string {
@@ -239,272 +185,254 @@ function userToEndUserOption(row: UserListRow): EndUserOption {
   };
 }
 
-function renderAttachmentLinks(
-  attachments: readonly SupportTicketAttachment[],
-  onPreviewAttachment: (file: PreviewableAttachment) => void,
-  isOwnMessage: boolean
-): ReactElement | null {
-  if (attachments.length === 0) {
-    return null;
-  }
-
-  return (
-    <Stack spacing={0.75} sx={{ mt: 1.5 }}>
-      {attachments.map((file, index) => {
-        const attachmentId =
-          file.id?.trim() ||
-          getFileIdFromAccessUrl(file.accessUrl) ||
-          file.path?.trim() ||
-          `attachment-${index}`;
-        const name = file.accessUrl?.name?.trim() || file.name?.trim() || "فایل";
-        const mimeType =
-          file.accessUrl?.mimeType?.trim() ||
-          file.mimeType?.trim() ||
-          "application/octet-stream";
-        const sizeBytes = file.accessUrl?.sizeBytes ?? file.sizeBytes ?? 0;
-        const label = name || attachmentId;
-        const href = resolveFileAccessUrl(file.accessUrl);
-        const previewFile = isPreviewableMedia(file) ? toResolvedPreviewAttachment(file) : null;
-        const attachmentContent = (
-          <>
-            <Typography variant="body2" fontWeight={800} sx={{ overflowWrap: "anywhere" }}>
-              {label}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {mimeType} · {formatFileSize(sizeBytes)}
-            </Typography>
-          </>
-        );
-
-        if (previewFile) {
-          return (
-            <Paper
-              key={attachmentId}
-              component="button"
-              type="button"
-              onClick={() => onPreviewAttachment(previewFile)}
-              variant="outlined"
-              sx={{
-                display: "flex",
-                gap: 1,
-                alignItems: "center",
-                width: "100%",
-                p: 1,
-                borderRadius: 2,
-                cursor: "pointer",
-                color: "text.primary",
-                textAlign: "start",
-                bgcolor: (theme) =>
-                  alpha(
-                    isOwnMessage ? theme.palette.primary.main : theme.palette.secondary.main,
-                    theme.palette.mode === "dark" ? 0.1 : 0.05
-                  ),
-                borderColor: (theme) =>
-                  alpha(
-                    isOwnMessage ? theme.palette.primary.main : theme.palette.secondary.main,
-                    theme.palette.mode === "dark" ? 0.34 : 0.18
-                  ),
-                "&:hover": {
-                  bgcolor: (theme) =>
-                    alpha(
-                      isOwnMessage ? theme.palette.primary.main : theme.palette.secondary.main,
-                      theme.palette.mode === "dark" ? 0.16 : 0.09
-                    ),
-                },
-              }}
-            >
-              <Box
-                aria-hidden="true"
-                sx={{
-                  display: "grid",
-                  placeItems: "center",
-                  flex: "0 0 auto",
-                  width: 34,
-                  height: 34,
-                  borderRadius: 1.5,
-                  bgcolor: (theme) =>
-                    alpha(
-                      isOwnMessage ? theme.palette.primary.main : theme.palette.secondary.main,
-                      0.16
-                    ),
-                  fontWeight: 900,
-                }}
-              >
-                {isImageMimeType(mimeType)
-                  ? "IMG"
-                  : isVideoMimeType(mimeType)
-                    ? "VID"
-                    : isAudioMimeType(mimeType)
-                      ? "AUD"
-                      : "FILE"}
-              </Box>
-              <Box sx={{ minWidth: 0 }}>{attachmentContent}</Box>
-            </Paper>
-          );
-        }
-
-        return href ? (
-          <Paper
-            key={attachmentId}
-            variant="outlined"
-            sx={{
-              display: "flex",
-              gap: 1,
-              alignItems: "center",
-              p: 1,
-              borderRadius: 2,
-              bgcolor: "background.paper",
-            }}
-          >
-            <Box
-              aria-hidden="true"
-              sx={{
-                display: "grid",
-                placeItems: "center",
-                flex: "0 0 auto",
-                width: 34,
-                height: 34,
-                borderRadius: 1.5,
-                bgcolor: "action.hover",
-                fontWeight: 900,
-              }}
-            >
-              FILE
-            </Box>
-            <Box sx={{ minWidth: 0 }}>
-              <Link href={href} target="_blank" rel="noopener noreferrer" variant="body2">
-                {label}
-              </Link>
-              <Typography variant="caption" color="text.secondary" display="block">
-                {mimeType} · {formatFileSize(sizeBytes)}
-              </Typography>
-            </Box>
-          </Paper>
-        ) : (
-          <Typography key={attachmentId} variant="body2" color="text.secondary">
-            {label}
-          </Typography>
-        );
-      })}
-    </Stack>
-  );
-}
-
-function MessageBubble({
-  message,
-  currentUserId,
-  onPreviewAttachment,
-}: {
-  readonly message: SupportTicketMessage;
-  readonly currentUserId?: string;
-  readonly onPreviewAttachment: (file: PreviewableAttachment) => void;
-}): ReactElement {
+function getMessageTone(
+  message: SupportTicketMessage,
+  currentUserId?: string,
+  ticketCreatorUserId?: string
+): "own" | "support" | "user" {
   const senderUserId = message.senderUser?.id?.trim() || "";
   const isSanitizedSupportMessage =
     !senderUserId && message.senderUser?.profile?.firstName?.trim() === "پشتیبانی";
   const isOwnMessage =
     Boolean(currentUserId && senderUserId && senderUserId === currentUserId) ||
     (!senderUserId && !isSanitizedSupportMessage);
-  const senderName = isOwnMessage ? "شما" : formatUserDisplayName(message.senderUser);
-  const avatarLabel = isOwnMessage ? "ش" : "پ";
+
+  if (isOwnMessage) {
+    return "own";
+  }
+
+  const isEndUserMessage =
+    Boolean(ticketCreatorUserId && senderUserId && senderUserId === ticketCreatorUserId) &&
+    !isSanitizedSupportMessage;
+
+  if (isEndUserMessage) {
+    return "user";
+  }
+
+  return "support";
+}
+
+type MessageToneStyle = {
+  readonly border: string;
+  readonly background: string;
+  readonly backgroundDark: string;
+};
+
+const MESSAGE_TONE_STYLES: Record<"own" | "support" | "user", MessageToneStyle> = {
+  own: {
+    border: "#0d9488",
+    background: "#ccfbf1",
+    backgroundDark: "rgba(13, 148, 136, 0.24)",
+  },
+  support: {
+    border: "#7c3aed",
+    background: "#ede9fe",
+    backgroundDark: "rgba(124, 58, 237, 0.24)",
+  },
+  user: {
+    border: "#2563eb",
+    background: "#dbeafe",
+    backgroundDark: "rgba(37, 99, 235, 0.24)",
+  },
+};
+
+function getMessageToneStyle(
+  tone: "own" | "support" | "user",
+  mode: "light" | "dark"
+): { border: string; background: string } {
+  const style = MESSAGE_TONE_STYLES[tone];
+  return {
+    border: style.border,
+    background: mode === "dark" ? style.backgroundDark : style.background,
+  };
+}
+
+function getMessageSentAtTimestamp(value?: string | null): number {
+  if (!value?.trim()) {
+    return 0;
+  }
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+}
+
+function sortMessagesBySentAt(
+  messages: readonly SupportTicketMessage[],
+): SupportTicketMessage[] {
+  return [...messages].sort((left, right) => {
+    const leftTimestamp = getMessageSentAtTimestamp(left.sentAt);
+    const rightTimestamp = getMessageSentAtTimestamp(right.sentAt);
+    return leftTimestamp - rightTimestamp;
+  });
+}
+
+function formatMessageDateTime(value?: string | null): string {
+  if (!value?.trim()) {
+    return EMPTY_DISPLAY;
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return EMPTY_DISPLAY;
+  }
+  return formatPersianDateTime(date);
+}
+
+function renderMessageAttachments(
+  attachments: readonly SupportTicketAttachment[]
+): ReactElement | null {
+  if (attachments.length === 0) {
+    return null;
+  }
 
   return (
-    <Stack
-      direction={isOwnMessage ? "row-reverse" : "row"}
-      spacing={1.25}
-      alignItems="flex-start"
+    <Stack spacing={1.25} sx={{ mt: 1.5 }}>
+      <Typography variant="caption" color="text.secondary" fontWeight={800}>
+        پیوست
+      </Typography>
+      <Box
+        sx={{
+          display: "grid",
+          gap: 1.25,
+          gridTemplateColumns: {
+            xs: "minmax(0, 1fr)",
+            sm: "repeat(auto-fill, minmax(11rem, 1fr))",
+          },
+        }}
+      >
+        {attachments.map((file, index) => {
+          const attachmentId =
+            file.id?.trim() ||
+            getFileIdFromAccessUrl(file.accessUrl) ||
+            file.path?.trim() ||
+            `attachment-${index}`;
+          const existingFile = buildExistingFilePreview(file.accessUrl, file.name ?? undefined);
+
+          if (!existingFile) {
+            const fallbackName = file.name?.trim() || file.accessUrl?.name?.trim() || "فایل";
+            return (
+              <Paper key={attachmentId} variant="outlined" sx={{ p: 1.25, borderRadius: 2 }}>
+                <Typography variant="body2" color="text.secondary">
+                  {fallbackName}
+                </Typography>
+              </Paper>
+            );
+          }
+
+          return (
+            <FileUploadField
+              key={attachmentId}
+              readOnly
+              hideLabel
+              fullWidth
+              label={existingFile.name}
+              file={null}
+              onChange={() => undefined}
+              existingFile={existingFile}
+              accept="*/*"
+              allowedFormatsLabel=""
+              maxSizeLabel=""
+              dropTitle=""
+              dropHint=""
+              removeLabel=""
+              invalidLabel=""
+            />
+          );
+        })}
+      </Box>
+    </Stack>
+  );
+}
+
+function MessageBubble({
+  message,
+  messageIndex,
+  currentUserId,
+  ticketCreatorUserId,
+  isEndUserView,
+}: {
+  readonly message: SupportTicketMessage;
+  readonly messageIndex: number;
+  readonly currentUserId?: string;
+  readonly ticketCreatorUserId?: string;
+  readonly isEndUserView: boolean;
+}): ReactElement {
+  const theme = useTheme();
+  const tone = getMessageTone(message, currentUserId, ticketCreatorUserId);
+  const toneStyle = getMessageToneStyle(tone, theme.palette.mode);
+  const senderName =
+    isEndUserView && tone === "own" ? "شما" : formatUserDisplayName(message.senderUser);
+  const messageNumber = `#${(messageIndex + 1).toLocaleString("fa-IR")}`;
+  const sentAtLabel = formatMessageDateTime(message.sentAt);
+
+  return (
+    <Box
       sx={{
+        display: "flex",
+        justifyContent: tone === "own" ? "flex-end" : "flex-start",
         width: "100%",
-        justifyContent: isOwnMessage ? "flex-start" : "flex-start",
       }}
     >
       <Box
-        aria-hidden="true"
         sx={{
-          display: { xs: "none", sm: "grid" },
-          placeItems: "center",
-          flex: "0 0 auto",
-          width: 36,
-          height: 36,
-          borderRadius: "50%",
-          color: isOwnMessage ? "primary.contrastText" : "secondary.contrastText",
-          bgcolor: isOwnMessage ? "primary.main" : "secondary.main",
-          fontWeight: 900,
-          boxShadow: 1,
-        }}
-      >
-        {avatarLabel}
-      </Box>
-      <Paper
-        variant="outlined"
-        sx={{
-          position: "relative",
-          flex: 1,
-          minWidth: 0,
+          display: "grid",
+          gap: 0.75,
           width: "100%",
-          maxWidth: "100%",
-          p: 2,
-          borderRadius: 3,
-          borderBottomLeftRadius: isOwnMessage ? 0 : 3,
-          borderBottomRightRadius: isOwnMessage ? 3 : 0,
-          borderColor: (theme) =>
-            alpha(
-              isOwnMessage ? theme.palette.primary.main : theme.palette.secondary.main,
-              theme.palette.mode === "dark" ? 0.42 : 0.22
-            ),
-          bgcolor: (theme) =>
-            alpha(
-              isOwnMessage ? theme.palette.primary.main : theme.palette.secondary.main,
-              theme.palette.mode === "dark" ? 0.2 : 0.07
-            ),
-          boxShadow: (theme) =>
+          maxWidth: { xs: "94%", sm: "82%", md: "76%" },
+          px: 1.75,
+          py: 1.35,
+          borderRadius:
+            tone === "own" ? "1.125rem 1.125rem 0 1.125rem" : "1.125rem 1.125rem 1.125rem 0",
+          border: `1px solid ${alpha(toneStyle.border, theme.palette.mode === "dark" ? 0.72 : 0.42)}`,
+          bgcolor: toneStyle.background,
+          boxShadow:
             theme.palette.mode === "dark"
-              ? "0 0.75rem 1.875rem rgba(0, 0, 0, 0.22)"
-              : "0 0.75rem 1.875rem rgba(15, 23, 42, 0.08)",
+              ? "0 0.35rem 1rem rgba(0, 0, 0, 0.18)"
+              : "0 0.35rem 1rem rgba(15, 23, 42, 0.06)",
         }}
       >
-        <Stack
-          direction="row"
-          alignItems="center"
-          spacing={1}
-          mb={1}
-          justifyContent={isOwnMessage ? "flex-end" : "flex-start"}
-        >
-          <Box
-            component="span"
-            sx={{
-              display: "inline-flex",
-              alignItems: "center",
-              px: 1,
-              py: 0.25,
-              borderRadius: 999,
-              fontSize: "0.75rem",
-              fontWeight: 900,
-              bgcolor: (theme) =>
-                alpha(
-                  isOwnMessage ? theme.palette.primary.main : theme.palette.secondary.main,
-                  theme.palette.mode === "dark" ? 0.24 : 0.12
-                ),
-              color: isOwnMessage ? "primary.dark" : "secondary.dark",
-            }}
+        <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={1}>
+          <Typography
+            variant="body2"
+            fontWeight={800}
+            sx={{ minWidth: 0, overflowWrap: "anywhere" }}
           >
             {senderName}
-          </Box>
+          </Typography>
+          <Stack alignItems="flex-end" spacing={0.15} sx={{ flexShrink: 0 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                fontWeight: 800,
+                fontVariantNumeric: "tabular-nums",
+                color: toneStyle.border,
+              }}
+            >
+              {messageNumber}
+            </Typography>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ fontVariantNumeric: "tabular-nums" }}
+            >
+              {sentAtLabel}
+            </Typography>
+          </Stack>
         </Stack>
+
         <Typography
           variant="body2"
           sx={{
             whiteSpace: "pre-wrap",
             overflowWrap: "anywhere",
-            lineHeight: 1.9,
+            lineHeight: 1.85,
             fontSize: "0.92rem",
           }}
         >
           {message.body}
         </Typography>
-        {renderAttachmentLinks(message.attachmentFiles ?? [], onPreviewAttachment, isOwnMessage)}
-      </Paper>
-    </Stack>
+
+        {renderMessageAttachments(message.attachmentFiles ?? [])}
+      </Box>
+    </Box>
   );
 }
 
@@ -523,6 +451,8 @@ const TicketDialog = ({
   const { user } = useAuth();
   const isMobile = useMediaQuery((muiTheme: Theme) => muiTheme.breakpoints.down("md"));
   const currentUserId = user?.id?.trim();
+  const roles = user?.roles ?? [];
+  const isEndUserView = !roles.includes("SUPER_ADMIN") && !roles.includes("ADMIN");
   const defaultCategory = initialCategory ?? "OTHER";
 
   const [title, setTitle] = useState("");
@@ -532,7 +462,6 @@ const TicketDialog = ({
   const [selectedEndUser, setSelectedEndUser] = useState<EndUserOption | null>(null);
   const [endUserSearch, setEndUserSearch] = useState("");
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
-  const [previewAttachment, setPreviewAttachment] = useState<PreviewableAttachment | null>(null);
   const debouncedEndUserSearch = useDebounce(endUserSearch, 400);
 
   const resetForm = (): void => {
@@ -553,7 +482,6 @@ const TicketDialog = ({
 
   const handleClose = (): void => {
     resetForm();
-    setPreviewAttachment(null);
     onClose();
   };
 
@@ -730,6 +658,11 @@ const TicketDialog = ({
 
   const canCloseTicket = mode === "view" && record != null && record.status !== "CLOSED";
 
+  const conversationMessages = useMemo(
+    () => (record ? sortMessagesBySentAt(record.messages) : []),
+    [record],
+  );
+
   const handleCloseTicket = (): void => {
     if (!record || record.status === "CLOSED") {
       return;
@@ -746,317 +679,258 @@ const TicketDialog = ({
   const dialogTitle =
     mode === "create" ? t("pages.support.create.title") : t("pages.support.view.title");
 
-  const previewMimeType = previewAttachment?.mimeType?.trim() ?? "";
-  const previewTitle = previewAttachment?.name?.trim() || previewAttachment?.id || "";
-
   return (
-    <>
-      <EntityModalShell
-        open={open}
-        title={dialogTitle}
-        onClose={handleClose}
-        maxWidth="md"
-        useFormWrapper
-        onSubmit={handleSubmit}
-        pinFooterToBottomOnMobile
-        footer={
+    <EntityModalShell
+      open={open}
+      title={dialogTitle}
+      onClose={handleClose}
+      maxWidth="md"
+      useFormWrapper
+      onSubmit={handleSubmit}
+      pinFooterToBottomOnMobile
+      footer={
+        <Stack
+          direction={isMobile ? "column-reverse" : "row"}
+          spacing={1.5}
+          sx={{
+            width: "100%",
+            justifyContent: isMobile ? "stretch" : "space-between",
+            "& .MuiButton-root": {
+              width: isMobile ? "100%" : "auto",
+              minWidth: isMobile ? undefined : "8rem",
+            },
+          }}
+        >
           <Stack
             direction={isMobile ? "column-reverse" : "row"}
             spacing={1.5}
-            sx={{
-              width: "100%",
-              justifyContent: isMobile ? "stretch" : "space-between",
-              "& .MuiButton-root": {
-                width: isMobile ? "100%" : "auto",
-                minWidth: isMobile ? undefined : "8rem",
-              },
-            }}
+            sx={{ width: isMobile ? "100%" : "auto" }}
           >
-            <Stack
-              direction={isMobile ? "column-reverse" : "row"}
-              spacing={1.5}
-              sx={{ width: isMobile ? "100%" : "auto" }}
+            <Button
+              type="button"
+              variant="outlined"
+              color="inherit"
+              onClick={handleClose}
+              disabled={isSubmitting}
             >
+              {t("pages.support.actions.cancel")}
+            </Button>
+            {canCloseTicket ? (
               <Button
                 type="button"
                 variant="outlined"
-                color="inherit"
-                onClick={handleClose}
+                color="error"
+                onClick={handleCloseTicket}
                 disabled={isSubmitting}
               >
-                {t("pages.support.actions.cancel")}
-              </Button>
-              {canCloseTicket ? (
-                <Button
-                  type="button"
-                  variant="outlined"
-                  color="error"
-                  onClick={handleCloseTicket}
-                  disabled={isSubmitting}
-                >
-                  {t("pages.support.actions.closeTicket")}
-                </Button>
-              ) : null}
-            </Stack>
-
-            {mode === "create" || canReply ? (
-              <Button type="submit" variant="contained" disabled={isSubmitting}>
-                {mode === "create"
-                  ? t("pages.support.create.submit")
-                  : t("pages.support.reply.submit")}
+                {t("pages.support.actions.closeTicket")}
               </Button>
             ) : null}
           </Stack>
-        }
-      >
-        <Stack spacing={3}>
-          {mode === "create" ? (
-            <>
-              {isSuperAdmin ? (
-                <EntityAutocompleteField
-                  options={endUserOptions}
-                  value={selectedEndUser}
-                  inputValue={endUserSearch}
-                  loading={endUserOptionsLoading}
-                  onInputChange={setEndUserSearch}
-                  onChange={setSelectedEndUser}
-                  noOptionsText={t("pages.support.create.endUserNoOptions")}
-                  label={t("pages.support.create.endUserIdLabel")}
-                  helperText={t("pages.support.create.endUserIdHelp")}
-                  placeholder={t("pages.support.create.endUserSearchPlaceholder")}
-                  required
-                />
-              ) : null}
-              <TextField
-                label={t("table.pages.support.columns.title")}
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                required
-                fullWidth
-                size="small"
-              />
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                <TextField
-                  select
-                  label={t("table.pages.support.columns.category")}
-                  value={category}
-                  onChange={(event) => setCategory(event.target.value as TicketCategory)}
-                  fullWidth
-                  size="small"
-                  required
-                  disabled={disableCategorySelect}
-                >
-                  {TICKET_CATEGORY_OPTIONS.map((option) => (
-                    <MenuItem key={option} value={option}>
-                      {TICKET_CATEGORY_LABEL[option]}
-                    </MenuItem>
-                  ))}
-                </TextField>
-                <TextField
-                  select
-                  label={t("table.pages.support.columns.priority")}
-                  value={priority}
-                  onChange={(event) => setPriority(event.target.value as TicketPriority)}
-                  fullWidth
-                  size="small"
-                >
-                  {TICKET_PRIORITY_OPTIONS.map((option) => (
-                    <MenuItem key={option} value={option}>
-                      {TICKET_PRIORITY_LABEL[option]}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Stack>
-            </>
-          ) : record ? (
-            <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-              <Stack spacing={1.5}>
-                <Typography variant="h6" fontWeight={800}>
-                  {record.title}
-                </Typography>
-                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  <Chip
-                    size="small"
-                    variant="outlined"
-                    label={TICKET_CATEGORY_LABEL[record.category]}
-                  />
-                  <Chip
-                    size="small"
-                    variant="outlined"
-                    label={TICKET_PRIORITY_LABEL[record.priority]}
-                  />
-                  <Chip
-                    size="small"
-                    variant="outlined"
-                    color={
-                      record.status === "OPEN"
-                        ? "warning"
-                        : record.status === "ANSWERED"
-                          ? "info"
-                          : "default"
-                    }
-                    label={TICKET_STATUS_LABEL[record.status]}
-                  />
-                </Stack>
-                <Box
-                  sx={{
-                    display: "grid",
-                    gap: 1,
-                    gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" },
-                  }}
-                >
-                  <Typography variant="body2" color="text.secondary">
-                    {t("table.pages.support.columns.createdByUserName")}: {record.createdByUserName}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {t("table.pages.support.columns.createdAt")}: {formatDateTime(record.createdAt)}
-                  </Typography>
-                  {record.closedAt ? (
-                    <>
-                      <Typography variant="body2" color="text.secondary">
-                        {t("table.pages.support.columns.closedBy")}:{" "}
-                        {record.closedBy !== "-"
-                          ? (TICKET_CLOSED_BY_LABEL[
-                              record.closedBy as keyof typeof TICKET_CLOSED_BY_LABEL
-                            ] ?? record.closedBy)
-                          : EMPTY_DISPLAY}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {t("table.pages.support.columns.closedAt")}:{" "}
-                        {formatDateTime(record.closedAt)}
-                      </Typography>
-                    </>
-                  ) : null}
-                </Box>
-              </Stack>
-            </Paper>
-          ) : null}
-
-          {mode === "view" && record ? (
-            <Stack spacing={1.5}>
-              <Typography variant="subtitle1" fontWeight={800}>
-                {t("pages.support.view.messagesTitle")}
-              </Typography>
-              {record.messages.length === 0 ? (
-                <Typography variant="body2" color="text.secondary">
-                  {t("pages.support.view.noMessages")}
-                </Typography>
-              ) : (
-                <Stack spacing={2} role="log" aria-live="polite" aria-label="گفتگوی تیکت">
-                  {record.messages.map((message, index) => (
-                    <MessageBubble
-                      key={`${record.id}-message-${index}`}
-                      message={message}
-                      currentUserId={currentUserId}
-                      onPreviewAttachment={setPreviewAttachment}
-                    />
-                  ))}
-                </Stack>
-              )}
-            </Stack>
-          ) : null}
 
           {mode === "create" || canReply ? (
-            <Stack spacing={2}>
-              <TextField
-                label={
-                  mode === "create"
-                    ? t("pages.support.create.messageLabel")
-                    : t("pages.support.reply.messageLabel")
-                }
-                value={messageBody}
-                onChange={(event) => setMessageBody(event.target.value)}
-                required
-                fullWidth
-                size="small"
-                multiline
-                minRows={4}
-              />
-              <FileUploadField
-                label={t("pages.support.attachments.label")}
-                file={attachmentFile}
-                onChange={setAttachmentFile}
-                accept="image/*,application/pdf,.doc,.docx,.txt"
-                allowedFormatsLabel={t("pages.support.attachments.allowedFormats")}
-                maxSizeLabel={t("pages.support.attachments.maxSize")}
-                dropTitle={t("pages.support.attachments.dropTitle")}
-                mobileDropTitle={t("pages.support.attachments.mobileDropTitle")}
-                dropHint={t("pages.support.attachments.dropHint")}
-                mobileDropHint={t("pages.support.attachments.mobileDropHint")}
-                removeLabel={t("pages.support.attachments.removeLabel")}
-                invalidLabel={t("pages.support.attachments.invalidLabel")}
-                optionalLabel={t("pages.support.attachments.optionalLabel")}
-              />
-            </Stack>
+            <Button type="submit" variant="contained" disabled={isSubmitting}>
+              {mode === "create"
+                ? t("pages.support.create.submit")
+                : t("pages.support.reply.submit")}
+            </Button>
           ) : null}
         </Stack>
-      </EntityModalShell>
-
-      <EntityModalShell
-        open={previewAttachment != null}
-        title={previewTitle}
-        onClose={() => setPreviewAttachment(null)}
-        maxWidth="lg"
-        footer={
-          <Button variant="outlined" color="inherit" onClick={() => setPreviewAttachment(null)}>
-            {t("pages.support.actions.cancel")}
-          </Button>
-        }
-      >
-        {previewAttachment ? (
-          <Box
-            sx={{
-              display: "grid",
-              placeItems: "center",
-              minHeight: { xs: "18rem", md: "28rem" },
-              borderRadius: 2,
-              bgcolor: "action.hover",
-              overflow: "hidden",
-            }}
-          >
-            {isImageMimeType(previewMimeType) ? (
-              <Box
-                component="img"
-                src={previewAttachment.accessUrl}
-                alt={previewTitle}
-                sx={{
-                  display: "block",
-                  inlineSize: "100%",
-                  maxBlockSize: "min(72vh, 46rem)",
-                  objectFit: "contain",
-                }}
+      }
+    >
+      <Stack spacing={3}>
+        {mode === "create" ? (
+          <>
+            {isSuperAdmin ? (
+              <EntityAutocompleteField
+                options={endUserOptions}
+                value={selectedEndUser}
+                inputValue={endUserSearch}
+                loading={endUserOptionsLoading}
+                onInputChange={setEndUserSearch}
+                onChange={setSelectedEndUser}
+                noOptionsText={t("pages.support.create.endUserNoOptions")}
+                label={t("pages.support.create.endUserIdLabel")}
+                helperText={t("pages.support.create.endUserIdHelp")}
+                placeholder={t("pages.support.create.endUserSearchPlaceholder")}
+                required
               />
             ) : null}
-            {isVideoMimeType(previewMimeType) ? (
+            <TextField
+              label={t("table.pages.support.columns.title")}
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              required
+              fullWidth
+              size="small"
+            />
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+              <TextField
+                select
+                label={t("table.pages.support.columns.category")}
+                value={category}
+                onChange={(event) => setCategory(event.target.value as TicketCategory)}
+                fullWidth
+                size="small"
+                required
+                disabled={disableCategorySelect}
+              >
+                {TICKET_CATEGORY_OPTIONS.map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {TICKET_CATEGORY_LABEL[option]}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                select
+                label={t("table.pages.support.columns.priority")}
+                value={priority}
+                onChange={(event) => setPriority(event.target.value as TicketPriority)}
+                fullWidth
+                size="small"
+              >
+                {TICKET_PRIORITY_OPTIONS.map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {TICKET_PRIORITY_LABEL[option]}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Stack>
+          </>
+        ) : record ? (
+          <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+            <Stack spacing={1.5}>
+              <Typography variant="h6" fontWeight={800}>
+                {record.title}
+              </Typography>
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                <Chip
+                  size="small"
+                  variant="outlined"
+                  label={TICKET_CATEGORY_LABEL[record.category]}
+                />
+                <Chip
+                  size="small"
+                  variant="outlined"
+                  label={TICKET_PRIORITY_LABEL[record.priority]}
+                />
+                <Chip
+                  size="small"
+                  variant="outlined"
+                  color={
+                    record.status === "OPEN"
+                      ? "warning"
+                      : record.status === "ANSWERED"
+                        ? "info"
+                        : "default"
+                  }
+                  label={TICKET_STATUS_LABEL[record.status]}
+                />
+              </Stack>
               <Box
-                component="video"
-                src={previewAttachment.accessUrl}
-                controls
-                autoPlay
                 sx={{
-                  display: "block",
-                  inlineSize: "100%",
-                  maxBlockSize: "min(72vh, 46rem)",
-                  bgcolor: "common.black",
+                  display: "grid",
+                  gap: 1,
+                  gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" },
                 }}
-              />
-            ) : null}
-            {isAudioMimeType(previewMimeType) ? (
-              <Box
-                component="audio"
-                src={previewAttachment.accessUrl}
-                controls
-                autoPlay
-                sx={{
-                  inlineSize: "min(100%, 42rem)",
-                  m: 3,
-                }}
-              />
-            ) : null}
-          </Box>
+              >
+                <Typography variant="body2" color="text.secondary">
+                  {t("table.pages.support.columns.createdByUserName")}: {record.createdByUserName}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {t("table.pages.support.columns.createdAt")}: {formatDateTime(record.createdAt)}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {t("table.pages.support.columns.updatedAt")}: {formatDateTime(record.updatedAt)}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  پیام‌ها: {record.messageCount.toLocaleString("fa-IR")} · پیوست:{" "}
+                  {record.attachmentCount.toLocaleString("fa-IR")}
+                </Typography>
+                {record.closedAt ? (
+                  <>
+                    <Typography variant="body2" color="text.secondary">
+                      {t("table.pages.support.columns.closedBy")}:{" "}
+                      {record.closedBy !== "-"
+                        ? (TICKET_CLOSED_BY_LABEL[
+                            record.closedBy as keyof typeof TICKET_CLOSED_BY_LABEL
+                          ] ?? record.closedBy)
+                        : EMPTY_DISPLAY}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {t("table.pages.support.columns.closedAt")}: {formatDateTime(record.closedAt)}
+                    </Typography>
+                  </>
+                ) : null}
+              </Box>
+            </Stack>
+          </Paper>
         ) : null}
-      </EntityModalShell>
-    </>
+
+        {mode === "view" && record ? (
+          <Stack spacing={1.5}>
+            <Typography variant="subtitle1" fontWeight={800}>
+              {t("pages.support.view.messagesTitle")}
+            </Typography>
+
+            {conversationMessages.length === 0 ? (
+              <Typography variant="body2" color="text.secondary" sx={{ py: 1 }}>
+                {t("pages.support.view.noMessages")}
+              </Typography>
+            ) : (
+              <Stack spacing={1.5} role="log" aria-live="polite" aria-label="گفتگوی تیکت">
+                {conversationMessages.map((message, index) => (
+                  <MessageBubble
+                    key={`${record.id}-message-${message.sentAt ?? index}`}
+                    message={message}
+                    messageIndex={index}
+                    currentUserId={currentUserId}
+                    ticketCreatorUserId={record.createdByUserId}
+                    isEndUserView={isEndUserView}
+                  />
+                ))}
+              </Stack>
+            )}
+          </Stack>
+        ) : null}
+
+        {mode === "create" || canReply ? (
+          <Stack spacing={2}>
+            <Divider />
+            <TextField
+              label={
+                mode === "create"
+                  ? t("pages.support.create.messageLabel")
+                  : t("pages.support.reply.messageLabel")
+              }
+              value={messageBody}
+              onChange={(event) => setMessageBody(event.target.value)}
+              required
+              fullWidth
+              size="small"
+              multiline
+              minRows={4}
+            />
+            <FileUploadField
+              label={t("pages.support.attachments.label")}
+              file={attachmentFile}
+              onChange={setAttachmentFile}
+              accept="image/*,application/pdf,.doc,.docx,.txt,video/*,audio/*"
+              allowedFormatsLabel={t("pages.support.attachments.allowedFormats")}
+              maxSizeLabel={t("pages.support.attachments.maxSize")}
+              dropTitle={t("pages.support.attachments.dropTitle")}
+              mobileDropTitle={t("pages.support.attachments.mobileDropTitle")}
+              dropHint={t("pages.support.attachments.dropHint")}
+              mobileDropHint={t("pages.support.attachments.mobileDropHint")}
+              removeLabel={t("pages.support.attachments.removeLabel")}
+              invalidLabel={t("pages.support.attachments.invalidLabel")}
+              optionalLabel={t("pages.support.attachments.optionalLabel")}
+              fullWidth
+            />
+          </Stack>
+        ) : null}
+      </Stack>
+    </EntityModalShell>
   );
 };
 

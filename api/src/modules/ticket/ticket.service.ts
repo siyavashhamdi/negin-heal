@@ -230,6 +230,7 @@ export class TicketService {
           body: normalizedMessageBody,
           attachmentFileIds,
           senderUserId: params.actorUserId,
+          sentAt: new Date(),
         },
       ];
 
@@ -272,6 +273,7 @@ export class TicketService {
           body: normalizedMessageBody,
           attachmentFileIds,
           senderUserId: params.actorUserId,
+          sentAt: new Date(),
         },
       ],
     });
@@ -606,9 +608,18 @@ export class TicketService {
         relatedLookups.avatarAccessUrlMap,
       ),
       closedAt: ticket.closedAt,
-      messages: (ticket.messages ?? []).map((message, index) =>
+      messages: this.orderMessagesChronologically(
+        ticket.messages ?? [],
+        ticket.audit?.createdAt,
+        ticket.audit?.updatedAt,
+      ).map(({ message, originalIndex }, _displayIndex, orderedMessages) =>
         this.toTicketMessageResponse(message, relatedLookups, {
-          fallbackSenderUserId: index === 0 ? createdByUserId : updatedByUserId,
+          fallbackSenderUserId:
+            originalIndex === 0 ? createdByUserId : updatedByUserId,
+          messageIndex: originalIndex,
+          messageCount: orderedMessages.length,
+          ticketCreatedAt: ticket.audit?.createdAt,
+          ticketUpdatedAt: ticket.audit?.updatedAt,
         }),
       ),
       createdByUserId,
@@ -632,16 +643,101 @@ export class TicketService {
     };
   }
 
+  private resolveMessageSentAt(
+    message: TicketMessage,
+    options: {
+      messageIndex: number;
+      messageCount: number;
+      ticketCreatedAt?: Date;
+      ticketUpdatedAt?: Date;
+    },
+  ): Date | undefined {
+    if (message.sentAt) {
+      return message.sentAt;
+    }
+
+    const ticketCreatedAt = options.ticketCreatedAt;
+    const ticketUpdatedAt = options.ticketUpdatedAt ?? ticketCreatedAt;
+    if (!ticketCreatedAt || !ticketUpdatedAt) {
+      return undefined;
+    }
+
+    if (options.messageCount <= 1 || options.messageIndex <= 0) {
+      return ticketCreatedAt;
+    }
+
+    if (options.messageIndex >= options.messageCount - 1) {
+      return ticketUpdatedAt;
+    }
+
+    const startMs = ticketCreatedAt.getTime();
+    const endMs = ticketUpdatedAt.getTime();
+    const ratio = options.messageIndex / (options.messageCount - 1);
+
+    return new Date(startMs + (endMs - startMs) * ratio);
+  }
+
+  private getMessageSentAtTimestamp(
+    message: TicketMessage,
+    options: {
+      messageIndex: number;
+      messageCount: number;
+      ticketCreatedAt?: Date;
+      ticketUpdatedAt?: Date;
+    },
+  ): number {
+    const sentAt = this.resolveMessageSentAt(message, options);
+    return sentAt?.getTime() ?? 0;
+  }
+
+  private orderMessagesChronologically(
+    messages: TicketMessage[],
+    ticketCreatedAt?: Date,
+    ticketUpdatedAt?: Date,
+  ): Array<{ message: TicketMessage; originalIndex: number }> {
+    const messageCount = messages.length;
+
+    return messages
+      .map((message, originalIndex) => ({ message, originalIndex }))
+      .sort((left, right) => {
+        const leftTimestamp = this.getMessageSentAtTimestamp(left.message, {
+          messageIndex: left.originalIndex,
+          messageCount,
+          ticketCreatedAt,
+          ticketUpdatedAt,
+        });
+        const rightTimestamp = this.getMessageSentAtTimestamp(right.message, {
+          messageIndex: right.originalIndex,
+          messageCount,
+          ticketCreatedAt,
+          ticketUpdatedAt,
+        });
+
+        if (leftTimestamp !== rightTimestamp) {
+          return leftTimestamp - rightTimestamp;
+        }
+
+        return left.originalIndex - right.originalIndex;
+      });
+  }
+
   private toTicketMessageResponse(
     message: TicketMessage,
     relatedLookups: TicketRelatedLookups,
-    options: { fallbackSenderUserId?: Types.ObjectId } = {},
+    options: {
+      fallbackSenderUserId?: Types.ObjectId;
+      messageIndex: number;
+      messageCount: number;
+      ticketCreatedAt?: Date;
+      ticketUpdatedAt?: Date;
+    },
   ): TicketListGqlResponse["messages"][number] {
     const attachmentFileIds = message.attachmentFileIds ?? [];
     const senderUserId = message.senderUserId ?? options.fallbackSenderUserId;
 
     return {
       body: message.body,
+      sentAt: this.resolveMessageSentAt(message, options),
       senderUser: this.toTicketUserMinimalResponse(
         senderUserId,
         senderUserId
@@ -675,10 +771,19 @@ export class TicketService {
       status: ticket.status,
       closedBy: ticket.closedBy,
       closedAt: ticket.closedAt,
-      messages: (ticket.messages ?? []).map((message, index) =>
+      messages: this.orderMessagesChronologically(
+        ticket.messages ?? [],
+        ticket.audit?.createdAt,
+        ticket.audit?.updatedAt,
+      ).map(({ message, originalIndex }, _displayIndex, orderedMessages) =>
         this.toUserTicketMessageResponse(message, relatedLookups, {
           ticketOwnerUserId: createdByUserId,
-          fallbackSenderUserId: index === 0 ? createdByUserId : updatedByUserId,
+          fallbackSenderUserId:
+            originalIndex === 0 ? createdByUserId : updatedByUserId,
+          messageIndex: originalIndex,
+          messageCount: orderedMessages.length,
+          ticketCreatedAt: ticket.audit?.createdAt,
+          ticketUpdatedAt: ticket.audit?.updatedAt,
         }),
       ),
       createdByUserId,
@@ -708,7 +813,11 @@ export class TicketService {
     options: {
       ticketOwnerUserId?: Types.ObjectId;
       fallbackSenderUserId?: Types.ObjectId;
-    } = {},
+      messageIndex: number;
+      messageCount: number;
+      ticketCreatedAt?: Date;
+      ticketUpdatedAt?: Date;
+    },
   ): UserTicketListGqlResponse["messages"][number] {
     const attachmentFileIds = message.attachmentFileIds ?? [];
     const senderUserId = message.senderUserId ?? options.fallbackSenderUserId;
@@ -719,6 +828,7 @@ export class TicketService {
 
     return {
       body: message.body,
+      sentAt: this.resolveMessageSentAt(message, options),
       senderUser: isOwnerMessage
         ? undefined
         : {

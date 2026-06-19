@@ -79,6 +79,20 @@
   align-items: stretch;
 }
 
+.dropzoneReadOnly {
+  cursor: default;
+
+  &:hover {
+    border-color: variables.$color-divider;
+    background-color: transparent;
+  }
+}
+
+.dropzoneReadOnly.dropzoneHasFile:hover {
+  border-color: variables.$color-divider;
+  background-color: transparent;
+}
+
 .icon {
   font-size: 2rem;
   color: variables.$color-text-secondary;

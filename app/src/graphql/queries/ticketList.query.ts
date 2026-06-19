@@ -27,6 +27,7 @@ export const TICKET_LIST_QUERY = gql`
         closedAt
         messages {
           body
+          sentAt
           senderUser {
             id
             username
