@@ -29,6 +29,20 @@
                 "sendButton": "ارسال ایمیل تستی",
                 "sendingButton": "در حال ارسال..."
             },
+            "pushTest": {
+                "title": "تست پوش نوتیفیکیشن",
+                "description": "یک اعلان سیستمی روی همین دستگاه (کاربر فعلی) نمایش می‌دهد.",
+                "messageLabel": "متن اعلان",
+                "messagePlaceholder": "سلام! این یک تست است.",
+                "sendButton": "ارسال پوش",
+                "sendingButton": "در حال ارسال...",
+                "missingMessage": "متن اعلان را وارد کنید.",
+                "unsupported": "مرورگر از اعلان پشتیبانی نمی‌کند.",
+                "permissionDenied": "اجازه اعلان داده نشد.",
+                "success": "اعلان ارسال شد.",
+                "successScheduled": "اعلان ارسال شد و ۳۰ ثانیه دیگر دوباره نمایش داده می‌شود.",
+                "notificationTitle": "نگین هیل"
+            },
             "menuCard": {
                 "submenuTooltipAria": "نمایش توضیحات",
                 "sectionIconAlt": "آیکون بخش {{title}}",
@@ -242,6 +256,35 @@
             },
             "viewChapter": {
                 "action": "مشاهده فصل"
+            }
+        },
+        "more": {
+            "notifications": {
+                "promptTitle": "دسترسی اعلان دستگاه فعال نیست",
+                "promptDescription": "برای دریافت یادآوری‌های مهم حتی وقتی اپ باز نیست، اجازه نمایش اعلان را در مرورگر فعال کنید.",
+                "benefitChapters": "انتشار فصل‌های جدید دوره",
+                "benefitAnnouncements": "اعلان‌های مهم سامانه",
+                "browserPromptButton": "نمایش تأییدیه مرورگر",
+                "retryBrowserPromptButton": "تلاش مجدد برای فعال‌سازی",
+                "requestingButton": "در حال انتظار برای تأیید...",
+                "privacyNote": "با کلیک، پیام تأیید مرورگر برای این وب‌سایت نمایش داده می‌شود.",
+                "blockedButtonHint": "اگر مرورگر پنجره نداد، از راهنمای بالا در تنظیمات مرورگر اقدام کنید.",
+                "browserGrantedTitle": "دسترسی مرورگر فعال است",
+                "browserGrantedDescription": "مرورگر اجازه نمایش اعلان را داده است. برای دریافت اعلان، سوئیچ بالا را روشن کنید.",
+                "enableAppToggleHint": "سوئیچ «اعلان‌ها» در بالا هنوز خاموش است — آن را روشن کنید.",
+                "insecureTitle": "اتصال امن (HTTPS) لازم است",
+                "insecureDescription": "مرورگر فقط روی HTTPS یا localhost اجازه درخواست اعلان می‌دهد. از ngrok یا آدرس https:// استفاده کنید.",
+                "enabledSuccess": "دسترسی اعلان با موفقیت فعال شد.",
+                "requestDenied": "مرورگر اجازه اعلان را رد کرد.",
+                "requestDismissed": "پیام تأیید بسته شد. برای فعال‌سازی دوباره روی دکمه بزنید.",
+                "blockedTitle": "اعلان‌ها در مرورگر مسدود شده‌اند",
+                "blockedDescription": "مرورگر اجازه نمایش اعلان نمی‌دهد. برای فعال‌سازی باید از تنظیمات مرورگر اقدام کنید.",
+                "blockedSnackbar": "اعلان در مرورگر مسدود است. لطفاً از راهنمای زیر استفاده کنید.",
+                "blockedHelpIos": "تنظیمات iOS ← Safari ← وب‌سایت‌ها ← neginheal.ir ← اعلان‌ها را فعال کنید. در iOS بهتر است اپ را به صفحه اصلی اضافه کنید.",
+                "blockedHelpAndroid": "Chrome ← منو (⋮) ← تنظیمات سایت ← اعلان‌ها ← اجازه دادن.",
+                "blockedHelpDesktop": "روی آیکون قفل یا اطلاعات کنار آدرس سایت کلیک کنید و اعلان‌ها را روی «Allow» بگذارید.",
+                "unsupportedTitle": "مرورگر از اعلان پشتیبانی نمی‌کند",
+                "unsupportedDescription": "برای دریافت اعلان، از Chrome، Safari یا Edge به‌روز روی موبایل یا دسکتاپ استفاده کنید."
             }
         },
         "underConstruction": {

@@ -34,6 +34,7 @@ import {
   EMPTY_APP_TERMS_OF_USE_PAGE,
   type AppTermsOfUsePageConfigQuery,
 } from "./terms-of-use-page.api";
+import NotificationPermissionCallout from "./NotificationPermissionCallout";
 import styles from "./styles/more.module.scss";
 
 const hasText = (value: string): boolean => value.trim().length > 0;
@@ -239,30 +240,33 @@ const More = (): ReactElement => {
       </div>
 
       {isAuthenticated ? (
-        <div className={styles.preferenceRow}>
-          <div className={styles.preferenceIcon}>
-            <NotificationsRoundedIcon />
-          </div>
-          <div className={styles.preferenceText}>
-            <strong>اعلان‌ها</strong>
-            <small>{notificationsEnabled ? "فعال" : "غیرفعال"}</small>
-          </div>
-          <button
-            type="button"
-            className={`${styles.switchButton} ${notificationsEnabled ? styles.switchButtonActive : ""}`}
-            role="switch"
-            aria-checked={notificationsEnabled}
-            aria-label={notificationsEnabled ? "غیرفعال کردن اعلان‌ها" : "فعال کردن اعلان‌ها"}
-            disabled={isUpdatingPreferences}
-            onClick={() => void handleNotificationsToggle()}
-          >
-            <span className={styles.switchTrack} aria-hidden="true">
-              <span className={styles.switchThumb}>
-                <NotificationsRoundedIcon />
+        <section className={styles.notificationsSection} aria-label="تنظیمات اعلان‌ها">
+          <div className={styles.preferenceRow}>
+            <div className={styles.preferenceIcon}>
+              <NotificationsRoundedIcon />
+            </div>
+            <div className={styles.preferenceText}>
+              <strong>اعلان‌ها</strong>
+              <small>{notificationsEnabled ? "فعال" : "غیرفعال"}</small>
+            </div>
+            <button
+              type="button"
+              className={`${styles.switchButton} ${notificationsEnabled ? styles.switchButtonActive : ""}`}
+              role="switch"
+              aria-checked={notificationsEnabled}
+              aria-label={notificationsEnabled ? "غیرفعال کردن اعلان‌ها" : "فعال کردن اعلان‌ها"}
+              disabled={isUpdatingPreferences}
+              onClick={() => void handleNotificationsToggle()}
+            >
+              <span className={styles.switchTrack} aria-hidden="true">
+                <span className={styles.switchThumb}>
+                  <NotificationsRoundedIcon />
+                </span>
               </span>
-            </span>
-          </button>
-        </div>
+            </button>
+          </div>
+          <NotificationPermissionCallout notificationsEnabled={notificationsEnabled} />
+        </section>
       ) : null}
 
       <div className={styles.linkGrid}>

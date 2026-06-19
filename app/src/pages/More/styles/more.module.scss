@@ -132,15 +132,184 @@
   transform: translateX(1.5rem);
 }
 
+.notificationsSection {
+  display: grid;
+  gap: 0;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  background: color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+}
+
 .preferenceRow {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.75rem;
   padding: 0.85rem;
-  border-radius: 1rem;
-  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
-  background: color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+  border-radius: 0;
+  border: 0;
+  background: transparent;
+}
+
+.notificationCallout {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.75rem;
+  padding: 0.85rem 0.9rem 0.95rem;
+  border-block-start: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 68%, transparent);
+}
+
+.notificationCalloutPrompt {
+  background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, variables.$color-primary-main 10%, transparent),
+      transparent 52%
+    ),
+    color-mix(in srgb, variables.$color-primary-main 4%, var(--app-surface-bg));
+}
+
+.notificationCalloutBlocked {
+  background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, #f59e0b 12%, transparent),
+      transparent 52%
+    ),
+    color-mix(in srgb, #f59e0b 5%, var(--app-surface-bg));
+}
+
+.notificationCalloutUnsupported {
+  background: color-mix(in srgb, var(--text-secondary) 6%, var(--app-surface-bg));
+}
+
+.notificationCalloutIcon {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 2.35rem;
+  block-size: 2.35rem;
+  border-radius: 0.85rem;
+  flex-shrink: 0;
+}
+
+.notificationCalloutPrompt .notificationCalloutIcon {
+  background: color-mix(in srgb, variables.$color-primary-main 14%, transparent);
+  color: variables.$color-primary-main;
+}
+
+.notificationCalloutBlocked .notificationCalloutIcon {
+  background: color-mix(in srgb, #f59e0b 16%, transparent);
+  color: #d97706;
+}
+
+.notificationCalloutUnsupported .notificationCalloutIcon {
+  background: color-mix(in srgb, var(--text-secondary) 12%, transparent);
+  color: var(--text-secondary);
+}
+
+.notificationCalloutContent {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.notificationCalloutContent strong {
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  line-height: 1.65;
+}
+
+.notificationCalloutContent p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.79rem;
+  line-height: 1.85;
+}
+
+.notificationCalloutBenefits {
+  display: grid;
+  gap: 0.28rem;
+  margin: 0;
+  padding-inline-start: 1rem;
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  line-height: 1.75;
+}
+
+.notificationCalloutBenefits li::marker {
+  color: variables.$color-primary-main;
+}
+
+.notificationCalloutHelp {
+  margin: 0;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.75rem;
+  border: 0.0625rem solid color-mix(in srgb, #f59e0b 22%, var(--app-surface-border));
+  background: color-mix(in srgb, #f59e0b 7%, transparent);
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  line-height: 1.85;
+}
+
+.notificationCalloutActions {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.15rem;
+}
+
+.notificationCalloutButton {
+  justify-self: start;
+  min-block-size: 2.35rem;
+  padding: 0.45rem 0.95rem;
+  border: 0;
+  border-radius: 999rem;
+  background: variables.$color-primary-main;
+  color: #ffffff;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: variables.$font-weight-semibold;
+  cursor: pointer;
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease,
+    opacity 140ms ease;
+}
+
+.notificationCalloutButton:hover:not(:disabled) {
+  box-shadow: 0 0.45rem 1.1rem color-mix(in srgb, variables.$color-primary-main 28%, transparent);
+  transform: translateY(-0.0625rem);
+}
+
+.notificationCalloutButton:focus-visible {
+  outline: 0.16rem solid color-mix(in srgb, variables.$color-primary-main 42%, transparent);
+  outline-offset: 0.16rem;
+}
+
+.notificationCalloutButton:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.notificationCalloutPrivacy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  line-height: 1.7;
+}
+
+.notificationCalloutPrivacy svg {
+  font-size: 0.95rem;
+  color: color-mix(in srgb, variables.$color-primary-main 70%, var(--text-secondary));
+}
+
+.notificationCalloutHint {
+  margin: 0;
+  color: color-mix(in srgb, #d97706 78%, var(--text-secondary));
+  font-size: 0.74rem;
+  line-height: 1.75;
 }
 
 .preferenceIcon {
@@ -492,7 +661,7 @@
 body[data-theme="dark"] {
   .hero,
   .themeCard,
-  .preferenceRow,
+  .notificationsSection,
   .linkCard,
   .globalAnouncementPanel,
   .aboutPanel {
@@ -554,6 +723,31 @@ body[data-theme="dark"] {
 
   .globalAnouncementPreviewIcon {
     background: color-mix(in srgb, var(--global-anouncement-preview-accent) 20%, transparent);
+  }
+
+  .notificationCalloutPrompt {
+    background:
+      radial-gradient(
+        circle at top right,
+        color-mix(in srgb, variables.$color-primary-main 16%, transparent),
+        transparent 52%
+      ),
+      color-mix(in srgb, variables.$color-primary-main 8%, #0f172a);
+  }
+
+  .notificationCalloutBlocked {
+    background:
+      radial-gradient(
+        circle at top right,
+        color-mix(in srgb, #f59e0b 14%, transparent),
+        transparent 52%
+      ),
+      color-mix(in srgb, #f59e0b 8%, #0f172a);
+  }
+
+  .notificationCalloutHelp {
+    background: color-mix(in srgb, #f59e0b 10%, #0f172a);
+    border-color: color-mix(in srgb, #fbbf24 24%, var(--app-surface-border));
   }
 
   .switchThumb {

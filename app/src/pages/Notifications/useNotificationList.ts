@@ -50,7 +50,7 @@ type UseNotificationListResult = {
 };
 
 export const useNotificationList = (): UseNotificationListResult => {
-  const [activeTab, setActiveTab] = useState<NotificationFilterTab>("all");
+  const [activeTab, setActiveTab] = useState<NotificationFilterTab>("unread");
   const [items, setItems] = useState<NotificationRecord[]>([]);
   const [isOnFirstPage, setIsOnFirstPage] = useState(true);
   const [pagination, setPagination] = useState({
