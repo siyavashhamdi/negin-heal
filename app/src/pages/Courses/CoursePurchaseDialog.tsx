@@ -20,6 +20,7 @@ import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
 import ShieldRoundedIcon from "@mui/icons-material/ShieldRounded";
 import FileUploadField from "../../shared/forms/FileUploadField";
+import EnamadTrustSeal from "../../shared/EnamadTrustSeal";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
 import { useSnackbar } from "../../hooks/useSnackbar";
@@ -729,11 +730,6 @@ export function CoursePurchaseDialog({
                         <ShieldRoundedIcon fontSize="small" />
                         <span>فعال‌سازی خودکار دوره پس از پرداخت موفق</span>
                       </div>
-                      <p className={styles.gatewayHint}>
-                        درگاه پرداخت آنلاین به‌زودی فعال می‌شود.
-                        <br />
-                        تا آن زمان می‌توانید از کارت به کارت یا رمزارز استفاده کنید.
-                      </p>
                     </div>
                   ) : null}
 
@@ -861,6 +857,12 @@ export function CoursePurchaseDialog({
                   ) : null}
                 </div>
               </>
+            ) : null}
+
+            {selectedPaymentMethod === "GATEWAY" && !isFreePurchase ? (
+              <div className={styles.trustSealRow}>
+                <EnamadTrustSeal />
+              </div>
             ) : null}
           </section>
         </div>

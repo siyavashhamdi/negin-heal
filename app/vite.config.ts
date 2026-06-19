@@ -2,6 +2,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
+import { ENAMAD_DEV_PROXY_PATH, ENAMAD_LOGO_PATH } from "./src/shared/enamad.config";
 
 const appDir = path.dirname(fileURLToPath(import.meta.url));
 
@@ -18,6 +19,10 @@ function parseAllowedHosts(value: string | undefined): string[] | true {
     .filter(Boolean);
 }
 
+function buildEnamadReferer(apiBaseUrl: string): string {
+  return `${new URL(apiBaseUrl).origin}/`;
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory.
@@ -26,6 +31,7 @@ export default defineConfig(({ mode }) => {
   const port = Number(env.VITE_PORT) || 8080;
   const apiTarget = env.VITE_API_BASE_URL || "http://127.0.0.1:5701";
   const allowedHosts = parseAllowedHosts(env.VITE_ALLOWED_HOSTS);
+  const enamadReferer = buildEnamadReferer(apiTarget);
   const graphqlProxy = {
     "/graphql": {
       target: apiTarget,
@@ -39,6 +45,16 @@ export default defineConfig(({ mode }) => {
       changeOrigin: true,
     },
   };
+  const enamadProxy = {
+    [ENAMAD_DEV_PROXY_PATH]: {
+      target: "https://trustseal.enamad.ir",
+      changeOrigin: true,
+      rewrite: () => ENAMAD_LOGO_PATH,
+      headers: {
+        Referer: enamadReferer,
+      },
+    },
+  };
 
   return {
     plugins: [react()],
@@ -50,6 +66,7 @@ export default defineConfig(({ mode }) => {
       proxy: {
         ...graphqlProxy,
         ...apiProxy,
+        ...enamadProxy,
       },
     },
     preview: {
@@ -61,6 +78,7 @@ export default defineConfig(({ mode }) => {
       proxy: {
         ...graphqlProxy,
         ...apiProxy,
+        ...enamadProxy,
       },
     },
     optimizeDeps: {

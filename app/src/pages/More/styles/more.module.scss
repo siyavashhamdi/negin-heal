@@ -447,6 +447,24 @@
   color: var(--text-secondary);
 }
 
+.aboutTrustSection {
+  display: grid;
+  gap: 0.85rem;
+  justify-items: center;
+  margin-block-start: 0.35rem;
+  padding-block-start: 1rem;
+  border-block-start: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 72%, transparent);
+}
+
+.aboutSafePayment {
+  margin: 0;
+  max-inline-size: 34rem;
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+  line-height: 1.9;
+  text-align: center;
+}
+
 .versionBlock {
   display: grid;
   gap: 0.65rem;

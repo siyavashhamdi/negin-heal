@@ -4,6 +4,7 @@ import { useQuery } from "@apollo/client/react";
 import { type ReactElement } from "react";
 import { useNavigate } from "react-router-dom";
 import { APP_ABOUT_PAGE_QUERY } from "../../graphql/queries/appAboutPageConfig.query";
+import EnamadTrustSeal from "../../shared/EnamadTrustSeal";
 import { EMPTY_APP_ABOUT_PAGE, type AppAboutPageConfigQuery } from "./about-page.api";
 import styles from "./styles/more.module.scss";
 
@@ -43,6 +44,14 @@ const AboutPage = (): ReactElement => {
         ) : (
           <p className={styles.aboutEmpty}>محتوای درباره سامانه هنوز تنظیم نشده است.</p>
         )}
+
+        <div className={styles.aboutTrustSection}>
+          <p className={styles.aboutSafePayment}>
+            پرداخت‌های آنلاین در این سامانه از طریق درگاه‌های معتبر بانکی انجام می‌شود و اطلاعات
+            مالی شما با رعایت استانداردهای امنیتی محافظت می‌گردد.
+          </p>
+          <EnamadTrustSeal />
+        </div>
       </div>
     </section>
   );
