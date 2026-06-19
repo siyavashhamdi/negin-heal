@@ -10,6 +10,12 @@ export const SCALAR_NUMBER_FIELD_CONFIG: Record<string, ScalarNumberFieldConfig>
     helperText: "پس از این مدت، لینک بازیابی رمز عبور منقضی می‌شود.",
     min: 1,
   },
+  TICKET_AUTO_CLOSE_AFTER_ANSWERED_HOURS: {
+    label: "بستن خودکار تیکت پاسخ‌داده‌شده (ساعت)",
+    helperText:
+      "پس از پاسخ پشتیبانی، تیکت پس از این مدت به‌صورت خودکار بسته می‌شود.",
+    min: 1,
+  },
 };
 
 export const POSITIVE_INTEGER_NUMBER_SETTING_KEYS = new Set(

@@ -12,7 +12,7 @@ export class TicketAutoCloseCron {
     private readonly ticketAutoCloseService: TicketAutoCloseService,
   ) {}
 
-  @Cron(CronExpression.EVERY_MINUTE, {
+  @Cron(CronExpression.EVERY_HOUR, {
     name: "ticket-auto-close",
     timeZone: "UTC",
   })

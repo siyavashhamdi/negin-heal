@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 
 import { TicketAutoCloseCron } from "../../cron/jobs";
+import { AppSettingsModule } from "../app-settings";
 import { BadgeModule } from "../badge";
 import { DatabaseModule } from "../database";
 import { FileModule } from "../file";
@@ -14,7 +15,7 @@ import {
 import { TicketListQuery, UserTicketListQuery } from "./graphql/queries";
 
 @Module({
-  imports: [BadgeModule, DatabaseModule, FileModule],
+  imports: [AppSettingsModule, BadgeModule, DatabaseModule, FileModule],
   providers: [
     TicketAutoCloseCron,
     TicketAutoCloseService,
