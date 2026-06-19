@@ -4,48 +4,48 @@ type PaletteMode = "light" | "dark";
 
 const colors = {
   primary: {
-    main: "#1976d2",
-    light: "#42a5f5",
-    dark: "#1565c0",
+    main: "#c9567e",
+    light: "#e08ba8",
+    dark: "#a8436a",
     contrastText: "#ffffff",
   },
   secondary: {
-    main: "#00acc1",
-    light: "#4dd0e1",
-    dark: "#00838f",
+    main: "#9b7aad",
+    light: "#b794c7",
+    dark: "#7d6290",
     contrastText: "#ffffff",
   },
   success: {
-    main: "#10b981",
-    light: "#34d399",
-    dark: "#059669",
+    main: "#6bb895",
+    light: "#8ecdb0",
+    dark: "#4f9a76",
   },
   warning: {
-    main: "#f59e0b",
-    light: "#fbbf24",
-    dark: "#d97706",
+    main: "#e8a54b",
+    light: "#f0c078",
+    dark: "#c4842e",
   },
   error: {
-    main: "#ef4444",
-    light: "#f87171",
-    dark: "#dc2626",
+    main: "#e05c5c",
+    light: "#f08080",
+    dark: "#c43c3c",
   },
   info: {
-    main: "#3b82f6",
-    light: "#60a5fa",
-    dark: "#2563eb",
+    main: "#9b7aad",
+    light: "#b794c7",
+    dark: "#7d6290",
   },
   grey: {
-    50: "#f9fafb",
-    100: "#f3f4f6",
-    200: "#e5e7eb",
-    300: "#d1d5db",
-    400: "#9ca3af",
-    500: "#6b7280",
-    600: "#4b5563",
-    700: "#374151",
-    800: "#1f2937",
-    900: "#111827",
+    50: "#fdf8f9",
+    100: "#f7eef2",
+    200: "#eadde3",
+    300: "#d4c4cc",
+    400: "#a8949e",
+    500: "#7a6872",
+    600: "#5c4d55",
+    700: "#453a41",
+    800: "#2e262b",
+    900: "#1a1518",
   },
 } as const;
 
@@ -58,10 +58,10 @@ const FONT_FAMILY_STACK = [
 ].join(",");
 
 const lightShadows = {
-  sm: "0 0.0625rem 0.125rem 0 rgba(0, 0, 0, 0.05)",
-  md: "0 0.125rem 0.5rem rgba(0, 0, 0, 0.08)",
-  lg: "0 0.25rem 1rem rgba(0, 0, 0, 0.12)",
-  xl: "0 0.625rem 1.5rem rgba(0, 0, 0, 0.15)",
+  sm: "0 0.0625rem 0.125rem 0 rgba(61, 44, 53, 0.05)",
+  md: "0 0.125rem 0.5rem rgba(61, 44, 53, 0.08)",
+  lg: "0 0.25rem 1rem rgba(61, 44, 53, 0.12)",
+  xl: "0 0.625rem 1.5rem rgba(61, 44, 53, 0.15)",
 } as const;
 
 const darkShadows = {
@@ -91,11 +91,11 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
       error: colors.error,
       info: colors.info,
       background: {
-        default: isDark ? "#121212" : "#f5f7fa",
-        paper: isDark ? "#1e1e1e" : "#ffffff",
+        default: isDark ? "#1a1518" : "#fdf7f9",
+        paper: isDark ? "#2e262b" : "#ffffff",
       },
       text: {
-        primary: isDark ? "#ffffff" : "#1a1a1a",
+        primary: isDark ? "#fdf8f9" : "#3d2c35",
         secondary: isDark ? colors.grey[400] : colors.grey[500],
         disabled: colors.grey[400],
       },
@@ -172,7 +172,7 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
       },
     },
     shape: {
-      borderRadius: 8,
+      borderRadius: 12,
     },
     spacing: 8,
     breakpoints: {
@@ -214,7 +214,7 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
       MuiButton: {
         styleOverrides: {
           root: {
-            borderRadius: "0.5rem",
+            borderRadius: "0.75rem",
             padding: "0.625rem 1.5rem",
             fontWeight: 500,
             textTransform: "none",
@@ -251,7 +251,7 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
         styleOverrides: {
           root: {
             boxShadow: shadows.md,
-            borderRadius: "0.75rem",
+            borderRadius: "1rem",
             transition: "box-shadow 0.3s ease-in-out, transform 0.2s ease-in-out",
             "&:hover": {
               boxShadow: shadows.lg,
@@ -263,7 +263,7 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
       MuiPaper: {
         styleOverrides: {
           root: {
-            borderRadius: "0.75rem",
+            borderRadius: "1rem",
             backgroundImage: "none",
           },
           elevation1: {
@@ -283,13 +283,13 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
             boxShadow: shadows.md,
             backgroundImage: "none",
             borderRadius: 0,
-            backgroundColor: isDark ? "#1e1e1e" : "#f5f5f5",
-            color: isDark ? "#ffffff" : "#000000",
+            backgroundColor: isDark ? "#2e262b" : "#fdf8f9",
+            color: isDark ? "#fdf8f9" : "#3d2c35",
             "& .MuiIconButton-root": {
-              color: isDark ? "#ffffff" : "#000000",
+              color: isDark ? "#fdf8f9" : "#3d2c35",
             },
             "& .MuiTypography-root": {
-              color: isDark ? "#ffffff" : "#000000",
+              color: isDark ? "#fdf8f9" : "#3d2c35",
             },
           },
         },
@@ -300,7 +300,7 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
             borderLeft: "none",
             borderRight: isDark
               ? "0.0625rem solid rgba(255, 255, 255, 0.12)"
-              : "0.0625rem solid rgba(0, 0, 0, 0.12)",
+              : "0.0625rem solid rgba(61, 44, 53, 0.1)",
             backgroundImage: "none",
           },
         },
@@ -318,7 +318,7 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
       MuiOutlinedInput: {
         styleOverrides: {
           root: {
-            borderRadius: "0.5rem",
+            borderRadius: "0.75rem",
             ...transparentInputChrome,
             "&:hover": {
               ...transparentInputChrome,
@@ -351,7 +351,7 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
       MuiChip: {
         styleOverrides: {
           root: {
-            borderRadius: "0.375rem",
+            borderRadius: "0.5rem",
             fontWeight: 500,
           },
         },
@@ -359,7 +359,7 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
       MuiListItemButton: {
         styleOverrides: {
           root: {
-            borderRadius: "0.5rem",
+            borderRadius: "0.75rem",
             "&.Mui-selected": {
               backgroundColor: colors.primary.main,
               color: "#ffffff",

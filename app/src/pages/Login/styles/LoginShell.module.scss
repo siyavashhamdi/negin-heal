@@ -14,7 +14,7 @@
       color-mix(in srgb, var(--app-layout-glow-2) 12%, transparent) 0%,
       transparent 48%
     ),
-    radial-gradient(circle at top left, rgba(56, 189, 248, 0.1), transparent 50%),
+    radial-gradient(circle at top left, color-mix(in srgb, variables.$color-primary-light 10%, transparent), transparent 50%),
     var(--app-surface-bg);
 }
 
@@ -41,7 +41,7 @@
   border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 74%, transparent);
   border-radius: variables.$border-radius-lg;
   background:
-    radial-gradient(circle at top left, rgba(56, 189, 248, 0.1), transparent 50%),
+    radial-gradient(circle at top left, color-mix(in srgb, variables.$color-primary-light 10%, transparent), transparent 50%),
     var(--app-surface-bg);
   box-shadow: 0 1.5rem 3rem rgba(15, 23, 42, 0.12);
   overflow: hidden;
@@ -251,7 +251,7 @@
 .imageOverlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(25, 118, 210, 0.15) 0%, rgba(0, 172, 193, 0.15) 100%);
+  background: linear-gradient(135deg, color-mix(in srgb, variables.$color-primary-main 15%, transparent) 0%, color-mix(in srgb, variables.$color-secondary-main 15%, transparent) 100%);
   z-index: 2;
   pointer-events: none;
 }
@@ -274,7 +274,7 @@
 .imageTitle {
   font-weight: variables.$font-weight-bold;
   margin-bottom: variables.$spacing-2;
-  color: #0d47a1;
+  color: variables.$color-primary-dark;
   text-shadow:
     0 0.125rem 0.25rem rgba(57, 84, 79, 0.1),
     0 0.0625rem 0.125rem rgba(192, 95, 95, 0.08);
@@ -286,7 +286,7 @@
 .imageSubtitle {
   font-weight: variables.$font-weight-normal;
   font-size: 1.1rem !important;
-  color: #0d47a1;
+  color: variables.$color-primary-dark;
   text-shadow:
     0 0.0625rem 0.1875rem rgba(106, 54, 54, 0.1),
     0 0.0625rem 0.125rem rgba(172, 93, 93, 0.08);

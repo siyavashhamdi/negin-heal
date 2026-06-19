@@ -29,36 +29,44 @@ body {
 // CSS variables for layout / non-MUI surfaces (must stay aligned with theme.ts + B Yekan)
 :root {
   --app-font-family: "B Yekan", "-apple-system", "BlinkMacSystemFont", "Arial", sans-serif;
-  --app-layout-glow: #6366f1;
-  --app-layout-glow-2: #0ea5e9;
+  --app-layout-glow: #e08ba8;
+  --app-layout-glow-2: #b794c7;
   --app-layout-bg: linear-gradient(
     165deg,
-    #f4f6ff 0%,
-    #eef4ff 38%,
-    #f0f7fb 72%,
-    #e8eef8 100%
+    #fdf7f9 0%,
+    #fcf0f5 38%,
+    #faf5fc 72%,
+    #f8f0f4 100%
   );
   --app-surface-bg: #ffffff;
-  --app-surface-border: rgba(17, 24, 39, 0.12);
-  --text-primary: #1a1a1a;
-  --text-secondary: #6b7280;
-  --divider: #e5e7eb;
+  --app-surface-border: rgba(61, 44, 53, 0.1);
+  --app-accent-soft-bg: #fce7f3;
+  --app-accent-soft-border: #f9a8d4;
+  --app-accent-soft-fg: #a8436a;
+  --app-focus-ring: #c9567e;
+  --text-primary: #3d2c35;
+  --text-secondary: #7a6872;
+  --divider: #eadde3;
 }
 
 [data-theme="dark"] {
-  --app-layout-glow: #38bdf8;
-  --app-layout-glow-2: #818cf8;
+  --app-layout-glow: #e08ba8;
+  --app-layout-glow-2: #b794c7;
   --app-layout-bg: linear-gradient(
     165deg,
-    #0b1220 0%,
-    #101a2d 40%,
-    #13223a 78%,
-    #17243a 100%
+    #1a1518 0%,
+    #231a22 40%,
+    #2a1f28 78%,
+    #2e262b 100%
   );
-  --app-surface-bg: #172033;
-  --app-surface-border: rgba(148, 163, 184, 0.28);
-  --text-primary: #f8fafc;
-  --text-secondary: #a7b2c5;
+  --app-surface-bg: #2e262b;
+  --app-surface-border: rgba(212, 196, 204, 0.22);
+  --app-accent-soft-bg: #831843;
+  --app-accent-soft-border: #9d174d;
+  --app-accent-soft-fg: #fbcfe8;
+  --app-focus-ring: #e08ba8;
+  --text-primary: #fdf8f9;
+  --text-secondary: #a8949e;
   --divider: rgba(255, 255, 255, 0.12);
 }
 

@@ -81,7 +81,7 @@ $ease-flip: cubic-bezier(0.32, 0.72, 0, 1);
   overflow: hidden;
   background:
     radial-gradient(circle at 18% 18%, color-mix(in srgb, #ffffff 34%, transparent), transparent 28%),
-    linear-gradient(135deg, #dbeafe, #e0e7ff 48%, #ccfbf1);
+    linear-gradient(135deg, variables.$color-accent-soft-bg, color-mix(in srgb, variables.$color-secondary-light 35%, #ffffff) 48%, color-mix(in srgb, variables.$color-success-light 30%, #ffffff));
 }
 
 .coverImage {
@@ -433,7 +433,7 @@ body[data-theme="dark"] {
   .coverWrap {
     background:
       radial-gradient(circle at 18% 18%, color-mix(in srgb, #ffffff 10%, transparent), transparent 28%),
-      linear-gradient(135deg, #1e3a8a, #312e81 48%, #155e75);
+      linear-gradient(135deg, variables.$color-primary-dark, variables.$color-secondary-dark 48%, variables.$color-success-dark);
   }
 
   .frontBody p {
@@ -485,7 +485,7 @@ body[data-theme="dark"] {
   }
 
   .priceText {
-    color: #dbeafe;
+    color: variables.$color-accent-soft-bg;
   }
 
   .purchasedContent {
@@ -493,8 +493,8 @@ body[data-theme="dark"] {
   }
 
   .itemTypeChip {
-    background: color-mix(in srgb, #312e81 32%, #1e293b) !important;
-    color: #dbeafe !important;
+    background: color-mix(in srgb, variables.$color-secondary-dark 32%, #1e293b) !important;
+    color: variables.$color-accent-soft-bg !important;
   }
 
   .releaseImmediate {

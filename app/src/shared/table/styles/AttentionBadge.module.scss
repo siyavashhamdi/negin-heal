@@ -1,3 +1,5 @@
+@use "../../../styles/variables" as variables;
+
 .attentionBadgeRed {
   :global(.MuiBadge-badge) {
     background-color: #d32f2f;
@@ -7,7 +9,7 @@
 
 .attentionBadgeBlue {
   :global(.MuiBadge-badge) {
-    background-color: #1976d2;
+    background-color: variables.$color-primary-main;
     animation: attentionBadgeBlinkSync 6s ease-in-out infinite;
   }
 }

@@ -18,7 +18,7 @@
       color-mix(in srgb, var(--app-layout-glow-2) 18%, transparent) 0%,
       transparent 42%
     ),
-    radial-gradient(circle at 82% 78%, rgba(56, 189, 248, 0.14), transparent 46%),
+    radial-gradient(circle at 82% 78%, color-mix(in srgb, variables.$color-primary-light 14%, transparent), transparent 46%),
     linear-gradient(
       165deg,
       color-mix(in srgb, var(--app-surface-bg) 92%, #0f172a) 0%,
@@ -37,7 +37,7 @@
 
 .ambientGlow {
   inset: -20%;
-  background: radial-gradient(circle, rgba(25, 118, 210, 0.12), transparent 62%);
+  background: radial-gradient(circle, color-mix(in srgb, variables.$color-primary-main 12%, transparent), transparent 62%);
   animation: ambientPulse 8s ease-in-out infinite;
 }
 
@@ -47,7 +47,7 @@
   top: 8%;
   right: 10%;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(0, 172, 193, 0.22), transparent 68%);
+  background: radial-gradient(circle, color-mix(in srgb, variables.$color-secondary-main 22%, transparent), transparent 68%);
   filter: blur(1.25rem);
   animation: floatOrb 12s ease-in-out infinite;
 }
@@ -58,7 +58,7 @@
   bottom: 10%;
   left: 8%;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(25, 118, 210, 0.2), transparent 70%);
+  background: radial-gradient(circle, color-mix(in srgb, variables.$color-primary-main 20%, transparent), transparent 70%);
   filter: blur(1.5rem);
   animation: floatOrb 10s ease-in-out infinite reverse;
 }
@@ -121,7 +121,7 @@
   border-radius: variables.$border-radius-lg;
   border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 72%, transparent);
   background:
-    radial-gradient(circle at top left, rgba(56, 189, 248, 0.12), transparent 52%),
+    radial-gradient(circle at top left, color-mix(in srgb, variables.$color-primary-light 12%, transparent), transparent 52%),
     color-mix(in srgb, var(--app-surface-bg) 84%, transparent);
   box-shadow:
     0 1.5rem 3rem rgba(15, 23, 42, 0.14),
@@ -139,21 +139,21 @@
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: linear-gradient(145deg, rgba(25, 118, 210, 0.18), rgba(0, 172, 193, 0.12));
-  border: 0.0625rem solid color-mix(in srgb, #1976d2 28%, transparent);
-  box-shadow: 0 0.75rem 2rem rgba(25, 118, 210, 0.18);
+  background: linear-gradient(145deg, color-mix(in srgb, variables.$color-primary-main 18%, transparent), color-mix(in srgb, variables.$color-secondary-main 12%, transparent));
+  border: 0.0625rem solid color-mix(in srgb, variables.$color-primary-main 28%, transparent);
+  box-shadow: 0 0.75rem 2rem color-mix(in srgb, variables.$color-primary-main 18%, transparent);
   animation: iconPulse 3.2s ease-in-out infinite;
 }
 
 .heroIcon {
   font-size: 2.75rem !important;
-  color: #1976d2;
+  color: variables.$color-primary-main;
 }
 
 .title {
   font-weight: 800 !important;
   line-height: 1.35 !important;
-  background: linear-gradient(135deg, var(--text-primary), #1976d2);
+  background: linear-gradient(135deg, var(--text-primary), variables.$color-primary-main);
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -186,7 +186,7 @@
 
   :global(.MuiLinearProgress-bar) {
     border-radius: 999px;
-    background: linear-gradient(90deg, #1976d2, #00acc1, #42a5f5);
+    background: linear-gradient(90deg, variables.$color-primary-main, variables.$color-secondary-main, variables.$color-primary-light);
     animation: progressShimmer 2.4s ease-in-out infinite;
   }
 }

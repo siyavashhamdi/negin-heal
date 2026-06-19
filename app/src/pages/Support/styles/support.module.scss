@@ -14,7 +14,7 @@
   border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
   border-radius: 1.5rem;
   background:
-    radial-gradient(circle at top left, color-mix(in srgb, #1976d2 24%, transparent), transparent 44%),
+    radial-gradient(circle at top left, color-mix(in srgb, variables.$color-primary-main 24%, transparent), transparent 44%),
     linear-gradient(135deg, color-mix(in srgb, var(--app-layout-glow) 12%, transparent), transparent 52%),
     color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
   box-shadow: 0 1.5rem 4rem color-mix(in srgb, #0f172a 8%, transparent);
@@ -28,7 +28,7 @@
   inline-size: 14rem;
   block-size: 14rem;
   border-radius: 999rem;
-  background: color-mix(in srgb, #1976d2 10%, transparent);
+  background: color-mix(in srgb, variables.$color-primary-main 10%, transparent);
   pointer-events: none;
 }
 
@@ -48,10 +48,10 @@
   block-size: 3.6rem;
   border-radius: 1.2rem;
   background:
-    linear-gradient(135deg, color-mix(in srgb, #1976d2 22%, transparent), color-mix(in srgb, #2dd4bf 16%, transparent)),
+    linear-gradient(135deg, color-mix(in srgb, variables.$color-primary-main 22%, transparent), color-mix(in srgb, #2dd4bf 16%, transparent)),
     color-mix(in srgb, var(--app-surface-bg) 78%, #ffffff);
-  color: #1976d2;
-  box-shadow: inset 0 0 0 0.0625rem color-mix(in srgb, #1976d2 18%, transparent);
+  color: variables.$color-primary-main;
+  box-shadow: inset 0 0 0 0.0625rem color-mix(in srgb, variables.$color-primary-main 18%, transparent);
 }
 
 .heroText p,
@@ -67,7 +67,7 @@
 .heroText p,
 .sectionHeading p,
 .panelIntro p {
-  color: #1976d2;
+  color: variables.$color-primary-main;
   font-size: 0.78rem;
   font-weight: variables.$font-weight-semibold;
 }
@@ -107,7 +107,7 @@
 }
 
 .heroMeta svg {
-  color: #1976d2;
+  color: variables.$color-primary-main;
   font-size: 1.08rem;
 }
 
@@ -161,17 +161,17 @@
 .card:hover,
 .card:focus-visible {
   transform: translateY(-0.125rem);
-  border-color: color-mix(in srgb, #1976d2 48%, var(--app-surface-border));
+  border-color: color-mix(in srgb, variables.$color-primary-main 48%, var(--app-surface-border));
   outline: none;
   box-shadow:
-    0 1.2rem 2.8rem color-mix(in srgb, #1976d2 18%, transparent),
-    0 0 0 0.18rem color-mix(in srgb, #1976d2 12%, transparent);
+    0 1.2rem 2.8rem color-mix(in srgb, variables.$color-primary-main 18%, transparent),
+    0 0 0 0.18rem color-mix(in srgb, variables.$color-primary-main 12%, transparent);
 }
 
 .cardPrimary {
-  border-color: color-mix(in srgb, #1976d2 42%, var(--app-surface-border));
+  border-color: color-mix(in srgb, variables.$color-primary-main 42%, var(--app-surface-border));
   background:
-    linear-gradient(135deg, color-mix(in srgb, #1976d2 10%, transparent), transparent 62%),
+    linear-gradient(135deg, color-mix(in srgb, variables.$color-primary-main 10%, transparent), transparent 62%),
     color-mix(in srgb, var(--app-surface-bg) 96%, #ffffff);
 }
 
@@ -181,8 +181,8 @@
   inline-size: 2.7rem;
   block-size: 2.7rem;
   border-radius: 0.95rem;
-  background: color-mix(in srgb, #1976d2 11%, transparent);
-  color: #1976d2;
+  background: color-mix(in srgb, variables.$color-primary-main 11%, transparent);
+  color: variables.$color-primary-main;
 }
 
 .cardIcon svg {
@@ -190,7 +190,7 @@
 }
 
 .cardArrow {
-  color: #1976d2;
+  color: variables.$color-primary-main;
   font-size: 1.05rem;
   opacity: 0.72;
   transition:
@@ -220,7 +220,7 @@
 
 .cardBody b {
   overflow-wrap: anywhere;
-  color: #1976d2;
+  color: variables.$color-primary-main;
   direction: ltr;
   unicode-bidi: isolate;
   font-family: variables.$font-family-latin;
@@ -250,7 +250,7 @@
   padding: 0.55rem;
   border-radius: 0.9rem;
   background: color-mix(in srgb, #2dd4bf 15%, transparent);
-  color: #0f766e;
+  color: variables.$color-success-dark;
   font-size: 2.25rem;
 }
 
@@ -277,7 +277,7 @@
   inline-size: 0.42rem;
   block-size: 0.42rem;
   border-radius: 999rem;
-  background: #0f766e;
+  background: variables.$color-success-dark;
 }
 
 .faqToolbar {
@@ -304,7 +304,7 @@
 }
 
 .faqSearch > svg {
-  color: #1976d2;
+  color: variables.$color-primary-main;
 }
 
 .faqSearch > span {
@@ -335,10 +335,10 @@
   justify-content: center;
   min-block-size: 2.35rem;
   padding: 0.5rem 0.85rem;
-  border: 0.0625rem solid color-mix(in srgb, #1976d2 28%, var(--app-surface-border));
+  border: 0.0625rem solid color-mix(in srgb, variables.$color-primary-main 28%, var(--app-surface-border));
   border-radius: 999rem;
-  background: color-mix(in srgb, #1976d2 8%, transparent);
-  color: #1976d2;
+  background: color-mix(in srgb, variables.$color-primary-main 8%, transparent);
+  color: variables.$color-primary-main;
   font: inherit;
   font-weight: variables.$font-weight-semibold;
   cursor: pointer;
@@ -378,8 +378,8 @@
   inline-size: 2.8rem;
   block-size: 2.8rem;
   border-radius: 1rem;
-  background: color-mix(in srgb, #1976d2 10%, transparent);
-  color: #1976d2;
+  background: color-mix(in srgb, variables.$color-primary-main 10%, transparent);
+  color: variables.$color-primary-main;
 }
 
 .faqSectionHeader h3,
@@ -433,12 +433,12 @@
 .faqItem h4 button:hover,
 .faqItem h4 button:focus-visible {
   outline: none;
-  background: color-mix(in srgb, #1976d2 7%, transparent);
+  background: color-mix(in srgb, variables.$color-primary-main 7%, transparent);
 }
 
 .faqItem h4 button svg {
   flex: 0 0 auto;
-  color: #1976d2;
+  color: variables.$color-primary-main;
   transition: transform 160ms ease;
 }
 
@@ -466,8 +466,8 @@
 .faqEmpty > svg {
   padding: 0.65rem;
   border-radius: 1rem;
-  background: color-mix(in srgb, #1976d2 10%, transparent);
-  color: #1976d2;
+  background: color-mix(in srgb, variables.$color-primary-main 10%, transparent);
+  color: variables.$color-primary-main;
   font-size: 3rem;
 }
 

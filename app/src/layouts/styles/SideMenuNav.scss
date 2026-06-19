@@ -116,7 +116,7 @@
 body[data-theme="dark"] {
   .side-menu-nav__item:hover,
   .side-menu-nav__item--active {
-    color: #bfdbfe;
-    background: color-mix(in srgb, #1d4ed8 28%, transparent);
+    color: variables.$color-accent-soft-border;
+    background: color-mix(in srgb, variables.$color-primary-dark 28%, transparent);
   }
 }
