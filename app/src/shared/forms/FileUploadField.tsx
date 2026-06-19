@@ -7,6 +7,7 @@ import {
   useState,
   type ChangeEvent,
   type DragEvent,
+  type KeyboardEvent,
   type ReactElement,
   type SyntheticEvent,
 } from "react";
@@ -27,11 +28,27 @@ import {
   PlayArrowRounded,
   VisibilityOutlined,
 } from "@mui/icons-material";
-import { getViewableMediaKind } from "../../utils/fileAccessUrl.util";
-import type { ExistingFilePreview } from "../../utils/fileAccessUrl.util";
+import {
+  getViewableMediaKind,
+  isExecutableFileType,
+  type ExistingFilePreview,
+} from "../../utils/fileAccessUrl.util";
 import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
 import { crudModalTitleSx } from "../crud/modalThemeSx";
 import styles from "./FileUploadField.module.scss";
+
+export type FileUploadPreviewAction = "play" | "view" | "download" | "maximize" | "remove";
+
+export type FileUploadPreviewActionContext = {
+  mediaKind: "image" | "video" | "audio" | "pdf" | "text" | null;
+};
+
+export type FileUploadPreviewActionAccess =
+  | Partial<Record<FileUploadPreviewAction, boolean>>
+  | ((
+      action: FileUploadPreviewAction,
+      context: FileUploadPreviewActionContext,
+    ) => boolean);
 
 interface FilePreviewSource {
   name: string;
@@ -67,6 +84,7 @@ interface FileUploadFieldProps {
   fullWidth?: boolean;
   readOnly?: boolean;
   hideLabel?: boolean;
+  previewActionAccess?: FileUploadPreviewActionAccess;
 }
 
 function formatFileSize(bytes: number): string {
@@ -151,6 +169,7 @@ const FileUploadField = ({
   fullWidth = false,
   readOnly = false,
   hideLabel = false,
+  previewActionAccess,
 }: FileUploadFieldProps): ReactElement => {
   const theme = useTheme();
   const { isCompact, dialogProps, getPaperProps, getContentProps } = useMobileDialogProps();
@@ -160,6 +179,7 @@ const FileUploadField = ({
   const inlineVideoRef = useRef<HTMLVideoElement | null>(null);
   const inlineAudioRef = useRef<HTMLAudioElement | null>(null);
   const popupVideoRef = useRef<HTMLVideoElement | null>(null);
+  const popupAudioRef = useRef<HTMLAudioElement | null>(null);
   const [isDragActive, setIsDragActive] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
@@ -167,6 +187,7 @@ const FileUploadField = ({
   const [textPreviewContent, setTextPreviewContent] = useState<string | null>(null);
   const [textPreviewLoading, setTextPreviewLoading] = useState(false);
   const [textPreviewError, setTextPreviewError] = useState<string | null>(null);
+  const [hasPickError, setHasPickError] = useState(false);
   const selectedPreviewUrl = useMemo(() => (file ? URL.createObjectURL(file) : undefined), [file]);
   const effectiveDropTitle = isMobile ? mobileDropTitle : dropTitle;
   const effectiveDropHint = isMobile ? mobileDropHint : dropHint;
@@ -198,19 +219,70 @@ const FileUploadField = ({
         }
       : undefined;
   const previewSource = selectedFileSource ?? existingFileSource;
+  const isBlockedFile =
+    previewSource != null &&
+    isExecutableFileType(previewSource.mimeType, previewSource.name);
   const hasFile = previewSource != null;
-  const previewMediaKind = previewSource
-    ? getViewableMediaKind(previewSource.mimeType, previewSource.name)
-    : null;
+  const previewMediaKind =
+    previewSource && !isBlockedFile
+      ? getViewableMediaKind(previewSource.mimeType, previewSource.name)
+      : null;
   const previewUrl = previewSource?.previewUrl ?? null;
   const supportsMaximize =
-    previewMediaKind === "image" || previewMediaKind === "video";
+    previewMediaKind === "image" ||
+    previewMediaKind === "video" ||
+    previewMediaKind === "audio";
   const supportsViewPopup =
     previewMediaKind === "pdf" || previewMediaKind === "text";
+  const supportsReadOnlyPreview =
+    readOnly && (supportsMaximize || supportsViewPopup);
   const supportsInlinePlay =
     previewMediaKind === "video" || previewMediaKind === "audio";
   const isPreviewDialogOpen =
     (isMaximized && supportsMaximize) || (isViewOpen && supportsViewPopup);
+
+  const isPreviewActionEnabled = useCallback(
+    (action: FileUploadPreviewAction): boolean => {
+      if (isBlockedFile && action !== "remove") {
+        return false;
+      }
+
+      if (previewActionAccess) {
+        if (typeof previewActionAccess === "function") {
+          if (!previewActionAccess(action, { mediaKind: previewMediaKind })) {
+            return false;
+          }
+        } else if (previewActionAccess[action] === false) {
+          return false;
+        }
+      }
+
+      switch (action) {
+        case "play":
+          return supportsInlinePlay;
+        case "view":
+          return supportsViewPopup;
+        case "download":
+          return previewUrl != null;
+        case "maximize":
+          return supportsMaximize;
+        case "remove":
+          return !readOnly;
+        default:
+          return false;
+      }
+    },
+    [
+      isBlockedFile,
+      previewActionAccess,
+      previewMediaKind,
+      previewUrl,
+      readOnly,
+      supportsInlinePlay,
+      supportsMaximize,
+      supportsViewPopup,
+    ],
+  );
 
   useEffect(() => {
     setIsMaximized(false);
@@ -219,6 +291,7 @@ const FileUploadField = ({
     setTextPreviewContent(null);
     setTextPreviewLoading(false);
     setTextPreviewError(null);
+    setHasPickError(false);
   }, [previewUrl, previewMediaKind]);
 
   useEffect(() => {
@@ -276,6 +349,7 @@ const FileUploadField = ({
   useEffect(() => {
     if (!isMaximized) {
       pauseMediaElement(popupVideoRef.current);
+      pauseMediaElement(popupAudioRef.current);
       return;
     }
 
@@ -285,11 +359,22 @@ const FileUploadField = ({
 
     if (previewMediaKind === "video") {
       void popupVideoRef.current?.play().catch(() => undefined);
+      return;
+    }
+
+    if (previewMediaKind === "audio") {
+      void popupAudioRef.current?.play().catch(() => undefined);
     }
   }, [isMaximized, previewMediaKind]);
 
   const handlePick = useCallback(
     (nextFile: File | null) => {
+      if (nextFile != null && isExecutableFileType(nextFile.type, nextFile.name)) {
+        setHasPickError(true);
+        return;
+      }
+
+      setHasPickError(false);
       onChange(nextFile);
     },
     [onChange],
@@ -337,9 +422,11 @@ const FileUploadField = ({
     pauseMediaElement(inlineVideoRef.current);
     pauseMediaElement(inlineAudioRef.current);
     pauseMediaElement(popupVideoRef.current);
+    pauseMediaElement(popupAudioRef.current);
     setIsMaximized(false);
     setIsViewOpen(false);
     setIsPlayingInline(false);
+    setHasPickError(false);
     if (file != null) {
       handlePick(null);
       return;
@@ -401,6 +488,39 @@ const FileUploadField = ({
     inputRef.current?.click();
   };
 
+  const openReadOnlyPreview = (): void => {
+    if (!supportsReadOnlyPreview) {
+      return;
+    }
+    if (supportsMaximize) {
+      setIsMaximized(true);
+      return;
+    }
+    if (supportsViewPopup) {
+      setIsViewOpen(true);
+    }
+  };
+
+  const handleDropzoneClick = (): void => {
+    if (readOnly) {
+      openReadOnlyPreview();
+      return;
+    }
+    openPicker();
+  };
+
+  const handleDropzoneKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+    event.preventDefault();
+    if (readOnly) {
+      openReadOnlyPreview();
+      return;
+    }
+    openPicker();
+  };
+
   const renderPreviewContent = (): ReactElement => {
     if (!previewSource || !previewUrl) {
       return <Box className={styles.previewIcon}>{getFileIcon("application/octet-stream")}</Box>;
@@ -412,7 +532,12 @@ const FileUploadField = ({
           component="img"
           src={previewUrl}
           alt={previewSource.name}
-          className={styles.previewMedia}
+          className={[
+            styles.previewMedia,
+            supportsReadOnlyPreview ? styles.previewMediaReadOnly : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
         />
       );
     }
@@ -423,7 +548,12 @@ const FileUploadField = ({
           component="video"
           ref={inlineVideoRef}
           src={previewUrl}
-          className={styles.previewMedia}
+          className={[
+            styles.previewMedia,
+            supportsReadOnlyPreview ? styles.previewMediaReadOnly : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
           playsInline
           preload="metadata"
           onPlay={handleInlinePlay}
@@ -441,7 +571,7 @@ const FileUploadField = ({
             component="audio"
             ref={inlineAudioRef}
             src={previewUrl}
-            className={styles.hiddenMedia}
+            className={styles.offscreenMedia}
             preload="metadata"
             onPlay={handleInlinePlay}
             onPause={handleInlinePause}
@@ -470,29 +600,22 @@ const FileUploadField = ({
         </span>
       ) : null}
       <Box
-        role={readOnly ? undefined : "button"}
-        tabIndex={readOnly ? undefined : 0}
+        role={readOnly && !supportsReadOnlyPreview ? undefined : "button"}
+        tabIndex={readOnly && !supportsReadOnlyPreview ? undefined : 0}
         className={[
           styles.dropzone,
           error ? styles.dropzoneError : "",
+          hasPickError ? styles.dropzoneError : "",
           hasFile ? styles.dropzoneHasFile : "",
           isDragActive ? styles.dropzoneDragActive : "",
           fullWidth ? styles.dropzoneFullWidth : "",
           readOnly ? styles.dropzoneReadOnly : "",
+          supportsReadOnlyPreview ? styles.dropzoneReadOnlyPreviewable : "",
         ]
           .filter(Boolean)
           .join(" ")}
-        onClick={readOnly ? undefined : openPicker}
-        onKeyDown={
-          readOnly
-            ? undefined
-            : (event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  openPicker();
-                }
-              }
-        }
+        onClick={handleDropzoneClick}
+        onKeyDown={readOnly && !supportsReadOnlyPreview ? undefined : handleDropzoneKeyDown}
         onDragEnter={readOnly ? undefined : handleDragEnter}
         onDragOver={readOnly ? undefined : handleDragOver}
         onDragLeave={readOnly ? undefined : handleDragLeave}
@@ -522,75 +645,79 @@ const FileUploadField = ({
           </>
         ) : (
           <Box className={styles.filePreview}>
-            {renderPreviewContent()}
-            <Box className={styles.fileRow}>
-              <Box>
-                <Typography variant="body2" className={styles.fileName}>
-                  {previewSource.name}
-                </Typography>
-                <Typography variant="caption" className={styles.meta}>
-                  {formatFileSize(previewSource.sizeBytes)}
-                </Typography>
-              </Box>
-              <Box className={styles.fileActions}>
-                {supportsMaximize ? (
-                  <IconButton
-                    size="small"
-                    color="primary"
-                    aria-label={isMaximized ? minimizeLabel : maximizeLabel}
-                    onClick={handleToggleMaximize}
-                  >
-                    {isMaximized ? (
-                      <CloseFullscreenOutlined fontSize="small" />
-                    ) : (
-                      <OpenInFullOutlined fontSize="small" />
-                    )}
-                  </IconButton>
-                ) : null}
-                {!supportsInlinePlay && !supportsMaximize ? (
-                  <IconButton
-                    size="small"
-                    color="primary"
-                    aria-label={downloadLabel}
-                    onClick={handleDownload}
-                  >
-                    <FileDownloadOutlined fontSize="small" />
-                  </IconButton>
-                ) : null}
-                {supportsInlinePlay ? (
-                  <IconButton
-                    size="small"
-                    color="primary"
-                    aria-label={isPlayingInline ? pauseLabel : playLabel}
-                    onClick={handleTogglePlay}
-                  >
-                    {isPlayingInline ? (
-                      <PauseRounded fontSize="small" />
-                    ) : (
-                      <PlayArrowRounded fontSize="small" />
-                    )}
-                  </IconButton>
-                ) : null}
-                {supportsViewPopup ? (
-                  <IconButton
-                    size="small"
-                    color="primary"
-                    aria-label={viewLabel}
-                    onClick={handleToggleView}
-                  >
-                    <VisibilityOutlined fontSize="small" />
-                  </IconButton>
-                ) : null}
-                {!readOnly ? (
-                  <IconButton
-                    size="small"
-                    color="error"
-                    aria-label={removeLabel}
-                    onClick={handleRemove}
-                  >
-                    <DeleteOutline fontSize="small" />
-                  </IconButton>
-                ) : null}
+            <Box className={styles.previewStage}>
+              {renderPreviewContent()}
+              <Box className={styles.fileOverlay}>
+                <Box className={styles.fileRow}>
+                  <Box className={styles.fileInfo}>
+                    <Typography variant="body2" className={styles.fileName}>
+                      {previewSource.name}
+                    </Typography>
+                    <Typography variant="caption" className={styles.meta}>
+                      {formatFileSize(previewSource.sizeBytes)}
+                    </Typography>
+                  </Box>
+                  <Box className={styles.fileActions}>
+                    {isPreviewActionEnabled("play") ? (
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        aria-label={isPlayingInline ? pauseLabel : playLabel}
+                        onClick={handleTogglePlay}
+                      >
+                        {isPlayingInline ? (
+                          <PauseRounded fontSize="small" />
+                        ) : (
+                          <PlayArrowRounded fontSize="small" />
+                        )}
+                      </IconButton>
+                    ) : null}
+                    {isPreviewActionEnabled("view") ? (
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        aria-label={viewLabel}
+                        onClick={handleToggleView}
+                      >
+                        <VisibilityOutlined fontSize="small" />
+                      </IconButton>
+                    ) : null}
+                    {isPreviewActionEnabled("download") ? (
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        aria-label={downloadLabel}
+                        onClick={handleDownload}
+                      >
+                        <FileDownloadOutlined fontSize="small" />
+                      </IconButton>
+                    ) : null}
+                    {isPreviewActionEnabled("maximize") ? (
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        aria-label={isMaximized ? minimizeLabel : maximizeLabel}
+                        onClick={handleToggleMaximize}
+                      >
+                        {isMaximized ? (
+                          <CloseFullscreenOutlined fontSize="small" />
+                        ) : (
+                          <OpenInFullOutlined fontSize="small" />
+                        )}
+                      </IconButton>
+                    ) : null}
+                    {isPreviewActionEnabled("remove") ? (
+                      <IconButton
+                        size="small"
+                        color="error"
+                        aria-label={removeLabel}
+                        onClick={handleRemove}
+                      >
+                        <DeleteOutline fontSize="small" />
+                      </IconButton>
+                    ) : null}
+                  </Box>
+                </Box>
               </Box>
             </Box>
           </Box>
@@ -606,7 +733,7 @@ const FileUploadField = ({
           onChange={handleInputChange}
         />
       ) : null}
-      {error ? (
+      {error || hasPickError ? (
         <Typography variant="caption" color="error">
           {invalidLabel}
         </Typography>
@@ -667,6 +794,7 @@ const FileUploadField = ({
         >
           {previewUrl && previewMediaKind === "image" ? (
             <Box
+              className={styles.previewDialogFrame}
               sx={{
                 display: "grid",
                 placeItems: "center",
@@ -674,7 +802,6 @@ const FileUploadField = ({
                 minHeight: isCompact ? 0 : { xs: "18rem", md: "28rem" },
                 width: "100%",
                 borderRadius: isCompact ? 0 : 2,
-                bgcolor: "action.hover",
                 overflow: "hidden",
               }}
             >
@@ -694,6 +821,7 @@ const FileUploadField = ({
           ) : null}
           {previewUrl && previewMediaKind === "video" ? (
             <Box
+              className={styles.previewDialogFrame}
               sx={{
                 display: "grid",
                 placeItems: "center",
@@ -701,7 +829,6 @@ const FileUploadField = ({
                 minHeight: isCompact ? 0 : { xs: "18rem", md: "28rem" },
                 width: "100%",
                 borderRadius: isCompact ? 0 : 2,
-                bgcolor: "common.black",
                 overflow: "hidden",
               }}
             >
@@ -718,6 +845,31 @@ const FileUploadField = ({
                   maxBlockSize: isCompact ? "100%" : "min(72vh, 46rem)",
                   objectFit: "contain",
                 }}
+              />
+            </Box>
+          ) : null}
+          {previewUrl && previewMediaKind === "audio" ? (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 2,
+                flex: isCompact ? 1 : undefined,
+                minHeight: isCompact ? 0 : { xs: "12rem", md: "16rem" },
+                width: "100%",
+                px: 2,
+                py: isCompact ? 2 : 3,
+              }}
+            >
+              <AudiotrackRounded sx={{ fontSize: "4rem", color: "text.secondary" }} />
+              <Box
+                component="audio"
+                ref={popupAudioRef}
+                src={previewUrl}
+                controls
+                style={{ width: "100%", maxWidth: "32rem" }}
               />
             </Box>
           ) : null}

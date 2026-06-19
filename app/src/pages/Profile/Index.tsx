@@ -1,3 +1,4 @@
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import PasswordRoundedIcon from "@mui/icons-material/PasswordRounded";
@@ -127,6 +128,7 @@ const Profile = (): ReactElement => {
   });
   const [logoutCountdown, setLogoutCountdown] = useState<number | null>(null);
   const [isAvatarUploading, setIsAvatarUploading] = useState(false);
+  const [isAvatarDeleting, setIsAvatarDeleting] = useState(false);
   const [updateProfile, updateProfileResult] = useMutationWithSnackbar<
     UserProfileUpdateMutationResult,
     UserProfileUpdateMutationVariables
@@ -144,7 +146,9 @@ const Profile = (): ReactElement => {
     authUser?.roles?.filter((role) => role !== "END_USER") ??
     [];
   const roleLabel = displayRoles.join("، ");
-  const isAvatarUpdating = isAvatarUploading || updateProfileResult.loading;
+  const isAvatarUpdating =
+    isAvatarUploading || isAvatarDeleting || updateProfileResult.loading;
+  const hasAvatar = Boolean(avatarUrl);
   const isSavingProfile = updateProfileResult.loading;
   const isChangingPassword = updateProfileResult.loading;
   const isEmailLocked = Boolean(user?.profile?.email?.trim());
@@ -227,6 +231,32 @@ const Profile = (): ReactElement => {
     }
 
     avatarInputRef.current?.click();
+  };
+
+  const handleAvatarDelete = async (): Promise<void> => {
+    if (isAvatarUpdating || !hasAvatar) {
+      return;
+    }
+
+    setIsAvatarDeleting(true);
+    try {
+      const result = await updateProfile({
+        variables: {
+          input: {
+            profile: {
+              avatarFileId: null,
+            },
+          },
+        },
+      }).catch(() => null);
+
+      if (result?.data?.userProfileUpdate) {
+        await refetch();
+        showSuccess("تصویر پروفایل حذف شد.");
+      }
+    } finally {
+      setIsAvatarDeleting(false);
+    }
   };
 
   const handleAvatarChange = async (event: ChangeEvent<HTMLInputElement>): Promise<void> => {
@@ -361,6 +391,27 @@ const Profile = (): ReactElement => {
             accept="image/*"
             onChange={handleAvatarChange}
           />
+          {hasAvatar ? (
+            <Tooltip title="حذف تصویر پروفایل">
+              <span className={styles.avatarDeleteTooltipAnchor}>
+                <IconButton
+                  className={styles.avatarDeleteButton}
+                  aria-label="حذف تصویر پروفایل"
+                  size="small"
+                  disabled={isAvatarUpdating}
+                  onClick={() => {
+                    void handleAvatarDelete();
+                  }}
+                >
+                  {isAvatarDeleting ? (
+                    <CircularProgress size={12} />
+                  ) : (
+                    <DeleteOutlineRoundedIcon fontSize="small" />
+                  )}
+                </IconButton>
+              </span>
+            </Tooltip>
+          ) : null}
           <Tooltip title="ویرایش تصویر پروفایل">
             <span className={styles.avatarEditTooltipAnchor}>
               <IconButton
@@ -370,7 +421,11 @@ const Profile = (): ReactElement => {
                 disabled={isAvatarUpdating}
                 onClick={handleAvatarButtonClick}
               >
-                {isAvatarUpdating ? <CircularProgress size={16} /> : <EditRoundedIcon fontSize="small" />}
+                {isAvatarUploading ? (
+                  <CircularProgress size={12} />
+                ) : (
+                  <EditRoundedIcon fontSize="small" />
+                )}
               </IconButton>
             </span>
           </Tooltip>

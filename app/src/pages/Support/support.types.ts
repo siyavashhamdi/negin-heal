@@ -11,6 +11,7 @@ export type SupportTicketUserMinimal = {
   readonly profile?: {
     readonly firstName?: string | null;
     readonly lastName?: string | null;
+    readonly avatarAccessUrl?: FileAccessUrl | null;
   } | null;
 };
 
@@ -62,6 +63,7 @@ export type SupportTicketRecord = {
   readonly closedAt: string;
   readonly createdByUserId: string;
   readonly createdByUserName: string;
+  readonly createdByUser?: SupportTicketUserMinimal | null;
   readonly updatedByUserId: string;
   readonly updatedByUserName: string;
   readonly messageCount: number;

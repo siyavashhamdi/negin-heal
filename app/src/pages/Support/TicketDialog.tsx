@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactElement } from "react";
+import SupportAgentRoundedIcon from "@mui/icons-material/SupportAgentRounded";
 import {
+  Avatar,
   Box,
   Button,
   Chip,
@@ -21,12 +23,17 @@ import { USER_TICKET_CLOSE_MUTATION } from "../../graphql/mutations/userTicketCl
 import { USER_TICKET_SEND_MUTATION } from "../../graphql/mutations/userTicketSend.mutation";
 import { USER_LIST_QUERY } from "../../graphql/queries/userList.query";
 import { useDebounce } from "../../hooks/useDebounce";
+import { useMe, type UserMeGqlResponse } from "../../hooks/useMe";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
 import EntityModalShell from "../../shared/crud/EntityModalShell";
 import EntityAutocompleteField from "../../shared/forms/EntityAutocompleteField";
 import FileUploadField from "../../shared/forms/FileUploadField";
-import { buildExistingFilePreview, getFileIdFromAccessUrl } from "../../utils/fileAccessUrl.util";
+import {
+  buildExistingFilePreview,
+  getFileIdFromAccessUrl,
+  resolveFileAccessUrl,
+} from "../../utils/fileAccessUrl.util";
 import { uploadFile as uploadFileToApi } from "../../utils/fileUpload.util";
 import {
   type UserListQuery,
@@ -247,6 +254,47 @@ function getMessageToneStyle(
   };
 }
 
+function getMessageBubbleSx(
+  tone: "own" | "support" | "user",
+  toneStyle: { border: string; background: string },
+  theme: Theme,
+) {
+  const borderColor = alpha(toneStyle.border, theme.palette.mode === "dark" ? 0.72 : 0.42);
+  const isOwn = tone === "own";
+
+  return {
+    position: "relative" as const,
+    display: "grid",
+    gap: 0.75,
+    width: "100%",
+    maxWidth: { xs: "94%", sm: "82%", md: "76%" },
+    px: 1.75,
+    py: 1.35,
+    borderStartStartRadius: "1.125rem",
+    borderEndStartRadius: "1.125rem",
+    borderStartEndRadius: isOwn ? 0 : "1.125rem",
+    borderEndEndRadius: isOwn ? "1.125rem" : 0,
+    border: `1px solid ${borderColor}`,
+    bgcolor: toneStyle.background,
+    boxShadow:
+      theme.palette.mode === "dark"
+        ? "0 0.35rem 1rem rgba(0, 0, 0, 0.18)"
+        : "0 0.35rem 1rem rgba(15, 23, 42, 0.06)",
+    "&::after": {
+      content: '""',
+      position: "absolute",
+      bottom: 0,
+      ...(isOwn ? { insetInlineStart: "-0.4rem" } : { insetInlineEnd: "-0.4rem" }),
+      width: "0.82rem",
+      height: "1rem",
+      bgcolor: toneStyle.background,
+      ...(isOwn
+        ? { borderStartEndRadius: "0.8rem 0.68rem" }
+        : { borderEndEndRadius: "0.8rem 0.68rem" }),
+    },
+  };
+}
+
 function getMessageSentAtTimestamp(value?: string | null): number {
   if (!value?.trim()) {
     return 0;
@@ -274,6 +322,96 @@ function formatMessageDateTime(value?: string | null): string {
     return EMPTY_DISPLAY;
   }
   return formatPersianDateTime(date);
+}
+
+function getProfileStyleInitial(displayName: string): string {
+  const trimmed = displayName.trim();
+  return trimmed.slice(0, 1) || "?";
+}
+
+function formatMeDisplayName(
+  meUser: UserMeGqlResponse | null,
+  fallbackUsername?: string | null,
+): string {
+  if (!meUser) {
+    return fallbackUsername?.trim() || "کاربر";
+  }
+
+  const firstName = meUser.profile?.firstName?.trim();
+  const lastName = meUser.profile?.lastName?.trim();
+
+  if (firstName && lastName) {
+    return `${firstName} ${lastName}`;
+  }
+
+  return firstName || meUser.username?.trim() || fallbackUsername?.trim() || "کاربر";
+}
+
+function resolveMessageAvatarUrl(
+  message: SupportTicketMessage,
+  tone: "own" | "support" | "user",
+  currentUserAvatarUrl: string | null,
+  ticketOwnerAvatarUrl: string | null,
+): string | null {
+  const senderAvatarUrl = resolveFileAccessUrl(message.senderUser?.profile?.avatarAccessUrl);
+  if (senderAvatarUrl) {
+    return senderAvatarUrl;
+  }
+
+  if (tone === "own") {
+    return currentUserAvatarUrl;
+  }
+
+  if (tone === "user") {
+    return ticketOwnerAvatarUrl;
+  }
+
+  return null;
+}
+
+function MessageSenderAvatar({
+  tone,
+  toneStyle,
+  displayName,
+  avatarUrl,
+}: {
+  readonly tone: "own" | "support" | "user";
+  readonly toneStyle: { border: string; background: string };
+  readonly displayName: string;
+  readonly avatarUrl: string | null;
+}): ReactElement {
+  const theme = useTheme();
+  const initials = getProfileStyleInitial(displayName);
+  const showSupportIcon = tone === "support" && !avatarUrl;
+
+  return (
+    <Avatar
+      src={avatarUrl ?? undefined}
+      alt={displayName}
+      sx={{
+        width: { xs: 34, sm: 38 },
+        height: { xs: 34, sm: 38 },
+        flexShrink: 0,
+        bgcolor: showSupportIcon
+          ? toneStyle.border
+          : alpha(toneStyle.border, theme.palette.mode === "dark" ? 0.38 : 0.16),
+        color: showSupportIcon ? "common.white" : toneStyle.border,
+        fontWeight: 800,
+        fontSize: "0.82rem",
+        border: `2px solid ${alpha(toneStyle.border, theme.palette.mode === "dark" ? 0.65 : 0.4)}`,
+        boxShadow:
+          theme.palette.mode === "dark"
+            ? `0 0.25rem 0.75rem ${alpha(toneStyle.border, 0.35)}`
+            : `0 0.25rem 0.75rem ${alpha(toneStyle.border, 0.18)}`,
+      }}
+    >
+      {showSupportIcon ? (
+        <SupportAgentRoundedIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
+      ) : (
+        initials
+      )}
+    </Avatar>
+  );
 }
 
 function renderMessageAttachments(
@@ -346,57 +484,65 @@ function MessageBubble({
   message,
   messageIndex,
   currentUserId,
+  currentUserAvatarUrl,
+  currentUserDisplayName,
   ticketCreatorUserId,
+  ticketOwnerAvatarUrl,
   isEndUserView,
 }: {
   readonly message: SupportTicketMessage;
   readonly messageIndex: number;
   readonly currentUserId?: string;
+  readonly currentUserAvatarUrl: string | null;
+  readonly currentUserDisplayName: string;
   readonly ticketCreatorUserId?: string;
+  readonly ticketOwnerAvatarUrl: string | null;
   readonly isEndUserView: boolean;
 }): ReactElement {
   const theme = useTheme();
   const tone = getMessageTone(message, currentUserId, ticketCreatorUserId);
   const toneStyle = getMessageToneStyle(tone, theme.palette.mode);
+  const isOwnMessage = tone === "own";
   const senderName =
-    isEndUserView && tone === "own" ? "شما" : formatUserDisplayName(message.senderUser);
+    isEndUserView && isOwnMessage ? "شما" : formatUserDisplayName(message.senderUser);
+  const avatarDisplayName = isOwnMessage ? currentUserDisplayName : senderName;
   const messageNumber = `#${(messageIndex + 1).toLocaleString("fa-IR")}`;
   const sentAtLabel = formatMessageDateTime(message.sentAt);
+  const avatarUrl = resolveMessageAvatarUrl(
+    message,
+    tone,
+    currentUserAvatarUrl,
+    ticketOwnerAvatarUrl,
+  );
 
   return (
     <Box
       sx={{
         display: "flex",
-        justifyContent: tone === "own" ? "flex-end" : "flex-start",
+        justifyContent: isOwnMessage ? "flex-end" : "flex-start",
         width: "100%",
+        ...(isOwnMessage
+          ? { paddingInlineStart: "0.35rem" }
+          : { paddingInlineEnd: "0.35rem" }),
       }}
     >
-      <Box
-        sx={{
-          display: "grid",
-          gap: 0.75,
-          width: "100%",
-          maxWidth: { xs: "94%", sm: "82%", md: "76%" },
-          px: 1.75,
-          py: 1.35,
-          borderRadius:
-            tone === "own" ? "1.125rem 1.125rem 0 1.125rem" : "1.125rem 1.125rem 1.125rem 0",
-          border: `1px solid ${alpha(toneStyle.border, theme.palette.mode === "dark" ? 0.72 : 0.42)}`,
-          bgcolor: toneStyle.background,
-          boxShadow:
-            theme.palette.mode === "dark"
-              ? "0 0.35rem 1rem rgba(0, 0, 0, 0.18)"
-              : "0 0.35rem 1rem rgba(15, 23, 42, 0.06)",
-        }}
-      >
+      <Box sx={getMessageBubbleSx(tone, toneStyle, theme)}>
         <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={1}>
-          <Typography
-            variant="body2"
-            fontWeight={800}
-            sx={{ minWidth: 0, overflowWrap: "anywhere" }}
-          >
-            {senderName}
-          </Typography>
+          <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
+            <MessageSenderAvatar
+              tone={tone}
+              toneStyle={toneStyle}
+              displayName={avatarDisplayName}
+              avatarUrl={avatarUrl}
+            />
+            <Typography
+              variant="body2"
+              fontWeight={800}
+              sx={{ minWidth: 0, overflowWrap: "anywhere" }}
+            >
+              {senderName}
+            </Typography>
+          </Stack>
           <Stack alignItems="flex-end" spacing={0.15} sx={{ flexShrink: 0 }}>
             <Typography
               variant="caption"
@@ -449,8 +595,13 @@ const TicketDialog = ({
 }: TicketDialogProps): ReactElement => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { user: meUser, avatarUrl: currentUserAvatarUrl } = useMe();
   const isMobile = useMediaQuery((muiTheme: Theme) => muiTheme.breakpoints.down("md"));
   const currentUserId = user?.id?.trim();
+  const currentUserDisplayName = useMemo(
+    () => formatMeDisplayName(meUser, user?.username),
+    [meUser, user?.username],
+  );
   const roles = user?.roles ?? [];
   const isEndUserView = !roles.includes("SUPER_ADMIN") && !roles.includes("ADMIN");
   const defaultCategory = initialCategory ?? "OTHER";
@@ -661,6 +812,11 @@ const TicketDialog = ({
   const conversationMessages = useMemo(
     () => (record ? sortMessagesBySentAt(record.messages) : []),
     [record],
+  );
+
+  const ticketOwnerAvatarUrl = useMemo(
+    () => resolveFileAccessUrl(record?.createdByUser?.profile?.avatarAccessUrl) ?? null,
+    [record?.createdByUser?.profile?.avatarAccessUrl],
   );
 
   const handleCloseTicket = (): void => {
@@ -878,14 +1034,17 @@ const TicketDialog = ({
                 {t("pages.support.view.noMessages")}
               </Typography>
             ) : (
-              <Stack spacing={1.5} role="log" aria-live="polite" aria-label="گفتگوی تیکت">
+              <Stack spacing={2} role="log" aria-live="polite" aria-label="گفتگوی تیکت">
                 {conversationMessages.map((message, index) => (
                   <MessageBubble
                     key={`${record.id}-message-${message.sentAt ?? index}`}
                     message={message}
                     messageIndex={index}
                     currentUserId={currentUserId}
+                    currentUserAvatarUrl={currentUserAvatarUrl}
+                    currentUserDisplayName={currentUserDisplayName}
                     ticketCreatorUserId={record.createdByUserId}
+                    ticketOwnerAvatarUrl={ticketOwnerAvatarUrl}
                     isEndUserView={isEndUserView}
                   />
                 ))}

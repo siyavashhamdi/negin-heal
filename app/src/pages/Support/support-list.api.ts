@@ -94,6 +94,7 @@ export function mapSupportTicketListRowToRecord(row: SupportTicketListRow): Supp
     closedAt: row.closedAt ?? "",
     createdByUserId: display(row.createdByUserId ?? undefined),
     createdByUserName: formatUserDisplayName(row.createdByUser),
+    createdByUser: row.createdByUser ?? null,
     updatedByUserId: display(row.updatedByUserId ?? undefined),
     updatedByUserName: formatUserDisplayName(row.updatedByUser),
     messageCount: row.messages.length,

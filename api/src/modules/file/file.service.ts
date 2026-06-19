@@ -20,6 +20,7 @@ import {
   FileAccessUrlDescriptor,
 } from "./file-access-url.util";
 import { FileUploadGqlResponse } from "./graphql/responses";
+import { isExecutableFileType } from "./executable-file-type.util";
 import { ImageCompressionService } from "./image-compression.service";
 
 export type { FileAccessUrlDescriptor } from "./file-access-url.util";
@@ -85,6 +86,10 @@ export class FileService {
 
     if (params.sizeBytes < 0) {
       throw new BadRequestException("File size must be zero or greater");
+    }
+
+    if (isExecutableFileType(params.mimeType, params.name)) {
+      throw new BadRequestException("Executable files are not allowed");
     }
 
     await this.ensureBucket();

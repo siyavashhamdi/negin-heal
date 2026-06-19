@@ -1,5 +1,23 @@
 @use "../../styles/variables" as variables;
 
+// Subtle transparency checkerboard — low-contrast grays, larger tiles
+@mixin transparencyCheckerboard($tile: 0.875rem) {
+  background-color: variables.$color-grey-100;
+  background-image: repeating-conic-gradient(
+    variables.$color-grey-200 0% 25%,
+    variables.$color-grey-100 0% 50%
+  );
+  background-size: $tile $tile;
+
+  [data-theme="dark"] & {
+    background-color: variables.$color-grey-900;
+    background-image: repeating-conic-gradient(
+      variables.$color-grey-800 0% 25%,
+      variables.$color-grey-900 0% 50%
+    );
+  }
+}
+
 .root {
   position: relative;
   display: inline-flex;
@@ -77,6 +95,8 @@
   border-style: solid;
   text-align: start;
   align-items: stretch;
+  justify-content: stretch;
+  padding: 0.35rem;
 }
 
 .dropzoneReadOnly {
@@ -91,6 +111,19 @@
 .dropzoneReadOnly.dropzoneHasFile:hover {
   border-color: variables.$color-divider;
   background-color: transparent;
+}
+
+.dropzoneReadOnlyPreviewable {
+  cursor: pointer;
+
+  &:hover {
+    border-color: variables.$color-primary-main;
+    background-color: rgba(variables.$color-primary-main, 0.04);
+  }
+}
+
+.previewMediaReadOnly {
+  pointer-events: none;
 }
 
 .icon {
@@ -125,14 +158,21 @@
 
 .fileRow {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
+  direction: ltr;
   gap: variables.$spacing-1;
-  flex-wrap: wrap;
+}
+
+.fileInfo {
+  min-width: 0;
+  flex: 1;
+  text-align: left;
 }
 
 .fileActions {
   display: flex;
+  direction: rtl;
   align-items: center;
   flex-shrink: 0;
   gap: 0.125rem;
@@ -140,19 +180,80 @@
 
 .filePreview {
   display: flex;
-  flex-direction: column;
-  gap: variables.$spacing-1;
+  flex: 1;
+  min-height: 0;
   width: 100%;
-  min-width: 0;
+}
+
+.previewStage {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+.fileOverlay {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  z-index: 1;
+  padding: 2rem 0.35rem 0.3rem;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.78) 0%,
+    rgba(0, 0, 0, 0.42) 58%,
+    transparent 100%
+  );
+  border-end-end-radius: variables.$border-radius-md;
+  border-end-start-radius: variables.$border-radius-md;
+  pointer-events: none;
+
+  .fileRow {
+    pointer-events: auto;
+  }
+
+  .fileName {
+    color: #ffffff;
+    font-size: 0.78rem;
+    line-height: 1.25;
+    text-shadow: 0 0.0625rem 0.125rem rgba(0, 0, 0, 0.45);
+  }
+
+  .meta {
+    color: rgba(255, 255, 255, 0.86);
+    margin-top: 0.125rem;
+    text-shadow: 0 0.0625rem 0.125rem rgba(0, 0, 0, 0.45);
+  }
+
+  .fileActions {
+    :global(.MuiIconButton-root) {
+      color: rgba(255, 255, 255, 0.94);
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.12);
+      }
+    }
+
+    :global(.MuiIconButton-colorError) {
+      color: variables.$color-error-light;
+    }
+  }
 }
 
 .previewMedia {
   display: block;
   width: 100%;
-  block-size: 6.7rem;
+  flex: 1;
+  min-height: 0;
+  block-size: 100%;
   object-fit: contain;
   border-radius: variables.$border-radius-md;
-  background-color: variables.$color-grey-100;
+  @include transparencyCheckerboard;
+}
+
+.previewDialogFrame {
+  @include transparencyCheckerboard(1.125rem);
 }
 
 .previewIcon,
@@ -160,7 +261,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 6.7rem;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
   border-radius: variables.$border-radius-md;
   background-color: variables.$color-grey-100;
   color: variables.$color-text-secondary;
@@ -180,6 +283,15 @@
 .hiddenInput,
 .hiddenMedia {
   display: none;
+}
+
+.offscreenMedia {
+  position: absolute;
+  inline-size: 0;
+  block-size: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
 }
 
 @media (max-width: (variables.$breakpoint-sm - 0.0625rem)) {
