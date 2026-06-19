@@ -8,6 +8,7 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from "@nestjs/common";
 
@@ -38,10 +39,22 @@ export type StoredFileUploadResult = {
   accessUrl: FileAccessUrlDescriptor;
 };
 
+type StoredFileStorageRecord = {
+  bucket?: string;
+  objectKey?: string;
+  path?: string;
+};
+
+type StoredFileStorageLocation = {
+  bucket: string;
+  objectKey: string;
+};
+
 @Injectable()
 export class FileService {
   static readonly FILE_ACCESS_URL_TTL_SECONDS = 60 * 60;
 
+  private readonly logger = new Logger(FileService.name);
   private readonly minioClient: MinioClient;
 
   constructor(
@@ -231,25 +244,496 @@ export class FileService {
     }
   }
 
-  async deleteByIds(ids: Types.ObjectId[]): Promise<void> {
+  async deleteByIds(
+    ids: Types.ObjectId[],
+    options?: { isSystemOrphanCleanup?: boolean },
+  ): Promise<number> {
     if (!ids.length) {
-      return;
+      return 0;
     }
 
-    const storedFiles = await this.storedFileModel
-      .find({ _id: { $in: ids } })
-      .exec();
+    const storedFiles = await this.storedFileModel.collection
+      .find(
+        {
+          _id: { $in: ids },
+          $or: [
+            { "audit.deletedAt": null },
+            { "audit.deletedAt": { $exists: false } },
+          ],
+        },
+        { projection: { bucket: 1, objectKey: 1, path: 1 } },
+      )
+      .toArray();
+
+    if (storedFiles.length === 0) {
+      return 0;
+    }
+
+    const activeFileIds = storedFiles.map(
+      (storedFile) => storedFile._id as Types.ObjectId,
+    );
 
     for (const storedFile of storedFiles) {
-      const { bucket, objectKey } = this.resolveStorageLocation(storedFile);
-      await this.minioClient.removeObject(bucket, objectKey);
+      const location = this.resolveStorageLocationSafely(
+        storedFile as StoredFileStorageRecord,
+      );
+      if (!location) {
+        this.logger.warn(
+          `Skipping MinIO delete for stored file ${String(storedFile._id)}: invalid storage location`,
+        );
+        continue;
+      }
+
+      await this.removeMinioObjectSafely(location.bucket, location.objectKey);
     }
 
-    if (storedFiles.length > 0) {
-      await this.storedFileModel.collection.deleteMany({
-        _id: { $in: storedFiles.map((storedFile) => storedFile._id) },
-      });
+    if (options?.isSystemOrphanCleanup) {
+      return this.softDeleteStoredFileRecordsAsSystemOrphans(activeFileIds);
     }
+
+    return this.softDeleteStoredFileRecordsByIds(activeFileIds);
+  }
+
+  async deleteUnreferencedByIds(
+    ids: Types.ObjectId[],
+    referencedFileIds: Set<string>,
+  ): Promise<number> {
+    const unreferencedIds = this.excludeReferencedFileIds(ids, referencedFileIds);
+    if (unreferencedIds.length === 0) {
+      return 0;
+    }
+
+    return this.deleteByIds(unreferencedIds, { isSystemOrphanCleanup: true });
+  }
+
+  async findReferencedFileIdsUnavailableForUse(
+    referencedFileIds: Set<string>,
+  ): Promise<Set<string>> {
+    const unavailableFileIds = new Set<string>();
+    if (referencedFileIds.size === 0) {
+      return unavailableFileIds;
+    }
+
+    const referencedObjectIds = [...referencedFileIds].map(
+      (fileId) => new Types.ObjectId(fileId),
+    );
+    const activeStoredFiles = await this.storedFileModel.collection
+      .find(
+        {
+          _id: { $in: referencedObjectIds },
+          $or: [
+            { "audit.deletedAt": null },
+            { "audit.deletedAt": { $exists: false } },
+          ],
+        },
+        { projection: { bucket: 1, objectKey: 1, path: 1 } },
+      )
+      .toArray();
+
+    const activeStoredFileById = new Map(
+      activeStoredFiles.map((storedFile) => [
+        (storedFile._id as Types.ObjectId).toString(),
+        storedFile as StoredFileStorageRecord & { _id: Types.ObjectId },
+      ]),
+    );
+
+    for (const fileId of referencedFileIds) {
+      const storedFile = activeStoredFileById.get(fileId);
+      if (!storedFile) {
+        unavailableFileIds.add(fileId);
+        continue;
+      }
+
+      const location = this.resolveStorageLocationSafely(storedFile);
+      if (!location) {
+        unavailableFileIds.add(fileId);
+        continue;
+      }
+
+      const existsInMinio = await this.minioObjectExistsSafely(
+        location.bucket,
+        location.objectKey,
+      );
+      if (!existsInMinio) {
+        unavailableFileIds.add(fileId);
+      }
+    }
+
+    return unavailableFileIds;
+  }
+
+  async removeMinioObjectsWithoutDbRecord(params: {
+    referencedFileIds: Set<string>;
+  }): Promise<number> {
+    await this.ensureBucket();
+
+    const bucket = env.MINIO_BUCKET;
+    const knownObjectKeys = await this.collectKnownMinioObjectKeys();
+    const minioObjectKeys = await this.listMinioObjectKeys(bucket);
+    const orphanObjectKeys = minioObjectKeys.filter(
+      (objectKey) =>
+        !knownObjectKeys.has(this.buildMinioObjectLookupKey(bucket, objectKey)),
+    );
+
+    let removedCount = 0;
+
+    for (const objectKey of orphanObjectKeys) {
+      const storedFileRecord =
+        await this.findActiveStoredFileRecordByStorageLocation(
+          bucket,
+          objectKey,
+        );
+
+      if (storedFileRecord?._id) {
+        continue;
+      }
+
+      const isReferenced = await this.isMinioObjectReferencedByStoredFiles(
+        bucket,
+        objectKey,
+        params.referencedFileIds,
+      );
+      if (isReferenced) {
+        this.logger.warn(
+          `Skipping MinIO orphan candidate ${bucket}/${objectKey}: object belongs to a referenced stored file`,
+        );
+        continue;
+      }
+
+      await this.removeMinioObjectSafely(bucket, objectKey);
+      removedCount++;
+    }
+
+    return removedCount;
+  }
+
+  async removeUnreferencedStoredFileRecordsMissingInMinio(params: {
+    getReferencedFileIds: () => Promise<Set<string>>;
+    scanBatchSize: number;
+    deleteBatchSize: number;
+  }): Promise<number> {
+    let deletedCount = 0;
+    let lastId: Types.ObjectId | undefined;
+
+    while (true) {
+      const referencedFileIds = await params.getReferencedFileIds();
+      const query: Record<string, unknown> = {};
+
+      if (lastId) {
+        query._id = { $gt: lastId };
+      }
+
+      const batch = await this.storedFileModel.collection
+        .find(query, {
+          projection: { _id: 1, bucket: 1, objectKey: 1, path: 1 },
+        })
+        .sort({ _id: 1 })
+        .limit(params.scanBatchSize)
+        .toArray();
+
+      if (batch.length === 0) {
+        break;
+      }
+
+      const missingInMinioIds: Types.ObjectId[] = [];
+
+      for (const storedFile of batch) {
+        const fileId = storedFile._id as Types.ObjectId;
+
+        if (referencedFileIds.has(fileId.toString())) {
+          continue;
+        }
+
+        const location = this.resolveStorageLocationSafely(
+          storedFile as StoredFileStorageRecord,
+        );
+        if (!location) {
+          this.logger.warn(
+            `Removing stored file ${fileId.toString()} from DB: invalid storage location`,
+          );
+          missingInMinioIds.push(fileId);
+          continue;
+        }
+
+        const existsInMinio = await this.minioObjectExistsSafely(
+          location.bucket,
+          location.objectKey,
+        );
+        if (!existsInMinio) {
+          missingInMinioIds.push(fileId);
+        }
+      }
+
+      for (
+        let index = 0;
+        index < missingInMinioIds.length;
+        index += params.deleteBatchSize
+      ) {
+        const deleteBatch = missingInMinioIds.slice(
+          index,
+          index + params.deleteBatchSize,
+        );
+        deletedCount += await this.softDeleteUnreferencedOrphansByIds(
+          deleteBatch,
+          referencedFileIds,
+        );
+      }
+
+      lastId = batch[batch.length - 1]._id as Types.ObjectId;
+
+      if (batch.length < params.scanBatchSize) {
+        break;
+      }
+    }
+
+    return deletedCount;
+  }
+
+  private async softDeleteUnreferencedOrphansByIds(
+    ids: Types.ObjectId[],
+    referencedFileIds: Set<string>,
+  ): Promise<number> {
+    const unreferencedIds = this.excludeReferencedFileIds(ids, referencedFileIds);
+    if (unreferencedIds.length === 0) {
+      return 0;
+    }
+
+    return this.softDeleteStoredFileRecordsAsSystemOrphans(unreferencedIds);
+  }
+
+  private async softDeleteStoredFileRecordsByIds(
+    ids: Types.ObjectId[],
+  ): Promise<number> {
+    if (!ids.length) {
+      return 0;
+    }
+
+    const result = await this.storedFileModel.deleteMany({
+      _id: { $in: ids },
+    });
+
+    return result.deletedCount ?? 0;
+  }
+
+  private async softDeleteStoredFileRecordsAsSystemOrphans(
+    ids: Types.ObjectId[],
+  ): Promise<number> {
+    if (!ids.length) {
+      return 0;
+    }
+
+    const result = await this.storedFileModel.collection.updateMany(
+      {
+        _id: { $in: ids },
+        $or: [
+          { "audit.deletedAt": null },
+          { "audit.deletedAt": { $exists: false } },
+        ],
+      },
+      {
+        $set: {
+          "audit.deletedAt": new Date(),
+          isSystemOrphanCleanup: true,
+        },
+        $unset: {
+          "audit.deletedBy": "",
+        },
+      },
+    );
+
+    return result.modifiedCount ?? 0;
+  }
+
+  private excludeReferencedFileIds(
+    ids: Types.ObjectId[],
+    referencedFileIds: Set<string>,
+  ): Types.ObjectId[] {
+    if (referencedFileIds.size === 0) {
+      return ids;
+    }
+
+    const unreferencedIds = ids.filter(
+      (fileId) => !referencedFileIds.has(fileId.toString()),
+    );
+
+    const skippedCount = ids.length - unreferencedIds.length;
+    if (skippedCount > 0) {
+      this.logger.warn(
+        `Skipped deleting ${skippedCount} referenced stored file(s)`,
+      );
+    }
+
+    return unreferencedIds;
+  }
+
+  private async isMinioObjectReferencedByStoredFiles(
+    bucket: string,
+    objectKey: string,
+    referencedFileIds: Set<string>,
+  ): Promise<boolean> {
+    if (referencedFileIds.size === 0) {
+      return false;
+    }
+
+    const referencedObjectIds = [...referencedFileIds].map(
+      (fileId) => new Types.ObjectId(fileId),
+    );
+    const referencedStoredFile = await this.storedFileModel.collection.findOne(
+      {
+        _id: { $in: referencedObjectIds },
+        $and: [
+          {
+            $or: [{ bucket, objectKey }, { path: `${bucket}/${objectKey}` }],
+          },
+          {
+            $or: [
+              { "audit.deletedAt": null },
+              { "audit.deletedAt": { $exists: false } },
+            ],
+          },
+        ],
+      },
+      { projection: { _id: 1 } },
+    );
+
+    return Boolean(referencedStoredFile?._id);
+  }
+
+  private async removeMinioObjectSafely(
+    bucket: string,
+    objectKey: string,
+  ): Promise<void> {
+    try {
+      await this.minioClient.removeObject(bucket, objectKey);
+    } catch (error) {
+      if (this.isMinioObjectNotFoundError(error)) {
+        return;
+      }
+
+      this.logger.warn(
+        `Failed to remove MinIO object ${bucket}/${objectKey}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  private async collectKnownMinioObjectKeys(): Promise<Set<string>> {
+    const storedFiles = await this.storedFileModel.collection
+      .find(
+        {
+          $or: [
+            { "audit.deletedAt": null },
+            { "audit.deletedAt": { $exists: false } },
+          ],
+        },
+        { projection: { bucket: 1, objectKey: 1, path: 1 } },
+      )
+      .toArray();
+
+    const knownObjectKeys = new Set<string>();
+    for (const storedFile of storedFiles) {
+      const location = this.resolveStorageLocationSafely(
+        storedFile as StoredFileStorageRecord,
+      );
+      if (!location) {
+        this.logger.warn(
+          `Skipping known MinIO key mapping for stored file ${String(storedFile._id)}: invalid storage location`,
+        );
+        continue;
+      }
+
+      knownObjectKeys.add(
+        this.buildMinioObjectLookupKey(location.bucket, location.objectKey),
+      );
+    }
+
+    return knownObjectKeys;
+  }
+
+  private buildMinioObjectLookupKey(bucket: string, objectKey: string): string {
+    return `${bucket}/${objectKey}`;
+  }
+
+  private async minioObjectExistsSafely(
+    bucket: string,
+    objectKey: string,
+  ): Promise<boolean> {
+    try {
+      return await this.minioObjectExists(bucket, objectKey);
+    } catch (error) {
+      this.logger.warn(
+        `Unable to verify MinIO object ${bucket}/${objectKey}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+      return true;
+    }
+  }
+
+  private async findActiveStoredFileRecordByStorageLocation(
+    bucket: string,
+    objectKey: string,
+  ): Promise<{ _id: Types.ObjectId } | null> {
+    const storedFileRecord = await this.storedFileModel.collection.findOne(
+      {
+        $and: [
+          {
+            $or: [{ bucket, objectKey }, { path: `${bucket}/${objectKey}` }],
+          },
+          {
+            $or: [
+              { "audit.deletedAt": null },
+              { "audit.deletedAt": { $exists: false } },
+            ],
+          },
+        ],
+      },
+      { projection: { _id: 1 } },
+    );
+
+    return storedFileRecord?._id
+      ? { _id: storedFileRecord._id as Types.ObjectId }
+      : null;
+  }
+
+  private resolveStorageLocationSafely(
+    storedFile: StoredFileStorageRecord,
+  ): StoredFileStorageLocation | null {
+    try {
+      return this.resolveStorageLocationFromRecord(storedFile);
+    } catch {
+      return null;
+    }
+  }
+
+  private async minioObjectExists(
+    bucket: string,
+    objectKey: string,
+  ): Promise<boolean> {
+    try {
+      await this.minioClient.statObject(bucket, objectKey);
+      return true;
+    } catch (error) {
+      if (this.isMinioObjectNotFoundError(error)) {
+        return false;
+      }
+
+      throw error;
+    }
+  }
+
+  private isMinioObjectNotFoundError(error: unknown): boolean {
+    if (!error || typeof error !== "object") {
+      return false;
+    }
+
+    const minioError = error as { code?: string; statusCode?: number };
+    return (
+      minioError.code === "NotFound" ||
+      minioError.code === "NoSuchKey" ||
+      minioError.statusCode === 404
+    );
   }
 
   private toUploadResult(
@@ -288,6 +772,12 @@ export class FileService {
     bucket: string;
     objectKey: string;
   } {
+    return this.resolveStorageLocationFromRecord(storedFile);
+  }
+
+  private resolveStorageLocationFromRecord(
+    storedFile: StoredFileStorageRecord,
+  ): StoredFileStorageLocation {
     if (storedFile.bucket && storedFile.objectKey) {
       return {
         bucket: storedFile.bucket,
@@ -295,8 +785,8 @@ export class FileService {
       };
     }
 
-    const slashIndex = storedFile.path.indexOf("/");
-    if (slashIndex <= 0) {
+    const slashIndex = storedFile.path?.indexOf("/") ?? -1;
+    if (slashIndex <= 0 || !storedFile.path) {
       throw new InternalServerErrorException("Stored file path is invalid");
     }
 
@@ -304,6 +794,21 @@ export class FileService {
       bucket: storedFile.path.slice(0, slashIndex),
       objectKey: storedFile.path.slice(slashIndex + 1),
     };
+  }
+
+  private async listMinioObjectKeys(bucket: string): Promise<string[]> {
+    return new Promise((resolve, reject) => {
+      const objectKeys: string[] = [];
+      const stream = this.minioClient.listObjectsV2(bucket, "", true);
+
+      stream.on("data", (object) => {
+        if (object.name) {
+          objectKeys.push(object.name);
+        }
+      });
+      stream.on("error", reject);
+      stream.on("end", () => resolve(objectKeys));
+    });
   }
 
   private async ensureBucket(): Promise<void> {

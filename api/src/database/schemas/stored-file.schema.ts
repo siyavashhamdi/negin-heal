@@ -29,6 +29,9 @@ export class StoredFile extends BaseIdTimestampableBlameableSchema {
 
   @Prop({ type: Date })
   uploadedAt?: Date;
+
+  @Prop({ type: Boolean })
+  isSystemOrphanCleanup?: boolean;
 }
 
 export const StoredFileSchema = SchemaFactory.createForClass(StoredFile);

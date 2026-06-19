@@ -27,7 +27,7 @@ export class TicketAutoCloseCron {
     this.isRunning = true;
 
     try {
-      await this.ticketAutoCloseService.closeExpiredAnsweredTickets();
+      await this.ticketAutoCloseService.closeAnsweredTickets();
     } catch (error) {
       this.logger.error(
         "Ticket auto-close cron failed",
