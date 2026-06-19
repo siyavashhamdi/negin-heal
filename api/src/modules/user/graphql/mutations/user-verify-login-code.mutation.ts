@@ -9,6 +9,7 @@ import { UserService } from "../../user.service";
 import { UserVerifyLoginCodeGqlInput } from "../inputs";
 import { UserVerifyLoginCodeGqlResponse } from "../responses";
 import { GraphQLContext } from "../../../../types/graphql-context.types";
+import { buildSessionClientContext } from "../../../../utils/session-client-context.util";
 
 @Resolver(() => UserVerifyLoginCodeGqlResponse)
 export class UserVerifyLoginCodeMutation {
@@ -24,17 +25,11 @@ export class UserVerifyLoginCodeMutation {
     @Args("input") input: UserVerifyLoginCodeGqlInput,
     @Context() context: GraphQLContext,
   ): Promise<UserVerifyLoginCodeGqlResponse> {
-    const req = context.req;
-    const ipAddress =
-      req?.ip || req?.connection?.remoteAddress || req?.socket?.remoteAddress;
-    const deviceInfo = req?.headers?.["user-agent"];
-
     return this.userService.verifyLoginCode(
       input.identity,
       input.code,
       input.rememberMe || false,
-      deviceInfo,
-      ipAddress,
+      buildSessionClientContext(context.req, input.clientContext),
     );
   }
 }

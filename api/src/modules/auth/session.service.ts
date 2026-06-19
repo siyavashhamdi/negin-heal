@@ -5,6 +5,7 @@ import { InjectModel } from "@nestjs/mongoose";
 
 import { SessionStatus } from "../../enums";
 import { Session, SessionDocument } from "../../database/schemas";
+import { SessionClientContext } from "../../database/schemas/session-client-context.schema";
 
 @Injectable()
 export class SessionService {
@@ -13,21 +14,15 @@ export class SessionService {
     private readonly sessionModel: Model<SessionDocument>,
   ) {}
 
-  /**
-   * Create a new session for a user
-   * Returns session with _id that will be used as jti in JWT
-   */
   async createSession(
     userId: Types.ObjectId,
     expiresAt: Date,
-    deviceInfo?: string,
-    ipAddress?: string,
+    clientContext?: SessionClientContext,
   ): Promise<SessionDocument> {
     const session = new this.sessionModel({
       userId,
       expiresAt,
-      deviceInfo,
-      ipAddress,
+      clientContext,
       status: SessionStatus.ACTIVE,
       lastActivityAt: new Date(),
     });
@@ -53,17 +48,20 @@ export class SessionService {
   }
 
   /**
-   * Revoke a specific session by ID (logout)
+   * Mark a specific session as logged out.
    */
-  async revokeSession(sessionId: string): Promise<void> {
+  async logoutSession(sessionId: string): Promise<void> {
     if (!Types.ObjectId.isValid(sessionId)) {
       return;
     }
 
     await this.sessionModel.updateOne(
-      { _id: new Types.ObjectId(sessionId) },
       {
-        status: SessionStatus.REVOKED,
+        _id: new Types.ObjectId(sessionId),
+        status: SessionStatus.ACTIVE,
+      },
+      {
+        status: SessionStatus.LOGGED_OUT,
         revokedAt: new Date(),
       },
     );

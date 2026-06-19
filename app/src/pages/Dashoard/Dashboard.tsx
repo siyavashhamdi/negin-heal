@@ -100,7 +100,6 @@ const Dashboard = (): ReactElement => {
 
   return (
     <section className={styles.page} aria-label="داشبورد">
-      <div>Siya-Jun 18, 2026</div>
       <Card className={styles.uploaderCard}>
         <CardContent>
           <form onSubmit={handleSendSampleEmail}>

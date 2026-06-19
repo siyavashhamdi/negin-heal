@@ -4,6 +4,7 @@ export * from "./migration.schema";
 export * from "./notification.schema";
 export * from "./coupon.schema";
 export * from "./session.schema";
+export * from "./session-client-context.schema";
 export * from "./stored-file.schema";
 export * from "./ticket.schema";
 export * from "./user-course.schema";

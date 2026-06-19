@@ -7,6 +7,7 @@ import {
   RateLimitGuard,
 } from "../../../auth/guards/rate-limit.guard";
 import { GraphQLContext } from "../../../../types/graphql-context.types";
+import { buildSessionClientContext } from "../../../../utils/session-client-context.util";
 import { UserSignupGqlInput } from "../inputs";
 import { UserLoginGqlResponse } from "../responses";
 import { UserRole } from "../../../../enums";
@@ -26,15 +27,9 @@ export class UserSignupMutation {
     @Args("input") input: UserSignupGqlInput,
     @Context() context: GraphQLContext,
   ): Promise<UserLoginGqlResponse> {
-    const req = context.req;
-    const ipAddress =
-      req?.ip || req?.connection?.remoteAddress || req?.socket?.remoteAddress;
-    const deviceInfo = req?.headers?.["user-agent"];
-
     const signupResult = await this.userService.signup(
       input,
-      deviceInfo,
-      ipAddress,
+      buildSessionClientContext(context.req, input.clientContext),
     );
 
     return {

@@ -21,6 +21,7 @@ import {
 } from "./graphql";
 import { AppSettingValueType, UserRole, UserStatus } from "../../enums";
 import { SessionService } from "../auth/session.service";
+import { SessionClientContext } from "../../database/schemas/session-client-context.schema";
 import { EmailService } from "../email";
 import { AppSettingsService } from "../app-settings";
 import { FileService, FileAccessUrlDescriptor } from "../file/file.service";
@@ -145,8 +146,7 @@ export class UserService {
     captchaId?: string,
     captchaValue?: string,
     rememberMe: boolean = false,
-    deviceInfo?: string,
-    ipAddress?: string,
+    clientContext?: SessionClientContext,
   ): Promise<UserLoginGqlResponse> {
     const user = await this.findByIdentityOrThrow(identity);
     this.userSecurityService.throwIfAccountIsLocked(user);
@@ -166,7 +166,7 @@ export class UserService {
       throw new InvalidCredentialsException();
     }
 
-    return this.createLoginSession(user, rememberMe, deviceInfo, ipAddress);
+    return this.createLoginSession(user, rememberMe, clientContext);
   }
 
   private shouldRequireLoginCaptcha(user: UserDocument): boolean {
@@ -450,8 +450,7 @@ export class UserService {
 
   async signup(
     input: UserSignupGqlInput,
-    deviceInfo?: string,
-    ipAddress?: string,
+    clientContext?: SessionClientContext,
   ): Promise<UserLoginGqlResponse> {
     if (env.CAPTCHA_ENABLED) {
       this.throwIfCaptchaIsInvalid(input.captchaId, input.captchaValue);
@@ -535,8 +534,7 @@ export class UserService {
     return this.createLoginSession(
       createdUser,
       input.rememberMe === true,
-      deviceInfo,
-      ipAddress,
+      clientContext,
     );
   }
 
@@ -544,8 +542,7 @@ export class UserService {
     identity: string,
     code: string,
     rememberMe: boolean = false,
-    deviceInfo?: string,
-    ipAddress?: string,
+    clientContext?: SessionClientContext,
   ): Promise<UserVerifyLoginCodeGqlResponse> {
     const user = await this.findByIdentityOrThrow(identity);
     this.userSecurityService.throwIfAccountIsLocked(user);
@@ -571,8 +568,7 @@ export class UserService {
     const loginResult = await this.createLoginSession(
       user,
       rememberMe,
-      deviceInfo,
-      ipAddress,
+      clientContext,
     );
 
     return {
@@ -586,8 +582,7 @@ export class UserService {
   private async createLoginSession(
     user: UserDocument,
     rememberMe: boolean = false,
-    deviceInfo?: string,
-    ipAddress?: string,
+    clientContext?: SessionClientContext,
   ): Promise<UserLoginGqlResponse> {
     // Update last login
     await this.userModel.updateOne(
@@ -610,8 +605,7 @@ export class UserService {
     const session = await this.sessionService.createSession(
       user._id,
       expiresAt,
-      deviceInfo,
-      ipAddress,
+      clientContext,
     );
 
     // Use session._id as jti in JWT
@@ -898,7 +892,7 @@ export class UserService {
   }
 
   async logout(sessionId: string): Promise<void> {
-    await this.sessionService.revokeSession(sessionId);
+    await this.sessionService.logoutSession(sessionId);
   }
 
   /**
@@ -960,7 +954,7 @@ export class UserService {
     const session = await this.sessionService.findSessionById(payload.jti);
 
     if (!session) {
-      // Session not found, expired, or revoked
+      // Session not found, expired, logged out, or revoked
       return null;
     }
 

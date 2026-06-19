@@ -10,6 +10,7 @@ import { UserLoginGqlInput } from "../inputs";
 import { UserLoginGqlResponse } from "../responses";
 import { UserRole } from "../../../../enums";
 import { GraphQLContext } from "../../../../types/graphql-context.types";
+import { buildSessionClientContext } from "../../../../utils/session-client-context.util";
 
 @Resolver(() => UserLoginGqlResponse)
 export class UserLoginMutation {
@@ -25,20 +26,13 @@ export class UserLoginMutation {
     @Args("input") input: UserLoginGqlInput,
     @Context() context: GraphQLContext,
   ): Promise<UserLoginGqlResponse> {
-    // Extract IP and device info from request
-    const req = context.req;
-    const ipAddress =
-      req?.ip || req?.connection?.remoteAddress || req?.socket?.remoteAddress;
-    const deviceInfo = req?.headers?.["user-agent"];
-
     const loginResult = await this.userService.login(
       input.identity,
       input.password,
       input.captchaId,
       input.captchaValue,
       input.rememberMe || false,
-      deviceInfo,
-      ipAddress,
+      buildSessionClientContext(context.req, input.clientContext),
     );
 
     // Cast roles to UserRole array for GraphQL response

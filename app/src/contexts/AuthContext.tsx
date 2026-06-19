@@ -8,6 +8,8 @@ import {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import { LOCAL_STORAGE_KEYS } from "../constants";
+import { apolloClient } from "../lib/apollo-client";
+import { USER_LOGOUT_MUTATION } from "../graphql/mutations/userLogout.mutation";
 
 /**
  * User data structure
@@ -90,11 +92,24 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
    * Clears auth state and redirects to login
    */
   const logout = (): void => {
-    setAccessToken(null);
-    setUser(null);
-    localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
-    localStorage.removeItem("user");
-    navigate("/login");
+    const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+
+    const finishLogout = (): void => {
+      setAccessToken(null);
+      setUser(null);
+      localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+      localStorage.removeItem("user");
+      navigate("/login");
+    };
+
+    if (!token) {
+      finishLogout();
+      return;
+    }
+
+    void apolloClient.mutate({ mutation: USER_LOGOUT_MUTATION }).finally(() => {
+      finishLogout();
+    });
   };
 
   const value: AuthContextValue = {

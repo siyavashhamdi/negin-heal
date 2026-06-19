@@ -11,7 +11,9 @@ import { apolloClient } from "../lib/apollo-client";
 import { LOCAL_STORAGE_KEYS } from "../constants";
 import { showErrorIfNotQueued } from "../utilities/graphql-error.util";
 import { useAuth, type User } from "../contexts/AuthContext";
+import { useAppSettings } from "../contexts/AppSettingsContext";
 import { useSnackbar } from "./useSnackbar";
+import { collectSessionClientContextInput } from "../utils/sessionClientContext.util";
 import type { UserMeGqlResponse } from "../lib/graphql/generated/graphql";
 
 export interface RequestLoginCodeInput {
@@ -196,8 +198,11 @@ export const useLogin = () => {
   >(USER_SIGNUP_MUTATION);
 
   const { login } = useAuth();
+  const { appVersion } = useAppSettings();
   const { showSuccess, showError } = useSnackbar();
   const { t } = useTranslation();
+
+  const buildClientContext = () => collectSessionClientContextInput(appVersion.value);
 
   const resolveAuthIdentity = async (input: RequestLoginCodeInput): Promise<boolean | null> => {
     try {
@@ -250,6 +255,7 @@ export const useLogin = () => {
             identity: input.identity.trim(),
             code: input.code.trim(),
             rememberMe: input.rememberMe === true,
+            clientContext: await buildClientContext(),
           },
         },
       });
@@ -317,6 +323,7 @@ export const useLogin = () => {
             captchaId: input.captchaId,
             captchaValue: input.captchaValue,
             rememberMe: input.rememberMe === true,
+            clientContext: await buildClientContext(),
           },
         },
       });
@@ -372,6 +379,7 @@ export const useLogin = () => {
             captchaId: input.captchaId,
             captchaValue: input.captchaValue,
             rememberMe: input.rememberMe === true,
+            clientContext: await buildClientContext(),
           },
         },
       });

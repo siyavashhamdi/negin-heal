@@ -12,7 +12,7 @@ export class UserLogoutMutation {
 
   @Mutation(() => Boolean, {
     name: "userLogout",
-    description: "Logout and revoke the current session token",
+    description: "Logout and mark the current session as logged out",
   })
   async logout(@Context() context: GraphQLContext): Promise<boolean> {
     // Get user context from GraphQL request

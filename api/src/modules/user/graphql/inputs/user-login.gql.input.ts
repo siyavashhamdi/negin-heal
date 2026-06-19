@@ -1,5 +1,7 @@
-import { IsBoolean, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsBoolean, IsNotEmpty, IsOptional, IsString, ValidateNested } from "class-validator";
+import { Type } from "class-transformer";
 import { Field, InputType } from "@nestjs/graphql";
+import { SessionClientContextGqlInput } from "./session-client-context.gql.input";
 
 @InputType()
 export class UserLoginGqlInput {
@@ -40,4 +42,13 @@ export class UserLoginGqlInput {
   @IsOptional()
   @IsBoolean({ message: "rememberMe must be a boolean" })
   rememberMe?: boolean;
+
+  @Field(() => SessionClientContextGqlInput, {
+    nullable: true,
+    description: "Client device and browser context captured at login time",
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => SessionClientContextGqlInput)
+  clientContext?: SessionClientContextGqlInput;
 }
