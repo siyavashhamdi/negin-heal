@@ -36,7 +36,7 @@ import * as UserSubscriptions from "./graphql/subscriptions";
     AppSettingsModule,
     DatabaseModule,
     EmailModule,
-    FileModule,
+    forwardRef(() => FileModule),
     forwardRef(() => AuthModule),
     JwtModule.register({
       secret: SecurityConfig.validateJwtSecret(),

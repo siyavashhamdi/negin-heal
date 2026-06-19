@@ -5,6 +5,7 @@ import { AuthModule } from "../auth";
 import { DatabaseModule } from "../database";
 import { FileController } from "./api/file.controller";
 import { FileService } from "./file.service";
+import { ImageCompressionService } from "./image-compression.service";
 import { UnreferencedFileCleanupService } from "./unreferenced-file-cleanup.service";
 
 @Module({
@@ -12,6 +13,7 @@ import { UnreferencedFileCleanupService } from "./unreferenced-file-cleanup.serv
   controllers: [FileController],
   providers: [
     FileService,
+    ImageCompressionService,
     UnreferencedFileCleanupCron,
     UnreferencedFileCleanupService,
   ],

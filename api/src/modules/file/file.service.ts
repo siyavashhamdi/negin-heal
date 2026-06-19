@@ -12,6 +12,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 
+import { SecurityConfig } from "../../config/security.config";
 import { env } from "../../config";
 import { StoredFile, StoredFileDocument } from "../../database/schemas";
 import {
@@ -19,6 +20,7 @@ import {
   FileAccessUrlDescriptor,
 } from "./file-access-url.util";
 import { FileUploadGqlResponse } from "./graphql/responses";
+import { ImageCompressionService } from "./image-compression.service";
 
 export type { FileAccessUrlDescriptor } from "./file-access-url.util";
 
@@ -60,6 +62,7 @@ export class FileService {
   constructor(
     @InjectModel(StoredFile.name)
     private readonly storedFileModel: Model<StoredFileDocument>,
+    private readonly imageCompressionService: ImageCompressionService,
   ) {
     this.minioClient = new MinioClient({
       endPoint: env.MINIO_ENDPOINT,
@@ -89,21 +92,23 @@ export class FileService {
     const uploadedAt = new Date();
     const bucket = env.MINIO_BUCKET;
     const objectKey = this.buildObjectName(params.name, uploadedAt);
+    const uploadPayload = await this.prepareUploadPayload(params);
+
     await this.minioClient.putObject(
       bucket,
       objectKey,
-      params.stream,
-      params.sizeBytes,
+      uploadPayload.body,
+      uploadPayload.sizeBytes,
       {
-        "Content-Type": params.mimeType,
+        "Content-Type": uploadPayload.mimeType,
         "X-Amz-Meta-Original-Name": encodeURIComponent(params.name),
       },
     );
 
     const storedFile = await this.storedFileModel.create({
       name: params.name,
-      mimeType: params.mimeType,
-      sizeBytes: params.sizeBytes,
+      mimeType: uploadPayload.mimeType,
+      sizeBytes: uploadPayload.sizeBytes,
       path: `${bucket}/${objectKey}`,
       bucket,
       objectKey,
@@ -809,6 +814,69 @@ export class FileService {
       stream.on("error", reject);
       stream.on("end", () => resolve(objectKeys));
     });
+  }
+
+  private async prepareUploadPayload(params: {
+    name: string;
+    mimeType: string;
+    sizeBytes: number;
+    stream: Readable;
+  }): Promise<{
+    body: Buffer | Readable;
+    mimeType: string;
+    sizeBytes: number;
+  }> {
+    if (
+      !this.imageCompressionService.shouldCompress(
+        params.mimeType,
+        params.name,
+        params.sizeBytes,
+      )
+    ) {
+      return {
+        body: params.stream,
+        mimeType: params.mimeType,
+        sizeBytes: params.sizeBytes,
+      };
+    }
+
+    const maxSizeBytes = SecurityConfig.getMaxRequestSize();
+    const inputBuffer = await this.readStreamToBuffer(
+      params.stream,
+      maxSizeBytes,
+    );
+    const compressionResult = await this.imageCompressionService.compress(
+      inputBuffer,
+      params.mimeType,
+      params.name,
+    );
+
+    return {
+      body: compressionResult.buffer,
+      mimeType: compressionResult.mimeType,
+      sizeBytes: compressionResult.buffer.length,
+    };
+  }
+
+  private async readStreamToBuffer(
+    stream: Readable,
+    maxSizeBytes: number,
+  ): Promise<Buffer> {
+    const chunks: Buffer[] = [];
+    let totalLength = 0;
+
+    for await (const chunk of stream) {
+      const bufferChunk = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+      totalLength += bufferChunk.length;
+
+      if (totalLength > maxSizeBytes) {
+        throw new BadRequestException("File size exceeds the allowed limit");
+      }
+
+      chunks.push(bufferChunk);
+    }
+
+    return Buffer.concat(chunks, totalLength);
   }
 
   private async ensureBucket(): Promise<void> {
