@@ -2,14 +2,18 @@
 
 .checkpoint {
   margin-block-start: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .pendingCard,
 .completedCard {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 0.65rem;
+  inline-size: min(100%, 34rem);
   padding: 0.55rem 0.7rem;
   border-radius: 0.75rem;
   border: 0.0625rem solid transparent;
@@ -25,7 +29,7 @@
 .pendingMain {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 0.65rem;
   flex-wrap: wrap;
 }
@@ -34,6 +38,7 @@
   color: var(--text-secondary);
   font-size: 0.78rem;
   line-height: 1.5;
+  text-align: center;
 }
 
 .completedCard {
@@ -51,7 +56,7 @@
 }
 
 .acknowledgement {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   align-items: center !important;
   margin: 0 !important;
   min-inline-size: 0;
@@ -80,6 +85,8 @@
   display: grid;
   gap: 0.55rem;
   margin-block-start: 0.85rem;
+  margin-inline: auto;
+  inline-size: min(100%, 34rem);
   padding: 0.85rem 0.95rem;
   border-radius: 0.95rem;
   border: 0.0625rem solid color-mix(in srgb, variables.$color-info-dark 16%, var(--app-surface-border));
@@ -89,6 +96,8 @@
       color-mix(in srgb, variables.$color-accent-soft-bg 82%, var(--app-surface-bg)),
       color-mix(in srgb, #fdf2f8 72%, var(--app-surface-bg))
     );
+  text-align: center;
+  justify-items: center;
 }
 
 .progressSummaryComplete {
@@ -104,7 +113,7 @@
 .progressSummaryHeader {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
+  justify-content: center;
   gap: 0.75rem;
 }
 
@@ -121,6 +130,7 @@
 }
 
 .progressBar {
+  inline-size: 100%;
   block-size: 0.55rem !important;
   border-radius: 999rem !important;
   background: color-mix(in srgb, #64748b 12%, var(--app-surface-bg)) !important;
@@ -138,6 +148,7 @@
 .progressCompleteMessage {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.4rem;
   color: color-mix(in srgb, #15803d 82%, var(--text-secondary));
   font-size: 0.84rem;
@@ -161,7 +172,7 @@ body[data-theme="dark"] {
 @media (max-width: variables.$breakpoint-sm) {
   .pendingMain {
     flex-direction: column;
-    align-items: stretch;
+    align-items: center;
   }
 
   .confirmButton {
@@ -170,6 +181,6 @@ body[data-theme="dark"] {
 
   .progressSummaryHeader {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
   }
 }

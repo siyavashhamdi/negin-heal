@@ -48,10 +48,7 @@ import { COURSE_CHAPTER_COMPLETE_MUTATION } from "../../graphql/mutations/course
 import { useSnackbar } from "../../hooks/useSnackbar";
 import EntityModalShell from "../../shared/crud/EntityModalShell";
 import ModalFooterActions from "../../shared/crud/ModalFooterActions";
-import {
-  ChapterCompletionCheckpoint,
-  CourseProgressSummary,
-} from "./ChapterCompletionCheckpoint";
+import { ChapterCompletionCheckpoint } from "./ChapterCompletionCheckpoint";
 import { CoursePurchaseDialog } from "./CoursePurchaseDialog";
 import {
   formatChapterUnlockCountdown,
@@ -572,6 +569,7 @@ const CourseDetail = (): ReactElement => {
   };
 
   const canTrackChapterProgress = canAccessCourse && isAuthenticated && isPaidPurchase;
+  const hasCourseProgress = (course?.completedChapterCount ?? 0) > 0;
 
   const handleChapterComplete = async (chapterKey: string, chapterTitle: string): Promise<void> => {
     if (!courseId || completingChapterKey) {
@@ -741,7 +739,13 @@ const CourseDetail = (): ReactElement => {
             onClick={handlePrimaryCourseAction}
             disabled={hasPendingPurchase}
           >
-            {canAccessCourse ? "شروع دوره" : hasPendingPurchase ? "در انتظار تایید پرداخت" : "خرید دوره"}
+            {canAccessCourse
+              ? hasCourseProgress
+                ? "ادامه دوره"
+                : "شروع دوره"
+              : hasPendingPurchase
+                ? "در انتظار تایید پرداخت"
+                : "خرید دوره"}
           </Button>
           {hasPendingPurchase ? (
             <Typography variant="caption" color="text.secondary">
@@ -799,12 +803,6 @@ const CourseDetail = (): ReactElement => {
               {courseContentIntroText}
               {courseContentAccessNoteText}
             </p>
-            <CourseProgressSummary
-              completedChapterCount={course.completedChapterCount ?? 0}
-              accessibleChapterCount={course.accessibleChapterCount ?? 0}
-              visible={canTrackChapterProgress}
-              isSingleChapter={isSingleChapter}
-            />
           </div>
           {loading ? <CircularProgress size={22} /> : null}
         </div>
