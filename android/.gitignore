@@ -1,0 +1,15 @@
+local.properties
+node_modules/
+android.keystore
+.env
+*.apk
+*.aab
+app-release-signed.apk
+app-release-bundle.aab
+app-release-unsigned-aligned.apk
+local.properties
+.gradle/
+build/
+app/build/
+decompressed/
+.DS_Store

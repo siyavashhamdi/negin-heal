@@ -111,7 +111,7 @@ export default defineConfig(({ mode }) => {
           globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,webmanifest}"],
         },
         devOptions: {
-          enabled: true,
+          enabled: false,
           type: "module",
           navigateFallback: "index.html",
         },
