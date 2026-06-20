@@ -17,6 +17,7 @@ build
 # Legacy JavaScript config files (migrated to TypeScript)
 .eslintrc.*
 *.mjs
+!scripts/generate-pwa-icons.mjs
 
 # Logs
 logs
