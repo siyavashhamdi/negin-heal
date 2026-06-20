@@ -29,7 +29,7 @@
   inset-block-start: 0;
   transform: translateY(-50%) scale(0.86);
   background: var(--app-surface-bg);
-  color: variables.$color-primary-main;
+  color: #1976d2;
   font-size: 0.78rem;
 }
 
@@ -49,8 +49,8 @@
 }
 
 .inputShell:focus-within {
-  border-color: variables.$color-primary-main;
-  box-shadow: 0 0 0 0.0625rem variables.$color-primary-main;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 0.0625rem #1976d2;
 }
 
 .inputShell:hover:not(:focus-within) {

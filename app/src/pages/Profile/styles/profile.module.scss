@@ -52,13 +52,13 @@
   block-size: 1.35rem !important;
   padding: 0 !important;
   border: 0.1rem solid var(--app-surface-bg) !important;
-  background: variables.$color-primary-main !important;
+  background: #1976d2 !important;
   color: #ffffff !important;
   box-shadow: 0 0.3rem 0.65rem color-mix(in srgb, #0f172a 18%, transparent) !important;
 }
 
 .avatarEditButton:disabled {
-  background: color-mix(in srgb, variables.$color-primary-main 72%, #ffffff) !important;
+  background: color-mix(in srgb, #1976d2 72%, #ffffff) !important;
   color: #ffffff !important;
 }
 
@@ -102,7 +102,7 @@
 }
 
 .eyebrow {
-  color: variables.$color-primary-main;
+  color: #1976d2;
   font-size: 0.78rem;
   font-weight: variables.$font-weight-semibold;
 }
@@ -129,7 +129,7 @@
 
 .actionCard svg {
   flex: 0 0 auto;
-  color: variables.$color-primary-main;
+  color: #1976d2;
 }
 
 .actionCard span {

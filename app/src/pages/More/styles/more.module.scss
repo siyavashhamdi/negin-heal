@@ -25,7 +25,7 @@
 }
 
 .hero p {
-  color: variables.$color-primary-main;
+  color: #1976d2;
   font-size: 0.78rem;
   font-weight: variables.$font-weight-semibold;
 }
@@ -56,8 +56,8 @@
   inline-size: 2.55rem;
   block-size: 2.55rem;
   border-radius: 0.9rem;
-  background: color-mix(in srgb, variables.$color-primary-main 12%, transparent);
-  color: variables.$color-primary-main;
+  background: color-mix(in srgb, #1976d2 12%, transparent);
+  color: #1976d2;
 }
 
 .themeCard strong,
@@ -75,7 +75,7 @@
   inline-size: 3.6rem;
   block-size: 2.1rem;
   padding: 0.16rem;
-  border: 0.0625rem solid color-mix(in srgb, variables.$color-primary-main 28%, var(--app-surface-border));
+  border: 0.0625rem solid color-mix(in srgb, #1976d2 28%, var(--app-surface-border));
   border-radius: 999rem;
   background: color-mix(in srgb, var(--text-secondary) 15%, transparent);
   color: #64748b;
@@ -86,11 +86,11 @@
 }
 
 .switchButton:hover {
-  box-shadow: 0 0.35rem 0.95rem color-mix(in srgb, variables.$color-primary-main 14%, transparent);
+  box-shadow: 0 0.35rem 0.95rem color-mix(in srgb, #1976d2 14%, transparent);
 }
 
 .switchButton:focus-visible {
-  outline: 0.16rem solid color-mix(in srgb, variables.$color-primary-main 42%, transparent);
+  outline: 0.16rem solid color-mix(in srgb, #1976d2 42%, transparent);
   outline-offset: 0.18rem;
 }
 
@@ -123,9 +123,9 @@
 }
 
 .switchButtonActive {
-  border-color: color-mix(in srgb, variables.$color-primary-main 45%, var(--app-surface-border));
-  background: color-mix(in srgb, variables.$color-primary-main 24%, transparent);
-  color: variables.$color-primary-main;
+  border-color: color-mix(in srgb, #1976d2 45%, var(--app-surface-border));
+  background: color-mix(in srgb, #1976d2 24%, transparent);
+  color: #1976d2;
 }
 
 .switchButtonActive .switchThumb {
@@ -526,8 +526,8 @@
   inline-size: 2.35rem;
   block-size: 2.35rem;
   border-radius: 0.85rem;
-  background: color-mix(in srgb, variables.$color-primary-main 11%, transparent);
-  color: variables.$color-primary-main;
+  background: color-mix(in srgb, #1976d2 11%, transparent);
+  color: #1976d2;
 }
 
 .preferenceText {
@@ -577,7 +577,7 @@ a.linkCard {
 }
 
 .linkCard svg {
-  color: variables.$color-primary-main;
+  color: #1976d2;
 }
 
 .linkCard:disabled {
@@ -667,8 +667,8 @@ a.linkCard {
 }
 
 .globalAnouncementPreview {
-  --global-anouncement-preview-accent: #{variables.$color-primary-main};
-  --global-anouncement-preview-fg: #{variables.$color-primary-dark};
+  --global-anouncement-preview-accent: #2563eb;
+  --global-anouncement-preview-fg: #1d4ed8;
 
   position: relative;
   display: grid;
@@ -755,7 +755,7 @@ a.linkCard {
   background:
     radial-gradient(
       circle at top right,
-      color-mix(in srgb, variables.$color-primary-main 11%, transparent),
+      color-mix(in srgb, #1976d2 11%, transparent),
       transparent 42%
     ),
     color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
@@ -775,8 +775,8 @@ a.linkCard {
   inline-size: 2.75rem;
   block-size: 2.75rem;
   border-radius: 1rem;
-  background: color-mix(in srgb, variables.$color-primary-main 12%, transparent);
-  color: variables.$color-primary-main;
+  background: color-mix(in srgb, #1976d2 12%, transparent);
+  color: #1976d2;
 }
 
 .aboutHeader button {
@@ -785,10 +785,10 @@ a.linkCard {
   gap: 0.35rem;
   min-block-size: 2.3rem;
   padding: 0.45rem 0.75rem;
-  border: 0.0625rem solid color-mix(in srgb, variables.$color-primary-main 26%, var(--app-surface-border));
+  border: 0.0625rem solid color-mix(in srgb, #1976d2 26%, var(--app-surface-border));
   border-radius: 999rem;
-  background: color-mix(in srgb, variables.$color-primary-main 7%, transparent);
-  color: variables.$color-primary-main;
+  background: color-mix(in srgb, #1976d2 7%, transparent);
+  color: #1976d2;
   font: inherit;
   font-weight: variables.$font-weight-semibold;
   cursor: pointer;
@@ -833,7 +833,7 @@ a.linkCard {
 }
 
 .aboutContent li::marker {
-  color: variables.$color-primary-main;
+  color: #1976d2;
 }
 
 .aboutEmpty {

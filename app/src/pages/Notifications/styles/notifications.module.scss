@@ -95,9 +95,9 @@
 }
 
 .cardUnread {
-  border-color: color-mix(in srgb, variables.$color-primary-main 28%, var(--app-surface-border));
+  border-color: color-mix(in srgb, #1976d2 28%, var(--app-surface-border));
   background:
-    linear-gradient(90deg, color-mix(in srgb, variables.$color-primary-main 5%, transparent), transparent 18%),
+    linear-gradient(90deg, color-mix(in srgb, #1976d2 5%, transparent), transparent 18%),
     color-mix(in srgb, var(--app-surface-bg) 96%, #ffffff);
 }
 
@@ -111,7 +111,7 @@
 }
 
 .cardAccentInfo {
-  color: variables.$color-info-main;
+  color: #3b82f6;
 }
 
 .cardAccentSuccess {
@@ -190,8 +190,8 @@
   inline-size: 0.55rem;
   block-size: 0.55rem;
   border-radius: 999rem;
-  background: variables.$color-primary-main;
-  box-shadow: 0 0 0 0.2rem color-mix(in srgb, variables.$color-primary-main 14%, transparent);
+  background: #1976d2;
+  box-shadow: 0 0 0 0.2rem rgba(25, 118, 210, 0.14);
 }
 
 .cardTime {
@@ -291,9 +291,9 @@
 .actionIconButton:hover,
 .actionIconButton:focus-visible {
   transform: translateY(-0.05rem);
-  border-color: color-mix(in srgb, variables.$color-primary-main 40%, var(--app-surface-border)) !important;
-  background: color-mix(in srgb, variables.$color-primary-main 10%, var(--app-surface-bg)) !important;
-  color: variables.$color-primary-main !important;
+  border-color: color-mix(in srgb, #1976d2 40%, var(--app-surface-border)) !important;
+  background: color-mix(in srgb, #1976d2 10%, var(--app-surface-bg)) !important;
+  color: #1976d2 !important;
 }
 
 .emptyState {
@@ -312,8 +312,8 @@
   inline-size: 3.5rem;
   block-size: 3.5rem;
   border-radius: 1rem;
-  background: color-mix(in srgb, variables.$color-primary-main 10%, transparent);
-  color: variables.$color-primary-main;
+  background: color-mix(in srgb, #1976d2 10%, transparent);
+  color: #1976d2;
 }
 
 .emptyState h2,
@@ -393,7 +393,7 @@ body[data-theme="dark"] {
 
   .cardUnread {
     background:
-      linear-gradient(90deg, color-mix(in srgb, variables.$color-primary-main 10%, transparent), transparent 18%),
+      linear-gradient(90deg, color-mix(in srgb, #1976d2 10%, transparent), transparent 18%),
       color-mix(in srgb, var(--app-surface-bg) 86%, #0f172a);
   }
 

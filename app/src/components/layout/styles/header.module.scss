@@ -14,7 +14,7 @@ $hairline: 0.0625rem solid;
   border: $hairline color-mix(in srgb, var(--app-surface-border) 74%, transparent);
   border-radius: variables.$spacing-3;
   background:
-    radial-gradient(circle at top left, color-mix(in srgb, variables.$color-primary-light 10%, transparent), transparent 50%),
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.1), transparent 50%),
     var(--app-surface-bg);
   box-shadow: $shadow-elevated;
   padding: clamp(variables.$spacing-2, 2vw, 1.2rem);
@@ -36,7 +36,7 @@ $hairline: 0.0625rem solid;
   }
 
   &:focus-visible {
-    outline: 0.125rem solid var(--app-focus-ring, variables.$color-primary-main);
+    outline: 0.125rem solid var(--app-focus-ring, #2563eb);
     outline-offset: 0.125rem;
   }
 }
@@ -63,9 +63,9 @@ $hairline: 0.0625rem solid;
 .titleBadge {
   position: relative;
   top: -0.22rem;
-  border: $hairline variables.$color-accent-soft-border;
-  background: variables.$color-accent-soft-bg;
-  color: variables.$color-accent-soft-fg;
+  border: $hairline #bfdbfe;
+  background: #eff6ff;
+  color: #1e3a8a;
   border-radius: 50em;
   padding: 0.1rem 0.45rem;
   font-size: 0.75rem;
@@ -155,8 +155,8 @@ $hairline: 0.0625rem solid;
 
 body[data-theme="dark"] {
   .titleBadge {
-    border-color: color-mix(in srgb, var(--app-surface-border) 80%, variables.$color-primary-light);
-    background: color-mix(in srgb, var(--app-surface-bg) 85%, variables.$color-primary-light 15%);
+    border-color: color-mix(in srgb, var(--app-surface-border) 80%, #38bdf8);
+    background: color-mix(in srgb, var(--app-surface-bg) 85%, #0ea5e9 15%);
     color: #bae6fd;
   }
 }

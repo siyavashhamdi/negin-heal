@@ -99,7 +99,7 @@ $hairline: 0.0625rem solid;
   }
 
   &:focus-visible {
-    outline: 0.125rem solid var(--app-focus-ring, #{variables.$color-primary-main});
+    outline: 0.125rem solid var(--app-focus-ring, #2563eb);
     outline-offset: 0.125rem;
   }
 }
@@ -121,9 +121,9 @@ $hairline: 0.0625rem solid;
   align-items: center;
   justify-content: center;
   border-radius: 50em;
-  border: $hairline variables.$color-accent-soft-border;
-  background: variables.$color-accent-soft-bg;
-  color: variables.$color-accent-soft-fg;
+  border: $hairline #bfdbfe;
+  background: #eff6ff;
+  color: #1e3a8a;
   font-size: variables.$font-size-sm;
   padding: 0.12rem 0.52rem;
   white-space: nowrap;
@@ -197,8 +197,8 @@ $hairline: 0.0625rem solid;
 }
 
 .main-layout__general-update-popup {
-  --general-update-popup-accent: #{variables.$color-primary-main};
-  --general-update-popup-fg: #{variables.$color-primary-dark};
+  --general-update-popup-accent: #2563eb;
+  --general-update-popup-fg: #1d4ed8;
   --general-update-popup-accent-soft: color-mix(
     in srgb,
     var(--general-update-popup-accent) 13%,
@@ -368,7 +368,7 @@ $hairline: 0.0625rem solid;
   @include popover-shell;
   width: min(92vw, 23rem);
   background:
-    radial-gradient(circle at top left, color-mix(in srgb, variables.$color-primary-light 18%, transparent), transparent 52%),
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.12), transparent 52%),
     var(--app-surface-bg);
 }
 
@@ -396,8 +396,8 @@ $hairline: 0.0625rem solid;
 }
 
 .main-layout__panel-header--notifications span {
-  background: variables.$color-accent-soft-bg;
-  color: variables.$color-accent-soft-fg;
+  background: #dbeafe;
+  color: #1e3a8a;
   border-radius: 50em;
   padding: 0.12rem 0.5rem;
   font-size: 0.72rem;
@@ -406,8 +406,8 @@ $hairline: 0.0625rem solid;
 }
 
 .main-layout__panel-header--settings span {
-  background: color-mix(in srgb, variables.$color-secondary-main 14%, transparent);
-  color: variables.$color-secondary-dark;
+  background: #cffafe;
+  color: #155e75;
   border-radius: 50em;
   padding: 0.12rem 0.5rem;
   font-size: 0.7rem;
@@ -416,8 +416,8 @@ $hairline: 0.0625rem solid;
 }
 
 .main-layout__panel-header--help span {
-  background: variables.$color-accent-soft-bg;
-  color: variables.$color-accent-soft-fg;
+  background: #e0e7ff;
+  color: #3730a3;
   border-radius: 50em;
   padding: 0.12rem 0.5rem;
   font-size: 0.7rem;
@@ -465,7 +465,7 @@ $hairline: 0.0625rem solid;
   border-radius: 50%;
   margin-top: 0.4rem;
   background: variables.$color-info-main;
-  box-shadow: 0 0 0 0.1875rem color-mix(in srgb, variables.$color-primary-main 16%, transparent);
+  box-shadow: 0 0 0 0.1875rem rgba(59, 130, 246, 0.16);
 }
 
 .main-layout__panel-actions {
@@ -478,7 +478,7 @@ $hairline: 0.0625rem solid;
 .main-layout__settings-popover {
   @include popover-shell;
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, variables.$color-secondary-main 14%, transparent), transparent 54%),
+    radial-gradient(circle at top right, rgba(14, 165, 233, 0.14), transparent 54%),
     var(--app-surface-bg);
 }
 
@@ -511,7 +511,7 @@ $hairline: 0.0625rem solid;
 .main-layout__help-popover {
   @include popover-shell;
   background:
-    radial-gradient(circle at top left, color-mix(in srgb, variables.$color-primary-main 12%, transparent), transparent 54%),
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.12), transparent 54%),
     var(--app-surface-bg);
 }
 
@@ -546,7 +546,7 @@ $hairline: 0.0625rem solid;
   min-width: 2.2rem;
   padding-inline: 0.6rem;
   border-radius: 0.65rem;
-  border-color: variables.$color-grey-300;
+  border-color: #cbd5e1;
   background: color-mix(in srgb, var(--app-surface-bg) 92%, #ffffff);
   color: var(--text-secondary);
   font-weight: variables.$font-weight-semibold;
@@ -554,9 +554,9 @@ $hairline: 0.0625rem solid;
 }
 
 .main-layout__header-button.MuiButton-root:hover {
-  border-color: variables.$color-accent-soft-border;
-  background: variables.$color-accent-soft-bg;
-  color: variables.$color-primary-dark;
+  border-color: #93c5fd;
+  background: #eff6ff;
+  color: variables.$color-info-dark;
 }
 
 .main-layout__user-chip {
@@ -601,7 +601,7 @@ $hairline: 0.0625rem solid;
   width: min(92vw, 20rem);
   color: var(--text-primary);
   background:
-    radial-gradient(circle at top left, color-mix(in srgb, variables.$color-secondary-dark 14%, transparent), transparent 54%),
+    radial-gradient(circle at top left, rgba(2, 132, 199, 0.14), transparent 54%),
     var(--app-surface-bg);
 }
 
@@ -699,7 +699,7 @@ $hairline: 0.0625rem solid;
   border: $hairline color-mix(in srgb, var(--app-surface-border) 74%, transparent);
   border-radius: var(--main-layout-panel-radius);
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, variables.$color-primary-main 9%, transparent), transparent 54%),
+    radial-gradient(circle at top right, rgba(59, 130, 246, 0.09), transparent 54%),
     var(--app-surface-bg);
   box-shadow: var(--main-layout-panel-shadow);
   padding: 0.75rem;
@@ -726,7 +726,7 @@ $hairline: 0.0625rem solid;
   border-radius: var(--main-layout-panel-radius);
   padding: clamp(1rem, 2.8vw, 1.8rem);
   background:
-    radial-gradient(circle at top left, color-mix(in srgb, variables.$color-primary-main 8%, transparent), transparent 50%),
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.08), transparent 50%),
     var(--app-surface-bg);
   box-shadow: var(--main-layout-panel-shadow);
 }
@@ -814,7 +814,7 @@ $hairline: 0.0625rem solid;
 }
 
 .main-layout__mobile-bottom-item:focus-visible {
-  outline: 0.125rem solid var(--app-focus-ring, variables.$color-primary-main);
+  outline: 0.125rem solid var(--app-focus-ring, #2563eb);
   outline-offset: 0.125rem;
 }
 
@@ -983,7 +983,7 @@ $hairline: 0.0625rem solid;
 
 body[data-theme="dark"] {
   .main-layout__brand-text p {
-    color: variables.$color-grey-300;
+    color: #cbd5e1;
   }
 
   .main-layout__header {
@@ -992,7 +992,7 @@ body[data-theme="dark"] {
 
   .main-layout__content {
     background:
-      radial-gradient(circle at top left, color-mix(in srgb, variables.$color-primary-light 9%, transparent), transparent 50%),
+      radial-gradient(circle at top left, rgba(56, 189, 248, 0.09), transparent 50%),
       linear-gradient(
         180deg,
         color-mix(in srgb, var(--app-surface-bg) 92%, #1e2b45) 0%,
@@ -1028,7 +1028,7 @@ body[data-theme="dark"] {
 
   .main-layout__notifications-popover {
     background:
-      radial-gradient(circle at top left, color-mix(in srgb, variables.$color-primary-light 15%, transparent), transparent 52%),
+      radial-gradient(circle at top left, rgba(56, 189, 248, 0.15), transparent 52%),
       color-mix(in srgb, var(--app-surface-bg) 95%, #0f172a);
   }
 
@@ -1042,8 +1042,8 @@ body[data-theme="dark"] {
   }
 
   .main-layout__panel-header--notifications span {
-    background: variables.$color-accent-soft-bg-dark;
-    color: variables.$color-accent-soft-fg-dark;
+    background: #1e3a8a;
+    color: #dbeafe;
   }
 
   .main-layout__notification-item {
@@ -1069,13 +1069,13 @@ body[data-theme="dark"] {
 
   .main-layout__settings-popover {
     background:
-      radial-gradient(circle at top right, color-mix(in srgb, variables.$color-secondary-main 17%, transparent), transparent 54%),
+      radial-gradient(circle at top right, rgba(14, 165, 233, 0.17), transparent 54%),
       color-mix(in srgb, var(--app-surface-bg) 95%, #0f172a);
   }
 
   .main-layout__panel-header--settings span {
-    background: color-mix(in srgb, variables.$color-secondary-dark 40%, transparent);
-    color: variables.$color-secondary-light;
+    background: #0c4a6e;
+    color: #cffafe;
   }
 
   .main-layout__settings-item {
@@ -1084,13 +1084,13 @@ body[data-theme="dark"] {
 
   .main-layout__help-popover {
     background:
-      radial-gradient(circle at top left, color-mix(in srgb, variables.$color-primary-main 15%, transparent), transparent 54%),
+      radial-gradient(circle at top left, rgba(59, 130, 246, 0.15), transparent 54%),
       color-mix(in srgb, var(--app-surface-bg) 95%, #0f172a);
   }
 
   .main-layout__panel-header--help span {
-    background: variables.$color-accent-soft-bg-dark;
-    color: variables.$color-accent-soft-fg-dark;
+    background: #312e81;
+    color: #e0e7ff;
   }
 
   .main-layout__help-item {
@@ -1099,7 +1099,7 @@ body[data-theme="dark"] {
 
   .main-layout__user-popover {
     background:
-      radial-gradient(circle at top left, color-mix(in srgb, variables.$color-secondary-dark 18%, transparent), transparent 54%),
+      radial-gradient(circle at top left, rgba(2, 132, 199, 0.18), transparent 54%),
       color-mix(in srgb, var(--app-surface-bg) 95%, #0f172a);
   }
 
@@ -1117,8 +1117,8 @@ body[data-theme="dark"] {
   .main-layout__mobile-bottom-item:hover,
   .main-layout__mobile-bottom-item:focus-visible,
   .main-layout__mobile-bottom-item--active {
-    color: variables.$color-accent-soft-bg;
-    background: color-mix(in srgb, variables.$color-primary-main 28%, transparent);
+    color: #dbeafe;
+    background: color-mix(in srgb, #2563eb 28%, transparent);
   }
 
   .main-layout__user-signout.MuiButton-root {
@@ -1133,14 +1133,14 @@ body[data-theme="dark"] {
   }
 
   .main-layout__header-button.MuiButton-root:hover {
-    border-color: variables.$color-primary-dark;
-    background: color-mix(in srgb, variables.$color-accent-soft-fg 32%, var(--app-surface-bg));
-    color: variables.$color-accent-soft-bg;
+    border-color: #1d4ed8;
+    background: color-mix(in srgb, #1e3a8a 32%, var(--app-surface-bg));
+    color: #dbeafe;
   }
 
   .main-layout__badge {
-    background: variables.$color-accent-soft-fg;
-    color: variables.$color-accent-soft-bg;
-    border-color: variables.$color-primary-dark;
+    background: #1e3a8a;
+    color: #dbeafe;
+    border-color: #1d4ed8;
   }
 }

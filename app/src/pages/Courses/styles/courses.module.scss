@@ -213,9 +213,9 @@ $layout-sm: variables.$breakpoint-sm;
     color: variables.$color-primary-contrast !important;
     background:
       radial-gradient(circle at 32% 24%, color-mix(in srgb, #ffffff 34%, transparent), transparent 34%),
-      linear-gradient(135deg, variables.$color-gradient-start 0%, variables.$color-gradient-mid 52%, variables.$color-gradient-end 100%) !important;
+      linear-gradient(135deg, #2563eb 0%, #0284c7 52%, #0f766e 100%) !important;
     box-shadow:
-      0 0.75rem 1.45rem color-mix(in srgb, variables.$color-primary-dark 30%, transparent),
+      0 0.75rem 1.45rem color-mix(in srgb, #1d4ed8 30%, transparent),
       inset 0 0.0625rem 0 color-mix(in srgb, #ffffff 54%, transparent);
     transition:
       transform 0.18s ease,
@@ -231,9 +231,9 @@ $layout-sm: variables.$breakpoint-sm;
   .mobileFilterTrigger:hover {
     background:
       radial-gradient(circle at 32% 24%, color-mix(in srgb, #ffffff 40%, transparent), transparent 34%),
-      linear-gradient(135deg, variables.$color-primary-dark 0%, variables.$color-secondary-dark 52%, variables.$color-gradient-end 100%) !important;
+      linear-gradient(135deg, #1d4ed8 0%, #0369a1 52%, #0f766e 100%) !important;
     box-shadow:
-      0 0.9rem 1.65rem color-mix(in srgb, variables.$color-primary-dark 34%, transparent),
+      0 0.9rem 1.65rem color-mix(in srgb, #1d4ed8 34%, transparent),
       inset 0 0.0625rem 0 color-mix(in srgb, #ffffff 60%, transparent);
     transform: translateY(-0.08rem) scale(1.02);
   }
@@ -258,10 +258,10 @@ $layout-sm: variables.$breakpoint-sm;
     border-radius: 1.25rem !important;
     background:
       radial-gradient(circle at 30% 22%, color-mix(in srgb, #ffffff 38%, transparent), transparent 32%),
-      linear-gradient(135deg, variables.$color-gradient-start 0%, variables.$color-secondary-light 48%, variables.$color-success-main 100%) !important;
+      linear-gradient(135deg, #2563eb 0%, #0ea5e9 48%, #14b8a6 100%) !important;
     color: variables.$color-primary-contrast !important;
     box-shadow:
-      0 1.15rem 2.4rem color-mix(in srgb, variables.$color-primary-dark 38%, transparent),
+      0 1.15rem 2.4rem color-mix(in srgb, #1d4ed8 38%, transparent),
       0 0.25rem 0.7rem color-mix(in srgb, #0f172a 22%, transparent),
       inset 0 0.0625rem 0 color-mix(in srgb, #ffffff 58%, transparent);
     transition:
@@ -276,7 +276,7 @@ $layout-sm: variables.$breakpoint-sm;
     inset: -0.3rem;
     z-index: -1;
     border-radius: 1.5rem;
-    background: color-mix(in srgb, variables.$color-secondary-light 18%, transparent);
+    background: color-mix(in srgb, #0ea5e9 18%, transparent);
     filter: blur(0.55rem);
     opacity: 0.9;
   }
@@ -289,9 +289,9 @@ $layout-sm: variables.$breakpoint-sm;
   .createCourseIconButton:hover {
     background:
       radial-gradient(circle at 30% 22%, color-mix(in srgb, #ffffff 42%, transparent), transparent 32%),
-      linear-gradient(135deg, variables.$color-primary-dark 0%, variables.$color-gradient-mid 48%, variables.$color-gradient-end 100%) !important;
+      linear-gradient(135deg, #1d4ed8 0%, #0284c7 48%, #0f766e 100%) !important;
     box-shadow:
-      0 1.3rem 2.7rem color-mix(in srgb, variables.$color-primary-dark 42%, transparent),
+      0 1.3rem 2.7rem color-mix(in srgb, #1d4ed8 42%, transparent),
       0 0.32rem 0.8rem color-mix(in srgb, #0f172a 24%, transparent),
       inset 0 0.0625rem 0 color-mix(in srgb, #ffffff 62%, transparent);
     transform: translateY(-0.12rem) scale(1.03);
