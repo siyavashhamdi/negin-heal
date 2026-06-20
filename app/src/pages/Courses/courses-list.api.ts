@@ -28,7 +28,6 @@ export type CourseListItemRow = {
 export type CourseDetailChapterRow = {
   readonly title: string;
   readonly description?: string | null;
-  readonly iconAccessUrl?: FileAccessUrl | null;
   readonly visibleAfterMinutes?: number | null;
   readonly isFree: boolean;
   readonly sortOrder?: number | null;
@@ -149,7 +148,6 @@ export type CourseEditRecord = {
   readonly chapters: Array<{
     readonly title: string;
     readonly description: string;
-    readonly iconAccessUrl: FileAccessUrl | null;
     readonly visibleAfterMinutes: number | null;
     readonly isFree: boolean;
     readonly sortOrder: number | null;
@@ -284,7 +282,6 @@ export function mapCourseDetailRowToRecord(row: CourseDetailItemRow): CourseEdit
     chapters: row.chapters.map((chapter) => ({
       title: chapter.title,
       description: chapter.description?.trim() || "",
-      iconAccessUrl: chapter.iconAccessUrl ?? null,
       visibleAfterMinutes:
         typeof chapter.visibleAfterMinutes === "number" ? chapter.visibleAfterMinutes : null,
       isFree: chapter.isFree,

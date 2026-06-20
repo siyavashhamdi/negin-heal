@@ -60,17 +60,6 @@ export class CourseChapterGqlInput {
   @IsString({ message: "Chapter description must be a string" })
   description?: string;
 
-  @Field(() => ID, {
-    nullable: true,
-    description: "Stored file ID used as the chapter icon",
-  })
-  @IsOptional()
-  @IsObjectId({
-    message: "Chapter icon file ID must be a valid MongoDB ObjectId",
-  })
-  @Transform(toObjectIdOptional)
-  iconFileId?: Types.ObjectId;
-
   @Field(() => Int, {
     nullable: true,
     description: "Number of minutes after purchase/enrollment when visible",

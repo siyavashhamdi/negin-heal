@@ -141,6 +141,33 @@
   }
 }
 
+// Override global mobile scrollbar hiding for intentional scroll regions.
+@mixin visible-scrollbars {
+  scrollbar-width: thin;
+  scrollbar-color: variables.$scrollbar-thumb-bg variables.$scrollbar-track-bg;
+  -ms-overflow-style: auto;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    display: block;
+    width: variables.$scrollbar-width;
+    height: variables.$scrollbar-height;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: variables.$scrollbar-track-bg;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: variables.$scrollbar-thumb-bg;
+    border-radius: variables.$scrollbar-thumb-radius;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: variables.$scrollbar-thumb-bg-hover;
+  }
+}
+
 // ============================================
 // Shadows
 // ============================================

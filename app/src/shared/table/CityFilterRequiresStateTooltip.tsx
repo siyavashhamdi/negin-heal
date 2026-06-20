@@ -1,5 +1,6 @@
 import { cloneElement, isValidElement, type ReactElement, type ReactNode } from "react";
-import { Box, Tooltip } from "@mui/material";
+import { Box } from "@mui/material";
+import AppTooltip from "../AppTooltip";
 
 interface DisabledCapable {
   disabled?: boolean;
@@ -32,11 +33,11 @@ const CityFilterRequiresStateTooltip = ({
   }
 
   return (
-    <Tooltip title={tooltipTitle} arrow>
+    <AppTooltip title={tooltipTitle} arrow>
       <Box component="span" sx={{ display: "block", width: "100%" }}>
         {control}
       </Box>
-    </Tooltip>
+    </AppTooltip>
   );
 };
 

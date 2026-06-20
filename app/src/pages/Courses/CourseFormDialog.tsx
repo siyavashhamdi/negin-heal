@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactElement } from "react";
+import { useEffect, useMemo, useRef, useState, type DragEvent, type ReactElement } from "react";
 import { useQuery } from "@apollo/client/react";
 import {
   Box,
@@ -18,6 +18,11 @@ import { COURSE_UPDATE_MUTATION } from "../../graphql/mutations/courseUpdate.mut
 import { COURSE_DETAIL_QUERY } from "../../graphql/queries/courseDetail.query";
 import ChaptersSection from "./course-form-dialog/ChaptersSection";
 import MainInfoSection from "./course-form-dialog/MainInfoSection";
+import {
+  reorderByIdWithInsertion,
+  shouldInsertAfterHorizontal,
+  shouldInsertAfterVertical,
+} from "./course-form-dialog/reorder-drag.util";
 import type {
   CourseDetailQuery,
   CourseDetailQueryVariables,
@@ -61,7 +66,6 @@ type CourseWriteMutationVariables = {
 
 type UploadedCourseFiles = {
   readonly coverImageFileId?: string;
-  readonly chapterIconFileIdsByChapterId: Record<string, string>;
   readonly itemFileIdsByItemId: Record<string, string>;
 };
 
@@ -93,8 +97,6 @@ function createDraftChapter(): DraftChapter {
     id: createTempId("chapter"),
     title: "",
     description: "",
-    iconFile: null,
-    iconAccessUrl: null,
     visibleAfterMinutes: "",
     visibleAfterUnit: "DAYS",
     isFree: false,
@@ -137,8 +139,6 @@ function createDraftChaptersFromCourse(course: CourseEditRecord): DraftChapter[]
       id: createTempId("chapter"),
       title: chapter.title,
       description: chapter.description,
-      iconFile: null,
-      iconAccessUrl: chapter.iconAccessUrl ?? null,
       visibleAfterMinutes: visibleAfterDraft.visibleAfterMinutes,
       visibleAfterUnit: visibleAfterDraft.visibleAfterUnit,
       isFree: chapter.isFree,
@@ -223,29 +223,6 @@ function parseVisibleAfterMinutes(value: string, unit: VisibleAfterUnit): number
   return parsedValue;
 }
 
-function reorderById<T extends { id: string }>(
-  items: T[],
-  draggedId: string,
-  targetId: string,
-): T[] {
-  if (draggedId === targetId) {
-    return items;
-  }
-  const draggedIndex = items.findIndex((item) => item.id === draggedId);
-  const targetIndex = items.findIndex((item) => item.id === targetId);
-  if (draggedIndex < 0 || targetIndex < 0) {
-    return items;
-  }
-
-  const copy = [...items];
-  const [dragged] = copy.splice(draggedIndex, 1);
-  if (!dragged) {
-    return items;
-  }
-  copy.splice(targetIndex, 0, dragged);
-  return copy;
-}
-
 type CourseFormSnapshot = {
   readonly title: string;
   readonly description: string;
@@ -261,8 +238,6 @@ type CourseFormSnapshot = {
     readonly id: string;
     readonly title: string;
     readonly description: string;
-    readonly iconAccessUrl: FileAccessUrl | null;
-    readonly hasIconFile: boolean;
     readonly visibleAfterMinutes: string;
     readonly visibleAfterUnit: VisibleAfterUnit;
     readonly isFree: boolean;
@@ -305,8 +280,6 @@ function buildCourseFormSnapshot(input: {
       id: chapter.id,
       title: chapter.title,
       description: chapter.description,
-      iconAccessUrl: chapter.iconAccessUrl,
-      hasIconFile: chapter.iconFile != null,
       visibleAfterMinutes: chapter.visibleAfterMinutes,
       visibleAfterUnit: chapter.visibleAfterUnit,
       isFree: chapter.isFree,
@@ -356,8 +329,8 @@ const CourseFormDialog = ({
   const [discountValue, setDiscountValue] = useState("");
   const [chapters, setChapters] = useState<DraftChapter[]>([createDraftChapter()]);
   const [activeChapterId, setActiveChapterId] = useState<string>(chapters[0]?.id ?? "");
-  const [draggedChapterId, setDraggedChapterId] = useState<string | null>(null);
-  const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
+  const draggedChapterIdRef = useRef<string | null>(null);
+  const draggedItemIdRef = useRef<string | null>(null);
   const [freeCourseConfirmOpen, setFreeCourseConfirmOpen] = useState(false);
   const [expandedItemByChapter, setExpandedItemByChapter] = useState<Record<string, string | null>>(
     () => {
@@ -688,20 +661,6 @@ const CourseFormDialog = ({
     }
 
     for (const chapter of chapters) {
-      if (chapter.iconFile) {
-        uploadTasks.push({
-          file: chapter.iconFile,
-          errorMessage: "آپلود آیکن فصل انجام نشد.",
-          applyFileId: (uploadedFileId, files) => ({
-            ...files,
-            chapterIconFileIdsByChapterId: {
-              ...files.chapterIconFileIdsByChapterId,
-              [chapter.id]: uploadedFileId,
-            },
-          }),
-        });
-      }
-
       for (const item of chapter.items) {
         if (item.contentType === "FILE" && item.file) {
           uploadTasks.push({
@@ -735,7 +694,6 @@ const CourseFormDialog = ({
     return uploadResults.reduce<UploadedCourseFiles>(
       (files, result) => result.task.applyFileId(result.uploadedFileId ?? "", files),
       {
-        chapterIconFileIdsByChapterId: {},
         itemFileIdsByItemId: {},
       },
     );
@@ -758,10 +716,6 @@ const CourseFormDialog = ({
       return {
         title: chapter.title.trim(),
         description: chapter.description.trim() || undefined,
-        iconFileId:
-          uploadedFiles.chapterIconFileIdsByChapterId[chapter.id] ||
-          getFileIdFromAccessUrl(chapter.iconAccessUrl) ||
-          undefined,
         visibleAfterMinutes: parseVisibleAfterMinutes(
           chapter.visibleAfterMinutes,
           chapter.visibleAfterUnit,
@@ -801,7 +755,7 @@ const CourseFormDialog = ({
       description: description.trim() || undefined,
       coverImageFileId:
         uploadedFiles.coverImageFileId || getFileIdFromAccessUrl(coverImageAccessUrl) || undefined,
-      priceIrt: parsedPriceIrt,
+      priceIrt: parsedPriceIrt ?? 0,
       isActive,
       tags,
       chapters: chapterInputs,
@@ -832,21 +786,50 @@ const CourseFormDialog = ({
     }
   };
 
-  const handleChapterDragOver = (targetChapterId: string): void => {
+  const handleChapterDragOver = (
+    event: DragEvent<HTMLButtonElement>,
+    targetChapterId: string,
+  ): void => {
+    const draggedChapterId = draggedChapterIdRef.current;
     if (!draggedChapterId || draggedChapterId === targetChapterId) {
       return;
     }
-    setChapters((prev) => reorderById(prev, draggedChapterId, targetChapterId));
+
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+
+    const insertAfter = shouldInsertAfterHorizontal(event, event.currentTarget);
+    setChapters((prev) =>
+      reorderByIdWithInsertion(prev, draggedChapterId, targetChapterId, insertAfter),
+    );
   };
 
-  const handleItemDragOver = (chapterId: string, targetItemId: string): void => {
+  const handleItemDragOver = (
+    event: DragEvent<HTMLDivElement>,
+    chapterId: string,
+    targetItemId: string,
+  ): void => {
+    const draggedItemId = draggedItemIdRef.current;
     if (!draggedItemId || draggedItemId === targetItemId) {
       return;
     }
+
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+
+    const insertAfter = shouldInsertAfterVertical(event, event.currentTarget);
     mapChapterById(chapterId, (chapter) => ({
       ...chapter,
-      items: reorderById(chapter.items, draggedItemId, targetItemId),
+      items: reorderByIdWithInsertion(chapter.items, draggedItemId, targetItemId, insertAfter),
     }));
+  };
+
+  const handleSetDraggedChapterId = (chapterId: string | null): void => {
+    draggedChapterIdRef.current = chapterId;
+  };
+
+  const handleSetDraggedItemId = (itemId: string | null): void => {
+    draggedItemIdRef.current = itemId;
   };
 
   const handleDiscountKindChange = (nextDiscountKind: DiscountKind): void => {
@@ -868,6 +851,7 @@ const CourseFormDialog = ({
         title={isEditMode ? "ویرایش دوره" : "دوره جدید"}
         maxWidth="lg"
         pinFooterToBottomOnMobile
+        resetKey={isEditMode ? `${courseId ?? ""}-${isEditFormReady}` : undefined}
         footer={
           <ModalFooterActions
             actions={[
@@ -941,12 +925,12 @@ const CourseFormDialog = ({
             hasPositivePrice={hasPositivePrice}
             onAddChapter={addChapter}
             onSelectChapterIndex={handleSelectChapterIndex}
-            onSetDraggedChapterId={setDraggedChapterId}
+            onSetDraggedChapterId={handleSetDraggedChapterId}
             onChapterDragOver={handleChapterDragOver}
             onRemoveChapter={removeChapter}
             onUpdateChapter={updateChapter}
             onSetExpandedItemByChapter={handleSetExpandedItem}
-            onSetDraggedItemId={setDraggedItemId}
+            onSetDraggedItemId={handleSetDraggedItemId}
             onItemDragOver={handleItemDragOver}
             onUpdateItem={updateItem}
             onAddItem={addItem}

@@ -10,22 +10,7 @@ import {
   type ReactElement,
 } from "react";
 import { AddRounded as AddRoundedIcon, Clear as ClearIcon } from "@mui/icons-material";
-import {
-  Avatar,
-  Box,
-  Checkbox,
-  Chip,
-  CircularProgress,
-  IconButton,
-  InputAdornment,
-  ListItemText,
-  MenuItem,
-  Stack,
-  TextField,
-  Tooltip,
-  Typography,
-  useMediaQuery,
-} from "@mui/material";
+import { Avatar, Box, Checkbox, Chip, CircularProgress, IconButton, InputAdornment, ListItemText, MenuItem, Stack, TextField, Typography, useMediaQuery } from "@mui/material";
 import {
   getCoreRowModel,
   getSortedRowModel,
@@ -84,6 +69,7 @@ import {
   type UserStatus,
 } from "./users-management-list.api";
 import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
+import AppTooltip from "../../shared/AppTooltip";
 
 const COLUMN_WIDTH_BY_ID: Record<string, string> = {
   username: "12rem",
@@ -681,7 +667,7 @@ const UsersManagementList = (): ReactElement => {
           endAdornment:
             textFilterValue.trim() !== "" ? (
               <InputAdornment position="end">
-                <Tooltip title={t("table.dataGrid.filter.clearField")} arrow>
+                <AppTooltip title={t("table.dataGrid.filter.clearField")} arrow>
                   <IconButton
                     size="small"
                     edge="end"
@@ -695,7 +681,7 @@ const UsersManagementList = (): ReactElement => {
                   >
                     <ClearIcon fontSize="small" />
                   </IconButton>
-                </Tooltip>
+                </AppTooltip>
               </InputAdornment>
             ) : undefined,
         }}
@@ -985,6 +971,7 @@ const UsersManagementList = (): ReactElement => {
         open={userDialogOpen}
         onClose={handleCloseEditDialog}
         maxWidth="lg"
+        resetKey={editUserId != null ? `${editUserId}-${Boolean(editUserRecord)}` : undefined}
         title={
           dialogMode === "create"
             ? t("pages.usersManagement.create.title")

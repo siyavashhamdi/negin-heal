@@ -432,7 +432,10 @@ function renderMessageAttachments(
             getFileIdFromAccessUrl(file.accessUrl) ||
             file.path?.trim() ||
             `attachment-${index}`;
-          const existingFile = buildExistingFilePreview(file.accessUrl, file.name ?? undefined);
+          const existingFile = buildExistingFilePreview(file.accessUrl, file.name ?? undefined, {
+            mimeType: file.mimeType,
+            sizeBytes: file.sizeBytes,
+          });
 
           if (!existingFile) {
             const fallbackName = file.name?.trim() || file.accessUrl?.name?.trim() || "فایل";
@@ -878,6 +881,7 @@ const TicketDialog = ({
       title={dialogTitle}
       onClose={handleClose}
       maxWidth="md"
+      resetKey={mode === "view" ? `${record?.id ?? ""}-${detailLoading}` : undefined}
       useFormWrapper
       onSubmit={handleSubmit}
       pinFooterToBottomOnMobile
@@ -1079,7 +1083,6 @@ const TicketDialog = ({
               mobileDropHint={t("pages.support.attachments.mobileDropHint")}
               removeLabel={t("pages.support.attachments.removeLabel")}
               invalidLabel={t("pages.support.attachments.invalidLabel")}
-              optionalLabel={t("pages.support.attachments.optionalLabel")}
               fullWidth
             />
           </Stack>

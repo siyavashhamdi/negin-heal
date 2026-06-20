@@ -1,9 +1,10 @@
 import { useEffect, type ReactElement } from "react";
-import { Box, IconButton, LinearProgress, Tooltip, Typography } from "@mui/material";
+import { Box, IconButton, LinearProgress, Typography } from "@mui/material";
 import { DarkMode, Engineering, LightMode } from "@mui/icons-material";
 import { useThemeMode } from "../../contexts/ThemeContext";
 import { useTranslation } from "../../hooks/useTranslation";
 import styles from "./styles/UnderConstruction.module.scss";
+import AppTooltip from "../../shared/AppTooltip";
 
 const UnderConstruction = (): ReactElement => {
   const { t } = useTranslation();
@@ -23,7 +24,7 @@ const UnderConstruction = (): ReactElement => {
       <Box className={styles.gridOverlay} aria-hidden />
 
       <Box className={styles.themeToggle}>
-        <Tooltip
+        <AppTooltip
           title={
             mode === "light"
               ? t("auth.login.theme.enableDarkMode")
@@ -37,7 +38,7 @@ const UnderConstruction = (): ReactElement => {
           >
             {mode === "light" ? <DarkMode /> : <LightMode />}
           </IconButton>
-        </Tooltip>
+        </AppTooltip>
       </Box>
 
       <Box className={styles.content}>

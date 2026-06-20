@@ -1,4 +1,5 @@
-import { type ReactElement, type ReactNode } from "react";
+import { type ReactElement, type ReactNode, useRef } from "react";
+import { useScrollContainerToTopOnOpen } from "../../hooks/useScrollContainerToTopOnOpen";
 import {
   Dialog,
   DialogContent,
@@ -14,6 +15,8 @@ interface EntityListDialogProps {
   readonly description?: string;
   readonly children: ReactNode;
   readonly maxWidth?: DialogProps["maxWidth"];
+  /** Re-run scroll reset when dialog content identity changes. */
+  readonly resetKey?: unknown;
 }
 
 const EntityListDialog = ({
@@ -23,7 +26,11 @@ const EntityListDialog = ({
   description,
   children,
   maxWidth = "xl",
+  resetKey,
 }: EntityListDialogProps): ReactElement => {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const { onEntered } = useScrollContainerToTopOnOpen(open, contentRef, resetKey);
+
   return (
     <Dialog
       open={open}
@@ -31,6 +38,7 @@ const EntityListDialog = ({
       fullWidth
       maxWidth={maxWidth}
       scroll="paper"
+      TransitionProps={{ onEntered }}
       aria-labelledby="entity-list-dialog-title"
     >
       <DialogTitle
@@ -49,6 +57,7 @@ const EntityListDialog = ({
         ) : null}
       </DialogTitle>
       <DialogContent
+        ref={contentRef}
         dividers
         sx={{
           p: { xs: 1, sm: 2 },

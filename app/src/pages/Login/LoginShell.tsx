@@ -1,10 +1,11 @@
 import { useState, type ReactElement, type ReactNode } from "react";
-import { Box, Container, Typography, IconButton, Tooltip } from "@mui/material";
+import { Box, Container, Typography, IconButton } from "@mui/material";
 import { DarkMode, LightMode } from "@mui/icons-material";
 import { useThemeMode } from "../../contexts/ThemeContext";
 import { useTranslation } from "../../hooks/useTranslation";
 import Footer from "../../components/layout/Footer";
 import styles from "./styles/LoginShell.module.scss";
+import AppTooltip from "../../shared/AppTooltip";
 
 interface LoginShellProps {
   readonly subtitle: string;
@@ -47,7 +48,7 @@ const LoginShell = ({ subtitle, children, embedded = false }: LoginShellProps): 
           <Box className={styles.formSection}>
             <Box className={styles.formSectionMain}>
               <Box className={styles.themeToggleContainer}>
-                <Tooltip
+                <AppTooltip
                   title={
                     mode === "light"
                       ? t("auth.login.theme.enableDarkMode")
@@ -61,7 +62,7 @@ const LoginShell = ({ subtitle, children, embedded = false }: LoginShellProps): 
                   >
                     {mode === "light" ? <DarkMode /> : <LightMode />}
                   </IconButton>
-                </Tooltip>
+                </AppTooltip>
               </Box>
 
               <Container maxWidth="md" className={styles.formContainer}>

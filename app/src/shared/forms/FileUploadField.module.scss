@@ -1,4 +1,8 @@
 @use "../../styles/variables" as variables;
+@use "../../styles/mixins" as mixins;
+
+$field-label-inline-offset: 0.875rem;
+$field-label-float-scale: 0.75;
 
 // Subtle transparency checkerboard — low-contrast grays, larger tiles
 @mixin transparencyCheckerboard($tile: 0.875rem) {
@@ -32,27 +36,36 @@
 
 .label {
   position: absolute;
-  z-index: 1;
-  inset-block-start: -0.48rem;
-  inset-inline-start: 0.85rem;
-  padding-inline: 0.28rem;
+  z-index: 2;
+  inset-block-start: 0;
+  inset-inline-start: $field-label-inline-offset;
+  transform: translateY(-50%) scale($field-label-float-scale);
+  transform-origin: top right;
+  padding-inline: 0.25rem;
   background: var(--app-surface-bg);
-  color: variables.$color-primary-main;
-  font-size: 0.74rem;
-  font-weight: variables.$font-weight-medium;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  font-weight: variables.$font-weight-normal;
   line-height: 1;
+  pointer-events: none;
+  transition: color 0.18s ease;
+}
+
+.root:focus-within .label,
+.root:has(.dropzoneDragActive) .label {
+  color: var(--app-focus-ring, #{variables.$color-primary-main});
+}
+
+.root:has(.dropzoneError) .label {
+  color: variables.$color-error-main;
 }
 
 .requiredMark {
   color: variables.$color-error-main;
 }
 
-.optionalMark {
-  color: var(--text-secondary);
-  font-weight: variables.$font-weight-normal;
-}
-
 .dropzone {
+  position: relative;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -61,7 +74,7 @@
   inline-size: 11rem;
   block-size: 11rem;
   max-inline-size: 100%;
-  border: 1px dashed variables.$color-divider;
+  border: 0.0625rem dashed color-mix(in srgb, var(--text-primary) 23%, transparent);
   border-radius: variables.$border-radius-md;
   padding: 0.9rem;
   text-align: center;
@@ -69,11 +82,17 @@
   overflow: hidden;
   transition:
     border-color 0.2s ease,
+    border-width 0.2s ease,
     background-color 0.2s ease;
 
-  &:hover {
-    border-color: variables.$color-primary-main;
-    background-color: rgba(variables.$color-primary-main, 0.04);
+  &:hover:not(:focus-within) {
+    border-color: var(--text-primary);
+  }
+
+  &:focus-within {
+    border-color: var(--app-focus-ring, #{variables.$color-primary-main});
+    border-width: 0.125rem;
+    padding: calc(0.9rem - 0.0625rem);
   }
 }
 
@@ -82,7 +101,7 @@
 }
 
 .dropzoneDragActive {
-  border-color: variables.$color-primary-main;
+  border-color: var(--app-focus-ring, #{variables.$color-primary-main});
   background-color: rgba(variables.$color-primary-main, 0.08);
   box-shadow: 0 0 0 0.125rem rgba(variables.$color-primary-main, 0.12);
 }
@@ -97,27 +116,39 @@
   align-items: stretch;
   justify-content: stretch;
   padding: 0.35rem;
+
+  &:focus-within {
+    padding: calc(0.35rem - 0.0625rem);
+  }
+
+  .previewStage {
+    min-block-size: 100%;
+  }
+
+  .previewIcon {
+    min-block-size: 6.5rem;
+  }
 }
 
 .dropzoneReadOnly {
   cursor: default;
 
   &:hover {
-    border-color: variables.$color-divider;
+    border-color: color-mix(in srgb, var(--text-primary) 23%, transparent);
     background-color: transparent;
   }
 }
 
 .dropzoneReadOnly.dropzoneHasFile:hover {
-  border-color: variables.$color-divider;
+  border-color: color-mix(in srgb, var(--text-primary) 23%, transparent);
   background-color: transparent;
 }
 
 .dropzoneReadOnlyPreviewable {
   cursor: pointer;
 
-  &:hover {
-    border-color: variables.$color-primary-main;
+  &:hover:not(:focus-within) {
+    border-color: var(--app-focus-ring, #{variables.$color-primary-main});
     background-color: rgba(variables.$color-primary-main, 0.04);
   }
 }
@@ -162,6 +193,10 @@
   justify-content: space-between;
   direction: ltr;
   gap: variables.$spacing-1;
+}
+
+.fileRowReadOnly {
+  justify-content: flex-end;
 }
 
 .fileInfo {
@@ -254,6 +289,82 @@
 
 .previewDialogFrame {
   @include transparencyCheckerboard(1.125rem);
+}
+
+.previewDialogDocument {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-block-size: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  overflow: hidden;
+  border-radius: variables.$border-radius-md;
+  background-color: variables.$color-grey-100;
+
+  [data-theme="dark"] & {
+    background-color: variables.$color-grey-900;
+  }
+
+  @media (min-width: variables.$breakpoint-sm) {
+    block-size: min(calc(80vh - 9rem), 36rem);
+    min-block-size: 28rem;
+  }
+}
+
+.previewDialogDocumentBody {
+  flex: 1;
+  min-block-size: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  overflow: auto;
+  border: 0;
+  background-color: variables.$color-background-paper;
+  @include mixins.visible-scrollbars;
+}
+
+.previewDialogDocumentText {
+  flex: 1;
+  min-block-size: 0;
+  margin: 0;
+  padding: 1rem;
+  overflow: auto;
+  inline-size: 100%;
+  block-size: 100%;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: monospace;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  background-color: variables.$color-background-paper;
+  @include mixins.visible-scrollbars;
+}
+
+.previewDialogDocumentState {
+  display: grid;
+  place-items: center;
+  flex: 1;
+  min-block-size: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  padding-inline: 1rem;
+}
+
+.previewDialogDocumentReadOnly {
+  border-radius: 0;
+  flex: 1;
+  block-size: 100%;
+  min-block-size: 0;
+
+  @media (min-width: variables.$breakpoint-sm) {
+    block-size: min(calc(80vh - 9rem), 36rem);
+    min-block-size: 28rem;
+  }
+}
+
+.previewDialogDocumentBodyReadOnly {
+  overflow: hidden;
+  display: block;
 }
 
 .previewIcon,

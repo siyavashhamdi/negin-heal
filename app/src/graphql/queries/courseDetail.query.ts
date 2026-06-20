@@ -21,9 +21,6 @@ export const COURSE_DETAIL_QUERY = gql`
       chapters {
         title
         description
-        iconAccessUrl {
-          ${FILE_ACCESS_URL_FIELDS}
-        }
         visibleAfterMinutes
         isFree
         sortOrder

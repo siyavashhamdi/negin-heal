@@ -1,56 +1,64 @@
 @use "../../../styles/variables" as variables;
 
+$field-label-inline-offset: 0.875rem;
+$field-label-float-scale: 0.75;
+
 .root {
   position: relative;
+}
+
+.inputShell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  min-block-size: 3.5rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--text-primary) 23%, transparent);
+  border-radius: variables.$border-radius-md;
+  padding: 0.875rem 0.875rem 0.75rem;
+  background: transparent;
+  transition:
+    border-color 0.18s ease,
+    border-width 0.18s ease,
+    padding 0.18s ease;
 }
 
 .label {
   position: absolute;
   z-index: 1;
   inset-block-start: 50%;
-  inset-inline-start: 0.78rem;
-  transform: translateY(-50%) scale(1);
-  transform-origin: right center;
-  padding-inline: 0.28rem;
+  inset-inline-start: $field-label-inline-offset;
+  transform: translateY(-50%);
+  transform-origin: top right;
+  padding-inline: 0.25rem;
   background: transparent;
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: 1rem;
   line-height: 1;
   pointer-events: none;
   transition:
     inset-block-start 0.18s ease,
     transform 0.18s ease,
     background-color 0.18s ease,
-    color 0.18s ease,
-    font-size 0.18s ease;
+    color 0.18s ease;
 }
 
 .rootFloating .label {
   inset-block-start: 0;
-  transform: translateY(-50%) scale(0.86);
+  transform: translateY(-50%) scale($field-label-float-scale);
   background: var(--app-surface-bg);
-  color: variables.$color-primary-main;
-  font-size: 0.78rem;
+  color: var(--text-secondary);
 }
 
-.inputShell {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  min-block-size: 3.5rem;
-  border: 0.125rem solid color-mix(in srgb, var(--text-primary) 23%, transparent);
-  border-radius: variables.$border-radius-md;
-  padding: 0.52rem 0.68rem;
-  background: transparent;
-  transition:
-    border-color 0.18s ease,
-    box-shadow 0.18s ease;
+.inputShell:focus-within .label {
+  color: var(--app-focus-ring, #{variables.$color-primary-main});
 }
 
 .inputShell:focus-within {
-  border-color: variables.$color-primary-main;
-  box-shadow: 0 0 0 0.0625rem variables.$color-primary-main;
+  border-color: var(--app-focus-ring, #{variables.$color-primary-main});
+  border-width: 0.125rem;
+  padding: calc(0.875rem - 0.0625rem) calc(0.875rem - 0.0625rem) calc(0.75rem - 0.0625rem);
 }
 
 .inputShell:hover:not(:focus-within) {

@@ -1,4 +1,5 @@
-import { type FormEventHandler, type ReactElement, type ReactNode } from "react";
+import { type FormEventHandler, type ReactElement, type ReactNode, useRef } from "react";
+import { useScrollContainerToTopOnOpen } from "../../hooks/useScrollContainerToTopOnOpen";
 import {
   Box,
   Dialog,
@@ -27,6 +28,12 @@ export interface EntityModalShellProps {
   pinFooterToBottomOnMobile?: boolean;
   /** When false, a successful save should not call onClose automatically. */
   closeOnSave?: boolean;
+  /** Re-run scroll reset when dialog content identity changes (e.g. loaded edit record). */
+  resetKey?: unknown;
+  disableAutoFocus?: boolean;
+  disableRestoreFocus?: boolean;
+  /** Keep scrollbars visible on mobile (overrides global hide). */
+  showVisibleScrollbar?: boolean;
 }
 
 const EntityModalShell = ({
@@ -41,13 +48,19 @@ const EntityModalShell = ({
   useFormWrapper = false,
   onSubmit,
   pinFooterToBottomOnMobile = true,
+  resetKey,
+  disableAutoFocus,
+  disableRestoreFocus,
+  showVisibleScrollbar = false,
 }: EntityModalShellProps): ReactElement => {
   const theme = useTheme();
+  const contentRef = useRef<HTMLDivElement>(null);
   const { isCompact, dialogProps, getPaperProps, getContentProps } = useMobileDialogProps();
+  const { onEntered } = useScrollContainerToTopOnOpen(open, contentRef, resetKey);
 
   const dialogContentClassName = `${styles.modalDialogContent} ${
     isCompact ? styles.modalDialogContentScrollMobile : styles.modalDialogContentScrollDesktop
-  }`;
+  }${showVisibleScrollbar ? ` ${styles.modalDialogContentVisibleScrollbar}` : ""}`;
 
   const renderHeader = (): ReactElement => (
     <DialogTitle className={styles.modalDialogTitle} sx={crudModalTitleSx(theme)}>
@@ -65,7 +78,12 @@ const EntityModalShell = ({
   );
 
   const renderContent = (): ReactElement => (
-    <DialogContent {...getContentProps({ className: dialogContentClassName })}>{children}</DialogContent>
+    <DialogContent
+      ref={contentRef}
+      {...getContentProps({ className: dialogContentClassName })}
+    >
+      {children}
+    </DialogContent>
   );
 
   const renderFooter = (): ReactElement | null =>
@@ -88,8 +106,11 @@ const EntityModalShell = ({
       open={open}
       onClose={onClose}
       maxWidth={maxWidth}
+      disableAutoFocus={disableAutoFocus}
+      disableRestoreFocus={disableRestoreFocus}
       {...dialogProps}
       fullWidth={fullWidth}
+      TransitionProps={{ onEntered }}
       PaperProps={getPaperProps({
         className: isCompact ? styles.modalPaperMobileFlex : undefined,
       })}

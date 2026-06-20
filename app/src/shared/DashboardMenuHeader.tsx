@@ -1,10 +1,11 @@
 import { type ReactElement, type ReactNode } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
-import { Box, Button, IconButton, Tooltip, Typography, useMediaQuery } from "@mui/material";
+import { Box, Button, IconButton, Typography, useMediaQuery } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
 import { useTranslation } from "../hooks/useTranslation";
 import styles from "./styles/DashboardMenuHeader.module.scss";
+import AppTooltip from "./AppTooltip";
 
 export type DashboardMenuHeaderProps = {
   readonly title: string;
@@ -40,7 +41,7 @@ const DashboardMenuHeader = ({
         {showBackLink ? (
           <Box className={styles.backWrap}>
             {isMobile ? (
-              <Tooltip title={resolvedBackLabel} arrow enterTouchDelay={0}>
+              <AppTooltip title={resolvedBackLabel} arrow enterTouchDelay={0}>
                 <IconButton
                   component={RouterLink}
                   to={resolvedBackTo}
@@ -60,7 +61,7 @@ const DashboardMenuHeader = ({
                 >
                   <ArrowBackIosNewRoundedIcon fontSize="small" className={styles.mobileBackIcon} />
                 </IconButton>
-              </Tooltip>
+              </AppTooltip>
             ) : (
               <Button
                 component={RouterLink}

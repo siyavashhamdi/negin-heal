@@ -17,8 +17,6 @@ export type DraftChapter = {
   id: string;
   title: string;
   description: string;
-  iconFile: File | null;
-  iconAccessUrl: FileAccessUrl | null;
   visibleAfterMinutes: string;
   visibleAfterUnit: VisibleAfterUnit;
   isFree: boolean;

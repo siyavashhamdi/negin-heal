@@ -1,6 +1,8 @@
 import {
   useCallback,
   useEffect,
+  useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -8,17 +10,7 @@ import {
   type KeyboardEvent,
   type ReactElement,
 } from "react";
-import {
-  Box,
-  Divider,
-  IconButton,
-  MenuItem,
-  Select,
-  Tooltip,
-  useMediaQuery,
-  type SelectChangeEvent,
-} from "@mui/material";
-import CloseFullscreenRoundedIcon from "@mui/icons-material/CloseFullscreenRounded";
+import { Box, Divider, IconButton, MenuItem, Select, useMediaQuery, type SelectChangeEvent } from "@mui/material";
 import CodeRoundedIcon from "@mui/icons-material/CodeRounded";
 import FormatAlignCenterRoundedIcon from "@mui/icons-material/FormatAlignCenterRounded";
 import FormatAlignLeftRoundedIcon from "@mui/icons-material/FormatAlignLeftRounded";
@@ -34,18 +26,31 @@ import FormatQuoteRoundedIcon from "@mui/icons-material/FormatQuoteRounded";
 import FormatUnderlinedRoundedIcon from "@mui/icons-material/FormatUnderlinedRounded";
 import OpenInFullRoundedIcon from "@mui/icons-material/OpenInFullRounded";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
+import { useMaxRoutePreview } from "../../hooks/useMaxRoutePreview";
+import EntityModalShell from "../crud/EntityModalShell";
+import ModalFooterActions from "../crud/ModalFooterActions";
 import styles from "./RichTextBox.module.scss";
+import AppTooltip from "../AppTooltip";
+import { applyBlankTargetToRichTextLinks } from "../../utils/richTextHtml.util";
 
+type RichTextBoxMode = "edit" | "render";
+type RichTextEditorMode = "visual" | "markup";
 type RichTextBoxProps = {
   readonly label: string;
   readonly value: string;
-  readonly onChange: (nextValue: string) => void;
+  readonly onChange?: (nextValue: string) => void;
   readonly placeholder?: string;
   readonly minRows?: number;
   readonly required?: boolean;
-  readonly optionalLabel?: string;
+  readonly mode?: RichTextBoxMode;
+  readonly hideLabel?: boolean;
+  readonly renderTitle?: string;
+  readonly maximizeLabel?: string;
+  /** Parent-owned maximize (e.g. course detail item modal). */
+  readonly onPreviewMaximize?: () => void;
+  /** Stable id for `/max` route ownership in self-managed maximize. */
+  readonly previewId?: string;
 };
-type RichTextMode = "visual" | "markup";
 type ActiveFormats = {
   readonly bold: boolean;
   readonly italic: boolean;
@@ -102,6 +107,105 @@ function getClosestQuote(node: Node | null, editable: HTMLElement): HTMLElement 
   return quote && editable.contains(quote) ? quote : null;
 }
 
+function RichTextBoxRender({
+  label,
+  value,
+  hideLabel,
+  renderTitle,
+  maximizeLabel = "بزرگ‌نمایی",
+  previewId,
+  onPreviewMaximize,
+}: {
+  readonly label: string;
+  readonly value: string;
+  readonly hideLabel: boolean;
+  readonly renderTitle?: string;
+  readonly maximizeLabel?: string;
+  readonly previewId?: string;
+  readonly onPreviewMaximize?: () => void;
+}): ReactElement {
+  const autoOwnerId = useId();
+  const ownerId = previewId?.trim() || autoOwnerId;
+  const maxRoutePreview = useMaxRoutePreview(ownerId, !onPreviewMaximize);
+  const renderedHtml = useMemo(() => applyBlankTargetToRichTextLinks(value), [value]);
+  const dialogTitle = renderTitle?.trim() || label.trim() || "نمایش محتوا";
+  const usesExternalPreview = Boolean(onPreviewMaximize);
+  const showInternalModal = !usesExternalPreview && maxRoutePreview.isOpen;
+
+  const handleMaximize = (): void => {
+    if (onPreviewMaximize) {
+      onPreviewMaximize();
+      return;
+    }
+    maxRoutePreview.open();
+  };
+
+  const handleCloseModal = (): void => {
+    maxRoutePreview.close();
+  };
+
+  return (
+    <>
+      <Box className={styles.root}>
+        <div className={styles.inputFrame}>
+          {!hideLabel && label.trim() ? (
+            <span className={styles.label}>
+              {label}
+            </span>
+          ) : null}
+          <div className={`${styles.modeSwitch} ${styles.modeSwitchSingle}`} aria-label="عملیات نمایش">
+            <AppTooltip title={maximizeLabel} arrow>
+              <IconButton
+                size="small"
+                className={styles.modeButton}
+                aria-label={maximizeLabel}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={handleMaximize}
+              >
+                <OpenInFullRoundedIcon fontSize="small" />
+              </IconButton>
+            </AppTooltip>
+          </div>
+          <div
+            className={styles.renderContent}
+            dir="rtl"
+            dangerouslySetInnerHTML={{ __html: renderedHtml }}
+          />
+        </div>
+      </Box>
+
+      {!usesExternalPreview ? (
+        <EntityModalShell
+          open={showInternalModal}
+          onClose={handleCloseModal}
+          title={dialogTitle}
+          maxWidth="lg"
+          disableAutoFocus
+          disableRestoreFocus
+          showVisibleScrollbar
+          footer={
+            <ModalFooterActions
+              actions={[
+                {
+                  key: "close",
+                  isCloseButton: true,
+                  onClick: handleCloseModal,
+                },
+              ]}
+            />
+          }
+        >
+          <div
+            className={`${styles.renderDialogContent} ${styles.renderDialogContentMax}`}
+            dir="rtl"
+            dangerouslySetInnerHTML={{ __html: renderedHtml }}
+          />
+        </EntityModalShell>
+      ) : null}
+    </>
+  );
+}
+
 const RichTextBox = ({
   label,
   value,
@@ -109,30 +213,135 @@ const RichTextBox = ({
   placeholder,
   minRows = 4,
   required = false,
-  optionalLabel,
-}: RichTextBoxProps): ReactElement => {
+  mode = "edit",
+  hideLabel = false,
+  renderTitle,
+  maximizeLabel,
+  previewId,
+  onPreviewMaximize,
+}: RichTextBoxProps): ReactElement | null => {
+  if (mode === "render") {
+    if (!hasRichTextContent(value)) {
+      return null;
+    }
+
+    return (
+      <RichTextBoxRender
+        label={label}
+        value={value}
+        hideLabel={hideLabel}
+        renderTitle={renderTitle}
+        maximizeLabel={maximizeLabel}
+        previewId={previewId}
+        onPreviewMaximize={onPreviewMaximize}
+      />
+    );
+  }
+
+  return (
+    <RichTextBoxEditor
+      label={label}
+      value={value}
+      onChange={onChange ?? (() => undefined)}
+      placeholder={placeholder}
+      minRows={minRows}
+      required={required}
+      previewId={previewId}
+    />
+  );
+};
+
+type RichTextBoxEditorProps = {
+  readonly label: string;
+  readonly value: string;
+  readonly onChange: (nextValue: string) => void;
+  readonly placeholder?: string;
+  readonly minRows: number;
+  readonly required: boolean;
+  readonly previewId?: string;
+};
+
+const RichTextBoxEditor = ({
+  label,
+  value,
+  onChange,
+  placeholder,
+  minRows,
+  required,
+  previewId,
+}: RichTextBoxEditorProps): ReactElement => {
   const isMobile = useMediaQuery("(max-width:600px)");
+  const autoOwnerId = useId();
+  const ownerId = previewId?.trim() || autoOwnerId;
+  const maxRoutePreview = useMaxRoutePreview(ownerId);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const editableRef = useRef<HTMLDivElement | null>(null);
+  const pendingHtmlRef = useRef<string | null>(null);
   const [isFocused, setIsFocused] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [mode, setMode] = useState<RichTextMode>("visual");
+  const [mode, setMode] = useState<RichTextEditorMode>("visual");
   const [activeFormats, setActiveFormats] = useState<ActiveFormats>(defaultActiveFormats);
   const shouldFloatLabel = isFocused || hasRichTextContent(value);
 
-  useEffect(() => {
+  const syncEditableHtml = useCallback(
+    (editable: HTMLDivElement): void => {
+      if (mode !== "visual") {
+        return;
+      }
+      const nextHtml = pendingHtmlRef.current ?? value;
+      pendingHtmlRef.current = null;
+      if (editable.innerHTML !== nextHtml) {
+        editable.innerHTML = nextHtml;
+      }
+    },
+    [mode, value],
+  );
+
+  const setEditableRef = useCallback(
+    (node: HTMLDivElement | null): void => {
+      editableRef.current = node;
+      if (node) {
+        syncEditableHtml(node);
+      }
+    },
+    [syncEditableHtml],
+  );
+
+  useLayoutEffect(() => {
+    const editable = editableRef.current;
+    if (editable) {
+      syncEditableHtml(editable);
+    }
+  }, [maxRoutePreview.isOpen, syncEditableHtml]);
+
+  const flushEditableValue = useCallback((): void => {
     const editable = editableRef.current;
     if (!editable || mode !== "visual") {
       return;
     }
     if (editable.innerHTML !== value) {
-      editable.innerHTML = value;
+      onChange(editable.innerHTML);
     }
-  }, [mode, value]);
+  }, [mode, onChange, value]);
+
+  const handleOpenMaximize = useCallback((): void => {
+    const editable = editableRef.current;
+    if (editable && mode === "visual") {
+      pendingHtmlRef.current = editable.innerHTML;
+      if (editable.innerHTML !== value) {
+        onChange(editable.innerHTML);
+      }
+    }
+    maxRoutePreview.open();
+  }, [maxRoutePreview, mode, onChange, value]);
+
+  const handleCloseMaximize = useCallback((): void => {
+    flushEditableValue();
+    maxRoutePreview.close();
+  }, [flushEditableValue, maxRoutePreview]);
 
   const minHeight = useMemo(
-    () => (isMobile && isExpanded ? "60vh" : `${Math.max(2, minRows) * rowHeightPx}px`),
-    [isExpanded, isMobile, minRows],
+    () => `${Math.max(2, minRows) * rowHeightPx}px`,
+    [minRows],
   );
 
   const getSelectedBlocks = useCallback((editable: HTMLElement): HTMLElement[] => {
@@ -351,235 +560,279 @@ const RichTextBox = ({
   const rootClassName = [
     styles.root,
     shouldFloatLabel ? styles.rootFloating : "",
-    isMobile && isExpanded ? styles.rootExpanded : "",
+    isFocused ? styles.rootFocused : "",
   ]
     .filter(Boolean)
     .join(" ");
 
-  return (
-    <Box ref={rootRef} className={rootClassName}>
-      <span className={styles.label}>
-        {label}
-        {required ? <span className={styles.requiredMark}> *</span> : null}
-        {!required && optionalLabel ? (
-          <span className={styles.optionalMark}> {optionalLabel}</span>
-        ) : null}
-      </span>
-      <div className={styles.header}>
-        {mode === "visual" ? (
-          <div className={styles.actions}>
-            <Select
-              size="small"
-              displayEmpty
-              value=""
-              className={styles.fontSizeSelect}
-              onMouseDown={keepEditorSelection}
-              onChange={applyFontSize}
-              renderValue={() => "اندازه"}
-            >
-              {fontSizeOptions.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </Select>
-            <Divider orientation="vertical" flexItem className={styles.toolbarDivider} />
-            <Tooltip title="پررنگ" arrow>
-              <IconButton
-                size="small"
-                color={activeFormats.bold ? "primary" : "default"}
-                onMouseDown={keepEditorSelection}
-                onClick={() => applyCommand("bold")}
-              >
-                <FormatBoldRoundedIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="مورب" arrow>
-              <IconButton
-                size="small"
-                color={activeFormats.italic ? "primary" : "default"}
-                onMouseDown={keepEditorSelection}
-                onClick={() => applyCommand("italic")}
-              >
-                <FormatItalicRoundedIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="زیرخط" arrow>
-              <IconButton
-                size="small"
-                color={activeFormats.underline ? "primary" : "default"}
-                onMouseDown={keepEditorSelection}
-                onClick={() => applyCommand("underline")}
-              >
-                <FormatUnderlinedRoundedIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Divider orientation="vertical" flexItem className={styles.toolbarDivider} />
-            <Tooltip title="لیست بولت‌دار" arrow>
-              <IconButton
-                size="small"
-                color={activeFormats.unorderedList ? "primary" : "default"}
-                onMouseDown={keepEditorSelection}
-                onClick={() => applyCommand("insertUnorderedList")}
-              >
-                <FormatListBulletedRoundedIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="لیست شماره‌دار" arrow>
-              <IconButton
-                size="small"
-                color={activeFormats.orderedList ? "primary" : "default"}
-                onMouseDown={keepEditorSelection}
-                onClick={() => applyCommand("insertOrderedList")}
-              >
-                <FormatListNumberedRoundedIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="نقل قول" arrow>
-              <IconButton
-                size="small"
-                color={activeFormats.quote ? "primary" : "default"}
-                onMouseDown={keepEditorSelection}
-                onClick={toggleQuote}
-              >
-                <FormatQuoteRoundedIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Divider orientation="vertical" flexItem className={styles.toolbarDivider} />
-            <Tooltip title="راست‌چین" arrow>
-              <IconButton
-                size="small"
-                color={activeFormats.alignRight ? "primary" : "default"}
-                onMouseDown={keepEditorSelection}
-                onClick={() => applyCommand("justifyRight")}
-              >
-                <FormatAlignRightRoundedIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="وسط‌چین" arrow>
-              <IconButton
-                size="small"
-                color={activeFormats.alignCenter ? "primary" : "default"}
-                onMouseDown={keepEditorSelection}
-                onClick={() => applyCommand("justifyCenter")}
-              >
-                <FormatAlignCenterRoundedIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="چپ‌چین" arrow>
-              <IconButton
-                size="small"
-                color={activeFormats.alignLeft ? "primary" : "default"}
-                onMouseDown={keepEditorSelection}
-                onClick={() => applyCommand("justifyLeft")}
-              >
-                <FormatAlignLeftRoundedIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Divider orientation="vertical" flexItem className={styles.toolbarDivider} />
-            <Tooltip title="تورفتگی بیشتر" arrow>
-              <IconButton
-                size="small"
-                color={activeFormats.indented ? "primary" : "default"}
-                onMouseDown={keepEditorSelection}
-                onClick={() => applyIndentChange(1)}
-              >
-                <FormatIndentIncreaseRoundedIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="تورفتگی کمتر" arrow>
-              <IconButton
-                size="small"
-                onMouseDown={keepEditorSelection}
-                onClick={() => applyIndentChange(-1)}
-              >
-                <FormatIndentDecreaseRoundedIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="پاک کردن قالب‌بندی" arrow>
-              <IconButton
-                size="small"
-                onMouseDown={keepEditorSelection}
-                onClick={() => applyCommand("removeFormat")}
-              >
-                <FormatClearRoundedIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          </div>
-        ) : null}
-      </div>
-      <div className={styles.inputFrame}>
-        <div
-          className={`${styles.modeSwitch}${isMobile ? ` ${styles.modeSwitchMobile}` : ""}`}
-          aria-label="حالت ویرایش متن"
+  const renderToolbar = (): ReactElement | null =>
+    mode === "visual" ? (
+      <div className={styles.actions}>
+        <Select
+          size="small"
+          displayEmpty
+          value=""
+          className={styles.fontSizeSelect}
+          onMouseDown={keepEditorSelection}
+          onChange={applyFontSize}
+          renderValue={() => "اندازه"}
         >
-          <Tooltip title="ویرایش نمایشی" arrow>
-            <IconButton
-              size="small"
-              className={styles.modeButton}
-              color={mode === "visual" ? "primary" : "default"}
-              onClick={() => setMode("visual")}
-            >
-              <VisibilityRoundedIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="ویرایش HTML" arrow>
-            <IconButton
-              size="small"
-              className={styles.modeButton}
-              color={mode === "markup" ? "primary" : "default"}
-              onClick={() => setMode("markup")}
-            >
-              <CodeRoundedIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          {isMobile ? (
-            <Tooltip title={isExpanded ? "کوچک‌سازی" : "بزرگ‌نمایی"} arrow>
+          {fontSizeOptions.map((option) => (
+            <MenuItem key={option.value} value={option.value}>
+              {option.label}
+            </MenuItem>
+          ))}
+        </Select>
+        <Divider orientation="vertical" flexItem className={styles.toolbarDivider} />
+        <AppTooltip title="پررنگ" arrow>
+          <IconButton
+            size="small"
+            color={activeFormats.bold ? "primary" : "default"}
+            onMouseDown={keepEditorSelection}
+            onClick={() => applyCommand("bold")}
+          >
+            <FormatBoldRoundedIcon fontSize="small" />
+          </IconButton>
+        </AppTooltip>
+        <AppTooltip title="مورب" arrow>
+          <IconButton
+            size="small"
+            color={activeFormats.italic ? "primary" : "default"}
+            onMouseDown={keepEditorSelection}
+            onClick={() => applyCommand("italic")}
+          >
+            <FormatItalicRoundedIcon fontSize="small" />
+          </IconButton>
+        </AppTooltip>
+        <AppTooltip title="زیرخط" arrow>
+          <IconButton
+            size="small"
+            color={activeFormats.underline ? "primary" : "default"}
+            onMouseDown={keepEditorSelection}
+            onClick={() => applyCommand("underline")}
+          >
+            <FormatUnderlinedRoundedIcon fontSize="small" />
+          </IconButton>
+        </AppTooltip>
+        <Divider orientation="vertical" flexItem className={styles.toolbarDivider} />
+        <AppTooltip title="لیست بولت‌دار" arrow>
+          <IconButton
+            size="small"
+            color={activeFormats.unorderedList ? "primary" : "default"}
+            onMouseDown={keepEditorSelection}
+            onClick={() => applyCommand("insertUnorderedList")}
+          >
+            <FormatListBulletedRoundedIcon fontSize="small" />
+          </IconButton>
+        </AppTooltip>
+        <AppTooltip title="لیست شماره‌دار" arrow>
+          <IconButton
+            size="small"
+            color={activeFormats.orderedList ? "primary" : "default"}
+            onMouseDown={keepEditorSelection}
+            onClick={() => applyCommand("insertOrderedList")}
+          >
+            <FormatListNumberedRoundedIcon fontSize="small" />
+          </IconButton>
+        </AppTooltip>
+        <AppTooltip title="نقل قول" arrow>
+          <IconButton
+            size="small"
+            color={activeFormats.quote ? "primary" : "default"}
+            onMouseDown={keepEditorSelection}
+            onClick={toggleQuote}
+          >
+            <FormatQuoteRoundedIcon fontSize="small" />
+          </IconButton>
+        </AppTooltip>
+        <Divider orientation="vertical" flexItem className={styles.toolbarDivider} />
+        <AppTooltip title="راست‌چین" arrow>
+          <IconButton
+            size="small"
+            color={activeFormats.alignRight ? "primary" : "default"}
+            onMouseDown={keepEditorSelection}
+            onClick={() => applyCommand("justifyRight")}
+          >
+            <FormatAlignRightRoundedIcon fontSize="small" />
+          </IconButton>
+        </AppTooltip>
+        <AppTooltip title="وسط‌چین" arrow>
+          <IconButton
+            size="small"
+            color={activeFormats.alignCenter ? "primary" : "default"}
+            onMouseDown={keepEditorSelection}
+            onClick={() => applyCommand("justifyCenter")}
+          >
+            <FormatAlignCenterRoundedIcon fontSize="small" />
+          </IconButton>
+        </AppTooltip>
+        <AppTooltip title="چپ‌چین" arrow>
+          <IconButton
+            size="small"
+            color={activeFormats.alignLeft ? "primary" : "default"}
+            onMouseDown={keepEditorSelection}
+            onClick={() => applyCommand("justifyLeft")}
+          >
+            <FormatAlignLeftRoundedIcon fontSize="small" />
+          </IconButton>
+        </AppTooltip>
+        <Divider orientation="vertical" flexItem className={styles.toolbarDivider} />
+        <AppTooltip title="تورفتگی بیشتر" arrow>
+          <IconButton
+            size="small"
+            color={activeFormats.indented ? "primary" : "default"}
+            onMouseDown={keepEditorSelection}
+            onClick={() => applyIndentChange(1)}
+          >
+            <FormatIndentIncreaseRoundedIcon fontSize="small" />
+          </IconButton>
+        </AppTooltip>
+        <AppTooltip title="تورفتگی کمتر" arrow>
+          <IconButton
+            size="small"
+            onMouseDown={keepEditorSelection}
+            onClick={() => applyIndentChange(-1)}
+          >
+            <FormatIndentDecreaseRoundedIcon fontSize="small" />
+          </IconButton>
+        </AppTooltip>
+        <AppTooltip title="پاک کردن قالب‌بندی" arrow>
+          <IconButton
+            size="small"
+            onMouseDown={keepEditorSelection}
+            onClick={() => applyCommand("removeFormat")}
+          >
+            <FormatClearRoundedIcon fontSize="small" />
+          </IconButton>
+        </AppTooltip>
+      </div>
+    ) : null;
+
+  const renderEditorSurface = (variant: "inline" | "modal"): ReactElement => {
+    const editorClassName =
+      variant === "modal"
+        ? `${styles.editor} ${styles.editorMax}`
+        : styles.editor;
+    const markupClassName =
+      variant === "modal"
+        ? `${styles.markupEditor} ${styles.markupEditorMax}`
+        : styles.markupEditor;
+    const editorMinHeight = variant === "modal" ? "100%" : minHeight;
+
+    return (
+      <>
+        <div className={styles.header}>{renderToolbar()}</div>
+        <div className={variant === "modal" ? styles.inputFrameMax : styles.inputFrame}>
+          {variant === "inline" ? (
+            <span className={styles.label}>
+              {label}
+              {required ? <span className={styles.requiredMark}> *</span> : null}
+            </span>
+          ) : null}
+          <div
+            className={`${styles.modeSwitch}${isMobile ? ` ${styles.modeSwitchMobile}` : ""}`}
+            aria-label="حالت ویرایش متن"
+          >
+            <AppTooltip title="ویرایش نمایشی" arrow>
               <IconButton
                 size="small"
                 className={styles.modeButton}
-                color={isExpanded ? "primary" : "default"}
-                onClick={() => setIsExpanded((previous) => !previous)}
+                color={mode === "visual" ? "primary" : "default"}
+                onClick={() => setMode("visual")}
               >
-                {isExpanded ? (
-                  <CloseFullscreenRoundedIcon fontSize="small" />
-                ) : (
-                  <OpenInFullRoundedIcon fontSize="small" />
-                )}
+                <VisibilityRoundedIcon fontSize="small" />
               </IconButton>
-            </Tooltip>
-          ) : null}
+            </AppTooltip>
+            <AppTooltip title="ویرایش HTML" arrow>
+              <IconButton
+                size="small"
+                className={styles.modeButton}
+                color={mode === "markup" ? "primary" : "default"}
+                onClick={() => setMode("markup")}
+              >
+                <CodeRoundedIcon fontSize="small" />
+              </IconButton>
+            </AppTooltip>
+            {variant === "inline" ? (
+              <AppTooltip title="بزرگ‌نمایی" arrow>
+                <IconButton
+                  size="small"
+                  className={styles.modeButton}
+                  aria-label="بزرگ‌نمایی"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={handleOpenMaximize}
+                >
+                  <OpenInFullRoundedIcon fontSize="small" />
+                </IconButton>
+              </AppTooltip>
+            ) : null}
+          </div>
+          {mode === "visual" ? (
+            <div
+              ref={setEditableRef}
+              className={editorClassName}
+              contentEditable
+              role="textbox"
+              aria-multiline
+              suppressContentEditableWarning
+              data-placeholder={isFocused ? placeholder ?? "" : ""}
+              style={{ minHeight: editorMinHeight }}
+              onFocus={() => setIsFocused(true)}
+              onInput={handleInput}
+              onBlur={handleBlur}
+              onKeyDown={handleKeyDown}
+            />
+          ) : (
+            <textarea
+              className={markupClassName}
+              value={value}
+              placeholder={isFocused ? "HTML را وارد کنید" : ""}
+              style={{ minHeight: editorMinHeight }}
+              dir="ltr"
+              spellCheck={false}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              onChange={(event) => onChange(event.target.value)}
+            />
+          )}
         </div>
-        {mode === "visual" ? (
-          <div
-            ref={editableRef}
-            className={styles.editor}
-            contentEditable
-            role="textbox"
-            aria-multiline
-            suppressContentEditableWarning
-            data-placeholder={isFocused ? placeholder ?? "" : ""}
-            style={{ minHeight }}
-            onFocus={() => setIsFocused(true)}
-            onInput={handleInput}
-            onBlur={handleBlur}
-            onKeyDown={handleKeyDown}
-          />
+      </>
+    );
+  };
+
+  return (
+    <>
+      <Box ref={rootRef} className={rootClassName}>
+        {maxRoutePreview.isOpen ? (
+          <div className={styles.inlineEditorPlaceholder} style={{ minHeight }} aria-hidden />
         ) : (
-          <textarea
-            className={styles.markupEditor}
-            value={value}
-            placeholder={isFocused ? "HTML را وارد کنید" : ""}
-            style={{ minHeight }}
-            dir="ltr"
-            spellCheck={false}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            onChange={(event) => onChange(event.target.value)}
-          />
+          renderEditorSurface("inline")
         )}
-      </div>
-    </Box>
+      </Box>
+
+      <EntityModalShell
+        open={maxRoutePreview.isOpen}
+        onClose={handleCloseMaximize}
+        title={label}
+        maxWidth="lg"
+        disableAutoFocus
+        disableRestoreFocus
+        showVisibleScrollbar
+        footer={
+          <ModalFooterActions
+            actions={[
+              {
+                key: "close",
+                isCloseButton: true,
+                onClick: handleCloseMaximize,
+              },
+            ]}
+          />
+        }
+      >
+        <Box className={styles.modalEditorRoot}>{renderEditorSurface("modal")}</Box>
+      </EntityModalShell>
+    </>
   );
 };
 

@@ -361,6 +361,36 @@
   flex: 0 0 auto;
 }
 
+.chapterListSingle {
+  .chapterCard,
+  .chapterCardSingle {
+    margin-inline-start: 0;
+    transform-origin: center top;
+  }
+
+  .chapterCard::before,
+  .chapterPathButton,
+  .chapterStep {
+    display: none;
+  }
+}
+
+.chapterCardSingle {
+  gap: 0.65rem;
+}
+
+.chapterHeaderStatic {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  column-gap: 0.75rem;
+  row-gap: 0.35rem;
+}
+
+.chapterCardSingle .chapterPanel {
+  padding-block-start: 0;
+}
+
 .chapterHeader {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -600,17 +630,10 @@
   color: var(--text-secondary);
 }
 
-.articlePreview,
 .emptyItems {
   margin: 0;
   color: var(--text-secondary);
   line-height: 1.8;
-}
-
-.articlePreview {
-  padding: 0.75rem;
-  border-radius: 0.75rem;
-  background: color-mix(in srgb, #ffffff 72%, var(--app-surface-bg));
 }
 
 .itemImage,
@@ -709,10 +732,6 @@
   box-shadow: 0 1.2rem 3rem rgba(0, 0, 0, 0.32);
 }
 
-.mobileBackButton {
-  justify-self: end;
-}
-
 @keyframes chapter-card-rise {
   from {
     opacity: 0;
@@ -796,8 +815,7 @@ body[data-theme="dark"] {
     color: #bbf7d0;
   }
 
-  .itemCard,
-  .articlePreview {
+  .itemCard {
     background: color-mix(in srgb, #0f172a 72%, var(--app-surface-bg));
   }
 

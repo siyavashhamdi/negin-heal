@@ -74,7 +74,7 @@ const NotificationActionFields = ({
       <Stack direction={{ xs: "column", sm: "row" }} spacing={1.2} alignItems={{ sm: "center" }}>
         <Box sx={{ flex: 1 }}>
           <Typography variant="subtitle2" fontWeight={800}>
-            دکمه اقدام (اختیاری)
+            دکمه اقدام
           </Typography>
           <Typography variant="body2" color="text.secondary">
             اگر پر شود، دکمه‌ای در پاپ‌آپ اعلان نمایش داده می‌شود.

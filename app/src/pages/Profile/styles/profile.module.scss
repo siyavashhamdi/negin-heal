@@ -35,19 +35,13 @@
   display: none;
 }
 
-.avatarEditTooltipAnchor {
+.avatarActionTooltipAnchor {
   position: absolute;
   right: -0.2rem;
   bottom: -0.2rem;
 }
 
-.avatarDeleteTooltipAnchor {
-  position: absolute;
-  left: -0.2rem;
-  bottom: -0.2rem;
-}
-
-.avatarEditButton {
+.avatarAddNewButton {
   inline-size: 1.35rem !important;
   block-size: 1.35rem !important;
   padding: 0 !important;
@@ -57,7 +51,7 @@
   box-shadow: 0 0.3rem 0.65rem color-mix(in srgb, #0f172a 18%, transparent) !important;
 }
 
-.avatarEditButton:disabled {
+.avatarAddNewButton:disabled {
   background: color-mix(in srgb, variables.$color-primary-main 72%, #ffffff) !important;
   color: #ffffff !important;
 }
@@ -77,12 +71,12 @@
   color: #ffffff !important;
 }
 
-.avatarEditButton :global(.MuiCircularProgress-root),
+.avatarAddNewButton :global(.MuiCircularProgress-root),
 .avatarDeleteButton :global(.MuiCircularProgress-root) {
   color: currentColor;
 }
 
-.avatarEditButton :global(.MuiSvgIcon-root),
+.avatarAddNewButton :global(.MuiSvgIcon-root),
 .avatarDeleteButton :global(.MuiSvgIcon-root) {
   font-size: 0.8rem;
 }

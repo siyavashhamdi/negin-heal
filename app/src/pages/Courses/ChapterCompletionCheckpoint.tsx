@@ -17,6 +17,7 @@ type ChapterCompletionCheckpointProps = {
   readonly canComplete: boolean;
   readonly isSubmitting: boolean;
   readonly hasNextChapter: boolean;
+  readonly isSingleChapter?: boolean;
   readonly onConfirm: () => void;
   readonly onGoToNextChapter?: () => void;
 };
@@ -27,10 +28,12 @@ export function ChapterCompletionCheckpoint({
   canComplete,
   isSubmitting,
   hasNextChapter,
+  isSingleChapter = false,
   onConfirm,
   onGoToNextChapter,
 }: ChapterCompletionCheckpointProps): ReactElement | null {
   const [hasAcknowledged, setHasAcknowledged] = useState(false);
+  const completionScopeLabel = isSingleChapter ? "دوره" : `فصل ${chapterTitle}`;
 
   if (!canComplete && !isCompleted) {
     return null;
@@ -40,7 +43,7 @@ export function ChapterCompletionCheckpoint({
     return (
       <section
         className={styles.checkpoint}
-        aria-label={`وضعیت تکمیل فصل ${chapterTitle}`}
+        aria-label={`وضعیت تکمیل ${completionScopeLabel}`}
       >
         <div className={styles.completedCard}>
           <span className={styles.completedMessage}>
@@ -67,7 +70,7 @@ export function ChapterCompletionCheckpoint({
   return (
     <section
       className={styles.checkpoint}
-      aria-label={`تأیید تکمیل فصل ${chapterTitle}`}
+      aria-label={`تأیید تکمیل ${completionScopeLabel}`}
     >
       <div className={styles.pendingCard}>
         <div className={styles.pendingMain}>
@@ -82,7 +85,11 @@ export function ChapterCompletionCheckpoint({
                 size="small"
               />
             }
-            label="این فصل را کامل مرور کردم."
+            label={
+              isSingleChapter
+                ? "محتوای دوره را کامل مرور کردم."
+                : "این فصل را کامل مرور کردم."
+            }
           />
           <Button
             variant="contained"
@@ -114,14 +121,16 @@ type CourseProgressSummaryProps = {
   readonly completedChapterCount: number;
   readonly accessibleChapterCount: number;
   readonly visible: boolean;
+  readonly isSingleChapter?: boolean;
 };
 
 export function CourseProgressSummary({
   completedChapterCount,
   accessibleChapterCount,
   visible,
+  isSingleChapter = false,
 }: CourseProgressSummaryProps): ReactElement | null {
-  if (!visible || accessibleChapterCount <= 0) {
+  if (!visible || accessibleChapterCount <= 0 || isSingleChapter) {
     return null;
   }
 

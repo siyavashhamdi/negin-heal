@@ -8,13 +8,14 @@ import MenuOpenRoundedIcon from "@mui/icons-material/MenuOpenRounded";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import NotificationsRoundedIcon from "@mui/icons-material/NotificationsRounded";
 import PostAddRoundedIcon from "@mui/icons-material/PostAddRounded";
-import { IconButton, Tooltip } from "@mui/material";
+import { IconButton } from "@mui/material";
 import { NavLink } from "react-router-dom";
 import type { ComponentType, ReactElement } from "react";
 import { OverflowTooltip } from "../shared/OverflowTooltip";
 import { useAuth } from "../contexts/AuthContext";
 import { APP_SHELL_ROUTES } from "../routing/app-shell-routes";
 import "./styles/SideMenuNav.scss";
+import AppTooltip from "../shared/AppTooltip";
 
 export type SideMenuIcon = ComponentType<{ className?: string }>;
 
@@ -77,7 +78,7 @@ export function SideMenuNav({
         </div>
         <div className="side-menu-nav__header-actions">
           {showCollapseToggle && onToggleCollapsed ? (
-            <Tooltip title={collapsed ? "باز کردن منو" : "جمع کردن منو"}>
+            <AppTooltip title={collapsed ? "باز کردن منو" : "جمع کردن منو"}>
               <IconButton
                 className="side-menu-nav__toggle"
                 aria-label={collapsed ? "باز کردن منو" : "جمع کردن منو"}
@@ -86,7 +87,7 @@ export function SideMenuNav({
               >
                 {collapsed ? <MenuRoundedIcon /> : <MenuOpenRoundedIcon />}
               </IconButton>
-            </Tooltip>
+            </AppTooltip>
           ) : null}
         </div>
       </div>

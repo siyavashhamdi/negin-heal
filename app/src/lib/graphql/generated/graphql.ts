@@ -443,8 +443,6 @@ export type CouponValidateGqlResponse = {
 export type CourseChapterGqlInput = {
   /** Chapter description */
   description?: InputMaybe<Scalars["String"]["input"]>;
-  /** Stored file ID used as the chapter icon */
-  iconFileId?: InputMaybe<Scalars["ID"]["input"]>;
   /** Whether the chapter is free to access */
   isFree: Scalars["Boolean"]["input"];
   /** Chapter items */
@@ -537,8 +535,6 @@ export type CourseListChapterGqlResponse = {
   __typename?: "CourseListChapterGqlResponse";
   /** Chapter description */
   description?: Maybe<Scalars["String"]["output"]>;
-  /** Signed access descriptor for the chapter icon */
-  iconAccessUrl?: Maybe<FileAccessUrlGqlResponse>;
   /** Whether the chapter is free to access */
   isFree: Scalars["Boolean"]["output"];
   /** Chapter items */

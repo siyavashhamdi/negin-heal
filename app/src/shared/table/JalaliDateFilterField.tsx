@@ -6,7 +6,7 @@ import DateObject from "react-date-object";
 import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
 import type { Value } from "react-multi-date-picker";
-import { Box, IconButton, InputAdornment, TextField, Tooltip } from "@mui/material";
+import { Box, IconButton, InputAdornment, TextField } from "@mui/material";
 import { Clear as ClearIcon } from "@mui/icons-material";
 import { useThemeMode } from "../../contexts/ThemeContext";
 import { useTranslation } from "../../hooks/useTranslation";
@@ -16,6 +16,7 @@ import {
 } from "../../utilities/jalali-date-param.util";
 
 import styles from "./JalaliDateFilterField.module.scss";
+import AppTooltip from "../AppTooltip";
 
 export interface JalaliDateFilterFieldProps {
   /** Used for accessibility (and floating label text when `label` is set). */
@@ -115,7 +116,7 @@ const JalaliDateFilterField = ({
             InputProps={{
               endAdornment: hasValue ? (
                 <InputAdornment position="end">
-                  <Tooltip title={t("table.dataGrid.filter.clearField")} arrow>
+                  <AppTooltip title={t("table.dataGrid.filter.clearField")} arrow>
                     <span>
                       <IconButton
                         size="small"
@@ -127,7 +128,7 @@ const JalaliDateFilterField = ({
                         <ClearIcon fontSize="small" />
                       </IconButton>
                     </span>
-                  </Tooltip>
+                  </AppTooltip>
                 </InputAdornment>
               ) : undefined,
             }}

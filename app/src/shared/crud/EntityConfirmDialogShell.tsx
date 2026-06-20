@@ -1,4 +1,5 @@
-import { type ReactElement, type ReactNode } from "react";
+import { type ReactElement, type ReactNode, useRef } from "react";
+import { useScrollContainerToTopOnOpen } from "../../hooks/useScrollContainerToTopOnOpen";
 import {
   Box,
   Dialog,
@@ -23,6 +24,8 @@ export interface EntityConfirmDialogShellProps {
   children: ReactNode;
   footer: ReactNode;
   maxWidth?: Breakpoint;
+  /** Re-run scroll reset when dialog content identity changes. */
+  resetKey?: unknown;
 }
 
 const EntityConfirmDialogShell = ({
@@ -34,9 +37,12 @@ const EntityConfirmDialogShell = ({
   children,
   footer,
   maxWidth = "xs",
+  resetKey,
 }: EntityConfirmDialogShellProps): ReactElement => {
   const theme = useTheme();
+  const contentRef = useRef<HTMLDivElement>(null);
   const { isCompact, dialogProps, getPaperProps, getContentProps } = useMobileDialogProps();
+  const { onEntered } = useScrollContainerToTopOnOpen(open, contentRef, resetKey);
 
   return (
     <Dialog
@@ -44,6 +50,7 @@ const EntityConfirmDialogShell = ({
       onClose={onClose}
       maxWidth={maxWidth}
       {...dialogProps}
+      TransitionProps={{ onEntered }}
       PaperProps={getPaperProps({
         className: isCompact ? styles.modalPaperMobileFlex : undefined,
       })}
@@ -55,6 +62,7 @@ const EntityConfirmDialogShell = ({
       </DialogTitle>
 
       <DialogContent
+        ref={contentRef}
         {...getContentProps({
           className: isCompact
             ? styles.confirmDialogContentMobile

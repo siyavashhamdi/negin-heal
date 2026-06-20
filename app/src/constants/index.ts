@@ -14,3 +14,4 @@ export {
   LOGIN_CAPTCHA_FAILED_ATTEMPTS_THRESHOLD,
   LOGIN_CAPTCHA_MAX_AUTO_REFRESHES,
 } from "./captcha.constants";
+export { SNACKBAR_AUTO_HIDE_DURATION_MS } from "./snackbar.constants";

@@ -1,22 +1,10 @@
 import { type ReactElement } from "react";
-import {
-  Box,
-  ButtonBase,
-  Typography,
-  Pagination,
-  PaginationItem,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Tooltip,
-  useTheme,
-  useMediaQuery,
-} from "@mui/material";
+import { Box, ButtonBase, Typography, Pagination, PaginationItem, Select, MenuItem, FormControl, InputLabel, useTheme, useMediaQuery } from "@mui/material";
 import type { PaginationRenderItemParams } from "@mui/material/Pagination";
 import { useTranslation } from "../../hooks/useTranslation";
 import { usePaginationGoToPagePopover } from "./PaginationGoToPagePopover";
 import styles from "./styles/PaginationControls.module.scss";
+import AppTooltip from "../AppTooltip";
 
 function paginationItemTooltipKey(type: PaginationRenderItemParams["type"]): string | null {
   switch (type) {
@@ -78,7 +66,7 @@ const PaginationControls = ({
     const goToPageLabel = t("table.pagination.goToPage");
 
     return (
-      <Tooltip title={goToPageLabel} arrow>
+      <AppTooltip title={goToPageLabel} arrow>
         <ButtonBase
           className={[
             styles.ellipsisButton,
@@ -101,7 +89,7 @@ const PaginationControls = ({
         >
           …
         </ButtonBase>
-      </Tooltip>
+      </AppTooltip>
     );
   };
 
@@ -118,9 +106,9 @@ const PaginationControls = ({
     }
 
     return (
-      <Tooltip title={t(tooltipKey)} arrow>
+      <AppTooltip title={t(tooltipKey)} arrow>
         <span>{paginationItem}</span>
-      </Tooltip>
+      </AppTooltip>
     );
   };
 

@@ -47,12 +47,6 @@ export class CourseListChapterGqlResponse {
   @Field({ nullable: true, description: "Chapter description" })
   description?: string;
 
-  @Field(() => FileAccessUrlGqlResponse, {
-    nullable: true,
-    description: "Signed access descriptor for the chapter icon",
-  })
-  iconAccessUrl?: FileAccessUrlGqlResponse;
-
   @Field(() => Int, {
     nullable: true,
     description: "Number of minutes after purchase/enrollment when visible",

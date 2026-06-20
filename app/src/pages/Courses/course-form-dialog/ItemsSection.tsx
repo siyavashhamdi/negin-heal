@@ -1,10 +1,9 @@
-import { Fragment, type ReactElement } from "react";
+import { type DragEvent, type ReactElement } from "react";
 import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
   Button,
-  Divider,
   FormControl,
   Grid,
   IconButton,
@@ -23,6 +22,7 @@ import FileUploadField from "../../../shared/forms/FileUploadField";
 import { buildExistingFilePreview } from "../../../utils/fileAccessUrl.util";
 import RichTextBox from "../../../shared/forms/RichTextBox";
 import type { DraftChapter, DraftItem, DraftItemContentType } from "./types";
+import { setDragTransferData } from "./reorder-drag.util";
 import styles from "./styles/ItemsSection.module.scss";
 
 type ItemsSectionProps = {
@@ -30,7 +30,11 @@ type ItemsSectionProps = {
   readonly expandedItemId: string | null;
   readonly onExpandedItemChange: (itemId: string | null) => void;
   readonly onSetDraggedItemId: (itemId: string | null) => void;
-  readonly onItemDragOver: (chapterId: string, targetItemId: string) => void;
+  readonly onItemDragOver: (
+    event: DragEvent<HTMLDivElement>,
+    chapterId: string,
+    targetItemId: string,
+  ) => void;
   readonly onUpdateItem: (chapterId: string, itemId: string, patch: Partial<DraftItem>) => void;
   readonly onAddItem: (chapterId: string) => void;
   readonly onRemoveItem: (chapterId: string, itemId: string) => void;
@@ -73,23 +77,24 @@ const ItemsSection = ({
           };
 
           return (
-            <Fragment key={item.id}>
-              {index > 0 ? <Divider className={styles.itemSeparator} /> : null}
-              <Accordion
-                elevation={0}
-                className={styles.itemCard}
-                expanded={isExpanded}
-                onDragOver={(event) => {
-                  event.preventDefault();
-                  onItemDragOver(chapter.id, item.id);
-                }}
-                onDrop={(event) => {
-                  event.preventDefault();
-                  onSetDraggedItemId(null);
-                }}
-                onDragEnd={() => onSetDraggedItemId(null)}
-              >
-                <AccordionSummary className={styles.itemSummary}>
+            <Accordion
+              key={item.id}
+              elevation={0}
+              className={styles.itemCard}
+              expanded={isExpanded}
+              onChange={(_event, nextExpanded) => {
+                onExpandedItemChange(nextExpanded ? item.id : null);
+              }}
+              onDragOver={(event) => {
+                onItemDragOver(event, chapter.id, item.id);
+              }}
+              onDrop={(event) => {
+                event.preventDefault();
+                onSetDraggedItemId(null);
+              }}
+              onDragEnd={() => onSetDraggedItemId(null)}
+            >
+                <AccordionSummary className={styles.itemSummary} expandIcon={null}>
                   <div className={styles.itemHead}>
                     <Typography className={styles.itemTitle}>آیتم {index + 1}</Typography>
                     <OverflowTooltip
@@ -119,9 +124,8 @@ const ItemsSection = ({
                         onClick={(event) => event.stopPropagation()}
                         onDragStart={(event) => {
                           event.stopPropagation();
+                          setDragTransferData(event, item.id);
                           onSetDraggedItemId(item.id);
-                          event.dataTransfer.effectAllowed = "move";
-                          event.dataTransfer.setData("text/plain", item.id);
                         }}
                         onDragEnd={() => onSetDraggedItemId(null)}
                       >
@@ -172,6 +176,7 @@ const ItemsSection = ({
                       <Grid item xs={12}>
                         <div className={styles.uploaderRow}>
                           <FileUploadField
+                            previewId={`course-item-file-${chapter.id}-${index}`}
                             label="فایل آیتم"
                             file={item.file}
                             onChange={(file) => updateCurrentItem({ file })}
@@ -199,6 +204,7 @@ const ItemsSection = ({
                     {item.contentType === "ARTICLE" ? (
                       <Grid item xs={12}>
                         <RichTextBox
+                          previewId={`course-item-article-${chapter.id}-${index}`}
                           label="متن مقاله"
                           value={item.article}
                           onChange={(nextValue) => updateCurrentItem({ article: nextValue })}
@@ -210,8 +216,7 @@ const ItemsSection = ({
                     ) : null}
                   </Grid>
                 </AccordionDetails>
-              </Accordion>
-            </Fragment>
+            </Accordion>
           );
         })}
         <div className={styles.addItemFooter}>

@@ -18,7 +18,6 @@ export type CourseChapter = {
   key: string;
   title: string;
   description?: string;
-  iconFileId?: Types.ObjectId;
   visibleAfterMinutes?: number;
   isFree: boolean;
   sortOrder?: number;
@@ -52,7 +51,6 @@ export const CourseChapterSchema = new MongooseSchema(
     },
     title: { type: String, required: true, trim: true },
     description: { type: String, trim: true },
-    iconFileId: { type: Types.ObjectId, ref: "StoredFile" },
     visibleAfterMinutes: { type: Number, min: 0 },
     isFree: { type: Boolean, required: true, default: false },
     sortOrder: { type: Number },

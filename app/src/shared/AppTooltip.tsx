@@ -1,0 +1,140 @@
+import { Tooltip, type TooltipProps } from "@mui/material";
+import { useForkRef } from "@mui/material/utils";
+import {
+  cloneElement,
+  isValidElement,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent,
+  type ReactElement,
+  type SyntheticEvent,
+} from "react";
+import { useMobileAppLayout } from "../hooks/useMobileAppLayout";
+import {
+  isOutsideTooltipTrigger,
+  MOBILE_TOOLTIP_DISMISS_MS,
+} from "./mobileTooltip.util";
+
+export type AppTooltipProps = TooltipProps;
+
+export default function AppTooltip({
+  children,
+  open: openProp,
+  onClose,
+  onOpen,
+  title,
+  disableHoverListener,
+  disableFocusListener,
+  disableTouchListener,
+  leaveTouchDelay = MOBILE_TOOLTIP_DISMISS_MS,
+  enterTouchDelay = 0,
+  ...rest
+}: AppTooltipProps): ReactElement {
+  const isMobileLayout = useMobileAppLayout();
+  const isControlled = openProp !== undefined;
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const triggerRef = useRef<HTMLElement | null>(null);
+  const childElement = isValidElement(children) ? children : null;
+  const childRef = childElement?.ref as React.Ref<HTMLElement> | undefined;
+  const mergedTriggerRef = useForkRef(triggerRef, childRef);
+
+  const hasTooltipContent = title !== "" && title != null && title !== false;
+  const useMobileBehavior = isMobileLayout && hasTooltipContent;
+  const isTooltipOpen = useMobileBehavior
+    ? isControlled
+      ? Boolean(openProp)
+      : mobileOpen
+    : openProp;
+
+  type ClickableChildProps = {
+    onClick?: (event: MouseEvent<HTMLElement>) => void;
+    ref?: React.Ref<HTMLElement>;
+  };
+
+  const closeMobileTooltip = useCallback((): void => {
+    if (isControlled) {
+      onClose?.({ type: "dismiss" } as SyntheticEvent);
+      return;
+    }
+    setMobileOpen(false);
+  }, [isControlled, onClose]);
+
+  useEffect(() => {
+    if (!useMobileBehavior || !isTooltipOpen) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(closeMobileTooltip, MOBILE_TOOLTIP_DISMISS_MS);
+
+    const handlePointerDown = (event: PointerEvent): void => {
+      if (!isOutsideTooltipTrigger(event.target, triggerRef.current)) {
+        return;
+      }
+      closeMobileTooltip();
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    return () => {
+      window.clearTimeout(timeoutId);
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+    };
+  }, [closeMobileTooltip, isTooltipOpen, useMobileBehavior]);
+
+  const handleTriggerClick = useCallback(
+    (event: MouseEvent<HTMLElement>): void => {
+      if (!useMobileBehavior || isControlled) {
+        return;
+      }
+
+      if (!mobileOpen) {
+        event.preventDefault();
+        event.stopPropagation();
+        setMobileOpen(true);
+        onOpen?.(event);
+        return;
+      }
+
+      setMobileOpen(false);
+    },
+    [isControlled, mobileOpen, onOpen, useMobileBehavior],
+  );
+
+  const resolvedOpen = useMobileBehavior
+    ? isControlled
+      ? openProp
+      : mobileOpen
+    : openProp;
+
+  const enhancedChild = childElement
+    ? cloneElement(childElement as ReactElement<ClickableChildProps>, {
+        ref: mergedTriggerRef,
+        onClick: (event: MouseEvent<HTMLElement>) => {
+          childElement.props.onClick?.(event);
+          handleTriggerClick(event);
+        },
+      })
+    : children;
+
+  return (
+    <Tooltip
+      {...rest}
+      title={title}
+      open={resolvedOpen}
+      onClose={(event) => {
+        if (useMobileBehavior && !isControlled) {
+          setMobileOpen(false);
+        }
+        onClose?.(event);
+      }}
+      disableHoverListener={useMobileBehavior || disableHoverListener}
+      disableFocusListener={useMobileBehavior || disableFocusListener}
+      disableTouchListener={useMobileBehavior || disableTouchListener}
+      leaveTouchDelay={leaveTouchDelay}
+      enterTouchDelay={enterTouchDelay}
+    >
+      {enhancedChild}
+    </Tooltip>
+  );
+}

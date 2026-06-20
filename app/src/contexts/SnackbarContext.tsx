@@ -10,6 +10,7 @@ import {
 } from "react";
 import { Snackbar, Alert, Slide, useMediaQuery, useTheme } from "@mui/material";
 import type { SlideProps } from "@mui/material/Slide";
+import { SNACKBAR_AUTO_HIDE_DURATION_MS } from "../constants/snackbar.constants";
 import {
   SnackbarContext,
   type SnackbarSeverity,
@@ -48,12 +49,13 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
     };
   }, [isMobile]);
   const [open, setOpen] = useState(false);
+  const [snackbarInstance, setSnackbarInstance] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [snackbarData, setSnackbarData] = useState<SnackbarMessage>({
     message: "",
     severity: "info",
-    duration: 6000,
+    duration: SNACKBAR_AUTO_HIDE_DURATION_MS,
   });
   const dragStateRef = useRef({
     pointerId: -1,
@@ -79,8 +81,13 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
    * Show snackbar with custom severity
    */
   const showSnackbar = useCallback(
-    (message: string, severity: SnackbarSeverity = "info", duration: number = 6000) => {
+    (
+      message: string,
+      severity: SnackbarSeverity = "info",
+      duration: number = SNACKBAR_AUTO_HIDE_DURATION_MS,
+    ) => {
       setSnackbarData({ message, severity, duration });
+      setSnackbarInstance((instance) => instance + 1);
       setOpen(true);
     },
     [],
@@ -90,7 +97,7 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
    * Show success snackbar
    */
   const showSuccess = useCallback(
-    (message: string, duration: number = 6000) => {
+    (message: string, duration: number = SNACKBAR_AUTO_HIDE_DURATION_MS) => {
       showSnackbar(message, "success", duration);
     },
     [showSnackbar],
@@ -100,7 +107,7 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
    * Show error snackbar
    */
   const showError = useCallback(
-    (message: string, duration: number = 6000) => {
+    (message: string, duration: number = SNACKBAR_AUTO_HIDE_DURATION_MS) => {
       showSnackbar(message, "error", duration);
     },
     [showSnackbar],
@@ -110,7 +117,7 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
    * Show warning snackbar
    */
   const showWarning = useCallback(
-    (message: string, duration: number = 6000) => {
+    (message: string, duration: number = SNACKBAR_AUTO_HIDE_DURATION_MS) => {
       showSnackbar(message, "warning", duration);
     },
     [showSnackbar],
@@ -120,7 +127,7 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
    * Show info snackbar
    */
   const showInfo = useCallback(
-    (message: string, duration: number = 6000) => {
+    (message: string, duration: number = SNACKBAR_AUTO_HIDE_DURATION_MS) => {
       showSnackbar(message, "info", duration);
     },
     [showSnackbar],
@@ -254,8 +261,9 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
     <SnackbarContext.Provider value={value}>
       {children}
       <Snackbar
+        key={snackbarInstance}
         open={open}
-        autoHideDuration={snackbarData.duration}
+        autoHideDuration={snackbarData.duration ?? SNACKBAR_AUTO_HIDE_DURATION_MS}
         onClose={handleClose}
         anchorOrigin={
           isMobile

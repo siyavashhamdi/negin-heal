@@ -1,5 +1,5 @@
 import { type ReactElement } from "react";
-import { Box, IconButton, Tooltip } from "@mui/material";
+import { Box, IconButton } from "@mui/material";
 import {
   DeleteOutline as DeleteOutlineIcon,
   FileDownloadOutlined as FileDownloadOutlinedIcon,
@@ -15,6 +15,7 @@ import {
 } from "@mui/icons-material";
 import { useTranslation } from "../../hooks/useTranslation";
 import styles from "./styles/EntityTableShell.module.scss";
+import AppTooltip from "../AppTooltip";
 
 interface CrudRowActionsProps {
   /** When omitted, the view action is hidden. */
@@ -86,96 +87,96 @@ const CrudRowActions = ({
   return (
     <Box className={styles.actionsCellFlex}>
       {onView != null ? (
-        <Tooltip title={viewLabel ?? t("table.dataGrid.rowActions.viewDetails")} arrow>
+        <AppTooltip title={viewLabel ?? t("table.dataGrid.rowActions.viewDetails")} arrow>
           <IconButton size="small" onClick={onView}>
             <VisibilityOutlinedIcon fontSize="small" />
           </IconButton>
-        </Tooltip>
+        </AppTooltip>
       ) : null}
       {onMembersList != null ? (
-        <Tooltip title={membersListLabel ?? ""} arrow>
+        <AppTooltip title={membersListLabel ?? ""} arrow>
           <IconButton size="small" onClick={onMembersList}>
             <GroupsOutlinedIcon fontSize="small" />
           </IconButton>
-        </Tooltip>
+        </AppTooltip>
       ) : null}
       {onDownloadActivityLicense != null ? (
-        <Tooltip title={downloadActivityLicenseLabel ?? ""} arrow>
+        <AppTooltip title={downloadActivityLicenseLabel ?? ""} arrow>
           <IconButton size="small" onClick={onDownloadActivityLicense}>
             <FileDownloadOutlinedIcon fontSize="small" />
           </IconButton>
-        </Tooltip>
+        </AppTooltip>
       ) : null}
       {onDownloadCredential != null ? (
-        <Tooltip title={downloadCredentialLabel ?? ""} arrow>
+        <AppTooltip title={downloadCredentialLabel ?? ""} arrow>
           <IconButton size="small" onClick={onDownloadCredential}>
             <FileDownloadOutlinedIcon fontSize="small" />
           </IconButton>
-        </Tooltip>
+        </AppTooltip>
       ) : null}
       {onMenuAccess != null ? (
-        <Tooltip title={menuAccessLabel ?? ""} arrow>
+        <AppTooltip title={menuAccessLabel ?? ""} arrow>
           <IconButton size="small" onClick={onMenuAccess}>
             <MenuOutlinedIcon fontSize="small" />
           </IconButton>
-        </Tooltip>
+        </AppTooltip>
       ) : null}
       {onMenuItemsAccess != null ? (
-        <Tooltip title={menuItemsAccessLabel ?? ""} arrow>
+        <AppTooltip title={menuItemsAccessLabel ?? ""} arrow>
           <IconButton size="small" onClick={onMenuItemsAccess}>
             <ListAltOutlinedIcon fontSize="small" />
           </IconButton>
-        </Tooltip>
+        </AppTooltip>
       ) : null}
       {onUsersList != null ? (
-        <Tooltip title={usersListLabel ?? ""} arrow>
+        <AppTooltip title={usersListLabel ?? ""} arrow>
           <IconButton size="small" onClick={onUsersList}>
             <GroupsOutlinedIcon fontSize="small" />
           </IconButton>
-        </Tooltip>
+        </AppTooltip>
       ) : null}
       {onEdit != null ? (
-        <Tooltip title={t("table.dataGrid.rowActions.edit")} arrow>
+        <AppTooltip title={t("table.dataGrid.rowActions.edit")} arrow>
           <IconButton size="small" onClick={onEdit}>
             <EditOutlinedIcon fontSize="small" />
           </IconButton>
-        </Tooltip>
+        </AppTooltip>
       ) : null}
       {onDisconnectOrganization != null ? (
-        <Tooltip title={disconnectOrganizationLabel ?? ""} arrow>
+        <AppTooltip title={disconnectOrganizationLabel ?? ""} arrow>
           <IconButton size="small" color="error" onClick={onDisconnectOrganization}>
             <LinkOffOutlinedIcon fontSize="small" />
           </IconButton>
-        </Tooltip>
+        </AppTooltip>
       ) : null}
       {onOperationHistory != null ? (
-        <Tooltip title={operationHistoryLabel ?? ""} arrow>
+        <AppTooltip title={operationHistoryLabel ?? ""} arrow>
           <IconButton size="small" onClick={onOperationHistory}>
             <HistoryOutlinedIcon fontSize="small" />
           </IconButton>
-        </Tooltip>
+        </AppTooltip>
       ) : null}
       {onToggleActive != null ? (
         isActive ? (
-          <Tooltip title={deactivateLabel ?? ""} arrow>
+          <AppTooltip title={deactivateLabel ?? ""} arrow>
             <IconButton size="small" color="error" onClick={onToggleActive}>
               <PersonOffOutlinedIcon fontSize="small" />
             </IconButton>
-          </Tooltip>
+          </AppTooltip>
         ) : (
-          <Tooltip title={activateLabel ?? ""} arrow>
+          <AppTooltip title={activateLabel ?? ""} arrow>
             <IconButton size="small" color="success" onClick={onToggleActive}>
               <HowToRegOutlinedIcon fontSize="small" />
             </IconButton>
-          </Tooltip>
+          </AppTooltip>
         )
       ) : null}
       {onDelete != null && onToggleActive == null ? (
-        <Tooltip title={t("table.dataGrid.rowActions.delete")} arrow>
+        <AppTooltip title={t("table.dataGrid.rowActions.delete")} arrow>
           <IconButton size="small" color="error" onClick={onDelete}>
             <DeleteOutlineIcon fontSize="small" />
           </IconButton>
-        </Tooltip>
+        </AppTooltip>
       ) : null}
     </Box>
   );

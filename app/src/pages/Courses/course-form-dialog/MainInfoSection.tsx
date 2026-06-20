@@ -110,6 +110,7 @@ const MainInfoSection = ({
       <Grid item xs={12}>
         <div className={styles.uploaderRow}>
           <FileUploadField
+            previewId="course-cover-image"
             label="فایل کاور دوره"
             file={coverImageFile}
             onChange={onCoverImageFileChange}

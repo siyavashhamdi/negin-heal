@@ -1,16 +1,9 @@
 import { type ReactElement, type SyntheticEvent } from "react";
-import {
-  Autocomplete,
-  Box,
-  Checkbox,
-  IconButton,
-  TextField,
-  Tooltip,
-  Typography,
-} from "@mui/material";
+import { Autocomplete, Box, Checkbox, IconButton, TextField, Typography } from "@mui/material";
 import { Clear as ClearIcon } from "@mui/icons-material";
 import { useTranslation } from "../../hooks/useTranslation";
 import styles from "./HoverClearMultiSelectField.module.scss";
+import AppTooltip from "../AppTooltip";
 
 export interface HoverClearMultiSelectOption {
   readonly value: string;
@@ -96,7 +89,7 @@ const HoverClearMultiSelectField = ({
           if (selectedOpts.length > 1) {
             const countLabel = PERSIAN_NUMBER_FORMATTER.format(selectedOpts.length);
             return (
-              <Tooltip title={selectedTooltipTitle} arrow>
+              <AppTooltip title={selectedTooltipTitle} arrow>
                 <Typography
                   component="span"
                   variant="body2"
@@ -105,15 +98,15 @@ const HoverClearMultiSelectField = ({
                 >
                   {`${t("table.filters.multipleSelected")} (${countLabel})`}
                 </Typography>
-              </Tooltip>
+              </AppTooltip>
             );
           }
           return (
-            <Tooltip title={selectedTooltipTitle} arrow>
+            <AppTooltip title={selectedTooltipTitle} arrow>
               <Typography component="span" variant="body2" className={styles.selectedValue} noWrap>
                 {selectedOpts[0]?.label ?? ""}
               </Typography>
-            </Tooltip>
+            </AppTooltip>
           );
         }}
         renderInput={(params) => (
@@ -134,7 +127,7 @@ const HoverClearMultiSelectField = ({
                 <>
                   {params.InputProps.endAdornment}
                   {showClearButton ? (
-                    <Tooltip title={t("table.dataGrid.filter.clearField")} arrow>
+                    <AppTooltip title={t("table.dataGrid.filter.clearField")} arrow>
                       <IconButton
                         size="small"
                         className={styles.clearButton}
@@ -144,7 +137,7 @@ const HoverClearMultiSelectField = ({
                       >
                         <ClearIcon fontSize="small" />
                       </IconButton>
-                    </Tooltip>
+                    </AppTooltip>
                   ) : null}
                 </>
               ),
@@ -160,9 +153,9 @@ const HoverClearMultiSelectField = ({
   }
 
   return (
-    <Tooltip title={tooltipTitle} arrow>
+    <AppTooltip title={tooltipTitle} arrow>
       <span>{field}</span>
-    </Tooltip>
+    </AppTooltip>
   );
 };
 

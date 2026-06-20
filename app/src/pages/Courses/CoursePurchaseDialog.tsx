@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactElement } from "react";
 import {
   Button,
+  IconButton,
   InputAdornment,
   TextField,
   Typography,
@@ -527,6 +528,8 @@ export function CoursePurchaseDialog({
       title="تکمیل خرید دوره"
       subtitle={course.title}
       maxWidth="md"
+      disableAutoFocus
+      disableRestoreFocus
       closeOnSave
       footer={
         <ModalFooterActions

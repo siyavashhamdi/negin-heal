@@ -6,24 +6,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
-import {
-  Badge,
-  Box,
-  Toolbar,
-  TextField,
-  InputAdornment,
-  IconButton,
-  Tooltip,
-  Menu,
-  MenuItem,
-  Checkbox,
-  ListItemText,
-  Divider,
-  Typography,
-  Button,
-  Fab,
-  useMediaQuery,
-} from "@mui/material";
+import { Badge, Box, Toolbar, TextField, InputAdornment, IconButton, Menu, MenuItem, Checkbox, ListItemText, Divider, Typography, Button, Fab, useMediaQuery } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
 import {
   Search as SearchIcon,
@@ -37,6 +20,7 @@ import type { VisibilityState, Table } from "@tanstack/react-table";
 import { useTranslation } from "../../hooks/useTranslation";
 import styles from "./styles/TableToolbar.module.scss";
 import attentionBadgeStyles from "./styles/AttentionBadge.module.scss";
+import AppTooltip from "../AppTooltip";
 
 export interface TableToolbarProps<T = unknown> {
   /** Search input value */
@@ -170,13 +154,13 @@ function TableToolbar<T = unknown>({
   const newRowControl =
     canRenderNewButton && onNewClick ? (
       isMobileToolbar ? (
-        <Tooltip title={newButtonLabel} arrow>
+        <AppTooltip title={newButtonLabel} arrow>
           <Fab color="primary" size="small" aria-label={newButtonLabel} onClick={onNewClick}>
             <AddIcon />
           </Fab>
-        </Tooltip>
+        </AppTooltip>
       ) : (
-        <Tooltip title={newButtonLabel} arrow>
+        <AppTooltip title={newButtonLabel} arrow>
           <Button
             variant="contained"
             size="small"
@@ -186,7 +170,7 @@ function TableToolbar<T = unknown>({
           >
             {newButtonLabel}
           </Button>
-        </Tooltip>
+        </AppTooltip>
       )
     ) : null;
 
@@ -227,7 +211,7 @@ function TableToolbar<T = unknown>({
           ) : null}
           <Box className={styles.iconActions}>
             {showRefresh && onRefresh && !isMobileToolbar && (
-              <Tooltip title={refreshLabel} arrow>
+              <AppTooltip title={refreshLabel} arrow>
                 <span>
                   <IconButton
                     color="default"
@@ -239,11 +223,11 @@ function TableToolbar<T = unknown>({
                     <RefreshIcon fontSize="small" />
                   </IconButton>
                 </span>
-              </Tooltip>
+              </AppTooltip>
             )}
             {showColumnVisibility && table && visibleColumns.length > 0 && (
               <>
-                <Tooltip title={columnVisibilityLabelText} arrow>
+                <AppTooltip title={columnVisibilityLabelText} arrow>
                   <IconButton
                     color={hasColumnVisibilityChanges ? "primary" : "default"}
                     onClick={handleColumnMenuOpen}
@@ -259,7 +243,7 @@ function TableToolbar<T = unknown>({
                       <ViewColumnIcon fontSize="small" />
                     </Badge>
                   </IconButton>
-                </Tooltip>
+                </AppTooltip>
                 <Menu
                   anchorEl={columnMenuAnchor}
                   open={Boolean(columnMenuAnchor)}
@@ -274,7 +258,7 @@ function TableToolbar<T = unknown>({
                         <Typography variant="subtitle2" fontWeight={600}>
                           {columnVisibilityLabel}
                         </Typography>
-                        <Tooltip title={t("table.toolbar.columnVisibilityResetDefault")} arrow>
+                        <AppTooltip title={t("table.toolbar.columnVisibilityResetDefault")} arrow>
                           <span>
                             <IconButton
                               size="small"
@@ -285,7 +269,7 @@ function TableToolbar<T = unknown>({
                               <RestartAltIcon fontSize="small" />
                             </IconButton>
                           </span>
-                        </Tooltip>
+                        </AppTooltip>
                       </Box>
                       <Divider />
                     </>

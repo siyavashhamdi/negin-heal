@@ -109,7 +109,6 @@ type CourseListSortField = Extract<keyof CourseListSortOptionInput, string>;
 type CourseFileReferenceSource = {
   coverImageFileId?: Types.ObjectId;
   chapters: Array<{
-    iconFileId?: Types.ObjectId;
     items: Array<{
       fileId?: Types.ObjectId;
     }>;
@@ -1328,7 +1327,6 @@ export class CourseService {
     return {
       title: chapter.title.trim(),
       description: this.normalizeOptionalText(chapter.description),
-      iconFileId: chapter.iconFileId,
       visibleAfterMinutes: chapter.visibleAfterMinutes,
       isFree: chapter.isFree,
       sortOrder: chapter.sortOrder,
@@ -1382,10 +1380,9 @@ export class CourseService {
   ): Types.ObjectId[] {
     const fileIds = [
       input.coverImageFileId,
-      ...input.chapters.flatMap((chapter) => [
-        chapter.iconFileId,
-        ...chapter.items.map((item) => item.fileId),
-      ]),
+      ...input.chapters.flatMap((chapter) =>
+        chapter.items.map((item) => item.fileId),
+      ),
     ].filter((fileId): fileId is Types.ObjectId => Boolean(fileId));
 
     return this.collectUniqueFileIds(fileIds);
@@ -1429,13 +1426,11 @@ export class CourseService {
         _id: { $ne: courseId },
         $or: [
           { coverImageFileId: { $in: fileIds } },
-          { "chapters.iconFileId": { $in: fileIds } },
           { "chapters.items.fileId": { $in: fileIds } },
         ],
       })
       .select({
         coverImageFileId: 1,
-        "chapters.iconFileId": 1,
         "chapters.items.fileId": 1,
       })
       .exec();
@@ -1656,7 +1651,6 @@ export class CourseService {
       ];
 
       for (const chapter of courseObj.chapters || []) {
-        ids.push(chapter.iconFileId);
         for (const item of chapter.items || []) {
           ids.push(item.fileId);
         }
@@ -1742,14 +1736,9 @@ export class CourseService {
     fileTypeLookup: FileTypeLookup,
     fileAccessUrlMap?: Map<string, FileAccessUrlDescriptor>,
   ): CourseListChapterGqlResponse {
-    const iconFileId = chapter.iconFileId;
-
     return {
       title: chapter.title,
       description: chapter.description,
-      iconAccessUrl: iconFileId
-        ? fileAccessUrlMap?.get(iconFileId.toString())
-        : undefined,
       visibleAfterMinutes: chapter.visibleAfterMinutes,
       isFree: chapter.isFree,
       sortOrder: chapter.sortOrder,

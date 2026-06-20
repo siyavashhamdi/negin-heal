@@ -34,8 +34,15 @@ import { CHAPTER_UNLOCK_COUNTDOWN_THRESHOLD_MS } from "../../constants/course.co
 import { useAuth } from "../../contexts/AuthContext";
 import { isMobileAppLayoutViewport } from "../../hooks/useMobileAppLayout";
 import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
+import {
+  buildCloseMaxRouteLocation,
+  buildMaxRouteLocation,
+  isMaxRoutePathname,
+} from "../../routing/max-route.util";
+import { setMaxRouteOwner, clearMaxRouteOwner } from "../../routing/max-route-owner.store";
 import { setPostLoginRedirect } from "../../routing/post-login-redirect";
-import { resolveFileAccessUrl } from "../../utils/fileAccessUrl.util";
+import { resolveFileAccessUrl, buildExistingFilePreview } from "../../utils/fileAccessUrl.util";
+import { applyBlankTargetToRichTextLinks } from "../../utils/richTextHtml.util";
 import { USER_COURSE_DETAIL_QUERY } from "../../graphql/queries/userCourseDetail.query";
 import { COURSE_CHAPTER_COMPLETE_MUTATION } from "../../graphql/mutations/courseChapterComplete.mutation";
 import { useSnackbar } from "../../hooks/useSnackbar";
@@ -51,7 +58,10 @@ import {
   formatChapterUnlockRelativeMessage,
   formatCoursePrice,
   getChapterUnlockRemainingMs,
+  getCourseContentAccessNoteText,
+  getCourseContentIntroText,
   getDiscountedPrice,
+  getPurchaseCardAccessCaption,
   isGradualChapterLock,
   shouldShowChapterUnlockCountdown,
   type CourseDetailItem,
@@ -60,7 +70,13 @@ import {
   type UserCourseDetailQuery,
   type UserCourseDetailQueryVariables,
 } from "./course-detail.api";
+import RichTextBox from "../../shared/forms/RichTextBox";
+import FileUploadField from "../../shared/forms/FileUploadField";
+import richTextStyles from "../../shared/forms/RichTextBox.module.scss";
 import type { CourseItemType } from "./courses-list.api";
+import {
+  buildCourseItemPreviewId,
+} from "./course-item-preview.util";
 import styles from "./styles/CourseDetail.module.scss";
 
 const ITEM_TYPE_ICON: Record<CourseItemType, ReactElement> = {
@@ -70,105 +86,100 @@ const ITEM_TYPE_ICON: Record<CourseItemType, ReactElement> = {
   IMAGE: <PhotoRoundedIcon fontSize="small" />,
 };
 
-type CourseMediaViewer = {
-  readonly slug: string;
+type CourseItemViewer = {
+  readonly previewId: string;
   readonly title: string;
-  readonly type: Exclude<CourseItemType, "ARTICLE">;
-  readonly url: string;
+  readonly article: string;
 };
 
-function buildMediaSlug(title: string): string {
-  return encodeURIComponent(title.trim());
+function buildArticleViewer(
+  item: CourseDetailItem,
+  previewId: string,
+): CourseItemViewer | null {
+  const article = item.article?.trim();
+  if (!article) {
+    return null;
+  }
+
+  return {
+    previewId,
+    title: item.title,
+    article,
+  };
 }
 
 function CourseItemContent({
   item,
-  onOpenMedia,
+  chapterKey,
+  itemIndex,
+  onOpenArticle,
 }: {
   readonly item: CourseDetailItem;
-  readonly onOpenMedia: (media: CourseMediaViewer) => void;
+  readonly chapterKey: string;
+  readonly itemIndex: number;
+  readonly onOpenArticle: (viewer: CourseItemViewer) => void;
 }): ReactElement | null {
+  const previewId = buildCourseItemPreviewId(chapterKey, itemIndex);
+
   if (item.type === "ARTICLE" && item.article?.trim()) {
-    return <p className={styles.articlePreview}>{item.article.trim()}</p>;
-  }
+    const openArticleViewer = (): void => {
+      const viewer = buildArticleViewer(item, previewId);
+      if (viewer) {
+        onOpenArticle(viewer);
+      }
+    };
 
-  const fileUrl = resolveFileAccessUrl(item.fileAccessUrl);
-  if (!fileUrl) {
-    return null;
-  }
-
-  if (item.type === "IMAGE") {
     return (
-      <img
-        src={fileUrl}
-        alt={item.title}
-        className={styles.itemImage}
-        loading="lazy"
-        onClick={() =>
-          onOpenMedia({
-            slug: buildMediaSlug(item.title),
-            title: item.title,
-            type: "IMAGE",
-            url: fileUrl,
-          })
-        }
+      <RichTextBox
+        mode="render"
+        label=""
+        renderTitle={item.title.trim() || undefined}
+        value={item.article.trim()}
+        hideLabel
+        onPreviewMaximize={openArticleViewer}
       />
     );
   }
 
-  if (item.type === "VIDEO") {
-    return (
-      <video
-        className={styles.itemVideo}
-        src={fileUrl}
-        controls
-        preload="metadata"
-        onClick={() =>
-          onOpenMedia({
-            slug: buildMediaSlug(item.title),
-            title: item.title,
-            type: "VIDEO",
-            url: fileUrl,
-          })
-        }
-      >
-        مرورگر شما از پخش ویدیو پشتیبانی نمی‌کند.
-      </video>
-    );
+  const existingFile = buildExistingFilePreview(
+    item.fileAccessUrl,
+    item.title.trim() || "فایل",
+  );
+  if (!existingFile) {
+    return null;
   }
 
-  if (item.type === "VOICE") {
-    return (
-      <audio
-        className={styles.itemAudio}
-        src={fileUrl}
-        controls
-        preload="metadata"
-        onClick={() =>
-          onOpenMedia({
-            slug: buildMediaSlug(item.title),
-            title: item.title,
-            type: "VOICE",
-            url: fileUrl,
-          })
-        }
-      >
-        مرورگر شما از پخش صوت پشتیبانی نمی‌کند.
-      </audio>
-    );
-  }
-
-  return null;
+  return (
+    <FileUploadField
+      previewId={previewId}
+      readOnly
+      hideLabel
+      fullWidth
+      label={existingFile.name}
+      file={null}
+      onChange={() => undefined}
+      existingFile={existingFile}
+      accept="*/*"
+      allowedFormatsLabel=""
+      maxSizeLabel=""
+      dropTitle=""
+      dropHint=""
+      removeLabel=""
+      invalidLabel=""
+    />
+  );
 }
 
 function ChapterUnlockNotice({
   unlocksAt,
   fallbackMessage,
   onExpired,
+  isSingleChapter = false,
 }: {
   readonly unlocksAt?: string | null;
   readonly fallbackMessage: string;
   readonly onExpired: () => void;
+  readonly isSingleChapter?: boolean;
 }): ReactElement {
   const [now, setNow] = useState(() => new Date());
   const hasExpiredRef = useRef(false);
@@ -233,7 +244,9 @@ function ChapterUnlockNotice({
         <LockRoundedIcon />
         <span className={styles.unlockCountdownMessage}>
           <span className={styles.unlockCountdownLead}>
-            این فصل به‌زودی قابل مشاهده خواهد بود.
+            {isSingleChapter
+              ? "محتوای دوره به‌زودی قابل مشاهده خواهد بود."
+              : "این فصل به‌زودی قابل مشاهده خواهد بود."}
           </span>
           <strong className={styles.unlockCountdown} aria-live="polite">
             {formatChapterUnlockCountdown(remainingMs)}
@@ -290,6 +303,22 @@ const CourseDetail = (): ReactElement => {
   const shouldShowMobilePinnedPriceBar = !canAccessCourse && !hasPendingPurchase;
   const totalItems =
     course?.chapters.reduce((sum, chapter) => sum + (chapter.items?.length ?? 0), 0) ?? 0;
+  const isSingleChapter = (course?.chapters.length ?? 0) === 1;
+  const isGradualRelease = course?.releaseType === "GRADUAL";
+  const hasLockedChapters = course?.chapters.some((chapter) => chapter.isLocked) ?? false;
+  const courseDetailCopyContext = useMemo(
+    () => ({
+      isSingleChapter,
+      isGradualRelease: isGradualRelease ?? false,
+      hasLockedChapters,
+      canAccessCourse,
+      totalItems,
+    }),
+    [canAccessCourse, hasLockedChapters, isGradualRelease, isSingleChapter, totalItems],
+  );
+  const courseContentIntroText = getCourseContentIntroText(courseDetailCopyContext);
+  const courseContentAccessNoteText = getCourseContentAccessNoteText(courseDetailCopyContext);
+  const purchaseCardAccessCaption = getPurchaseCardAccessCaption(courseDetailCopyContext);
   const defaultExpandedChapterKey = useMemo(() => {
     if (!course?.chapters.length) {
       return null;
@@ -311,11 +340,10 @@ const CourseDetail = (): ReactElement => {
     () => new Set(),
   );
   const [isMobilePriceBarVisible, setIsMobilePriceBarVisible] = useState(false);
-  const [selectedMedia, setSelectedMedia] = useState<CourseMediaViewer | null>(null);
+  const [selectedItemViewer, setSelectedItemViewer] = useState<CourseItemViewer | null>(null);
   const [completingChapterKey, setCompletingChapterKey] = useState<string | null>(null);
   const isPurchaseDialogOpen = location.pathname.endsWith("/purchase");
-  const mediaRouteMatch = /^\/courses\/[^/]+\/view\/(.+)$/.exec(location.pathname);
-  const mediaSlugFromRoute = mediaRouteMatch?.[1] ? decodeURIComponent(mediaRouteMatch[1]) : null;
+  const isMaxRouteOpen = isMaxRoutePathname(location.pathname);
   const isUnlockRefetchingRef = useRef(false);
   const purchaseIntentHandledRef = useRef(false);
 
@@ -511,53 +539,25 @@ const CourseDetail = (): ReactElement => {
     });
   };
 
-  const closeMediaViewer = (): void => {
-    if (!courseId) {
-      return;
+  const closeItemViewer = (): void => {
+    if (selectedItemViewer) {
+      clearMaxRouteOwner(selectedItemViewer.previewId);
     }
-    setSelectedMedia(null);
-    navigate(`${APP_SHELL_ROUTES.courses}/${courseId}`);
+    setSelectedItemViewer(null);
+    navigate(buildCloseMaxRouteLocation(location.pathname, searchParams));
   };
 
-  const openMediaViewer = (media: CourseMediaViewer): void => {
-    if (!courseId) {
-      return;
-    }
-    setSelectedMedia(media);
-    navigate(`${APP_SHELL_ROUTES.courses}/${courseId}/view/${media.slug}`);
+  const openItemViewer = (viewer: CourseItemViewer): void => {
+    setMaxRouteOwner(viewer.previewId);
+    setSelectedItemViewer(viewer);
+    navigate(buildMaxRouteLocation(location.pathname, searchParams));
   };
 
   useEffect(() => {
-    if (!course || !mediaSlugFromRoute) {
-      if (!mediaSlugFromRoute) {
-        setSelectedMedia(null);
-      }
-      return;
+    if (!isMaxRouteOpen) {
+      setSelectedItemViewer(null);
     }
-
-    if (selectedMedia?.slug === mediaSlugFromRoute) {
-      return;
-    }
-
-    for (const chapter of course.chapters) {
-      for (const item of chapter.items ?? []) {
-        if (item.type === "ARTICLE" || buildMediaSlug(item.title) !== mediaSlugFromRoute) {
-          continue;
-        }
-        const fileUrl = resolveFileAccessUrl(item.fileAccessUrl);
-        if (!fileUrl || item.type === "ARTICLE") {
-          continue;
-        }
-        setSelectedMedia({
-          slug: mediaSlugFromRoute,
-          title: item.title,
-          type: item.type,
-          url: fileUrl,
-        });
-        return;
-      }
-    }
-  }, [course, mediaSlugFromRoute, selectedMedia?.slug]);
+  }, [isMaxRouteOpen]);
 
   const closePurchaseDialog = (): void => {
     if (!courseId) {
@@ -594,8 +594,10 @@ const CourseDetail = (): ReactElement => {
         result.data?.courseChapterComplete.accessibleChapterCount ?? 0;
 
       showSuccess(
-        accessibleCount > 0 && completedCount >= accessibleCount
-          ? `فصل «${chapterTitle}» تکمیل شد. همه فصل‌های در دسترس را به پایان رساندید!`
+        isSingleChapter || (accessibleCount > 0 && completedCount >= accessibleCount)
+          ? isSingleChapter
+            ? "محتوای دوره را با موفقیت به پایان رساندید!"
+            : `فصل «${chapterTitle}» تکمیل شد. همه فصل‌های در دسترس را به پایان رساندید!`
           : `فصل «${chapterTitle}» با موفقیت تکمیل شد.`,
       );
       await refetch();
@@ -685,8 +687,9 @@ const CourseDetail = (): ReactElement => {
           )}
           <div className={styles.heroStats}>
             <span>
-              {course.chapters.length.toLocaleString("fa-IR")} فصل /{" "}
-              {totalItems.toLocaleString("fa-IR")} آیتم
+              {isSingleChapter
+                ? `${totalItems.toLocaleString("fa-IR")} آیتم`
+                : `${course.chapters.length.toLocaleString("fa-IR")} فصل / ${totalItems.toLocaleString("fa-IR")} آیتم`}
             </span>
           </div>
         </div>
@@ -746,11 +749,13 @@ const CourseDetail = (): ReactElement => {
             </Typography>
           ) : !canAccessCourse ? (
             <Typography variant="caption" color="text.secondary">
-              بعد از خرید، فصل‌ها و آیتم‌های دوره طبق زمان‌بندی انتشار در دسترس قرار می‌گیرند.
+              {purchaseCardAccessCaption}
             </Typography>
           ) : hasGradualLockedChapters ? (
             <Typography variant="caption" color="text.secondary">
-              برخی فصل‌ها طبق زمان‌بندی انتشار تدریجی به‌تدریج باز می‌شوند.
+              {isSingleChapter
+                ? "محتوای دوره طبق زمان‌بندی انتشار تدریجی به‌تدریج باز می‌شود."
+                : "برخی فصل‌ها طبق زمان‌بندی انتشار تدریجی به‌تدریج باز می‌شوند."}
             </Typography>
           ) : null}
         </aside>
@@ -789,25 +794,26 @@ const CourseDetail = (): ReactElement => {
       <div id="course-content" className={styles.contentLayout}>
         <div className={styles.contentHeader}>
           <div>
-            <h2>مسیر یادگیری دوره</h2>
+            <h2>{isSingleChapter ? "محتوای دوره" : "مسیر یادگیری دوره"}</h2>
             <p>
-              فصل‌ها را به ترتیب جلو ببرید.
-              {course.releaseType === "GRADUAL"
-                ? " فصل‌های زمان‌بندی‌شده پس از خرید، در زمان مقرر باز می‌شوند."
-                : " فصل‌های قفل‌شده بعد از خرید دوره باز می‌شوند."}
+              {courseContentIntroText}
+              {courseContentAccessNoteText}
             </p>
             <CourseProgressSummary
               completedChapterCount={course.completedChapterCount ?? 0}
               accessibleChapterCount={course.accessibleChapterCount ?? 0}
               visible={canTrackChapterProgress}
+              isSingleChapter={isSingleChapter}
             />
           </div>
           {loading ? <CircularProgress size={22} /> : null}
         </div>
 
-        <div className={styles.chapterList}>
+        <div
+          className={`${styles.chapterList}${isSingleChapter ? ` ${styles.chapterListSingle}` : ""}`}
+        >
           {course.chapters.map((chapter, chapterIndex) => {
-            const isExpanded = expandedChapterKeys.has(chapter.key);
+            const isExpanded = isSingleChapter || expandedChapterKeys.has(chapter.key);
             const isGradualLock = isGradualChapterLock(chapter);
             const chapterItems = chapter.items ?? [];
             const nextUnlockedChapter = course.chapters
@@ -821,6 +827,7 @@ const CourseDetail = (): ReactElement => {
                 id={`course-chapter-${chapter.key}`}
                 className={[
                   styles.chapterCard,
+                  isSingleChapter ? styles.chapterCardSingle : "",
                   chapter.isLocked ? styles.chapterLocked : "",
                   chapter.isCompleted ? styles.chapterCompleted : "",
                 ]
@@ -828,81 +835,124 @@ const CourseDetail = (): ReactElement => {
                   .join(" ")}
                 elevation={0}
               >
-                <button
-                  type="button"
-                  className={styles.chapterPathButton}
-                  aria-label={`رفتن به ابتدای فصل ${chapter.title}`}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    event.currentTarget
-                      .closest(`.${styles.chapterCard}`)
-                      ?.scrollIntoView({ behavior: "smooth", block: "start" });
-                  }}
-                />
-                <button
-                  type="button"
-                  className={styles.chapterHeader}
-                  onClick={() => toggleChapter(chapter.key)}
-                  aria-expanded={isExpanded}
-                  aria-controls={`chapter-panel-${chapter.key}`}
-                >
-                  <span
-                    className={[
-                      styles.chapterStep,
-                      chapter.isCompleted ? styles.chapterStepCompleted : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                  >
-                    <span className={styles.chapterNumber}>
-                      {(chapterIndex + 1).toLocaleString("fa-IR")}
+                {!isSingleChapter ? (
+                  <button
+                    type="button"
+                    className={styles.chapterPathButton}
+                    aria-label={`رفتن به ابتدای فصل ${chapter.title}`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      event.currentTarget
+                        .closest(`.${styles.chapterCard}`)
+                        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }}
+                  />
+                ) : null}
+                {isSingleChapter ? (
+                  <div className={styles.chapterHeaderStatic}>
+                    <span className={styles.chapterTitleBlock}>
+                      {chapter.title.trim() ? (
+                        <span className={styles.chapterTitle}>{chapter.title}</span>
+                      ) : null}
                     </span>
-                    {chapter.isCompleted ? (
-                      <span className={styles.chapterStepTick} aria-label="تکمیل شده">
-                        <CheckRoundedIcon />
+                    <span className={styles.chapterMeta}>
+                      {chapter.isLocked ? (
+                        <Chip
+                          size="small"
+                          icon={<LockRoundedIcon />}
+                          label={isGradualLock ? "زمان‌بندی‌شده" : "قفل"}
+                          variant="outlined"
+                          className={styles.chapterLockChip}
+                        />
+                      ) : chapter.isCompleted ? (
+                        <Chip
+                          size="small"
+                          icon={<CheckCircleRoundedIcon />}
+                          label="تکمیل‌شده"
+                          color="success"
+                          variant="filled"
+                          className={styles.chapterCompletedChip}
+                        />
+                      ) : chapter.isFree ? (
+                        <Chip
+                          size="small"
+                          icon={<CardGiftcardRoundedIcon />}
+                          label="رایگان"
+                          color="success"
+                          variant="filled"
+                        />
+                      ) : null}
+                    </span>
+                    {chapter.description?.trim() ? (
+                      <span className={styles.chapterDescription}>{chapter.description.trim()}</span>
+                    ) : null}
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className={styles.chapterHeader}
+                    onClick={() => toggleChapter(chapter.key)}
+                    aria-expanded={isExpanded}
+                    aria-controls={`chapter-panel-${chapter.key}`}
+                  >
+                    <span
+                      className={[
+                        styles.chapterStep,
+                        chapter.isCompleted ? styles.chapterStepCompleted : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                    >
+                      <span className={styles.chapterNumber}>
+                        {(chapterIndex + 1).toLocaleString("fa-IR")}
                       </span>
+                      {chapter.isCompleted ? (
+                        <span className={styles.chapterStepTick} aria-label="تکمیل شده">
+                          <CheckRoundedIcon />
+                        </span>
+                      ) : null}
+                    </span>
+                    <span className={styles.chapterTitleBlock}>
+                      <span className={styles.chapterTitle}>{chapter.title}</span>
+                    </span>
+                    <span className={styles.chapterMeta}>
+                      {chapter.isLocked ? (
+                        <Chip
+                          size="small"
+                          icon={<LockRoundedIcon />}
+                          label={isGradualLock ? "زمان‌بندی‌شده" : "قفل"}
+                          variant="outlined"
+                          className={styles.chapterLockChip}
+                        />
+                      ) : chapter.isCompleted ? (
+                        <Chip
+                          size="small"
+                          icon={<CheckCircleRoundedIcon />}
+                          label="تکمیل‌شده"
+                          color="success"
+                          variant="filled"
+                          className={styles.chapterCompletedChip}
+                        />
+                      ) : chapter.isFree ? (
+                        <Chip
+                          size="small"
+                          icon={<CardGiftcardRoundedIcon />}
+                          label="رایگان"
+                          color="success"
+                          variant="filled"
+                        />
+                      ) : null}
+                      <ExpandMoreRoundedIcon
+                        className={`${styles.expandIcon}${isExpanded ? ` ${styles.expandIconOpen}` : ""}`}
+                      />
+                    </span>
+                    {chapter.description?.trim() ? (
+                      <span className={styles.chapterDescription}>{chapter.description.trim()}</span>
                     ) : null}
-                  </span>
-                  <span className={styles.chapterTitleBlock}>
-                    <span className={styles.chapterTitle}>{chapter.title}</span>
-                  </span>
-                  <span className={styles.chapterMeta}>
-                    {chapter.isLocked ? (
-                      <Chip
-                        size="small"
-                        icon={<LockRoundedIcon />}
-                        label={isGradualLock ? "زمان‌بندی‌شده" : "قفل"}
-                        variant="outlined"
-                        className={styles.chapterLockChip}
-                      />
-                    ) : chapter.isCompleted ? (
-                      <Chip
-                        size="small"
-                        icon={<CheckCircleRoundedIcon />}
-                        label="تکمیل‌شده"
-                        color="success"
-                        variant="filled"
-                        className={styles.chapterCompletedChip}
-                      />
-                    ) : chapter.isFree ? (
-                      <Chip
-                        size="small"
-                        icon={<CardGiftcardRoundedIcon />}
-                        label="رایگان"
-                        color="success"
-                        variant="filled"
-                      />
-                    ) : null}
-                    <ExpandMoreRoundedIcon
-                      className={`${styles.expandIcon}${isExpanded ? ` ${styles.expandIconOpen}` : ""}`}
-                    />
-                  </span>
-                  {chapter.description?.trim() ? (
-                    <span className={styles.chapterDescription}>{chapter.description.trim()}</span>
-                  ) : null}
-                </button>
+                  </button>
+                )}
 
-                <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                <Collapse in={isExpanded} timeout="auto" unmountOnExit={!isSingleChapter}>
                   <div id={`chapter-panel-${chapter.key}`} className={styles.chapterPanel}>
                     {chapter.isLocked ? (
                       <div
@@ -913,20 +963,33 @@ const CourseDetail = (): ReactElement => {
                         {isGradualLock ? (
                           <ChapterUnlockNotice
                             unlocksAt={chapter.unlocksAt}
-                            fallbackMessage="این فصل طبق زمان‌بندی انتشار تدریجی به‌زودی قابل مشاهده خواهد بود."
+                            fallbackMessage={
+                              isSingleChapter
+                                ? "محتوای دوره طبق زمان‌بندی انتشار تدریجی به‌زودی قابل مشاهده خواهد بود."
+                                : "این فصل طبق زمان‌بندی انتشار تدریجی به‌زودی قابل مشاهده خواهد بود."
+                            }
+                            isSingleChapter={isSingleChapter}
                             onExpired={handleChapterUnlockExpired}
                           />
                         ) : (
                           <>
                             <LockRoundedIcon />
-                            <span>برای مشاهده آیتم‌های این فصل، دوره را خریداری کنید.</span>
+                            <span>
+                              {isSingleChapter
+                                ? "برای مشاهده آیتم‌های دوره، آن را خریداری کنید."
+                                : "برای مشاهده آیتم‌های این فصل، دوره را خریداری کنید."}
+                            </span>
                           </>
                         )}
                       </div>
                     ) : (
                       <div className={styles.itemList}>
                         {chapterItems.length === 0 ? (
-                          <p className={styles.emptyItems}>آیتمی برای این فصل ثبت نشده است.</p>
+                          <p className={styles.emptyItems}>
+                            {isSingleChapter
+                              ? "آیتمی برای این دوره ثبت نشده است."
+                              : "آیتمی برای این فصل ثبت نشده است."}
+                          </p>
                         ) : (
                           chapterItems.map((item, itemIndex) => (
                             <article
@@ -942,7 +1005,12 @@ const CourseDetail = (): ReactElement => {
                                 </div>
                               </div>
                               <div className={styles.itemContent}>
-                                <CourseItemContent item={item} onOpenMedia={openMediaViewer} />
+                                <CourseItemContent
+                                  item={item}
+                                  chapterKey={chapter.key}
+                                  itemIndex={itemIndex}
+                                  onOpenArticle={openItemViewer}
+                                />
                               </div>
                             </article>
                           ))
@@ -954,6 +1022,7 @@ const CourseDetail = (): ReactElement => {
                             canComplete={showChapterCompletion}
                             isSubmitting={completingChapterKey === chapter.key}
                             hasNextChapter={Boolean(nextUnlockedChapter)}
+                            isSingleChapter={isSingleChapter}
                             onConfirm={() => void handleChapterComplete(chapter.key, chapter.title)}
                             onGoToNextChapter={
                               nextUnlockedChapter
@@ -972,43 +1041,34 @@ const CourseDetail = (): ReactElement => {
         </div>
       </div>
 
-      <Button className={styles.mobileBackButton} variant="outlined" onClick={() => navigate("/courses")}>
-        بازگشت به لیست دوره‌ها
-      </Button>
-
       <EntityModalShell
-        open={selectedMedia != null || mediaSlugFromRoute != null}
-        onClose={closeMediaViewer}
-        title={selectedMedia?.title ?? "نمایش رسانه"}
+        open={isMaxRouteOpen && selectedItemViewer != null}
+        onClose={closeItemViewer}
+        title={selectedItemViewer?.title ?? "نمایش محتوا"}
         maxWidth="lg"
+        disableAutoFocus
+        disableRestoreFocus
+        showVisibleScrollbar
         footer={
           <ModalFooterActions
             actions={[
               {
                 key: "close",
                 isCloseButton: true,
-                onClick: closeMediaViewer,
+                onClick: closeItemViewer,
               },
             ]}
           />
         }
       >
-        {selectedMedia?.type === "IMAGE" ? (
-          <img
-            src={selectedMedia.url}
-            alt={selectedMedia.title}
-            className={styles.mediaDialogImage}
+        {selectedItemViewer?.article ? (
+          <div
+            className={`${richTextStyles.renderDialogContent} ${richTextStyles.renderDialogContentMax}`}
+            dir="rtl"
+            dangerouslySetInnerHTML={{
+              __html: applyBlankTargetToRichTextLinks(selectedItemViewer.article),
+            }}
           />
-        ) : null}
-        {selectedMedia?.type === "VIDEO" ? (
-          <video className={styles.mediaDialogVideo} src={selectedMedia.url} controls autoPlay>
-            مرورگر شما از پخش ویدیو پشتیبانی نمی‌کند.
-          </video>
-        ) : null}
-        {selectedMedia?.type === "VOICE" ? (
-          <audio className={styles.mediaDialogAudio} src={selectedMedia.url} controls autoPlay>
-            مرورگر شما از پخش صوت پشتیبانی نمی‌کند.
-          </audio>
         ) : null}
       </EntityModalShell>
 

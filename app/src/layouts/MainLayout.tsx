@@ -14,17 +14,7 @@ import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneR
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
-import {
-  Avatar,
-  Badge,
-  Box,
-  Button,
-  Container,
-  Divider,
-  IconButton,
-  Popover,
-  Tooltip,
-} from "@mui/material";
+import { Avatar, Badge, Box, Button, Container, Divider, IconButton, Popover } from "@mui/material";
 import { useQuery } from "@apollo/client/react";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from "react";
 import { Link as RouterLink, NavLink, useLocation } from "react-router-dom";
@@ -49,6 +39,7 @@ import { showBrowserNotification } from "../utils/browserNotification.util";
 import { scrollToTopOnMobile } from "../utils/scrollToTopOnMobile.util";
 import { SideMenuNav } from "./SideMenuNav";
 import "./styles/MainLayout.scss";
+import AppTooltip from "../shared/AppTooltip";
 
 const POPOVER_ANCHOR_ORIGIN = { vertical: "bottom", horizontal: "left" } as const;
 const POPOVER_TRANSFORM_ORIGIN = { vertical: "top", horizontal: "left" } as const;
@@ -579,7 +570,7 @@ export function MainLayout({
                 <div className="main-layout__quick-actions">
                   {authUser ? (
                     <>
-                      <Tooltip title={t("layout.header.actions.notifications")}>
+                      <AppTooltip title={t("layout.header.actions.notifications")}>
                         <Badge
                           className="main-layout__notification-badge"
                           badgeContent={notificationBadgeCount}
@@ -596,7 +587,7 @@ export function MainLayout({
                             <NotificationsNoneRoundedIcon />
                           </IconButton>
                         </Badge>
-                      </Tooltip>
+                      </AppTooltip>
                       <LayoutPopover
                         id={notificationPopoverId}
                         open={isNotificationOpen}
@@ -649,7 +640,7 @@ export function MainLayout({
                     </>
                   ) : null}
 
-                  <Tooltip title={t("layout.header.actions.settings")}>
+                  <AppTooltip title={t("layout.header.actions.settings")}>
                     <IconButton
                       id="main-layout-settings-button"
                       aria-label={t("layout.header.actions.settings")}
@@ -659,7 +650,7 @@ export function MainLayout({
                     >
                       <SettingsRoundedIcon />
                     </IconButton>
-                  </Tooltip>
+                  </AppTooltip>
                   <LayoutPopover
                     id={settingsPopoverId}
                     open={isSettingsOpen}
@@ -700,7 +691,7 @@ export function MainLayout({
                     </div>
                   </LayoutPopover>
 
-                  <Tooltip title={t("layout.header.actions.help")}>
+                  <AppTooltip title={t("layout.header.actions.help")}>
                     <IconButton
                       id="main-layout-help-button"
                       aria-label={t("layout.header.actions.help")}
@@ -710,7 +701,7 @@ export function MainLayout({
                     >
                       <HelpOutlineRoundedIcon />
                     </IconButton>
-                  </Tooltip>
+                  </AppTooltip>
                   <LayoutPopover
                     id={helpPopoverId}
                     open={isHelpOpen}
@@ -751,7 +742,7 @@ export function MainLayout({
                     </div>
                   </LayoutPopover>
 
-                  <Tooltip title={themeToggleLabel}>
+                  <AppTooltip title={themeToggleLabel}>
                     <IconButton
                       aria-label={themeToggleLabel}
                       className="main-layout__icon-button"
@@ -759,7 +750,7 @@ export function MainLayout({
                     >
                       {mode === "light" ? <DarkModeRoundedIcon /> : <LightModeRoundedIcon />}
                     </IconButton>
-                  </Tooltip>
+                  </AppTooltip>
                 </div>
 
                 <button

@@ -11,27 +11,7 @@ import {
 import { NetworkStatus } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
 import { useLocation, useNavigate } from "react-router-dom";
-import {
-  Alert,
-  Box,
-  Button,
-  Chip,
-  FormControl,
-  Grid,
-  InputLabel,
-  InputAdornment,
-  IconButton,
-  MenuItem,
-  Paper,
-  Select,
-  Skeleton,
-  Stack,
-  TextField,
-  Typography,
-  Divider,
-  Tooltip,
-  useMediaQuery,
-} from "@mui/material";
+import { Alert, Box, Button, Chip, FormControl, Grid, InputLabel, InputAdornment, IconButton, MenuItem, Paper, Select, Skeleton, Stack, TextField, Typography, Divider, useMediaQuery } from "@mui/material";
 import ClearRoundedIcon from "@mui/icons-material/ClearRounded";
 import FilterAltOffRoundedIcon from "@mui/icons-material/FilterAltOffRounded";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
@@ -67,7 +47,9 @@ import {
 import { resolveFileAccessUrl } from "../../utils/fileAccessUrl.util";
 import EntityDeleteDialog from "../../shared/crud/EntityDeleteDialog";
 import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
+import { stripOverlayRoutePathname } from "../../routing/max-route.util";
 import styles from "./styles/courses.module.scss";
+import AppTooltip from "../../shared/AppTooltip";
 
 const COURSE_LIST_PAGE_SIZE = 6;
 
@@ -157,9 +139,10 @@ const CoursesIndex = (): ReactElement => {
   });
   const debouncedSearchQuery = useDebounce(searchQuery, 450);
 
-  const isCreateDialogOpen = location.pathname === `${APP_SHELL_ROUTES.courses}/new`;
+  const courseFormPath = stripOverlayRoutePathname(location.pathname);
+  const isCreateDialogOpen = courseFormPath === `${APP_SHELL_ROUTES.courses}/new`;
   const editTargetId =
-    /^\/courses\/edit\/([^/]+)$/.exec(location.pathname)?.[1] ?? null;
+    /^\/courses\/edit\/([^/]+)$/.exec(courseFormPath)?.[1] ?? null;
   const isCourseFormDialogOpen = isCreateDialogOpen || editTargetId != null;
 
   const closeCourseFormDialog = (): void => {
@@ -674,7 +657,7 @@ const CoursesIndex = (): ReactElement => {
           </h2>
           {!isPublicCourseView ? (
             <>
-              <Tooltip title="دوره جدید" arrow>
+              <AppTooltip title="دوره جدید" arrow>
                 <IconButton
                   color="primary"
                   onClick={openCreateCourseDialog}
@@ -683,7 +666,7 @@ const CoursesIndex = (): ReactElement => {
                 >
                   <AddRoundedIcon />
                 </IconButton>
-              </Tooltip>
+              </AppTooltip>
               <Button
                 variant="contained"
                 startIcon={<AddRoundedIcon />}
@@ -723,7 +706,7 @@ const CoursesIndex = (): ReactElement => {
                 InputProps={{
                   endAdornment: searchQuery ? (
                     <InputAdornment position="end">
-                      <Tooltip title="پاک کردن جستجو" arrow>
+                      <AppTooltip title="پاک کردن جستجو" arrow>
                         <IconButton
                           size="small"
                           edge="end"
@@ -733,14 +716,14 @@ const CoursesIndex = (): ReactElement => {
                         >
                           <ClearRoundedIcon fontSize="small" />
                         </IconButton>
-                      </Tooltip>
+                      </AppTooltip>
                     </InputAdornment>
                   ) : null,
                 }}
               />
 
               <div className={styles.searchActions}>
-                <Tooltip title="پاک کردن فیلترها" arrow>
+                <AppTooltip title="پاک کردن فیلترها" arrow>
                   <span>
                     <IconButton
                       size="small"
@@ -752,9 +735,9 @@ const CoursesIndex = (): ReactElement => {
                       <FilterAltOffRoundedIcon />
                     </IconButton>
                   </span>
-                </Tooltip>
+                </AppTooltip>
 
-                <Tooltip
+                <AppTooltip
                   title={
                     showFilterSections ? "بستن فیلترها و مرتب‌سازی" : "نمایش فیلترها و مرتب‌سازی"
                   }
@@ -770,18 +753,18 @@ const CoursesIndex = (): ReactElement => {
                   >
                     <FilterListRoundedIcon />
                   </IconButton>
-                </Tooltip>
+                </AppTooltip>
 
-                <Tooltip title="بروزرسانی" arrow>
+                <AppTooltip title="بروزرسانی" arrow>
                   <IconButton size="small" color="default" onClick={onRefresh} aria-label="بروزرسانی">
                     <RefreshRoundedIcon />
                   </IconButton>
-                </Tooltip>
+                </AppTooltip>
               </div>
             </Box>
           </div>
         ) : (
-          <Tooltip title="جستجو و فیلتر" arrow>
+          <AppTooltip title="جستجو و فیلتر" arrow>
             <IconButton
               className={styles.mobileFilterTrigger}
               color="primary"
@@ -790,7 +773,7 @@ const CoursesIndex = (): ReactElement => {
             >
               <SearchRoundedIcon />
             </IconButton>
-          </Tooltip>
+          </AppTooltip>
         )}
 
         {!isEndUser && shouldShowFilterPanelContent && showFilterSections ? (
@@ -921,9 +904,9 @@ const CoursesIndex = (): ReactElement => {
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
-                        <Tooltip title="برای چند برچسب از , استفاده کنید." arrow>
+                        <AppTooltip title="برای چند برچسب از , استفاده کنید." arrow>
                           <InfoOutlinedIcon className={styles.inputInfoIcon} fontSize="small" />
-                        </Tooltip>
+                        </AppTooltip>
                       </InputAdornment>
                     ),
                   }}

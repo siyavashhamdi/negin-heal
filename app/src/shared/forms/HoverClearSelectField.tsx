@@ -1,16 +1,9 @@
 import { useMemo, type ReactElement, type SyntheticEvent } from "react";
-import {
-  Autocomplete,
-  Box,
-  IconButton,
-  TextField,
-  Tooltip,
-  Typography,
-  createFilterOptions,
-} from "@mui/material";
+import { Autocomplete, Box, IconButton, TextField, Typography, createFilterOptions } from "@mui/material";
 import { Clear as ClearIcon } from "@mui/icons-material";
 import { useTranslation } from "../../hooks/useTranslation";
 import styles from "./HoverClearSelectField.module.scss";
+import AppTooltip from "../AppTooltip";
 
 export interface HoverClearSelectOption {
   readonly value: string;
@@ -129,7 +122,7 @@ const HoverClearSelectField = ({
           </li>
         )}
         renderInput={(params) => (
-          <Tooltip title={selectedTooltipTitle} arrow>
+          <AppTooltip title={selectedTooltipTitle} arrow>
             <TextField
               {...params}
               label={useFloatingLabel ? label : undefined}
@@ -150,7 +143,7 @@ const HoverClearSelectField = ({
                   <>
                     {params.InputProps.endAdornment}
                     {showClearButton ? (
-                      <Tooltip title={t("table.dataGrid.filter.clearField")} arrow>
+                      <AppTooltip title={t("table.dataGrid.filter.clearField")} arrow>
                         <IconButton
                           size="small"
                           className={styles.clearButton}
@@ -160,13 +153,13 @@ const HoverClearSelectField = ({
                         >
                           <ClearIcon fontSize="small" />
                         </IconButton>
-                      </Tooltip>
+                      </AppTooltip>
                     ) : null}
                   </>
                 ),
               }}
             />
-          </Tooltip>
+          </AppTooltip>
         )}
       />
     </Box>

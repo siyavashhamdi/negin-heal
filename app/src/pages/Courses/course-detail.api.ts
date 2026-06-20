@@ -306,3 +306,90 @@ export function isGradualChapterLock(
 ): boolean {
   return chapter.isLocked && Boolean(chapter.unlocksAt);
 }
+
+type CourseDetailCopyContext = {
+  readonly isSingleChapter: boolean;
+  readonly isGradualRelease: boolean;
+  readonly hasLockedChapters: boolean;
+  readonly canAccessCourse: boolean;
+  readonly totalItems: number;
+};
+
+export function getCourseContentIntroText({
+  isSingleChapter,
+  totalItems,
+}: Pick<CourseDetailCopyContext, "isSingleChapter" | "totalItems">): string {
+  if (!isSingleChapter) {
+    return "فصل‌ها را به ترتیب جلو ببرید.";
+  }
+
+  if (totalItems === 0) {
+    return "هنوز آیتمی برای این دوره ثبت نشده است.";
+  }
+
+  if (totalItems === 1) {
+    return "محتوای دوره را مشاهده و مرور کنید.";
+  }
+
+  return "آیتم‌های دوره را مشاهده و مرور کنید.";
+}
+
+export function getCourseContentAccessNoteText({
+  isSingleChapter,
+  isGradualRelease,
+  hasLockedChapters,
+  canAccessCourse,
+  totalItems,
+}: Pick<
+  CourseDetailCopyContext,
+  "isSingleChapter" | "isGradualRelease" | "hasLockedChapters" | "canAccessCourse" | "totalItems"
+>): string {
+  if (isSingleChapter && totalItems === 0) {
+    return "";
+  }
+
+  if (canAccessCourse) {
+    if (!hasLockedChapters) {
+      return isSingleChapter ? " همه محتوا در دسترس شماست." : " همه فصل‌ها در دسترس شماست.";
+    }
+
+    if (isGradualRelease) {
+      return isSingleChapter
+        ? " محتوای زمان‌بندی‌شده در زمان مقرر باز می‌شود."
+        : " فصل‌های زمان‌بندی‌شده در زمان مقرر باز می‌شوند.";
+    }
+
+    return isSingleChapter
+      ? " بخشی از محتوا هنوز قفل است."
+      : " برخی فصل‌ها هنوز قفل هستند.";
+  }
+
+  if (isGradualRelease) {
+    return isSingleChapter
+      ? " پس از خرید، محتوا طبق زمان‌بندی انتشار در دسترس قرار می‌گیرد."
+      : " فصل‌های زمان‌بندی‌شده پس از خرید، در زمان مقرر باز می‌شوند.";
+  }
+
+  if (hasLockedChapters) {
+    return isSingleChapter
+      ? " پس از خرید، به همه محتوا دسترسی خواهید داشت."
+      : " فصل‌های قفل‌شده بعد از خرید دوره باز می‌شوند.";
+  }
+
+  return "";
+}
+
+export function getPurchaseCardAccessCaption({
+  isSingleChapter,
+  isGradualRelease,
+}: Pick<CourseDetailCopyContext, "isSingleChapter" | "isGradualRelease">): string {
+  if (isGradualRelease) {
+    return isSingleChapter
+      ? "بعد از خرید، محتوا طبق زمان‌بندی انتشار در دسترس قرار می‌گیرد."
+      : "بعد از خرید، فصل‌ها و آیتم‌های دوره طبق زمان‌بندی انتشار در دسترس قرار می‌گیرند.";
+  }
+
+  return isSingleChapter
+    ? "بعد از خرید، بلافاصله به محتوای دوره دسترسی پیدا می‌کنید."
+    : "بعد از خرید، بلافاصله به فصل‌ها و آیتم‌های دوره دسترسی پیدا می‌کنید.";
+}

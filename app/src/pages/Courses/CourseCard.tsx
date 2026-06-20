@@ -10,11 +10,12 @@ import OndemandVideoRoundedIcon from "@mui/icons-material/OndemandVideoRounded";
 import PhotoRoundedIcon from "@mui/icons-material/PhotoRounded";
 import VolumeUpRoundedIcon from "@mui/icons-material/VolumeUpRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
-import { Button, Chip, Tooltip } from "@mui/material";
+import { Button, Chip } from "@mui/material";
 import { OverflowTooltip } from "../../shared/OverflowTooltip";
 import type { CourseItemType, CourseListRecord, CourseReleaseType } from "./courses-list.api";
 import { getCourseTagChipSx } from "./course-tag-colors.util";
 import styles from "./styles/CourseCard.module.scss";
+import AppTooltip from "../../shared/AppTooltip";
 
 interface CourseCardProps {
   readonly item: CourseListRecord;
@@ -172,7 +173,7 @@ const CourseCard = ({
 
             <div className={styles.topChipsRow} onClick={(event) => event.stopPropagation()}>
               {isManagement ? (
-                <Tooltip
+                <AppTooltip
                   title={item.isActive ? "وضعیت فعال" : "وضعیت غیرفعال"}
                   arrow
                   enterTouchDelay={0}
@@ -192,9 +193,9 @@ const CourseCard = ({
                       className={`${styles.iconOnlyChip} ${styles.statusChip} ${statusChipClass}`}
                     />
                   </span>
-                </Tooltip>
+                </AppTooltip>
               ) : null}
-              <Tooltip
+              <AppTooltip
                 title={RELEASE_TYPE_TOOLTIP_LABEL[item.releaseType]}
                 arrow
                 enterTouchDelay={0}
@@ -208,7 +209,7 @@ const CourseCard = ({
                     className={`${styles.iconOnlyChip} ${styles.releaseTypeChip} ${releaseTypeChipClass}`}
                   />
                 </span>
-              </Tooltip>
+              </AppTooltip>
             </div>
 
             <div className={styles.coverContent}>

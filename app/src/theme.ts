@@ -428,6 +428,9 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
         },
       },
       MuiTooltip: {
+        defaultProps: {
+          leaveTouchDelay: 3000,
+        },
         styleOverrides: {
           tooltip: {
             backgroundColor: isDark ? colors.grey[700] : colors.grey[800],

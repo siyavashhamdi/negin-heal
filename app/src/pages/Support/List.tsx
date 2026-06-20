@@ -10,17 +10,7 @@ import {
 } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Clear as ClearIcon } from "@mui/icons-material";
-import {
-  Chip,
-  IconButton,
-  InputAdornment,
-  MenuItem,
-  Stack,
-  TextField,
-  Tooltip,
-  Typography,
-  useMediaQuery,
-} from "@mui/material";
+import { Chip, IconButton, InputAdornment, MenuItem, Stack, TextField, Typography, useMediaQuery } from "@mui/material";
 import {
   getCoreRowModel,
   getSortedRowModel,
@@ -72,6 +62,7 @@ import {
   TICKET_STATUS_LABEL,
   TICKET_STATUS_OPTIONS,
 } from "./support-labels.util";
+import AppTooltip from "../../shared/AppTooltip";
 import {
   EMPTY_SUPPORT_TICKET_LIST_FILTERS,
   EMPTY_USER_SUPPORT_TICKET_LIST_FILTERS,
@@ -634,7 +625,7 @@ function SupportTicketListInner({
         endAdornment:
           pendingFilters[key].trim() !== "" ? (
             <InputAdornment position="end">
-              <Tooltip title={t("table.dataGrid.filter.clearField")} arrow>
+              <AppTooltip title={t("table.dataGrid.filter.clearField")} arrow>
                 <IconButton
                   size="small"
                   edge="end"
@@ -643,7 +634,7 @@ function SupportTicketListInner({
                 >
                   <ClearIcon fontSize="small" />
                 </IconButton>
-              </Tooltip>
+              </AppTooltip>
             </InputAdornment>
           ) : undefined,
       }}

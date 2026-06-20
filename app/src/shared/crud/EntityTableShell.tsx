@@ -5,27 +5,12 @@ import {
   type ReactNode,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
-import {
-  Badge,
-  Box,
-  Fade,
-  IconButton,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TableSortLabel,
-  Tooltip,
-  Typography,
-  useTheme,
-} from "@mui/material";
+import { Badge, Box, Fade, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel, Typography, useTheme } from "@mui/material";
 import { darken, lighten } from "@mui/material/styles";
 import {
   FilterAltOff as FilterAltOffIcon,
@@ -47,6 +32,7 @@ import styles from "./styles/EntityTableShell.module.scss";
 import { TruncatedTableCellContent } from "../OverflowTooltip";
 import attentionBadgeStyles from "../table/styles/AttentionBadge.module.scss";
 import { sumColumnWidthsRem, columnWidthPercent } from "../table/resolve-column-widths.util";
+import AppTooltip from "../AppTooltip";
 
 interface EntityTableShellToolbarOptions {
   showSearch?: boolean;
@@ -456,7 +442,7 @@ function EntityTableShell<TData extends object>({
           showColumnVisibility={showColumnVisibility}
           searchAdjacentActions={
             showFilterButton ? (
-              <Tooltip
+              <AppTooltip
                 title={
                   resolvedShowColumnFilters
                     ? t("table.dataGrid.toolbar.hideColumnFilters")
@@ -477,7 +463,7 @@ function EntityTableShell<TData extends object>({
                     <TuneIcon fontSize="small" />
                   </Badge>
                 </IconButton>
-              </Tooltip>
+              </AppTooltip>
             ) : null
           }
           showNewButton={showNewButton}
@@ -626,16 +612,16 @@ function EntityTableShell<TData extends object>({
                         >
                           {isActionsColumn && onApplyFilters && onClearFilters ? (
                             <Box className={styles.actionsCellFlex}>
-                              <Tooltip title={t("table.dataGrid.filter.applyFilters")} arrow>
+                              <AppTooltip title={t("table.dataGrid.filter.applyFilters")} arrow>
                                 <IconButton size="small" color="primary" onClick={onApplyFilters}>
                                   <SearchIcon fontSize="small" />
                                 </IconButton>
-                              </Tooltip>
-                              <Tooltip title={t("table.dataGrid.filter.clearAllFilters")} arrow>
+                              </AppTooltip>
+                              <AppTooltip title={t("table.dataGrid.filter.clearAllFilters")} arrow>
                                 <IconButton size="small" color="default" onClick={onClearFilters}>
                                   <FilterAltOffIcon fontSize="small" />
                                 </IconButton>
-                              </Tooltip>
+                              </AppTooltip>
                             </Box>
                           ) : (
                             renderFilterCell(column)

@@ -1520,7 +1520,6 @@ const PaymentsList = (): ReactElement => {
                   label="کد تخفیف"
                   value={manualCouponCode}
                   onChange={(event) => setManualCouponCode(event.target.value)}
-                  placeholder="اختیاری"
                 />
 
                 <Box>
@@ -1564,6 +1563,7 @@ const PaymentsList = (): ReactElement => {
         open={reviewPaymentId != null}
         onClose={closeReviewDialog}
         maxWidth="lg"
+        resetKey={reviewPaymentId != null ? `${reviewPaymentId}-${Boolean(reviewPayment)}` : undefined}
         title="بررسی پرداخت"
         subtitle={reviewPayment?.courseTitle ?? EMPTY_DISPLAY}
         footer={

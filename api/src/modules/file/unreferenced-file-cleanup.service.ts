@@ -61,13 +61,6 @@ export class UnreferencedFileCleanupService {
           }),
       },
       {
-        label: "courses.chapters.iconFileId",
-        collect: () =>
-          this.courseModel.collection.distinct("chapters.iconFileId", {
-            "chapters.iconFileId": { $exists: true, $ne: null },
-          }),
-      },
-      {
         label: "courses.chapters.items.fileId",
         collect: () =>
           this.courseModel.collection.distinct("chapters.items.fileId", {
@@ -243,7 +236,6 @@ export class UnreferencedFileCleanupService {
       {
         $or: [
           { coverImageFileId: { $in: unavailableObjectIds } },
-          { "chapters.iconFileId": { $in: unavailableObjectIds } },
           { "chapters.items.fileId": { $in: unavailableObjectIds } },
         ],
       },
@@ -265,15 +257,6 @@ export class UnreferencedFileCleanupService {
                   $mergeObjects: [
                     "$$chapter",
                     {
-                      iconFileId: {
-                        $cond: [
-                          {
-                            $in: ["$$chapter.iconFileId", unavailableObjectIds],
-                          },
-                          null,
-                          "$$chapter.iconFileId",
-                        ],
-                      },
                       items: {
                         $map: {
                           input: { $ifNull: ["$$chapter.items", []] },

@@ -1,4 +1,4 @@
-import { Box, Tooltip, useMediaQuery } from "@mui/material";
+import { Box, useMediaQuery } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material/styles";
 import {
   useCallback,
@@ -10,6 +10,8 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
+import AppTooltip from "./AppTooltip";
+import { useMobileAppLayout } from "../hooks/useMobileAppLayout";
 
 const truncatedCellContentSx = {
   overflow: "hidden",
@@ -81,7 +83,9 @@ export function OverflowTooltip({
   const [isOverflowing, setIsOverflowing] = useState(false);
   const [detectedText, setDetectedText] = useState("");
   const [touchOpen, setTouchOpen] = useState(false);
+  const isMobileLayout = useMobileAppLayout();
   const isTouchPrimary = useMediaQuery("(hover: none) and (pointer: coarse)");
+  const useTouchToggle = isMobileLayout || isTouchPrimary;
   const tooltipText = title ?? detectedText;
 
   const updateOverflowState = useCallback((): void => {
@@ -126,7 +130,7 @@ export function OverflowTooltip({
   const showTooltip = isOverflowing && tooltipText !== "";
 
   const handleTouchToggle = (event: MouseEvent<HTMLElement>): void => {
-    if (!isTouchPrimary || !showTooltip) {
+    if (!useTouchToggle || !showTooltip) {
       return;
     }
     if (!touchOpen) {
@@ -137,17 +141,16 @@ export function OverflowTooltip({
   };
 
   return (
-    <Tooltip
+    <AppTooltip
       title={tooltipText}
       arrow
       enterDelay={500}
       enterTouchDelay={0}
-      leaveTouchDelay={2000}
-      open={isTouchPrimary ? (showTooltip ? touchOpen : false) : undefined}
+      open={useTouchToggle ? (showTooltip ? touchOpen : false) : undefined}
       onClose={() => setTouchOpen(false)}
-      disableHoverListener={!showTooltip || isTouchPrimary}
-      disableFocusListener={!showTooltip || isTouchPrimary}
-      disableTouchListener={!showTooltip || isTouchPrimary}
+      disableHoverListener={!showTooltip || useTouchToggle}
+      disableFocusListener={!showTooltip || useTouchToggle}
+      disableTouchListener={!showTooltip || useTouchToggle}
     >
       <Box
         component={component}
@@ -155,11 +158,11 @@ export function OverflowTooltip({
         className={className}
         sx={sx}
         onClick={handleTouchToggle}
-        aria-label={showTooltip && isTouchPrimary ? tooltipText : undefined}
+        aria-label={showTooltip && useTouchToggle ? tooltipText : undefined}
       >
         {children}
       </Box>
-    </Tooltip>
+    </AppTooltip>
   );
 }
 

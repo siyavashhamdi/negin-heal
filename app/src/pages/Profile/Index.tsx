@@ -1,19 +1,9 @@
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
-import EditRoundedIcon from "@mui/icons-material/EditRounded";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import PasswordRoundedIcon from "@mui/icons-material/PasswordRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
-import {
-  Alert,
-  Avatar,
-  Button,
-  CircularProgress,
-  IconButton,
-  Stack,
-  TextField,
-  Tooltip,
-  Typography,
-} from "@mui/material";
+import { Alert, Avatar, Button, CircularProgress, IconButton, Stack, TextField, Typography } from "@mui/material";
 import {
   type ChangeEvent,
   type FormEvent,
@@ -23,19 +13,16 @@ import {
   useState,
 } from "react";
 import { Link as RouterLink, Navigate, useLocation, useNavigate } from "react-router-dom";
-import { useLazyQuery } from "@apollo/client/react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useMobileAppLayout } from "../../hooks/useMobileAppLayout";
+import { useMe, type UserMeGqlResponse } from "../../hooks/useMe";
 import { LoginRequiredState } from "../../shared/auth/LoginRequiredState";
 import { PasswordPolicyChecklist } from "../../shared/auth/PasswordPolicyChecklist";
 import { USER_PROFILE_UPDATE_MUTATION } from "../../graphql/mutations/userProfileUpdate.mutation";
-import { USER_ME_QUERY } from "../../graphql/queries/userMe.query";
-import { type UserMeGqlResponse, type UserMeResponse } from "../../hooks/useMe";
 import EntityConfirmDialogShell from "../../shared/crud/EntityConfirmDialogShell";
 import EntityModalShell from "../../shared/crud/EntityModalShell";
 import {
   getFileIdFromAccessUrl,
-  resolveFileAccessUrl,
   type FileAccessUrl,
 } from "../../utils/fileAccessUrl.util";
 import { uploadFile } from "../../utils/fileUpload.util";
@@ -47,6 +34,7 @@ import ModalFooterActions from "../../shared/crud/ModalFooterActions";
 import { APP_SHELL_ROUTES, isProfileAuthRoute } from "../../routing/app-shell-routes";
 import { ProfileAuthRoutes } from "./ProfileAuthRoutes";
 import styles from "./styles/profile.module.scss";
+import AppTooltip from "../../shared/AppTooltip";
 
 const PASSWORD_CHANGE_LOGOUT_COUNTDOWN_SECONDS = 5;
 
@@ -110,48 +98,16 @@ function optionalTextInput(value: string): string | null {
   return trimmed ? trimmed : null;
 }
 
-function mergeProfileUpdateIntoUser(
-  current: UserMeGqlResponse | null,
-  updated: UserProfileUpdateMutationResult["userProfileUpdate"],
-): UserMeGqlResponse {
-  if (!current) {
-    return {
-      id: updated.id,
-      username: updated.username,
-      roles: [],
-      status: "",
-      profile: updated.profile ?? null,
-      preferences: null,
-    };
-  }
-
-  return {
-    ...current,
-    username: updated.username,
-    profile: {
-      ...current.profile,
-      ...updated.profile,
-    },
-  };
-}
-
 const AuthenticatedProfile = (): ReactElement => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout, user: authUser } = useAuth();
+  const { logout } = useAuth();
+  const { user: profileUser, avatarUrl, loading: isProfileLoading, refetch } = useMe();
   const { showError, showSuccess } = useSnackbar();
-  const isMainProfileRoute = location.pathname === APP_SHELL_ROUTES.profile;
   const isEditRoute = location.pathname === `${APP_SHELL_ROUTES.profile}/edit`;
   const isPasswordRoute = location.pathname === `${APP_SHELL_ROUTES.profile}/password`;
-  const hasFetchedInitialMeRef = useRef(false);
-  const editMeFetchPendingRef = useRef(false);
-  const [profileUser, setProfileUser] = useState<UserMeGqlResponse | null>(null);
   const [editProfileUser, setEditProfileUser] = useState<UserMeGqlResponse | null>(null);
-  const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [isEditMeLoading, setIsEditMeLoading] = useState(false);
-  const [fetchMe] = useLazyQuery<UserMeResponse>(USER_ME_QUERY, {
-    fetchPolicy: "network-only",
-  });
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const [editForm, setEditForm] = useState<ProfileEditForm>({
     username: "",
@@ -182,15 +138,11 @@ const AuthenticatedProfile = (): ReactElement => {
       ? `${profileUser.profile.firstName} ${profileUser.profile.lastName}`
       : profileUser?.profile?.firstName ||
         profileUser?.username ||
-        authUser?.username ||
         "کاربر";
   const userInitial = displayName.trim().slice(0, 1) || "؟";
   const displayRoles =
-    profileUser?.roles?.filter((role) => role !== "END_USER") ??
-    authUser?.roles?.filter((role) => role !== "END_USER") ??
-    [];
+    profileUser?.roles?.filter((role) => role !== "END_USER") ?? [];
   const roleLabel = displayRoles.join("، ");
-  const avatarUrl = resolveFileAccessUrl(profileUser?.profile?.avatarAccessUrl);
   const isAvatarUpdating =
     isAvatarUploading || isAvatarDeleting || updateProfileResult.loading;
   const hasAvatar = Boolean(avatarUrl);
@@ -217,31 +169,12 @@ const AuthenticatedProfile = (): ReactElement => {
     editForm.username.trim().length > 0 && hasProfileEditChanges;
 
   useEffect(() => {
-    if (!isMainProfileRoute || hasFetchedInitialMeRef.current) {
+    if (!isEditRoute) {
       return;
     }
 
-    hasFetchedInitialMeRef.current = true;
-    setIsProfileLoading(true);
-    void fetchMe()
-      .then((result) => {
-        if (result.data?.me) {
-          setProfileUser(result.data.me);
-        }
-      })
-      .finally(() => {
-        setIsProfileLoading(false);
-      });
-  }, [fetchMe, isMainProfileRoute]);
-
-  useEffect(() => {
-    if (!isEditRoute || !editMeFetchPendingRef.current) {
-      return;
-    }
-
-    editMeFetchPendingRef.current = false;
     setIsEditMeLoading(true);
-    void fetchMe()
+    void refetch()
       .then((result) => {
         if (result.data?.me) {
           const nextForm = buildEditFormFromUser(result.data.me);
@@ -253,7 +186,7 @@ const AuthenticatedProfile = (): ReactElement => {
       .finally(() => {
         setIsEditMeLoading(false);
       });
-  }, [fetchMe, isEditRoute]);
+  }, [isEditRoute, refetch]);
 
   useEffect(() => {
     if (logoutCountdown === null) {
@@ -275,7 +208,7 @@ const AuthenticatedProfile = (): ReactElement => {
   const buildEditFormFromUser = (
     meUser: UserMeGqlResponse | null,
   ): ProfileEditForm => ({
-    username: meUser?.username ?? authUser?.username ?? "",
+    username: meUser?.username ?? "",
     firstName: meUser?.profile?.firstName ?? "",
     lastName: meUser?.profile?.lastName ?? "",
     email: meUser?.profile?.email ?? "",
@@ -284,7 +217,6 @@ const AuthenticatedProfile = (): ReactElement => {
   });
 
   const openEditDialog = (): void => {
-    editMeFetchPendingRef.current = true;
     navigate(`${APP_SHELL_ROUTES.profile}/edit`);
   };
 
@@ -367,9 +299,7 @@ const AuthenticatedProfile = (): ReactElement => {
       }).catch(() => null);
 
       if (result?.data?.userProfileUpdate) {
-        setProfileUser((current) =>
-          mergeProfileUpdateIntoUser(current, result.data!.userProfileUpdate),
-        );
+        await refetch();
         showSuccess("تصویر پروفایل حذف شد.");
       }
     } finally {
@@ -416,9 +346,7 @@ const AuthenticatedProfile = (): ReactElement => {
     }).catch(() => null);
 
     if (result?.data?.userProfileUpdate) {
-      setProfileUser((current) =>
-        mergeProfileUpdateIntoUser(current, result.data!.userProfileUpdate),
-      );
+      await refetch();
       showSuccess("تصویر پروفایل با موفقیت به‌روزرسانی شد.");
     }
   };
@@ -454,9 +382,7 @@ const AuthenticatedProfile = (): ReactElement => {
     }).catch(() => null);
 
     if (result?.data?.userProfileUpdate) {
-      setProfileUser((current) =>
-        mergeProfileUpdateIntoUser(current, result.data!.userProfileUpdate),
-      );
+      await refetch();
       closeEditDialog();
       showSuccess("اطلاعات کاربری با موفقیت به‌روزرسانی شد.");
     }
@@ -519,8 +445,8 @@ const AuthenticatedProfile = (): ReactElement => {
             onChange={handleAvatarChange}
           />
           {hasAvatar ? (
-            <Tooltip title="حذف تصویر پروفایل">
-              <span className={styles.avatarDeleteTooltipAnchor}>
+            <AppTooltip title="حذف تصویر پروفایل">
+              <span className={styles.avatarActionTooltipAnchor}>
                 <IconButton
                   className={styles.avatarDeleteButton}
                   aria-label="حذف تصویر پروفایل"
@@ -537,25 +463,26 @@ const AuthenticatedProfile = (): ReactElement => {
                   )}
                 </IconButton>
               </span>
-            </Tooltip>
-          ) : null}
-          <Tooltip title="ویرایش تصویر پروفایل">
-            <span className={styles.avatarEditTooltipAnchor}>
-              <IconButton
-                className={styles.avatarEditButton}
-                aria-label="ویرایش تصویر پروفایل"
-                size="small"
-                disabled={isAvatarUpdating}
-                onClick={handleAvatarButtonClick}
-              >
-                {isAvatarUploading ? (
-                  <CircularProgress size={12} />
-                ) : (
-                  <EditRoundedIcon fontSize="small" />
-                )}
-              </IconButton>
-            </span>
-          </Tooltip>
+            </AppTooltip>
+          ) : (
+            <AppTooltip title="افزودن تصویر جدید">
+              <span className={styles.avatarActionTooltipAnchor}>
+                <IconButton
+                  className={styles.avatarAddNewButton}
+                  aria-label="افزودن تصویر جدید"
+                  size="small"
+                  disabled={isAvatarUpdating}
+                  onClick={handleAvatarButtonClick}
+                >
+                  {isAvatarUploading ? (
+                    <CircularProgress size={12} />
+                  ) : (
+                    <AddRoundedIcon fontSize="small" />
+                  )}
+                </IconButton>
+              </span>
+            </AppTooltip>
+          )}
         </div>
         <div>
           <p className={styles.eyebrow}>پروفایل</p>

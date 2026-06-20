@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactElement } from "react";
+import { useEffect, useRef, type DragEvent, type ReactElement } from "react";
 import {
   Button,
   Divider,
@@ -17,9 +17,8 @@ import {
 import { OverflowTooltip } from "../../../shared/OverflowTooltip";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
-import FileUploadField from "../../../shared/forms/FileUploadField";
-import { buildExistingFilePreview } from "../../../utils/fileAccessUrl.util";
 import ItemsSection from "./ItemsSection";
+import { setDragTransferData } from "./reorder-drag.util";
 import type {
   DraftChapter,
   DraftItem,
@@ -37,12 +36,19 @@ type ChaptersSectionProps = {
   readonly onAddChapter: () => void;
   readonly onSelectChapterIndex: (nextIndex: number) => void;
   readonly onSetDraggedChapterId: (chapterId: string | null) => void;
-  readonly onChapterDragOver: (targetChapterId: string) => void;
+  readonly onChapterDragOver: (
+    event: DragEvent<HTMLButtonElement>,
+    targetChapterId: string,
+  ) => void;
   readonly onRemoveChapter: (chapterId: string) => void;
   readonly onUpdateChapter: (chapterId: string, patch: Partial<DraftChapter>) => void;
   readonly onSetExpandedItemByChapter: (chapterId: string, itemId: string | null) => void;
   readonly onSetDraggedItemId: (itemId: string | null) => void;
-  readonly onItemDragOver: (chapterId: string, targetItemId: string) => void;
+  readonly onItemDragOver: (
+    event: DragEvent<HTMLDivElement>,
+    chapterId: string,
+    targetItemId: string,
+  ) => void;
   readonly onUpdateItem: (chapterId: string, itemId: string, patch: Partial<DraftItem>) => void;
   readonly onAddItem: (chapterId: string) => void;
   readonly onRemoveItem: (chapterId: string, itemId: string) => void;
@@ -72,17 +78,37 @@ const ChaptersSection = ({
   const chapterStepsRailRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const rail = chapterStepsRailRef.current;
-    if (!rail) {
-      return;
-    }
+    const scrollActiveChapterStepIntoView = (): void => {
+      const rail = chapterStepsRailRef.current;
+      if (!rail) {
+        return;
+      }
 
-    const activeStep = rail.querySelector(`.${styles.chapterStepButtonActive}`);
-    if (!(activeStep instanceof HTMLElement)) {
-      return;
-    }
+      const activeStep = rail.querySelector(`.${styles.chapterStepButtonActive}`);
+      if (!(activeStep instanceof HTMLElement)) {
+        return;
+      }
 
-    activeStep.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "end" });
+      const railRect = rail.getBoundingClientRect();
+      const stepRect = activeStep.getBoundingClientRect();
+      const isRtl = getComputedStyle(rail).direction === "rtl";
+      const inlineEndDelta = isRtl
+        ? stepRect.left - railRect.left
+        : stepRect.right - railRect.right;
+
+      if (Math.abs(inlineEndDelta) < 1) {
+        return;
+      }
+
+      rail.scrollTo({ left: rail.scrollLeft + inlineEndDelta, behavior: "smooth" });
+    };
+
+    scrollActiveChapterStepIntoView();
+    const rafId = requestAnimationFrame(scrollActiveChapterStepIntoView);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+    };
   }, [activeChapterIndex, chapters.length]);
 
   const updateActiveChapter = (patch: Partial<DraftChapter>): void => {
@@ -100,10 +126,6 @@ const ChaptersSection = ({
 
   const handleVisibleAfterUnitChange = (unit: VisibleAfterUnit): void => {
     updateActiveChapter({ visibleAfterUnit: unit });
-  };
-
-  const handleActiveChapterIconChange = (file: File | null): void => {
-    updateActiveChapter({ iconFile: file });
   };
 
   const handleExpandedItemChange = (itemId: string | null): void => {
@@ -145,10 +167,12 @@ const ChaptersSection = ({
               }`}
               onClick={() => onSelectChapterIndex(index)}
               draggable
-              onDragStart={() => onSetDraggedChapterId(chapter.id)}
+              onDragStart={(event) => {
+                setDragTransferData(event, chapter.id);
+                onSetDraggedChapterId(chapter.id);
+              }}
               onDragOver={(event) => {
-                event.preventDefault();
-                onChapterDragOver(chapter.id);
+                onChapterDragOver(event, chapter.id);
               }}
               onDrop={(event) => {
                 event.preventDefault();
@@ -242,31 +266,6 @@ const ChaptersSection = ({
                 />
               </Grid>
             ) : null}
-            <Grid item xs={12}>
-              <div className={styles.uploaderRow}>
-                <FileUploadField
-                  label="آیکن فصل"
-                  file={activeChapter.iconFile}
-                  onChange={handleActiveChapterIconChange}
-                  existingFile={buildExistingFilePreview(
-                    activeChapter.iconAccessUrl,
-                    activeChapter.title.trim() || "آیکن فصل",
-                  )}
-                  onExistingFileClear={() =>
-                    updateActiveChapter({ iconAccessUrl: null })
-                  }
-                  accept="image/*"
-                  allowedFormatsLabel="فرمت مجاز: تصویر"
-                  maxSizeLabel="حداکثر: ۲۰MB"
-                  dropTitle="انتخاب فایل آیکن"
-                  mobileDropTitle="انتخاب فایل آیکن"
-                  dropHint="هنگام ایجاد دوره آپلود می‌شود"
-                  mobileDropHint="هنگام ایجاد دوره آپلود می‌شود"
-                  removeLabel="حذف فایل"
-                  invalidLabel="فایل معتبر نیست"
-                />
-              </div>
-            </Grid>
           </Grid>
 
           <Divider className={styles.innerDivider} />

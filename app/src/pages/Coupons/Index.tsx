@@ -939,6 +939,7 @@ const CouponsIndex = (): ReactElement => {
         open={couponDialogOpen}
         onClose={isSaving ? () => undefined : closeDialog}
         maxWidth="lg"
+        resetKey={editCouponId != null ? `${editCouponId}-${Boolean(editCouponRecord)}` : undefined}
         title={
           dialogMode === "create"
             ? t("pages.coupons.create.title")

@@ -6,7 +6,7 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import MarkEmailUnreadOutlinedIcon from "@mui/icons-material/MarkEmailUnreadOutlined";
 import UnarchiveOutlinedIcon from "@mui/icons-material/UnarchiveOutlined";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
-import { IconButton, Tooltip } from "@mui/material";
+import { IconButton } from "@mui/material";
 import { type ReactElement, useMemo } from "react";
 import { Link as RouterLink } from "react-router-dom";
 
@@ -22,6 +22,7 @@ import {
   type NotificationRecord,
 } from "./notifications-list.api";
 import styles from "./styles/notifications.module.scss";
+import AppTooltip from "../../shared/AppTooltip";
 
 type NotificationCardProps = {
   readonly notification: NotificationRecord;
@@ -184,7 +185,7 @@ const NotificationCard = ({
             <>
               <div className={styles.cardActions}>
                 {!notification.isRead ? (
-                  <Tooltip title={readActionLabel} arrow>
+                  <AppTooltip title={readActionLabel} arrow>
                     <span>
                       <IconButton
                         size="small"
@@ -196,9 +197,9 @@ const NotificationCard = ({
                         <CheckCircleOutlineRoundedIcon fontSize="small" />
                       </IconButton>
                     </span>
-                  </Tooltip>
+                  </AppTooltip>
                 ) : (
-                  <Tooltip title={readActionLabel} arrow>
+                  <AppTooltip title={readActionLabel} arrow>
                     <span>
                       <IconButton
                         size="small"
@@ -210,10 +211,10 @@ const NotificationCard = ({
                         <MarkEmailUnreadOutlinedIcon fontSize="small" />
                       </IconButton>
                     </span>
-                  </Tooltip>
+                  </AppTooltip>
                 )}
 
-                <Tooltip title={archiveActionLabel} arrow>
+                <AppTooltip title={archiveActionLabel} arrow>
                   <span>
                     <IconButton
                       size="small"
@@ -229,11 +230,11 @@ const NotificationCard = ({
                       )}
                     </IconButton>
                   </span>
-                </Tooltip>
+                </AppTooltip>
               </div>
 
               <div className={styles.mobileActions}>
-                <Tooltip title={readActionLabel} arrow>
+                <AppTooltip title={readActionLabel} arrow>
                   <span>
                     <IconButton
                       size="small"
@@ -249,8 +250,8 @@ const NotificationCard = ({
                       )}
                     </IconButton>
                   </span>
-                </Tooltip>
-                <Tooltip title={archiveActionLabel} arrow>
+                </AppTooltip>
+                <AppTooltip title={archiveActionLabel} arrow>
                   <span>
                     <IconButton
                       size="small"
@@ -266,7 +267,7 @@ const NotificationCard = ({
                       )}
                     </IconButton>
                   </span>
-                </Tooltip>
+                </AppTooltip>
               </div>
             </>
           ) : null}

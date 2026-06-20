@@ -118,6 +118,7 @@ const SystemSettingEditDialog = ({
       title="ویرایش تنظیمات سامانه"
       subtitle={detail?.label ?? detail?.key ?? ""}
       maxWidth="lg"
+      resetKey={settingId != null ? `${settingId}-${Boolean(form)}` : undefined}
       useFormWrapper
       onSubmit={handleSubmit}
       closeOnSave={closeOnSave}

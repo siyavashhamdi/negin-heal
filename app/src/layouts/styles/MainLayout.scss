@@ -769,6 +769,12 @@ $hairline: 0.0625rem solid;
   font-size: 1.35rem;
 }
 
+.main-layout__mobile-bottom-avatar.MuiAvatar-root {
+  width: 1.35rem;
+  height: 1.35rem;
+  font-size: 0.72rem;
+}
+
 .main-layout__mobile-bottom-icon-wrap {
   position: relative;
   display: inline-grid;

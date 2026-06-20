@@ -233,9 +233,28 @@ export function getViewableMediaKind(
   return null;
 }
 
+/** Chrome/Adobe PDF embed fragment — hides built-in toolbar and fits page to viewer. */
+export function buildPdfEmbedUrl(url: string): string {
+  const trimmed = url.trim();
+  if (!trimmed) {
+    return trimmed;
+  }
+
+  const fragment = "toolbar=0&navpanes=0&statusbar=0&messages=0&scrollbar=1&view=Fit";
+  if (trimmed.includes("#")) {
+    return `${trimmed}&${fragment}`;
+  }
+
+  return `${trimmed}#${fragment}`;
+}
+
 export function buildExistingFilePreview(
   accessUrl: FileAccessUrl | null | undefined,
   fallbackName?: string,
+  overrides?: {
+    readonly mimeType?: string | null;
+    readonly sizeBytes?: number | null;
+  },
 ): ExistingFilePreview | null {
   const resolved = resolveFileAccessUrl(accessUrl);
   if (!resolved) {
@@ -243,7 +262,10 @@ export function buildExistingFilePreview(
   }
 
   const name = accessUrl?.name?.trim() || fallbackName?.trim() || "فایل";
-  const mimeType = accessUrl?.mimeType?.trim() || "application/octet-stream";
+  const mimeType =
+    overrides?.mimeType?.trim() ||
+    accessUrl?.mimeType?.trim() ||
+    "application/octet-stream";
   if (isExecutableFileType(mimeType, name)) {
     return null;
   }
@@ -252,6 +274,6 @@ export function buildExistingFilePreview(
     accessUrl: resolved,
     name,
     mimeType,
-    sizeBytes: accessUrl?.sizeBytes ?? 0,
+    sizeBytes: overrides?.sizeBytes ?? accessUrl?.sizeBytes ?? 0,
   };
 }

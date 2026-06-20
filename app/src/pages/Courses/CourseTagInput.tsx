@@ -68,7 +68,6 @@ const CourseTagInput = ({
 
   return (
     <div className={`${styles.root}${shouldFloatLabel ? ` ${styles.rootFloating}` : ""}`}>
-      <span className={styles.label}>{label}</span>
       <div
         className={styles.inputShell}
         onMouseDown={(event) => {
@@ -79,6 +78,7 @@ const CourseTagInput = ({
           inputRef.current?.focus();
         }}
       >
+        <span className={styles.label}>{label}</span>
         {value.map((tag) => (
           <Chip
             key={tag}

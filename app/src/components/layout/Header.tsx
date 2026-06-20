@@ -1,14 +1,4 @@
-import {
-  Avatar,
-  Badge,
-  Box,
-  Button,
-  Divider,
-  IconButton,
-  Popover,
-  Tooltip,
-  Typography,
-} from "@mui/material";
+import { Avatar, Badge, Box, Button, Divider, IconButton, Popover, Typography } from "@mui/material";
 import {
   HelpOutlineRounded as HelpIcon,
   LogoutRounded as LogoutIcon,
@@ -22,6 +12,7 @@ import { useMe } from "../../hooks/useMe";
 import { useTranslation } from "../../hooks/useTranslation";
 import ThemeToggle from "../ThemeToggle";
 import styles from "./styles/header.module.scss";
+import AppTooltip from "../../shared/AppTooltip";
 
 const POPOVER_ANCHOR_ORIGIN = { vertical: "bottom", horizontal: "left" } as const;
 const POPOVER_TRANSFORM_ORIGIN = { vertical: "top", horizontal: "left" } as const;
@@ -123,7 +114,7 @@ const Header = (): ReactElement => {
       <Box className={styles.actions}>
         <Box className={styles.quickActions}>
           <ThemeToggle />
-          <Tooltip title={t("layout.header.actions.notifications")}>
+          <AppTooltip title={t("layout.header.actions.notifications")}>
             <IconButton
               onClick={(event) => setNotificationAnchor(event.currentTarget)}
               className={styles.iconButton}
@@ -132,24 +123,24 @@ const Header = (): ReactElement => {
                 <NotificationsIcon />
               </Badge>
             </IconButton>
-          </Tooltip>
+          </AppTooltip>
 
-          <Tooltip title={t("layout.header.actions.settings")}>
+          <AppTooltip title={t("layout.header.actions.settings")}>
             <IconButton
               onClick={(event) => setSettingsAnchor(event.currentTarget)}
               className={styles.iconButton}
             >
               <SettingsIcon />
             </IconButton>
-          </Tooltip>
-          <Tooltip title={t("layout.header.actions.help")}>
+          </AppTooltip>
+          <AppTooltip title={t("layout.header.actions.help")}>
             <IconButton
               onClick={(event) => setHelpAnchor(event.currentTarget)}
               className={styles.iconButton}
             >
               <HelpIcon />
             </IconButton>
-          </Tooltip>
+          </AppTooltip>
         </Box>
 
         <button
@@ -163,7 +154,7 @@ const Header = (): ReactElement => {
           <strong>{displayName}</strong>
         </button>
 
-        <Tooltip title={t("layout.header.actions.exit")}>
+        <AppTooltip title={t("layout.header.actions.exit")}>
           <Button
             variant="outlined"
             className={styles.signoutButton}
@@ -172,7 +163,7 @@ const Header = (): ReactElement => {
           >
             {t("layout.header.actions.exit")}
           </Button>
-        </Tooltip>
+        </AppTooltip>
       </Box>
 
       <HeaderPopover
