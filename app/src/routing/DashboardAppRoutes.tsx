@@ -38,8 +38,11 @@ export const DashboardAppRoutes = (): ReactElement => {
       <Route path={APP_SHELL_ROUTES.login} element={<LoginRoute />} />
       <Route path={APP_SHELL_ROUTES.resetPassword} element={<ResetPassword />} />
       <Route path={APP_SHELL_ROUTES.dashboard} element={wrapProtected(<Dashboard />)} />
-      <Route path={APP_SHELL_ROUTES.courseDetail} element={<CourseDetail />} />
+      <Route path={`${APP_SHELL_ROUTES.courses}/new`} element={<CoursesIndex />} />
+      <Route path={`${APP_SHELL_ROUTES.courses}/edit/:courseId`} element={<CoursesIndex />} />
+      <Route path={`${APP_SHELL_ROUTES.courses}/delete/:courseId`} element={<CoursesIndex />} />
       <Route path={APP_SHELL_ROUTES.courses} element={<CoursesIndex />} />
+      <Route path={APP_SHELL_ROUTES.courseDetail} element={<CourseDetail />} />
       <Route path={APP_SHELL_ROUTES.more} element={wrapProtected(<More />)} />
       <Route path={APP_SHELL_ROUTES.moreAbout} element={wrapProtected(<AboutPage />)} />
       <Route
@@ -47,6 +50,10 @@ export const DashboardAppRoutes = (): ReactElement => {
         element={wrapProtected(<PrivacyPolicyPage />)}
       />
       <Route path={APP_SHELL_ROUTES.moreTermsOfUse} element={wrapProtected(<TermsOfUsePage />)} />
+      <Route
+        path={`${APP_SHELL_ROUTES.moreSystemSettings}/edit/:settingId`}
+        element={wrapProtected(<SystemSettingsIndex />)}
+      />
       <Route
         path={APP_SHELL_ROUTES.moreSystemSettings}
         element={wrapProtected(<SystemSettingsIndex />)}
@@ -62,12 +69,15 @@ export const DashboardAppRoutes = (): ReactElement => {
       <Route path={`${APP_SHELL_ROUTES.profile}/*`} element={wrapProtected(<Profile />)} />
       <Route path={APP_SHELL_ROUTES.support} element={wrapProtected(<Support />)} />
       <Route path={APP_SHELL_ROUTES.supportFaq} element={wrapProtected(<SupportFaq />)} />
+      <Route path={`${APP_SHELL_ROUTES.supportTickets}/new`} element={wrapProtected(<SupportTicketsIndex />)} />
+      <Route path={`${APP_SHELL_ROUTES.supportTickets}/:ticketId`} element={wrapProtected(<SupportTicketsIndex />)} />
       <Route
         path={APP_SHELL_ROUTES.supportTickets}
         element={wrapProtected(<SupportTicketsIndex />)}
       />
-      <Route path={APP_SHELL_ROUTES.users} element={wrapProtected(<UsersManagementIndex />)} />
-      <Route path={`${APP_SHELL_ROUTES.usersManagement}/*`} element={wrapProtected(<UsersManagementIndex />)} />
+      <Route path={`${APP_SHELL_ROUTES.courses}/:courseId/purchase`} element={<CourseDetail />} />
+      <Route path={`${APP_SHELL_ROUTES.courses}/:courseId/view/:mediaSlug`} element={<CourseDetail />} />
+      <Route path={`${APP_SHELL_ROUTES.users}/*`} element={wrapProtected(<UsersManagementIndex />)} />
       <Route
         path={APP_SHELL_ROUTES.home}
         element={

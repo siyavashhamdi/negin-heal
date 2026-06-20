@@ -799,10 +799,14 @@ export class CourseService {
     const { filters, options } = input || {};
     const limit =
       options?.limit ?? PAGINATION_CONSTANT.CURSOR_BASED.DEFAULT_LIMIT;
-    const baseFilterQuery = await this.buildListFilterQuery({
-      ...(filters ?? {}),
-      isActive: true,
-    });
+    const baseFilterQuery = await this.applyUserCoursePurchaseFilter(
+      await this.buildListFilterQuery({
+        ...(filters ?? {}),
+        isActive: true,
+      }),
+      filters?.isPurchased,
+      userId,
+    );
     const sortFieldMap: Record<CourseListSortField, string> = {
       createdAt: "audit.createdAt",
       updatedAt: "audit.updatedAt",
@@ -1763,6 +1767,42 @@ export class CourseService {
     )
       ? CourseReleaseType.GRADUAL
       : CourseReleaseType.IMMEDIATE;
+  }
+
+  private async applyUserCoursePurchaseFilter(
+    filterQuery: FilterQuery<Course>,
+    isPurchased: boolean | undefined,
+    userId?: Types.ObjectId,
+  ): Promise<FilterQuery<Course>> {
+    if (typeof isPurchased !== "boolean") {
+      return filterQuery;
+    }
+
+    if (!userId) {
+      return isPurchased
+        ? { $and: [filterQuery, { _id: { $in: [] } }] }
+        : filterQuery;
+    }
+
+    const paidCourseIds = await this.userCourseModel
+      .find({
+        userId,
+        "purchase.status": UserCoursePurchaseStatus.PAID,
+      })
+      .select({ courseId: 1 })
+      .lean<Array<{ courseId: Types.ObjectId }>>()
+      .exec();
+
+    const purchasedCourseObjectIds = paidCourseIds.map((entry) => entry.courseId);
+
+    return {
+      $and: [
+        filterQuery,
+        isPurchased
+          ? { _id: { $in: purchasedCourseObjectIds } }
+          : { _id: { $nin: purchasedCourseObjectIds } },
+      ],
+    };
   }
 
   private async buildUserCourseLookup(

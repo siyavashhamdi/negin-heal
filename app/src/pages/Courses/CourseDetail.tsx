@@ -13,7 +13,6 @@ import {
   Chip,
   CircularProgress,
   Collapse,
-  Dialog,
   IconButton,
   Paper,
   Skeleton,
@@ -40,6 +39,8 @@ import { resolveFileAccessUrl } from "../../utils/fileAccessUrl.util";
 import { USER_COURSE_DETAIL_QUERY } from "../../graphql/queries/userCourseDetail.query";
 import { COURSE_CHAPTER_COMPLETE_MUTATION } from "../../graphql/mutations/courseChapterComplete.mutation";
 import { useSnackbar } from "../../hooks/useSnackbar";
+import EntityModalShell from "../../shared/crud/EntityModalShell";
+import ModalFooterActions from "../../shared/crud/ModalFooterActions";
 import {
   ChapterCompletionCheckpoint,
   CourseProgressSummary,
@@ -70,10 +71,15 @@ const ITEM_TYPE_ICON: Record<CourseItemType, ReactElement> = {
 };
 
 type CourseMediaViewer = {
+  readonly slug: string;
   readonly title: string;
   readonly type: Exclude<CourseItemType, "ARTICLE">;
   readonly url: string;
 };
+
+function buildMediaSlug(title: string): string {
+  return encodeURIComponent(title.trim());
+}
 
 function CourseItemContent({
   item,
@@ -98,7 +104,14 @@ function CourseItemContent({
         alt={item.title}
         className={styles.itemImage}
         loading="lazy"
-        onClick={() => onOpenMedia({ title: item.title, type: "IMAGE", url: fileUrl })}
+        onClick={() =>
+          onOpenMedia({
+            slug: buildMediaSlug(item.title),
+            title: item.title,
+            type: "IMAGE",
+            url: fileUrl,
+          })
+        }
       />
     );
   }
@@ -110,7 +123,14 @@ function CourseItemContent({
         src={fileUrl}
         controls
         preload="metadata"
-        onClick={() => onOpenMedia({ title: item.title, type: "VIDEO", url: fileUrl })}
+        onClick={() =>
+          onOpenMedia({
+            slug: buildMediaSlug(item.title),
+            title: item.title,
+            type: "VIDEO",
+            url: fileUrl,
+          })
+        }
       >
         مرورگر شما از پخش ویدیو پشتیبانی نمی‌کند.
       </video>
@@ -124,7 +144,14 @@ function CourseItemContent({
         src={fileUrl}
         controls
         preload="metadata"
-        onClick={() => onOpenMedia({ title: item.title, type: "VOICE", url: fileUrl })}
+        onClick={() =>
+          onOpenMedia({
+            slug: buildMediaSlug(item.title),
+            title: item.title,
+            type: "VOICE",
+            url: fileUrl,
+          })
+        }
       >
         مرورگر شما از پخش صوت پشتیبانی نمی‌کند.
       </audio>
@@ -285,8 +312,10 @@ const CourseDetail = (): ReactElement => {
   );
   const [isMobilePriceBarVisible, setIsMobilePriceBarVisible] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<CourseMediaViewer | null>(null);
-  const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
   const [completingChapterKey, setCompletingChapterKey] = useState<string | null>(null);
+  const isPurchaseDialogOpen = location.pathname.endsWith("/purchase");
+  const mediaRouteMatch = /^\/courses\/[^/]+\/view\/(.+)$/.exec(location.pathname);
+  const mediaSlugFromRoute = mediaRouteMatch?.[1] ? decodeURIComponent(mediaRouteMatch[1]) : null;
   const isUnlockRefetchingRef = useRef(false);
   const purchaseIntentHandledRef = useRef(false);
 
@@ -325,8 +354,7 @@ const CourseDetail = (): ReactElement => {
     }
 
     purchaseIntentHandledRef.current = true;
-    setIsPurchaseDialogOpen(true);
-    navigate(`${location.pathname}${location.search}`, { replace: true, state: null });
+    navigate(`${APP_SHELL_ROUTES.courses}/${courseId}/purchase`, { replace: true });
   }, [
     canAccessCourse,
     course,
@@ -462,13 +490,13 @@ const CourseDetail = (): ReactElement => {
       const coursePath = `${APP_SHELL_ROUTES.courses}/${courseId}`;
       setPostLoginRedirect({ pathname: coursePath, openCoursePurchase: true });
       const loginPath = isMobileAppLayoutViewport()
-        ? APP_SHELL_ROUTES.profile
+        ? APP_SHELL_ROUTES.profileLogin
         : APP_SHELL_ROUTES.login;
       navigate(loginPath, { state: { from: coursePath } });
       return;
     }
 
-    setIsPurchaseDialogOpen(true);
+    navigate(`${APP_SHELL_ROUTES.courses}/${courseId}/purchase`);
   };
 
   const toggleChapter = (chapterKey: string): void => {
@@ -483,8 +511,63 @@ const CourseDetail = (): ReactElement => {
     });
   };
 
+  const closeMediaViewer = (): void => {
+    if (!courseId) {
+      return;
+    }
+    setSelectedMedia(null);
+    navigate(`${APP_SHELL_ROUTES.courses}/${courseId}`);
+  };
+
+  const openMediaViewer = (media: CourseMediaViewer): void => {
+    if (!courseId) {
+      return;
+    }
+    setSelectedMedia(media);
+    navigate(`${APP_SHELL_ROUTES.courses}/${courseId}/view/${media.slug}`);
+  };
+
+  useEffect(() => {
+    if (!course || !mediaSlugFromRoute) {
+      if (!mediaSlugFromRoute) {
+        setSelectedMedia(null);
+      }
+      return;
+    }
+
+    if (selectedMedia?.slug === mediaSlugFromRoute) {
+      return;
+    }
+
+    for (const chapter of course.chapters) {
+      for (const item of chapter.items ?? []) {
+        if (item.type === "ARTICLE" || buildMediaSlug(item.title) !== mediaSlugFromRoute) {
+          continue;
+        }
+        const fileUrl = resolveFileAccessUrl(item.fileAccessUrl);
+        if (!fileUrl || item.type === "ARTICLE") {
+          continue;
+        }
+        setSelectedMedia({
+          slug: mediaSlugFromRoute,
+          title: item.title,
+          type: item.type,
+          url: fileUrl,
+        });
+        return;
+      }
+    }
+  }, [course, mediaSlugFromRoute, selectedMedia?.slug]);
+
+  const closePurchaseDialog = (): void => {
+    if (!courseId) {
+      return;
+    }
+    navigate(`${APP_SHELL_ROUTES.courses}/${courseId}`);
+  };
+
   const handlePurchaseSuccess = (): void => {
-    setIsPurchaseDialogOpen(false);
+    closePurchaseDialog();
     void refetch();
   };
 
@@ -859,7 +942,7 @@ const CourseDetail = (): ReactElement => {
                                 </div>
                               </div>
                               <div className={styles.itemContent}>
-                                <CourseItemContent item={item} onOpenMedia={setSelectedMedia} />
+                                <CourseItemContent item={item} onOpenMedia={openMediaViewer} />
                               </div>
                             </article>
                           ))
@@ -893,40 +976,45 @@ const CourseDetail = (): ReactElement => {
         بازگشت به لیست دوره‌ها
       </Button>
 
-      <Dialog
-        fullScreen
-        open={selectedMedia != null}
-        onClose={() => setSelectedMedia(null)}
-        PaperProps={{ className: styles.mediaDialogPaper }}
+      <EntityModalShell
+        open={selectedMedia != null || mediaSlugFromRoute != null}
+        onClose={closeMediaViewer}
+        title={selectedMedia?.title ?? "نمایش رسانه"}
+        maxWidth="lg"
+        footer={
+          <ModalFooterActions
+            actions={[
+              {
+                key: "close",
+                isCloseButton: true,
+                onClick: closeMediaViewer,
+              },
+            ]}
+          />
+        }
       >
-        <div className={styles.mediaDialogHeader}>
-          <strong>{selectedMedia?.title}</strong>
-        </div>
-        <div className={styles.mediaDialogBody}>
-          {selectedMedia?.type === "IMAGE" ? (
-            <img src={selectedMedia.url} alt={selectedMedia.title} className={styles.mediaDialogImage} />
-          ) : null}
-          {selectedMedia?.type === "VIDEO" ? (
-            <video className={styles.mediaDialogVideo} src={selectedMedia.url} controls autoPlay>
-              مرورگر شما از پخش ویدیو پشتیبانی نمی‌کند.
-            </video>
-          ) : null}
-          {selectedMedia?.type === "VOICE" ? (
-            <audio className={styles.mediaDialogAudio} src={selectedMedia.url} controls autoPlay>
-              مرورگر شما از پخش صوت پشتیبانی نمی‌کند.
-            </audio>
-          ) : null}
-        </div>
-        <div className={styles.mediaDialogHeader}>
-          <Button variant="outlined" fullWidth onClick={() => setSelectedMedia(null)}>
-            بستن
-          </Button>
-        </div>
-      </Dialog>
+        {selectedMedia?.type === "IMAGE" ? (
+          <img
+            src={selectedMedia.url}
+            alt={selectedMedia.title}
+            className={styles.mediaDialogImage}
+          />
+        ) : null}
+        {selectedMedia?.type === "VIDEO" ? (
+          <video className={styles.mediaDialogVideo} src={selectedMedia.url} controls autoPlay>
+            مرورگر شما از پخش ویدیو پشتیبانی نمی‌کند.
+          </video>
+        ) : null}
+        {selectedMedia?.type === "VOICE" ? (
+          <audio className={styles.mediaDialogAudio} src={selectedMedia.url} controls autoPlay>
+            مرورگر شما از پخش صوت پشتیبانی نمی‌کند.
+          </audio>
+        ) : null}
+      </EntityModalShell>
 
       <CoursePurchaseDialog
         open={isPurchaseDialogOpen}
-        onClose={() => setIsPurchaseDialogOpen(false)}
+        onClose={closePurchaseDialog}
         onPurchaseSuccess={handlePurchaseSuccess}
         course={course}
         displayPrice={displayPrice}

@@ -16,9 +16,6 @@ import {
   Checkbox,
   Chip,
   CircularProgress,
-  Dialog,
-  DialogContent,
-  DialogTitle,
   FormControlLabel,
   InputAdornment,
   MenuItem,
@@ -45,7 +42,6 @@ import { COUPON_LIST_QUERY } from "../../graphql/queries/couponList.query";
 import { COURSE_LIST_QUERY } from "../../graphql/queries/courseList.query";
 import { useAuth } from "../../contexts/AuthContext";
 import { useDebounce } from "../../hooks/useDebounce";
-import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import {
   useServerPaginatedQuery,
@@ -56,6 +52,7 @@ import { useTranslation } from "../../hooks/useTranslation";
 import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
 import CrudRowActions from "../../shared/crud/CrudRowActions";
 import EntityDeleteDialog from "../../shared/crud/EntityDeleteDialog";
+import EntityModalShell from "../../shared/crud/EntityModalShell";
 import ModalFooterActions from "../../shared/crud/ModalFooterActions";
 import EntityTableShell from "../../shared/crud/EntityTableShell";
 import crudPrimitives from "../../shared/crud/styles/crudPrimitives.module.scss";
@@ -248,9 +245,6 @@ const CouponsIndex = (): ReactElement => {
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useMediaQuery((muiTheme: Theme) => muiTheme.breakpoints.down("md"));
-  const { isCompact, dialogProps, getPaperProps, getContentProps } = useMobileDialogProps({
-    breakpoint: "md",
-  });
   const { user } = useAuth();
   const { t } = useTranslation();
   const { showError } = useSnackbar();
@@ -452,7 +446,7 @@ const CouponsIndex = (): ReactElement => {
     setDialogMode("edit");
     setEditTarget(record);
     setForm(buildInitialCouponForm(record));
-    navigate(`${APP_SHELL_ROUTES.moreCoupons}/${record.id}`);
+    navigate(`${APP_SHELL_ROUTES.moreCoupons}/edit/${record.id}`);
   };
 
   const setFormField = <TKey extends keyof CouponFormState>(
@@ -554,15 +548,22 @@ const CouponsIndex = (): ReactElement => {
       return;
     }
 
-    if (!routeSuffix) {
+    if (routeSuffix.startsWith("edit/")) {
+      const editId = routeSuffix.slice("edit/".length);
+      if (!editId) {
+        return;
+      }
+      const target = rows.find((row) => row.id === editId) ?? null;
+      if (target) {
+        setDialogMode("edit");
+        setEditTarget(target);
+        setForm(buildInitialCouponForm(target));
+      }
       return;
     }
 
-    const target = rows.find((row) => row.id === routeSuffix) ?? null;
-    if (target) {
-      setDialogMode("edit");
-      setEditTarget(target);
-      setForm(buildInitialCouponForm(target));
+    if (!routeSuffix) {
+      return;
     }
   }, [dialogMode, form, location.pathname, rows]);
 
@@ -962,29 +963,43 @@ const CouponsIndex = (): ReactElement => {
         pagination={pagination}
       />
 
-      <Dialog
+      <EntityModalShell
         open={form != null}
-        onClose={isSaving ? undefined : closeDialog}
+        onClose={isSaving ? () => undefined : closeDialog}
         maxWidth="lg"
-        {...dialogProps}
-        PaperProps={getPaperProps()}
+        title={
+          dialogMode === "create"
+            ? t("pages.coupons.create.title")
+            : t("pages.coupons.edit.title")
+        }
+        useFormWrapper
+        onSubmit={handleSubmit}
+        closeOnSave
+        footer={
+          <ModalFooterActions
+            actions={[
+              {
+                key: "close",
+                isCloseButton: true,
+                onClick: closeDialog,
+                disabled: isSaving,
+              },
+              {
+                key: "submit",
+                label: isSaving
+                  ? t("pages.coupons.edit.saving")
+                  : dialogMode === "create"
+                    ? t("pages.coupons.create.save")
+                    : t("pages.coupons.edit.save"),
+                type: "submit",
+                icon: dialogMode === "create" ? <AddRoundedIcon /> : undefined,
+                disabled: isSaving,
+              },
+            ]}
+          />
+        }
       >
-        <Box
-          component="form"
-          onSubmit={handleSubmit}
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            minHeight: isCompact ? "100%" : undefined,
-          }}
-        >
-          <DialogTitle>
-            {dialogMode === "create"
-              ? t("pages.coupons.create.title")
-              : t("pages.coupons.edit.title")}
-          </DialogTitle>
-          <DialogContent dividers {...getContentProps({ sx: { bgcolor: "background.default" } })}>
-            {form ? (
+        {form ? (
               <Stack spacing={2.5}>
                 <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
                   <TextField
@@ -1177,35 +1192,7 @@ const CouponsIndex = (): ReactElement => {
                 </Stack>
               </Stack>
             ) : null}
-          </DialogContent>
-          <ModalFooterActions
-            reverseOrderOnMobile={isMobile}
-            actions={[
-              {
-                key: "close",
-                label: "بستن",
-                onClick: closeDialog,
-                color: "inherit",
-                variant: "outlined",
-                disabled: isSaving,
-              },
-              {
-                key: "submit",
-                label: isSaving
-                  ? t("pages.coupons.edit.saving")
-                  : dialogMode === "create"
-                    ? t("pages.coupons.create.save")
-                    : t("pages.coupons.edit.save"),
-                type: "submit",
-                variant: "contained",
-                color: "primary",
-                disabled: isSaving,
-                icon: dialogMode === "create" ? <AddRoundedIcon /> : undefined,
-              },
-            ]}
-          />
-        </Box>
-      </Dialog>
+      </EntityModalShell>
 
       <EntityDeleteDialog
         open={deleteTarget != null}

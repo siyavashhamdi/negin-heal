@@ -4,6 +4,12 @@ const LEGACY_PUSH_SW_FILENAME = "push-sw.js";
 
 let activeRegistration: ServiceWorkerRegistration | undefined;
 
+function getRegistrationScriptUrls(registration: ServiceWorkerRegistration): string[] {
+  return [registration.active, registration.waiting, registration.installing]
+    .filter((worker): worker is ServiceWorker => worker != null)
+    .map((worker) => worker.scriptURL);
+}
+
 async function unregisterLegacyPushServiceWorkers(): Promise<void> {
   if (!("serviceWorker" in navigator)) {
     return;
@@ -14,7 +20,7 @@ async function unregisterLegacyPushServiceWorkers(): Promise<void> {
   await Promise.all(
     registrations
       .filter((registration) =>
-        Array.from(registration.scriptURLs).some((scriptUrl) =>
+        getRegistrationScriptUrls(registration).some((scriptUrl) =>
           scriptUrl.includes(LEGACY_PUSH_SW_FILENAME),
         ),
       )

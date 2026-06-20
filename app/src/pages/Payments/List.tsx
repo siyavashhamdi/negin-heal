@@ -18,9 +18,6 @@ import {
 import {
   Box,
   Chip,
-  Dialog,
-  DialogContent,
-  DialogTitle,
   IconButton,
   MenuItem,
   Paper,
@@ -48,7 +45,6 @@ import { COURSE_PAYMENT_LIST_QUERY } from "../../graphql/queries/coursePaymentLi
 import { COURSE_LIST_QUERY } from "../../graphql/queries/courseList.query";
 import { USER_LIST_QUERY } from "../../graphql/queries/userList.query";
 import { useDebounce } from "../../hooks/useDebounce";
-import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import {
   useServerPaginatedQuery,
@@ -56,6 +52,7 @@ import {
 } from "../../hooks/useServerPaginatedQuery";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
+import EntityModalShell from "../../shared/crud/EntityModalShell";
 import EntityTableShell from "../../shared/crud/EntityTableShell";
 import crudPrimitives from "../../shared/crud/styles/crudPrimitives.module.scss";
 import EntityAutocompleteField from "../../shared/forms/EntityAutocompleteField";
@@ -540,9 +537,6 @@ const PaymentsList = (): ReactElement => {
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useMediaQuery((muiTheme: Theme) => muiTheme.breakpoints.down("md"));
-  const { dialogProps, getPaperProps, getContentProps } = useMobileDialogProps({
-    breakpoint: "md",
-  });
   const { t } = useTranslation();
   const { showError } = useSnackbar();
   const hasShownLoadErrorRef = useRef(false);
@@ -1379,28 +1373,26 @@ const PaymentsList = (): ReactElement => {
         pagination={pagination}
       />
 
-      <Dialog
+      <EntityModalShell
         open={manualPaymentRouteOpen}
         onClose={closeManualPaymentDialog}
         maxWidth="md"
-        {...dialogProps}
-        PaperProps={getPaperProps()}
+        title="ثبت دستی پرداخت"
+        subtitle="این فرم فقط برای ثبت پرداخت توسط پشتیبانی استفاده می‌شود"
+        footer={
+          <ManualPaymentDialogActions
+            onCancel={closeManualPaymentDialog}
+            onSubmit={handleSubmitManualPayment}
+            cancelDisabled={
+              createManualPaymentResult.loading || isManualPaymentFileUploading
+            }
+            submitDisabled={!canSubmitManualPayment}
+            isUploadingFile={isManualPaymentFileUploading}
+            isSubmitting={createManualPaymentResult.loading}
+          />
+        }
       >
-        <DialogTitle sx={{ pb: 1 }}>
-          <Stack spacing={0.5}>
-            <Typography variant="h6" fontWeight={900}>
-              ثبت دستی پرداخت
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              این فرم فقط برای ثبت پرداخت توسط پشتیبانی استفاده می‌شود
-            </Typography>
-          </Stack>
-        </DialogTitle>
-        <DialogContent
-          dividers
-          {...getContentProps({ sx: { bgcolor: "background.default" } })}
-        >
-          <Stack spacing={2}>
+        <Stack spacing={2}>
             <Paper
               variant="outlined"
               sx={{ p: 2, borderRadius: 3, bgcolor: "background.paper", borderColor: "divider" }}
@@ -1521,51 +1513,25 @@ const PaymentsList = (): ReactElement => {
               </Typography>
             ) : null}
           </Stack>
-        </DialogContent>
-        <ManualPaymentDialogActions
-          onCancel={closeManualPaymentDialog}
-          onSubmit={handleSubmitManualPayment}
-          cancelDisabled={
-            createManualPaymentResult.loading || isManualPaymentFileUploading
-          }
-          submitDisabled={!canSubmitManualPayment}
-          isUploadingFile={isManualPaymentFileUploading}
-          isSubmitting={createManualPaymentResult.loading}
-        />
-      </Dialog>
+      </EntityModalShell>
 
-      <Dialog
+      <EntityModalShell
         open={reviewTarget != null}
         onClose={closeReviewDialog}
         maxWidth="lg"
-        {...dialogProps}
-        PaperProps={getPaperProps()}
+        title="بررسی پرداخت"
+        subtitle={reviewTarget?.courseTitle ?? EMPTY_DISPLAY}
+        footer={
+          <ReviewPaymentDialogActions
+            onCancel={closeReviewDialog}
+            onSubmit={handleSubmitReview}
+            cancelDisabled={updatePaymentStatusResult.loading}
+            submitDisabled={!reviewTarget || updatePaymentStatusResult.loading}
+          />
+        }
       >
-        <DialogTitle sx={{ pb: 1 }}>
-          <Stack spacing={1}>
-            <Stack
-              direction={{ xs: "column", sm: "row" }}
-              spacing={1}
-              alignItems={{ xs: "flex-start", sm: "center" }}
-              justifyContent="space-between"
-            >
-              <Box>
-                <Typography variant="h6" fontWeight={900}>
-                  بررسی پرداخت
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {reviewTarget?.courseTitle ?? EMPTY_DISPLAY}
-                </Typography>
-              </Box>
-            </Stack>
-          </Stack>
-        </DialogTitle>
-        <DialogContent
-          dividers
-          {...getContentProps({ sx: { bgcolor: "background.default" } })}
-        >
-          {reviewTarget ? (
-            <Stack spacing={2}>
+        {reviewTarget ? (
+          <Stack spacing={2}>
               <PaymentDetailSection
                 title="خلاصه پرداخت"
                 items={[
@@ -1708,15 +1674,7 @@ const PaymentsList = (): ReactElement => {
               </Paper>
             </Stack>
           ) : null}
-        </DialogContent>
-        <ReviewPaymentDialogActions
-          onCancel={closeReviewDialog}
-          onSubmit={handleSubmitReview}
-          cancelDisabled={updatePaymentStatusResult.loading}
-          submitDisabled={!reviewTarget || updatePaymentStatusResult.loading}
-          cancelLabel="بستن"
-        />
-      </Dialog>
+      </EntityModalShell>
     </>
   );
 };

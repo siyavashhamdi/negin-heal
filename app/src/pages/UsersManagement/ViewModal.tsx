@@ -47,10 +47,8 @@ const UsersManagementViewModal = ({
           actions={[
             {
               key: "close",
-              label: "بستن",
+              isCloseButton: true,
               onClick: onClose,
-              variant: "outlined",
-              color: "inherit",
             },
           ]}
         />

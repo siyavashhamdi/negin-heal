@@ -67,10 +67,8 @@ const EntityToggleActiveDialog = ({
           actions={[
             {
               key: "close",
-              label: "بستن",
+              isCloseButton: true,
               onClick: onCancel,
-              color: "inherit",
-              variant: "outlined",
               disabled: loading,
             },
             {

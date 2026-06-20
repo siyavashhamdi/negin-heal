@@ -88,6 +88,7 @@ type CourseListFilterInput = {
   itemType?: CourseItemType | null;
   hasPrice?: boolean | null;
   hasFreeChapter?: boolean | null;
+  isPurchased?: boolean | null;
   minPriceIrt?: number | null;
   maxPriceIrt?: number | null;
   tagsAny?: string[] | null;
@@ -169,6 +170,7 @@ export type CourseListFilters = {
   readonly itemType: "ALL" | CourseItemType;
   readonly hasPrice: "ALL" | "WITH_PRICE" | "FREE_OR_UNSET";
   readonly hasFreeChapter: "ALL" | "YES" | "NO";
+  readonly isPurchased: "ALL" | "YES" | "NO";
   readonly minPriceIrt: string;
   readonly maxPriceIrt: string;
   readonly tagsAny: string;
@@ -188,6 +190,7 @@ export const DEFAULT_COURSE_LIST_FILTERS: CourseListFilters = {
   itemType: "ALL",
   hasPrice: "ALL",
   hasFreeChapter: "ALL",
+  isPurchased: "ALL",
   minPriceIrt: "",
   maxPriceIrt: "",
   tagsAny: "",
@@ -326,6 +329,8 @@ export function buildCourseListQueryVariables(
           filters.hasFreeChapter === "ALL"
             ? null
             : filters.hasFreeChapter === "YES",
+        isPurchased:
+          filters.isPurchased === "ALL" ? null : filters.isPurchased === "YES",
         minPriceIrt,
         maxPriceIrt,
         tagsAny,

@@ -7,6 +7,7 @@ import {
   type ChangeEvent,
   type ReactElement,
 } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Clear as ClearIcon } from "@mui/icons-material";
 import {
   Chip,
@@ -42,6 +43,7 @@ import {
 } from "../../hooks/useServerPaginatedQuery";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
+import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
 import CrudRowActions from "../../shared/crud/CrudRowActions";
 import EntityTableShell from "../../shared/crud/EntityTableShell";
 import JalaliDateFilterField from "../../shared/table/JalaliDateFilterField";
@@ -293,6 +295,8 @@ function SupportTicketListInner({
   debouncedPendingFilters,
 }: SupportTicketListInnerProps): ReactElement {
   const isMobile = useMediaQuery((muiTheme: Theme) => muiTheme.breakpoints.down("md"));
+  const location = useLocation();
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const { showError } = useSnackbar();
   const hasShownLoadErrorRef = useRef(false);
@@ -305,8 +309,39 @@ function SupportTicketListInner({
   const applyFiltersRef = useRef<(() => void) | null>(null);
 
   const [dialogMode, setDialogMode] = useState<TicketDialogMode>("view");
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogRecord, setDialogRecord] = useState<SupportTicketRecord | null>(null);
+
+  const ticketsRoutePrefix = `${APP_SHELL_ROUTES.supportTickets}/`;
+  const isCreateRoute = location.pathname === `${APP_SHELL_ROUTES.supportTickets}/new`;
+  const viewRouteMatch = /^\/support\/tickets\/([^/]+)$/.exec(location.pathname);
+  const viewRouteId = viewRouteMatch?.[1] !== "new" ? viewRouteMatch?.[1] : undefined;
+  const dialogOpen = isCreateRoute || viewRouteId != null;
+
+  const closeTicketDialog = (): void => {
+    navigate(APP_SHELL_ROUTES.supportTickets);
+  };
+
+  useEffect(() => {
+    if (!location.pathname.startsWith(ticketsRoutePrefix)) {
+      return;
+    }
+
+    if (isCreateRoute) {
+      setDialogMode("create");
+      setDialogRecord(null);
+      return;
+    }
+
+    if (!viewRouteId) {
+      return;
+    }
+
+    const target = rows.find((row) => row.id === viewRouteId) ?? null;
+    if (target) {
+      setDialogMode("view");
+      setDialogRecord(target);
+    }
+  }, [isCreateRoute, location.pathname, rows, ticketsRoutePrefix, viewRouteId]);
 
   const hasAppliedFilters = useMemo(() => {
     if (searchQuery.trim() !== "") {
@@ -333,25 +368,19 @@ function SupportTicketListInner({
   }, [debouncedPendingFilters, showColumnFilters, onApplyFilters]);
 
   const openCreateDialog = (): void => {
-    setDialogMode("create");
-    setDialogRecord(null);
-    setDialogOpen(true);
+    navigate(`${APP_SHELL_ROUTES.supportTickets}/new`);
   };
 
   const openViewDialog = (record: SupportTicketRecord): void => {
-    setDialogMode("view");
-    setDialogRecord(record);
-    setDialogOpen(true);
+    navigate(`${APP_SHELL_ROUTES.supportTickets}/${record.id}`);
   };
 
   const handleDialogClose = (): void => {
-    setDialogOpen(false);
-    setDialogRecord(null);
+    closeTicketDialog();
   };
 
   const handleDialogSuccess = (): void => {
-    setDialogOpen(false);
-    setDialogRecord(null);
+    closeTicketDialog();
     onRefresh();
   };
 

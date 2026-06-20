@@ -8,16 +8,11 @@ import {
   Avatar,
   Button,
   CircularProgress,
-  Dialog,
-  DialogContent,
-  DialogTitle,
   IconButton,
   Stack,
   TextField,
   Tooltip,
-  useMediaQuery,
 } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
 import {
   type ChangeEvent,
   type FormEvent,
@@ -26,20 +21,21 @@ import {
   useRef,
   useState,
 } from "react";
-import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
+import { Link as RouterLink, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useMobileAppLayout } from "../../hooks/useMobileAppLayout";
-import Login from "../Login/Login";
 import { LoginRequiredState } from "../../shared/auth/LoginRequiredState";
 import { USER_PROFILE_UPDATE_MUTATION } from "../../graphql/mutations/userProfileUpdate.mutation";
 import { useMe } from "../../hooks/useMe";
-import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
+import EntityConfirmDialogShell from "../../shared/crud/EntityConfirmDialogShell";
+import EntityModalShell from "../../shared/crud/EntityModalShell";
 import { getFileIdFromAccessUrl, type FileAccessUrl } from "../../utils/fileAccessUrl.util";
 import { uploadFile } from "../../utils/fileUpload.util";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import ModalFooterActions from "../../shared/crud/ModalFooterActions";
-import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
+import { APP_SHELL_ROUTES, isProfileAuthRoute } from "../../routing/app-shell-routes";
+import { ProfileAuthRoutes } from "./ProfileAuthRoutes";
 import styles from "./styles/profile.module.scss";
 
 const PASSWORD_CHANGE_LOGOUT_COUNTDOWN_SECONDS = 5;
@@ -107,11 +103,6 @@ function optionalTextInput(value: string): string | null {
 const AuthenticatedProfile = (): ReactElement => {
   const location = useLocation();
   const navigate = useNavigate();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const { dialogProps, getPaperProps, getContentProps } = useMobileDialogProps({
-    breakpoint: "sm",
-  });
   const { logout, user: authUser } = useAuth();
   const { showError, showSuccess } = useSnackbar();
   const { user, avatarUrl, loading, refetch } = useMe();
@@ -373,7 +364,7 @@ const AuthenticatedProfile = (): ReactElement => {
 
     if (result?.data?.userProfileUpdate) {
       await refetch();
-      setIsEditDialogOpen(false);
+      closeEditDialog();
       showSuccess("اطلاعات کاربری با موفقیت به‌روزرسانی شد.");
     }
   };
@@ -405,7 +396,7 @@ const AuthenticatedProfile = (): ReactElement => {
     }).catch(() => null);
 
     if (result?.data?.userProfileUpdate) {
-      setIsPasswordDialogOpen(false);
+      closePasswordDialog();
       setPasswordForm({
         currentPassword: "",
         newPassword: "",
@@ -492,17 +483,34 @@ const AuthenticatedProfile = (): ReactElement => {
         </button>
       </div>
 
-      <Dialog
+      <EntityModalShell
         open={isEditDialogOpen}
         onClose={closeEditDialog}
+        title="ویرایش اطلاعات کاربری"
         maxWidth="sm"
-        {...dialogProps}
-        PaperProps={getPaperProps()}
+        useFormWrapper
+        onSubmit={handleSubmitEdit}
+        closeOnSave
+        footer={
+          <ModalFooterActions
+            actions={[
+              {
+                key: "close",
+                isCloseButton: true,
+                onClick: closeEditDialog,
+                disabled: isSavingProfile,
+              },
+              {
+                key: "submit",
+                label: isSavingProfile ? "در حال ذخیره..." : "ذخیره تغییرات",
+                type: "submit",
+                disabled: isSavingProfile,
+              },
+            ]}
+          />
+        }
       >
-        <form className={styles.editForm} onSubmit={handleSubmitEdit}>
-          <DialogTitle>ویرایش اطلاعات کاربری</DialogTitle>
-          <DialogContent dividers {...getContentProps({ className: styles.editDialogContent })}>
-            <Stack spacing={2}>
+        <Stack spacing={2}>
               <TextField
                 label="نام کاربری"
                 value={editForm.username}
@@ -574,42 +582,36 @@ const AuthenticatedProfile = (): ReactElement => {
                 </Alert>
               ) : null}
             </Stack>
-          </DialogContent>
+      </EntityModalShell>
+
+      <EntityModalShell
+        open={isPasswordDialogOpen}
+        onClose={closePasswordDialog}
+        title="تغییر رمز عبور"
+        maxWidth="sm"
+        useFormWrapper
+        onSubmit={handleSubmitPassword}
+        closeOnSave={false}
+        footer={
           <ModalFooterActions
-            reverseOrderOnMobile={isMobile}
             actions={[
               {
                 key: "close",
-                label: "بستن",
-                onClick: closeEditDialog,
-                variant: "outlined",
-                color: "inherit",
-                disabled: isSavingProfile,
+                isCloseButton: true,
+                onClick: closePasswordDialog,
+                disabled: isChangingPassword,
               },
               {
                 key: "submit",
-                label: isSavingProfile ? "در حال ذخیره..." : "ذخیره تغییرات",
+                label: isChangingPassword ? "در حال ذخیره..." : "ذخیره رمز عبور",
                 type: "submit",
-                variant: "contained",
-                color: "primary",
-                disabled: isSavingProfile,
+                disabled: isChangingPassword,
               },
             ]}
           />
-        </form>
-      </Dialog>
-
-      <Dialog
-        open={isPasswordDialogOpen}
-        onClose={closePasswordDialog}
-        maxWidth="sm"
-        {...dialogProps}
-        PaperProps={getPaperProps()}
+        }
       >
-        <form className={styles.editForm} onSubmit={handleSubmitPassword}>
-          <DialogTitle>تغییر رمز عبور</DialogTitle>
-          <DialogContent dividers {...getContentProps({ className: styles.editDialogContent })}>
-            <Stack spacing={2}>
+        <Stack spacing={2}>
               <Alert severity="info">
                 رمز عبور جدید باید حداقل ۸ کاراکتر و حداقل شامل یک حرف بزرگ
                 انگلیسی، یک حرف کوچک انگلیسی، یک عدد و یک کاراکتر ویژه باشد. همچنین از
@@ -646,52 +648,30 @@ const AuthenticatedProfile = (): ReactElement => {
                 autoComplete="new-password"
               />
             </Stack>
-          </DialogContent>
+      </EntityModalShell>
+
+      <EntityConfirmDialogShell
+        open={logoutCountdown !== null}
+        onClose={logout}
+        title="رمز عبور تغییر کرد"
+        footer={
           <ModalFooterActions
-            reverseOrderOnMobile={isMobile}
+            reverseOrderOnMobile={false}
             actions={[
               {
-                key: "close",
-                label: "بستن",
-                onClick: closePasswordDialog,
-                variant: "outlined",
-                color: "inherit",
-                disabled: isChangingPassword,
-              },
-              {
-                key: "submit",
-                label: isChangingPassword ? "در حال ذخیره..." : "ذخیره رمز عبور",
-                type: "submit",
-                variant: "contained",
-                color: "primary",
-                disabled: isChangingPassword,
+                key: "logout",
+                label: "خروج و ورود دوباره",
+                onClick: logout,
               },
             ]}
           />
-        </form>
-      </Dialog>
-
-      <Dialog open={logoutCountdown !== null} fullWidth maxWidth="xs">
-        <DialogTitle>رمز عبور تغییر کرد</DialogTitle>
-        <DialogContent dividers>
-          <Alert severity="success">
-            رمز عبور با موفقیت به‌روزرسانی شد. برای ادامه، باید دوباره وارد حساب شوید.
-            خروج خودکار تا {logoutCountdown ?? 0} ثانیه دیگر انجام می‌شود.
-          </Alert>
-        </DialogContent>
-        <ModalFooterActions
-          actions={[
-            {
-              key: "logout",
-              label: "خروج و ورود دوباره",
-              onClick: logout,
-              variant: "contained",
-              color: "primary",
-            },
-          ]}
-          reverseOrderOnMobile={false}
-        />
-      </Dialog>
+        }
+      >
+        <Alert severity="success">
+          رمز عبور با موفقیت به‌روزرسانی شد. برای ادامه، باید دوباره وارد حساب شوید.
+          خروج خودکار تا {logoutCountdown ?? 0} ثانیه دیگر انجام می‌شود.
+        </Alert>
+      </EntityConfirmDialogShell>
 
       <Button
         variant="outlined"
@@ -709,12 +689,17 @@ const AuthenticatedProfile = (): ReactElement => {
 const Profile = (): ReactElement => {
   const { isAuthenticated } = useAuth();
   const isMobileAppLayout = useMobileAppLayout();
+  const location = useLocation();
+
+  if (isAuthenticated && isProfileAuthRoute(location.pathname)) {
+    return <Navigate to={APP_SHELL_ROUTES.profile} replace />;
+  }
 
   if (!isAuthenticated) {
     if (isMobileAppLayout) {
       return (
         <section className={styles.page}>
-          <Login embedded />
+          <ProfileAuthRoutes />
         </section>
       );
     }

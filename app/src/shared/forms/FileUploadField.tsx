@@ -11,7 +11,7 @@ import {
   type ReactElement,
   type SyntheticEvent,
 } from "react";
-import { Box, Dialog, DialogContent, DialogTitle, IconButton, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Box, IconButton, Typography, useMediaQuery } from "@mui/material";
 import {
   ArticleRounded,
   AudiotrackRounded,
@@ -34,7 +34,8 @@ import {
   type ExistingFilePreview,
 } from "../../utils/fileAccessUrl.util";
 import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
-import { crudModalTitleSx } from "../crud/modalThemeSx";
+import EntityModalShell from "../crud/EntityModalShell";
+import ModalFooterActions from "../crud/ModalFooterActions";
 import styles from "./FileUploadField.module.scss";
 
 export type FileUploadPreviewAction = "play" | "view" | "download" | "maximize" | "remove";
@@ -171,8 +172,7 @@ const FileUploadField = ({
   hideLabel = false,
   previewActionAccess,
 }: FileUploadFieldProps): ReactElement => {
-  const theme = useTheme();
-  const { isCompact, dialogProps, getPaperProps, getContentProps } = useMobileDialogProps();
+  const { isCompact } = useMobileDialogProps();
   const isMobile = useMediaQuery("(max-width:600px)");
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -738,60 +738,23 @@ const FileUploadField = ({
           {invalidLabel}
         </Typography>
       ) : null}
-      <Dialog
+      <EntityModalShell
         open={isPreviewDialogOpen && previewUrl != null}
         onClose={handleClosePreviewDialog}
+        title={previewSource?.name ?? ""}
         maxWidth="lg"
-        {...dialogProps}
-        PaperProps={getPaperProps({
-          sx: isCompact
-            ? {
-                display: "flex",
-                flexDirection: "column",
-              }
-            : undefined,
-        })}
+        footer={
+          <ModalFooterActions
+            actions={[
+              {
+                key: "close",
+                isCloseButton: true,
+                onClick: handleClosePreviewDialog,
+              },
+            ]}
+          />
+        }
       >
-        <DialogTitle
-          sx={{
-            ...crudModalTitleSx(theme),
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 1,
-            pr: 1,
-            flexShrink: 0,
-          }}
-        >
-          <Typography variant="h6" component="span" sx={{ minWidth: 0, wordBreak: "break-word" }}>
-            {previewSource?.name ?? ""}
-          </Typography>
-          <IconButton
-            size="small"
-            color="primary"
-            aria-label={supportsViewPopup ? viewLabel : minimizeLabel}
-            onClick={handleClosePreviewDialog}
-          >
-            <CloseFullscreenOutlined fontSize="small" />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent
-          {...getContentProps({
-            sx: {
-              display: "flex",
-              flexDirection: "column",
-              ...(isCompact
-                ? {
-                    flex: 1,
-                    minHeight: 0,
-                    justifyContent: "center",
-                    px: 0,
-                    pb: 0,
-                  }
-                : {}),
-            },
-          })}
-        >
           {previewUrl && previewMediaKind === "image" ? (
             <Box
               className={styles.previewDialogFrame}
@@ -965,8 +928,7 @@ const FileUploadField = ({
               ) : null}
             </Box>
           ) : null}
-        </DialogContent>
-      </Dialog>
+      </EntityModalShell>
     </Box>
   );
 };

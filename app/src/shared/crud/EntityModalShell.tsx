@@ -4,6 +4,7 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
+  Stack,
   Typography,
   useTheme,
   type Breakpoint,
@@ -15,6 +16,7 @@ import styles from "./styles/EntityModalShell.module.scss";
 export interface EntityModalShellProps {
   open: boolean;
   title: string;
+  subtitle?: ReactNode;
   onClose: () => void;
   children: ReactNode;
   footer?: ReactNode;
@@ -23,11 +25,14 @@ export interface EntityModalShellProps {
   useFormWrapper?: boolean;
   onSubmit?: FormEventHandler<HTMLFormElement>;
   pinFooterToBottomOnMobile?: boolean;
+  /** When false, a successful save should not call onClose automatically. */
+  closeOnSave?: boolean;
 }
 
 const EntityModalShell = ({
   open,
   title,
+  subtitle,
   onClose,
   children,
   footer,
@@ -35,7 +40,7 @@ const EntityModalShell = ({
   fullWidth = true,
   useFormWrapper = false,
   onSubmit,
-  pinFooterToBottomOnMobile = false,
+  pinFooterToBottomOnMobile = true,
 }: EntityModalShellProps): ReactElement => {
   const theme = useTheme();
   const { isCompact, dialogProps, getPaperProps, getContentProps } = useMobileDialogProps();
@@ -46,9 +51,16 @@ const EntityModalShell = ({
 
   const renderHeader = (): ReactElement => (
     <DialogTitle className={styles.modalDialogTitle} sx={crudModalTitleSx(theme)}>
-      <Typography variant="h6" component="div" className={styles.modalTitleTypography}>
-        {title}
-      </Typography>
+      <Stack spacing={subtitle ? 0.5 : 0}>
+        <Typography variant="h6" component="div" className={styles.modalTitleTypography}>
+          {title}
+        </Typography>
+        {subtitle ? (
+          <Typography variant="body2" color="text.secondary" component="div">
+            {subtitle}
+          </Typography>
+        ) : null}
+      </Stack>
     </DialogTitle>
   );
 

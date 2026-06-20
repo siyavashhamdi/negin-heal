@@ -15,10 +15,17 @@ export const APP_SHELL_ROUTES = {
   payments: "/payments",
   paymentZarinPalCallback: "/payment/zarinpal/callback",
   profile: "/profile",
+  profileLogin: "/profile/login",
+  profileSignup: "/profile/signup",
+  profileForgotPassword: "/profile/forgot-password",
   support: "/support",
   supportFaq: "/support/faq",
   supportTickets: "/support/tickets",
   users: "/users",
-  usersManagement: "/users-management",
   home: "/",
 } as const;
+
+export const isProfileAuthRoute = (pathname: string): boolean =>
+  pathname === APP_SHELL_ROUTES.profileLogin ||
+  pathname === APP_SHELL_ROUTES.profileSignup ||
+  pathname === APP_SHELL_ROUTES.profileForgotPassword;

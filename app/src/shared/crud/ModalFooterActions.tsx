@@ -1,67 +1,94 @@
 import { type ReactElement, type ReactNode } from "react";
 import { Button, Stack, type ButtonProps } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
 import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
-import { crudModalFooterSx } from "./modalThemeSx";
+import { MODAL_CLOSE_LABEL } from "./modalFooterActions.util";
 
 type FooterActionColor = NonNullable<ButtonProps["color"]>;
 type FooterActionVariant = NonNullable<ButtonProps["variant"]>;
 
 export type ModalFooterAction = {
   readonly key: string;
-  readonly label: string;
+  readonly label?: string;
   readonly onClick?: () => void;
   readonly type?: "button" | "submit";
   readonly color?: FooterActionColor;
   readonly variant?: FooterActionVariant;
   readonly disabled?: boolean;
   readonly icon?: ReactNode;
+  /** Applies standard dismiss styling and default label (`بستن`). */
+  readonly isCloseButton?: boolean;
+  /** Applies standard destructive styling (contained + error). */
+  readonly isDestructive?: boolean;
 };
 
 type ModalFooterActionsProps = {
   readonly actions: readonly ModalFooterAction[];
+  /** On mobile, primary action appears above the close button. */
   readonly reverseOrderOnMobile?: boolean;
-  readonly pinFooterToBottomOnMobile?: boolean;
 };
+
+function resolveActionPresentation(action: ModalFooterAction): {
+  label: string;
+  color: FooterActionColor;
+  variant: FooterActionVariant;
+} {
+  if (action.isCloseButton) {
+    return {
+      label: action.label ?? MODAL_CLOSE_LABEL,
+      variant: action.variant ?? "outlined",
+      color: action.color ?? "inherit",
+    };
+  }
+
+  if (action.isDestructive) {
+    return {
+      label: action.label ?? "",
+      variant: action.variant ?? "contained",
+      color: action.color ?? "error",
+    };
+  }
+
+  return {
+    label: action.label ?? "",
+    variant: action.variant ?? "contained",
+    color: action.color ?? "primary",
+  };
+}
 
 export default function ModalFooterActions({
   actions,
   reverseOrderOnMobile = true,
-  pinFooterToBottomOnMobile = true,
 }: ModalFooterActionsProps): ReactElement {
-  const theme = useTheme();
   const { isCompact } = useMobileDialogProps();
 
   return (
     <Stack
-      sx={crudModalFooterSx(theme, { pinFooterToBottomOnMobile })}
-      direction="column"
-      spacing={0}
-    >
-      <Stack
-        direction={isCompact && reverseOrderOnMobile ? "column-reverse" : "column"}
-        spacing={1.5}
-        sx={{
+      direction={isCompact && reverseOrderOnMobile ? "column-reverse" : "column"}
+      spacing={1.5}
+      sx={{
+        width: "100%",
+        "& .MuiButton-root": {
           width: "100%",
-          "& .MuiButton-root": {
-            width: "100%",
-          },
-        }}
-      >
-        {actions.map((action) => (
+        },
+      }}
+    >
+      {actions.map((action) => {
+        const presentation = resolveActionPresentation(action);
+
+        return (
           <Button
             key={action.key}
             type={action.type ?? "button"}
             onClick={action.onClick}
-            color={action.color ?? "primary"}
-            variant={action.variant ?? "contained"}
+            color={presentation.color}
+            variant={presentation.variant}
             startIcon={action.icon}
             disabled={action.disabled}
           >
-            {action.label}
+            {presentation.label}
           </Button>
-        ))}
-      </Stack>
+        );
+      })}
     </Stack>
   );
 }

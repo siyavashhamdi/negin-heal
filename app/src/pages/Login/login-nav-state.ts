@@ -24,3 +24,20 @@ export const isLoginNavState = (value: unknown): value is LoginNavState => {
     candidate.identity.length > 0
   );
 };
+
+export type ProfileLoginVerifyState = LoginNavState & { readonly verify: true };
+
+export const createProfileLoginVerifyState = (
+  identity: LoginNavState,
+): ProfileLoginVerifyState => ({
+  ...identity,
+  verify: true,
+});
+
+export const isProfileLoginVerifyState = (value: unknown): value is ProfileLoginVerifyState =>
+  isLoginNavState(value) && (value as { verify?: boolean }).verify === true;
+
+export const toLoginNavState = (value: LoginNavState): LoginNavState => ({
+  identity: value.identity,
+  identityKind: value.identityKind,
+});

@@ -1,13 +1,7 @@
 import { type ReactElement } from "react";
-import {
-  Box,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  Typography,
-} from "@mui/material";
-import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
+import { Typography } from "@mui/material";
 import { useTranslation } from "../../hooks/useTranslation";
+import EntityConfirmDialogShell from "./EntityConfirmDialogShell";
 import ModalFooterActions from "./ModalFooterActions";
 
 interface EntityDeleteDialogProps {
@@ -26,55 +20,37 @@ const EntityDeleteDialog = ({
   loading = false,
 }: EntityDeleteDialogProps): ReactElement => {
   const { t } = useTranslation();
-  const { isCompact, dialogProps, getPaperProps, getContentProps } = useMobileDialogProps();
 
   return (
-    <Dialog
+    <EntityConfirmDialogShell
       open={open}
       onClose={loading ? undefined : onCancel}
-      maxWidth="xs"
-      {...dialogProps}
-      PaperProps={getPaperProps()}
-    >
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          minHeight: isCompact ? "100%" : undefined,
-        }}
-      >
-        <DialogTitle>{t("table.dataGrid.deleteDialog.title")}</DialogTitle>
-        <DialogContent
-          dividers={isCompact}
-          {...getContentProps({ sx: isCompact ? { flex: "1 1 auto" } : undefined })}
-        >
-          <Typography variant="body2" color="text.secondary">
-            {t("table.entity.deleteConfirmMessage", { title: entityTitle })}
-          </Typography>
-        </DialogContent>
+      title={t("table.dataGrid.deleteDialog.title")}
+      subjectLine={entityTitle}
+      footer={
         <ModalFooterActions
-          pinFooterToBottomOnMobile={isCompact}
           actions={[
             {
               key: "close",
-              label: "بستن",
+              isCloseButton: true,
               onClick: onCancel,
-              color: "inherit",
-              variant: "outlined",
               disabled: loading,
             },
             {
               key: "confirm",
               label: t("table.dataGrid.deleteDialog.confirm"),
               onClick: onConfirm,
-              color: "error",
-              variant: "contained",
+              isDestructive: true,
               disabled: loading,
             },
           ]}
         />
-      </Box>
-    </Dialog>
+      }
+    >
+      <Typography variant="body2" color="text.secondary">
+        {t("table.entity.deleteConfirmMessage", { title: entityTitle })}
+      </Typography>
+    </EntityConfirmDialogShell>
   );
 };
 

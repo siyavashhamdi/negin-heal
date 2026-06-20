@@ -22,7 +22,6 @@ type ReviewPaymentDialogActionsProps = {
   readonly onSubmit: () => void;
   readonly cancelDisabled: boolean;
   readonly submitDisabled: boolean;
-  readonly cancelLabel: string;
 };
 
 export function PaymentRowActions({ onReview }: PaymentRowActionsProps) {
@@ -40,10 +39,8 @@ export function ManualPaymentDialogActions({
   const actions: readonly ModalFooterAction[] = [
     {
       key: "close",
-      label: "بستن",
+      isCloseButton: true,
       onClick: onCancel,
-      variant: "outlined",
-      color: "inherit",
       disabled: cancelDisabled,
     },
     {
@@ -61,9 +58,7 @@ export function ManualPaymentDialogActions({
     },
   ];
 
-  return (
-    <ModalFooterActions actions={actions} />
-  );
+  return <ModalFooterActions actions={actions} />;
 }
 
 export function ReviewPaymentDialogActions({
@@ -71,15 +66,12 @@ export function ReviewPaymentDialogActions({
   onSubmit,
   cancelDisabled,
   submitDisabled,
-  cancelLabel,
 }: ReviewPaymentDialogActionsProps): ReactElement {
   const actions: readonly ModalFooterAction[] = [
     {
       key: "close",
-      label: cancelLabel,
+      isCloseButton: true,
       onClick: onCancel,
-      variant: "outlined",
-      color: "inherit",
       disabled: cancelDisabled,
     },
     {
@@ -92,7 +84,5 @@ export function ReviewPaymentDialogActions({
     },
   ];
 
-  return (
-    <ModalFooterActions actions={actions} />
-  );
+  return <ModalFooterActions actions={actions} />;
 }

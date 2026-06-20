@@ -1,25 +1,16 @@
 import { useEffect, useState, type FormEvent, type ReactElement } from "react";
 import { useQuery } from "@apollo/client/react";
 import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
-import {
-  Box,
-  CircularProgress,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  Typography,
-  useMediaQuery,
-} from "@mui/material";
-import type { Theme } from "@mui/material/styles";
+import { CircularProgress, Stack, Typography } from "@mui/material";
 
 import { APP_SETTING_UPDATE_MUTATION } from "../../graphql/mutations/appSettingUpdate.mutation";
 import { APP_SETTING_DETAIL_QUERY } from "../../graphql/queries/appSettingDetail.query";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
-import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
+import EntityModalShell from "../../shared/crud/EntityModalShell";
 import ModalFooterActions from "../../shared/crud/ModalFooterActions";
+import { createModalSaveSuccessHandler } from "../../shared/crud/modalFooterActions.util";
 import type { AppSettingRecord } from "./system-settings-list.api";
 import {
   CommonSettingFields,
@@ -40,6 +31,7 @@ interface SystemSettingEditDialogProps {
   readonly open: boolean;
   readonly onClose: () => void;
   readonly onSaved: () => void;
+  readonly closeOnSave?: boolean;
 }
 
 const SystemSettingEditDialog = ({
@@ -47,11 +39,8 @@ const SystemSettingEditDialog = ({
   open,
   onClose,
   onSaved,
+  closeOnSave = true,
 }: SystemSettingEditDialogProps): ReactElement => {
-  const isMobile = useMediaQuery((muiTheme: Theme) => muiTheme.breakpoints.down("md"));
-  const { dialogProps, getPaperProps, getContentProps } = useMobileDialogProps({
-    breakpoint: "md",
-  });
   const { t } = useTranslation();
   const { showError } = useSnackbar();
   const [form, setForm] = useState<AppSettingEditFormState | null>(null);
@@ -73,10 +62,7 @@ const SystemSettingEditDialog = ({
     AppSettingUpdateMutationVariables
   >(APP_SETTING_UPDATE_MUTATION, {
     successMessage: "تنظیمات با موفقیت ذخیره شد.",
-    onSuccess: () => {
-      onSaved();
-      onClose();
-    },
+    onSuccess: createModalSaveSuccessHandler({ onClose, onSaved, closeOnSave }),
   });
 
   useEffect(() => {
@@ -119,52 +105,22 @@ const SystemSettingEditDialog = ({
   const canSubmit = Boolean(detail && form && !detailLoading && !isSaving);
 
   return (
-    <Dialog
+    <EntityModalShell
       open={open}
-      onClose={isSaving ? undefined : onClose}
+      onClose={isSaving ? () => undefined : onClose}
+      title="ویرایش تنظیمات سامانه"
+      subtitle={record?.label ?? record?.key ?? ""}
       maxWidth="lg"
-      {...dialogProps}
-      PaperProps={getPaperProps()}
-    >
-      <Box component="form" onSubmit={handleSubmit}>
-        <DialogTitle sx={{ pb: 1 }}>
-          <Stack spacing={0.5}>
-            <Typography variant="h6" fontWeight={900}>
-              ویرایش تنظیمات سامانه
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {record?.label ?? record?.key ?? ""}
-            </Typography>
-          </Stack>
-        </DialogTitle>
-        <DialogContent dividers {...getContentProps({ sx: { bgcolor: "background.default" } })}>
-          {detailLoading || !detail || !form ? (
-            <Stack alignItems="center" justifyContent="center" sx={{ minHeight: 260 }} spacing={2}>
-              <CircularProgress />
-              <Typography variant="body2" color="text.secondary">
-                در حال دریافت مقدار تنظیم...
-              </Typography>
-            </Stack>
-          ) : (
-            <Stack spacing={2.5}>
-              <CommonSettingFields detail={detail} form={form} updateForm={updateForm} />
-              {form.valueType === "JSON" && form.jsonValue ? (
-                <JsonValueEditor jsonValue={form.jsonValue} updateJson={updateJson} />
-              ) : (
-                <ScalarValueEditor form={form} settingKey={detail.key} updateForm={updateForm} />
-              )}
-            </Stack>
-          )}
-        </DialogContent>
+      useFormWrapper
+      onSubmit={handleSubmit}
+      closeOnSave={closeOnSave}
+      footer={
         <ModalFooterActions
-          reverseOrderOnMobile={isMobile}
           actions={[
             {
               key: "close",
-              label: "بستن",
+              isCloseButton: true,
               onClick: onClose,
-              variant: "outlined",
-              color: "inherit",
               disabled: isSaving,
             },
             {
@@ -173,15 +129,31 @@ const SystemSettingEditDialog = ({
                 ? t("pages.usersManagement.edit.saving")
                 : t("pages.usersManagement.edit.save"),
               type: "submit",
-              variant: "contained",
-              color: "primary",
               icon: <SaveRoundedIcon />,
               disabled: !canSubmit,
             },
           ]}
         />
-      </Box>
-    </Dialog>
+      }
+    >
+      {detailLoading || !detail || !form ? (
+        <Stack alignItems="center" justifyContent="center" sx={{ minHeight: 260 }} spacing={2}>
+          <CircularProgress />
+          <Typography variant="body2" color="text.secondary">
+            در حال دریافت مقدار تنظیم...
+          </Typography>
+        </Stack>
+      ) : (
+        <Stack spacing={2.5}>
+          <CommonSettingFields detail={detail} form={form} updateForm={updateForm} />
+          {form.valueType === "JSON" && form.jsonValue ? (
+            <JsonValueEditor jsonValue={form.jsonValue} updateJson={updateJson} />
+          ) : (
+            <ScalarValueEditor form={form} settingKey={detail.key} updateForm={updateForm} />
+          )}
+        </Stack>
+      )}
+    </EntityModalShell>
   );
 };
 

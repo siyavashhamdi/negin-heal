@@ -117,6 +117,15 @@ export class CourseListFilterInput {
 
   @Field(() => Boolean, {
     nullable: true,
+    description:
+      "Filter by whether the current user has purchased the course. Used by userCourseList.",
+  })
+  @IsOptional()
+  @IsBoolean({ message: "isPurchased filter must be a boolean" })
+  isPurchased?: boolean;
+
+  @Field(() => Boolean, {
+    nullable: true,
     description: "Filter courses that contain at least one free chapter",
   })
   @IsOptional()

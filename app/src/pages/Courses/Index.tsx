@@ -10,15 +10,12 @@ import {
 } from "react";
 import { NetworkStatus } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Alert,
   Box,
   Button,
   Chip,
-  Dialog,
-  DialogContent,
-  DialogTitle,
   FormControl,
   Grid,
   InputLabel,
@@ -44,7 +41,6 @@ import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { useDebounce } from "../../hooks/useDebounce";
-import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
 import { useBadgeCountFirstPageReload } from "../../hooks/useBadgeCountFirstPageReload";
 import { useAuth } from "../../contexts/AuthContext";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
@@ -59,7 +55,6 @@ import {
   buildCourseListQueryVariables,
   DEFAULT_COURSE_LIST_FILTERS,
   DEFAULT_COURSE_LIST_SORT,
-  isCourseFreeForList,
   mapCourseListRowToRecord,
   type CourseItemType,
   type CourseListFilters,
@@ -70,10 +65,28 @@ import {
   type CourseSortField,
 } from "./courses-list.api";
 import { resolveFileAccessUrl } from "../../utils/fileAccessUrl.util";
+import EntityConfirmDialogShell from "../../shared/crud/EntityConfirmDialogShell";
 import ModalFooterActions from "../../shared/crud/ModalFooterActions";
+import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
 import styles from "./styles/courses.module.scss";
 
 const COURSE_LIST_PAGE_SIZE = 6;
+
+function getEndUserTabFilters(
+  tab: EndUserCourseTab,
+): Pick<CourseListFilters, "hasPrice" | "isPurchased"> {
+  switch (tab) {
+    case "FREE":
+      return { hasPrice: "FREE_OR_UNSET", isPurchased: "ALL" };
+    case "PURCHASABLE":
+      return { hasPrice: "WITH_PRICE", isPurchased: "NO" };
+    case "PURCHASED":
+      return { hasPrice: "ALL", isPurchased: "YES" };
+    case "ALL":
+    default:
+      return { hasPrice: "ALL", isPurchased: "ALL" };
+  }
+}
 
 type CourseDeleteMutationResult = {
   courseDelete: boolean;
@@ -115,10 +128,8 @@ const CoursesIndex = (): ReactElement => {
   const { t } = useTranslation();
   const { user: authUser } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const isMobile = useMediaQuery("(max-width:600px)");
-  const { dialogProps, getPaperProps, getContentProps } = useMobileDialogProps({
-    breakpoint: "sm",
-  });
   const isEndUser = authUser?.roles?.includes("END_USER") === true;
   const isPublicCourseView = !authUser || isEndUser;
 
@@ -127,8 +138,6 @@ const CoursesIndex = (): ReactElement => {
   const [searchQuery, setSearchQuery] = useState(DEFAULT_COURSE_LIST_FILTERS.query);
   const [sort, setSort] = useState<CourseListSort>(DEFAULT_COURSE_LIST_SORT);
   const [deleteTarget, setDeleteTarget] = useState<CourseListRecord | null>(null);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editTargetId, setEditTargetId] = useState<string | null>(null);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [showFilterSections, setShowFilterSections] = useState(false);
   const [endUserTab, setEndUserTab] = useState<EndUserCourseTab>("ALL");
@@ -148,6 +157,53 @@ const CoursesIndex = (): ReactElement => {
     endCursor: null as string | null,
   });
   const debouncedSearchQuery = useDebounce(searchQuery, 450);
+
+  const isCreateDialogOpen = location.pathname === `${APP_SHELL_ROUTES.courses}/new`;
+  const editTargetId =
+    /^\/courses\/edit\/([^/]+)$/.exec(location.pathname)?.[1] ?? null;
+  const isCourseFormDialogOpen = isCreateDialogOpen || editTargetId != null;
+
+  const closeCourseFormDialog = (): void => {
+    navigate(APP_SHELL_ROUTES.courses);
+  };
+
+  const openCreateCourseDialog = (): void => {
+    navigate(`${APP_SHELL_ROUTES.courses}/new`);
+  };
+
+  const openEditCourseDialog = (course: CourseListRecord): void => {
+    navigate(`${APP_SHELL_ROUTES.courses}/edit/${course.id}`);
+  };
+
+  const closeDeleteDialog = (): void => {
+    navigate(APP_SHELL_ROUTES.courses);
+  };
+
+  const openDeleteDialog = (course: CourseListRecord): void => {
+    navigate(`${APP_SHELL_ROUTES.courses}/delete/${course.id}`);
+  };
+
+  useEffect(() => {
+    if (!location.pathname.startsWith(`${APP_SHELL_ROUTES.courses}/delete/`)) {
+      return;
+    }
+
+    const deleteId = location.pathname.slice(`${APP_SHELL_ROUTES.courses}/delete/`.length);
+    if (!deleteId) {
+      return;
+    }
+
+    const target = items.find((item) => item.id === deleteId) ?? null;
+    setDeleteTarget(target);
+  }, [items, location.pathname]);
+
+  useEffect(() => {
+    if (location.pathname.startsWith(`${APP_SHELL_ROUTES.courses}/delete/`)) {
+      return;
+    }
+
+    setDeleteTarget(null);
+  }, [location.pathname]);
 
   const setFilterValue = <K extends keyof CourseListFilters>(
     key: K,
@@ -196,36 +252,13 @@ const CoursesIndex = (): ReactElement => {
       return;
     }
 
+    const tabFilters = getEndUserTabFilters(endUserTab);
     setItems([]);
-    setIsOnFirstPage(true);
-    setFilters((prev) => {
-      const nextHasPrice: CourseListFilters["hasPrice"] =
-        endUserTab === "FREE"
-          ? "FREE_OR_UNSET"
-          : endUserTab === "PURCHASABLE"
-            ? "WITH_PRICE"
-            : "ALL";
-
-      if (
-        prev.query === "" &&
-        prev.isActive === DEFAULT_COURSE_LIST_FILTERS.isActive &&
-        prev.releaseType === DEFAULT_COURSE_LIST_FILTERS.releaseType &&
-        prev.itemType === DEFAULT_COURSE_LIST_FILTERS.itemType &&
-        prev.hasPrice === nextHasPrice &&
-        prev.hasFreeChapter === DEFAULT_COURSE_LIST_FILTERS.hasFreeChapter &&
-        prev.minPriceIrt === "" &&
-        prev.maxPriceIrt === "" &&
-        prev.tagsAny === ""
-      ) {
-        return prev;
-      }
-
-      return {
-        ...DEFAULT_COURSE_LIST_FILTERS,
-        hasPrice: nextHasPrice,
-      };
-    });
     setSearchQuery("");
+    setFilters({
+      ...DEFAULT_COURSE_LIST_FILTERS,
+      ...tabFilters,
+    });
   }, [endUserTab, isEndUser]);
 
   const handleEndUserTabChange = useCallback((tab: EndUserCourseTab): void => {
@@ -315,30 +348,11 @@ const CoursesIndex = (): ReactElement => {
 
   const isFetchingMore = networkStatus === NetworkStatus.fetchMore;
 
-  const displayedItems = useMemo(() => {
-    if (!isEndUser) {
-      return items;
-    }
-
-    if (endUserTab === "PURCHASED") {
-      return items.filter((item) => item.isPurchased);
-    }
-
-    if (endUserTab === "PURCHASABLE") {
-      return items.filter((item) => !item.isPurchased && !isCourseFreeForList(item));
-    }
-
-    return items;
-  }, [endUserTab, isEndUser, items]);
-
   const isInitialLoading =
-    (loading || networkStatus === NetworkStatus.loading) && items.length === 0;
-
-  useEffect(() => {
-    if (!isEndUser || !isInitialLoading) {
-      setCourseFeedMinHeight(undefined);
-    }
-  }, [isEndUser, isInitialLoading, endUserTab]);
+    (loading ||
+      networkStatus === NetworkStatus.loading ||
+      networkStatus === NetworkStatus.setVariables) &&
+    items.length === 0;
 
   useEffect(() => {
     const page = courseListData?.courseList;
@@ -357,6 +371,12 @@ const CoursesIndex = (): ReactElement => {
       endCursor: page.pagination.endCursor ?? null,
     });
   }, [courseListData, networkStatus]);
+
+  useEffect(() => {
+    if (!isEndUser || !isInitialLoading) {
+      setCourseFeedMinHeight(undefined);
+    }
+  }, [isEndUser, isInitialLoading, endUserTab]);
 
   const onRefresh = useCallback((): void => {
     void refetchCourseList();
@@ -430,7 +450,7 @@ const CoursesIndex = (): ReactElement => {
     successMessage: "دوره با موفقیت حذف شد.",
     errorMessage: "حذف دوره انجام نشد.",
     onSuccess: () => {
-      setDeleteTarget(null);
+      closeDeleteDialog();
       onRefresh();
     },
   });
@@ -658,7 +678,7 @@ const CoursesIndex = (): ReactElement => {
               <Tooltip title="دوره جدید" arrow>
                 <IconButton
                   color="primary"
-                  onClick={() => setIsCreateDialogOpen(true)}
+                  onClick={openCreateCourseDialog}
                   className={styles.createCourseIconButton}
                   aria-label="دوره جدید"
                 >
@@ -668,7 +688,7 @@ const CoursesIndex = (): ReactElement => {
               <Button
                 variant="contained"
                 startIcon={<AddRoundedIcon />}
-                onClick={() => setIsCreateDialogOpen(true)}
+                onClick={openCreateCourseDialog}
                 className={styles.createCourseButton}
               >
                 دوره جدید
@@ -1012,7 +1032,7 @@ const CoursesIndex = (): ReactElement => {
               </div>
             </Paper>
           ))
-          : displayedItems.map((item) => (
+          : items.map((item) => (
             <div
               key={item.id}
               className={`${styles.courseCardShell}${
@@ -1032,14 +1052,14 @@ const CoursesIndex = (): ReactElement => {
                 onOpen={() => navigate(`/courses/${item.id}`)}
                 onFlip={() => toggleFlippedItem(item.id)}
                 onKeyDown={(event) => handleCourseKeyDown(event, item.id)}
-                onEdit={(course) => setEditTargetId(course.id)}
-                onDelete={(course) => setDeleteTarget(course)}
+                onEdit={openEditCourseDialog}
+                onDelete={openDeleteDialog}
               />
             </div>
           ))}
       </div>
 
-      {!isInitialLoading && displayedItems.length === 0 ? (
+      {!isInitialLoading && items.length === 0 ? (
         <div className={styles.emptyState}>
           <Typography variant="h6">دوره‌ای پیدا نشد.</Typography>
           <Typography variant="body2" color="text.secondary">
@@ -1050,7 +1070,7 @@ const CoursesIndex = (): ReactElement => {
         </div>
       ) : null}
 
-      {displayedItems.length > 0 || (isEndUser && pagination.hasNextPage) ? (
+      {items.length > 0 || (isEndUser && pagination.hasNextPage) ? (
         <div
           ref={loadMoreRef}
           className={styles.infiniteScrollSentinel}
@@ -1061,59 +1081,48 @@ const CoursesIndex = (): ReactElement => {
       ) : null}
       </div>
 
-      <Dialog
+      <EntityConfirmDialogShell
         open={Boolean(deleteTarget)}
-        onClose={() => (deleteCourseResult.loading ? undefined : setDeleteTarget(null))}
-        maxWidth="xs"
-        {...dialogProps}
-        PaperProps={getPaperProps({ className: styles.deleteDialogPaper })}
-      >
-        <DialogTitle className={styles.deleteDialogTitle}>
-          <span className={styles.deleteDialogIcon}>
+        onClose={deleteCourseResult.loading ? undefined : closeDeleteDialog}
+        title="حذف دوره"
+        subjectLine={deleteTarget?.title}
+        icon={
+          <Box className={styles.deleteDialogIcon}>
             <WarningAmberRoundedIcon />
-          </span>
-          حذف دوره
-        </DialogTitle>
-        <DialogContent {...getContentProps({ className: styles.deleteDialogContent })}>
-          <Typography variant="body1" className={styles.deleteDialogMessage}>
-            آیا از حذف این دوره مطمئن هستید؟
-          </Typography>
-          <Typography variant="subtitle1" className={styles.deleteDialogCourseTitle}>
-            {deleteTarget?.title}
-          </Typography>
-          <Typography variant="body2" className={styles.deleteDialogHint}>
-            فایل‌های جداشده این دوره نیز حذف می‌شوند و این عملیات قابل بازگشت نیست.
-          </Typography>
-        </DialogContent>
-        <ModalFooterActions
-          actions={[
-            {
-              key: "close",
-              label: "بستن",
-              onClick: () => setDeleteTarget(null),
-              variant: "outlined",
-              color: "inherit",
-              disabled: deleteCourseResult.loading,
-            },
-            {
-              key: "delete",
-              label: "حذف دوره",
-              onClick: handleDeleteConfirm,
-              variant: "contained",
-              color: "error",
-              disabled: deleteCourseResult.loading,
-            },
-          ]}
-        />
-      </Dialog>
+          </Box>
+        }
+        footer={
+          <ModalFooterActions
+            actions={[
+              {
+                key: "close",
+                isCloseButton: true,
+                onClick: closeDeleteDialog,
+                disabled: deleteCourseResult.loading,
+              },
+              {
+                key: "delete",
+                label: "حذف دوره",
+                onClick: handleDeleteConfirm,
+                isDestructive: true,
+                disabled: deleteCourseResult.loading,
+              },
+            ]}
+          />
+        }
+      >
+        <Typography variant="body1" className={styles.deleteDialogMessage}>
+          آیا از حذف این دوره مطمئن هستید؟
+        </Typography>
+        <Typography variant="body2" className={styles.deleteDialogHint}>
+          فایل‌های جداشده این دوره نیز حذف می‌شوند و این عملیات قابل بازگشت نیست.
+        </Typography>
+      </EntityConfirmDialogShell>
       {!isPublicCourseView ? (
         <CourseFormDialog
-          open={isCreateDialogOpen || editTargetId != null}
+          open={isCourseFormDialogOpen}
           courseId={editTargetId}
-          onClose={() => {
-            setIsCreateDialogOpen(false);
-            setEditTargetId(null);
-          }}
+          onClose={closeCourseFormDialog}
           onSaved={onRefresh}
         />
       ) : null}

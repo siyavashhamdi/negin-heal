@@ -838,10 +838,8 @@ const TicketDialog = ({
   const footerActions: ModalFooterAction[] = [
     {
       key: "close",
-      label: "بستن",
+      isCloseButton: true,
       onClick: handleClose,
-      variant: "outlined",
-      color: "inherit",
       disabled: isSubmitting,
     },
   ];

@@ -7,7 +7,7 @@ import {
   type ChangeEvent,
   type ReactElement,
 } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import {
   Chip,
   Container,
@@ -159,6 +159,8 @@ function sortingToServerSort(
 
 const SystemSettingsIndex = (): ReactElement => {
   const isMobile = useMediaQuery((muiTheme: Theme) => muiTheme.breakpoints.down("md"));
+  const location = useLocation();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useTranslation();
   const { showError } = useSnackbar();
@@ -226,6 +228,24 @@ const SystemSettingsIndex = (): ReactElement => {
     resetPageDeps: [debouncedSearchQuery, appliedFilters, serverSort],
     skip: !isSuperAdmin,
   });
+
+  useEffect(() => {
+    if (!location.pathname.startsWith(`${APP_SHELL_ROUTES.moreSystemSettings}/edit/`)) {
+      setEditTarget(null);
+      return;
+    }
+
+    const settingId = location.pathname.slice(
+      `${APP_SHELL_ROUTES.moreSystemSettings}/edit/`.length,
+    );
+    if (!settingId) {
+      setEditTarget(null);
+      return;
+    }
+
+    const target = rows.find((row) => row.id === settingId) ?? null;
+    setEditTarget(target);
+  }, [location.pathname, rows]);
 
   useEffect(() => {
     if (!error) {
@@ -322,12 +342,16 @@ const SystemSettingsIndex = (): ReactElement => {
       {
         id: "actions",
         header: t("table.columns.actions"),
-        cell: ({ row }) => <CrudRowActions onEdit={() => setEditTarget(row.original)} />,
+        cell: ({ row }) => (
+          <CrudRowActions
+            onEdit={() => navigate(`${APP_SHELL_ROUTES.moreSystemSettings}/edit/${row.original.id}`)}
+          />
+        ),
         enableSorting: false,
         enableHiding: false,
       },
     ],
-    [t],
+    [navigate, t],
   );
 
   const table = useReactTable({
@@ -519,7 +543,7 @@ const SystemSettingsIndex = (): ReactElement => {
       <SystemSettingEditDialog
         open={editTarget != null}
         record={editTarget}
-        onClose={() => setEditTarget(null)}
+        onClose={() => navigate(APP_SHELL_ROUTES.moreSystemSettings)}
         onSaved={onRefresh}
       />
     </Container>

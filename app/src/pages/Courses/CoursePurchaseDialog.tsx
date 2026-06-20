@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState, type ReactElement } from "react";
 import {
   Button,
-  Dialog,
-  DialogContent,
   InputAdornment,
   TextField,
   Typography,
@@ -20,8 +18,8 @@ import ShieldRoundedIcon from "@mui/icons-material/ShieldRounded";
 import FileUploadField from "../../shared/forms/FileUploadField";
 import EnamadTrustSeal from "../../shared/EnamadTrustSeal";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
-import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
 import { useSnackbar } from "../../hooks/useSnackbar";
+import EntityModalShell from "../../shared/crud/EntityModalShell";
 import { COURSE_PURCHASE_SUBMIT_MUTATION } from "../../graphql/mutations/coursePurchaseSubmit.mutation";
 import { PAYMENT_CHECKOUT_CONFIG_QUERY } from "../../graphql/queries/paymentCheckoutConfig.query";
 import { COUPON_VALIDATE_QUERY } from "../../graphql/queries/couponValidate.query";
@@ -160,9 +158,6 @@ export function CoursePurchaseDialog({
   discountLabel,
   coverImageUrl,
 }: CoursePurchaseDialogProps): ReactElement {
-  const { dialogProps, getPaperProps, getContentProps } = useMobileDialogProps({
-    breakpoint: "sm",
-  });
   const { showSuccess, showError } = useSnackbar();
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<UserCoursePaymentMethod>("GATEWAY");
@@ -526,22 +521,39 @@ export function CoursePurchaseDialog({
   };
 
   return (
-    <Dialog
+    <EntityModalShell
       open={open}
-      onClose={onClose}
+      onClose={isSubmitting ? () => undefined : onClose}
+      title="تکمیل خرید دوره"
+      subtitle={course.title}
       maxWidth="md"
-      {...dialogProps}
-      PaperProps={getPaperProps({ className: styles.dialogPaper })}
+      closeOnSave
+      footer={
+        <ModalFooterActions
+          actions={[
+            {
+              key: "close",
+              isCloseButton: true,
+              onClick: onClose,
+              disabled: isSubmitting,
+            },
+            {
+              key: "submit",
+              label: isFreePurchase ? "خرید رایگان" : selectedPaymentOption.actionLabel,
+              onClick: () => void handleSubmit(),
+              icon: isFreePurchase ? undefined : selectedPaymentOption.icon,
+              disabled:
+                isSubmitting ||
+                (!isFreePurchase &&
+                  (isCheckoutConfigLoading ||
+                    paymentMethodOptions.length === 0 ||
+                    !selectedPaymentOption.isActive)),
+            },
+          ]}
+        />
+      }
     >
-      <div className={styles.dialogHeader}>
-        <div className={styles.dialogHeaderText}>
-          <span>تکمیل خرید دوره</span>
-          <h2>{course.title}</h2>
-        </div>
-      </div>
-
-      <DialogContent {...getContentProps({ className: styles.dialogContent })}>
-        <div className={styles.layout}>
+      <div className={styles.layout}>
           <aside className={styles.summaryPanel}>
             <div className={styles.summaryHero}>
               {coverImageUrl ? (
@@ -862,34 +874,6 @@ export function CoursePurchaseDialog({
             ) : null}
           </section>
         </div>
-      </DialogContent>
-
-      <ModalFooterActions
-        actions={[
-          {
-            key: "close",
-            label: "بستن",
-            onClick: onClose,
-            variant: "outlined",
-            color: "inherit",
-            disabled: isSubmitting,
-          },
-          {
-            key: "submit",
-            label: isFreePurchase ? "خرید رایگان" : selectedPaymentOption.actionLabel,
-            onClick: () => void handleSubmit(),
-            variant: "contained",
-            color: "primary",
-            icon: isFreePurchase ? undefined : selectedPaymentOption.icon,
-            disabled:
-              isSubmitting ||
-              (!isFreePurchase &&
-                (isCheckoutConfigLoading ||
-                  paymentMethodOptions.length === 0 ||
-                  !selectedPaymentOption.isActive)),
-          },
-        ]}
-      />
-    </Dialog>
+    </EntityModalShell>
   );
 }

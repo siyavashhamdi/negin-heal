@@ -25,7 +25,7 @@ export const LoginRequiredState = ({
 }: LoginRequiredStateProps): ReactElement => {
   const location = useLocation();
   const isMobileAppLayout = useMobileAppLayout();
-  const loginPath = isMobileAppLayout ? APP_SHELL_ROUTES.profile : APP_SHELL_ROUTES.login;
+  const loginPath = isMobileAppLayout ? APP_SHELL_ROUTES.profileLogin : APP_SHELL_ROUTES.login;
 
   return (
     <section

@@ -14,9 +14,6 @@ import {
   Box,
   Checkbox,
   Chip,
-  Dialog,
-  DialogContent,
-  DialogTitle,
   IconButton,
   InputAdornment,
   ListItemText,
@@ -38,8 +35,6 @@ import {
 } from "@tanstack/react-table";
 import { type Theme } from "@mui/material/styles";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
-
 import { USER_CREATE_MUTATION } from "../../graphql/mutations/userCreate.mutation";
 import { USER_UPDATE_MUTATION } from "../../graphql/mutations/userUpdate.mutation";
 import {
@@ -62,6 +57,7 @@ import CrudRowActions from "../../shared/crud/CrudRowActions";
 import EntityTableShell from "../../shared/crud/EntityTableShell";
 import FileUploadField from "../../shared/forms/FileUploadField";
 import JalaliDateFilterField from "../../shared/table/JalaliDateFilterField";
+import EntityModalShell from "../../shared/crud/EntityModalShell";
 import ModalFooterActions from "../../shared/crud/ModalFooterActions";
 import crudPrimitives from "../../shared/crud/styles/crudPrimitives.module.scss";
 import {
@@ -316,9 +312,6 @@ const UsersManagementList = (): ReactElement => {
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useMediaQuery((muiTheme: Theme) => muiTheme.breakpoints.down("md"));
-  const { dialogProps, getPaperProps, getContentProps } = useMobileDialogProps({
-    breakpoint: "md",
-  });
   const { t } = useTranslation();
   const { showError } = useSnackbar();
   const hasShownLoadErrorRef = useRef(false);
@@ -558,7 +551,7 @@ const UsersManagementList = (): ReactElement => {
               setEditTarget(record);
               setEditForm(buildEditFormState(record));
               setAvatarFile(null);
-              navigate(`${APP_SHELL_ROUTES.usersManagement}/${record.id}`);
+              navigate(`${APP_SHELL_ROUTES.users}/edit/${record.id}`);
             }}
           />
         ),
@@ -775,7 +768,7 @@ const UsersManagementList = (): ReactElement => {
     setEditForm(null);
     setAvatarFile(null);
     setDialogMode("edit");
-    navigate(APP_SHELL_ROUTES.usersManagement);
+    navigate(APP_SHELL_ROUTES.users);
   };
 
   const handleOpenCreateDialog = (): void => {
@@ -783,11 +776,11 @@ const UsersManagementList = (): ReactElement => {
     setEditTarget(null);
     setEditForm(buildCreateFormState());
     setAvatarFile(null);
-    navigate(`${APP_SHELL_ROUTES.usersManagement}/new`);
+    navigate(`${APP_SHELL_ROUTES.users}/new`);
   };
 
   useEffect(() => {
-    const usersRoutePrefix = `${APP_SHELL_ROUTES.usersManagement}/`;
+    const usersRoutePrefix = `${APP_SHELL_ROUTES.users}/`;
     if (!location.pathname.startsWith(usersRoutePrefix)) {
       return;
     }
@@ -803,16 +796,23 @@ const UsersManagementList = (): ReactElement => {
       return;
     }
 
-    if (!routeSuffix) {
+    if (routeSuffix.startsWith("edit/")) {
+      const editId = routeSuffix.slice("edit/".length);
+      if (!editId) {
+        return;
+      }
+      const target = rows.find((row) => row.id === editId) ?? null;
+      if (target) {
+        setDialogMode("edit");
+        setEditTarget(target);
+        setEditForm(buildEditFormState(target));
+        setAvatarFile(null);
+      }
       return;
     }
 
-    const target = rows.find((row) => row.id === routeSuffix) ?? null;
-    if (target) {
-      setDialogMode("edit");
-      setEditTarget(target);
-      setEditForm(buildEditFormState(target));
-      setAvatarFile(null);
+    if (!routeSuffix) {
+      return;
     }
   }, [dialogMode, editForm, location.pathname, rows]);
 
@@ -943,22 +943,44 @@ const UsersManagementList = (): ReactElement => {
         pagination={pagination}
       />
 
-      <Dialog
+      <EntityModalShell
         open={Boolean(editForm)}
         onClose={handleCloseEditDialog}
         maxWidth="lg"
-        {...dialogProps}
-        PaperProps={getPaperProps()}
+        title={
+          dialogMode === "create"
+            ? t("pages.usersManagement.create.title")
+            : t("pages.usersManagement.edit.title")
+        }
+        useFormWrapper
+        onSubmit={handleSubmitEdit}
+        closeOnSave
+        footer={
+          <ModalFooterActions
+            actions={[
+              {
+                key: "close",
+                isCloseButton: true,
+                onClick: handleCloseEditDialog,
+                disabled: isSavingUser,
+              },
+              {
+                key: "submit",
+                label: isSavingUser
+                  ? t("pages.usersManagement.edit.saving")
+                  : dialogMode === "create"
+                    ? t("pages.usersManagement.create.save")
+                    : t("pages.usersManagement.edit.save"),
+                type: "submit",
+                icon: dialogMode === "create" ? <AddRoundedIcon /> : undefined,
+                disabled: isSavingUser,
+              },
+            ]}
+          />
+        }
       >
-        <Box component="form" onSubmit={handleSubmitEdit}>
-          <DialogTitle>
-            {dialogMode === "create"
-              ? t("pages.usersManagement.create.title")
-              : t("pages.usersManagement.edit.title")}
-          </DialogTitle>
-          <DialogContent dividers {...getContentProps()}>
-            {editForm ? (
-              <Stack spacing={3}>
+        {editForm ? (
+          <Stack spacing={3}>
                 <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
                   <TextField
                     label={t("table.pages.usersManagement.columns.username")}
@@ -1103,35 +1125,7 @@ const UsersManagementList = (): ReactElement => {
 
               </Stack>
             ) : null}
-          </DialogContent>
-          <ModalFooterActions
-            reverseOrderOnMobile={isMobile}
-            actions={[
-              {
-                key: "close",
-                label: "بستن",
-                onClick: handleCloseEditDialog,
-                variant: "outlined",
-                color: "inherit",
-                disabled: isSavingUser,
-              },
-              {
-                key: "submit",
-                label: isSavingUser
-                  ? t("pages.usersManagement.edit.saving")
-                  : dialogMode === "create"
-                    ? t("pages.usersManagement.create.save")
-                    : t("pages.usersManagement.edit.save"),
-                type: "submit",
-                variant: "contained",
-                color: "primary",
-                icon: dialogMode === "create" ? <AddRoundedIcon /> : undefined,
-                disabled: isSavingUser,
-              },
-            ]}
-          />
-        </Box>
-      </Dialog>
+      </EntityModalShell>
     </>
   );
 };

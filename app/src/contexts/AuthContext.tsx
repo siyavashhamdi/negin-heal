@@ -119,7 +119,9 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
       setUser(null);
       localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
       localStorage.removeItem("user");
-      navigate(isMobileAppLayoutViewport() ? APP_SHELL_ROUTES.profile : APP_SHELL_ROUTES.login);
+      navigate(
+        isMobileAppLayoutViewport() ? APP_SHELL_ROUTES.profileLogin : APP_SHELL_ROUTES.login,
+      );
     };
 
     if (!token) {

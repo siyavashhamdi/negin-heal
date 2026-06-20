@@ -1,19 +1,18 @@
 import { useEffect, useMemo, useState, type ReactElement } from "react";
 import { useQuery } from "@apollo/client/react";
 import {
+  Box,
   CircularProgress,
-  Dialog,
-  DialogContent,
   DialogContentText,
-  DialogTitle,
   Divider,
   Stack,
   Typography,
 } from "@mui/material";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
-import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
 import { useSnackbar } from "../../hooks/useSnackbar";
+import EntityConfirmDialogShell from "../../shared/crud/EntityConfirmDialogShell";
+import EntityModalShell from "../../shared/crud/EntityModalShell";
 import { COURSE_CREATE_MUTATION } from "../../graphql/mutations/courseCreate.mutation";
 import { COURSE_UPDATE_MUTATION } from "../../graphql/mutations/courseUpdate.mutation";
 import { COURSE_DETAIL_QUERY } from "../../graphql/queries/courseDetail.query";
@@ -31,7 +30,6 @@ import type {
   DraftItem,
   VisibleAfterUnit,
 } from "./course-form-dialog/types";
-import styles from "./course-form-dialog/styles/DialogShell.module.scss";
 import {
   buildExistingFilePreview,
   getFileIdFromAccessUrl,
@@ -254,9 +252,6 @@ const CourseFormDialog = ({
   courseId,
 }: CourseFormDialogProps): ReactElement => {
   const { showError } = useSnackbar();
-  const { dialogProps, getPaperProps, getContentProps } = useMobileDialogProps({
-    breakpoint: "sm",
-  });
   const isEditMode = Boolean(courseId);
   const { data, loading: detailLoading } = useQuery<CourseDetailQuery, CourseDetailQueryVariables>(
     COURSE_DETAIL_QUERY,
@@ -731,17 +726,35 @@ const CourseFormDialog = ({
 
   return (
     <>
-      <Dialog
+      <EntityModalShell
         open={open}
         onClose={() => (isSubmitting ? undefined : closeDialog())}
+        title={isEditMode ? "ویرایش دوره" : "دوره جدید"}
         maxWidth="lg"
-        {...dialogProps}
-        PaperProps={getPaperProps({ className: styles.dialogPaper })}
+        pinFooterToBottomOnMobile
+        footer={
+          <ModalFooterActions
+            actions={[
+              {
+                key: "close",
+                isCloseButton: true,
+                onClick: closeDialog,
+                disabled: isSubmitting,
+              },
+              {
+                key: "submit",
+                label: isEditMode ? "ذخیره تغییرات" : "ایجاد دوره",
+                onClick: () => void handleSubmit(),
+                variant: "contained",
+                color: "primary",
+                icon: <AddRoundedIcon />,
+                disabled: !canSubmit,
+              },
+            ]}
+          />
+        }
       >
-        <DialogTitle className={styles.dialogTitle}>
-          {isEditMode ? "ویرایش دوره" : "دوره جدید"}
-        </DialogTitle>
-        <DialogContent {...getContentProps({ className: styles.dialogContent })}>
+        <Box sx={{ display: "grid", gap: "0.95rem" }}>
           {isEditMode && !isEditFormReady ? (
             <Stack alignItems="center" justifyContent="center" spacing={2} sx={{ minHeight: 320 }}>
               <CircularProgress />
@@ -806,65 +819,38 @@ const CourseFormDialog = ({
           />
             </>
           )}
-        </DialogContent>
-        <ModalFooterActions
-          actions={[
-            {
-              key: "close",
-              label: "بستن",
-              onClick: closeDialog,
-              variant: "outlined",
-              color: "inherit",
-              disabled: isSubmitting,
-            },
-            {
-              key: "submit",
-              label: isEditMode ? "ذخیره تغییرات" : "ایجاد دوره",
-              onClick: () => void handleSubmit(),
-              variant: "contained",
-              color: "primary",
-              icon: <AddRoundedIcon />,
-              disabled: !canSubmit,
-            },
-          ]}
-        />
-      </Dialog>
-      <Dialog
+        </Box>
+      </EntityModalShell>
+      <EntityConfirmDialogShell
         open={freeCourseConfirmOpen}
         onClose={() => setFreeCourseConfirmOpen(false)}
-        maxWidth="xs"
-        disableScrollLock
+        title={isEditMode ? "تایید ویرایش دوره رایگان" : "تایید ایجاد دوره رایگان"}
+        footer={
+          <ModalFooterActions
+            actions={[
+              {
+                key: "close",
+                isCloseButton: true,
+                onClick: () => setFreeCourseConfirmOpen(false),
+              },
+              {
+                key: "submit",
+                label: isEditMode ? "ذخیره دوره رایگان" : "ایجاد دوره رایگان",
+                onClick: () => void handleSubmit(true),
+                variant: "contained",
+                color: "primary",
+                disabled: isSubmitting,
+              },
+            ]}
+          />
+        }
       >
-        <DialogTitle>
-          {isEditMode ? "تایید ویرایش دوره رایگان" : "تایید ایجاد دوره رایگان"}
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            {isEditMode
-              ? "این دوره به‌صورت رایگان ذخیره می‌شود. آیا مطمئن هستید؟"
-              : "این دوره به‌صورت رایگان ایجاد می‌شود. آیا مطمئن هستید؟"}
-          </DialogContentText>
-        </DialogContent>
-        <ModalFooterActions
-          actions={[
-            {
-              key: "close",
-              label: "بستن",
-              onClick: () => setFreeCourseConfirmOpen(false),
-              variant: "outlined",
-              color: "inherit",
-            },
-            {
-              key: "submit",
-              label: isEditMode ? "ذخیره دوره رایگان" : "ایجاد دوره رایگان",
-              onClick: () => void handleSubmit(true),
-              variant: "contained",
-              color: "primary",
-              disabled: isSubmitting,
-            },
-          ]}
-        />
-      </Dialog>
+        <DialogContentText>
+          {isEditMode
+            ? "این دوره به‌صورت رایگان ذخیره می‌شود. آیا مطمئن هستید؟"
+            : "این دوره به‌صورت رایگان ایجاد می‌شود. آیا مطمئن هستید؟"}
+        </DialogContentText>
+      </EntityConfirmDialogShell>
     </>
   );
 };

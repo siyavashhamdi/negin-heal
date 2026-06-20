@@ -8,7 +8,7 @@ const LoginRoute = (): ReactElement => {
   const isMobileAppLayout = useMobileAppLayout();
 
   if (isMobileAppLayout) {
-    return <Navigate to={APP_SHELL_ROUTES.profile} replace />;
+    return <Navigate to={APP_SHELL_ROUTES.profileLogin} replace />;
   }
 
   return <Login />;
