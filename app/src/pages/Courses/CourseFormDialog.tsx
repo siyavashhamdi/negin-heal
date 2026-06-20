@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState, type ReactElement } from "react";
+import { useQuery } from "@apollo/client/react";
 import {
-  Button,
+  CircularProgress,
   Dialog,
   DialogContent,
   DialogContentText,
   DialogTitle,
   Divider,
+  Stack,
+  Typography,
 } from "@mui/material";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
@@ -13,9 +16,15 @@ import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { COURSE_CREATE_MUTATION } from "../../graphql/mutations/courseCreate.mutation";
 import { COURSE_UPDATE_MUTATION } from "../../graphql/mutations/courseUpdate.mutation";
+import { COURSE_DETAIL_QUERY } from "../../graphql/queries/courseDetail.query";
 import ChaptersSection from "./course-form-dialog/ChaptersSection";
 import MainInfoSection from "./course-form-dialog/MainInfoSection";
-import type { CourseListRecord } from "./courses-list.api";
+import type {
+  CourseDetailQuery,
+  CourseDetailQueryVariables,
+  CourseEditRecord,
+} from "./courses-list.api";
+import { mapCourseDetailRowToRecord } from "./courses-list.api";
 import type {
   DiscountKind,
   DraftChapter,
@@ -35,7 +44,7 @@ type CourseFormDialogProps = {
   readonly open: boolean;
   readonly onClose: () => void;
   readonly onSaved?: () => void;
-  readonly course?: CourseListRecord | null;
+  readonly courseId?: string | null;
 };
 
 type CourseWriteMutationResult = {
@@ -121,7 +130,7 @@ function getVisibleAfterDraft(
   };
 }
 
-function createDraftChaptersFromCourse(course: CourseListRecord): DraftChapter[] {
+function createDraftChaptersFromCourse(course: CourseEditRecord): DraftChapter[] {
   const draftChapters = course.chapters.map((chapter) => {
     const visibleAfterDraft = getVisibleAfterDraft(chapter.visibleAfterMinutes);
 
@@ -242,13 +251,27 @@ const CourseFormDialog = ({
   open,
   onClose,
   onSaved,
-  course,
+  courseId,
 }: CourseFormDialogProps): ReactElement => {
   const { showError } = useSnackbar();
   const { dialogProps, getPaperProps, getContentProps } = useMobileDialogProps({
     breakpoint: "sm",
   });
-  const isEditMode = course != null;
+  const isEditMode = Boolean(courseId);
+  const { data, loading: detailLoading } = useQuery<CourseDetailQuery, CourseDetailQueryVariables>(
+    COURSE_DETAIL_QUERY,
+    {
+      variables: { input: { id: courseId ?? "" } },
+      skip: !open || !courseId,
+      fetchPolicy: "network-only",
+    },
+  );
+  const detailCourse = useMemo(() => {
+    if (!courseId || data?.courseDetail?.id !== courseId) {
+      return null;
+    }
+    return mapCourseDetailRowToRecord(data.courseDetail);
+  }, [courseId, data]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
@@ -279,7 +302,7 @@ const CourseFormDialog = ({
   const parsedPriceIrt = parseOptionalNumber(priceIrt);
   const hasPositivePrice = parsedPriceIrt != null && parsedPriceIrt > 0;
 
-  const applyFormState = (nextCourse?: CourseListRecord | null): void => {
+  const applyFormState = (nextCourse?: CourseEditRecord | null): void => {
     const nextChapters = nextCourse ? createDraftChaptersFromCourse(nextCourse) : [createDraftChapter()];
     const activeDraftChapter = getLastChapter(nextChapters) ?? createDraftChapter();
     setTitle(nextCourse?.title ?? "");
@@ -318,10 +341,17 @@ const CourseFormDialog = ({
   };
 
   useEffect(() => {
-    if (open) {
-      applyFormState(course);
+    if (!open) {
+      return;
     }
-  }, [course, open]);
+    if (!isEditMode) {
+      applyFormState(null);
+      return;
+    }
+    if (detailCourse) {
+      applyFormState(detailCourse);
+    }
+  }, [detailCourse, isEditMode, open]);
 
   const [createCourse, createCourseResult] = useMutationWithSnackbar<
     CourseWriteMutationResult,
@@ -352,6 +382,8 @@ const CourseFormDialog = ({
     createCourseResult.loading ||
     updateCourseResult.loading ||
     isUploadingFiles;
+  const isEditFormReady = !isEditMode || (detailCourse != null && !detailLoading);
+  const canSubmit = isEditFormReady && !isSubmitting;
 
   const uploadAndGetFileId = async (file: File): Promise<string | null> => {
     try {
@@ -651,7 +683,7 @@ const CourseFormDialog = ({
       };
     }
 
-    const mutationInput = isEditMode && course ? { ...input, id: course.id } : input;
+    const mutationInput = isEditMode && courseId ? { ...input, id: courseId } : input;
     const mutateCourse = isEditMode ? updateCourse : createCourse;
 
     void mutateCourse({
@@ -710,7 +742,16 @@ const CourseFormDialog = ({
           {isEditMode ? "ویرایش دوره" : "دوره جدید"}
         </DialogTitle>
         <DialogContent {...getContentProps({ className: styles.dialogContent })}>
-          <MainInfoSection
+          {isEditMode && !isEditFormReady ? (
+            <Stack alignItems="center" justifyContent="center" spacing={2} sx={{ minHeight: 320 }}>
+              <CircularProgress />
+              <Typography variant="body2" color="text.secondary">
+                در حال دریافت اطلاعات دوره...
+              </Typography>
+            </Stack>
+          ) : (
+            <>
+              <MainInfoSection
             title={title}
             onTitleChange={setTitle}
             description={description}
@@ -763,6 +804,8 @@ const CourseFormDialog = ({
             onRemoveItem={removeItem}
             stripNumberSeparators={stripNumberSeparators}
           />
+            </>
+          )}
         </DialogContent>
         <ModalFooterActions
           actions={[
@@ -781,7 +824,7 @@ const CourseFormDialog = ({
               variant: "contained",
               color: "primary",
               icon: <AddRoundedIcon />,
-              disabled: isSubmitting,
+              disabled: !canSubmit,
             },
           ]}
         />

@@ -55,6 +55,7 @@ import {
   CourseItemGqlInput,
 } from "./graphql/inputs/course-common.gql.input";
 import { CourseCreateGqlInput } from "./graphql/inputs/course-create.gql.input";
+import { CourseDetailGqlInput } from "./graphql/inputs/course-detail.gql.input";
 import { CourseDeleteGqlInput } from "./graphql/inputs/course-delete.gql.input";
 import { CourseListGqlInput } from "./graphql/inputs/course-list.gql.input";
 import { CoursePaymentListGqlInput } from "./graphql/inputs/course-payment-list.gql.input";
@@ -71,6 +72,7 @@ import {
   CourseListGqlResponse,
   CourseListItemGqlResponse,
   CourseListPaginatedCursorGqlResponse,
+  CourseListSummaryGqlResponse,
 } from "./graphql/responses/course-list.gql.response";
 import {
   UserCourseDetailChapterGqlResponse,
@@ -715,6 +717,18 @@ export class CourseService {
     return this.toCoursePaymentListResponse(userCourse, relatedLookups);
   }
 
+  async detail(input: CourseDetailGqlInput): Promise<CourseListGqlResponse> {
+    const course = await this.courseModel.findById(input.id).exec();
+    if (!course) {
+      throw new CourseNotFoundException();
+    }
+
+    const fileTypeLookup = await this.buildFileTypeLookup([course]);
+    const fileAccessUrlMap = await this.buildFileAccessUrlLookup([course]);
+
+    return this.toListResponse(course, fileTypeLookup, fileAccessUrlMap);
+  }
+
   async list(
     input: CourseListGqlInput,
   ): Promise<CourseListPaginatedCursorGqlResponse> {
@@ -764,7 +778,7 @@ export class CourseService {
 
     return {
       items: courses.map((course) =>
-        this.toListResponse(course, fileTypeLookup, fileAccessUrlMap),
+        this.toListSummaryResponse(course, fileTypeLookup, fileAccessUrlMap),
       ),
       pagination: {
         limit,
@@ -1630,6 +1644,46 @@ export class CourseService {
     });
 
     return this.fileService.getAccessUrlMap(fileIds);
+  }
+
+  private toListSummaryResponse(
+    course: CourseDocument,
+    fileTypeLookup: FileTypeLookup,
+    fileAccessUrlMap?: Map<string, FileAccessUrlDescriptor>,
+  ): CourseListSummaryGqlResponse {
+    const courseObj = (course.toObject?.() || course) as PlainCourse;
+    const chapters = courseObj.chapters || [];
+    const itemTypes = Array.from(
+      new Set(
+        chapters.flatMap((chapter) =>
+          (chapter.items || []).map((item) =>
+            this.resolveItemType(item, fileTypeLookup),
+          ),
+        ),
+      ),
+    );
+    const coverImageFileId = courseObj.coverImageFileId;
+
+    return {
+      id: course._id,
+      title: courseObj.title,
+      description: courseObj.description,
+      coverImageAccessUrl: coverImageFileId
+        ? fileAccessUrlMap?.get(coverImageFileId.toString())
+        : undefined,
+      priceIrt: courseObj.priceIrt,
+      discount: courseObj.discount,
+      isActive: courseObj.isActive,
+      sortOrder: courseObj.sortOrder,
+      tags: courseObj.tags || [],
+      releaseType: this.calculateReleaseType(chapters),
+      chapterCount: chapters.length,
+      itemCount: chapters.reduce(
+        (sum, chapter) => sum + (chapter.items || []).length,
+        0,
+      ),
+      itemTypes,
+    };
   }
 
   private toListResponse(

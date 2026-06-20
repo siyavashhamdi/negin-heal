@@ -21,27 +21,9 @@ export const COURSE_LIST_QUERY = gql`
         sortOrder
         tags
         releaseType
-        chapters {
-          title
-          description
-          iconAccessUrl {
-            ${FILE_ACCESS_URL_FIELDS}
-          }
-          visibleAfterMinutes
-          isFree
-          sortOrder
-          items {
-            title
-            sortOrder
-            fileAccessUrl {
-              ${FILE_ACCESS_URL_FIELDS}
-            }
-            article
-            type
-          }
-        }
-        createdAt
-        updatedAt
+        chapterCount
+        itemCount
+        itemTypes
       }
       pagination {
         limit

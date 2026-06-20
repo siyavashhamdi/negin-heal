@@ -19,27 +19,51 @@ export type CourseListItemRow = {
   readonly sortOrder?: number | null;
   readonly tags: string[];
   readonly releaseType: CourseReleaseType;
-  readonly chapters?: Array<{
-    readonly title: string;
-    readonly description?: string | null;
-    readonly iconAccessUrl?: FileAccessUrl | null;
-    readonly visibleAfterMinutes?: number | null;
-    readonly isFree: boolean;
-    readonly sortOrder?: number | null;
-    readonly items: Array<{
-      readonly title: string;
-      readonly sortOrder?: number | null;
-      readonly fileAccessUrl?: FileAccessUrl | null;
-      readonly article?: string | null;
-      readonly type: CourseItemType;
-    }>;
-  }>;
-  readonly chapterCount?: number | null;
-  readonly itemCount?: number | null;
-  readonly itemTypes?: CourseItemType[] | null;
+  readonly chapterCount: number;
+  readonly itemCount: number;
+  readonly itemTypes: CourseItemType[];
   readonly isPurchased?: boolean | null;
-  readonly createdAt?: string | null;
-  readonly updatedAt?: string | null;
+};
+
+export type CourseDetailChapterRow = {
+  readonly title: string;
+  readonly description?: string | null;
+  readonly iconAccessUrl?: FileAccessUrl | null;
+  readonly visibleAfterMinutes?: number | null;
+  readonly isFree: boolean;
+  readonly sortOrder?: number | null;
+  readonly items: Array<{
+    readonly title: string;
+    readonly sortOrder?: number | null;
+    readonly fileAccessUrl?: FileAccessUrl | null;
+    readonly article?: string | null;
+    readonly type: CourseItemType;
+  }>;
+};
+
+export type CourseDetailItemRow = {
+  readonly id: string;
+  readonly title: string;
+  readonly description?: string | null;
+  readonly coverImageAccessUrl?: FileAccessUrl | null;
+  readonly priceIrt?: number | null;
+  readonly discount?: {
+    readonly type: CourseDiscountType;
+    readonly value: number;
+  } | null;
+  readonly isActive?: boolean;
+  readonly tags: string[];
+  readonly chapters: CourseDetailChapterRow[];
+};
+
+export type CourseDetailQuery = {
+  courseDetail: CourseDetailItemRow;
+};
+
+export type CourseDetailQueryVariables = {
+  input: {
+    id: string;
+  };
 };
 
 export type CourseListQuery = {
@@ -103,6 +127,24 @@ export type CourseListRecord = {
   readonly sortOrder: number;
   readonly tags: string[];
   readonly releaseType: CourseReleaseType;
+  readonly itemTypes: CourseItemType[];
+  readonly chapterCount: number;
+  readonly itemCount: number;
+  readonly isPurchased: boolean;
+};
+
+export type CourseEditRecord = {
+  readonly id: string;
+  readonly title: string;
+  readonly description: string;
+  readonly coverImageAccessUrl: FileAccessUrl | null;
+  readonly priceIrt: number | null;
+  readonly discount: {
+    readonly type: CourseDiscountType;
+    readonly value: number;
+  } | null;
+  readonly isActive: boolean;
+  readonly tags: string[];
   readonly chapters: Array<{
     readonly title: string;
     readonly description: string;
@@ -118,12 +160,6 @@ export type CourseListRecord = {
       readonly type: CourseItemType;
     }>;
   }>;
-  readonly itemTypes: CourseItemType[];
-  readonly chapterCount: number;
-  readonly itemCount: number;
-  readonly isPurchased: boolean;
-  readonly createdAt: string;
-  readonly updatedAt: string;
 };
 
 export type CourseListFilters = {
@@ -201,20 +237,7 @@ function parseTags(value: string): string[] | null {
   return parts.length > 0 ? Array.from(new Set(parts)) : null;
 }
 
-function toIsoOrEmpty(value?: string | null): string {
-  if (!value) {
-    return "";
-  }
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "" : date.toISOString();
-}
-
 export function mapCourseListRowToRecord(row: CourseListItemRow): CourseListRecord {
-  const chapters = row.chapters ?? [];
-  const itemTypes = Array.from(
-    new Set(row.itemTypes?.length ? row.itemTypes : chapters.flatMap((chapter) => chapter.items.map((item) => item.type))),
-  );
-
   return {
     id: row.id,
     title: row.title,
@@ -232,7 +255,30 @@ export function mapCourseListRowToRecord(row: CourseListItemRow): CourseListReco
     sortOrder: typeof row.sortOrder === "number" ? row.sortOrder : 0,
     tags: row.tags || [],
     releaseType: row.releaseType,
-    chapters: chapters.map((chapter) => ({
+    itemTypes: row.itemTypes || [],
+    chapterCount: row.chapterCount,
+    itemCount: row.itemCount,
+    isPurchased: row.isPurchased === true,
+  };
+}
+
+export function mapCourseDetailRowToRecord(row: CourseDetailItemRow): CourseEditRecord {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description?.trim() || "",
+    coverImageAccessUrl: row.coverImageAccessUrl ?? null,
+    priceIrt: typeof row.priceIrt === "number" ? row.priceIrt : null,
+    discount:
+      row.discount && typeof row.discount.value === "number"
+        ? {
+            type: row.discount.type,
+            value: row.discount.value,
+          }
+        : null,
+    isActive: row.isActive ?? true,
+    tags: row.tags || [],
+    chapters: row.chapters.map((chapter) => ({
       title: chapter.title,
       description: chapter.description?.trim() || "",
       iconAccessUrl: chapter.iconAccessUrl ?? null,
@@ -248,15 +294,6 @@ export function mapCourseListRowToRecord(row: CourseListItemRow): CourseListReco
         type: item.type,
       })),
     })),
-    itemTypes,
-    chapterCount: typeof row.chapterCount === "number" ? row.chapterCount : chapters.length,
-    itemCount:
-      typeof row.itemCount === "number"
-        ? row.itemCount
-        : chapters.reduce((sum, chapter) => sum + chapter.items.length, 0),
-    isPurchased: row.isPurchased === true,
-    createdAt: toIsoOrEmpty(row.createdAt),
-    updatedAt: toIsoOrEmpty(row.updatedAt),
   };
 }
 

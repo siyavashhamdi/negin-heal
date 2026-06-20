@@ -89,6 +89,65 @@ export class CourseListDiscountGqlResponse {
 }
 
 @ObjectType()
+export class CourseListSummaryGqlResponse {
+  @Field(() => ID, { description: "Course ID" })
+  id: Types.ObjectId;
+
+  @Field({ description: "Course title" })
+  title: string;
+
+  @Field({ nullable: true, description: "Course description" })
+  description?: string;
+
+  @Field(() => FileAccessUrlGqlResponse, {
+    nullable: true,
+    description: "Signed access descriptor for the course cover image",
+  })
+  coverImageAccessUrl?: FileAccessUrlGqlResponse;
+
+  @Field(() => Float, {
+    nullable: true,
+    description: "Course price in IRT",
+  })
+  priceIrt?: number;
+
+  @Field(() => CourseListDiscountGqlResponse, {
+    nullable: true,
+    description: "Optional course discount",
+  })
+  discount?: CourseListDiscountGqlResponse;
+
+  @Field({ description: "Whether the course is active" })
+  isActive: boolean;
+
+  @Field(() => Float, {
+    nullable: true,
+    description: "Course display rank used for manual ordering",
+  })
+  sortOrder?: number;
+
+  @Field(() => [String], { description: "Course tags" })
+  tags: string[];
+
+  @Field(() => CourseReleaseType, {
+    description:
+      "Calculated release strategy. GRADUAL means at least one chapter has visibleAfterMinutes.",
+  })
+  releaseType: CourseReleaseType;
+
+  @Field(() => Int, { description: "Number of chapters in the course" })
+  chapterCount: number;
+
+  @Field(() => Int, { description: "Number of items in the course" })
+  itemCount: number;
+
+  @Field(() => [CourseItemType], {
+    description: "Calculated content types available in this course",
+  })
+  itemTypes: CourseItemType[];
+}
+
+@ObjectType()
 export class CourseListGqlResponse {
   @Field(() => ID, { description: "Course ID" })
   id: Types.ObjectId;
@@ -152,10 +211,10 @@ export class CourseListGqlResponse {
 
 @ObjectType()
 export class CourseListPaginatedCursorGqlResponse {
-  @Field(() => [CourseListGqlResponse], {
+  @Field(() => [CourseListSummaryGqlResponse], {
     description: "List of courses",
   })
-  items: CourseListGqlResponse[];
+  items: CourseListSummaryGqlResponse[];
 
   @Field(() => PaginationCursorResponse, {
     description: "Pagination metadata",

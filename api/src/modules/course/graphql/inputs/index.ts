@@ -2,6 +2,7 @@ export * from "./course-chapter-complete.gql.input";
 export * from "./course-common.gql.input";
 export * from "./course-create.gql.input";
 export * from "./course-delete.gql.input";
+export * from "./course-detail.gql.input";
 export * from "./course-list.gql.input";
 export * from "./course-list-sort-option.gql.input";
 export * from "./course-payment-list.gql.input";

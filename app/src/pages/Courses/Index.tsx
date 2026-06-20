@@ -128,7 +128,7 @@ const CoursesIndex = (): ReactElement => {
   const [sort, setSort] = useState<CourseListSort>(DEFAULT_COURSE_LIST_SORT);
   const [deleteTarget, setDeleteTarget] = useState<CourseListRecord | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<CourseListRecord | null>(null);
+  const [editTargetId, setEditTargetId] = useState<string | null>(null);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [showFilterSections, setShowFilterSections] = useState(false);
   const [endUserTab, setEndUserTab] = useState<EndUserCourseTab>("ALL");
@@ -1032,7 +1032,7 @@ const CoursesIndex = (): ReactElement => {
                 onOpen={() => navigate(`/courses/${item.id}`)}
                 onFlip={() => toggleFlippedItem(item.id)}
                 onKeyDown={(event) => handleCourseKeyDown(event, item.id)}
-                onEdit={(course) => setEditTarget(course)}
+                onEdit={(course) => setEditTargetId(course.id)}
                 onDelete={(course) => setDeleteTarget(course)}
               />
             </div>
@@ -1108,11 +1108,11 @@ const CoursesIndex = (): ReactElement => {
       </Dialog>
       {!isPublicCourseView ? (
         <CourseFormDialog
-          open={isCreateDialogOpen || editTarget != null}
-          course={editTarget}
+          open={isCreateDialogOpen || editTargetId != null}
+          courseId={editTargetId}
           onClose={() => {
             setIsCreateDialogOpen(false);
-            setEditTarget(null);
+            setEditTargetId(null);
           }}
           onSaved={onRefresh}
         />
