@@ -18,6 +18,13 @@ cat > "${ASSETLINKS_PATH}" <<EOF
         "${FINGERPRINT}"
       ]
     }
+  },
+  {
+    "relation": ["check_validation"],
+    "target": {
+      "namespace": "cafebazaar_twa",
+      "package_name": "ir.neginheal.app"
+    }
   }
 ]
 EOF

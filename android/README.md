@@ -81,7 +81,7 @@ curl -sI https://neginheal.ir/.well-known/assetlinks.json
 curl -s https://neginheal.ir/.well-known/assetlinks.json
 ```
 
-Example content:
+Example content (the second entry is required for Cafe Bazaar TWA validation):
 
 ```json
 [
@@ -94,9 +94,18 @@ Example content:
         "C7:61:73:0B:0E:0F:63:9C:33:71:16:ED:F1:E1:EC:06:E6:94:D7:80:43:E4:A0:4E:BE:AD:CE:09:87:07:26:DF"
       ]
     }
+  },
+  {
+    "relation": ["check_validation"],
+    "target": {
+      "namespace": "cafebazaar_twa",
+      "package_name": "ir.neginheal.app"
+    }
   }
 ]
 ```
+
+See [Cafe Bazaar TWA guide](https://developers.cafebazaar.ir/fa/document/feature/trusted-web-application/).
 
 Run `npm run fingerprint` again if you create a new keystore, then `npm run sync:assetlinks` and redeploy.
 
