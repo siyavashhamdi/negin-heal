@@ -45,6 +45,7 @@ import { notifyBadgeCountUpdateListeners } from "../lib/badge-count-update-liste
 import { notifyGeneralUpdateListeners } from "../lib/general-updates-listeners";
 import { APP_SHELL_ROUTES } from "../routing/app-shell-routes";
 import { resolveNotificationActionPayload } from "../utilities/notification-action.util";
+import { showBrowserNotification } from "../utils/browserNotification.util";
 import { SideMenuNav } from "./SideMenuNav";
 import "./styles/MainLayout.scss";
 
@@ -312,6 +313,15 @@ export function MainLayout({
         notifications: previous.notifications + 1,
       };
     });
+
+    if (payload?.isPushNotification) {
+      void showBrowserNotification({
+        title: incomingTitle ?? "اعلان جدید",
+        body: incomingDescription,
+        tag: popupId,
+      });
+    }
+
     if (!messageType) {
       return;
     }

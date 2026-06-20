@@ -2913,6 +2913,7 @@ export class CourseService {
       title,
       description: message,
       mode: NotificationMode.SUCCESS,
+      isPushNotification: true,
     };
 
     const notification = await this.notificationModel.create({
