@@ -4,12 +4,34 @@ export type BrowserNotificationInput = {
   readonly tag?: string;
 };
 
+const NOTIFICATION_SW_PATH = "/push-sw.js";
+
 export function isSecureBrowserContext(): boolean {
   return typeof window !== "undefined" && window.isSecureContext;
 }
 
 export function isBrowserNotificationSupported(): boolean {
   return isSecureBrowserContext() && "Notification" in window;
+}
+
+export function requiresServiceWorkerForNotifications(): boolean {
+  if (typeof navigator === "undefined") {
+    return false;
+  }
+
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+export function isBrowserNotificationDeliverySupported(): boolean {
+  if (!isBrowserNotificationSupported()) {
+    return false;
+  }
+
+  if (requiresServiceWorkerForNotifications()) {
+    return "serviceWorker" in navigator;
+  }
+
+  return true;
 }
 
 export function getBrowserNotificationPermission(): NotificationPermission | "unsupported" {
@@ -26,6 +48,32 @@ export function canRequestBrowserNotificationPrompt(
   return permission === "default" || permission === "denied";
 }
 
+async function ensureNotificationServiceWorkerRegistration(): Promise<ServiceWorkerRegistration | null> {
+  if (!("serviceWorker" in navigator)) {
+    return null;
+  }
+
+  try {
+    let registration = await navigator.serviceWorker.getRegistration("/");
+
+    if (!registration) {
+      registration = await navigator.serviceWorker.register(NOTIFICATION_SW_PATH, {
+        scope: "/",
+      });
+    }
+
+    await navigator.serviceWorker.ready;
+    return registration;
+  } catch {
+    return null;
+  }
+}
+
+export async function registerNotificationServiceWorker(): Promise<boolean> {
+  const registration = await ensureNotificationServiceWorkerRegistration();
+  return registration != null;
+}
+
 export async function requestBrowserNotificationPermission(): Promise<NotificationPermission | "unsupported"> {
   if (!isBrowserNotificationSupported()) {
     return "unsupported";
@@ -35,7 +83,13 @@ export async function requestBrowserNotificationPermission(): Promise<Notificati
     return "granted";
   }
 
-  return await Notification.requestPermission();
+  const permission = await Notification.requestPermission();
+
+  if (permission === "granted" && requiresServiceWorkerForNotifications()) {
+    await registerNotificationServiceWorker();
+  }
+
+  return permission;
 }
 
 export async function ensureBrowserNotificationPermission(): Promise<boolean> {
@@ -43,16 +97,55 @@ export async function ensureBrowserNotificationPermission(): Promise<boolean> {
   return permission === "granted";
 }
 
-export function showBrowserNotification(input: BrowserNotificationInput): void {
-  if (!isBrowserNotificationSupported() || Notification.permission !== "granted") {
-    return;
+async function showNotificationViaServiceWorker(
+  input: BrowserNotificationInput,
+): Promise<boolean> {
+  const registration = await ensureNotificationServiceWorkerRegistration();
+  if (!registration) {
+    return false;
   }
 
-  new Notification(input.title, {
+  await registration.showNotification(input.title, {
     body: input.body,
     tag: input.tag,
     icon: "/logo.svg",
+    badge: "/logo.svg",
     dir: "rtl",
     lang: "fa",
-  });
+    data: {
+      url: "/",
+    },
+  } as NotificationOptions);
+
+  return true;
+}
+
+function showNotificationViaPageConstructor(input: BrowserNotificationInput): boolean {
+  try {
+    new Notification(input.title, {
+      body: input.body,
+      tag: input.tag,
+      icon: "/logo.svg",
+      dir: "rtl",
+      lang: "fa",
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function showBrowserNotification(input: BrowserNotificationInput): Promise<boolean> {
+  if (!isBrowserNotificationSupported() || Notification.permission !== "granted") {
+    return false;
+  }
+
+  if (requiresServiceWorkerForNotifications() || "serviceWorker" in navigator) {
+    const shownViaServiceWorker = await showNotificationViaServiceWorker(input);
+    if (shownViaServiceWorker) {
+      return true;
+    }
+  }
+
+  return showNotificationViaPageConstructor(input);
 }

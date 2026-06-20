@@ -8,8 +8,10 @@ import { useSnackbar } from "../../hooks/useSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
 import {
   canRequestBrowserNotificationPrompt,
+  isBrowserNotificationDeliverySupported,
   isBrowserNotificationSupported,
   isSecureBrowserContext,
+  registerNotificationServiceWorker,
   requestBrowserNotificationPermission,
 } from "../../utils/browserNotification.util";
 import styles from "./styles/more.module.scss";
@@ -77,6 +79,20 @@ const NotificationPermissionCallout = ({
     );
   }
 
+  if (!isBrowserNotificationDeliverySupported()) {
+    return (
+      <div className={`${styles.notificationCallout} ${styles.notificationCalloutUnsupported}`}>
+        <div className={styles.notificationCalloutIcon} aria-hidden="true">
+          <NotificationsOffRoundedIcon />
+        </div>
+        <div className={styles.notificationCalloutContent}>
+          <strong>{t("pages.more.notifications.mobileUnsupportedTitle")}</strong>
+          <p>{t("pages.more.notifications.mobileUnsupportedDescription")}</p>
+        </div>
+      </div>
+    );
+  }
+
   if (permission === "granted" && notificationsEnabled) {
     return null;
   }
@@ -91,6 +107,7 @@ const NotificationPermissionCallout = ({
       refreshPermission();
 
       if (result === "granted") {
+        await registerNotificationServiceWorker();
         showSuccess(t("pages.more.notifications.enabledSuccess"));
         return;
       }

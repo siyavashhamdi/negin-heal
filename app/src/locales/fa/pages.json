@@ -39,6 +39,7 @@
                 "missingMessage": "متن اعلان را وارد کنید.",
                 "unsupported": "مرورگر از اعلان پشتیبانی نمی‌کند.",
                 "permissionDenied": "اجازه اعلان داده نشد.",
+                "showFailed": "اعلان نمایش داده نشد. روی موبایل از Chrome/Android استفاده کنید و اگر iOS دارید اپ را به صفحه اصلی اضافه کنید.",
                 "success": "اعلان ارسال شد.",
                 "successScheduled": "اعلان ارسال شد و ۳۰ ثانیه دیگر دوباره نمایش داده می‌شود.",
                 "notificationTitle": "نگین هیل"
@@ -284,7 +285,9 @@
                 "blockedHelpAndroid": "Chrome ← منو (⋮) ← تنظیمات سایت ← اعلان‌ها ← اجازه دادن.",
                 "blockedHelpDesktop": "روی آیکون قفل یا اطلاعات کنار آدرس سایت کلیک کنید و اعلان‌ها را روی «Allow» بگذارید.",
                 "unsupportedTitle": "مرورگر از اعلان پشتیبانی نمی‌کند",
-                "unsupportedDescription": "برای دریافت اعلان، از Chrome، Safari یا Edge به‌روز روی موبایل یا دسکتاپ استفاده کنید."
+                "unsupportedDescription": "برای دریافت اعلان، از Chrome، Safari یا Edge به‌روز روی موبایل یا دسکتاپ استفاده کنید.",
+                "mobileUnsupportedTitle": "این مرورگر روی موبایل اعلان را پشتیبانی نمی‌کند",
+                "mobileUnsupportedDescription": "روی Android از Chrome استفاده کنید. روی iOS باید سایت را با Safari باز کنید و با «Add to Home Screen» به صفحه اصلی اضافه کنید."
             }
         },
         "underConstruction": {

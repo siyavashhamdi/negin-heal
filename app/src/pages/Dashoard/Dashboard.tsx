@@ -13,7 +13,7 @@ import { useTranslation } from "../../hooks/useTranslation";
 import FileUploadField from "../../shared/forms/FileUploadField";
 import {
   ensureBrowserNotificationPermission,
-  isBrowserNotificationSupported,
+  isBrowserNotificationDeliverySupported,
   showBrowserNotification,
 } from "../../utils/browserNotification.util";
 import { getFileIdFromAccessUrl } from "../../utils/fileAccessUrl.util";
@@ -126,7 +126,7 @@ const Dashboard = (): ReactElement => {
       return;
     }
 
-    if (!isBrowserNotificationSupported()) {
+    if (!isBrowserNotificationDeliverySupported()) {
       showError(t("pages.dashboard.pushTest.unsupported"));
       return;
     }
@@ -139,18 +139,23 @@ const Dashboard = (): ReactElement => {
         return;
       }
 
-      showBrowserNotification({
+      const shown = await showBrowserNotification({
         title: t("pages.dashboard.pushTest.notificationTitle"),
         body: message,
         tag: "dashboard-push-test-immediate",
       });
+
+      if (!shown) {
+        showError(t("pages.dashboard.pushTest.showFailed"));
+        return;
+      }
 
       if (pushRetryTimeoutRef.current) {
         clearTimeout(pushRetryTimeoutRef.current);
       }
 
       pushRetryTimeoutRef.current = setTimeout(() => {
-        showBrowserNotification({
+        void showBrowserNotification({
           title: t("pages.dashboard.pushTest.notificationTitle"),
           body: message,
           tag: "dashboard-push-test-delayed",
