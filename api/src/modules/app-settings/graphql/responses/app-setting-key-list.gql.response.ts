@@ -5,7 +5,7 @@ import { AppSettingValueType } from "../../../../enums";
 import { PaginationOffsetResponse } from "../../../../common/pagination/response";
 
 @ObjectType()
-export class AppSettingKeyListGqlResponse {
+export class AppSettingKeyListSummaryGqlResponse {
   @Field(() => ID, { description: "App setting ID" })
   id: Types.ObjectId;
 
@@ -44,10 +44,10 @@ export class AppSettingKeyListGqlResponse {
 
 @ObjectType()
 export class AppSettingKeyListPaginatedOffsetGqlResponse {
-  @Field(() => [AppSettingKeyListGqlResponse], {
+  @Field(() => [AppSettingKeyListSummaryGqlResponse], {
     description: "List of app setting keys",
   })
-  items: AppSettingKeyListGqlResponse[];
+  items: AppSettingKeyListSummaryGqlResponse[];
 
   @Field(() => PaginationOffsetResponse, {
     description: "Pagination metadata",

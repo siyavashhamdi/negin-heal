@@ -30,18 +30,22 @@ import { FileService, FileAccessUrlDescriptor } from "../file";
 import { resolveAvatarAccessUrl } from "../file/file-access-url.util";
 import {
   TicketListGqlInput,
+  TicketDetailGqlInput,
   TicketListSortOptionInput,
   SuperAdminTicketSendGqlInput,
+  UserTicketDetailGqlInput,
   UserTicketListGqlInput,
   UserTicketSendGqlInput,
 } from "./graphql/inputs";
 import {
   TicketListGqlResponse,
   TicketListPaginatedOffsetGqlResponse,
+  TicketListSummaryGqlResponse,
   TicketStoredFileMinimalGqlResponse,
   TicketUserMinimalGqlResponse,
   UserTicketListGqlResponse,
   UserTicketListPaginatedOffsetGqlResponse,
+  UserTicketListSummaryGqlResponse,
 } from "./graphql/responses";
 
 type TicketListSortField = Extract<keyof TicketListSortOptionInput, string>;
@@ -78,12 +82,13 @@ export class TicketService {
   async list(
     input: TicketListGqlInput,
   ): Promise<TicketListPaginatedOffsetGqlResponse> {
-    const { tickets, total, limit, skip, relatedLookups } =
+    const { tickets, total, limit, skip } =
       await this.findTicketListRecords(input);
+    const usersById = await this.buildTicketListUserLookup(tickets);
 
     return {
       items: tickets.map((ticket) =>
-        this.toTicketListResponse(ticket, relatedLookups),
+        this.toTicketListSummaryResponse(ticket, usersById),
       ),
       pagination: {
         limit,
@@ -94,6 +99,45 @@ export class TicketService {
     };
   }
 
+  async detail(input: TicketDetailGqlInput): Promise<TicketListGqlResponse> {
+    const ticket = await this.ticketModel.findById(input.id).exec();
+
+    if (!ticket) {
+      throw new NotFoundException("Ticket not found");
+    }
+
+    const relatedLookups = await this.buildTicketRelatedLookups([
+      ticket.toObject() as TicketListRecord,
+    ]);
+
+    return this.toTicketListResponse(ticket, relatedLookups);
+  }
+
+  async userDetail(
+    input: UserTicketDetailGqlInput,
+    userId: Types.ObjectId,
+  ): Promise<UserTicketListGqlResponse> {
+    const ticket = await this.ticketModel
+      .findOne({
+        _id: input.id,
+        "audit.createdBy": userId,
+      })
+      .exec();
+
+    if (!ticket) {
+      throw new NotFoundException("Ticket not found");
+    }
+
+    const relatedLookups = await this.buildTicketRelatedLookups([
+      ticket.toObject() as TicketListRecord,
+    ]);
+
+    return this.toUserTicketListResponse(
+      ticket.toObject() as TicketListRecord,
+      relatedLookups,
+    );
+  }
+
   async listForUser(
     input: UserTicketListGqlInput,
     userId: Types.ObjectId,
@@ -101,12 +145,14 @@ export class TicketService {
     const userScopedFilterQuery: FilterQuery<Ticket> = {
       "audit.createdBy": userId,
     };
-    const { tickets, total, limit, skip, relatedLookups } =
-      await this.findTicketListRecords(input, userScopedFilterQuery);
+    const { tickets, total, limit, skip } = await this.findTicketListRecords(
+      input,
+      userScopedFilterQuery,
+    );
 
     return {
       items: tickets.map((ticket) =>
-        this.toUserTicketListResponse(ticket, relatedLookups),
+        this.toUserTicketListSummaryResponse(ticket),
       ),
       pagination: {
         limit,
@@ -372,7 +418,6 @@ export class TicketService {
     total: number;
     limit: number;
     skip: number;
-    relatedLookups: TicketRelatedLookups;
   }> {
     const { filters, options } = input || {};
     const limit =
@@ -394,14 +439,12 @@ export class TicketService {
         .exec(),
       this.ticketModel.countDocuments(filterQuery).exec(),
     ]);
-    const relatedLookups = await this.buildTicketRelatedLookups(tickets);
 
     return {
       tickets,
       total,
       limit,
       skip,
-      relatedLookups,
     };
   }
 
@@ -517,6 +560,40 @@ export class TicketService {
     return sortOptions;
   }
 
+  private async buildTicketListUserLookup(
+    tickets: TicketListRecord[],
+  ): Promise<Map<string, TicketUserLookupRecord>> {
+    const userIds = new Set<string>();
+
+    tickets.forEach((ticket) => {
+      if (ticket.audit?.createdBy) {
+        userIds.add(ticket.audit.createdBy.toString());
+      }
+      if (ticket.audit?.updatedBy) {
+        userIds.add(ticket.audit.updatedBy.toString());
+      }
+      if (ticket.closedByUserId) {
+        userIds.add(ticket.closedByUserId.toString());
+      }
+    });
+
+    const userObjectIds = [...userIds]
+      .filter((id) => Types.ObjectId.isValid(id))
+      .map((id) => new Types.ObjectId(id));
+
+    if (userObjectIds.length === 0) {
+      return new Map();
+    }
+
+    const users = await this.userModel
+      .find({ _id: { $in: userObjectIds } })
+      .select({ _id: 1, username: 1, profile: 1 })
+      .lean<TicketUserLookupRecord[]>()
+      .exec();
+
+    return new Map(users.map((user) => [user._id.toString(), user]));
+  }
+
   private async buildTicketRelatedLookups(
     tickets: TicketListRecord[],
   ): Promise<TicketRelatedLookups> {
@@ -582,6 +659,105 @@ export class TicketService {
         ]),
       ),
       avatarAccessUrlMap,
+    };
+  }
+
+  private computeTicketListSummaryMessageStats(ticket: TicketListRecord): {
+    messageCount: number;
+    lastMessageBody: string;
+    attachmentCount: number;
+  } {
+    const messages = ticket.messages ?? [];
+    const messageCount = messages.length;
+    let attachmentCount = 0;
+
+    messages.forEach((message) => {
+      attachmentCount += message.attachmentFileIds?.length ?? 0;
+    });
+
+    if (messageCount === 0) {
+      return {
+        messageCount,
+        lastMessageBody: "",
+        attachmentCount,
+      };
+    }
+
+    const ticketCreatedAt = ticket.audit?.createdAt;
+    const ticketUpdatedAt = ticket.audit?.updatedAt;
+    const latestMessage = [...messages]
+      .map((message, originalIndex) => ({
+        message,
+        sentAtTimestamp: this.getMessageSentAtTimestamp(message, {
+          messageIndex: originalIndex,
+          messageCount,
+          ticketCreatedAt,
+          ticketUpdatedAt,
+        }),
+      }))
+      .sort((left, right) => right.sentAtTimestamp - left.sentAtTimestamp)[0];
+
+    return {
+      messageCount,
+      lastMessageBody: latestMessage?.message.body?.trim() ?? "",
+      attachmentCount,
+    };
+  }
+
+  private toTicketListUserSummaryResponse(
+    user?: TicketUserLookupRecord,
+  ): TicketListSummaryGqlResponse["createdByUser"] {
+    if (!user) {
+      return undefined;
+    }
+
+    return {
+      username: user.username,
+      profile: user.profile
+        ? {
+            firstName: user.profile.firstName,
+            lastName: user.profile.lastName,
+          }
+        : undefined,
+    };
+  }
+
+  private toTicketListSummaryResponse(
+    ticket: TicketListRecord,
+    usersById: Map<string, TicketUserLookupRecord>,
+  ): TicketListSummaryGqlResponse {
+    const createdByUserId = ticket.audit?.createdBy;
+    const updatedByUserId = ticket.audit?.updatedBy;
+    const { messageCount, lastMessageBody, attachmentCount } =
+      this.computeTicketListSummaryMessageStats(ticket);
+
+    return {
+      id: ticket._id,
+      title: ticket.title,
+      category: ticket.category,
+      priority: ticket.priority,
+      status: ticket.status,
+      closedBy: ticket.closedBy,
+      closedByUserId: ticket.closedByUserId,
+      closedByUser: this.toTicketListUserSummaryResponse(
+        ticket.closedByUserId
+          ? usersById.get(ticket.closedByUserId.toString())
+          : undefined,
+      ),
+      closedAt: ticket.closedAt,
+      createdByUserId,
+      createdByUser: this.toTicketListUserSummaryResponse(
+        createdByUserId ? usersById.get(createdByUserId.toString()) : undefined,
+      ),
+      updatedByUserId,
+      updatedByUser: this.toTicketListUserSummaryResponse(
+        updatedByUserId ? usersById.get(updatedByUserId.toString()) : undefined,
+      ),
+      messageCount,
+      lastMessageBody,
+      attachmentCount,
+      createdAt: ticket.audit?.createdAt,
+      updatedAt: ticket.audit?.updatedAt,
     };
   }
 
@@ -752,7 +928,31 @@ export class TicketService {
             relatedLookups.filesById.get(fileId.toString()),
           ),
         )
-        .filter((file): file is TicketStoredFileMinimalGqlResponse => file !== null),
+        .filter(
+          (file): file is TicketStoredFileMinimalGqlResponse => file !== null,
+        ),
+    };
+  }
+
+  private toUserTicketListSummaryResponse(
+    ticket: TicketListRecord,
+  ): UserTicketListSummaryGqlResponse {
+    const { messageCount, lastMessageBody, attachmentCount } =
+      this.computeTicketListSummaryMessageStats(ticket);
+
+    return {
+      id: ticket._id,
+      title: ticket.title,
+      category: ticket.category,
+      priority: ticket.priority,
+      status: ticket.status,
+      closedBy: ticket.closedBy,
+      closedAt: ticket.closedAt,
+      messageCount,
+      lastMessageBody,
+      attachmentCount,
+      createdAt: ticket.audit?.createdAt,
+      updatedAt: ticket.audit?.updatedAt,
     };
   }
 
@@ -843,7 +1043,9 @@ export class TicketService {
             relatedLookups.filesById.get(fileId.toString()),
           ),
         )
-        .filter((file): file is TicketStoredFileMinimalGqlResponse => file !== null),
+        .filter(
+          (file): file is TicketStoredFileMinimalGqlResponse => file !== null,
+        ),
     };
   }
 

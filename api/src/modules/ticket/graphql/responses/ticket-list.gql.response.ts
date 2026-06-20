@@ -1,4 +1,4 @@
-import { Field, Float, ID, ObjectType } from "@nestjs/graphql";
+import { Field, Float, ID, Int, ObjectType } from "@nestjs/graphql";
 import { Types } from "mongoose";
 
 import { FileAccessUrlGqlResponse } from "../../../file/graphql/responses";
@@ -126,6 +126,108 @@ export class UserTicketMessageGqlResponse {
 }
 
 @ObjectType()
+export class TicketListUserSummaryProfileGqlResponse {
+  @Field({ nullable: true, description: "User's first name" })
+  firstName?: string;
+
+  @Field({ nullable: true, description: "User's last name" })
+  lastName?: string;
+}
+
+@ObjectType()
+export class TicketListUserSummaryGqlResponse {
+  @Field({ nullable: true, description: "Username" })
+  username?: string;
+
+  @Field(() => TicketListUserSummaryProfileGqlResponse, {
+    nullable: true,
+    description: "User profile information for list display",
+  })
+  profile?: TicketListUserSummaryProfileGqlResponse;
+}
+
+@ObjectType()
+export class TicketListSummaryGqlResponse {
+  @Field(() => ID, { description: "Ticket ID" })
+  id: Types.ObjectId;
+
+  @Field({ description: "Ticket title" })
+  title: string;
+
+  @Field(() => TicketCategory, { description: "Ticket category" })
+  category: TicketCategory;
+
+  @Field(() => TicketPriority, { description: "Ticket priority" })
+  priority: TicketPriority;
+
+  @Field(() => TicketStatus, { description: "Ticket lifecycle status" })
+  status: TicketStatus;
+
+  @Field(() => TicketClosedBy, {
+    nullable: true,
+    description: "Actor type that closed the ticket",
+  })
+  closedBy?: TicketClosedBy;
+
+  @Field(() => ID, {
+    nullable: true,
+    description: "User ID that closed the ticket",
+  })
+  closedByUserId?: Types.ObjectId;
+
+  @Field(() => TicketListUserSummaryGqlResponse, {
+    nullable: true,
+    description: "Minimal user that closed the ticket",
+  })
+  closedByUser?: TicketListUserSummaryGqlResponse;
+
+  @Field({ nullable: true, description: "Date when the ticket was closed" })
+  closedAt?: Date;
+
+  @Field(() => ID, {
+    nullable: true,
+    description: "User ID that created the ticket",
+  })
+  createdByUserId?: Types.ObjectId;
+
+  @Field(() => TicketListUserSummaryGqlResponse, {
+    nullable: true,
+    description: "Minimal user that created the ticket",
+  })
+  createdByUser?: TicketListUserSummaryGqlResponse;
+
+  @Field(() => ID, {
+    nullable: true,
+    description: "User ID that last updated the ticket",
+  })
+  updatedByUserId?: Types.ObjectId;
+
+  @Field(() => TicketListUserSummaryGqlResponse, {
+    nullable: true,
+    description: "Minimal user that last updated the ticket",
+  })
+  updatedByUser?: TicketListUserSummaryGqlResponse;
+
+  @Field(() => Int, { description: "Number of messages in the ticket" })
+  messageCount: number;
+
+  @Field({ description: "Body of the most recent message" })
+  lastMessageBody: string;
+
+  @Field(() => Int, { description: "Total number of attachments across messages" })
+  attachmentCount: number;
+
+  @Field({ nullable: true, description: "Date when the ticket was created" })
+  createdAt?: Date;
+
+  @Field({
+    nullable: true,
+    description: "Date when the ticket was last updated",
+  })
+  updatedAt?: Date;
+}
+
+@ObjectType()
 export class TicketListGqlResponse {
   @Field(() => ID, { description: "Ticket ID" })
   id: Types.ObjectId;
@@ -204,15 +306,60 @@ export class TicketListGqlResponse {
 
 @ObjectType()
 export class TicketListPaginatedOffsetGqlResponse {
-  @Field(() => [TicketListGqlResponse], {
+  @Field(() => [TicketListSummaryGqlResponse], {
     description: "List of support tickets",
   })
-  items: TicketListGqlResponse[];
+  items: TicketListSummaryGqlResponse[];
 
   @Field(() => PaginationOffsetResponse, {
     description: "Pagination metadata",
   })
   pagination: PaginationOffsetResponse;
+}
+
+@ObjectType()
+export class UserTicketListSummaryGqlResponse {
+  @Field(() => ID, { description: "Ticket ID" })
+  id: Types.ObjectId;
+
+  @Field({ description: "Ticket title" })
+  title: string;
+
+  @Field(() => TicketCategory, { description: "Ticket category" })
+  category: TicketCategory;
+
+  @Field(() => TicketPriority, { description: "Ticket priority" })
+  priority: TicketPriority;
+
+  @Field(() => TicketStatus, { description: "Ticket lifecycle status" })
+  status: TicketStatus;
+
+  @Field(() => TicketClosedBy, {
+    nullable: true,
+    description: "Actor type that closed the ticket",
+  })
+  closedBy?: TicketClosedBy;
+
+  @Field({ nullable: true, description: "Date when the ticket was closed" })
+  closedAt?: Date;
+
+  @Field(() => Int, { description: "Number of messages in the ticket" })
+  messageCount: number;
+
+  @Field({ description: "Body of the most recent message" })
+  lastMessageBody: string;
+
+  @Field(() => Int, { description: "Total number of attachments across messages" })
+  attachmentCount: number;
+
+  @Field({ nullable: true, description: "Date when the ticket was created" })
+  createdAt?: Date;
+
+  @Field({
+    nullable: true,
+    description: "Date when the ticket was last updated",
+  })
+  updatedAt?: Date;
 }
 
 @ObjectType()
@@ -282,10 +429,10 @@ export class UserTicketListGqlResponse {
 
 @ObjectType()
 export class UserTicketListPaginatedOffsetGqlResponse {
-  @Field(() => [UserTicketListGqlResponse], {
+  @Field(() => [UserTicketListSummaryGqlResponse], {
     description: "List of current user's support tickets",
   })
-  items: UserTicketListGqlResponse[];
+  items: UserTicketListSummaryGqlResponse[];
 
   @Field(() => PaginationOffsetResponse, {
     description: "Pagination metadata",

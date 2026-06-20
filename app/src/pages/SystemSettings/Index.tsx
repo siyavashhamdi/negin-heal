@@ -48,9 +48,9 @@ import {
   EMPTY_APP_SETTING_LIST_FILTERS,
   buildAppSettingListQueryVariables,
   hasAppSettingFiltersApplied,
-  mapAppSettingKeyListRowToRecord,
+  mapAppSettingKeyListItemRowToRecord,
+  type AppSettingKeyListItemRow,
   type AppSettingKeyListQuery,
-  type AppSettingKeyListRow,
   type AppSettingListFilters,
   type AppSettingListQueryVariables,
   type AppSettingListSortField,
@@ -125,7 +125,7 @@ function textCell(value: unknown, monospace = false): ReactElement {
 
 function selectAppSettingListPage(
   data: AppSettingKeyListQuery | undefined,
-): ServerPageResult<AppSettingKeyListRow> | null {
+): ServerPageResult<AppSettingKeyListItemRow> | null {
   const page = data?.appSettingKeyList;
   if (!page) {
     return null;
@@ -179,7 +179,16 @@ const SystemSettingsIndex = (): ReactElement => {
     updatedAt: false,
   });
   const [showColumnFilters, setShowColumnFilters] = useState(false);
-  const [editTarget, setEditTarget] = useState<AppSettingRecord | null>(null);
+  const editSettingId = useMemo(() => {
+    const editRoutePrefix = `${APP_SHELL_ROUTES.moreSystemSettings}/edit/`;
+    if (!location.pathname.startsWith(editRoutePrefix)) {
+      return null;
+    }
+
+    const routeId = location.pathname.slice(editRoutePrefix.length);
+    return routeId || null;
+  }, [location.pathname]);
+  const editDialogOpen = editSettingId != null;
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const [appliedFilters, setAppliedFilters] = useState<AppSettingListFilters>(
@@ -218,34 +227,16 @@ const SystemSettingsIndex = (): ReactElement => {
   } = useServerPaginatedQuery<
     AppSettingKeyListQuery,
     AppSettingListQueryVariables,
-    AppSettingKeyListRow,
+    AppSettingKeyListItemRow,
     AppSettingRecord
   >({
     query: APP_SETTING_KEY_LIST_QUERY,
     variables: buildVariables,
     selectPage: selectAppSettingListPage,
-    mapItem: mapAppSettingKeyListRowToRecord,
+    mapItem: mapAppSettingKeyListItemRowToRecord,
     resetPageDeps: [debouncedSearchQuery, appliedFilters, serverSort],
     skip: !isSuperAdmin,
   });
-
-  useEffect(() => {
-    if (!location.pathname.startsWith(`${APP_SHELL_ROUTES.moreSystemSettings}/edit/`)) {
-      setEditTarget(null);
-      return;
-    }
-
-    const settingId = location.pathname.slice(
-      `${APP_SHELL_ROUTES.moreSystemSettings}/edit/`.length,
-    );
-    if (!settingId) {
-      setEditTarget(null);
-      return;
-    }
-
-    const target = rows.find((row) => row.id === settingId) ?? null;
-    setEditTarget(target);
-  }, [location.pathname, rows]);
 
   useEffect(() => {
     if (!error) {
@@ -541,8 +532,8 @@ const SystemSettingsIndex = (): ReactElement => {
         pagination={pagination}
       />
       <SystemSettingEditDialog
-        open={editTarget != null}
-        record={editTarget}
+        open={editDialogOpen}
+        settingId={editSettingId}
         onClose={() => navigate(APP_SHELL_ROUTES.moreSystemSettings)}
         onSaved={onRefresh}
       />

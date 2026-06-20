@@ -22,6 +22,7 @@ import {
 import {
   CourseDetailQuery,
   CourseListQuery,
+  CoursePaymentDetailQuery,
   CoursePaymentListQuery,
   UserCourseDetailQuery,
   UserCourseListQuery,
@@ -50,6 +51,7 @@ import {
     CourseUpdateMutation,
     CourseDetailQuery,
     CourseListQuery,
+    CoursePaymentDetailQuery,
     CoursePaymentListQuery,
     UserCourseDetailQuery,
     UserCourseListQuery,

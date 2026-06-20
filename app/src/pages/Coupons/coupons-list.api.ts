@@ -3,7 +3,23 @@ import { parseJalaliParamDate } from "../../utilities/jalali-date-param.util";
 export type CouponDiscountType = "PERCENTAGE" | "FIXED_AMOUNT";
 export type SortingOrder = "ASC" | "DESC";
 
-export type CouponListRow = {
+export type CouponListItemRow = {
+  readonly id: string;
+  readonly code: string;
+  readonly title: string;
+  readonly discountType: CouponDiscountType;
+  readonly discountValue: number;
+  readonly startsAt?: string | null;
+  readonly expiresAt?: string | null;
+  readonly isFirstPurchaseOnly: boolean;
+  readonly isActive: boolean;
+  readonly totalUsageCount: number;
+  readonly remainingTotalUsageCount?: number | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+};
+
+export type CouponDetailRow = {
   readonly id: string;
   readonly code: string;
   readonly title: string;
@@ -23,6 +39,32 @@ export type CouponListRow = {
   readonly updatedBy?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
+};
+
+export type CouponDetailQuery = {
+  couponDetail: CouponDetailRow;
+};
+
+export type CouponDetailQueryVariables = {
+  input: {
+    id: string;
+  };
+};
+
+export type CouponListRecord = {
+  readonly id: string;
+  readonly code: string;
+  readonly title: string;
+  readonly discountType: CouponDiscountType;
+  readonly discountValue: number;
+  readonly startsAt: string;
+  readonly expiresAt: string;
+  readonly isFirstPurchaseOnly: boolean;
+  readonly isActive: boolean;
+  readonly totalUsageCount: number;
+  readonly remainingTotalUsageCount: number | null;
+  readonly createdAt: string;
+  readonly updatedAt: string;
 };
 
 export type CouponRecord = {
@@ -50,7 +92,7 @@ export type CouponRecord = {
 
 export type CouponListQuery = {
   couponList: {
-    items: CouponListRow[];
+    items: CouponListItemRow[];
     pagination: {
       limit: number;
       skip: number;
@@ -138,11 +180,11 @@ export type CouponListQueryVariables = {
 };
 
 export type CouponCreateMutation = {
-  readonly couponCreate: CouponListRow;
+  readonly couponCreate: { readonly id: string };
 };
 
 export type CouponUpdateMutation = {
-  readonly couponUpdate: CouponListRow;
+  readonly couponUpdate: { readonly id: string };
 };
 
 export type CouponDeleteMutation = {
@@ -328,7 +370,26 @@ function normalizeCourseIds(value: readonly string[]): string[] | null {
   return ids.length > 0 ? Array.from(new Set(ids)) : null;
 }
 
-export function mapCouponListRowToRecord(row: CouponListRow): CouponRecord {
+export function mapCouponListRowToRecord(row: CouponListItemRow): CouponListRecord {
+  return {
+    id: String(row.id),
+    code: row.code?.trim() || EMPTY_DISPLAY,
+    title: row.title?.trim() || EMPTY_DISPLAY,
+    discountType: row.discountType,
+    discountValue: row.discountValue,
+    startsAt: row.startsAt ?? "",
+    expiresAt: row.expiresAt ?? "",
+    isFirstPurchaseOnly: row.isFirstPurchaseOnly,
+    isActive: row.isActive,
+    totalUsageCount: row.totalUsageCount,
+    remainingTotalUsageCount:
+      typeof row.remainingTotalUsageCount === "number" ? row.remainingTotalUsageCount : null,
+    createdAt: row.createdAt ?? "",
+    updatedAt: row.updatedAt ?? "",
+  };
+}
+
+export function mapCouponDetailRowToRecord(row: CouponDetailRow): CouponRecord {
   const applicableCourseIds = row.applicableCourseIds ?? [];
 
   return {

@@ -6,11 +6,11 @@ import { GqlAuthGuard, Roles, RolesGuard } from "../../../auth";
 import { AppSettingsService } from "../../app-settings.service";
 import { AppSettingKeyListGqlInput } from "../inputs";
 import {
-  AppSettingKeyListGqlResponse,
   AppSettingKeyListPaginatedOffsetGqlResponse,
+  AppSettingKeyListSummaryGqlResponse,
 } from "../responses";
 
-@Resolver(() => AppSettingKeyListGqlResponse)
+@Resolver(() => AppSettingKeyListSummaryGqlResponse)
 @UseGuards(GqlAuthGuard, RolesGuard)
 @Roles(UserRole.SUPER_ADMIN)
 export class AppSettingKeyListQuery {

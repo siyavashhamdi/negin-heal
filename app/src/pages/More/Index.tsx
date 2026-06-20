@@ -15,12 +15,13 @@ import { useQuery } from "@apollo/client/react";
 import { useEffect, useRef, useState, type ReactElement } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import { useAppSettings } from "../../contexts/AppSettingsContext";
 import { useThemeMode } from "../../contexts/ThemeContext";
 import { USER_PROFILE_UPDATE_MUTATION } from "../../graphql/mutations/userProfileUpdate.mutation";
 import { APP_PRIVACY_POLICY_PAGE_QUERY } from "../../graphql/queries/appPrivacyPolicyPageConfig.query";
 import { APP_TERMS_OF_USE_PAGE_QUERY } from "../../graphql/queries/appTermsOfUsePageConfig.query";
+import { APP_VERSION_QUERY } from "../../graphql/queries/appVersionConfig.query";
 import { USER_ME_QUERY } from "../../graphql/queries/userMe.query";
+import { useMobileAppLayout } from "../../hooks/useMobileAppLayout";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import type { UserMeResponse } from "../../hooks/useMe";
 import TicketDialog from "../Support/TicketDialog";
@@ -66,11 +67,17 @@ type UserProfilePreferencesMutationVariables = {
   };
 };
 
+type AppVersionConfigQuery = {
+  readonly appVersionConfig: {
+    readonly value: string;
+  };
+};
+
 const More = (): ReactElement => {
   const navigate = useNavigate();
   const apolloClient = useApolloClient();
   const { user, isAuthenticated } = useAuth();
-  const { appVersion } = useAppSettings();
+  const isMobile = useMobileAppLayout();
   const { mode, setThemeMode } = useThemeMode();
   const roles = user?.roles ?? [];
   const isSuperAdmin = roles.includes("SUPER_ADMIN");
@@ -96,6 +103,10 @@ const More = (): ReactElement => {
       skip: !shouldShowPublicInfoCards,
     }
   );
+  const { data: appVersionData } = useQuery<AppVersionConfigQuery>(APP_VERSION_QUERY, {
+    fetchPolicy: "cache-and-network",
+    skip: !isMobile,
+  });
   const [preferredTheme, setPreferredTheme] = useState<ThemePreference>(initialThemePreference);
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(
     initialNotificationsEnabled
@@ -117,7 +128,8 @@ const More = (): ReactElement => {
   const termsOfUsePage = termsOfUseData?.appTermsOfUsePageConfig ?? EMPTY_APP_TERMS_OF_USE_PAGE;
   const shouldShowPrivacyPolicy = shouldShowPublicInfoCards && hasText(privacyPolicyPage.html);
   const shouldShowTermsOfUse = shouldShowPublicInfoCards && hasText(termsOfUsePage.html);
-  const shouldShowVersion = hasText(appVersion.value);
+  const appVersionValue = appVersionData?.appVersionConfig?.value?.trim() ?? "";
+  const shouldShowVersion = isMobile && hasText(appVersionValue);
 
   useEffect(() => {
     if (mode !== preferredTheme) {
@@ -369,21 +381,23 @@ const More = (): ReactElement => {
       {shouldShowVersion ? (
         <div className={styles.versionBlock}>
           <span />
-          <p>نسخه {appVersion.value}</p>
+          <p>نسخه {appVersionValue}</p>
         </div>
       ) : null}
 
-      <TicketDialog
-        open={bugReportDialogOpen}
-        mode="create"
-        record={null}
-        canReply={false}
-        isSuperAdmin={false}
-        initialCategory="BUG"
-        disableCategorySelect
-        onClose={() => setBugReportDialogOpen(false)}
-        onSuccess={() => setBugReportDialogOpen(false)}
-      />
+      {bugReportDialogOpen ? (
+        <TicketDialog
+          open
+          mode="create"
+          record={null}
+          canReply={false}
+          isSuperAdmin={false}
+          initialCategory="BUG"
+          disableCategorySelect
+          onClose={() => setBugReportDialogOpen(false)}
+          onSuccess={() => setBugReportDialogOpen(false)}
+        />
+      ) : null}
     </section>
   );
 };

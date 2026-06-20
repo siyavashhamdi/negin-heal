@@ -1,7 +1,5 @@
 import { gql } from "@apollo/client";
 
-import { FILE_ACCESS_URL_FIELDS } from "../fragments/fileAccessUrl.fragment";
-
 export const COURSE_PAYMENT_LIST_QUERY = gql`
   query CoursePaymentList($input: CoursePaymentListGqlInput!) {
     coursePaymentList(input: $input) {
@@ -10,7 +8,6 @@ export const COURSE_PAYMENT_LIST_QUERY = gql`
         userId
         courseId
         user {
-          id
           fullName
           username
           email
@@ -18,9 +15,7 @@ export const COURSE_PAYMENT_LIST_QUERY = gql`
           mobilePhone
         }
         course {
-          id
           title
-          priceIrt
         }
         status
         paymentMethod
@@ -33,41 +28,19 @@ export const COURSE_PAYMENT_LIST_QUERY = gql`
         discountAmountIrt
         finalAmountIrt
         coupon {
-          id
           couponId
           code
-          title
           discountType
           discountValue
         }
         uploadedReceiptFile {
-          name
-          title
-          mimeType
-          sizeBytes
-          path
           accessUrl {
-            ${FILE_ACCESS_URL_FIELDS}
+            fileId
           }
         }
         receiptUploadedBy
-        receiptUploader {
-          id
-          fullName
-          username
-          email
-          phone
-        }
         isManualStatusChange
-        submittedInitiallyByAdmin
         manualStatusChangedBy
-        manualStatusChanger {
-          id
-          fullName
-          username
-          email
-          phone
-        }
         manualStatusChangedDescription
         createdAt
         updatedAt

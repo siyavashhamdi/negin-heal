@@ -8,9 +8,10 @@ import { UserListGqlInput } from "../inputs";
 import {
   UserListGqlResponse,
   UserListPaginatedOffsetGqlResponse,
+  UserListSummaryGqlResponse,
 } from "../responses";
 
-@Resolver(() => UserListGqlResponse)
+@Resolver(() => UserListSummaryGqlResponse)
 @UseGuards(GqlAuthGuard, RolesGuard)
 @Roles(UserRole.SUPER_ADMIN)
 export class UserListQuery {

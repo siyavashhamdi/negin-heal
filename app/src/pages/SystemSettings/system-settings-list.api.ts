@@ -3,7 +3,7 @@ import { parseJalaliParamDate } from "../../utilities/jalali-date-param.util";
 export type AppSettingValueType = "STRING" | "NUMBER" | "BOOLEAN" | "JSON";
 export type SortingOrder = "ASC" | "DESC";
 
-export type AppSettingKeyListRow = {
+export type AppSettingKeyListItemRow = {
   readonly id: string;
   readonly key: string;
   readonly label: string;
@@ -27,7 +27,7 @@ export type AppSettingRecord = {
 
 export type AppSettingKeyListQuery = {
   appSettingKeyList: {
-    items: AppSettingKeyListRow[];
+    items: AppSettingKeyListItemRow[];
     pagination: {
       limit: number;
       skip: number;
@@ -135,7 +135,9 @@ function dateFilterToIsoDate(value: string): string | null {
   return `${year}-${month}-${day}`;
 }
 
-export function mapAppSettingKeyListRowToRecord(row: AppSettingKeyListRow): AppSettingRecord {
+export function mapAppSettingKeyListItemRowToRecord(
+  row: AppSettingKeyListItemRow,
+): AppSettingRecord {
   return {
     id: String(row.id),
     key: row.key?.trim() || EMPTY_DISPLAY,
@@ -147,6 +149,12 @@ export function mapAppSettingKeyListRowToRecord(row: AppSettingKeyListRow): AppS
     updatedAt: row.updatedAt ?? "",
   };
 }
+
+/** @deprecated Use AppSettingKeyListItemRow instead. */
+export type AppSettingKeyListRow = AppSettingKeyListItemRow;
+
+/** @deprecated Use mapAppSettingKeyListItemRowToRecord instead. */
+export const mapAppSettingKeyListRowToRecord = mapAppSettingKeyListItemRowToRecord;
 
 export function buildAppSettingListQueryVariables(
   search: string,

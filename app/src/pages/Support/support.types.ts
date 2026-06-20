@@ -15,6 +15,14 @@ export type SupportTicketUserMinimal = {
   } | null;
 };
 
+export type SupportTicketListUserSummary = {
+  readonly username?: string | null;
+  readonly profile?: {
+    readonly firstName?: string | null;
+    readonly lastName?: string | null;
+  } | null;
+};
+
 export type SupportTicketAttachment = {
   readonly id?: string | null;
   readonly name?: string | null;
@@ -32,7 +40,60 @@ export type SupportTicketMessage = {
   readonly attachmentFiles: readonly SupportTicketAttachment[];
 };
 
-export type SupportTicketListRow = {
+export type SupportTicketListItemRow = {
+  readonly id: string;
+  readonly title: string;
+  readonly category: TicketCategory;
+  readonly priority: TicketPriority;
+  readonly status: TicketStatus;
+  readonly closedBy?: TicketClosedBy | null;
+  readonly closedByUserId?: string | null;
+  readonly closedByUser?: SupportTicketListUserSummary | null;
+  readonly closedAt?: string | null;
+  readonly createdByUserId?: string | null;
+  readonly createdByUser?: SupportTicketListUserSummary | null;
+  readonly updatedByUserId?: string | null;
+  readonly updatedByUser?: SupportTicketListUserSummary | null;
+  readonly messageCount: number;
+  readonly lastMessageBody: string;
+  readonly attachmentCount: number;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+};
+
+export type UserSupportTicketListItemRow = {
+  readonly id: string;
+  readonly title: string;
+  readonly category: TicketCategory;
+  readonly priority: TicketPriority;
+  readonly status: TicketStatus;
+  readonly closedBy?: TicketClosedBy | null;
+  readonly closedAt?: string | null;
+  readonly messageCount: number;
+  readonly lastMessageBody: string;
+  readonly attachmentCount: number;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+};
+
+export type UserTicketDetailRow = {
+  readonly id: string;
+  readonly title: string;
+  readonly category: TicketCategory;
+  readonly priority: TicketPriority;
+  readonly status: TicketStatus;
+  readonly closedBy?: TicketClosedBy | null;
+  readonly closedAt?: string | null;
+  readonly messages: readonly SupportTicketMessage[];
+  readonly createdByUserId?: string | null;
+  readonly createdByUser?: SupportTicketUserMinimal | null;
+  readonly updatedByUserId?: string | null;
+  readonly updatedByUser?: SupportTicketUserMinimal | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+};
+
+export type SupportTicketDetailRow = {
   readonly id: string;
   readonly title: string;
   readonly category: TicketCategory;
@@ -154,7 +215,7 @@ export const EMPTY_USER_SUPPORT_TICKET_LIST_FILTERS: UserSupportTicketListFilter
 
 export type TicketListQuery = {
   ticketList: {
-    items: SupportTicketListRow[];
+    items: SupportTicketListItemRow[];
     pagination: {
       limit: number;
       skip: number;
@@ -166,7 +227,7 @@ export type TicketListQuery = {
 
 export type UserTicketListQuery = {
   userTicketList: {
-    items: SupportTicketListRow[];
+    items: UserSupportTicketListItemRow[];
     pagination: {
       limit: number;
       skip: number;
@@ -193,6 +254,26 @@ export type TicketListQueryVariables = {
         closedAt?: "ASC" | "DESC";
       };
     };
+  };
+};
+
+export type TicketDetailQuery = {
+  ticketDetail: SupportTicketDetailRow;
+};
+
+export type TicketDetailQueryVariables = {
+  input: {
+    id: string;
+  };
+};
+
+export type UserTicketDetailQuery = {
+  userTicketDetail: UserTicketDetailRow;
+};
+
+export type UserTicketDetailQueryVariables = {
+  input: {
+    id: string;
   };
 };
 

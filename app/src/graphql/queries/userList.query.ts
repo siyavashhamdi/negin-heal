@@ -15,10 +15,10 @@ export const USER_LIST_QUERY = gql`
           lastName
           email
           phoneNumber
+          bio
           avatarAccessUrl {
             ${FILE_ACCESS_URL_FIELDS}
           }
-          bio
         }
         createdAt
         updatedAt

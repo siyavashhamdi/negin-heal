@@ -8,10 +8,10 @@ import { APP_SETTING_DETAIL_QUERY } from "../../graphql/queries/appSettingDetail
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
+import { hasFormChanges } from "../../utils/formChange.util";
 import EntityModalShell from "../../shared/crud/EntityModalShell";
 import ModalFooterActions from "../../shared/crud/ModalFooterActions";
 import { createModalSaveSuccessHandler } from "../../shared/crud/modalFooterActions.util";
-import type { AppSettingRecord } from "./system-settings-list.api";
 import {
   CommonSettingFields,
   JsonValueEditor,
@@ -27,7 +27,7 @@ import {
 } from "./edit";
 
 interface SystemSettingEditDialogProps {
-  readonly record: AppSettingRecord | null;
+  readonly settingId: string | null;
   readonly open: boolean;
   readonly onClose: () => void;
   readonly onSaved: () => void;
@@ -35,7 +35,7 @@ interface SystemSettingEditDialogProps {
 }
 
 const SystemSettingEditDialog = ({
-  record,
+  settingId,
   open,
   onClose,
   onSaved,
@@ -44,18 +44,19 @@ const SystemSettingEditDialog = ({
   const { t } = useTranslation();
   const { showError } = useSnackbar();
   const [form, setForm] = useState<AppSettingEditFormState | null>(null);
-  const settingId = record?.id ?? "";
+  const [initialForm, setInitialForm] = useState<AppSettingEditFormState | null>(null);
 
   const { data, loading: detailLoading } = useQuery<
     AppSettingDetailQuery,
     AppSettingDetailQueryVariables
   >(APP_SETTING_DETAIL_QUERY, {
-    variables: { input: { id: settingId } },
+    variables: { input: { id: settingId ?? "" } },
     skip: !open || !settingId,
     fetchPolicy: "network-only",
   });
 
-  const detail = data?.appSettingDetail?.id === settingId ? data.appSettingDetail : null;
+  const detail =
+    settingId && data?.appSettingDetail?.id === settingId ? data.appSettingDetail : null;
 
   const [updateSetting, updateSettingResult] = useMutationWithSnackbar<
     AppSettingUpdateMutation,
@@ -68,10 +69,13 @@ const SystemSettingEditDialog = ({
   useEffect(() => {
     if (!open) {
       setForm(null);
+      setInitialForm(null);
       return;
     }
     if (detail) {
-      setForm(buildInitialEditForm(detail));
+      const nextForm = buildInitialEditForm(detail);
+      setInitialForm(nextForm);
+      setForm(nextForm);
     }
   }, [detail, open]);
 
@@ -102,14 +106,17 @@ const SystemSettingEditDialog = ({
   };
 
   const isSaving = updateSettingResult.loading;
-  const canSubmit = Boolean(detail && form && !detailLoading && !isSaving);
+  const hasEditFormChanges =
+    initialForm != null && form != null && hasFormChanges(initialForm, form);
+  const canSubmit =
+    Boolean(detail && form && !detailLoading && !isSaving) && hasEditFormChanges;
 
   return (
     <EntityModalShell
       open={open}
       onClose={isSaving ? () => undefined : onClose}
       title="ویرایش تنظیمات سامانه"
-      subtitle={record?.label ?? record?.key ?? ""}
+      subtitle={detail?.label ?? detail?.key ?? ""}
       maxWidth="lg"
       useFormWrapper
       onSubmit={handleSubmit}

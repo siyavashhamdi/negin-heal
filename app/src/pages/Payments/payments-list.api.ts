@@ -35,7 +35,53 @@ export type CoursePaymentStoredFile = {
   readonly accessUrl?: FileAccessUrl | null;
 };
 
-export type CoursePaymentListRow = {
+export type CoursePaymentListItemRow = {
+  readonly id: string;
+  readonly userId: string;
+  readonly courseId: string;
+  readonly user: {
+    readonly fullName: string;
+    readonly username: string;
+    readonly email: string;
+    readonly phone?: string | null;
+    readonly mobilePhone?: string | null;
+  };
+  readonly course: {
+    readonly title: string;
+  };
+  readonly status: UserCoursePurchaseStatus;
+  readonly paymentMethod: UserCoursePaymentMethod;
+  readonly currency: UserCoursePurchaseCurrency;
+  readonly paymentProvider?: string | null;
+  readonly paymentReference?: string | null;
+  readonly transactionId?: string | null;
+  readonly amountIrt: number;
+  readonly discountPercentage?: number | null;
+  readonly discountAmountIrt?: number | null;
+  readonly finalAmountIrt: number;
+  readonly coupon?: {
+    readonly couponId: string;
+    readonly code: string;
+    readonly discountType: CouponDiscountType;
+    readonly discountValue: number;
+  } | null;
+  readonly uploadedReceiptFile?: {
+    readonly accessUrl?: Pick<FileAccessUrl, "fileId"> | null;
+  } | null;
+  readonly receiptUploadedBy?: string | null;
+  readonly isManualStatusChange: boolean;
+  readonly manualStatusChangedBy?: string | null;
+  readonly manualStatusChangedDescription?: string | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+  readonly pendingAt?: string | null;
+  readonly paidAt?: string | null;
+  readonly failedAt?: string | null;
+  readonly refundedAt?: string | null;
+  readonly cancelledAt?: string | null;
+};
+
+export type CoursePaymentDetailRow = {
   readonly id: string;
   readonly userId: string;
   readonly courseId: string;
@@ -89,13 +135,23 @@ export type CoursePaymentListRow = {
 
 export type CoursePaymentListQuery = {
   coursePaymentList: {
-    items: CoursePaymentListRow[];
+    items: CoursePaymentListItemRow[];
     pagination: {
       limit: number;
       skip: number;
       total: number;
       count: number;
     };
+  };
+};
+
+export type CoursePaymentDetailQuery = {
+  coursePaymentDetail: CoursePaymentDetailRow;
+};
+
+export type CoursePaymentDetailQueryVariables = {
+  input: {
+    id: string;
   };
 };
 
@@ -354,7 +410,60 @@ function dateFilterToIsoDate(value: string): string | null {
   return `${year}-${month}-${day}`;
 }
 
-export function mapCoursePaymentListRowToRecord(row: CoursePaymentListRow): CoursePaymentRecord {
+export function mapCoursePaymentListRowToRecord(row: CoursePaymentListItemRow): CoursePaymentRecord {
+  const receiptAccessUrl = row.uploadedReceiptFile?.accessUrl;
+
+  return {
+    id: String(row.id),
+    userId: String(row.userId),
+    courseId: String(row.courseId),
+    userFullName: display(row.user.fullName),
+    username: display(row.user.username),
+    userEmail: display(row.user.email),
+    userPhone: display(row.user.mobilePhone ?? row.user.phone),
+    courseTitle: display(row.course.title),
+    status: row.status,
+    paymentMethod: row.paymentMethod,
+    currency: row.currency,
+    paymentProvider: display(row.paymentProvider),
+    paymentReference: display(row.paymentReference),
+    transactionId: display(row.transactionId),
+    amountIrt: row.amountIrt,
+    discountPercentage: row.discountPercentage ?? null,
+    discountAmountIrt: row.discountAmountIrt ?? null,
+    finalAmountIrt: row.finalAmountIrt,
+    couponId: display(row.coupon?.couponId),
+    couponCode: display(row.coupon?.code),
+    couponTitle: display(row.coupon?.code),
+    couponDiscountType: row.coupon?.discountType ?? null,
+    couponDiscountValue: row.coupon?.discountValue ?? null,
+    uploadedReceiptFileId: display(getFileIdFromAccessUrl(receiptAccessUrl)),
+    uploadedReceiptFileTitle: EMPTY_DISPLAY,
+    uploadedReceiptFileName: EMPTY_DISPLAY,
+    uploadedReceiptFileMimeType: EMPTY_DISPLAY,
+    uploadedReceiptFileSizeBytes: null,
+    uploadedReceiptFilePath: EMPTY_DISPLAY,
+    uploadedReceiptFileAccessUrl: "",
+    receiptUploadedBy: display(row.receiptUploadedBy),
+    receiptUploaderName: EMPTY_DISPLAY,
+    receiptUploaderUsername: EMPTY_DISPLAY,
+    isManualStatusChange: row.isManualStatusChange,
+    submittedInitiallyByAdmin: false,
+    manualStatusChangedBy: display(row.manualStatusChangedBy),
+    manualStatusChangerName: EMPTY_DISPLAY,
+    manualStatusChangerUsername: EMPTY_DISPLAY,
+    manualStatusChangedDescription: display(row.manualStatusChangedDescription),
+    createdAt: row.createdAt ?? "",
+    updatedAt: row.updatedAt ?? "",
+    pendingAt: row.pendingAt ?? "",
+    paidAt: row.paidAt ?? "",
+    failedAt: row.failedAt ?? "",
+    refundedAt: row.refundedAt ?? "",
+    cancelledAt: row.cancelledAt ?? "",
+  };
+}
+
+export function mapCoursePaymentDetailRowToRecord(row: CoursePaymentDetailRow): CoursePaymentRecord {
   const receiptFile = row.uploadedReceiptFile;
   const receiptAccessUrl = receiptFile?.accessUrl;
 
@@ -401,7 +510,7 @@ export function mapCoursePaymentListRowToRecord(row: CoursePaymentListRow): Cour
     submittedInitiallyByAdmin: row.submittedInitiallyByAdmin === true,
     manualStatusChangedBy: display(row.manualStatusChangedBy),
     manualStatusChangerName: display(
-      row.manualStatusChanger?.fullName ?? row.manualStatusChanger?.username
+      row.manualStatusChanger?.fullName ?? row.manualStatusChanger?.username,
     ),
     manualStatusChangerUsername: display(row.manualStatusChanger?.username),
     manualStatusChangedDescription: display(row.manualStatusChangedDescription),

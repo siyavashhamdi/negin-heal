@@ -59,6 +59,7 @@ import { CourseDetailGqlInput } from "./graphql/inputs/course-detail.gql.input";
 import { CourseDeleteGqlInput } from "./graphql/inputs/course-delete.gql.input";
 import { CourseListGqlInput } from "./graphql/inputs/course-list.gql.input";
 import { CoursePaymentListGqlInput } from "./graphql/inputs/course-payment-list.gql.input";
+import { CoursePaymentDetailGqlInput } from "./graphql/inputs/course-payment-detail.gql.input";
 import { CoursePaymentManualCreateGqlInput } from "./graphql/inputs/course-payment-manual-create.gql.input";
 import { CoursePaymentStatusUpdateGqlInput } from "./graphql/inputs/course-payment-status-update.gql.input";
 import { CoursePurchaseSubmitGqlInput } from "./graphql/inputs/course-purchase-submit.gql.input";
@@ -86,6 +87,7 @@ import {
 import {
   CoursePaymentListGqlResponse,
   CoursePaymentListPaginatedOffsetGqlResponse,
+  CoursePaymentListSummaryGqlResponse,
 } from "./graphql/responses/course-payment-list.gql.response";
 import { CoursePurchaseSubmitGqlResponse } from "./graphql/responses/course-purchase-submit.gql.response";
 import { CourseChapterCompleteGqlResponse } from "./graphql/responses/course-chapter-complete.gql.response";
@@ -522,6 +524,22 @@ export class CourseService {
     }
   }
 
+  async paymentDetail(
+    input: CoursePaymentDetailGqlInput,
+  ): Promise<CoursePaymentListGqlResponse> {
+    const userCourse = await this.userCourseModel.findById(input.id).exec();
+
+    if (!userCourse) {
+      throw new NotFoundException("Payment record not found");
+    }
+
+    const relatedLookups = await this.buildCoursePaymentRelatedLookups([
+      userCourse.toObject() as CoursePaymentListRecord,
+    ]);
+
+    return this.toCoursePaymentListResponse(userCourse, relatedLookups);
+  }
+
   async listPayments(
     input: CoursePaymentListGqlInput,
   ): Promise<CoursePaymentListPaginatedOffsetGqlResponse> {
@@ -550,11 +568,11 @@ export class CourseService {
       this.userCourseModel.countDocuments(filterQuery).exec(),
     ]);
     const relatedLookups =
-      await this.buildCoursePaymentRelatedLookups(userCourses);
+      await this.buildCoursePaymentFileLookup(userCourses);
 
     return {
       items: userCourses.map((userCourse) =>
-        this.toCoursePaymentListResponse(userCourse, relatedLookups),
+        this.toCoursePaymentListSummaryResponse(userCourse, relatedLookups),
       ),
       pagination: {
         limit,
@@ -2756,6 +2774,41 @@ export class CourseService {
     return date;
   }
 
+  private async buildCoursePaymentFileLookup(
+    userCourses: CoursePaymentListRecord[],
+  ): Promise<Map<string, CoursePaymentFileLookupRecord>> {
+    const fileIds = new Set<string>();
+
+    userCourses.forEach((userCourse) => {
+      if (userCourse.purchase.uploadedReceiptFileId) {
+        fileIds.add(userCourse.purchase.uploadedReceiptFileId.toString());
+      }
+    });
+
+    const fileObjectIds = [...fileIds]
+      .filter((id) => Types.ObjectId.isValid(id))
+      .map((id) => new Types.ObjectId(id));
+
+    if (fileObjectIds.length === 0) {
+      return new Map();
+    }
+
+    const files = await this.fileService.getFileSummariesByIds(fileObjectIds);
+
+    return new Map(
+      [...files.entries()].map(([id, file]) => [
+        id,
+        {
+          name: file.name,
+          mimeType: file.mimeType,
+          sizeBytes: file.sizeBytes,
+          path: file.path,
+          accessUrl: file.accessUrl,
+        },
+      ]),
+    );
+  }
+
   private async buildCoursePaymentRelatedLookups(
     userCourses: CoursePaymentListRecord[],
   ): Promise<CoursePaymentRelatedLookups> {
@@ -2852,6 +2905,69 @@ export class CourseService {
       path: file?.path,
       accessUrl:
         file?.accessUrl ?? this.fileService.createAccessUrlDescriptor(id),
+    };
+  }
+
+  private toCoursePaymentListSummaryResponse(
+    userCourse: CoursePaymentListRecord,
+    filesById: Map<string, CoursePaymentFileLookupRecord>,
+  ): CoursePaymentListSummaryGqlResponse {
+    const purchase = userCourse.purchase;
+    const uploadedReceiptFileId = purchase.uploadedReceiptFileId;
+    const uploadedReceiptFile = uploadedReceiptFileId
+      ? {
+          accessUrl:
+            filesById.get(uploadedReceiptFileId.toString())?.accessUrl ??
+            this.fileService.createAccessUrlDescriptor(uploadedReceiptFileId),
+        }
+      : undefined;
+
+    return {
+      id: userCourse._id,
+      userId: userCourse.userId,
+      courseId: userCourse.courseId,
+      user: {
+        fullName: userCourse.userSnapshot.fullName,
+        username: userCourse.userSnapshot.username,
+        email: userCourse.userSnapshot.email,
+        phone: userCourse.userSnapshot.phone,
+        ...(userCourse.userSnapshot.phone
+          ? { mobilePhone: userCourse.userSnapshot.phone }
+          : {}),
+      },
+      course: {
+        title: userCourse.courseSnapshot.title,
+      },
+      status: purchase.status,
+      paymentMethod: purchase.paymentMethod,
+      currency: purchase.currency,
+      paymentProvider: purchase.paymentProvider,
+      paymentReference: purchase.paymentReference,
+      transactionId: purchase.transactionId,
+      amountIrt: purchase.amountIrt,
+      discountPercentage: purchase.discountPercentage,
+      discountAmountIrt: purchase.discountAmountIrt,
+      finalAmountIrt: purchase.finalAmountIrt,
+      coupon: purchase.couponSnapshot
+        ? {
+            couponId: purchase.couponSnapshot.couponId,
+            code: purchase.couponSnapshot.code,
+            discountType: purchase.couponSnapshot.discountType,
+            discountValue: purchase.couponSnapshot.discountValue,
+          }
+        : undefined,
+      uploadedReceiptFile,
+      receiptUploadedBy: purchase.receiptUploadedBy,
+      isManualStatusChange: purchase.isManualStatusChange,
+      manualStatusChangedBy: purchase.manualStatusChangedBy,
+      manualStatusChangedDescription: purchase.manualStatusChangedDescription,
+      createdAt: userCourse.audit?.createdAt,
+      updatedAt: userCourse.audit?.updatedAt,
+      pendingAt: purchase.pendingAt,
+      paidAt: purchase.paidAt,
+      failedAt: purchase.failedAt,
+      refundedAt: purchase.refundedAt,
+      cancelledAt: purchase.cancelledAt,
     };
   }
 

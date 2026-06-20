@@ -5,26 +5,61 @@ import type { FileAccessUrl } from "../../utils/fileAccessUrl.util";
 export type UserRole = "SUPER_ADMIN" | "ADMIN" | "END_USER";
 export type UserStatus = "ACTIVE" | "DEACTIVE" | "SUSPENDED" | "BANNED";
 
-export type UserListRow = {
+export type UserListProfileSummary = {
+  readonly firstName?: string | null;
+  readonly lastName?: string | null;
+  readonly email?: string | null;
+  readonly phoneNumber?: string | null;
+  readonly avatarAccessUrl?: FileAccessUrl | null;
+  readonly bio?: string | null;
+};
+
+export type UserListItemRow = {
   readonly id: string;
   readonly username: string;
   readonly roles: readonly string[];
   readonly status: string;
+  readonly profile?: UserListProfileSummary | null;
+  readonly createdAt?: string | null;
+  readonly updatedAt?: string | null;
+};
+
+export type UserPickerListRow = {
+  readonly id: string;
+  readonly username: string;
   readonly profile?: {
     readonly firstName?: string | null;
     readonly lastName?: string | null;
     readonly email?: string | null;
     readonly phoneNumber?: string | null;
-    readonly avatarAccessUrl?: FileAccessUrl | null;
-    readonly bio?: string | null;
   } | null;
+};
+
+export type UserDetailRow = {
+  readonly id: string;
+  readonly username: string;
+  readonly roles: readonly string[];
+  readonly status: string;
+  readonly profile?: UserListProfileSummary | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 };
 
 export type UserListQuery = {
   userList: {
-    items: UserListRow[];
+    items: UserListItemRow[];
+    pagination: {
+      limit: number;
+      skip: number;
+      total: number;
+      count: number;
+    };
+  };
+};
+
+export type UserPickerListQuery = {
+  userList: {
+    items: UserPickerListRow[];
     pagination: {
       limit: number;
       skip: number;
@@ -70,6 +105,16 @@ export type UserListQueryVariables = {
   };
 };
 
+export type UserDetailQuery = {
+  userDetail: UserDetailRow;
+};
+
+export type UserDetailQueryVariables = {
+  input: {
+    id: string;
+  };
+};
+
 const EMPTY_DISPLAY = "-";
 
 function trimToNull(value: string): string | null {
@@ -111,10 +156,11 @@ function joinName(first?: string | null, last?: string | null): string {
   return parts.length > 0 ? parts.join(" ") : EMPTY_DISPLAY;
 }
 
-export function mapUserListRowToRecord(row: UserListRow): ManagedUserRecord {
+function mapUserProfileRowToRecord(
+  row: Pick<UserListItemRow, "id" | "username" | "roles" | "status" | "profile" | "createdAt" | "updatedAt">,
+): ManagedUserRecord {
   const firstName = display(row.profile?.firstName);
   const lastName = display(row.profile?.lastName);
-
   const phoneNumber = display(row.profile?.phoneNumber);
 
   return {
@@ -133,6 +179,14 @@ export function mapUserListRowToRecord(row: UserListRow): ManagedUserRecord {
     createdAt: row.createdAt ?? "",
     updatedAt: row.updatedAt ?? "",
   };
+}
+
+export function mapUserListItemRowToRecord(row: UserListItemRow): ManagedUserRecord {
+  return mapUserProfileRowToRecord(row);
+}
+
+export function mapUserDetailRowToRecord(row: UserDetailRow): ManagedUserRecord {
+  return mapUserProfileRowToRecord(row);
 }
 
 export function buildUserListQueryVariables(
@@ -168,3 +222,9 @@ export function buildUserListQueryVariables(
     },
   };
 }
+
+/** @deprecated Use UserListItemRow for admin list or UserPickerListRow for autocomplete. */
+export type UserListRow = UserListItemRow;
+
+/** @deprecated Use mapUserListItemRowToRecord instead. */
+export const mapUserListRowToRecord = mapUserListItemRowToRecord;

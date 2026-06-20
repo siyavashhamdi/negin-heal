@@ -169,6 +169,10 @@ const Dashboard = (): ReactElement => {
     }
   };
 
+  const canSendPushNotification = pushMessage.trim().length > 0 && !pushSending;
+  const canSendSampleEmail = sampleEmailTo.trim().length > 0 && !sampleEmailLoading;
+  const canUploadFile = selectedFile != null && !uploadLoading;
+
   return (
     <section className={styles.page} aria-label="داشبورد">
       <Card className={styles.uploaderCard}>
@@ -198,7 +202,7 @@ const Dashboard = (): ReactElement => {
                   type="submit"
                   variant="contained"
                   startIcon={<PushIcon />}
-                  disabled={pushSending}
+                  disabled={!canSendPushNotification}
                 >
                   {pushSending
                     ? t("pages.dashboard.pushTest.sendingButton")
@@ -238,7 +242,7 @@ const Dashboard = (): ReactElement => {
                   type="submit"
                   variant="contained"
                   startIcon={<SendIcon />}
-                  disabled={sampleEmailLoading}
+                  disabled={!canSendSampleEmail}
                 >
                   {sampleEmailLoading
                     ? t("pages.dashboard.mailTest.sendingButton")
@@ -281,7 +285,7 @@ const Dashboard = (): ReactElement => {
                   type="submit"
                   variant="contained"
                   startIcon={<UploadIcon />}
-                  disabled={uploadLoading}
+                  disabled={!canUploadFile}
                 >
                   {uploadLoading
                     ? t("pages.dashboard.uploader.uploadingButton")

@@ -1,3 +1,4 @@
+import { useQuery } from "@apollo/client/react";
 import {
   useCallback,
   useEffect,
@@ -32,7 +33,9 @@ import {
 import type { Theme } from "@mui/material/styles";
 
 import { TICKET_LIST_QUERY } from "../../graphql/queries/ticketList.query";
+import { TICKET_DETAIL_QUERY } from "../../graphql/queries/ticketDetail.query";
 import { USER_TICKET_LIST_QUERY } from "../../graphql/queries/userTicketList.query";
+import { USER_TICKET_DETAIL_QUERY } from "../../graphql/queries/userTicketDetail.query";
 import { useAuth } from "../../contexts/AuthContext";
 import { useBadgeCountFirstPageReload } from "../../hooks/useBadgeCountFirstPageReload";
 import { useDebounce } from "../../hooks/useDebounce";
@@ -54,7 +57,10 @@ import {
   buildUserTicketListQueryVariables,
   hasSupportTicketFiltersApplied,
   hasUserSupportTicketFiltersApplied,
-  mapSupportTicketListRowToRecord,
+  mapSupportTicketDetailRowToRecord,
+  mapSupportTicketListItemRowToRecord,
+  mapUserSupportTicketListRowToRecord,
+  mapUserTicketDetailRowToRecord,
 } from "./support-list.api";
 import {
   TICKET_CATEGORY_LABEL,
@@ -70,13 +76,18 @@ import {
   EMPTY_SUPPORT_TICKET_LIST_FILTERS,
   EMPTY_USER_SUPPORT_TICKET_LIST_FILTERS,
   type SupportTicketListFilters,
-  type SupportTicketListRow,
+  type SupportTicketListItemRow,
   type SupportTicketRecord,
+  type TicketDetailQuery,
+  type TicketDetailQueryVariables,
   type TicketListQuery,
   type TicketListQueryVariables,
   type TicketPriority,
   type TicketStatus,
+  type UserSupportTicketListItemRow,
   type UserSupportTicketListFilters,
+  type UserTicketDetailQuery,
+  type UserTicketDetailQueryVariables,
   type UserTicketListQuery,
   type UserTicketListQueryVariables,
 } from "./support.types";
@@ -207,7 +218,7 @@ function truncateText(value: string, maxLength = 80): string {
 
 function selectTicketListPage(
   data: TicketListQuery | undefined,
-): ServerPageResult<SupportTicketListRow> | null {
+): ServerPageResult<SupportTicketListItemRow> | null {
   const page = data?.ticketList;
   if (!page) {
     return null;
@@ -228,7 +239,7 @@ function selectTicketListPage(
 
 function selectUserTicketListPage(
   data: UserTicketListQuery | undefined,
-): ServerPageResult<SupportTicketListRow> | null {
+): ServerPageResult<UserSupportTicketListItemRow> | null {
   const page = data?.userTicketList;
   if (!page) {
     return null;
@@ -308,40 +319,58 @@ function SupportTicketListInner({
   const [showColumnFilters, setShowColumnFilters] = useState(false);
   const applyFiltersRef = useRef<(() => void) | null>(null);
 
-  const [dialogMode, setDialogMode] = useState<TicketDialogMode>("view");
-  const [dialogRecord, setDialogRecord] = useState<SupportTicketRecord | null>(null);
-
   const ticketsRoutePrefix = `${APP_SHELL_ROUTES.supportTickets}/`;
   const isCreateRoute = location.pathname === `${APP_SHELL_ROUTES.supportTickets}/new`;
   const viewRouteMatch = /^\/support\/tickets\/([^/]+)$/.exec(location.pathname);
   const viewRouteId = viewRouteMatch?.[1] !== "new" ? viewRouteMatch?.[1] : undefined;
   const dialogOpen = isCreateRoute || viewRouteId != null;
+  const dialogMode: TicketDialogMode = isCreateRoute ? "create" : "view";
+  const shouldFetchTicketDetail = viewMode === "staff" && viewRouteId != null;
+  const shouldFetchUserTicketDetail = viewMode === "endUser" && viewRouteId != null;
+
+  const {
+    data: ticketDetailData,
+    loading: ticketDetailLoading,
+  } = useQuery<TicketDetailQuery, TicketDetailQueryVariables>(TICKET_DETAIL_QUERY, {
+    variables: { input: { id: viewRouteId ?? "" } },
+    skip: !shouldFetchTicketDetail,
+    fetchPolicy: "network-only",
+  });
+
+  const {
+    data: userTicketDetailData,
+    loading: userTicketDetailLoading,
+  } = useQuery<UserTicketDetailQuery, UserTicketDetailQueryVariables>(USER_TICKET_DETAIL_QUERY, {
+    variables: { input: { id: viewRouteId ?? "" } },
+    skip: !shouldFetchUserTicketDetail,
+    fetchPolicy: "network-only",
+  });
+
+  const staffViewRecord = useMemo(() => {
+    if (!viewRouteId || ticketDetailData?.ticketDetail?.id !== viewRouteId) {
+      return null;
+    }
+
+    return mapSupportTicketDetailRowToRecord(ticketDetailData.ticketDetail);
+  }, [ticketDetailData, viewRouteId]);
+
+  const endUserViewRecord = useMemo(() => {
+    if (!viewRouteId || userTicketDetailData?.userTicketDetail?.id !== viewRouteId) {
+      return null;
+    }
+
+    return mapUserTicketDetailRowToRecord(userTicketDetailData.userTicketDetail);
+  }, [userTicketDetailData, viewRouteId]);
+
+  const dialogRecord = isCreateRoute
+    ? null
+    : viewMode === "staff"
+      ? staffViewRecord
+      : endUserViewRecord;
 
   const closeTicketDialog = (): void => {
     navigate(APP_SHELL_ROUTES.supportTickets);
   };
-
-  useEffect(() => {
-    if (!location.pathname.startsWith(ticketsRoutePrefix)) {
-      return;
-    }
-
-    if (isCreateRoute) {
-      setDialogMode("create");
-      setDialogRecord(null);
-      return;
-    }
-
-    if (!viewRouteId) {
-      return;
-    }
-
-    const target = rows.find((row) => row.id === viewRouteId) ?? null;
-    if (target) {
-      setDialogMode("view");
-      setDialogRecord(target);
-    }
-  }, [isCreateRoute, location.pathname, rows, ticketsRoutePrefix, viewRouteId]);
 
   const hasAppliedFilters = useMemo(() => {
     if (searchQuery.trim() !== "") {
@@ -819,15 +848,21 @@ function SupportTicketListInner({
         pagination={pagination}
       />
 
-      <TicketDialog
-        open={dialogOpen}
-        mode={dialogMode}
-        record={dialogRecord}
-        canReply={canReply && dialogMode === "view"}
-        isSuperAdmin={isSuperAdmin}
-        onClose={handleDialogClose}
-        onSuccess={handleDialogSuccess}
-      />
+      {dialogOpen ? (
+        <TicketDialog
+          open
+          mode={dialogMode}
+          record={dialogRecord}
+          detailLoading={
+            (shouldFetchTicketDetail && ticketDetailLoading) ||
+            (shouldFetchUserTicketDetail && userTicketDetailLoading)
+          }
+          canReply={canReply && dialogMode === "view"}
+          isSuperAdmin={isSuperAdmin}
+          onClose={handleDialogClose}
+          onSuccess={handleDialogSuccess}
+        />
+      ) : null}
     </>
   );
 }
@@ -862,13 +897,13 @@ function StaffSupportTicketList({
   const { items: rows, loading, error, onRefresh, pagination, page } = useServerPaginatedQuery<
     TicketListQuery,
     TicketListQueryVariables,
-    SupportTicketListRow,
+    SupportTicketListItemRow,
     SupportTicketRecord
   >({
     query: TICKET_LIST_QUERY,
     variables: buildVariables,
     selectPage: selectTicketListPage,
-    mapItem: mapSupportTicketListRowToRecord,
+    mapItem: mapSupportTicketListItemRowToRecord,
     resetPageDeps: [debouncedSearchQuery, appliedFilters],
   });
 
@@ -933,13 +968,13 @@ function EndUserSupportTicketList({
   const { items: rows, loading, error, onRefresh, pagination, page } = useServerPaginatedQuery<
     UserTicketListQuery,
     UserTicketListQueryVariables,
-    SupportTicketListRow,
+    UserSupportTicketListItemRow,
     SupportTicketRecord
   >({
     query: USER_TICKET_LIST_QUERY,
     variables: buildVariables,
     selectPage: selectUserTicketListPage,
-    mapItem: mapSupportTicketListRowToRecord,
+    mapItem: mapUserSupportTicketListRowToRecord,
     resetPageDeps: [debouncedSearchQuery, appliedFilters],
   });
 

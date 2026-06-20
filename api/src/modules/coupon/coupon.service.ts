@@ -26,6 +26,7 @@ import { buildSortOptions } from "../../common/pagination/utils";
 import {
   CouponCreateGqlInput,
   CouponDeleteGqlInput,
+  CouponDetailGqlInput,
   CouponListGqlInput,
   CouponListSortOptionInput,
   CouponUpdateGqlInput,
@@ -34,6 +35,7 @@ import {
 import {
   CouponListGqlResponse,
   CouponListPaginatedOffsetGqlResponse,
+  CouponListSummaryGqlResponse,
   CouponValidateGqlResponse,
 } from "./graphql/responses";
 
@@ -118,7 +120,7 @@ export class CouponService {
 
     return {
       items: coupons.map((coupon) =>
-        this.toCouponListResponse(coupon, usageCountsByCouponId),
+        this.toCouponListSummaryResponse(coupon, usageCountsByCouponId),
       ),
       pagination: {
         limit,
@@ -127,6 +129,29 @@ export class CouponService {
         count: coupons.length,
       },
     };
+  }
+
+  async detail(input: CouponDetailGqlInput): Promise<CouponListGqlResponse> {
+    const coupon = await this.couponModel
+      .findOne({
+        _id: input.id,
+        $or: [
+          { "audit.deletedAt": null },
+          { "audit.deletedAt": { $exists: false } },
+        ],
+      })
+      .lean<CouponListRecord>()
+      .exec();
+
+    if (!coupon) {
+      throw new NotFoundException("Coupon not found");
+    }
+
+    const usageCountsByCouponId = await this.buildCouponUsageCountsByCouponId([
+      coupon._id,
+    ]);
+
+    return this.toCouponListResponse(coupon, usageCountsByCouponId);
   }
 
   async create(
@@ -875,6 +900,33 @@ export class CouponService {
         usageCount.totalUsageCount,
       ]),
     );
+  }
+
+  private toCouponListSummaryResponse(
+    coupon: CouponListRecord,
+    usageCountsByCouponId: Map<string, number>,
+  ): CouponListSummaryGqlResponse {
+    const totalUsageCount =
+      usageCountsByCouponId.get(coupon._id.toString()) ?? 0;
+
+    return {
+      id: coupon._id,
+      code: coupon.code,
+      title: coupon.title,
+      discountType: coupon.discountType,
+      discountValue: coupon.discountValue,
+      startsAt: coupon.startsAt,
+      expiresAt: coupon.expiresAt,
+      isFirstPurchaseOnly: coupon.isFirstPurchaseOnly,
+      isActive: coupon.isActive,
+      totalUsageCount,
+      remainingTotalUsageCount:
+        coupon.totalUsageLimit != null
+          ? Math.max(0, coupon.totalUsageLimit - totalUsageCount)
+          : undefined,
+      createdAt: coupon.audit?.createdAt,
+      updatedAt: coupon.audit?.updatedAt,
+    };
   }
 
   private toCouponListResponse(

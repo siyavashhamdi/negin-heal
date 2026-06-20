@@ -3,6 +3,7 @@ export * from "./user-request-login-code.gql.input";
 export * from "./user-verify-login-code.gql.input";
 export * from "./user-create.gql.input";
 export * from "./user-list.gql.input";
+export * from "./user-detail.gql.input";
 export * from "./user-list-sort-option.gql.input";
 export * from "./user-update.gql.input";
 export * from "./user-profile-update.gql.input";

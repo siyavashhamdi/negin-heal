@@ -1,7 +1,5 @@
 import { gql } from "@apollo/client";
 
-import { FILE_ACCESS_URL_FIELDS } from "../fragments/fileAccessUrl.fragment";
-
 export const USER_TICKET_LIST_QUERY = gql`
   query UserTicketList($input: UserTicketListGqlInput!) {
     userTicketList(input: $input) {
@@ -13,48 +11,9 @@ export const USER_TICKET_LIST_QUERY = gql`
         status
         closedBy
         closedAt
-        messages {
-          body
-          sentAt
-          senderUser {
-            profile {
-              firstName
-            }
-          }
-          attachmentFiles {
-            name
-            mimeType
-            sizeBytes
-            path
-            accessUrl {
-              ${FILE_ACCESS_URL_FIELDS}
-            }
-          }
-        }
-        createdByUserId
-        createdByUser {
-          id
-          username
-          profile {
-            firstName
-            lastName
-            avatarAccessUrl {
-              ${FILE_ACCESS_URL_FIELDS}
-            }
-          }
-        }
-        updatedByUserId
-        updatedByUser {
-          id
-          username
-          profile {
-            firstName
-            lastName
-            avatarAccessUrl {
-              ${FILE_ACCESS_URL_FIELDS}
-            }
-          }
-        }
+        messageCount
+        lastMessageBody
+        attachmentCount
         createdAt
         updatedAt
       }

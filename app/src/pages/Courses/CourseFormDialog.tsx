@@ -36,6 +36,7 @@ import {
   type FileAccessUrl,
 } from "../../utils/fileAccessUrl.util";
 import { uploadFile } from "../../utils/fileUpload.util";
+import { hasFormChanges } from "../../utils/formChange.util";
 import ModalFooterActions from "../../shared/crud/ModalFooterActions";
 
 type CourseFormDialogProps = {
@@ -245,6 +246,82 @@ function reorderById<T extends { id: string }>(
   return copy;
 }
 
+type CourseFormSnapshot = {
+  readonly title: string;
+  readonly description: string;
+  readonly coverImageAccessUrl: FileAccessUrl | null;
+  readonly hasCoverImageFile: boolean;
+  readonly priceIrt: string;
+  readonly tags: string[];
+  readonly isActive: boolean;
+  readonly discountEnabled: boolean;
+  readonly discountKind: DiscountKind;
+  readonly discountValue: string;
+  readonly chapters: ReadonlyArray<{
+    readonly id: string;
+    readonly title: string;
+    readonly description: string;
+    readonly iconAccessUrl: FileAccessUrl | null;
+    readonly hasIconFile: boolean;
+    readonly visibleAfterMinutes: string;
+    readonly visibleAfterUnit: VisibleAfterUnit;
+    readonly isFree: boolean;
+    readonly items: ReadonlyArray<{
+      readonly id: string;
+      readonly title: string;
+      readonly contentType: DraftItem["contentType"];
+      readonly article: string;
+      readonly fileAccessUrl: FileAccessUrl | null;
+      readonly hasFile: boolean;
+    }>;
+  }>;
+};
+
+function buildCourseFormSnapshot(input: {
+  readonly title: string;
+  readonly description: string;
+  readonly coverImageAccessUrl: FileAccessUrl | null;
+  readonly coverImageFile: File | null;
+  readonly priceIrt: string;
+  readonly tags: string[];
+  readonly isActive: boolean;
+  readonly discountEnabled: boolean;
+  readonly discountKind: DiscountKind;
+  readonly discountValue: string;
+  readonly chapters: DraftChapter[];
+}): CourseFormSnapshot {
+  return {
+    title: input.title,
+    description: input.description,
+    coverImageAccessUrl: input.coverImageAccessUrl,
+    hasCoverImageFile: input.coverImageFile != null,
+    priceIrt: input.priceIrt,
+    tags: input.tags,
+    isActive: input.isActive,
+    discountEnabled: input.discountEnabled,
+    discountKind: input.discountKind,
+    discountValue: input.discountValue,
+    chapters: input.chapters.map((chapter) => ({
+      id: chapter.id,
+      title: chapter.title,
+      description: chapter.description,
+      iconAccessUrl: chapter.iconAccessUrl,
+      hasIconFile: chapter.iconFile != null,
+      visibleAfterMinutes: chapter.visibleAfterMinutes,
+      visibleAfterUnit: chapter.visibleAfterUnit,
+      isFree: chapter.isFree,
+      items: chapter.items.map((item) => ({
+        id: item.id,
+        title: item.title,
+        contentType: item.contentType,
+        article: item.article,
+        fileAccessUrl: item.fileAccessUrl,
+        hasFile: item.file != null,
+      })),
+    })),
+  };
+}
+
 const CourseFormDialog = ({
   open,
   onClose,
@@ -288,6 +365,7 @@ const CourseFormDialog = ({
       return firstChapter ? { [firstChapter.id]: firstChapter.items[0]?.id ?? null } : {};
     },
   );
+  const [initialSnapshot, setInitialSnapshot] = useState<CourseFormSnapshot | null>(null);
 
   const activeChapterIndex = useMemo(
     () => chapters.findIndex((chapter) => chapter.id === activeChapterId),
@@ -297,32 +375,84 @@ const CourseFormDialog = ({
   const parsedPriceIrt = parseOptionalNumber(priceIrt);
   const hasPositivePrice = parsedPriceIrt != null && parsedPriceIrt > 0;
 
+  const currentSnapshot = useMemo(
+    () =>
+      buildCourseFormSnapshot({
+        title,
+        description,
+        coverImageAccessUrl,
+        coverImageFile,
+        priceIrt,
+        tags,
+        isActive,
+        discountEnabled,
+        discountKind,
+        discountValue,
+        chapters,
+      }),
+    [
+      chapters,
+      coverImageAccessUrl,
+      coverImageFile,
+      description,
+      discountEnabled,
+      discountKind,
+      discountValue,
+      isActive,
+      priceIrt,
+      tags,
+      title,
+    ],
+  );
+
   const applyFormState = (nextCourse?: CourseEditRecord | null): void => {
     const nextChapters = nextCourse ? createDraftChaptersFromCourse(nextCourse) : [createDraftChapter()];
     const activeDraftChapter = getLastChapter(nextChapters) ?? createDraftChapter();
-    setTitle(nextCourse?.title ?? "");
-    setDescription(nextCourse?.description ?? "");
-    setCoverImageFile(null);
-    setCoverImageAccessUrl(nextCourse?.coverImageAccessUrl ?? null);
-    setPriceIrt(
+    const nextTitle = nextCourse?.title ?? "";
+    const nextDescription = nextCourse?.description ?? "";
+    const nextCoverImageAccessUrl = nextCourse?.coverImageAccessUrl ?? null;
+    const nextPriceIrt =
       typeof nextCourse?.priceIrt === "number"
         ? formatIntegerWithThousands(String(nextCourse.priceIrt))
-        : "",
-    );
-    setTags(nextCourse?.tags ?? []);
-    setIsActive(nextCourse?.isActive ?? false);
-    setDiscountEnabled(nextCourse?.discount != null);
-    setDiscountKind(nextCourse?.discount?.type ?? "PERCENTAGE");
-    setDiscountValue(
-      nextCourse?.discount
-        ? nextCourse.discount.type === "PERCENTAGE"
-          ? sanitizePercentageValue(String(nextCourse.discount.value))
-          : formatIntegerWithThousands(String(nextCourse.discount.value))
-        : "",
-    );
+        : "";
+    const nextTags = nextCourse?.tags ?? [];
+    const nextIsActive = nextCourse?.isActive ?? false;
+    const nextDiscountEnabled = nextCourse?.discount != null;
+    const nextDiscountKind = nextCourse?.discount?.type ?? "PERCENTAGE";
+    const nextDiscountValue = nextCourse?.discount
+      ? nextCourse.discount.type === "PERCENTAGE"
+        ? sanitizePercentageValue(String(nextCourse.discount.value))
+        : formatIntegerWithThousands(String(nextCourse.discount.value))
+      : "";
+
+    setTitle(nextTitle);
+    setDescription(nextDescription);
+    setCoverImageFile(null);
+    setCoverImageAccessUrl(nextCoverImageAccessUrl);
+    setPriceIrt(nextPriceIrt);
+    setTags(nextTags);
+    setIsActive(nextIsActive);
+    setDiscountEnabled(nextDiscountEnabled);
+    setDiscountKind(nextDiscountKind);
+    setDiscountValue(nextDiscountValue);
     setChapters(nextChapters);
     setActiveChapterId(activeDraftChapter.id);
     setExpandedItemByChapter({ [activeDraftChapter.id]: getLastItemId(activeDraftChapter) });
+    setInitialSnapshot(
+      buildCourseFormSnapshot({
+        title: nextTitle,
+        description: nextDescription,
+        coverImageAccessUrl: nextCoverImageAccessUrl,
+        coverImageFile: null,
+        priceIrt: nextPriceIrt,
+        tags: nextTags,
+        isActive: nextIsActive,
+        discountEnabled: nextDiscountEnabled,
+        discountKind: nextDiscountKind,
+        discountValue: nextDiscountValue,
+        chapters: nextChapters,
+      }),
+    );
   };
 
   const resetForm = (): void => {
@@ -378,7 +508,13 @@ const CourseFormDialog = ({
     updateCourseResult.loading ||
     isUploadingFiles;
   const isEditFormReady = !isEditMode || (detailCourse != null && !detailLoading);
-  const canSubmit = isEditFormReady && !isSubmitting;
+  const hasCreateInput = title.trim().length > 0;
+  const hasEditFormChanges =
+    initialSnapshot != null && hasFormChanges(initialSnapshot, currentSnapshot);
+  const canSubmit =
+    isEditFormReady &&
+    !isSubmitting &&
+    (isEditMode ? hasEditFormChanges : hasCreateInput);
 
   const uploadAndGetFileId = async (file: File): Promise<string | null> => {
     try {

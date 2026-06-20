@@ -118,6 +118,174 @@ export class CoursePaymentStoredFileGqlResponse {
 }
 
 @ObjectType()
+export class CoursePaymentListUserSummaryGqlResponse {
+  @Field({ description: "Buyer full name snapshot" })
+  fullName: string;
+
+  @Field({ description: "Buyer username snapshot" })
+  username: string;
+
+  @Field({ description: "Buyer email snapshot" })
+  email: string;
+
+  @Field({ nullable: true, description: "Buyer phone snapshot" })
+  phone?: string;
+
+  @Field({ nullable: true, description: "Buyer mobile phone snapshot" })
+  mobilePhone?: string;
+}
+
+@ObjectType()
+export class CoursePaymentListCourseSummaryGqlResponse {
+  @Field({ description: "Course title snapshot" })
+  title: string;
+}
+
+@ObjectType()
+export class CoursePaymentListCouponSummaryGqlResponse {
+  @Field(() => ID, { description: "Coupon ID" })
+  couponId: Types.ObjectId;
+
+  @Field({ description: "Coupon code" })
+  code: string;
+
+  @Field(() => CouponDiscountType, {
+    description: "Coupon discount type",
+  })
+  discountType: CouponDiscountType;
+
+  @Field(() => Float, {
+    description:
+      "Coupon discount value. Percentage or fixed amount based on discountType",
+  })
+  discountValue: number;
+}
+
+@ObjectType()
+export class CoursePaymentListReceiptFileSummaryGqlResponse {
+  @Field(() => FileAccessUrlGqlResponse, {
+    nullable: true,
+    description: "Signed access descriptor for reading the stored receipt file",
+  })
+  accessUrl?: FileAccessUrlGqlResponse;
+}
+
+@ObjectType()
+export class CoursePaymentListSummaryGqlResponse {
+  @Field(() => ID, { description: "User-course purchase record ID" })
+  id: Types.ObjectId;
+
+  @Field(() => ID, { description: "Buyer user ID" })
+  userId: Types.ObjectId;
+
+  @Field(() => ID, { description: "Course ID" })
+  courseId: Types.ObjectId;
+
+  @Field(() => CoursePaymentListUserSummaryGqlResponse, {
+    description: "Buyer snapshot captured when the purchase was submitted",
+  })
+  user: CoursePaymentListUserSummaryGqlResponse;
+
+  @Field(() => CoursePaymentListCourseSummaryGqlResponse, {
+    description: "Course snapshot captured when the purchase was submitted",
+  })
+  course: CoursePaymentListCourseSummaryGqlResponse;
+
+  @Field(() => UserCoursePurchaseStatus, { description: "Payment status" })
+  status: UserCoursePurchaseStatus;
+
+  @Field(() => UserCoursePaymentMethod, { description: "Payment method" })
+  paymentMethod: UserCoursePaymentMethod;
+
+  @Field(() => UserCoursePurchaseCurrency, { description: "Payment currency" })
+  currency: UserCoursePurchaseCurrency;
+
+  @Field({ nullable: true, description: "Payment provider, if any" })
+  paymentProvider?: string;
+
+  @Field({
+    nullable: true,
+    description: "Gateway authority or manual reference",
+  })
+  paymentReference?: string;
+
+  @Field({
+    nullable: true,
+    description: "Gateway ref ID or crypto transaction ID",
+  })
+  transactionId?: string;
+
+  @Field(() => Float, { description: "Original amount in IRT" })
+  amountIrt: number;
+
+  @Field(() => Float, {
+    nullable: true,
+    description: "Discount percentage applied by course discount",
+  })
+  discountPercentage?: number;
+
+  @Field(() => Float, { nullable: true, description: "Discount amount in IRT" })
+  discountAmountIrt?: number;
+
+  @Field(() => Float, { description: "Final payable amount in IRT" })
+  finalAmountIrt: number;
+
+  @Field(() => CoursePaymentListCouponSummaryGqlResponse, {
+    nullable: true,
+    description: "Applied coupon snapshot, if any",
+  })
+  coupon?: CoursePaymentListCouponSummaryGqlResponse;
+
+  @Field(() => CoursePaymentListReceiptFileSummaryGqlResponse, {
+    nullable: true,
+    description: "Uploaded receipt file metadata",
+  })
+  uploadedReceiptFile?: CoursePaymentListReceiptFileSummaryGqlResponse;
+
+  @Field(() => ID, {
+    nullable: true,
+    description: "User ID that uploaded the receipt",
+  })
+  receiptUploadedBy?: Types.ObjectId;
+
+  @Field({ description: "Whether the payment status was changed manually" })
+  isManualStatusChange: boolean;
+
+  @Field(() => ID, {
+    nullable: true,
+    description: "User ID that manually changed the status",
+  })
+  manualStatusChangedBy?: Types.ObjectId;
+
+  @Field({
+    nullable: true,
+    description: "Manual status-change description",
+  })
+  manualStatusChangedDescription?: string;
+
+  @Field({ nullable: true, description: "Payment submitted date" })
+  createdAt?: Date;
+
+  @Field({ nullable: true, description: "Last payment update date" })
+  updatedAt?: Date;
+
+  @Field({ nullable: true, description: "Pending status date" })
+  pendingAt?: Date;
+
+  @Field({ nullable: true, description: "Paid status date" })
+  paidAt?: Date;
+
+  @Field({ nullable: true, description: "Failed status date" })
+  failedAt?: Date;
+
+  @Field({ nullable: true, description: "Refunded status date" })
+  refundedAt?: Date;
+
+  @Field({ nullable: true, description: "Cancelled status date" })
+  cancelledAt?: Date;
+}
+
+@ObjectType()
 export class CoursePaymentListGqlResponse {
   @Field(() => ID, { description: "User-course purchase record ID" })
   id: Types.ObjectId;
@@ -252,10 +420,10 @@ export class CoursePaymentListGqlResponse {
 
 @ObjectType()
 export class CoursePaymentListPaginatedOffsetGqlResponse {
-  @Field(() => [CoursePaymentListGqlResponse], {
+  @Field(() => [CoursePaymentListSummaryGqlResponse], {
     description: "List of course payments",
   })
-  items: CoursePaymentListGqlResponse[];
+  items: CoursePaymentListSummaryGqlResponse[];
 
   @Field(() => PaginationOffsetResponse, {
     description: "Pagination metadata",

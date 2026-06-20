@@ -5,6 +5,64 @@ import { CouponDiscountType } from "../../../../enums";
 import { PaginationOffsetResponse } from "../../../../common/pagination/response";
 
 @ObjectType()
+export class CouponListSummaryGqlResponse {
+  @Field(() => ID, { description: "Coupon ID" })
+  id: Types.ObjectId;
+
+  @Field({ description: "Coupon code" })
+  code: string;
+
+  @Field({ description: "Coupon display title" })
+  title: string;
+
+  @Field(() => CouponDiscountType, {
+    description: "Coupon discount type",
+  })
+  discountType: CouponDiscountType;
+
+  @Field(() => Float, {
+    description:
+      "Coupon discount value. Percentage or fixed amount based on discountType",
+  })
+  discountValue: number;
+
+  @Field({ nullable: true, description: "Date when this coupon becomes valid" })
+  startsAt?: Date;
+
+  @Field({ nullable: true, description: "Date when this coupon expires" })
+  expiresAt?: Date;
+
+  @Field({
+    description: "Whether the coupon is restricted to first purchases only",
+  })
+  isFirstPurchaseOnly: boolean;
+
+  @Field({ description: "Whether this coupon is currently active" })
+  isActive: boolean;
+
+  @Field(() => Int, {
+    description: "Total committed purchases that used this coupon",
+  })
+  totalUsageCount: number;
+
+  @Field(() => Int, {
+    nullable: true,
+    description:
+      "Remaining total uses before the total usage limit is reached, if limited",
+  })
+  remainingTotalUsageCount?: number;
+
+  @Field({ nullable: true, description: "Date when the coupon was created" })
+  createdAt?: Date;
+
+  @Field({
+    nullable: true,
+    description: "Date when the coupon was last updated",
+  })
+  updatedAt?: Date;
+}
+
+@ObjectType()
 export class CouponListGqlResponse {
   @Field(() => ID, { description: "Coupon ID" })
   id: Types.ObjectId;
@@ -96,10 +154,10 @@ export class CouponListGqlResponse {
 
 @ObjectType()
 export class CouponListPaginatedOffsetGqlResponse {
-  @Field(() => [CouponListGqlResponse], {
+  @Field(() => [CouponListSummaryGqlResponse], {
     description: "List of coupons",
   })
-  items: CouponListGqlResponse[];
+  items: CouponListSummaryGqlResponse[];
 
   @Field(() => PaginationOffsetResponse, {
     description: "Pagination metadata",

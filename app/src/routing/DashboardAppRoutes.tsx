@@ -2,6 +2,7 @@ import { type ReactElement } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "../components/ProtectedRoute";
 import { usePageTitle } from "../hooks/usePageTitle";
+import { useScrollToTop } from "../hooks/useScrollToTop";
 import Dashboard from "../pages/Dashoard/Dashboard";
 import CourseDetail from "../pages/Courses/CourseDetail";
 import CoursesIndex from "../pages/Courses/Index";
@@ -32,6 +33,7 @@ const wrapProtected = (element: ReactElement): ReactElement => (
 
 export const DashboardAppRoutes = (): ReactElement => {
   usePageTitle();
+  useScrollToTop();
 
   return (
     <Routes>

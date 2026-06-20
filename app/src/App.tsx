@@ -8,7 +8,6 @@ import { ApolloProvider } from "@apollo/client/react";
 import { createAppTheme } from "./theme";
 import { ThemeProvider, useThemeMode } from "./contexts/ThemeContext";
 import { AuthProvider } from "./contexts/AuthContext";
-import { AppSettingsProvider } from "./contexts/AppSettingsContext";
 import { SnackbarProvider } from "./contexts/SnackbarContext";
 import { LoadingProvider } from "./contexts/LoadingContext";
 import { ApolloErrorHandler } from "./components/ApolloErrorHandler";
@@ -67,12 +66,10 @@ const App = (): ReactElement => (
       <ThemeProvider>
         <BrowserRouter>
           <AuthProvider>
-            <AppSettingsProvider>
-              <LoadingProvider>
-                <UserPreferencesSync />
-                <ThemedAppTree />
-              </LoadingProvider>
-            </AppSettingsProvider>
+            <LoadingProvider>
+              <UserPreferencesSync />
+              <ThemedAppTree />
+            </LoadingProvider>
           </AuthProvider>
         </BrowserRouter>
       </ThemeProvider>

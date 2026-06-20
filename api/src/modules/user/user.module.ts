@@ -67,6 +67,7 @@ import * as UserSubscriptions from "./graphql/subscriptions";
     GlobalAnouncementSendMutation,
     UserQueries.UserMeQuery,
     UserQueries.UserListQuery,
+    UserQueries.UserDetailQuery,
     UserQueries.UserLoginCaptchaQuery,
     UserSubscriptions.GeneralUpdatesSubscription,
   ],

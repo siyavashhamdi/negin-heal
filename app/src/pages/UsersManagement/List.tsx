@@ -1,3 +1,4 @@
+import { useQuery } from "@apollo/client/react";
 import {
   useCallback,
   useEffect,
@@ -14,6 +15,7 @@ import {
   Box,
   Checkbox,
   Chip,
+  CircularProgress,
   IconButton,
   InputAdornment,
   ListItemText,
@@ -43,8 +45,10 @@ import {
   resolveFileAccessUrl,
   type FileAccessUrl,
 } from "../../utils/fileAccessUrl.util";
+import { hasFormChanges } from "../../utils/formChange.util";
 import { uploadFile } from "../../utils/fileUpload.util";
 import { USER_LIST_QUERY } from "../../graphql/queries/userList.query";
+import { USER_DETAIL_QUERY } from "../../graphql/queries/userDetail.query";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import {
@@ -68,10 +72,14 @@ import {
 } from "./users-management.types";
 import {
   buildUserListQueryVariables,
-  mapUserListRowToRecord,
+  mapUserDetailRowToRecord,
+  mapUserListItemRowToRecord,
+  type UserDetailQuery,
+  type UserDetailQueryVariables,
+  type UserListItemRow,
   type UserListQuery,
   type UserListQueryVariables,
-  type UserListRow,
+  type UserDetailRow,
   type UserRole,
   type UserStatus,
 } from "./users-management-list.api";
@@ -145,7 +153,7 @@ const STATUS_COLOR: Record<
 };
 
 type UserUpdateMutation = {
-  readonly userUpdate: UserListRow;
+  readonly userUpdate: UserDetailRow;
 };
 
 type UserEditFormState = {
@@ -162,7 +170,7 @@ type UserEditFormState = {
 };
 
 type UserCreateMutation = {
-  readonly userCreate: UserListRow;
+  readonly userCreate: UserDetailRow;
 };
 
 type UserCreateMutationVariables = {
@@ -289,7 +297,9 @@ function UserAvatarCell({
   );
 }
 
-function selectUserListPage(data: UserListQuery | undefined): ServerPageResult<UserListRow> | null {
+function selectUserListPage(
+  data: UserListQuery | undefined,
+): ServerPageResult<UserListItemRow> | null {
   const page = data?.userList;
   if (!page) {
     return null;
@@ -315,6 +325,34 @@ const UsersManagementList = (): ReactElement => {
   const { t } = useTranslation();
   const { showError } = useSnackbar();
   const hasShownLoadErrorRef = useRef(false);
+  const isCreateRoute = location.pathname === `${APP_SHELL_ROUTES.users}/new`;
+  const editUserId = useMemo(() => {
+    const editRoutePrefix = `${APP_SHELL_ROUTES.users}/edit/`;
+    if (!location.pathname.startsWith(editRoutePrefix)) {
+      return null;
+    }
+
+    const routeId = location.pathname.slice(editRoutePrefix.length);
+    return routeId || null;
+  }, [location.pathname]);
+  const userDialogOpen = isCreateRoute || editUserId != null;
+
+  const { data: userDetailData, loading: userDetailLoading } = useQuery<
+    UserDetailQuery,
+    UserDetailQueryVariables
+  >(USER_DETAIL_QUERY, {
+    variables: { input: { id: editUserId ?? "" } },
+    skip: !editUserId,
+    fetchPolicy: "network-only",
+  });
+
+  const editUserRecord = useMemo(() => {
+    if (!editUserId || userDetailData?.userDetail?.id !== editUserId) {
+      return null;
+    }
+
+    return mapUserDetailRowToRecord(userDetailData.userDetail);
+  }, [editUserId, userDetailData]);
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
@@ -345,6 +383,7 @@ const UsersManagementList = (): ReactElement => {
   const [dialogMode, setDialogMode] = useState<UserDialogMode>("edit");
   const [editTarget, setEditTarget] = useState<ManagedUserRecord | null>(null);
   const [editForm, setEditForm] = useState<UserEditFormState | null>(null);
+  const [initialEditForm, setInitialEditForm] = useState<UserEditFormState | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
 
   const hasAppliedFilters = useMemo(
@@ -367,13 +406,13 @@ const UsersManagementList = (): ReactElement => {
   } = useServerPaginatedQuery<
     UserListQuery,
     UserListQueryVariables,
-    UserListRow,
+    UserListItemRow,
     ManagedUserRecord
   >({
     query: USER_LIST_QUERY,
     variables: buildVariables,
     selectPage: selectUserListPage,
-    mapItem: mapUserListRowToRecord,
+    mapItem: mapUserListItemRowToRecord,
     resetPageDeps: [debouncedSearchQuery, appliedFilters],
   });
 
@@ -408,7 +447,24 @@ const UsersManagementList = (): ReactElement => {
   const [isAvatarUploading, setIsAvatarUploading] = useState(false);
 
   const isSavingUser =
-    createUserResult.loading || updateUserResult.loading || isAvatarUploading;
+    createUserResult.loading ||
+    updateUserResult.loading ||
+    isAvatarUploading ||
+    (editUserId != null && userDetailLoading);
+
+  const isCreateFormReady =
+    editForm != null &&
+    editForm.username.trim().length > 0 &&
+    editForm.roles.length > 0 &&
+    editForm.password.trim().length > 0;
+
+  const hasEditFormChanges =
+    initialEditForm != null &&
+    editForm != null &&
+    (hasFormChanges(initialEditForm, editForm) || avatarFile != null);
+
+  const canSubmitUserForm =
+    dialogMode === "create" ? isCreateFormReady : hasEditFormChanges;
 
   useEffect(() => {
     if (!error) {
@@ -546,12 +602,7 @@ const UsersManagementList = (): ReactElement => {
         cell: ({ row }) => (
           <CrudRowActions
             onEdit={() => {
-              const record = row.original;
-              setDialogMode("edit");
-              setEditTarget(record);
-              setEditForm(buildEditFormState(record));
-              setAvatarFile(null);
-              navigate(`${APP_SHELL_ROUTES.users}/edit/${record.id}`);
+              navigate(`${APP_SHELL_ROUTES.users}/edit/${row.original.id}`);
             }}
           />
         ),
@@ -766,55 +817,42 @@ const UsersManagementList = (): ReactElement => {
     }
     setEditTarget(null);
     setEditForm(null);
+    setInitialEditForm(null);
     setAvatarFile(null);
     setDialogMode("edit");
     navigate(APP_SHELL_ROUTES.users);
   };
 
   const handleOpenCreateDialog = (): void => {
+    const nextForm = buildCreateFormState();
     setDialogMode("create");
     setEditTarget(null);
-    setEditForm(buildCreateFormState());
+    setInitialEditForm(nextForm);
+    setEditForm(nextForm);
     setAvatarFile(null);
     navigate(`${APP_SHELL_ROUTES.users}/new`);
   };
 
   useEffect(() => {
-    const usersRoutePrefix = `${APP_SHELL_ROUTES.users}/`;
-    if (!location.pathname.startsWith(usersRoutePrefix)) {
+    if (isCreateRoute) {
+      const nextForm = buildCreateFormState();
+      setDialogMode("create");
+      setEditTarget(null);
+      setInitialEditForm(nextForm);
+      setEditForm(nextForm);
+      setAvatarFile(null);
       return;
     }
 
-    const routeSuffix = location.pathname.slice(usersRoutePrefix.length);
-    if (routeSuffix === "new") {
-      if (!editForm || dialogMode !== "create") {
-        setDialogMode("create");
-        setEditTarget(null);
-        setEditForm(buildCreateFormState());
-        setAvatarFile(null);
-      }
-      return;
+    if (editUserRecord) {
+      const nextForm = buildEditFormState(editUserRecord);
+      setDialogMode("edit");
+      setEditTarget(editUserRecord);
+      setInitialEditForm(nextForm);
+      setEditForm(nextForm);
+      setAvatarFile(null);
     }
-
-    if (routeSuffix.startsWith("edit/")) {
-      const editId = routeSuffix.slice("edit/".length);
-      if (!editId) {
-        return;
-      }
-      const target = rows.find((row) => row.id === editId) ?? null;
-      if (target) {
-        setDialogMode("edit");
-        setEditTarget(target);
-        setEditForm(buildEditFormState(target));
-        setAvatarFile(null);
-      }
-      return;
-    }
-
-    if (!routeSuffix) {
-      return;
-    }
-  }, [dialogMode, editForm, location.pathname, rows]);
+  }, [editUserRecord, isCreateRoute]);
 
   const setEditField = <TField extends keyof UserEditFormState>(
     field: TField,
@@ -944,7 +982,7 @@ const UsersManagementList = (): ReactElement => {
       />
 
       <EntityModalShell
-        open={Boolean(editForm)}
+        open={userDialogOpen}
         onClose={handleCloseEditDialog}
         maxWidth="lg"
         title={
@@ -973,13 +1011,20 @@ const UsersManagementList = (): ReactElement => {
                     : t("pages.usersManagement.edit.save"),
                 type: "submit",
                 icon: dialogMode === "create" ? <AddRoundedIcon /> : undefined,
-                disabled: isSavingUser,
+                disabled: isSavingUser || !editForm || !canSubmitUserForm,
               },
             ]}
           />
         }
       >
-        {editForm ? (
+        {editUserId != null && userDetailLoading ? (
+          <Stack alignItems="center" justifyContent="center" spacing={2} sx={{ minHeight: 320 }}>
+            <CircularProgress />
+            <Typography variant="body2" color="text.secondary">
+              در حال دریافت اطلاعات کاربر...
+            </Typography>
+          </Stack>
+        ) : editForm ? (
           <Stack spacing={3}>
                 <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
                   <TextField

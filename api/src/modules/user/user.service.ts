@@ -61,6 +61,7 @@ import {
   UserCreateGqlInput,
   UserForgotPasswordGqlInput,
   UserListGqlInput,
+  UserDetailGqlInput,
   UserListSortOptionInput,
   UserProfileUpdateGqlInput,
   UserResetPasswordGqlInput,
@@ -69,6 +70,7 @@ import {
 import {
   UserListGqlResponse,
   UserListPaginatedOffsetGqlResponse,
+  UserListSummaryGqlResponse,
   UserMutationGqlResponse,
   UserPasswordResetGqlResponse,
 } from "./graphql/responses";
@@ -1188,7 +1190,7 @@ export class UserService {
 
     return {
       items: users.map((user) =>
-        this.toUserListResponse(user, avatarAccessUrlMap),
+        this.toUserListSummaryResponse(user, avatarAccessUrlMap),
       ),
       pagination: {
         limit,
@@ -1197,6 +1199,29 @@ export class UserService {
         count: users.length,
       },
     };
+  }
+
+  async detail(input: UserDetailGqlInput): Promise<UserListGqlResponse> {
+    const user = await this.userModel
+      .findOne({
+        _id: input.id,
+        $or: [
+          { "audit.deletedAt": null },
+          { "audit.deletedAt": { $exists: false } },
+        ],
+      })
+      .lean<UserListRecord>()
+      .exec();
+
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+
+    const avatarAccessUrlMap = await this.fileService.getAccessUrlMap([
+      user.profile?.avatarFileId,
+    ]);
+
+    return this.toUserListResponse(user, avatarAccessUrlMap);
   }
 
   private buildListFilterQuery(
@@ -1636,6 +1661,35 @@ export class UserService {
     sortOptions._id = Object.values(sortOptions)[0] ?? -1;
 
     return sortOptions;
+  }
+
+  private toUserListSummaryResponse(
+    user: UserListRecord,
+    avatarAccessUrlMap?: Map<string, FileAccessUrlDescriptor>,
+  ): UserListSummaryGqlResponse {
+    const avatarAccessUrl = resolveAvatarAccessUrl(
+      user.profile?.avatarFileId,
+      avatarAccessUrlMap,
+    );
+
+    return {
+      id: user._id,
+      username: user.username,
+      roles: user.roles || [],
+      status: user.status,
+      profile: user.profile
+        ? {
+            firstName: user.profile.firstName,
+            lastName: user.profile.lastName,
+            email: user.profile.email,
+            phoneNumber: user.profile.phoneNumber,
+            avatarAccessUrl,
+            bio: user.profile.bio,
+          }
+        : undefined,
+      createdAt: user.audit?.createdAt,
+      updatedAt: user.audit?.updatedAt,
+    };
   }
 
   private toUserListResponse(

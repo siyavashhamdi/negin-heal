@@ -4,6 +4,7 @@ import {
   Avatar,
   Box,
   Chip,
+  CircularProgress,
   Divider,
   MenuItem,
   Paper,
@@ -20,9 +21,10 @@ import { SUPER_ADMIN_TICKET_SEND_MUTATION } from "../../graphql/mutations/superA
 import { TICKET_CLOSE_MUTATION } from "../../graphql/mutations/ticketClose.mutation";
 import { USER_TICKET_CLOSE_MUTATION } from "../../graphql/mutations/userTicketClose.mutation";
 import { USER_TICKET_SEND_MUTATION } from "../../graphql/mutations/userTicketSend.mutation";
-import { USER_LIST_QUERY } from "../../graphql/queries/userList.query";
+import { USER_PICKER_LIST_QUERY } from "../../graphql/queries/userPickerList.query";
 import { useDebounce } from "../../hooks/useDebounce";
-import { useMe, type UserMeGqlResponse } from "../../hooks/useMe";
+import { USER_ME_QUERY } from "../../graphql/queries/userMe.query";
+import { type UserMeGqlResponse, type UserMeResponse } from "../../hooks/useMe";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
 import EntityModalShell from "../../shared/crud/EntityModalShell";
@@ -36,9 +38,9 @@ import {
 } from "../../utils/fileAccessUrl.util";
 import { uploadFile as uploadFileToApi } from "../../utils/fileUpload.util";
 import {
-  type UserListQuery,
+  type UserPickerListQuery,
   type UserListQueryVariables,
-  type UserListRow,
+  type UserPickerListRow,
 } from "../UsersManagement/users-management-list.api";
 import {
   TICKET_CATEGORY_LABEL,
@@ -117,7 +119,7 @@ type EndUserOption = {
   readonly id: string;
   readonly label: string;
   readonly subtitle: string;
-  readonly row: UserListRow;
+  readonly row: UserPickerListRow;
 };
 
 export type TicketDialogMode = "create" | "view";
@@ -126,6 +128,7 @@ export type TicketDialogProps = {
   readonly open: boolean;
   readonly mode: TicketDialogMode;
   readonly record: SupportTicketRecord | null;
+  readonly detailLoading?: boolean;
   readonly canReply: boolean;
   readonly isSuperAdmin: boolean;
   readonly initialCategory?: TicketCategory;
@@ -172,7 +175,7 @@ function formatUserDisplayName(user: SupportTicketMessage["senderUser"]): string
   return user.username?.trim() || "فرستنده نامشخص";
 }
 
-function getUserFullName(row: UserListRow): string {
+function getUserFullName(row: UserPickerListRow): string {
   const parts = [row.profile?.firstName?.trim(), row.profile?.lastName?.trim()].filter(
     (part): part is string => Boolean(part)
   );
@@ -180,7 +183,7 @@ function getUserFullName(row: UserListRow): string {
   return parts.length > 0 ? parts.join(" ") : row.username;
 }
 
-function userToEndUserOption(row: UserListRow): EndUserOption {
+function userToEndUserOption(row: UserPickerListRow): EndUserOption {
   const phone = row.profile?.phoneNumber?.trim();
   const email = row.profile?.email?.trim();
 
@@ -255,43 +258,30 @@ function getMessageToneStyle(
 }
 
 function getMessageBubbleSx(
-  tone: "own" | "support" | "user",
+  isOwnMessage: boolean,
   toneStyle: { border: string; background: string },
   theme: Theme,
 ) {
   const borderColor = alpha(toneStyle.border, theme.palette.mode === "dark" ? 0.72 : 0.42);
-  const isOwn = tone === "own";
+  const cornerRadius = "1.125rem";
 
   return {
-    position: "relative" as const,
     display: "grid",
     gap: 0.75,
     width: "100%",
     maxWidth: { xs: "94%", sm: "82%", md: "76%" },
     px: 1.75,
     py: 1.35,
-    borderStartStartRadius: "1.125rem",
-    borderEndStartRadius: "1.125rem",
-    borderStartEndRadius: isOwn ? 0 : "1.125rem",
-    borderEndEndRadius: isOwn ? "1.125rem" : 0,
+    borderTopLeftRadius: cornerRadius,
+    borderTopRightRadius: cornerRadius,
+    borderBottomLeftRadius: isOwnMessage ? cornerRadius : 0,
+    borderBottomRightRadius: isOwnMessage ? 0 : cornerRadius,
     border: `1px solid ${borderColor}`,
     bgcolor: toneStyle.background,
     boxShadow:
       theme.palette.mode === "dark"
         ? "0 0.35rem 1rem rgba(0, 0, 0, 0.18)"
         : "0 0.35rem 1rem rgba(15, 23, 42, 0.06)",
-    "&::after": {
-      content: '""',
-      position: "absolute",
-      bottom: 0,
-      ...(isOwn ? { insetInlineStart: "-0.4rem" } : { insetInlineEnd: "-0.4rem" }),
-      width: "0.82rem",
-      height: "1rem",
-      bgcolor: toneStyle.background,
-      ...(isOwn
-        ? { borderStartEndRadius: "0.8rem 0.68rem" }
-        : { borderEndEndRadius: "0.8rem 0.68rem" }),
-    },
   };
 }
 
@@ -521,12 +511,9 @@ function MessageBubble({
         display: "flex",
         justifyContent: isOwnMessage ? "flex-end" : "flex-start",
         width: "100%",
-        ...(isOwnMessage
-          ? { paddingInlineStart: "0.35rem" }
-          : { paddingInlineEnd: "0.35rem" }),
       }}
     >
-      <Box sx={getMessageBubbleSx(tone, toneStyle, theme)}>
+      <Box sx={getMessageBubbleSx(isOwnMessage, toneStyle, theme)}>
         <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={1}>
           <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
             <MessageSenderAvatar
@@ -586,6 +573,7 @@ const TicketDialog = ({
   open,
   mode,
   record,
+  detailLoading = false,
   canReply,
   isSuperAdmin,
   initialCategory,
@@ -595,7 +583,12 @@ const TicketDialog = ({
 }: TicketDialogProps): ReactElement => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const { user: meUser, avatarUrl: currentUserAvatarUrl } = useMe();
+  const { data: meData } = useQuery<UserMeResponse>(USER_ME_QUERY, {
+    fetchPolicy: "cache-only",
+    returnPartialData: true,
+  });
+  const meUser = meData?.me ?? null;
+  const currentUserAvatarUrl = resolveFileAccessUrl(meUser?.profile?.avatarAccessUrl);
   const isMobile = useMediaQuery((muiTheme: Theme) => muiTheme.breakpoints.down("md"));
   const currentUserId = user?.id?.trim();
   const currentUserDisplayName = useMemo(
@@ -658,9 +651,9 @@ const TicketDialog = ({
   }, [debouncedEndUserSearch]);
 
   const { data: endUserOptionsData, loading: endUserOptionsLoading } = useQuery<
-    UserListQuery,
+    UserPickerListQuery,
     UserListQueryVariables
-  >(USER_LIST_QUERY, {
+  >(USER_PICKER_LIST_QUERY, {
     variables: endUserOptionsVariables,
     fetchPolicy: "cache-first",
     skip: !open || mode !== "create" || !isSuperAdmin,
@@ -720,6 +713,7 @@ const TicketDialog = ({
   });
 
   const isSubmitting =
+    detailLoading ||
     isAttachmentUploading ||
     sendUserTicketResult.loading ||
     sendSuperAdminTicketResult.loading ||
@@ -809,6 +803,15 @@ const TicketDialog = ({
 
   const canCloseTicket = mode === "view" && record != null && record.status !== "CLOSED";
 
+  const canSubmitCreate =
+    title.trim().length > 0 &&
+    messageBody.trim().length > 0 &&
+    (!isSuperAdmin || selectedEndUser != null);
+
+  const canSubmitReply = messageBody.trim().length > 0 || attachmentFile != null;
+
+  const canSubmitTicket = mode === "create" ? canSubmitCreate : canSubmitReply;
+
   const conversationMessages = useMemo(
     () => (record ? sortMessagesBySentAt(record.messages) : []),
     [record],
@@ -865,7 +868,7 @@ const TicketDialog = ({
       type: "submit",
       variant: "contained",
       color: "primary",
-      disabled: isSubmitting,
+      disabled: isSubmitting || !canSubmitTicket,
     });
   }
 
@@ -939,6 +942,13 @@ const TicketDialog = ({
               </TextField>
             </Stack>
           </>
+        ) : detailLoading ? (
+          <Stack alignItems="center" justifyContent="center" spacing={2} sx={{ minHeight: 320 }}>
+            <CircularProgress />
+            <Typography variant="body2" color="text.secondary">
+              در حال دریافت اطلاعات تیکت...
+            </Typography>
+          </Stack>
         ) : record ? (
           <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
             <Stack spacing={1.5}>
@@ -1039,7 +1049,7 @@ const TicketDialog = ({
           </Stack>
         ) : null}
 
-        {mode === "create" || canReply ? (
+        {(mode === "create" || canReply) && !detailLoading ? (
           <Stack spacing={2}>
             <Divider />
             <TextField

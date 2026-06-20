@@ -11,7 +11,6 @@ import { apolloClient } from "../lib/apollo-client";
 import { LOCAL_STORAGE_KEYS } from "../constants";
 import { showErrorIfNotQueued } from "../utilities/graphql-error.util";
 import { useAuth, type User } from "../contexts/AuthContext";
-import { useAppSettings } from "../contexts/AppSettingsContext";
 import { useSnackbar } from "./useSnackbar";
 import { collectSessionClientContextInput } from "../utils/sessionClientContext.util";
 import { applyUserPreferences } from "../utils/userPreferences.util";
@@ -200,11 +199,10 @@ export const useLogin = () => {
   >(USER_SIGNUP_MUTATION);
 
   const { login } = useAuth();
-  const { appVersion } = useAppSettings();
   const { showSuccess, showError } = useSnackbar();
   const { t } = useTranslation();
 
-  const buildClientContext = () => collectSessionClientContextInput(appVersion.value);
+  const buildClientContext = () => collectSessionClientContextInput();
 
   const resolveAuthIdentity = async (input: RequestLoginCodeInput): Promise<boolean | null> => {
     try {

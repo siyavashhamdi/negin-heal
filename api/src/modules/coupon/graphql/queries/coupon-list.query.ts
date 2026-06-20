@@ -6,11 +6,11 @@ import { GqlAuthGuard, Roles, RolesGuard } from "../../../auth";
 import { CouponService } from "../../coupon.service";
 import { CouponListGqlInput } from "../inputs";
 import {
-  CouponListGqlResponse,
+  CouponListSummaryGqlResponse,
   CouponListPaginatedOffsetGqlResponse,
 } from "../responses";
 
-@Resolver(() => CouponListGqlResponse)
+@Resolver(() => CouponListSummaryGqlResponse)
 @UseGuards(GqlAuthGuard, RolesGuard)
 @Roles(UserRole.SUPER_ADMIN)
 export class CouponListQuery {

@@ -1,4 +1,4 @@
-import { type ReactElement } from "react";
+import { type ReactElement, type ReactNode } from "react";
 import { Typography } from "@mui/material";
 import { useTranslation } from "../../hooks/useTranslation";
 import EntityConfirmDialogShell from "./EntityConfirmDialogShell";
@@ -10,6 +10,8 @@ interface EntityDeleteDialogProps {
   onCancel: () => void;
   onConfirm: () => void;
   loading?: boolean;
+  icon?: ReactNode;
+  children?: ReactNode;
 }
 
 const EntityDeleteDialog = ({
@@ -18,6 +20,8 @@ const EntityDeleteDialog = ({
   onCancel,
   onConfirm,
   loading = false,
+  icon,
+  children,
 }: EntityDeleteDialogProps): ReactElement => {
   const { t } = useTranslation();
 
@@ -27,6 +31,7 @@ const EntityDeleteDialog = ({
       onClose={loading ? undefined : onCancel}
       title={t("table.dataGrid.deleteDialog.title")}
       subjectLine={entityTitle}
+      icon={icon}
       footer={
         <ModalFooterActions
           actions={[
@@ -50,6 +55,7 @@ const EntityDeleteDialog = ({
       <Typography variant="body2" color="text.secondary">
         {t("table.entity.deleteConfirmMessage", { title: entityTitle })}
       </Typography>
+      {children}
     </EntityConfirmDialogShell>
   );
 };

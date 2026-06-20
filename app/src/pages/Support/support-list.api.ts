@@ -1,8 +1,11 @@
 import { parseJalaliParamDate } from "../../utilities/jalali-date-param.util";
 import type {
+  SupportTicketDetailRow,
   SupportTicketListFilters,
-  SupportTicketListRow,
+  SupportTicketListItemRow,
+  SupportTicketListUserSummary,
   SupportTicketRecord,
+  SupportTicketMessage,
   SupportTicketUserMinimal,
   TicketCategory,
   TicketClosedBy,
@@ -10,6 +13,8 @@ import type {
   TicketPriority,
   TicketStatus,
   UserSupportTicketListFilters,
+  UserSupportTicketListItemRow,
+  UserTicketDetailRow,
   UserTicketListQueryVariables,
 } from "./support.types";
 
@@ -49,7 +54,9 @@ function dateFilterToIsoDate(value: string): string | null {
   return `${year}-${month}-${day}`;
 }
 
-function formatUserDisplayName(user?: SupportTicketUserMinimal | null): string {
+function formatUserDisplayName(
+  user?: SupportTicketUserMinimal | SupportTicketListUserSummary | null,
+): string {
   if (!user) {
     return EMPTY_DISPLAY;
   }
@@ -62,11 +69,11 @@ function formatUserDisplayName(user?: SupportTicketUserMinimal | null): string {
   return display(user.username);
 }
 
-function countAttachments(messages: SupportTicketListRow["messages"]): number {
+function countAttachments(messages: readonly SupportTicketMessage[]): number {
   return messages.reduce((total, message) => total + (message.attachmentFiles?.length ?? 0), 0);
 }
 
-function getLastMessageBody(messages: SupportTicketListRow["messages"]): string {
+function getLastMessageBody(messages: readonly SupportTicketMessage[]): string {
   if (messages.length === 0) {
     return EMPTY_DISPLAY;
   }
@@ -81,7 +88,108 @@ function getLastMessageBody(messages: SupportTicketListRow["messages"]): string 
   return body || EMPTY_DISPLAY;
 }
 
-export function mapSupportTicketListRowToRecord(row: SupportTicketListRow): SupportTicketRecord {
+function mapDetailMessages(
+  messages: SupportTicketDetailRow["messages"],
+): SupportTicketRecord["messages"] {
+  return messages.map((message) => ({
+    body: message.body,
+    sentAt: message.sentAt ?? null,
+    senderUser: message.senderUser ?? null,
+    attachmentFileIds: message.attachmentFileIds ?? [],
+    attachmentFiles: message.attachmentFiles ?? [],
+  }));
+}
+
+export function mapSupportTicketListItemRowToRecord(
+  row: SupportTicketListItemRow,
+): SupportTicketRecord {
+  return {
+    id: String(row.id),
+    title: display(row.title),
+    category: row.category,
+    priority: row.priority,
+    status: row.status,
+    closedBy: display(row.closedBy ?? undefined),
+    closedByUserId: display(row.closedByUserId ?? undefined),
+    closedByUserName: formatUserDisplayName(row.closedByUser),
+    closedAt: row.closedAt ?? "",
+    createdByUserId: display(row.createdByUserId ?? undefined),
+    createdByUserName: formatUserDisplayName(row.createdByUser),
+    createdByUser: null,
+    updatedByUserId: display(row.updatedByUserId ?? undefined),
+    updatedByUserName: formatUserDisplayName(row.updatedByUser),
+    messageCount: row.messageCount,
+    lastMessageBody: display(row.lastMessageBody),
+    attachmentCount: row.attachmentCount,
+    createdAt: row.createdAt ?? "",
+    updatedAt: row.updatedAt ?? "",
+    messages: [],
+  };
+}
+
+export function mapUserSupportTicketListRowToRecord(
+  row: UserSupportTicketListItemRow,
+): SupportTicketRecord {
+  return {
+    id: String(row.id),
+    title: display(row.title),
+    category: row.category,
+    priority: row.priority,
+    status: row.status,
+    closedBy: display(row.closedBy ?? undefined),
+    closedByUserId: EMPTY_DISPLAY,
+    closedByUserName: EMPTY_DISPLAY,
+    closedAt: row.closedAt ?? "",
+    createdByUserId: EMPTY_DISPLAY,
+    createdByUserName: EMPTY_DISPLAY,
+    createdByUser: null,
+    updatedByUserId: EMPTY_DISPLAY,
+    updatedByUserName: EMPTY_DISPLAY,
+    messageCount: row.messageCount,
+    lastMessageBody: display(row.lastMessageBody),
+    attachmentCount: row.attachmentCount,
+    createdAt: row.createdAt ?? "",
+    updatedAt: row.updatedAt ?? "",
+    messages: [],
+  };
+}
+
+export function mapUserTicketDetailRowToRecord(
+  row: UserTicketDetailRow,
+): SupportTicketRecord {
+  return {
+    id: String(row.id),
+    title: display(row.title),
+    category: row.category,
+    priority: row.priority,
+    status: row.status,
+    closedBy: display(row.closedBy ?? undefined),
+    closedByUserId: EMPTY_DISPLAY,
+    closedByUserName: EMPTY_DISPLAY,
+    closedAt: row.closedAt ?? "",
+    createdByUserId: display(row.createdByUserId ?? undefined),
+    createdByUserName: formatUserDisplayName(row.createdByUser),
+    createdByUser: row.createdByUser ?? null,
+    updatedByUserId: display(row.updatedByUserId ?? undefined),
+    updatedByUserName: formatUserDisplayName(row.updatedByUser),
+    messageCount: row.messages.length,
+    lastMessageBody: getLastMessageBody(row.messages),
+    attachmentCount: countAttachments(row.messages),
+    createdAt: row.createdAt ?? "",
+    updatedAt: row.updatedAt ?? "",
+    messages: row.messages.map((message) => ({
+      body: message.body,
+      sentAt: message.sentAt ?? null,
+      senderUser: message.senderUser ?? null,
+      attachmentFileIds: message.attachmentFileIds ?? [],
+      attachmentFiles: message.attachmentFiles ?? [],
+    })),
+  };
+}
+
+export function mapSupportTicketDetailRowToRecord(
+  row: SupportTicketDetailRow,
+): SupportTicketRecord {
   return {
     id: String(row.id),
     title: display(row.title),
@@ -102,7 +210,7 @@ export function mapSupportTicketListRowToRecord(row: SupportTicketListRow): Supp
     attachmentCount: countAttachments(row.messages),
     createdAt: row.createdAt ?? "",
     updatedAt: row.updatedAt ?? "",
-    messages: row.messages,
+    messages: mapDetailMessages(row.messages),
   };
 }
 

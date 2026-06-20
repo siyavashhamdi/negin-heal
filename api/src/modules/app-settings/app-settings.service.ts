@@ -22,8 +22,8 @@ import {
   AppSettingUpdateGqlInput,
 } from "./graphql/inputs";
 import {
-  AppSettingKeyListGqlResponse,
   AppSettingKeyListPaginatedOffsetGqlResponse,
+  AppSettingKeyListSummaryGqlResponse,
   AppSettingMutationGqlResponse,
 } from "./graphql/responses";
 import {
@@ -171,6 +171,7 @@ export class AppSettingsService {
     const [settings, total] = await Promise.all([
       this.appSettingModel
         .find(filterQuery)
+        .select("-value")
         .sort(sortOptions)
         .skip(skip)
         .limit(limit)
@@ -181,7 +182,7 @@ export class AppSettingsService {
 
     return {
       items: settings.map((setting) =>
-        this.toAppSettingKeyListResponse(setting),
+        this.toAppSettingKeyListSummaryResponse(setting),
       ),
       pagination: {
         limit,
@@ -1081,9 +1082,9 @@ export class AppSettingsService {
     return sortOptions;
   }
 
-  private toAppSettingKeyListResponse(
+  private toAppSettingKeyListSummaryResponse(
     setting: AppSettingKeyListRecord,
-  ): AppSettingKeyListGqlResponse {
+  ): AppSettingKeyListSummaryGqlResponse {
     return {
       id: setting._id,
       key: setting.key,

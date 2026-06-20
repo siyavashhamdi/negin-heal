@@ -12,6 +12,7 @@ import {
   Stack,
   TextField,
   Tooltip,
+  Typography,
 } from "@mui/material";
 import {
   type ChangeEvent,
@@ -22,15 +23,24 @@ import {
   useState,
 } from "react";
 import { Link as RouterLink, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { useLazyQuery } from "@apollo/client/react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useMobileAppLayout } from "../../hooks/useMobileAppLayout";
 import { LoginRequiredState } from "../../shared/auth/LoginRequiredState";
+import { PasswordPolicyChecklist } from "../../shared/auth/PasswordPolicyChecklist";
 import { USER_PROFILE_UPDATE_MUTATION } from "../../graphql/mutations/userProfileUpdate.mutation";
-import { useMe } from "../../hooks/useMe";
+import { USER_ME_QUERY } from "../../graphql/queries/userMe.query";
+import { type UserMeGqlResponse, type UserMeResponse } from "../../hooks/useMe";
 import EntityConfirmDialogShell from "../../shared/crud/EntityConfirmDialogShell";
 import EntityModalShell from "../../shared/crud/EntityModalShell";
-import { getFileIdFromAccessUrl, type FileAccessUrl } from "../../utils/fileAccessUrl.util";
+import {
+  getFileIdFromAccessUrl,
+  resolveFileAccessUrl,
+  type FileAccessUrl,
+} from "../../utils/fileAccessUrl.util";
 import { uploadFile } from "../../utils/fileUpload.util";
+import { hasFormChanges } from "../../utils/formChange.util";
+import { arePasswordRulesPassed } from "../../utils/passwordPolicy.util";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import ModalFooterActions from "../../shared/crud/ModalFooterActions";
@@ -100,15 +110,49 @@ function optionalTextInput(value: string): string | null {
   return trimmed ? trimmed : null;
 }
 
+function mergeProfileUpdateIntoUser(
+  current: UserMeGqlResponse | null,
+  updated: UserProfileUpdateMutationResult["userProfileUpdate"],
+): UserMeGqlResponse {
+  if (!current) {
+    return {
+      id: updated.id,
+      username: updated.username,
+      roles: [],
+      status: "",
+      profile: updated.profile ?? null,
+      preferences: null,
+    };
+  }
+
+  return {
+    ...current,
+    username: updated.username,
+    profile: {
+      ...current.profile,
+      ...updated.profile,
+    },
+  };
+}
+
 const AuthenticatedProfile = (): ReactElement => {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout, user: authUser } = useAuth();
   const { showError, showSuccess } = useSnackbar();
-  const { user, avatarUrl, loading, refetch } = useMe();
+  const isMainProfileRoute = location.pathname === APP_SHELL_ROUTES.profile;
+  const isEditRoute = location.pathname === `${APP_SHELL_ROUTES.profile}/edit`;
+  const isPasswordRoute = location.pathname === `${APP_SHELL_ROUTES.profile}/password`;
+  const hasFetchedInitialMeRef = useRef(false);
+  const editMeFetchPendingRef = useRef(false);
+  const [profileUser, setProfileUser] = useState<UserMeGqlResponse | null>(null);
+  const [editProfileUser, setEditProfileUser] = useState<UserMeGqlResponse | null>(null);
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
+  const [isEditMeLoading, setIsEditMeLoading] = useState(false);
+  const [fetchMe] = useLazyQuery<UserMeResponse>(USER_ME_QUERY, {
+    fetchPolicy: "network-only",
+  });
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [editForm, setEditForm] = useState<ProfileEditForm>({
     username: "",
     firstName: "",
@@ -117,6 +161,7 @@ const AuthenticatedProfile = (): ReactElement => {
     phoneNumber: "",
     bio: "",
   });
+  const [initialEditForm, setInitialEditForm] = useState<ProfileEditForm | null>(null);
   const [passwordForm, setPasswordForm] = useState<PasswordChangeForm>({
     currentPassword: "",
     newPassword: "",
@@ -133,23 +178,82 @@ const AuthenticatedProfile = (): ReactElement => {
   });
 
   const displayName =
-    user?.profile?.firstName && user.profile.lastName
-      ? `${user.profile.firstName} ${user.profile.lastName}`
-      : user?.profile?.firstName || user?.username || authUser?.username || "کاربر";
+    profileUser?.profile?.firstName && profileUser.profile.lastName
+      ? `${profileUser.profile.firstName} ${profileUser.profile.lastName}`
+      : profileUser?.profile?.firstName ||
+        profileUser?.username ||
+        authUser?.username ||
+        "کاربر";
   const userInitial = displayName.trim().slice(0, 1) || "؟";
   const displayRoles =
-    user?.roles?.filter((role) => role !== "END_USER") ??
+    profileUser?.roles?.filter((role) => role !== "END_USER") ??
     authUser?.roles?.filter((role) => role !== "END_USER") ??
     [];
   const roleLabel = displayRoles.join("، ");
+  const avatarUrl = resolveFileAccessUrl(profileUser?.profile?.avatarAccessUrl);
   const isAvatarUpdating =
     isAvatarUploading || isAvatarDeleting || updateProfileResult.loading;
   const hasAvatar = Boolean(avatarUrl);
   const isSavingProfile = updateProfileResult.loading;
   const isChangingPassword = updateProfileResult.loading;
-  const isEmailLocked = Boolean(user?.profile?.email?.trim());
-  const isPhoneNumberLocked = Boolean(user?.profile?.phoneNumber?.trim());
+  const isEmailLocked = Boolean(editProfileUser?.profile?.email?.trim());
+  const isPhoneNumberLocked = Boolean(editProfileUser?.profile?.phoneNumber?.trim());
   const hasLockedContactField = isEmailLocked || isPhoneNumberLocked;
+  const passwordRulesPassed = arePasswordRulesPassed(passwordForm.newPassword);
+  const passwordsMatch =
+    passwordForm.confirmPassword.trim().length > 0 &&
+    passwordForm.newPassword === passwordForm.confirmPassword;
+  const canSubmitPasswordChange =
+    passwordForm.currentPassword.trim().length > 0 &&
+    passwordForm.newPassword.trim().length > 0 &&
+    passwordForm.confirmPassword.trim().length > 0 &&
+    passwordRulesPassed &&
+    passwordsMatch;
+
+  const hasProfileEditChanges =
+    initialEditForm != null && hasFormChanges(initialEditForm, editForm);
+
+  const canSubmitProfileEdit =
+    editForm.username.trim().length > 0 && hasProfileEditChanges;
+
+  useEffect(() => {
+    if (!isMainProfileRoute || hasFetchedInitialMeRef.current) {
+      return;
+    }
+
+    hasFetchedInitialMeRef.current = true;
+    setIsProfileLoading(true);
+    void fetchMe()
+      .then((result) => {
+        if (result.data?.me) {
+          setProfileUser(result.data.me);
+        }
+      })
+      .finally(() => {
+        setIsProfileLoading(false);
+      });
+  }, [fetchMe, isMainProfileRoute]);
+
+  useEffect(() => {
+    if (!isEditRoute || !editMeFetchPendingRef.current) {
+      return;
+    }
+
+    editMeFetchPendingRef.current = false;
+    setIsEditMeLoading(true);
+    void fetchMe()
+      .then((result) => {
+        if (result.data?.me) {
+          const nextForm = buildEditFormFromUser(result.data.me);
+          setEditProfileUser(result.data.me);
+          setInitialEditForm(nextForm);
+          setEditForm(nextForm);
+        }
+      })
+      .finally(() => {
+        setIsEditMeLoading(false);
+      });
+  }, [fetchMe, isEditRoute]);
 
   useEffect(() => {
     if (logoutCountdown === null) {
@@ -168,18 +272,19 @@ const AuthenticatedProfile = (): ReactElement => {
     return () => window.clearTimeout(timerId);
   }, [logout, logoutCountdown]);
 
-  const buildEditForm = (): ProfileEditForm => ({
-    username: user?.username ?? authUser?.username ?? "",
-    firstName: user?.profile?.firstName ?? "",
-    lastName: user?.profile?.lastName ?? "",
-    email: user?.profile?.email ?? "",
-    phoneNumber: user?.profile?.phoneNumber ?? "",
-    bio: user?.profile?.bio ?? "",
+  const buildEditFormFromUser = (
+    meUser: UserMeGqlResponse | null,
+  ): ProfileEditForm => ({
+    username: meUser?.username ?? authUser?.username ?? "",
+    firstName: meUser?.profile?.firstName ?? "",
+    lastName: meUser?.profile?.lastName ?? "",
+    email: meUser?.profile?.email ?? "",
+    phoneNumber: meUser?.profile?.phoneNumber ?? "",
+    bio: meUser?.profile?.bio ?? "",
   });
 
   const openEditDialog = (): void => {
-    setEditForm(buildEditForm());
-    setIsEditDialogOpen(true);
+    editMeFetchPendingRef.current = true;
     navigate(`${APP_SHELL_ROUTES.profile}/edit`);
   };
 
@@ -188,7 +293,8 @@ const AuthenticatedProfile = (): ReactElement => {
       return;
     }
 
-    setIsEditDialogOpen(false);
+    setEditProfileUser(null);
+    setInitialEditForm(null);
     navigate(APP_SHELL_ROUTES.profile);
   };
 
@@ -205,7 +311,6 @@ const AuthenticatedProfile = (): ReactElement => {
       newPassword: "",
       confirmPassword: "",
     });
-    setIsPasswordDialogOpen(true);
     navigate(`${APP_SHELL_ROUTES.profile}/password`);
   };
 
@@ -214,38 +319,20 @@ const AuthenticatedProfile = (): ReactElement => {
       return;
     }
 
-    setIsPasswordDialogOpen(false);
     navigate(APP_SHELL_ROUTES.profile);
   };
 
   useEffect(() => {
-    const profileRoutePrefix = `${APP_SHELL_ROUTES.profile}/`;
-    if (!location.pathname.startsWith(profileRoutePrefix)) {
+    if (!isPasswordRoute) {
       return;
     }
 
-    const routeSuffix = location.pathname.slice(profileRoutePrefix.length);
-    if (routeSuffix === "edit") {
-      setEditForm(buildEditForm());
-      setIsEditDialogOpen(true);
-      setIsPasswordDialogOpen(false);
-      return;
-    }
-
-    if (routeSuffix === "password") {
-      setPasswordForm({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-      setIsPasswordDialogOpen(true);
-      setIsEditDialogOpen(false);
-      return;
-    }
-
-    setIsEditDialogOpen(false);
-    setIsPasswordDialogOpen(false);
-  }, [location.pathname, user?.id, authUser?.id]);
+    setPasswordForm({
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    });
+  }, [isPasswordRoute]);
 
   const setPasswordField = <TField extends keyof PasswordChangeForm>(
     field: TField,
@@ -280,7 +367,9 @@ const AuthenticatedProfile = (): ReactElement => {
       }).catch(() => null);
 
       if (result?.data?.userProfileUpdate) {
-        await refetch();
+        setProfileUser((current) =>
+          mergeProfileUpdateIntoUser(current, result.data!.userProfileUpdate),
+        );
         showSuccess("تصویر پروفایل حذف شد.");
       }
     } finally {
@@ -327,7 +416,9 @@ const AuthenticatedProfile = (): ReactElement => {
     }).catch(() => null);
 
     if (result?.data?.userProfileUpdate) {
-      await refetch();
+      setProfileUser((current) =>
+        mergeProfileUpdateIntoUser(current, result.data!.userProfileUpdate),
+      );
       showSuccess("تصویر پروفایل با موفقیت به‌روزرسانی شد.");
     }
   };
@@ -363,7 +454,9 @@ const AuthenticatedProfile = (): ReactElement => {
     }).catch(() => null);
 
     if (result?.data?.userProfileUpdate) {
-      await refetch();
+      setProfileUser((current) =>
+        mergeProfileUpdateIntoUser(current, result.data!.userProfileUpdate),
+      );
       closeEditDialog();
       showSuccess("اطلاعات کاربری با موفقیت به‌روزرسانی شد.");
     }
@@ -383,6 +476,11 @@ const AuthenticatedProfile = (): ReactElement => {
 
     if (newPassword !== confirmPassword) {
       showError("رمز عبور جدید و تکرار آن یکسان نیستند.");
+      return;
+    }
+
+    if (!arePasswordRulesPassed(newPassword)) {
+      showError("رمز عبور جدید باید شرایط امنیتی نمایش‌داده‌شده را داشته باشد.");
       return;
     }
 
@@ -461,7 +559,7 @@ const AuthenticatedProfile = (): ReactElement => {
         </div>
         <div>
           <p className={styles.eyebrow}>پروفایل</p>
-          <h2>{loading ? "در حال دریافت اطلاعات..." : displayName}</h2>
+          <h2>{isProfileLoading ? "در حال دریافت اطلاعات..." : displayName}</h2>
           {roleLabel ? <p>{roleLabel}</p> : null}
         </div>
       </div>
@@ -484,7 +582,7 @@ const AuthenticatedProfile = (): ReactElement => {
       </div>
 
       <EntityModalShell
-        open={isEditDialogOpen}
+        open={isEditRoute}
         onClose={closeEditDialog}
         title="ویرایش اطلاعات کاربری"
         maxWidth="sm"
@@ -504,12 +602,20 @@ const AuthenticatedProfile = (): ReactElement => {
                 key: "submit",
                 label: isSavingProfile ? "در حال ذخیره..." : "ذخیره تغییرات",
                 type: "submit",
-                disabled: isSavingProfile,
+                disabled: isSavingProfile || isEditMeLoading || !editProfileUser || !canSubmitProfileEdit,
               },
             ]}
           />
         }
       >
+        {isEditMeLoading ? (
+          <Stack alignItems="center" justifyContent="center" spacing={2} sx={{ minHeight: 240 }}>
+            <CircularProgress />
+            <Typography variant="body2" color="text.secondary">
+              در حال دریافت اطلاعات کاربر...
+            </Typography>
+          </Stack>
+        ) : editProfileUser ? (
         <Stack spacing={2}>
               <TextField
                 label="نام کاربری"
@@ -582,10 +688,11 @@ const AuthenticatedProfile = (): ReactElement => {
                 </Alert>
               ) : null}
             </Stack>
+        ) : null}
       </EntityModalShell>
 
       <EntityModalShell
-        open={isPasswordDialogOpen}
+        open={isPasswordRoute}
         onClose={closePasswordDialog}
         title="تغییر رمز عبور"
         maxWidth="sm"
@@ -605,18 +712,13 @@ const AuthenticatedProfile = (): ReactElement => {
                 key: "submit",
                 label: isChangingPassword ? "در حال ذخیره..." : "ذخیره رمز عبور",
                 type: "submit",
-                disabled: isChangingPassword,
+                disabled: isChangingPassword || !canSubmitPasswordChange,
               },
             ]}
           />
         }
       >
         <Stack spacing={2}>
-              <Alert severity="info">
-                رمز عبور جدید باید حداقل ۸ کاراکتر و حداقل شامل یک حرف بزرگ
-                انگلیسی، یک حرف کوچک انگلیسی، یک عدد و یک کاراکتر ویژه باشد. همچنین از
-                رمزهای عبور رایج و قابل حدس استفاده نکنید.
-              </Alert>
               <TextField
                 label="رمز عبور فعلی"
                 value={passwordForm.currentPassword}
@@ -637,6 +739,7 @@ const AuthenticatedProfile = (): ReactElement => {
                 type="password"
                 autoComplete="new-password"
               />
+              <PasswordPolicyChecklist password={passwordForm.newPassword} />
               <TextField
                 label="تکرار رمز عبور جدید"
                 value={passwordForm.confirmPassword}
@@ -646,6 +749,12 @@ const AuthenticatedProfile = (): ReactElement => {
                 size="small"
                 type="password"
                 autoComplete="new-password"
+                error={Boolean(passwordForm.confirmPassword) && !passwordsMatch}
+                helperText={
+                  passwordForm.confirmPassword && !passwordsMatch
+                    ? "رمز عبور جدید و تکرار آن یکسان نیستند."
+                    : undefined
+                }
               />
             </Stack>
       </EntityModalShell>

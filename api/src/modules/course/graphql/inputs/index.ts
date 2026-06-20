@@ -6,6 +6,7 @@ export * from "./course-detail.gql.input";
 export * from "./course-list.gql.input";
 export * from "./course-list-sort-option.gql.input";
 export * from "./course-payment-list.gql.input";
+export * from "./course-payment-detail.gql.input";
 export * from "./course-payment-manual-create.gql.input";
 export * from "./course-payment-status-update.gql.input";
 export * from "./course-purchase-submit.gql.input";

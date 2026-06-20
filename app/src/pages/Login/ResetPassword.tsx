@@ -21,16 +21,10 @@ import {
 import { useTranslation } from "../../hooks/useTranslation";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { usePasswordReset } from "../../hooks/usePasswordReset";
+import { PasswordPolicyChecklist } from "../../shared/auth/PasswordPolicyChecklist";
+import { arePasswordRulesPassed } from "../../utils/passwordPolicy.util";
 import LoginShell from "./LoginShell";
 import formStyles from "./styles/LoginFormShared.module.scss";
-
-const MIN_PASSWORD_LENGTH = 8;
-
-type PasswordRule = {
-  id: "length" | "uppercase" | "lowercase" | "number" | "special";
-  passed: boolean;
-  labelKey: string;
-};
 
 const getTokenFromLocation = (searchParams: URLSearchParams): string =>
   searchParams.get("token")?.trim() || searchParams.get("resetToken")?.trim() || "";
@@ -49,34 +43,7 @@ const ResetPassword = (): ReactElement => {
   const [hasError, setHasError] = useState(false);
   const [completed, setCompleted] = useState(false);
 
-  const passwordRules: PasswordRule[] = [
-    {
-      id: "length",
-      passed: newPassword.trim().length >= MIN_PASSWORD_LENGTH,
-      labelKey: "auth.login.passwordRuleLength",
-    },
-    {
-      id: "uppercase",
-      passed: /[A-Z]/.test(newPassword),
-      labelKey: "auth.login.passwordRuleUppercase",
-    },
-    {
-      id: "lowercase",
-      passed: /[a-z]/.test(newPassword),
-      labelKey: "auth.login.passwordRuleLowercase",
-    },
-    {
-      id: "number",
-      passed: /\d/.test(newPassword),
-      labelKey: "auth.login.passwordRuleNumber",
-    },
-    {
-      id: "special",
-      passed: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/.test(newPassword),
-      labelKey: "auth.login.passwordRuleSpecial",
-    },
-  ];
-  const passwordRulesPassed = passwordRules.every((rule) => rule.passed);
+  const passwordRulesPassed = arePasswordRulesPassed(newPassword);
   const passwordsMatch =
     confirmPassword.trim().length > 0 && newPassword === confirmPassword;
   const canSubmit =
@@ -209,22 +176,7 @@ const ResetPassword = (): ReactElement => {
           error={hasError && !newPassword.trim()}
         />
 
-        <Box className={formStyles.passwordChecklist}>
-          {passwordRules.map((rule) => (
-            <Typography
-              key={rule.id}
-              component="span"
-              className={
-                rule.passed
-                  ? formStyles.passwordRulePassed
-                  : formStyles.passwordRule
-              }
-            >
-              <CheckCircleIcon fontSize="inherit" />
-              {t(rule.labelKey)}
-            </Typography>
-          ))}
-        </Box>
+        <PasswordPolicyChecklist password={newPassword} />
 
         <TextField
           fullWidth

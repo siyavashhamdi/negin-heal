@@ -12,7 +12,7 @@ import {
   TicketCloseMutation,
   UserTicketSendMutation,
 } from "./graphql/mutations";
-import { TicketListQuery, UserTicketListQuery } from "./graphql/queries";
+import { TicketListQuery, TicketDetailQuery, UserTicketListQuery, UserTicketDetailQuery } from "./graphql/queries";
 
 @Module({
   imports: [AppSettingsModule, BadgeModule, DatabaseModule, FileModule],
@@ -23,6 +23,8 @@ import { TicketListQuery, UserTicketListQuery } from "./graphql/queries";
     SuperAdminTicketSendMutation,
     TicketCloseMutation,
     UserTicketSendMutation,
+    UserTicketDetailQuery,
+    TicketDetailQuery,
     TicketListQuery,
     UserTicketListQuery,
   ],

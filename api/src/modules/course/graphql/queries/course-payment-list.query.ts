@@ -6,11 +6,11 @@ import { GqlAuthGuard, Roles, RolesGuard } from "../../../auth";
 import { CourseService } from "../../course.service";
 import { CoursePaymentListGqlInput } from "../inputs";
 import {
-  CoursePaymentListGqlResponse,
+  CoursePaymentListSummaryGqlResponse,
   CoursePaymentListPaginatedOffsetGqlResponse,
 } from "../responses";
 
-@Resolver(() => CoursePaymentListGqlResponse)
+@Resolver(() => CoursePaymentListSummaryGqlResponse)
 @UseGuards(GqlAuthGuard, RolesGuard)
 @Roles(UserRole.SUPER_ADMIN)
 export class CoursePaymentListQuery {

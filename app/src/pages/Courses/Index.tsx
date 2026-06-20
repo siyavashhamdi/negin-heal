@@ -65,8 +65,7 @@ import {
   type CourseSortField,
 } from "./courses-list.api";
 import { resolveFileAccessUrl } from "../../utils/fileAccessUrl.util";
-import EntityConfirmDialogShell from "../../shared/crud/EntityConfirmDialogShell";
-import ModalFooterActions from "../../shared/crud/ModalFooterActions";
+import EntityDeleteDialog from "../../shared/crud/EntityDeleteDialog";
 import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
 import styles from "./styles/courses.module.scss";
 
@@ -1081,43 +1080,22 @@ const CoursesIndex = (): ReactElement => {
       ) : null}
       </div>
 
-      <EntityConfirmDialogShell
+      <EntityDeleteDialog
         open={Boolean(deleteTarget)}
-        onClose={deleteCourseResult.loading ? undefined : closeDeleteDialog}
-        title="حذف دوره"
-        subjectLine={deleteTarget?.title}
+        entityTitle={deleteTarget?.title ?? "دوره"}
+        onCancel={closeDeleteDialog}
+        onConfirm={handleDeleteConfirm}
+        loading={deleteCourseResult.loading}
         icon={
           <Box className={styles.deleteDialogIcon}>
             <WarningAmberRoundedIcon />
           </Box>
         }
-        footer={
-          <ModalFooterActions
-            actions={[
-              {
-                key: "close",
-                isCloseButton: true,
-                onClick: closeDeleteDialog,
-                disabled: deleteCourseResult.loading,
-              },
-              {
-                key: "delete",
-                label: "حذف دوره",
-                onClick: handleDeleteConfirm,
-                isDestructive: true,
-                disabled: deleteCourseResult.loading,
-              },
-            ]}
-          />
-        }
       >
-        <Typography variant="body1" className={styles.deleteDialogMessage}>
-          آیا از حذف این دوره مطمئن هستید؟
-        </Typography>
         <Typography variant="body2" className={styles.deleteDialogHint}>
           فایل‌های جداشده این دوره نیز حذف می‌شوند و این عملیات قابل بازگشت نیست.
         </Typography>
-      </EntityConfirmDialogShell>
+      </EntityDeleteDialog>
       {!isPublicCourseView ? (
         <CourseFormDialog
           open={isCourseFormDialogOpen}

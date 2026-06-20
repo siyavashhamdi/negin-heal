@@ -18,6 +18,7 @@ import {
 import {
   Box,
   Chip,
+  CircularProgress,
   IconButton,
   MenuItem,
   Paper,
@@ -41,9 +42,10 @@ import type { Theme } from "@mui/material/styles";
 
 import { COURSE_PAYMENT_MANUAL_CREATE_MUTATION } from "../../graphql/mutations/coursePaymentManualCreate.mutation";
 import { COURSE_PAYMENT_STATUS_UPDATE_MUTATION } from "../../graphql/mutations/coursePaymentStatusUpdate.mutation";
+import { COURSE_PAYMENT_DETAIL_QUERY } from "../../graphql/queries/coursePaymentDetail.query";
 import { COURSE_PAYMENT_LIST_QUERY } from "../../graphql/queries/coursePaymentList.query";
 import { COURSE_LIST_QUERY } from "../../graphql/queries/courseList.query";
-import { USER_LIST_QUERY } from "../../graphql/queries/userList.query";
+import { USER_PICKER_LIST_QUERY } from "../../graphql/queries/userPickerList.query";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import {
@@ -58,6 +60,7 @@ import crudPrimitives from "../../shared/crud/styles/crudPrimitives.module.scss"
 import EntityAutocompleteField from "../../shared/forms/EntityAutocompleteField";
 import FileUploadField from "../../shared/forms/FileUploadField";
 import { getFileIdFromAccessUrl } from "../../utils/fileAccessUrl.util";
+import { hasFormChanges } from "../../utils/formChange.util";
 import { uploadFile } from "../../utils/fileUpload.util";
 import JalaliDateFilterField from "../../shared/table/JalaliDateFilterField";
 import {
@@ -66,19 +69,22 @@ import {
   type CourseListItemRow,
 } from "../Courses/courses-list.api";
 import {
-  type UserListQuery,
+  type UserPickerListQuery,
   type UserListQueryVariables,
-  type UserListRow,
+  type UserPickerListRow,
 } from "../UsersManagement/users-management-list.api";
 import {
   EMPTY_COURSE_PAYMENT_LIST_FILTERS,
   buildCoursePaymentListQueryVariables,
   hasCoursePaymentFiltersApplied,
   mapCoursePaymentListRowToRecord,
+  mapCoursePaymentDetailRowToRecord,
+  type CoursePaymentDetailQuery,
+  type CoursePaymentDetailQueryVariables,
   type CoursePaymentListFilters,
+  type CoursePaymentListItemRow,
   type CoursePaymentListQuery,
   type CoursePaymentListQueryVariables,
-  type CoursePaymentListRow,
   type CoursePaymentRecord,
   type CouponDiscountType,
   type UserCoursePaymentMethod,
@@ -93,7 +99,10 @@ import {
 import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
 
 type CoursePaymentStatusUpdateMutation = {
-  readonly coursePaymentStatusUpdate: CoursePaymentListRow;
+  readonly coursePaymentStatusUpdate: {
+    readonly id: string;
+    readonly status: UserCoursePurchaseStatus;
+  };
 };
 
 type CoursePaymentStatusUpdateMutationVariables = {
@@ -105,7 +114,9 @@ type CoursePaymentStatusUpdateMutationVariables = {
 };
 
 type CoursePaymentManualCreateMutation = {
-  readonly coursePaymentManualCreate: CoursePaymentListRow;
+  readonly coursePaymentManualCreate: {
+    readonly id: string;
+  };
 };
 
 type CoursePaymentManualCreateMutationVariables = {
@@ -124,7 +135,7 @@ type ManualPaymentUserOption = {
   readonly id: string;
   readonly label: string;
   readonly subtitle: string;
-  readonly row: UserListRow;
+  readonly row: UserPickerListRow;
 };
 
 type ManualPaymentCourseOption = {
@@ -260,14 +271,14 @@ function formatNumber(value: number | null | undefined): string {
   return value.toLocaleString("fa-IR").replace(/\u066c/g, ",");
 }
 
-function getUserFullName(row: UserListRow): string {
+function getUserFullName(row: UserPickerListRow): string {
   const parts = [row.profile?.firstName?.trim(), row.profile?.lastName?.trim()].filter(
     (part): part is string => Boolean(part),
   );
   return parts.length > 0 ? parts.join(" ") : row.username;
 }
 
-function userToManualPaymentOption(row: UserListRow): ManualPaymentUserOption {
+function userToManualPaymentOption(row: UserPickerListRow): ManualPaymentUserOption {
   const fullName = getUserFullName(row);
   const phone = row.profile?.phoneNumber?.trim();
   const email = row.profile?.email?.trim();
@@ -462,7 +473,7 @@ function renderReceiptFileCard(
 
 function selectCoursePaymentListPage(
   data: CoursePaymentListQuery | undefined,
-): ServerPageResult<CoursePaymentListRow> | null {
+): ServerPageResult<CoursePaymentListItemRow> | null {
   const page = data?.coursePaymentList;
   if (!page) {
     return null;
@@ -584,11 +595,27 @@ const PaymentsList = (): ReactElement => {
   const [filters, setFilters] = useState<CoursePaymentListFilters>(
     EMPTY_COURSE_PAYMENT_LIST_FILTERS,
   );
-  const [reviewTarget, setReviewTarget] = useState<CoursePaymentRecord | null>(null);
   const [reviewStatus, setReviewStatus] = useState<UserCoursePurchaseStatus>("PENDING");
   const [reviewDescription, setReviewDescription] = useState("");
+  const [initialReviewForm, setInitialReviewForm] = useState<{
+    status: UserCoursePurchaseStatus;
+    description: string;
+  } | null>(null);
   const [isReceiptPreviewExpanded, setIsReceiptPreviewExpanded] = useState(false);
   const manualPaymentRouteOpen = location.pathname === `${APP_SHELL_ROUTES.payments}/new`;
+  const reviewPaymentId = useMemo(() => {
+    const paymentRoutePrefix = `${APP_SHELL_ROUTES.payments}/`;
+    if (!location.pathname.startsWith(paymentRoutePrefix)) {
+      return null;
+    }
+
+    const routeId = location.pathname.slice(paymentRoutePrefix.length);
+    if (!routeId || routeId === "new") {
+      return null;
+    }
+
+    return routeId;
+  }, [location.pathname]);
   const [manualPaymentUser, setManualPaymentUser] = useState<ManualPaymentUserOption | null>(null);
   const [manualPaymentUserSearch, setManualPaymentUserSearch] = useState("");
   const [manualPaymentCourse, setManualPaymentCourse] = useState<ManualPaymentCourseOption | null>(
@@ -661,7 +688,7 @@ const PaymentsList = (): ReactElement => {
   } = useServerPaginatedQuery<
     CoursePaymentListQuery,
     CoursePaymentListQueryVariables,
-    CoursePaymentListRow,
+    CoursePaymentListItemRow,
     CoursePaymentRecord
   >({
     query: COURSE_PAYMENT_LIST_QUERY,
@@ -671,10 +698,31 @@ const PaymentsList = (): ReactElement => {
     resetPageDeps: [debouncedSearchQuery, debouncedFilters],
   });
 
+  const {
+    data: paymentDetailData,
+    loading: paymentDetailLoading,
+    refetch: refetchPaymentDetail,
+  } = useQuery<CoursePaymentDetailQuery, CoursePaymentDetailQueryVariables>(
+    COURSE_PAYMENT_DETAIL_QUERY,
+    {
+      variables: { input: { id: reviewPaymentId ?? "" } },
+      skip: !reviewPaymentId,
+      fetchPolicy: "network-only",
+    },
+  );
+
+  const reviewPayment = useMemo(() => {
+    if (!reviewPaymentId || paymentDetailData?.coursePaymentDetail?.id !== reviewPaymentId) {
+      return null;
+    }
+
+    return mapCoursePaymentDetailRowToRecord(paymentDetailData.coursePaymentDetail);
+  }, [paymentDetailData, reviewPaymentId]);
+
   const { data: manualPaymentUsersData, loading: manualPaymentUsersLoading } = useQuery<
-    UserListQuery,
+    UserPickerListQuery,
     UserListQueryVariables
-  >(USER_LIST_QUERY, {
+  >(USER_PICKER_LIST_QUERY, {
     variables: manualPaymentUsersVariables,
     fetchPolicy: "cache-first",
     skip: !manualPaymentRouteOpen,
@@ -695,8 +743,8 @@ const PaymentsList = (): ReactElement => {
   >(COURSE_PAYMENT_STATUS_UPDATE_MUTATION, {
     successMessage: "وضعیت پرداخت با موفقیت ثبت شد.",
     errorMessage: "ثبت وضعیت پرداخت انجام نشد.",
-    onSuccess: (data) => {
-      setReviewTarget(mapCoursePaymentListRowToRecord(data.coursePaymentStatusUpdate));
+    onSuccess: () => {
+      void refetchPaymentDetail();
       onRefresh();
     },
   });
@@ -762,39 +810,24 @@ const PaymentsList = (): ReactElement => {
   }, [manualPaymentCourse, manualPaymentCourseOptions]);
 
   useEffect(() => {
-    if (!reviewTarget) {
+    if (!reviewPayment) {
+      setInitialReviewForm(null);
       return;
     }
 
-    setReviewStatus(reviewTarget.status);
-    setReviewDescription(
-      reviewTarget.manualStatusChangedDescription === "-"
+    const nextDescription =
+      reviewPayment.manualStatusChangedDescription === "-"
         ? ""
-        : reviewTarget.manualStatusChangedDescription,
-    );
+        : reviewPayment.manualStatusChangedDescription;
+
+    setReviewStatus(reviewPayment.status);
+    setReviewDescription(nextDescription);
+    setInitialReviewForm({
+      status: reviewPayment.status,
+      description: nextDescription,
+    });
     setIsReceiptPreviewExpanded(false);
-  }, [reviewTarget]);
-
-  useEffect(() => {
-    const paymentRoutePrefix = `${APP_SHELL_ROUTES.payments}/`;
-    if (!location.pathname.startsWith(paymentRoutePrefix)) {
-      if (reviewTarget) {
-        setReviewTarget(null);
-      }
-      return;
-    }
-
-    const routeId = location.pathname.slice(paymentRoutePrefix.length);
-    if (!routeId || routeId === "new") {
-      if (routeId !== "new" && reviewTarget) {
-        setReviewTarget(null);
-      }
-      return;
-    }
-
-    const record = rows.find((item) => item.id === routeId) ?? null;
-    setReviewTarget(record);
-  }, [location.pathname, reviewTarget, rows]);
+  }, [reviewPayment]);
 
   const textCell = (value: unknown, tabular = false): ReactElement => (
     <Typography variant="body2" className={tabular ? crudPrimitives.tabularNums : undefined}>
@@ -1071,20 +1104,19 @@ const PaymentsList = (): ReactElement => {
   };
 
   const closeReviewDialog = (): void => {
-    setReviewTarget(null);
     setIsReceiptPreviewExpanded(false);
     navigate(APP_SHELL_ROUTES.payments);
   };
 
   const handleSubmitReview = (): void => {
-    if (!reviewTarget) {
+    if (!reviewPaymentId) {
       return;
     }
 
     void updatePaymentStatus({
       variables: {
         input: {
-          id: reviewTarget.id,
+          id: reviewPaymentId,
           status: reviewStatus,
           manualStatusChangedDescription: reviewDescription.trim() || null,
         },
@@ -1332,12 +1364,12 @@ const PaymentsList = (): ReactElement => {
     }
   };
 
-  const reviewStatusChip = reviewTarget ? (
+  const reviewStatusChip = reviewPayment ? (
     <Chip
       size="small"
-      color={STATUS_COLOR[reviewTarget.status]}
+      color={STATUS_COLOR[reviewPayment.status]}
       variant="outlined"
-      label={STATUS_LABEL[reviewTarget.status]}
+      label={STATUS_LABEL[reviewPayment.status]}
     />
   ) : null;
   const isManualPaymentOptionsLoading = manualPaymentUsersLoading || manualPaymentCoursesLoading;
@@ -1346,6 +1378,19 @@ const PaymentsList = (): ReactElement => {
     manualPaymentCourse != null &&
     !createManualPaymentResult.loading &&
     !isManualPaymentFileUploading;
+
+  const hasReviewFormChanges =
+    initialReviewForm != null &&
+    hasFormChanges(initialReviewForm, {
+      status: reviewStatus,
+      description: reviewDescription,
+    });
+
+  const canSubmitReview =
+    reviewPayment != null &&
+    !paymentDetailLoading &&
+    !updatePaymentStatusResult.loading &&
+    hasReviewFormChanges;
 
   return (
     <>
@@ -1516,21 +1561,28 @@ const PaymentsList = (): ReactElement => {
       </EntityModalShell>
 
       <EntityModalShell
-        open={reviewTarget != null}
+        open={reviewPaymentId != null}
         onClose={closeReviewDialog}
         maxWidth="lg"
         title="بررسی پرداخت"
-        subtitle={reviewTarget?.courseTitle ?? EMPTY_DISPLAY}
+        subtitle={reviewPayment?.courseTitle ?? EMPTY_DISPLAY}
         footer={
           <ReviewPaymentDialogActions
             onCancel={closeReviewDialog}
             onSubmit={handleSubmitReview}
             cancelDisabled={updatePaymentStatusResult.loading}
-            submitDisabled={!reviewTarget || updatePaymentStatusResult.loading}
+            submitDisabled={!canSubmitReview}
           />
         }
       >
-        {reviewTarget ? (
+        {paymentDetailLoading || !reviewPayment ? (
+          <Stack alignItems="center" justifyContent="center" spacing={2} sx={{ minHeight: 320 }}>
+            <CircularProgress />
+            <Typography variant="body2" color="text.secondary">
+              در حال دریافت اطلاعات پرداخت...
+            </Typography>
+          </Stack>
+        ) : (
           <Stack spacing={2}>
               <PaymentDetailSection
                 title="خلاصه پرداخت"
@@ -1538,21 +1590,21 @@ const PaymentsList = (): ReactElement => {
                   { label: "وضعیت", value: reviewStatusChip ?? EMPTY_DISPLAY },
                   {
                     label: "روش پرداخت",
-                    value: PAYMENT_METHOD_LABEL[reviewTarget.paymentMethod],
+                    value: PAYMENT_METHOD_LABEL[reviewPayment.paymentMethod],
                   },
-                  { label: "واحد", value: CURRENCY_LABEL[reviewTarget.currency] },
-                  { label: "مبلغ اولیه", value: formatAmount(reviewTarget.amountIrt) },
+                  { label: "واحد", value: CURRENCY_LABEL[reviewPayment.currency] },
+                  { label: "مبلغ اولیه", value: formatAmount(reviewPayment.amountIrt) },
                   {
                     label: "درصد تخفیف",
-                    value: formatNumber(reviewTarget.discountPercentage),
+                    value: formatNumber(reviewPayment.discountPercentage),
                   },
                   {
                     label: "مبلغ تخفیف",
-                    value: formatAmount(reviewTarget.discountAmountIrt),
+                    value: formatAmount(reviewPayment.discountAmountIrt),
                   },
                   {
                     label: "مبلغ نهایی",
-                    value: formatAmount(reviewTarget.finalAmountIrt),
+                    value: formatAmount(reviewPayment.finalAmountIrt),
                   },
                 ]}
               />
@@ -1560,36 +1612,36 @@ const PaymentsList = (): ReactElement => {
               <PaymentDetailSection
                 title="پرداخت‌کننده و دوره"
                 items={[
-                  { label: "نام پرداخت‌کننده", value: reviewTarget.userFullName },
-                  { label: "نام کاربری", value: reviewTarget.username },
-                  { label: "ایمیل", value: reviewTarget.userEmail },
-                  { label: "شماره تماس", value: reviewTarget.userPhone },
-                  { label: "دوره", value: reviewTarget.courseTitle },
+                  { label: "نام پرداخت‌کننده", value: reviewPayment.userFullName },
+                  { label: "نام کاربری", value: reviewPayment.username },
+                  { label: "ایمیل", value: reviewPayment.userEmail },
+                  { label: "شماره تماس", value: reviewPayment.userPhone },
+                  { label: "دوره", value: reviewPayment.courseTitle },
                 ]}
               />
 
               <PaymentDetailSection
                 title="اطلاعات تراکنش"
                 items={[
-                  { label: "درگاه/ارائه‌دهنده", value: reviewTarget.paymentProvider },
-                  { label: "کد/مرجع پرداخت", value: reviewTarget.paymentReference },
-                  { label: "شناسه تراکنش", value: reviewTarget.transactionId },
+                  { label: "درگاه/ارائه‌دهنده", value: reviewPayment.paymentProvider },
+                  { label: "کد/مرجع پرداخت", value: reviewPayment.paymentReference },
+                  { label: "شناسه تراکنش", value: reviewPayment.transactionId },
                 ]}
               />
 
               <PaymentDetailSection
                 title="کد تخفیف"
                 items={[
-                  { label: "کد تخفیف", value: reviewTarget.couponCode },
+                  { label: "کد تخفیف", value: reviewPayment.couponCode },
                   {
                     label: "نوع تخفیف",
-                    value: reviewTarget.couponDiscountType
-                      ? COUPON_DISCOUNT_TYPE_LABEL[reviewTarget.couponDiscountType]
+                    value: reviewPayment.couponDiscountType
+                      ? COUPON_DISCOUNT_TYPE_LABEL[reviewPayment.couponDiscountType]
                       : EMPTY_DISPLAY,
                   },
                   {
                     label: "مقدار تخفیف",
-                    value: formatNumber(reviewTarget.couponDiscountValue),
+                    value: formatNumber(reviewPayment.couponDiscountValue),
                   },
                 ]}
               />
@@ -1597,13 +1649,13 @@ const PaymentsList = (): ReactElement => {
               <PaymentDetailSection
                 title="زمان‌بندی وضعیت‌ها"
                 items={[
-                  { label: "تاریخ ثبت", value: formatDate(reviewTarget.createdAt) },
-                  { label: "آخرین بروزرسانی", value: formatDate(reviewTarget.updatedAt) },
-                  { label: "تاریخ انتظار", value: formatDate(reviewTarget.pendingAt) },
-                  { label: "تاریخ پرداخت", value: formatDate(reviewTarget.paidAt) },
-                  { label: "تاریخ خطا", value: formatDate(reviewTarget.failedAt) },
-                  { label: "تاریخ مرجوعی", value: formatDate(reviewTarget.refundedAt) },
-                  { label: "تاریخ لغو", value: formatDate(reviewTarget.cancelledAt) },
+                  { label: "تاریخ ثبت", value: formatDate(reviewPayment.createdAt) },
+                  { label: "آخرین بروزرسانی", value: formatDate(reviewPayment.updatedAt) },
+                  { label: "تاریخ انتظار", value: formatDate(reviewPayment.pendingAt) },
+                  { label: "تاریخ پرداخت", value: formatDate(reviewPayment.paidAt) },
+                  { label: "تاریخ خطا", value: formatDate(reviewPayment.failedAt) },
+                  { label: "تاریخ مرجوعی", value: formatDate(reviewPayment.refundedAt) },
+                  { label: "تاریخ لغو", value: formatDate(reviewPayment.cancelledAt) },
                 ]}
               />
 
@@ -1612,16 +1664,16 @@ const PaymentsList = (): ReactElement => {
                 items={[
                   {
                     label: "تغییر دستی",
-                    value: reviewTarget.isManualStatusChange ? "بله" : "خیر",
+                    value: reviewPayment.isManualStatusChange ? "بله" : "خیر",
                   },
                   {
                     label: "تغییردهنده دستی",
-                    value: reviewTarget.manualStatusChangerName,
+                    value: reviewPayment.manualStatusChangerName,
                   },
                 ]}
               />
 
-              {renderReceiptFileCard(reviewTarget, isReceiptPreviewExpanded, () =>
+              {renderReceiptFileCard(reviewPayment, isReceiptPreviewExpanded, () =>
                 setIsReceiptPreviewExpanded((previous) => !previous),
               )}
 
@@ -1673,7 +1725,7 @@ const PaymentsList = (): ReactElement => {
                 </Stack>
               </Paper>
             </Stack>
-          ) : null}
+        )}
       </EntityModalShell>
     </>
   );

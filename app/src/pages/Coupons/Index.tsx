@@ -39,6 +39,7 @@ import { COUPON_CREATE_MUTATION } from "../../graphql/mutations/couponCreate.mut
 import { COUPON_DELETE_MUTATION } from "../../graphql/mutations/couponDelete.mutation";
 import { COUPON_UPDATE_MUTATION } from "../../graphql/mutations/couponUpdate.mutation";
 import { COUPON_LIST_QUERY } from "../../graphql/queries/couponList.query";
+import { COUPON_DETAIL_QUERY } from "../../graphql/queries/couponDetail.query";
 import { COURSE_LIST_QUERY } from "../../graphql/queries/courseList.query";
 import { useAuth } from "../../contexts/AuthContext";
 import { useDebounce } from "../../hooks/useDebounce";
@@ -50,6 +51,7 @@ import {
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
 import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
+import { hasFormChanges } from "../../utils/formChange.util";
 import CrudRowActions from "../../shared/crud/CrudRowActions";
 import EntityDeleteDialog from "../../shared/crud/EntityDeleteDialog";
 import EntityModalShell from "../../shared/crud/EntityModalShell";
@@ -66,17 +68,21 @@ import {
   buildCouponListQueryVariables,
   buildCouponUpdateVariables,
   hasCouponFiltersApplied,
+  mapCouponDetailRowToRecord,
   mapCouponListRowToRecord,
   type CouponCreateMutation,
   type CouponCreateMutationVariables,
   type CouponDeleteMutation,
   type CouponDeleteMutationVariables,
+  type CouponDetailQuery,
+  type CouponDetailQueryVariables,
   type CouponDiscountType,
   type CouponFormState,
   type CouponListFilters,
+  type CouponListItemRow,
   type CouponListQuery,
   type CouponListQueryVariables,
-  type CouponListRow,
+  type CouponListRecord,
   type CouponListSortField,
   type CouponRecord,
   type CouponUpdateMutation,
@@ -102,20 +108,14 @@ const COLUMN_WIDTH_BY_ID: Record<string, string> = {
   id: "14rem",
   code: "11rem",
   title: "16rem",
-  description: "22rem",
   discountType: "10rem",
   discountValue: "9rem",
   startsAt: "11rem",
   expiresAt: "11rem",
-  totalUsageLimit: "9rem",
-  perUserUsageLimit: "9rem",
-  applicableCourseIdsText: "20rem",
   isFirstPurchaseOnly: "9rem",
   isActive: "8rem",
   totalUsageCount: "8rem",
   remainingTotalUsageCount: "8rem",
-  createdBy: "14rem",
-  updatedBy: "14rem",
   createdAt: "10rem",
   updatedAt: "10rem",
   actions: "7rem",
@@ -125,8 +125,6 @@ const MOBILE_COLUMN_WIDTH_BY_ID: Record<string, string> = {
   ...COLUMN_WIDTH_BY_ID,
   code: "18rem",
   title: "24rem",
-  description: "30rem",
-  applicableCourseIdsText: "34rem",
   actions: "12rem",
 };
 
@@ -158,8 +156,6 @@ const SORTABLE_FIELDS = new Set<CouponListSortField>([
   "discountValue",
   "startsAt",
   "expiresAt",
-  "totalUsageLimit",
-  "perUserUsageLimit",
   "isFirstPurchaseOnly",
   "isActive",
 ]);
@@ -208,7 +204,7 @@ function buildCourseOption(course: CourseListItemRow): CourseSelectOption {
 
 function selectCouponListPage(
   data: CouponListQuery | undefined
-): ServerPageResult<CouponListRow> | null {
+): ServerPageResult<CouponListItemRow> | null {
   const page = data?.couponList;
   if (!page) {
     return null;
@@ -250,26 +246,48 @@ const CouponsIndex = (): ReactElement => {
   const { showError } = useSnackbar();
   const isSuperAdmin = user?.roles?.includes("SUPER_ADMIN") === true;
   const hasShownLoadErrorRef = useRef(false);
+  const isCreateRoute = location.pathname === `${APP_SHELL_ROUTES.moreCoupons}/new`;
+  const editCouponId = useMemo(() => {
+    const editRoutePrefix = `${APP_SHELL_ROUTES.moreCoupons}/edit/`;
+    if (!location.pathname.startsWith(editRoutePrefix)) {
+      return null;
+    }
+
+    const routeId = location.pathname.slice(editRoutePrefix.length);
+    return routeId || null;
+  }, [location.pathname]);
+  const couponDialogOpen = isCreateRoute || editCouponId != null;
+
+  const { data: couponDetailData, loading: couponDetailLoading } = useQuery<
+    CouponDetailQuery,
+    CouponDetailQueryVariables
+  >(COUPON_DETAIL_QUERY, {
+    variables: { input: { id: editCouponId ?? "" } },
+    skip: !editCouponId,
+    fetchPolicy: "network-only",
+  });
+
+  const editCouponRecord = useMemo(() => {
+    if (!editCouponId || couponDetailData?.couponDetail?.id !== editCouponId) {
+      return null;
+    }
+
+    return mapCouponDetailRowToRecord(couponDetailData.couponDetail);
+  }, [couponDetailData, editCouponId]);
 
   const [sorting, setSorting] = useState<SortingState>([{ id: "createdAt", desc: true }]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
     id: false,
     code: true,
     title: false,
-    description: false,
     discountType: false,
     discountValue: true,
     startsAt: false,
     expiresAt: false,
-    totalUsageLimit: false,
-    perUserUsageLimit: false,
-    applicableCourseIdsText: false,
     isFirstPurchaseOnly: false,
     isActive: true,
     totalUsageCount: true,
     remainingTotalUsageCount: true,
-    createdBy: false,
-    updatedBy: false,
     createdAt: true,
     updatedAt: false,
   });
@@ -286,8 +304,9 @@ const CouponsIndex = (): ReactElement => {
   const applyFiltersRef = useRef<(() => void) | null>(null);
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [form, setForm] = useState<CouponFormState | null>(null);
+  const [initialForm, setInitialForm] = useState<CouponFormState | null>(null);
   const [editTarget, setEditTarget] = useState<CouponRecord | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<CouponRecord | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<CouponListRecord | null>(null);
   const serverSort = useMemo(() => sortingToServerSort(sorting), [sorting]);
 
   const hasAppliedFilters = useMemo(
@@ -330,8 +349,8 @@ const CouponsIndex = (): ReactElement => {
   } = useServerPaginatedQuery<
     CouponListQuery,
     CouponListQueryVariables,
-    CouponListRow,
-    CouponRecord
+    CouponListItemRow,
+    CouponListRecord
   >({
     query: COUPON_LIST_QUERY,
     variables: buildVariables,
@@ -370,6 +389,7 @@ const CouponsIndex = (): ReactElement => {
 
   const closeDialog = (): void => {
     setForm(null);
+    setInitialForm(null);
     setEditTarget(null);
     setDialogMode("create");
     navigate(APP_SHELL_ROUTES.moreCoupons);
@@ -412,6 +432,18 @@ const CouponsIndex = (): ReactElement => {
 
   const isSaving = createCouponResult.loading || updateCouponResult.loading;
 
+  const isCreateFormReady =
+    form != null &&
+    form.code.trim().length > 0 &&
+    form.title.trim().length > 0 &&
+    form.discountValue.trim().length > 0;
+
+  const hasEditFormChanges =
+    initialForm != null && form != null && hasFormChanges(initialForm, form);
+
+  const canSubmitCouponForm =
+    dialogMode === "create" ? isCreateFormReady : hasEditFormChanges;
+
   useEffect(() => {
     if (!error) {
       hasShownLoadErrorRef.current = false;
@@ -436,16 +468,15 @@ const CouponsIndex = (): ReactElement => {
   }, [debouncedPendingFilters, showColumnFilters]);
 
   const openCreateDialog = (): void => {
+    const nextForm = buildInitialCouponForm();
     setDialogMode("create");
     setEditTarget(null);
-    setForm(buildInitialCouponForm());
+    setInitialForm(nextForm);
+    setForm(nextForm);
     navigate(`${APP_SHELL_ROUTES.moreCoupons}/new`);
   };
 
-  const openEditDialog = (record: CouponRecord): void => {
-    setDialogMode("edit");
-    setEditTarget(record);
-    setForm(buildInitialCouponForm(record));
+  const openEditDialog = (record: CouponListRecord): void => {
     navigate(`${APP_SHELL_ROUTES.moreCoupons}/edit/${record.id}`);
   };
 
@@ -529,15 +560,6 @@ const CouponsIndex = (): ReactElement => {
     }
 
     const routeSuffix = location.pathname.slice(couponRoutePrefix.length);
-    if (routeSuffix === "new") {
-      if (!form || dialogMode !== "create") {
-        setDialogMode("create");
-        setEditTarget(null);
-        setForm(buildInitialCouponForm());
-      }
-      return;
-    }
-
     if (routeSuffix.startsWith("delete/")) {
       const deleteId = routeSuffix.replace("delete/", "");
       if (!deleteId) {
@@ -545,27 +567,27 @@ const CouponsIndex = (): ReactElement => {
       }
       const target = rows.find((row) => row.id === deleteId) ?? null;
       setDeleteTarget(target);
+    }
+  }, [location.pathname, rows]);
+
+  useEffect(() => {
+    if (isCreateRoute) {
+      const nextForm = buildInitialCouponForm();
+      setDialogMode("create");
+      setEditTarget(null);
+      setInitialForm(nextForm);
+      setForm(nextForm);
       return;
     }
 
-    if (routeSuffix.startsWith("edit/")) {
-      const editId = routeSuffix.slice("edit/".length);
-      if (!editId) {
-        return;
-      }
-      const target = rows.find((row) => row.id === editId) ?? null;
-      if (target) {
-        setDialogMode("edit");
-        setEditTarget(target);
-        setForm(buildInitialCouponForm(target));
-      }
-      return;
+    if (editCouponRecord) {
+      const nextForm = buildInitialCouponForm(editCouponRecord);
+      setDialogMode("edit");
+      setEditTarget(editCouponRecord);
+      setInitialForm(nextForm);
+      setForm(nextForm);
     }
-
-    if (!routeSuffix) {
-      return;
-    }
-  }, [dialogMode, form, location.pathname, rows]);
+  }, [editCouponRecord, isCreateRoute]);
 
   const renderTextFilter = (
     key: keyof Pick<
@@ -664,18 +686,14 @@ const CouponsIndex = (): ReactElement => {
     </TextField>
   );
 
-  const renderFilterCell = (column: Column<CouponRecord, unknown>): ReactElement | null => {
+  const renderFilterCell = (column: Column<CouponListRecord, unknown>): ReactElement | null => {
     const label = String(column.columnDef.header ?? column.id);
 
     switch (column.id) {
       case "id":
       case "code":
       case "title":
-      case "createdBy":
-      case "updatedBy":
         return renderTextFilter(column.id, label);
-      case "applicableCourseIdsText":
-        return renderTextFilter("applicableCourseId", label);
       case "discountType":
         return (
           <TextField
@@ -720,20 +738,6 @@ const CouponsIndex = (): ReactElement => {
           t("table.pages.coupons.filters.expiresAtFrom"),
           t("table.pages.coupons.filters.expiresAtTo")
         );
-      case "totalUsageLimit":
-        return (
-          <Stack spacing={0.5}>
-            {renderNumberFilter("totalUsageLimitMin", t("pages.coupons.filters.min"))}
-            {renderNumberFilter("totalUsageLimitMax", t("pages.coupons.filters.max"))}
-          </Stack>
-        );
-      case "perUserUsageLimit":
-        return (
-          <Stack spacing={0.5}>
-            {renderNumberFilter("perUserUsageLimitMin", t("pages.coupons.filters.min"))}
-            {renderNumberFilter("perUserUsageLimitMax", t("pages.coupons.filters.max"))}
-          </Stack>
-        );
       case "isFirstPurchaseOnly":
       case "isActive":
         return renderBooleanFilter(column.id, label);
@@ -756,7 +760,7 @@ const CouponsIndex = (): ReactElement => {
     }
   };
 
-  const columns = useMemo<ColumnDef<CouponRecord>[]>(
+  const columns = useMemo<ColumnDef<CouponListRecord>[]>(
     () => [
       {
         accessorKey: "id",
@@ -775,11 +779,6 @@ const CouponsIndex = (): ReactElement => {
       {
         accessorKey: "title",
         header: t("table.pages.coupons.columns.title"),
-        cell: (info) => textCell(info.getValue()),
-      },
-      {
-        accessorKey: "description",
-        header: t("table.pages.coupons.columns.description"),
         cell: (info) => textCell(info.getValue()),
       },
       {
@@ -814,21 +813,6 @@ const CouponsIndex = (): ReactElement => {
         accessorKey: "expiresAt",
         header: t("table.pages.coupons.columns.expiresAt"),
         cell: (info) => textCell(formatDate(info.getValue() as string), true),
-      },
-      {
-        accessorKey: "totalUsageLimit",
-        header: t("table.pages.coupons.columns.totalUsageLimit"),
-        cell: (info) => textCell(formatNumber(info.getValue() as number | null), true),
-      },
-      {
-        accessorKey: "perUserUsageLimit",
-        header: t("table.pages.coupons.columns.perUserUsageLimit"),
-        cell: (info) => textCell(formatNumber(info.getValue() as number | null), true),
-      },
-      {
-        accessorKey: "applicableCourseIdsText",
-        header: t("table.pages.coupons.columns.applicableCourseIds"),
-        cell: (info) => textCell(info.getValue(), true),
       },
       {
         accessorKey: "isFirstPurchaseOnly",
@@ -867,18 +851,6 @@ const CouponsIndex = (): ReactElement => {
         accessorKey: "remainingTotalUsageCount",
         header: t("table.pages.coupons.columns.remainingTotalUsageCount"),
         cell: (info) => textCell(formatNumber(info.getValue() as number | null), true),
-        enableSorting: false,
-      },
-      {
-        accessorKey: "createdBy",
-        header: t("table.pages.coupons.columns.createdBy"),
-        cell: (info) => textCell(info.getValue(), true),
-        enableSorting: false,
-      },
-      {
-        accessorKey: "updatedBy",
-        header: t("table.pages.coupons.columns.updatedBy"),
-        cell: (info) => textCell(info.getValue(), true),
         enableSorting: false,
       },
       {
@@ -937,7 +909,7 @@ const CouponsIndex = (): ReactElement => {
         backTo={APP_SHELL_ROUTES.more}
         backLabel={t("pages.coupons.backToMore")}
       />
-      <EntityTableShell<CouponRecord>
+      <EntityTableShell<CouponListRecord>
         table={table}
         pagedRows={table.getRowModel().rows}
         isMobile={isMobile}
@@ -964,7 +936,7 @@ const CouponsIndex = (): ReactElement => {
       />
 
       <EntityModalShell
-        open={form != null}
+        open={couponDialogOpen}
         onClose={isSaving ? () => undefined : closeDialog}
         maxWidth="lg"
         title={
@@ -993,13 +965,20 @@ const CouponsIndex = (): ReactElement => {
                     : t("pages.coupons.edit.save"),
                 type: "submit",
                 icon: dialogMode === "create" ? <AddRoundedIcon /> : undefined,
-                disabled: isSaving,
+                disabled: isSaving || !form || !canSubmitCouponForm,
               },
             ]}
           />
         }
       >
-        {form ? (
+        {editCouponId != null && couponDetailLoading ? (
+          <Stack alignItems="center" justifyContent="center" spacing={2} sx={{ minHeight: 320 }}>
+            <CircularProgress />
+            <Typography variant="body2" color="text.secondary">
+              در حال دریافت اطلاعات کوپن...
+            </Typography>
+          </Stack>
+        ) : form ? (
               <Stack spacing={2.5}>
                 <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
                   <TextField

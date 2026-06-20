@@ -6,11 +6,11 @@ import { GqlAuthGuard, Roles, RolesGuard } from "../../../auth";
 import { TicketService } from "../../ticket.service";
 import { TicketListGqlInput } from "../inputs";
 import {
-  TicketListGqlResponse,
+  TicketListSummaryGqlResponse,
   TicketListPaginatedOffsetGqlResponse,
 } from "../responses";
 
-@Resolver(() => TicketListGqlResponse)
+@Resolver(() => TicketListSummaryGqlResponse)
 @UseGuards(GqlAuthGuard, RolesGuard)
 @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
 export class TicketListQuery {
