@@ -81,7 +81,7 @@ $ease-flip: cubic-bezier(0.32, 0.72, 0, 1);
   overflow: hidden;
   background:
     radial-gradient(circle at 18% 18%, color-mix(in srgb, #ffffff 34%, transparent), transparent 28%),
-    linear-gradient(135deg, #dbeafe, #e0e7ff 48%, #ccfbf1);
+    linear-gradient(135deg, variables.$color-accent-soft-bg, color-mix(in srgb, variables.$color-secondary-light 35%, #ffffff) 48%, color-mix(in srgb, variables.$color-success-light 30%, #ffffff));
 }
 
 .coverImage {

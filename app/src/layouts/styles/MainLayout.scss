@@ -75,6 +75,8 @@ $hairline: 0.0625rem solid;
   border-radius: var(--main-layout-panel-radius);
   background: var(--app-surface-bg);
   box-shadow: var(--main-layout-panel-shadow);
+  padding-inline: var(--main-layout-panel-padding);
+  padding-block: 0;
   display: grid;
   gap: 0.9rem;
   inline-size: 100%;
@@ -99,7 +101,7 @@ $hairline: 0.0625rem solid;
   }
 
   &:focus-visible {
-    outline: 0.125rem solid var(--app-focus-ring, #2563eb);
+    outline: 0.125rem solid var(--app-focus-ring, #{variables.$color-primary-main});
     outline-offset: 0.125rem;
   }
 }
@@ -121,9 +123,9 @@ $hairline: 0.0625rem solid;
   align-items: center;
   justify-content: center;
   border-radius: 50em;
-  border: $hairline #bfdbfe;
-  background: #eff6ff;
-  color: #1e3a8a;
+  border: $hairline variables.$color-accent-soft-border;
+  background: variables.$color-accent-soft-bg;
+  color: variables.$color-accent-soft-fg;
   font-size: variables.$font-size-sm;
   padding: 0.12rem 0.52rem;
   white-space: nowrap;
@@ -145,6 +147,7 @@ $hairline: 0.0625rem solid;
   inline-size: 5rem;
   block-size: 5rem;
   object-fit: contain;
+  border-radius: variables.$brand-logo-radius;
 }
 
 .main-layout__brand-text p {
@@ -197,8 +200,8 @@ $hairline: 0.0625rem solid;
 }
 
 .main-layout__general-update-popup {
-  --general-update-popup-accent: #2563eb;
-  --general-update-popup-fg: #1d4ed8;
+  --general-update-popup-accent: #{variables.$color-primary-main};
+  --general-update-popup-fg: #{variables.$color-primary-dark};
   --general-update-popup-accent-soft: color-mix(
     in srgb,
     var(--general-update-popup-accent) 13%,
@@ -368,7 +371,7 @@ $hairline: 0.0625rem solid;
   @include popover-shell;
   width: min(92vw, 23rem);
   background:
-    radial-gradient(circle at top left, rgba(56, 189, 248, 0.12), transparent 52%),
+    radial-gradient(circle at top left, color-mix(in srgb, variables.$color-primary-light 18%, transparent), transparent 52%),
     var(--app-surface-bg);
 }
 
@@ -396,8 +399,8 @@ $hairline: 0.0625rem solid;
 }
 
 .main-layout__panel-header--notifications span {
-  background: #dbeafe;
-  color: #1e3a8a;
+  background: variables.$color-accent-soft-bg;
+  color: variables.$color-accent-soft-fg;
   border-radius: 50em;
   padding: 0.12rem 0.5rem;
   font-size: 0.72rem;
@@ -406,8 +409,8 @@ $hairline: 0.0625rem solid;
 }
 
 .main-layout__panel-header--settings span {
-  background: #cffafe;
-  color: #155e75;
+  background: color-mix(in srgb, variables.$color-secondary-main 14%, transparent);
+  color: variables.$color-secondary-dark;
   border-radius: 50em;
   padding: 0.12rem 0.5rem;
   font-size: 0.7rem;
@@ -416,8 +419,8 @@ $hairline: 0.0625rem solid;
 }
 
 .main-layout__panel-header--help span {
-  background: #e0e7ff;
-  color: #3730a3;
+  background: variables.$color-accent-soft-bg;
+  color: variables.$color-accent-soft-fg;
   border-radius: 50em;
   padding: 0.12rem 0.5rem;
   font-size: 0.7rem;
@@ -465,7 +468,7 @@ $hairline: 0.0625rem solid;
   border-radius: 50%;
   margin-top: 0.4rem;
   background: variables.$color-info-main;
-  box-shadow: 0 0 0 0.1875rem rgba(59, 130, 246, 0.16);
+  box-shadow: 0 0 0 0.1875rem color-mix(in srgb, variables.$color-primary-main 16%, transparent);
 }
 
 .main-layout__panel-actions {
@@ -478,7 +481,7 @@ $hairline: 0.0625rem solid;
 .main-layout__settings-popover {
   @include popover-shell;
   background:
-    radial-gradient(circle at top right, rgba(14, 165, 233, 0.14), transparent 54%),
+    radial-gradient(circle at top right, color-mix(in srgb, variables.$color-secondary-main 14%, transparent), transparent 54%),
     var(--app-surface-bg);
 }
 
@@ -511,7 +514,7 @@ $hairline: 0.0625rem solid;
 .main-layout__help-popover {
   @include popover-shell;
   background:
-    radial-gradient(circle at top left, rgba(59, 130, 246, 0.12), transparent 54%),
+    radial-gradient(circle at top left, color-mix(in srgb, variables.$color-primary-main 12%, transparent), transparent 54%),
     var(--app-surface-bg);
 }
 
@@ -546,7 +549,7 @@ $hairline: 0.0625rem solid;
   min-width: 2.2rem;
   padding-inline: 0.6rem;
   border-radius: 0.65rem;
-  border-color: #cbd5e1;
+  border-color: variables.$color-grey-300;
   background: color-mix(in srgb, var(--app-surface-bg) 92%, #ffffff);
   color: var(--text-secondary);
   font-weight: variables.$font-weight-semibold;
@@ -554,9 +557,9 @@ $hairline: 0.0625rem solid;
 }
 
 .main-layout__header-button.MuiButton-root:hover {
-  border-color: #93c5fd;
-  background: #eff6ff;
-  color: variables.$color-info-dark;
+  border-color: variables.$color-accent-soft-border;
+  background: variables.$color-accent-soft-bg;
+  color: variables.$color-primary-dark;
 }
 
 .main-layout__user-chip {
@@ -601,7 +604,7 @@ $hairline: 0.0625rem solid;
   width: min(92vw, 20rem);
   color: var(--text-primary);
   background:
-    radial-gradient(circle at top left, rgba(2, 132, 199, 0.14), transparent 54%),
+    radial-gradient(circle at top left, color-mix(in srgb, variables.$color-secondary-dark 14%, transparent), transparent 54%),
     var(--app-surface-bg);
 }
 
@@ -699,7 +702,7 @@ $hairline: 0.0625rem solid;
   border: $hairline color-mix(in srgb, var(--app-surface-border) 74%, transparent);
   border-radius: var(--main-layout-panel-radius);
   background:
-    radial-gradient(circle at top right, rgba(59, 130, 246, 0.09), transparent 54%),
+    radial-gradient(circle at top right, color-mix(in srgb, variables.$color-primary-main 9%, transparent), transparent 54%),
     var(--app-surface-bg);
   box-shadow: var(--main-layout-panel-shadow);
   padding: 0.75rem;
@@ -726,7 +729,7 @@ $hairline: 0.0625rem solid;
   border-radius: var(--main-layout-panel-radius);
   padding: clamp(1rem, 2.8vw, 1.8rem);
   background:
-    radial-gradient(circle at top left, rgba(59, 130, 246, 0.08), transparent 50%),
+    radial-gradient(circle at top left, color-mix(in srgb, variables.$color-primary-main 8%, transparent), transparent 50%),
     var(--app-surface-bg);
   box-shadow: var(--main-layout-panel-shadow);
 }
@@ -764,12 +767,6 @@ $hairline: 0.0625rem solid;
 
 .main-layout__mobile-bottom-item svg {
   font-size: 1.35rem;
-}
-
-.main-layout__mobile-bottom-avatar.MuiAvatar-root {
-  inline-size: 1.35rem;
-  block-size: 1.35rem;
-  font-size: 0.72rem;
 }
 
 .main-layout__mobile-bottom-icon-wrap {
@@ -814,7 +811,7 @@ $hairline: 0.0625rem solid;
 }
 
 .main-layout__mobile-bottom-item:focus-visible {
-  outline: 0.125rem solid var(--app-focus-ring, #2563eb);
+  outline: 0.125rem solid var(--app-focus-ring, variables.$color-primary-main);
   outline-offset: 0.125rem;
 }
 

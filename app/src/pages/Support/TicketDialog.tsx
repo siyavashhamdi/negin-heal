@@ -237,8 +237,8 @@ const MESSAGE_TONE_STYLES: Record<"own" | "support" | "user", MessageToneStyle> 
     backgroundDark: "rgba(124, 58, 237, 0.24)",
   },
   user: {
-    border: "#2563eb",
-    background: "#dbeafe",
+    border: "#c9567e",
+    background: "#fce7f3",
     backgroundDark: "rgba(37, 99, 235, 0.24)",
   },
 };

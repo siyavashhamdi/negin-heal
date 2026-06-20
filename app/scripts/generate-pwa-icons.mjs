@@ -1,18 +1,44 @@
-import { mkdir } from "node:fs/promises";
+import { copyFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
-const publicDir = path.resolve(scriptDir, "../public");
+const appDir = path.resolve(scriptDir, "..");
+const repoRoot = path.resolve(appDir, "..");
+const publicDir = path.join(appDir, "public");
 const logoPath = path.join(publicDir, "logo.png");
 const iconsDir = path.join(publicDir, "icons");
+const androidResDir = path.join(repoRoot, "android/app/src/main/res");
+const androidStoreIconsDir = path.join(repoRoot, "android/store/icons");
 
 const THEME_COLOR = { r: 202, g: 184, b: 222, alpha: 1 };
 
-async function writeSquareIcon(size, outputName, { maskable = false } = {}) {
-  const outputPath = path.join(iconsDir, outputName);
+const ANDROID_LAUNCHER_SIZES = {
+  "mipmap-mdpi": 48,
+  "mipmap-hdpi": 72,
+  "mipmap-xhdpi": 96,
+  "mipmap-xxhdpi": 144,
+  "mipmap-xxxhdpi": 192,
+};
 
+const ANDROID_NOTIFICATION_SIZES = {
+  "drawable-mdpi": 24,
+  "drawable-hdpi": 36,
+  "drawable-xhdpi": 48,
+  "drawable-xxhdpi": 72,
+  "drawable-xxxhdpi": 96,
+};
+
+const ANDROID_SPLASH_SIZES = {
+  "drawable-mdpi": 300,
+  "drawable-hdpi": 450,
+  "drawable-xhdpi": 600,
+  "drawable-xxhdpi": 900,
+  "drawable-xxxhdpi": 1200,
+};
+
+async function writeSquareIcon(outputPath, size, { maskable = false } = {}) {
   if (!maskable) {
     await sharp(logoPath).resize(size, size, { fit: "contain" }).png().toFile(outputPath);
     return;
@@ -34,14 +60,48 @@ async function writeSquareIcon(size, outputName, { maskable = false } = {}) {
     .toFile(outputPath);
 }
 
-await mkdir(iconsDir, { recursive: true });
+async function writePwaIcons() {
+  await mkdir(iconsDir, { recursive: true });
 
-await Promise.all([
-  writeSquareIcon(32, "favicon-32.png"),
-  writeSquareIcon(180, "icon-180.png"),
-  writeSquareIcon(192, "icon-192.png"),
-  writeSquareIcon(512, "icon-512.png"),
-  writeSquareIcon(512, "icon-512-maskable.png", { maskable: true }),
-]);
+  await Promise.all([
+    writeSquareIcon(path.join(iconsDir, "favicon-32.png"), 32),
+    writeSquareIcon(path.join(iconsDir, "icon-180.png"), 180),
+    writeSquareIcon(path.join(iconsDir, "icon-192.png"), 192),
+    writeSquareIcon(path.join(iconsDir, "icon-512.png"), 512),
+    writeSquareIcon(path.join(iconsDir, "icon-512-maskable.png"), 512, { maskable: true }),
+  ]);
+}
 
-console.log("Generated PWA icons in public/icons/");
+async function writeAndroidIcons() {
+  await Promise.all([
+    ...Object.entries(ANDROID_LAUNCHER_SIZES).flatMap(([folder, size]) => {
+      const maskableSize = Math.round(size * (512 / 300));
+      return [
+        writeSquareIcon(path.join(androidResDir, folder, "ic_launcher.png"), size),
+        writeSquareIcon(path.join(androidResDir, folder, "ic_maskable.png"), maskableSize),
+      ];
+    }),
+    ...Object.entries(ANDROID_NOTIFICATION_SIZES).map(([folder, size]) =>
+      writeSquareIcon(path.join(androidResDir, folder, "ic_notification_icon.png"), size),
+    ),
+    ...Object.entries(ANDROID_SPLASH_SIZES).map(([folder, size]) =>
+      writeSquareIcon(path.join(androidResDir, folder, "splash.png"), size),
+    ),
+    writeSquareIcon(path.join(repoRoot, "android/store_icon.png"), 512),
+  ]);
+
+  await mkdir(androidStoreIconsDir, { recursive: true });
+  await Promise.all([
+    copyFile(path.join(iconsDir, "icon-192.png"), path.join(androidStoreIconsDir, "icon-192.png")),
+    copyFile(path.join(iconsDir, "icon-512.png"), path.join(androidStoreIconsDir, "icon-512.png")),
+    copyFile(
+      path.join(iconsDir, "icon-512-maskable.png"),
+      path.join(androidStoreIconsDir, "icon-512-maskable.png"),
+    ),
+  ]);
+}
+
+await writePwaIcons();
+await writeAndroidIcons();
+
+console.log("Generated PWA icons in public/icons/ and Android launcher/notification icons");

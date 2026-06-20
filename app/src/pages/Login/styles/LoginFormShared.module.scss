@@ -23,7 +23,7 @@
   border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 72%, transparent);
   border-radius: variables.$border-radius-lg;
   background:
-    radial-gradient(circle at top left, rgba(25, 118, 210, 0.08), transparent 48%),
+    radial-gradient(circle at top left, color-mix(in srgb, variables.$color-primary-main 8%, transparent), transparent 48%),
     color-mix(in srgb, var(--app-surface-bg) 94%, white);
 
   [data-theme="dark"] & {
@@ -103,6 +103,12 @@
           border-color: variables.$color-primary-light;
           border-width: 0.125rem;
         }
+
+        [data-theme="dark"] & {
+          .MuiOutlinedInput-notchedOutline {
+            border-color: variables.$color-dark-primary-light;
+          }
+        }
       }
 
       &.Mui-focused {
@@ -115,6 +121,12 @@
         .MuiOutlinedInput-notchedOutline {
           border-color: variables.$color-primary-main;
           border-width: 0.125rem;
+        }
+
+        [data-theme="dark"] & {
+          .MuiOutlinedInput-notchedOutline {
+            border-color: variables.$color-dark-primary-main;
+          }
         }
       }
 

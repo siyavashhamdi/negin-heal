@@ -93,7 +93,7 @@ $hairline: 0.0625rem solid;
 }
 
 .footerLink:hover {
-  color: variables.$color-info-dark;
+  color: variables.$color-primary-dark;
   text-decoration: underline;
 }
 
@@ -168,7 +168,7 @@ body[data-theme="dark"] {
   }
 
   .footerLink:hover {
-    color: variables.$color-info-light;
+    color: variables.$color-dark-info-light;
   }
 }
 

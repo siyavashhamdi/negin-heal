@@ -41,7 +41,7 @@
   overflow: hidden;
   background:
     radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.58), transparent 31%),
-    linear-gradient(135deg, #2563eb 0%, #06b6d4 52%, #10b981 100%);
+    linear-gradient(135deg, variables.$color-gradient-start 0%, variables.$color-gradient-mid 52%, #10b981 100%);
 }
 
 .heroGlow {
@@ -285,8 +285,8 @@
   border-start-start-radius: 999rem;
   background:
     linear-gradient(var(--app-surface-bg), var(--app-surface-bg)) padding-box,
-    linear-gradient(100deg, #f472b6, #c084fc 52%, #38bdf8) border-box;
-  filter: drop-shadow(0 0.35rem 0.6rem color-mix(in srgb, #f472b6 22%, transparent));
+    linear-gradient(100deg, variables.$color-primary-light, variables.$color-secondary-light 52%, variables.$color-secondary-light) border-box;
+  filter: drop-shadow(0 0.35rem 0.6rem color-mix(in srgb, variables.$color-primary-light 22%, transparent));
   animation: chapter-connector-glow 2.8s ease-in-out infinite;
 }
 
@@ -301,10 +301,10 @@
   border: 0;
   border-radius: 999rem;
   background:
-    linear-gradient(180deg, #f472b6, #c084fc 44%, #38bdf8 82%, color-mix(in srgb, #38bdf8 0%, transparent)),
+    linear-gradient(180deg, variables.$color-primary-light, variables.$color-secondary-light 44%, variables.$color-secondary-light 82%, color-mix(in srgb, variables.$color-secondary-light 0%, transparent)),
     repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0 0.32rem, transparent 0.32rem 0.74rem);
   background-blend-mode: screen;
-  box-shadow: 0 0 0.8rem color-mix(in srgb, #f472b6 26%, transparent);
+  box-shadow: 0 0 0.8rem color-mix(in srgb, variables.$color-primary-light 26%, transparent);
   animation: chapter-path-flow 3.6s linear infinite;
   cursor: pointer;
   z-index: 1;
@@ -318,7 +318,7 @@
 }
 
 .chapterPathButton:focus-visible {
-  outline: 0.15rem solid color-mix(in srgb, #ec4899 72%, #ffffff);
+  outline: 0.15rem solid color-mix(in srgb, variables.$color-primary-main 72%, #ffffff);
   outline-offset: 0.25rem;
 }
 
@@ -331,7 +331,7 @@
 }
 
 .chapterCard:hover {
-  border-color: color-mix(in srgb, #f472b6 44%, var(--app-surface-border));
+  border-color: color-mix(in srgb, variables.$color-primary-light 44%, var(--app-surface-border));
   box-shadow:
     0 1rem 2.2rem color-mix(in srgb, #be185d 12%, transparent),
     inset 0 0.0625rem 0 color-mix(in srgb, #ffffff 72%, transparent);
@@ -393,7 +393,7 @@
   border: 0.12rem solid transparent;
   box-shadow:
     0 0 0 0.28rem color-mix(in srgb, #fbcfe8 30%, var(--app-surface-bg)),
-    0 0.7rem 1.2rem color-mix(in srgb, #c084fc 18%, transparent);
+    0 0.7rem 1.2rem color-mix(in srgb, variables.$color-secondary-light 18%, transparent);
 }
 
 .chapterStepCompleted {
@@ -431,13 +431,13 @@
   inline-size: 1.82rem;
   block-size: 1.82rem;
   border-radius: 999rem;
-  background: linear-gradient(135deg, #ec4899, #a855f7 52%, #38bdf8);
+  background: linear-gradient(135deg, variables.$color-primary-main, variables.$color-secondary-main 52%, variables.$color-secondary-light);
   color: #ffffff;
   font-size: 0.84rem;
   font-weight: 950;
   box-shadow:
     inset 0 0.0625rem 0 rgba(255, 255, 255, 0.62),
-    0 0.45rem 1rem color-mix(in srgb, #ec4899 24%, transparent);
+    0 0.45rem 1rem color-mix(in srgb, variables.$color-primary-main 24%, transparent);
   animation: chapter-step-bloom 2.6s ease-in-out infinite;
 }
 
@@ -639,8 +639,8 @@
 
 .mediaDialogPaper {
   background:
-    radial-gradient(circle at 10% 8%, color-mix(in srgb, #f472b6 20%, transparent), transparent 30%),
-    radial-gradient(circle at 92% 88%, color-mix(in srgb, #38bdf8 18%, transparent), transparent 34%),
+    radial-gradient(circle at 10% 8%, color-mix(in srgb, variables.$color-primary-light 20%, transparent), transparent 30%),
+    radial-gradient(circle at 92% 88%, color-mix(in srgb, variables.$color-secondary-light 18%, transparent), transparent 34%),
     color-mix(in srgb, #020617 94%, #111827) !important;
   color: #ffffff !important;
 }
@@ -728,11 +728,11 @@
 @keyframes chapter-connector-glow {
   0%,
   100% {
-    filter: drop-shadow(0 0.25rem 0.45rem color-mix(in srgb, #f472b6 16%, transparent));
+    filter: drop-shadow(0 0.25rem 0.45rem color-mix(in srgb, variables.$color-primary-light 16%, transparent));
   }
 
   50% {
-    filter: drop-shadow(0 0.45rem 0.8rem color-mix(in srgb, #c084fc 34%, transparent));
+    filter: drop-shadow(0 0.45rem 0.8rem color-mix(in srgb, variables.$color-secondary-light 34%, transparent));
   }
 }
 

@@ -2,7 +2,54 @@ import { createTheme, type Theme } from "@mui/material/styles";
 
 type PaletteMode = "light" | "dark";
 
-const colors = {
+const lightColors = {
+  primary: {
+    main: "#c9567e",
+    light: "#e08ba8",
+    dark: "#a8436a",
+    contrastText: "#ffffff",
+  },
+  secondary: {
+    main: "#9b7aad",
+    light: "#b794c7",
+    dark: "#7d6290",
+    contrastText: "#ffffff",
+  },
+  success: {
+    main: "#6bb895",
+    light: "#8ecdb0",
+    dark: "#4f9a76",
+  },
+  warning: {
+    main: "#e8a54b",
+    light: "#f0c078",
+    dark: "#c4842e",
+  },
+  error: {
+    main: "#e05c5c",
+    light: "#f08080",
+    dark: "#c43c3c",
+  },
+  info: {
+    main: "#9b7aad",
+    light: "#b794c7",
+    dark: "#7d6290",
+  },
+  grey: {
+    50: "#fdf8f9",
+    100: "#f7eef2",
+    200: "#eadde3",
+    300: "#d4c4cc",
+    400: "#a8949e",
+    500: "#7a6872",
+    600: "#5c4d55",
+    700: "#453a41",
+    800: "#2e262b",
+    900: "#1a1518",
+  },
+} as const;
+
+const darkColors = {
   primary: {
     main: "#1976d2",
     light: "#42a5f5",
@@ -58,10 +105,10 @@ const FONT_FAMILY_STACK = [
 ].join(",");
 
 const lightShadows = {
-  sm: "0 0.0625rem 0.125rem 0 rgba(0, 0, 0, 0.05)",
-  md: "0 0.125rem 0.5rem rgba(0, 0, 0, 0.08)",
-  lg: "0 0.25rem 1rem rgba(0, 0, 0, 0.12)",
-  xl: "0 0.625rem 1.5rem rgba(0, 0, 0, 0.15)",
+  sm: "0 0.0625rem 0.125rem 0 rgba(61, 44, 53, 0.05)",
+  md: "0 0.125rem 0.5rem rgba(61, 44, 53, 0.08)",
+  lg: "0 0.25rem 1rem rgba(61, 44, 53, 0.12)",
+  xl: "0 0.625rem 1.5rem rgba(61, 44, 53, 0.15)",
 } as const;
 
 const darkShadows = {
@@ -79,7 +126,14 @@ const transparentInputChrome = {
 
 export const createAppTheme = (mode: PaletteMode): Theme => {
   const isDark = mode === "dark";
+  const colors = isDark ? darkColors : lightColors;
   const shadows = isDark ? darkShadows : lightShadows;
+  const borderRadius = isDark ? 8 : 12;
+  const buttonRadius = isDark ? "0.5rem" : "0.75rem";
+  const cardRadius = isDark ? "0.75rem" : "1rem";
+  const inputRadius = isDark ? "0.5rem" : "0.75rem";
+  const chipRadius = isDark ? "0.375rem" : "0.5rem";
+  const listItemRadius = isDark ? "0.5rem" : "0.75rem";
 
   return createTheme({
     palette: {
@@ -91,11 +145,11 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
       error: colors.error,
       info: colors.info,
       background: {
-        default: isDark ? "#121212" : "#f5f7fa",
+        default: isDark ? "#121212" : "#fdf7f9",
         paper: isDark ? "#1e1e1e" : "#ffffff",
       },
       text: {
-        primary: isDark ? "#ffffff" : "#1a1a1a",
+        primary: isDark ? "#ffffff" : "#3d2c35",
         secondary: isDark ? colors.grey[400] : colors.grey[500],
         disabled: colors.grey[400],
       },
@@ -172,7 +226,7 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
       },
     },
     shape: {
-      borderRadius: 8,
+      borderRadius,
     },
     spacing: 8,
     breakpoints: {
@@ -214,7 +268,7 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
       MuiButton: {
         styleOverrides: {
           root: {
-            borderRadius: "0.5rem",
+            borderRadius: buttonRadius,
             padding: "0.625rem 1.5rem",
             fontWeight: 500,
             textTransform: "none",
@@ -251,7 +305,7 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
         styleOverrides: {
           root: {
             boxShadow: shadows.md,
-            borderRadius: "0.75rem",
+            borderRadius: cardRadius,
             transition: "box-shadow 0.3s ease-in-out, transform 0.2s ease-in-out",
             "&:hover": {
               boxShadow: shadows.lg,
@@ -263,7 +317,7 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
       MuiPaper: {
         styleOverrides: {
           root: {
-            borderRadius: "0.75rem",
+            borderRadius: cardRadius,
             backgroundImage: "none",
           },
           elevation1: {
@@ -283,13 +337,13 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
             boxShadow: shadows.md,
             backgroundImage: "none",
             borderRadius: 0,
-            backgroundColor: isDark ? "#1e1e1e" : "#f5f5f5",
-            color: isDark ? "#ffffff" : "#000000",
+            backgroundColor: isDark ? "#1e1e1e" : "#fdf8f9",
+            color: isDark ? "#ffffff" : "#3d2c35",
             "& .MuiIconButton-root": {
-              color: isDark ? "#ffffff" : "#000000",
+              color: isDark ? "#ffffff" : "#3d2c35",
             },
             "& .MuiTypography-root": {
-              color: isDark ? "#ffffff" : "#000000",
+              color: isDark ? "#ffffff" : "#3d2c35",
             },
           },
         },
@@ -300,7 +354,7 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
             borderLeft: "none",
             borderRight: isDark
               ? "0.0625rem solid rgba(255, 255, 255, 0.12)"
-              : "0.0625rem solid rgba(0, 0, 0, 0.12)",
+              : "0.0625rem solid rgba(61, 44, 53, 0.1)",
             backgroundImage: "none",
           },
         },
@@ -318,7 +372,7 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
       MuiOutlinedInput: {
         styleOverrides: {
           root: {
-            borderRadius: "0.5rem",
+            borderRadius: inputRadius,
             ...transparentInputChrome,
             "&:hover": {
               ...transparentInputChrome,
@@ -351,7 +405,7 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
       MuiChip: {
         styleOverrides: {
           root: {
-            borderRadius: "0.375rem",
+            borderRadius: chipRadius,
             fontWeight: 500,
           },
         },
@@ -359,7 +413,7 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
       MuiListItemButton: {
         styleOverrides: {
           root: {
-            borderRadius: "0.5rem",
+            borderRadius: listItemRadius,
             "&.Mui-selected": {
               backgroundColor: colors.primary.main,
               color: "#ffffff",

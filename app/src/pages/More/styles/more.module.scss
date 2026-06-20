@@ -950,10 +950,10 @@ body[data-theme="dark"] {
     background:
       radial-gradient(
         circle at top right,
-        color-mix(in srgb, variables.$color-primary-main 16%, transparent),
+        color-mix(in srgb, variables.$color-dark-primary-main 16%, transparent),
         transparent 52%
       ),
-      color-mix(in srgb, variables.$color-primary-main 8%, #0f172a);
+      color-mix(in srgb, variables.$color-dark-primary-main 8%, #0f172a);
   }
 
   .notificationCalloutBlocked {

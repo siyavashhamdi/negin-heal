@@ -86,7 +86,7 @@
   background:
     linear-gradient(
       135deg,
-      color-mix(in srgb, #eff6ff 82%, var(--app-surface-bg)),
+      color-mix(in srgb, variables.$color-accent-soft-bg 82%, var(--app-surface-bg)),
       color-mix(in srgb, #fdf2f8 72%, var(--app-surface-bg))
     );
 }
@@ -97,7 +97,7 @@
     linear-gradient(
       135deg,
       color-mix(in srgb, #ecfdf5 88%, var(--app-surface-bg)),
-      color-mix(in srgb, #eff6ff 72%, var(--app-surface-bg))
+      color-mix(in srgb, variables.$color-accent-soft-bg 72%, var(--app-surface-bg))
     );
 }
 
@@ -127,7 +127,7 @@
 
   :global(.MuiLinearProgress-bar) {
     border-radius: 999rem;
-    background: linear-gradient(90deg, #ec4899, #a855f7 52%, #38bdf8) !important;
+    background: linear-gradient(90deg, variables.$color-primary-main, variables.$color-secondary-main 52%, variables.$color-secondary-light) !important;
   }
 }
 

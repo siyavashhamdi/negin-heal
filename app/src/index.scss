@@ -29,20 +29,24 @@ body {
 // CSS variables for layout / non-MUI surfaces (must stay aligned with theme.ts + B Yekan)
 :root {
   --app-font-family: "B Yekan", "-apple-system", "BlinkMacSystemFont", "Arial", sans-serif;
-  --app-layout-glow: #6366f1;
-  --app-layout-glow-2: #0ea5e9;
+  --app-layout-glow: #e08ba8;
+  --app-layout-glow-2: #b794c7;
   --app-layout-bg: linear-gradient(
     165deg,
-    #f4f6ff 0%,
-    #eef4ff 38%,
-    #f0f7fb 72%,
-    #e8eef8 100%
+    #fdf7f9 0%,
+    #fcf0f5 38%,
+    #faf5fc 72%,
+    #f8f0f4 100%
   );
   --app-surface-bg: #ffffff;
-  --app-surface-border: rgba(17, 24, 39, 0.12);
-  --text-primary: #1a1a1a;
-  --text-secondary: #6b7280;
-  --divider: #e5e7eb;
+  --app-surface-border: rgba(61, 44, 53, 0.1);
+  --app-accent-soft-bg: #fce7f3;
+  --app-accent-soft-border: #f9a8d4;
+  --app-accent-soft-fg: #a8436a;
+  --app-focus-ring: #c9567e;
+  --text-primary: #3d2c35;
+  --text-secondary: #7a6872;
+  --divider: #eadde3;
 }
 
 [data-theme="dark"] {
@@ -60,6 +64,18 @@ body {
   --text-primary: #f8fafc;
   --text-secondary: #a7b2c5;
   --divider: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
 }
 
 [dir="rtl"] {

@@ -1,3 +1,5 @@
+@use "../../../../styles/variables" as variables;
+
 .section {
   display: grid;
   gap: 0.85rem;
@@ -41,7 +43,7 @@
 }
 
 .stepConnectorActive {
-  background: var(--color-primary, #1976d2);
+  background: var(--color-primary, #{variables.$color-primary-main});
 }
 
 .chapterStepButton {
@@ -73,9 +75,9 @@
 }
 
 .chapterStepButtonActive {
-  border-color: var(--color-primary, #1976d2);
-  background: color-mix(in srgb, #1976d2 9%, transparent);
-  box-shadow: 0 0 0 0.0625rem color-mix(in srgb, #1976d2 35%, transparent);
+  border-color: var(--color-primary, #{variables.$color-primary-main});
+  background: color-mix(in srgb, variables.$color-primary-main 9%, transparent);
+  box-shadow: 0 0 0 0.0625rem color-mix(in srgb, variables.$color-primary-main 35%, transparent);
 }
 
 .chapterStepNumber {
@@ -106,8 +108,8 @@
 }
 
 .isReached .chapterStepNumber {
-  background: color-mix(in srgb, #1976d2 14%, transparent);
-  color: color-mix(in srgb, #1976d2 88%, white);
+  background: color-mix(in srgb, variables.$color-primary-main 14%, transparent);
+  color: color-mix(in srgb, variables.$color-primary-main 88%, white);
 }
 
 .chapterPanel {

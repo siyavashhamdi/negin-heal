@@ -1,3 +1,5 @@
+@use "../../styles/variables" as variables;
+
 .root {
   width: 100%;
 }
@@ -51,7 +53,7 @@
   }
 
   .jalali-date-filter-popup .rmdp-arrow-container:hover {
-    background-color: rgba(25, 118, 210, 0.15);
+    background-color: color-mix(in srgb, variables.$color-primary-main 15%, transparent);
     box-shadow: none;
   }
 
@@ -60,19 +62,19 @@
   }
 
   .jalali-date-filter-popup .rmdp-day:not(.rmdp-disabled):not(.rmdp-day-hidden) span:hover {
-    background-color: rgba(25, 118, 210, 0.12);
+    background-color: color-mix(in srgb, variables.$color-primary-main 12%, transparent);
     color: var(--text-primary);
   }
 
   .jalali-date-filter-popup .rmdp-day.rmdp-selected span:not(.highlight) {
-    background-color: #1976d2 !important;
+    background-color: variables.$color-primary-main !important;
     color: #fff !important;
     box-shadow: none;
   }
 
   .jalali-date-filter-popup .rmdp-day.rmdp-today span {
     background-color: transparent;
-    color: #1976d2;
+    color: variables.$color-primary-main;
     font-weight: 600;
   }
 
