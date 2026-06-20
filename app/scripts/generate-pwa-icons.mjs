@@ -5,7 +5,7 @@ import sharp from "sharp";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.resolve(scriptDir, "../public");
-const logoPath = path.join(publicDir, "logo.svg");
+const logoPath = path.join(publicDir, "logo.png");
 const iconsDir = path.join(publicDir, "icons");
 
 const THEME_COLOR = { r: 202, g: 184, b: 222, alpha: 1 };
