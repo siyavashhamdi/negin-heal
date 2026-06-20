@@ -3,7 +3,6 @@ import SupportAgentRoundedIcon from "@mui/icons-material/SupportAgentRounded";
 import {
   Avatar,
   Box,
-  Button,
   Chip,
   Divider,
   MenuItem,
@@ -27,6 +26,7 @@ import { useMe, type UserMeGqlResponse } from "../../hooks/useMe";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
 import EntityModalShell from "../../shared/crud/EntityModalShell";
+import ModalFooterActions, { type ModalFooterAction } from "../../shared/crud/ModalFooterActions";
 import EntityAutocompleteField from "../../shared/forms/EntityAutocompleteField";
 import FileUploadField from "../../shared/forms/FileUploadField";
 import {
@@ -835,6 +835,42 @@ const TicketDialog = ({
   const dialogTitle =
     mode === "create" ? t("pages.support.create.title") : t("pages.support.view.title");
 
+  const footerActions: ModalFooterAction[] = [
+    {
+      key: "close",
+      label: "بستن",
+      onClick: handleClose,
+      variant: "outlined",
+      color: "inherit",
+      disabled: isSubmitting,
+    },
+  ];
+
+  if (canCloseTicket) {
+    footerActions.push({
+      key: "close-ticket",
+      label: t("pages.support.actions.closeTicket"),
+      onClick: handleCloseTicket,
+      variant: "outlined",
+      color: "error",
+      disabled: isSubmitting,
+    });
+  }
+
+  if (mode === "create" || canReply) {
+    footerActions.push({
+      key: "submit",
+      label:
+        mode === "create"
+          ? t("pages.support.create.submit")
+          : t("pages.support.reply.submit"),
+      type: "submit",
+      variant: "contained",
+      color: "primary",
+      disabled: isSubmitting,
+    });
+  }
+
   return (
     <EntityModalShell
       open={open}
@@ -844,55 +880,7 @@ const TicketDialog = ({
       useFormWrapper
       onSubmit={handleSubmit}
       pinFooterToBottomOnMobile
-      footer={
-        <Stack
-          direction={isMobile ? "column-reverse" : "row"}
-          spacing={1.5}
-          sx={{
-            width: "100%",
-            justifyContent: isMobile ? "stretch" : "space-between",
-            "& .MuiButton-root": {
-              width: isMobile ? "100%" : "auto",
-              minWidth: isMobile ? undefined : "8rem",
-            },
-          }}
-        >
-          <Stack
-            direction={isMobile ? "column-reverse" : "row"}
-            spacing={1.5}
-            sx={{ width: isMobile ? "100%" : "auto" }}
-          >
-            <Button
-              type="button"
-              variant="outlined"
-              color="inherit"
-              onClick={handleClose}
-              disabled={isSubmitting}
-            >
-              {t("pages.support.actions.cancel")}
-            </Button>
-            {canCloseTicket ? (
-              <Button
-                type="button"
-                variant="outlined"
-                color="error"
-                onClick={handleCloseTicket}
-                disabled={isSubmitting}
-              >
-                {t("pages.support.actions.closeTicket")}
-              </Button>
-            ) : null}
-          </Stack>
-
-          {mode === "create" || canReply ? (
-            <Button type="submit" variant="contained" disabled={isSubmitting}>
-              {mode === "create"
-                ? t("pages.support.create.submit")
-                : t("pages.support.reply.submit")}
-            </Button>
-          ) : null}
-        </Stack>
-      }
+      footer={<ModalFooterActions actions={footerActions} reverseOrderOnMobile={isMobile} />}
     >
       <Stack spacing={3}>
         {mode === "create" ? (

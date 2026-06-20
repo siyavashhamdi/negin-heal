@@ -55,14 +55,11 @@ export const DashboardAppRoutes = (): ReactElement => {
         path={APP_SHELL_ROUTES.moreGlobalAnouncement}
         element={wrapProtected(<GlobalAnouncementPage />)}
       />
-      <Route
-        path={APP_SHELL_ROUTES.moreCoupons}
-        element={wrapProtected(<CouponsIndex />)}
-      />
+      <Route path={`${APP_SHELL_ROUTES.moreCoupons}/*`} element={wrapProtected(<CouponsIndex />)} />
       <Route path={APP_SHELL_ROUTES.notifications} element={wrapProtected(<Notifications />)} />
-      <Route path={APP_SHELL_ROUTES.payments} element={wrapProtected(<PaymentsIndex />)} />
+      <Route path={`${APP_SHELL_ROUTES.payments}/*`} element={wrapProtected(<PaymentsIndex />)} />
       <Route path={APP_SHELL_ROUTES.paymentZarinPalCallback} element={<ZarinPalCallback />} />
-      <Route path={APP_SHELL_ROUTES.profile} element={wrapProtected(<Profile />)} />
+      <Route path={`${APP_SHELL_ROUTES.profile}/*`} element={wrapProtected(<Profile />)} />
       <Route path={APP_SHELL_ROUTES.support} element={wrapProtected(<Support />)} />
       <Route path={APP_SHELL_ROUTES.supportFaq} element={wrapProtected(<SupportFaq />)} />
       <Route
@@ -70,10 +67,7 @@ export const DashboardAppRoutes = (): ReactElement => {
         element={wrapProtected(<SupportTicketsIndex />)}
       />
       <Route path={APP_SHELL_ROUTES.users} element={wrapProtected(<UsersManagementIndex />)} />
-      <Route
-        path={APP_SHELL_ROUTES.usersManagement}
-        element={wrapProtected(<UsersManagementIndex />)}
-      />
+      <Route path={`${APP_SHELL_ROUTES.usersManagement}/*`} element={wrapProtected(<UsersManagementIndex />)} />
       <Route
         path={APP_SHELL_ROUTES.home}
         element={

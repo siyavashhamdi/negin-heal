@@ -1,0 +1,105 @@
+@use "../../styles/variables" as variables;
+
+.filterTabs {
+  display: flex;
+  align-items: stretch;
+  gap: 0.35rem;
+  width: 100%;
+  min-width: 0;
+  padding: 0.35rem;
+  border-radius: 999rem;
+  background: color-mix(in srgb, var(--app-surface-bg) 88%, var(--text-secondary) 4%);
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 72%, transparent);
+}
+
+.filterTab {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-width: 0;
+  min-height: 2.5rem;
+  padding-inline: 0.75rem;
+  border: 0.0625rem solid transparent;
+  border-radius: 999rem;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: variables.$font-weight-semibold;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.filterTab:hover {
+  color: var(--text-primary);
+}
+
+.filterTabActive {
+  background: var(--app-surface-bg);
+  color: var(--text-primary);
+  border-color: color-mix(in srgb, var(--app-surface-border) 72%, transparent);
+}
+
+.pinnedShell {
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: (variables.$breakpoint-sm - 0.0625rem)) {
+  .pinnedShell {
+    position: sticky;
+    z-index: 5;
+    top: 0.65rem;
+    padding: 0.42rem;
+    border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+    border-radius: 1.35rem;
+    background:
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--app-surface-bg) 92%, #ffffff) 0%,
+        color-mix(in srgb, var(--app-surface-bg) 82%, var(--app-layout-glow) 10%) 100%
+      );
+    box-shadow: 0 1rem 2.5rem color-mix(in srgb, #0f172a 18%, transparent);
+    backdrop-filter: blur(1rem);
+    -webkit-backdrop-filter: blur(1rem);
+  }
+
+}
+
+@media (max-width: 720px) {
+  .filterTabs {
+    gap: 0.25rem;
+    padding: 0.25rem;
+    border-radius: 1rem;
+  }
+
+  .filterTab {
+    min-height: 2.35rem;
+    padding-inline: 0.3rem;
+    font-size: 0.72rem;
+  }
+}
+
+body[data-theme="dark"] {
+  @media (max-width: (variables.$breakpoint-sm - 0.0625rem)) {
+    .pinnedShell {
+      border-color: color-mix(in srgb, #94a3b8 18%, transparent);
+      background:
+        linear-gradient(
+          135deg,
+          color-mix(in srgb, var(--app-surface-bg) 90%, #1e2b45) 0%,
+          color-mix(in srgb, #1e3a5f 28%, var(--app-surface-bg)) 100%
+        );
+      box-shadow:
+        0 0.1rem 0.18rem rgba(0, 0, 0, 0.24),
+        inset 0 0.0625rem 0 rgba(255, 255, 255, 0.08);
+    }
+  }
+}

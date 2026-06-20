@@ -17,7 +17,6 @@ import {
   Button,
   Chip,
   Dialog,
-  DialogActions,
   DialogContent,
   DialogTitle,
   FormControl,
@@ -40,7 +39,7 @@ import ClearRoundedIcon from "@mui/icons-material/ClearRounded";
 import FilterAltOffRoundedIcon from "@mui/icons-material/FilterAltOffRounded";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
-import ManageSearchRoundedIcon from "@mui/icons-material/ManageSearchRounded";
+import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
@@ -55,10 +54,12 @@ import { USER_COURSE_LIST_QUERY } from "../../graphql/queries/userCourseList.que
 import { COURSE_DELETE_MUTATION } from "../../graphql/mutations/courseDelete.mutation";
 import CourseCard from "./CourseCard";
 import CourseFormDialog from "./CourseFormDialog";
+import EndUserCourseFilterTabs, { type EndUserCourseTab } from "./EndUserCourseFilterTabs";
 import {
   buildCourseListQueryVariables,
   DEFAULT_COURSE_LIST_FILTERS,
   DEFAULT_COURSE_LIST_SORT,
+  isCourseFreeForList,
   mapCourseListRowToRecord,
   type CourseItemType,
   type CourseListFilters,
@@ -69,6 +70,7 @@ import {
   type CourseSortField,
 } from "./courses-list.api";
 import { resolveFileAccessUrl } from "../../utils/fileAccessUrl.util";
+import ModalFooterActions from "../../shared/crud/ModalFooterActions";
 import styles from "./styles/courses.module.scss";
 
 const COURSE_LIST_PAGE_SIZE = 6;
@@ -129,9 +131,12 @@ const CoursesIndex = (): ReactElement => {
   const [editTarget, setEditTarget] = useState<CourseListRecord | null>(null);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [showFilterSections, setShowFilterSections] = useState(false);
+  const [endUserTab, setEndUserTab] = useState<EndUserCourseTab>("ALL");
+  const [courseFeedMinHeight, setCourseFeedMinHeight] = useState<number | undefined>();
   const [draggedCourseId, setDraggedCourseId] = useState<string | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const courseFeedRef = useRef<HTMLDivElement | null>(null);
   const fetchingMoreRef = useRef(false);
   const lastMobileScrollYRef = useRef(0);
   const mobileFilterOpenGuardUntilRef = useRef(0);
@@ -187,7 +192,51 @@ const CoursesIndex = (): ReactElement => {
   }, [filters, searchQuery]);
 
   useEffect(() => {
-    if (!isMobile) {
+    if (!isEndUser) {
+      return;
+    }
+
+    setItems([]);
+    setIsOnFirstPage(true);
+    setFilters((prev) => {
+      const nextHasPrice: CourseListFilters["hasPrice"] =
+        endUserTab === "FREE"
+          ? "FREE_OR_UNSET"
+          : endUserTab === "PURCHASABLE"
+            ? "WITH_PRICE"
+            : "ALL";
+
+      if (
+        prev.query === "" &&
+        prev.isActive === DEFAULT_COURSE_LIST_FILTERS.isActive &&
+        prev.releaseType === DEFAULT_COURSE_LIST_FILTERS.releaseType &&
+        prev.itemType === DEFAULT_COURSE_LIST_FILTERS.itemType &&
+        prev.hasPrice === nextHasPrice &&
+        prev.hasFreeChapter === DEFAULT_COURSE_LIST_FILTERS.hasFreeChapter &&
+        prev.minPriceIrt === "" &&
+        prev.maxPriceIrt === "" &&
+        prev.tagsAny === ""
+      ) {
+        return prev;
+      }
+
+      return {
+        ...DEFAULT_COURSE_LIST_FILTERS,
+        hasPrice: nextHasPrice,
+      };
+    });
+    setSearchQuery("");
+  }, [endUserTab, isEndUser]);
+
+  const handleEndUserTabChange = useCallback((tab: EndUserCourseTab): void => {
+    if (courseFeedRef.current) {
+      setCourseFeedMinHeight(courseFeedRef.current.offsetHeight);
+    }
+    setEndUserTab(tab);
+  }, []);
+
+  useEffect(() => {
+    if (!isMobile || isEndUser) {
       setIsMobileFilterOpen(false);
       return undefined;
     }
@@ -223,7 +272,7 @@ const CoursesIndex = (): ReactElement => {
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
-  }, [hasActiveFilters, isMobile]);
+  }, [hasActiveFilters, isEndUser, isMobile]);
 
   useEffect(() => {
     if (!isMobile || !isMobileFilterOpen) {
@@ -265,8 +314,31 @@ const CoursesIndex = (): ReactElement => {
   );
 
   const isFetchingMore = networkStatus === NetworkStatus.fetchMore;
+
+  const displayedItems = useMemo(() => {
+    if (!isEndUser) {
+      return items;
+    }
+
+    if (endUserTab === "PURCHASED") {
+      return items.filter((item) => item.isPurchased);
+    }
+
+    if (endUserTab === "PURCHASABLE") {
+      return items.filter((item) => !item.isPurchased && !isCourseFreeForList(item));
+    }
+
+    return items;
+  }, [endUserTab, isEndUser, items]);
+
   const isInitialLoading =
     (loading || networkStatus === NetworkStatus.loading) && items.length === 0;
+
+  useEffect(() => {
+    if (!isEndUser || !isInitialLoading) {
+      setCourseFeedMinHeight(undefined);
+    }
+  }, [isEndUser, isInitialLoading, endUserTab]);
 
   useEffect(() => {
     const page = courseListData?.courseList;
@@ -607,13 +679,16 @@ const CoursesIndex = (): ReactElement => {
         <p>{t("pages.courses.heroDescription")}</p>
       </header>
 
-      <Paper
-        className={`${styles.filterPanel}${
-          shouldShowFilterPanelContent ? "" : ` ${styles.filterPanelCollapsed}`
-        }`}
-        elevation={0}
-      >
-        {shouldShowFilterPanelContent ? (
+      {isEndUser ? (
+        <EndUserCourseFilterTabs activeTab={endUserTab} onChange={handleEndUserTabChange} />
+      ) : (
+        <Paper
+          className={`${styles.filterPanel}${
+            shouldShowFilterPanelContent ? "" : ` ${styles.filterPanelCollapsed}`
+          }`}
+          elevation={0}
+        >
+          {shouldShowFilterPanelContent ? (
           <div className={styles.searchSection}>
             <Box className={styles.searchRow}>
               <TextField
@@ -694,16 +769,16 @@ const CoursesIndex = (): ReactElement => {
               onClick={openMobileFilter}
               aria-label="جستجو و فیلتر"
             >
-              <ManageSearchRoundedIcon />
+              <SearchRoundedIcon />
             </IconButton>
           </Tooltip>
         )}
 
-        {shouldShowFilterPanelContent && showFilterSections ? (
+        {!isEndUser && shouldShowFilterPanelContent && showFilterSections ? (
           <Divider className={styles.sectionDivider} />
         ) : null}
 
-        {shouldShowFilterPanelContent && showFilterSections ? (
+        {!isEndUser && shouldShowFilterPanelContent && showFilterSections ? (
           <div className={styles.filtersSection}>
             <Grid container spacing={1.25}>
               {!isPublicCourseView ? (
@@ -839,11 +914,11 @@ const CoursesIndex = (): ReactElement => {
           </div>
         ) : null}
 
-        {shouldShowFilterPanelContent && showFilterSections ? (
+        {!isEndUser && shouldShowFilterPanelContent && showFilterSections ? (
           <Divider className={styles.sectionDivider} />
         ) : null}
 
-        {shouldShowFilterPanelContent && showFilterSections ? (
+        {!isEndUser && shouldShowFilterPanelContent && showFilterSections ? (
           <div className={styles.sortSection}>
             <Grid container spacing={1.25}>
               <Grid item xs={12} md={3}>
@@ -895,7 +970,7 @@ const CoursesIndex = (): ReactElement => {
           </div>
         ) : null}
 
-        {shouldShowFilterPanelContent && appliedFilterChips.length > 0 ? (
+        {!isEndUser && shouldShowFilterPanelContent && appliedFilterChips.length > 0 ? (
           <Stack direction="row" spacing={0.75} className={styles.appliedFilters} flexWrap="wrap">
             {appliedFilterChips.map((chip) => (
               <Chip
@@ -911,7 +986,8 @@ const CoursesIndex = (): ReactElement => {
             ))}
           </Stack>
         ) : null}
-      </Paper>
+        </Paper>
+      )}
 
       {error ? (
         <Alert severity="error" className={styles.errorAlert}>
@@ -919,7 +995,11 @@ const CoursesIndex = (): ReactElement => {
         </Alert>
       ) : null}
 
-      <div className={styles.courseGrid}>
+      <div
+        ref={courseFeedRef}
+        style={isEndUser && courseFeedMinHeight ? { minHeight: courseFeedMinHeight } : undefined}
+      >
+        <div className={styles.courseGrid}>
         {isInitialLoading
           ? Array.from({ length: 8 }).map((_, index) => (
             <Paper key={`course-skeleton-${index}`} className={styles.skeletonCard} elevation={0}>
@@ -932,7 +1012,7 @@ const CoursesIndex = (): ReactElement => {
               </div>
             </Paper>
           ))
-          : items.map((item) => (
+          : displayedItems.map((item) => (
             <div
               key={item.id}
               className={`${styles.courseCardShell}${
@@ -959,16 +1039,18 @@ const CoursesIndex = (): ReactElement => {
           ))}
       </div>
 
-      {!isInitialLoading && items.length === 0 ? (
+      {!isInitialLoading && displayedItems.length === 0 ? (
         <div className={styles.emptyState}>
           <Typography variant="h6">دوره‌ای پیدا نشد.</Typography>
           <Typography variant="body2" color="text.secondary">
-            فیلترها را تغییر دهید یا پاک کنید تا نتایج بیشتری ببینید.
+            {isEndUser
+              ? "دوره‌ای در این دسته وجود ندارد. دسته دیگری را امتحان کنید."
+              : "فیلترها را تغییر دهید یا پاک کنید تا نتایج بیشتری ببینید."}
           </Typography>
         </div>
       ) : null}
 
-      {items.length > 0 ? (
+      {displayedItems.length > 0 || (isEndUser && pagination.hasNextPage) ? (
         <div
           ref={loadMoreRef}
           className={styles.infiniteScrollSentinel}
@@ -977,6 +1059,7 @@ const CoursesIndex = (): ReactElement => {
           {isFetchingMore && pagination.hasNextPage ? "در حال بارگذاری دوره‌های بیشتر..." : null}
         </div>
       ) : null}
+      </div>
 
       <Dialog
         open={Boolean(deleteTarget)}
@@ -1002,25 +1085,26 @@ const CoursesIndex = (): ReactElement => {
             فایل‌های جداشده این دوره نیز حذف می‌شوند و این عملیات قابل بازگشت نیست.
           </Typography>
         </DialogContent>
-        <DialogActions className={styles.deleteDialogActions}>
-          <Button
-            className={styles.deleteDialogActionButton}
-            variant="outlined"
-            onClick={() => setDeleteTarget(null)}
-            disabled={deleteCourseResult.loading}
-          >
-            انصراف
-          </Button>
-          <Button
-            className={styles.deleteDialogActionButton}
-            color="error"
-            variant="contained"
-            onClick={handleDeleteConfirm}
-            disabled={deleteCourseResult.loading}
-          >
-            حذف دوره
-          </Button>
-        </DialogActions>
+        <ModalFooterActions
+          actions={[
+            {
+              key: "close",
+              label: "بستن",
+              onClick: () => setDeleteTarget(null),
+              variant: "outlined",
+              color: "inherit",
+              disabled: deleteCourseResult.loading,
+            },
+            {
+              key: "delete",
+              label: "حذف دوره",
+              onClick: handleDeleteConfirm,
+              variant: "contained",
+              color: "error",
+              disabled: deleteCourseResult.loading,
+            },
+          ]}
+        />
       </Dialog>
       {!isPublicCourseView ? (
         <CourseFormDialog

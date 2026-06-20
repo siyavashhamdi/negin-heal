@@ -1,15 +1,11 @@
 import { type ReactElement, type ReactNode } from "react";
 import {
-  Box,
   Dialog,
   DialogContent,
   DialogTitle,
-  IconButton,
   Typography,
   type DialogProps,
 } from "@mui/material";
-import { Close as CloseIcon } from "@mui/icons-material";
-import { useTranslation } from "../../hooks/useTranslation";
 
 interface EntityListDialogProps {
   readonly open: boolean;
@@ -28,8 +24,6 @@ const EntityListDialog = ({
   children,
   maxWidth = "xl",
 }: EntityListDialogProps): ReactElement => {
-  const { t } = useTranslation();
-
   return (
     <Dialog
       open={open}
@@ -42,32 +36,17 @@ const EntityListDialog = ({
       <DialogTitle
         id="entity-list-dialog-title"
         sx={{
-          display: "flex",
-          alignItems: "flex-start",
-          justifyContent: "space-between",
-          gap: 1,
-          pr: 1,
           pb: description ? 1 : undefined,
         }}
       >
-        <Box sx={{ minWidth: 0 }}>
-          <Typography variant="h6" component="p" fontWeight={700}>
-            {title}
+        <Typography variant="h6" component="p" fontWeight={700}>
+          {title}
+        </Typography>
+        {description ? (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            {description}
           </Typography>
-          {description ? (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              {description}
-            </Typography>
-          ) : null}
-        </Box>
-        <IconButton
-          aria-label={t("table.dataGrid.modal.closeAria")}
-          onClick={onClose}
-          size="small"
-          sx={{ flexShrink: 0 }}
-        >
-          <CloseIcon fontSize="small" />
-        </IconButton>
+        ) : null}
       </DialogTitle>
       <DialogContent
         dividers

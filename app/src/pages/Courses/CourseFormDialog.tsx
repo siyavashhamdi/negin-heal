@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState, type ReactElement } from "react";
 import {
   Button,
   Dialog,
-  DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
@@ -30,6 +29,7 @@ import {
   type FileAccessUrl,
 } from "../../utils/fileAccessUrl.util";
 import { uploadFile } from "../../utils/fileUpload.util";
+import ModalFooterActions from "../../shared/crud/ModalFooterActions";
 
 type CourseFormDialogProps = {
   readonly open: boolean;
@@ -764,19 +764,27 @@ const CourseFormDialog = ({
             stripNumberSeparators={stripNumberSeparators}
           />
         </DialogContent>
-        <DialogActions className={styles.dialogActions}>
-          <Button variant="outlined" onClick={closeDialog} disabled={isSubmitting}>
-            انصراف
-          </Button>
-          <Button
-            variant="contained"
-            onClick={() => void handleSubmit()}
-            disabled={isSubmitting}
-            startIcon={<AddRoundedIcon />}
-          >
-            {isEditMode ? "ذخیره تغییرات" : "ایجاد دوره"}
-          </Button>
-        </DialogActions>
+        <ModalFooterActions
+          actions={[
+            {
+              key: "close",
+              label: "بستن",
+              onClick: closeDialog,
+              variant: "outlined",
+              color: "inherit",
+              disabled: isSubmitting,
+            },
+            {
+              key: "submit",
+              label: isEditMode ? "ذخیره تغییرات" : "ایجاد دوره",
+              onClick: () => void handleSubmit(),
+              variant: "contained",
+              color: "primary",
+              icon: <AddRoundedIcon />,
+              disabled: isSubmitting,
+            },
+          ]}
+        />
       </Dialog>
       <Dialog
         open={freeCourseConfirmOpen}
@@ -794,18 +802,25 @@ const CourseFormDialog = ({
               : "این دوره به‌صورت رایگان ایجاد می‌شود. آیا مطمئن هستید؟"}
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button variant="outlined" onClick={() => setFreeCourseConfirmOpen(false)}>
-            انصراف
-          </Button>
-          <Button
-            variant="contained"
-            onClick={() => void handleSubmit(true)}
-            disabled={isSubmitting}
-          >
-            {isEditMode ? "ذخیره دوره رایگان" : "ایجاد دوره رایگان"}
-          </Button>
-        </DialogActions>
+        <ModalFooterActions
+          actions={[
+            {
+              key: "close",
+              label: "بستن",
+              onClick: () => setFreeCourseConfirmOpen(false),
+              variant: "outlined",
+              color: "inherit",
+            },
+            {
+              key: "submit",
+              label: isEditMode ? "ذخیره دوره رایگان" : "ایجاد دوره رایگان",
+              onClick: () => void handleSubmit(true),
+              variant: "contained",
+              color: "primary",
+              disabled: isSubmitting,
+            },
+          ]}
+        />
       </Dialog>
     </>
   );

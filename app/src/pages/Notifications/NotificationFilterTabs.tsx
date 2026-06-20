@@ -1,8 +1,8 @@
 import { type ReactElement } from "react";
 
+import SegmentFilterTabs from "../../shared/tabs/SegmentFilterTabs";
 import { useTranslation } from "../../hooks/useTranslation";
 import type { NotificationFilterTab } from "./notifications-list.api";
-import styles from "./styles/notifications.module.scss";
 
 type NotificationFilterTabsProps = {
   readonly activeTab: NotificationFilterTab;
@@ -18,28 +18,16 @@ const NotificationFilterTabs = ({
   const { t } = useTranslation();
 
   return (
-    <div
-      className={styles.filterTabs}
-      role="tablist"
-      aria-label={t("pages.notifications.filters.ariaLabel")}
-    >
-      {TAB_ORDER.map((tab) => {
-        const isActive = activeTab === tab;
-
-        return (
-          <button
-            key={tab}
-            type="button"
-            role="tab"
-            aria-selected={isActive}
-            className={`${styles.filterTab}${isActive ? ` ${styles.filterTabActive}` : ""}`}
-            onClick={() => onChange(tab)}
-          >
-            <span>{t(`pages.notifications.filters.${tab}`)}</span>
-          </button>
-        );
-      })}
-    </div>
+    <SegmentFilterTabs
+      activeTab={activeTab}
+      tabs={TAB_ORDER.map((tab) => ({
+        value: tab,
+        label: t(`pages.notifications.filters.${tab}`),
+      }))}
+      onChange={onChange}
+      ariaLabel={t("pages.notifications.filters.ariaLabel")}
+      pinned
+    />
   );
 };
 

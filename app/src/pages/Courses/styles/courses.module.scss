@@ -30,6 +30,24 @@ $layout-sm: variables.$breakpoint-sm;
 .createCourseButton {
   border-radius: 0.75rem !important;
   font-weight: 900 !important;
+  border: 0.0625rem solid color-mix(in srgb, #ffffff 52%, transparent) !important;
+  color: #ffffff !important;
+  background:
+    radial-gradient(circle at 32% 24%, color-mix(in srgb, #ffffff 30%, transparent), transparent 34%),
+    linear-gradient(135deg, var(--app-layout-glow) 0%, var(--app-layout-glow-2) 100%) !important;
+  box-shadow:
+    0 0.55rem 1.2rem color-mix(in srgb, var(--app-layout-glow) 34%, transparent),
+    inset 0 0.0625rem 0 color-mix(in srgb, #ffffff 48%, transparent);
+}
+
+.createCourseButton:hover {
+  background:
+    radial-gradient(circle at 32% 24%, color-mix(in srgb, #ffffff 36%, transparent), transparent 34%),
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--app-layout-glow) 84%, #000) 0%,
+      color-mix(in srgb, var(--app-layout-glow-2) 84%, #000) 100%
+    ) !important;
 }
 
 .createCourseIconButton {
@@ -195,27 +213,31 @@ $layout-sm: variables.$breakpoint-sm;
     position: sticky;
     z-index: 1285;
     justify-self: start;
-    box-sizing: border-box;
-    inline-size: 3.25rem;
-    block-size: 3.25rem;
-    margin-block-end: calc(-3.25rem - 0.85rem);
-    padding: 0.35rem;
-    border-radius: 1.15rem !important;
-    display: inline-grid;
-    place-items: center;
+    inline-size: auto;
+    block-size: auto;
+    margin-block-end: calc(-2.85rem - 0.85rem);
+    padding: 0;
+    border: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    display: inline-flex;
   }
 
   .mobileFilterTrigger {
-    inline-size: 100%;
-    block-size: 100%;
-    border-radius: 0.9rem !important;
+    inline-size: 2.85rem;
+    block-size: 2.85rem;
+    flex-shrink: 0;
+    border-radius: 0.82rem !important;
     border: 0.0625rem solid color-mix(in srgb, #ffffff 64%, transparent) !important;
-    color: variables.$color-primary-contrast !important;
+    color: #ffffff !important;
     background:
       radial-gradient(circle at 32% 24%, color-mix(in srgb, #ffffff 34%, transparent), transparent 34%),
-      linear-gradient(135deg, variables.$color-gradient-start 0%, variables.$color-gradient-mid 52%, variables.$color-gradient-end 100%) !important;
+      linear-gradient(135deg, var(--app-layout-glow) 0%, var(--app-layout-glow-2) 100%) !important;
     box-shadow:
-      0 0.75rem 1.45rem color-mix(in srgb, variables.$color-primary-dark 30%, transparent),
+      0 0.65rem 1.25rem color-mix(in srgb, var(--app-layout-glow) 34%, transparent),
       inset 0 0.0625rem 0 color-mix(in srgb, #ffffff 54%, transparent);
     transition:
       transform 0.18s ease,
@@ -224,16 +246,20 @@ $layout-sm: variables.$breakpoint-sm;
   }
 
   .mobileFilterTrigger :global(svg) {
-    font-size: 1.55rem;
+    font-size: 1.28rem;
     filter: drop-shadow(0 0.08rem 0.14rem rgba(15, 23, 42, 0.22));
   }
 
   .mobileFilterTrigger:hover {
     background:
       radial-gradient(circle at 32% 24%, color-mix(in srgb, #ffffff 40%, transparent), transparent 34%),
-      linear-gradient(135deg, variables.$color-primary-dark 0%, variables.$color-secondary-dark 52%, variables.$color-gradient-end 100%) !important;
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--app-layout-glow) 84%, #000) 0%,
+        color-mix(in srgb, var(--app-layout-glow-2) 84%, #000) 100%
+      ) !important;
     box-shadow:
-      0 0.9rem 1.65rem color-mix(in srgb, variables.$color-primary-dark 34%, transparent),
+      0 0.78rem 1.45rem color-mix(in srgb, var(--app-layout-glow) 38%, transparent),
       inset 0 0.0625rem 0 color-mix(in srgb, #ffffff 60%, transparent);
     transform: translateY(-0.08rem) scale(1.02);
   }
@@ -252,16 +278,16 @@ $layout-sm: variables.$breakpoint-sm;
     left: max(1rem, env(safe-area-inset-left));
     bottom: calc(5.65rem + env(safe-area-inset-bottom));
     display: inline-flex !important;
-    inline-size: 3.75rem !important;
-    block-size: 3.75rem !important;
+    inline-size: 3.35rem !important;
+    block-size: 3.35rem !important;
     border: 0.0625rem solid color-mix(in srgb, #ffffff 64%, transparent) !important;
-    border-radius: 1.25rem !important;
+    border-radius: 1.1rem !important;
     background:
       radial-gradient(circle at 30% 22%, color-mix(in srgb, #ffffff 38%, transparent), transparent 32%),
-      linear-gradient(135deg, variables.$color-gradient-start 0%, variables.$color-secondary-light 48%, variables.$color-success-main 100%) !important;
-    color: variables.$color-primary-contrast !important;
+      linear-gradient(135deg, var(--app-layout-glow) 0%, var(--app-layout-glow-2) 100%) !important;
+    color: #ffffff !important;
     box-shadow:
-      0 1.15rem 2.4rem color-mix(in srgb, variables.$color-primary-dark 38%, transparent),
+      0 1rem 2rem color-mix(in srgb, var(--app-layout-glow) 38%, transparent),
       0 0.25rem 0.7rem color-mix(in srgb, #0f172a 22%, transparent),
       inset 0 0.0625rem 0 color-mix(in srgb, #ffffff 58%, transparent);
     transition:
@@ -275,23 +301,27 @@ $layout-sm: variables.$breakpoint-sm;
     position: absolute;
     inset: -0.3rem;
     z-index: -1;
-    border-radius: 1.5rem;
-    background: color-mix(in srgb, variables.$color-secondary-light 18%, transparent);
+    border-radius: 1.35rem;
+    background: color-mix(in srgb, var(--app-layout-glow) 22%, transparent);
     filter: blur(0.55rem);
     opacity: 0.9;
   }
 
   .createCourseIconButton :global(svg) {
-    font-size: 1.72rem;
+    font-size: 1.45rem;
     filter: drop-shadow(0 0.08rem 0.16rem rgba(15, 23, 42, 0.22));
   }
 
   .createCourseIconButton:hover {
     background:
       radial-gradient(circle at 30% 22%, color-mix(in srgb, #ffffff 42%, transparent), transparent 32%),
-      linear-gradient(135deg, variables.$color-primary-dark 0%, variables.$color-gradient-mid 48%, variables.$color-gradient-end 100%) !important;
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--app-layout-glow) 84%, #000) 0%,
+        color-mix(in srgb, var(--app-layout-glow-2) 84%, #000) 100%
+      ) !important;
     box-shadow:
-      0 1.3rem 2.7rem color-mix(in srgb, variables.$color-primary-dark 42%, transparent),
+      0 1.15rem 2.35rem color-mix(in srgb, var(--app-layout-glow) 42%, transparent),
       0 0.32rem 0.8rem color-mix(in srgb, #0f172a 24%, transparent),
       inset 0 0.0625rem 0 color-mix(in srgb, #ffffff 62%, transparent);
     transform: translateY(-0.12rem) scale(1.03);
@@ -488,5 +518,11 @@ body[data-theme="dark"] {
     box-shadow:
       0 0.1rem 0.18rem rgba(0, 0, 0, 0.24),
       inset 0 0.0625rem 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .filterPanelCollapsed {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
   }
 }

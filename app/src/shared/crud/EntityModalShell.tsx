@@ -2,16 +2,12 @@ import { type FormEventHandler, type ReactElement, type ReactNode } from "react"
 import {
   Box,
   Dialog,
-  DialogActions,
   DialogContent,
   DialogTitle,
-  IconButton,
   Typography,
   useTheme,
   type Breakpoint,
 } from "@mui/material";
-import { Close as CloseIcon } from "@mui/icons-material";
-import { useTranslation } from "../../hooks/useTranslation";
 import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
 import { crudModalFooterSx, crudModalTitleSx } from "./modalThemeSx";
 import styles from "./styles/EntityModalShell.module.scss";
@@ -43,49 +39,35 @@ const EntityModalShell = ({
 }: EntityModalShellProps): ReactElement => {
   const theme = useTheme();
   const { isCompact, dialogProps, getPaperProps, getContentProps } = useMobileDialogProps();
-  const { t } = useTranslation();
 
   const dialogContentClassName = `${styles.modalDialogContent} ${
     isCompact ? styles.modalDialogContentScrollMobile : styles.modalDialogContentScrollDesktop
   }`;
 
-  const renderedBody = footer != null ? (
-    <>
-      <DialogTitle className={styles.modalDialogTitle} sx={crudModalTitleSx(theme)}>
-        <Typography variant="h6" component="div" className={styles.modalTitleTypography}>
-          {title}
-        </Typography>
-        <IconButton aria-label={t("table.dataGrid.modal.close")} onClick={onClose}>
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
+  const renderHeader = (): ReactElement => (
+    <DialogTitle className={styles.modalDialogTitle} sx={crudModalTitleSx(theme)}>
+      <Typography variant="h6" component="div" className={styles.modalTitleTypography}>
+        {title}
+      </Typography>
+    </DialogTitle>
+  );
 
-      <DialogContent {...getContentProps({ className: dialogContentClassName })}>
-        {children}
-      </DialogContent>
+  const renderContent = (): ReactElement => (
+    <DialogContent {...getContentProps({ className: dialogContentClassName })}>{children}</DialogContent>
+  );
 
-      <DialogActions
-        sx={crudModalFooterSx(theme, {
-          pinFooterToBottomOnMobile,
-        })}
-      >
+  const renderFooter = (): ReactElement | null =>
+    footer != null ? (
+      <Box component="footer" sx={crudModalFooterSx(theme, { pinFooterToBottomOnMobile })}>
         {footer}
-      </DialogActions>
-    </>
-  ) : (
-    <>
-      <DialogTitle className={styles.modalDialogTitle} sx={crudModalTitleSx(theme)}>
-        <Typography variant="h6" component="div" className={styles.modalTitleTypography}>
-          {title}
-        </Typography>
-        <IconButton aria-label={t("table.dataGrid.modal.close")} onClick={onClose}>
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
+      </Box>
+    ) : null;
 
-      <DialogContent {...getContentProps({ className: dialogContentClassName })}>
-        {children}
-      </DialogContent>
+  const renderedBody = (
+    <>
+      {renderHeader()}
+      {renderContent()}
+      {renderFooter()}
     </>
   );
 

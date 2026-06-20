@@ -28,9 +28,9 @@ import {
   TextField,
   Typography,
   useMediaQuery,
-  useTheme,
 } from "@mui/material";
 import { useQuery } from "@apollo/client/react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   getCoreRowModel,
   getSortedRowModel,
@@ -93,6 +93,7 @@ import {
   PaymentRowActions,
   ReviewPaymentDialogActions,
 } from "./PaymentActions";
+import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
 
 type CoursePaymentStatusUpdateMutation = {
   readonly coursePaymentStatusUpdate: CoursePaymentListRow;
@@ -536,7 +537,8 @@ function PaymentDetailSection({
 }
 
 const PaymentsList = (): ReactElement => {
-  const theme = useTheme();
+  const location = useLocation();
+  const navigate = useNavigate();
   const isMobile = useMediaQuery((muiTheme: Theme) => muiTheme.breakpoints.down("md"));
   const { dialogProps, getPaperProps, getContentProps } = useMobileDialogProps({
     breakpoint: "md",
@@ -592,7 +594,7 @@ const PaymentsList = (): ReactElement => {
   const [reviewStatus, setReviewStatus] = useState<UserCoursePurchaseStatus>("PENDING");
   const [reviewDescription, setReviewDescription] = useState("");
   const [isReceiptPreviewExpanded, setIsReceiptPreviewExpanded] = useState(false);
-  const [isManualPaymentDialogOpen, setIsManualPaymentDialogOpen] = useState(false);
+  const manualPaymentRouteOpen = location.pathname === `${APP_SHELL_ROUTES.payments}/new`;
   const [manualPaymentUser, setManualPaymentUser] = useState<ManualPaymentUserOption | null>(null);
   const [manualPaymentUserSearch, setManualPaymentUserSearch] = useState("");
   const [manualPaymentCourse, setManualPaymentCourse] = useState<ManualPaymentCourseOption | null>(
@@ -681,7 +683,7 @@ const PaymentsList = (): ReactElement => {
   >(USER_LIST_QUERY, {
     variables: manualPaymentUsersVariables,
     fetchPolicy: "cache-first",
-    skip: !isManualPaymentDialogOpen,
+    skip: !manualPaymentRouteOpen,
   });
 
   const { data: manualPaymentCoursesData, loading: manualPaymentCoursesLoading } = useQuery<
@@ -690,7 +692,7 @@ const PaymentsList = (): ReactElement => {
   >(COURSE_LIST_QUERY, {
     variables: manualPaymentCoursesVariables,
     fetchPolicy: "cache-first",
-    skip: !isManualPaymentDialogOpen,
+    skip: !manualPaymentRouteOpen,
   });
 
   const [updatePaymentStatus, updatePaymentStatusResult] = useMutationWithSnackbar<
@@ -778,6 +780,27 @@ const PaymentsList = (): ReactElement => {
     );
     setIsReceiptPreviewExpanded(false);
   }, [reviewTarget]);
+
+  useEffect(() => {
+    const paymentRoutePrefix = `${APP_SHELL_ROUTES.payments}/`;
+    if (!location.pathname.startsWith(paymentRoutePrefix)) {
+      if (reviewTarget) {
+        setReviewTarget(null);
+      }
+      return;
+    }
+
+    const routeId = location.pathname.slice(paymentRoutePrefix.length);
+    if (!routeId || routeId === "new") {
+      if (routeId !== "new" && reviewTarget) {
+        setReviewTarget(null);
+      }
+      return;
+    }
+
+    const record = rows.find((item) => item.id === routeId) ?? null;
+    setReviewTarget(record);
+  }, [location.pathname, reviewTarget, rows]);
 
   const textCell = (value: unknown, tabular = false): ReactElement => (
     <Typography variant="body2" className={tabular ? crudPrimitives.tabularNums : undefined}>
@@ -996,7 +1019,9 @@ const PaymentsList = (): ReactElement => {
       {
         id: "actions",
         header: t("table.columns.actions"),
-        cell: ({ row }) => <PaymentRowActions onReview={() => setReviewTarget(row.original)} />,
+        cell: ({ row }) => (
+          <PaymentRowActions onReview={() => navigate(`${APP_SHELL_ROUTES.payments}/${row.original.id}`)} />
+        ),
         enableSorting: false,
         enableHiding: false,
       },
@@ -1033,14 +1058,14 @@ const PaymentsList = (): ReactElement => {
   };
 
   const openManualPaymentDialog = (): void => {
-    setIsManualPaymentDialogOpen(true);
+    navigate(`${APP_SHELL_ROUTES.payments}/new`);
   };
 
   const closeManualPaymentDialog = (): void => {
     if (createManualPaymentResult.loading) {
       return;
     }
-    setIsManualPaymentDialogOpen(false);
+    navigate(APP_SHELL_ROUTES.payments);
     setManualPaymentUser(null);
     setManualPaymentUserSearch("");
     setManualPaymentCourse(null);
@@ -1054,6 +1079,7 @@ const PaymentsList = (): ReactElement => {
   const closeReviewDialog = (): void => {
     setReviewTarget(null);
     setIsReceiptPreviewExpanded(false);
+    navigate(APP_SHELL_ROUTES.payments);
   };
 
   const handleSubmitReview = (): void => {
@@ -1354,7 +1380,7 @@ const PaymentsList = (): ReactElement => {
       />
 
       <Dialog
-        open={isManualPaymentDialogOpen}
+        open={manualPaymentRouteOpen}
         onClose={closeManualPaymentDialog}
         maxWidth="md"
         {...dialogProps}
@@ -1497,8 +1523,6 @@ const PaymentsList = (): ReactElement => {
           </Stack>
         </DialogContent>
         <ManualPaymentDialogActions
-          theme={theme}
-          isMobile={isMobile}
           onCancel={closeManualPaymentDialog}
           onSubmit={handleSubmitManualPayment}
           cancelDisabled={
@@ -1686,13 +1710,11 @@ const PaymentsList = (): ReactElement => {
           ) : null}
         </DialogContent>
         <ReviewPaymentDialogActions
-          theme={theme}
-          isMobile={isMobile}
           onCancel={closeReviewDialog}
           onSubmit={handleSubmitReview}
           cancelDisabled={updatePaymentStatusResult.loading}
           submitDisabled={!reviewTarget || updatePaymentStatusResult.loading}
-          cancelLabel={t("table.dataGrid.toggleActiveDialog.cancel")}
+          cancelLabel="بستن"
         />
       </Dialog>
     </>

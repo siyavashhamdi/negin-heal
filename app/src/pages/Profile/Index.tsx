@@ -9,7 +9,6 @@ import {
   Button,
   CircularProgress,
   Dialog,
-  DialogActions,
   DialogContent,
   DialogTitle,
   IconButton,
@@ -27,7 +26,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useMobileAppLayout } from "../../hooks/useMobileAppLayout";
 import Login from "../Login/Login";
@@ -39,7 +38,8 @@ import { getFileIdFromAccessUrl, type FileAccessUrl } from "../../utils/fileAcce
 import { uploadFile } from "../../utils/fileUpload.util";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { useSnackbar } from "../../hooks/useSnackbar";
-import { crudModalFooterSx } from "../../shared/crud/modalThemeSx";
+import ModalFooterActions from "../../shared/crud/ModalFooterActions";
+import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
 import styles from "./styles/profile.module.scss";
 
 const PASSWORD_CHANGE_LOGOUT_COUNTDOWN_SECONDS = 5;
@@ -105,6 +105,8 @@ function optionalTextInput(value: string): string | null {
 }
 
 const AuthenticatedProfile = (): ReactElement => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { dialogProps, getPaperProps, getContentProps } = useMobileDialogProps({
@@ -187,6 +189,7 @@ const AuthenticatedProfile = (): ReactElement => {
   const openEditDialog = (): void => {
     setEditForm(buildEditForm());
     setIsEditDialogOpen(true);
+    navigate(`${APP_SHELL_ROUTES.profile}/edit`);
   };
 
   const closeEditDialog = (): void => {
@@ -195,6 +198,7 @@ const AuthenticatedProfile = (): ReactElement => {
     }
 
     setIsEditDialogOpen(false);
+    navigate(APP_SHELL_ROUTES.profile);
   };
 
   const setEditField = <TField extends keyof ProfileEditForm>(
@@ -211,6 +215,7 @@ const AuthenticatedProfile = (): ReactElement => {
       confirmPassword: "",
     });
     setIsPasswordDialogOpen(true);
+    navigate(`${APP_SHELL_ROUTES.profile}/password`);
   };
 
   const closePasswordDialog = (): void => {
@@ -219,7 +224,37 @@ const AuthenticatedProfile = (): ReactElement => {
     }
 
     setIsPasswordDialogOpen(false);
+    navigate(APP_SHELL_ROUTES.profile);
   };
+
+  useEffect(() => {
+    const profileRoutePrefix = `${APP_SHELL_ROUTES.profile}/`;
+    if (!location.pathname.startsWith(profileRoutePrefix)) {
+      return;
+    }
+
+    const routeSuffix = location.pathname.slice(profileRoutePrefix.length);
+    if (routeSuffix === "edit") {
+      setEditForm(buildEditForm());
+      setIsEditDialogOpen(true);
+      setIsPasswordDialogOpen(false);
+      return;
+    }
+
+    if (routeSuffix === "password") {
+      setPasswordForm({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+      setIsPasswordDialogOpen(true);
+      setIsEditDialogOpen(false);
+      return;
+    }
+
+    setIsEditDialogOpen(false);
+    setIsPasswordDialogOpen(false);
+  }, [location.pathname, user?.id, authUser?.id]);
 
   const setPasswordField = <TField extends keyof PasswordChangeForm>(
     field: TField,
@@ -540,36 +575,27 @@ const AuthenticatedProfile = (): ReactElement => {
               ) : null}
             </Stack>
           </DialogContent>
-          <DialogActions
-            sx={crudModalFooterSx(theme, {
-              pinFooterToBottomOnMobile: true,
-            })}
-          >
-            <Stack
-              direction={isMobile ? "column-reverse" : "row"}
-              spacing={1.5}
-              sx={{
-                width: "100%",
-                justifyContent: isMobile ? "stretch" : "flex-end",
-                "& .MuiButton-root": {
-                  width: isMobile ? "100%" : "auto",
-                  minWidth: isMobile ? undefined : "8rem",
-                },
-              }}
-            >
-              <Button
-                variant="outlined"
-                color="inherit"
-                onClick={closeEditDialog}
-                disabled={isSavingProfile}
-              >
-                انصراف
-              </Button>
-              <Button type="submit" variant="contained" disabled={isSavingProfile}>
-                {isSavingProfile ? "در حال ذخیره..." : "ذخیره تغییرات"}
-              </Button>
-            </Stack>
-          </DialogActions>
+          <ModalFooterActions
+            reverseOrderOnMobile={isMobile}
+            actions={[
+              {
+                key: "close",
+                label: "بستن",
+                onClick: closeEditDialog,
+                variant: "outlined",
+                color: "inherit",
+                disabled: isSavingProfile,
+              },
+              {
+                key: "submit",
+                label: isSavingProfile ? "در حال ذخیره..." : "ذخیره تغییرات",
+                type: "submit",
+                variant: "contained",
+                color: "primary",
+                disabled: isSavingProfile,
+              },
+            ]}
+          />
         </form>
       </Dialog>
 
@@ -621,36 +647,27 @@ const AuthenticatedProfile = (): ReactElement => {
               />
             </Stack>
           </DialogContent>
-          <DialogActions
-            sx={crudModalFooterSx(theme, {
-              pinFooterToBottomOnMobile: true,
-            })}
-          >
-            <Stack
-              direction={isMobile ? "column-reverse" : "row"}
-              spacing={1.5}
-              sx={{
-                width: "100%",
-                justifyContent: isMobile ? "stretch" : "flex-end",
-                "& .MuiButton-root": {
-                  width: isMobile ? "100%" : "auto",
-                  minWidth: isMobile ? undefined : "8rem",
-                },
-              }}
-            >
-              <Button
-                variant="outlined"
-                color="inherit"
-                onClick={closePasswordDialog}
-                disabled={isChangingPassword}
-              >
-                انصراف
-              </Button>
-              <Button type="submit" variant="contained" disabled={isChangingPassword}>
-                {isChangingPassword ? "در حال ذخیره..." : "ذخیره رمز عبور"}
-              </Button>
-            </Stack>
-          </DialogActions>
+          <ModalFooterActions
+            reverseOrderOnMobile={isMobile}
+            actions={[
+              {
+                key: "close",
+                label: "بستن",
+                onClick: closePasswordDialog,
+                variant: "outlined",
+                color: "inherit",
+                disabled: isChangingPassword,
+              },
+              {
+                key: "submit",
+                label: isChangingPassword ? "در حال ذخیره..." : "ذخیره رمز عبور",
+                type: "submit",
+                variant: "contained",
+                color: "primary",
+                disabled: isChangingPassword,
+              },
+            ]}
+          />
         </form>
       </Dialog>
 
@@ -662,15 +679,18 @@ const AuthenticatedProfile = (): ReactElement => {
             خروج خودکار تا {logoutCountdown ?? 0} ثانیه دیگر انجام می‌شود.
           </Alert>
         </DialogContent>
-        <DialogActions
-          sx={crudModalFooterSx(theme, {
-            pinFooterToBottomOnMobile: true,
-          })}
-        >
-          <Button fullWidth={isMobile} variant="contained" color="primary" onClick={logout}>
-            خروج و ورود دوباره
-          </Button>
-        </DialogActions>
+        <ModalFooterActions
+          actions={[
+            {
+              key: "logout",
+              label: "خروج و ورود دوباره",
+              onClick: logout,
+              variant: "contained",
+              color: "primary",
+            },
+          ]}
+          reverseOrderOnMobile={false}
+        />
       </Dialog>
 
       <Button

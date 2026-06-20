@@ -12,11 +12,9 @@ import { AddRounded as AddRoundedIcon, Clear as ClearIcon } from "@mui/icons-mat
 import {
   Avatar,
   Box,
-  Button,
   Checkbox,
   Chip,
   Dialog,
-  DialogActions,
   DialogContent,
   DialogTitle,
   IconButton,
@@ -38,7 +36,8 @@ import {
   type SortingState,
   type VisibilityState,
 } from "@tanstack/react-table";
-import { useTheme, type Theme } from "@mui/material/styles";
+import { type Theme } from "@mui/material/styles";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
 
 import { USER_CREATE_MUTATION } from "../../graphql/mutations/userCreate.mutation";
@@ -63,7 +62,7 @@ import CrudRowActions from "../../shared/crud/CrudRowActions";
 import EntityTableShell from "../../shared/crud/EntityTableShell";
 import FileUploadField from "../../shared/forms/FileUploadField";
 import JalaliDateFilterField from "../../shared/table/JalaliDateFilterField";
-import { crudModalFooterSx } from "../../shared/crud/modalThemeSx";
+import ModalFooterActions from "../../shared/crud/ModalFooterActions";
 import crudPrimitives from "../../shared/crud/styles/crudPrimitives.module.scss";
 import {
   EMPTY_MANAGED_USERS_LIST_FILTERS,
@@ -80,6 +79,7 @@ import {
   type UserRole,
   type UserStatus,
 } from "./users-management-list.api";
+import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
 
 const COLUMN_WIDTH_BY_ID: Record<string, string> = {
   username: "12rem",
@@ -313,11 +313,12 @@ function selectUserListPage(data: UserListQuery | undefined): ServerPageResult<U
 }
 
 const UsersManagementList = (): ReactElement => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const isMobile = useMediaQuery((muiTheme: Theme) => muiTheme.breakpoints.down("md"));
   const { dialogProps, getPaperProps, getContentProps } = useMobileDialogProps({
     breakpoint: "md",
   });
-  const theme = useTheme();
   const { t } = useTranslation();
   const { showError } = useSnackbar();
   const hasShownLoadErrorRef = useRef(false);
@@ -557,6 +558,7 @@ const UsersManagementList = (): ReactElement => {
               setEditTarget(record);
               setEditForm(buildEditFormState(record));
               setAvatarFile(null);
+              navigate(`${APP_SHELL_ROUTES.usersManagement}/${record.id}`);
             }}
           />
         ),
@@ -773,6 +775,7 @@ const UsersManagementList = (): ReactElement => {
     setEditForm(null);
     setAvatarFile(null);
     setDialogMode("edit");
+    navigate(APP_SHELL_ROUTES.usersManagement);
   };
 
   const handleOpenCreateDialog = (): void => {
@@ -780,7 +783,38 @@ const UsersManagementList = (): ReactElement => {
     setEditTarget(null);
     setEditForm(buildCreateFormState());
     setAvatarFile(null);
+    navigate(`${APP_SHELL_ROUTES.usersManagement}/new`);
   };
+
+  useEffect(() => {
+    const usersRoutePrefix = `${APP_SHELL_ROUTES.usersManagement}/`;
+    if (!location.pathname.startsWith(usersRoutePrefix)) {
+      return;
+    }
+
+    const routeSuffix = location.pathname.slice(usersRoutePrefix.length);
+    if (routeSuffix === "new") {
+      if (!editForm || dialogMode !== "create") {
+        setDialogMode("create");
+        setEditTarget(null);
+        setEditForm(buildCreateFormState());
+        setAvatarFile(null);
+      }
+      return;
+    }
+
+    if (!routeSuffix) {
+      return;
+    }
+
+    const target = rows.find((row) => row.id === routeSuffix) ?? null;
+    if (target) {
+      setDialogMode("edit");
+      setEditTarget(target);
+      setEditForm(buildEditFormState(target));
+      setAvatarFile(null);
+    }
+  }, [dialogMode, editForm, location.pathname, rows]);
 
   const setEditField = <TField extends keyof UserEditFormState>(
     field: TField,
@@ -1070,45 +1104,32 @@ const UsersManagementList = (): ReactElement => {
               </Stack>
             ) : null}
           </DialogContent>
-          <DialogActions
-            sx={crudModalFooterSx(theme, {
-              pinFooterToBottomOnMobile: true,
-            })}
-          >
-            <Stack
-              direction={isMobile ? "column-reverse" : "row"}
-              spacing={1.5}
-              sx={{
-                width: "100%",
-                justifyContent: isMobile ? "stretch" : "flex-end",
-                "& .MuiButton-root": {
-                  width: isMobile ? "100%" : "auto",
-                  minWidth: isMobile ? undefined : "8rem",
-                },
-              }}
-            >
-              <Button
-                variant="outlined"
-                color="inherit"
-                onClick={handleCloseEditDialog}
-                disabled={isSavingUser}
-              >
-                {t("pages.usersManagement.edit.cancel")}
-              </Button>
-              <Button
-                type="submit"
-                variant="contained"
-                disabled={isSavingUser}
-                startIcon={dialogMode === "create" ? <AddRoundedIcon /> : undefined}
-              >
-                {isSavingUser
+          <ModalFooterActions
+            reverseOrderOnMobile={isMobile}
+            actions={[
+              {
+                key: "close",
+                label: "بستن",
+                onClick: handleCloseEditDialog,
+                variant: "outlined",
+                color: "inherit",
+                disabled: isSavingUser,
+              },
+              {
+                key: "submit",
+                label: isSavingUser
                   ? t("pages.usersManagement.edit.saving")
                   : dialogMode === "create"
                     ? t("pages.usersManagement.create.save")
-                    : t("pages.usersManagement.edit.save")}
-              </Button>
-            </Stack>
-          </DialogActions>
+                    : t("pages.usersManagement.edit.save"),
+                type: "submit",
+                variant: "contained",
+                color: "primary",
+                icon: dialogMode === "create" ? <AddRoundedIcon /> : undefined,
+                disabled: isSavingUser,
+              },
+            ]}
+          />
         </Box>
       </Dialog>
     </>

@@ -7,10 +7,18 @@ $ease-flip: cubic-bezier(0.32, 0.72, 0, 1);
 .flipCard {
   perspective: 93.75rem;
   block-size: 100%;
-  min-block-size: 23rem;
+  min-block-size: 27.5rem;
   cursor: pointer;
   outline: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
   transition: transform 0.35s $ease-out;
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+  }
 }
 
 .flipCard:hover {
@@ -24,16 +32,11 @@ $ease-flip: cubic-bezier(0.32, 0.72, 0, 1);
     0 0.16rem 0.45rem rgba(15, 23, 42, 0.1);
 }
 
-.flipCard:focus-visible {
-  outline: 0.125rem solid variables.$color-info-dark;
-  outline-offset: 0.125rem;
-}
-
 .flipInner {
   position: relative;
   inline-size: 100%;
   block-size: 100%;
-  min-block-size: 23rem;
+  min-block-size: 27.5rem;
   transform-style: preserve-3d;
   transition: transform 0.7s $ease-flip;
 }
@@ -66,36 +69,46 @@ $ease-flip: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .flipFaceFront {
-  display: flex;
-  flex-direction: column;
+  position: relative;
   block-size: 100%;
 }
 
 .coverWrap {
-  position: relative;
-  flex: 1 1 auto;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
   inline-size: 100%;
-  min-block-size: 0;
-  aspect-ratio: 16 / 9;
-  border-radius: 1.15rem 1.15rem 0 0;
+  block-size: 100%;
+  border-radius: 1.15rem;
   overflow: hidden;
+  isolation: isolate;
   background:
     radial-gradient(circle at 18% 18%, color-mix(in srgb, #ffffff 34%, transparent), transparent 28%),
     linear-gradient(135deg, variables.$color-accent-soft-bg, color-mix(in srgb, variables.$color-secondary-light 35%, #ffffff) 48%, color-mix(in srgb, variables.$color-success-light 30%, #ffffff));
+
+  .coverImage,
+  .defaultCoverIcon {
+    border-radius: 0;
+  }
 }
 
 .coverImage {
+  position: absolute;
+  inset: 0;
   inline-size: 100%;
   block-size: 100%;
   object-fit: cover;
+  z-index: 0;
 }
 
 .defaultCoverIcon {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  inline-size: 100%;
-  block-size: 100%;
   color: color-mix(in srgb, variables.$color-info-dark 78%, white);
 }
 
@@ -103,26 +116,94 @@ $ease-flip: cubic-bezier(0.32, 0.72, 0, 1);
   font-size: 3.1rem;
 }
 
-.releaseTypeChipWrap {
-  position: absolute !important;
+.coverScrimTop {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(15, 23, 42, 0.62) 0%,
+    rgba(15, 23, 42, 0.28) 22%,
+    rgba(15, 23, 42, 0.06) 42%,
+    transparent 58%
+  );
+}
+
+.coverContent {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-block-start: auto;
+  padding: 3rem 0.85rem 0.8rem;
+  min-inline-size: 0;
+  color: #ffffff;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.97) 0%,
+    rgba(0, 0, 0, 0.92) 20%,
+    rgba(0, 0, 0, 0.84) 38%,
+    rgba(0, 0, 0, 0.7) 56%,
+    rgba(0, 0, 0, 0.48) 72%,
+    rgba(0, 0, 0, 0.18) 88%,
+    transparent 100%
+  );
+  border-radius: 0;
+  pointer-events: none;
+
+  h3,
+  p,
+  .coverMeta,
+  .itemTypeChipsRow,
+  .tagRow {
+    pointer-events: auto;
+  }
+}
+.topChipsRow {
+  position: absolute;
   top: 0.7rem;
   left: 0.7rem;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.releaseTypeChipWrap {
+  display: inline-flex;
 }
 
 .releaseTypeChip {
   font-weight: 700 !important;
-  backdrop-filter: blur(0.25rem);
+  backdrop-filter: blur(0.35rem);
+  box-shadow: 0 0.12rem 0.45rem rgba(15, 23, 42, 0.18);
 }
 
 .statusChipWrap {
-  position: absolute !important;
-  top: 0.7rem;
-  right: 0.7rem;
+  display: inline-flex;
 }
 
 .statusChip {
   font-weight: 700 !important;
-  backdrop-filter: blur(0.25rem);
+  backdrop-filter: blur(0.35rem);
+  box-shadow: 0 0.12rem 0.45rem rgba(15, 23, 42, 0.18);
+}
+
+.iconOnlyChip {
+  inline-size: 1.62rem;
+  block-size: 1.62rem;
+  padding: 0 !important;
+}
+
+.iconOnlyChip :global(.MuiChip-label) {
+  display: none;
+}
+
+.iconOnlyChip :global(.MuiChip-icon) {
+  margin: 0 !important;
+  font-size: 0.92rem !important;
 }
 
 .releaseImmediate {
@@ -141,65 +222,55 @@ $ease-flip: cubic-bezier(0.32, 0.72, 0, 1);
   background: color-mix(in srgb, #64748b 22%, white) !important;
 }
 
-.coverStats {
-  position: absolute;
-  left: 0.4rem;
-  bottom: 0.4rem;
+.coverMeta {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  max-inline-size: calc(100% - 1.4rem);
-  padding: 0.18rem 0.55rem;
+  gap: 0.38rem;
+  align-self: flex-start;
+  margin-block: 0.05rem 0.1rem;
+  min-block-size: 1.5rem;
+  padding: 0 0.5rem;
   border-radius: 0.5rem;
-  background: rgba(15, 23, 42, 0.68);
-  color: #ffffff;
-  font-size: 0.7rem;
+  background: rgba(255, 255, 255, 0.12);
+  border: 0.0625rem solid rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.68rem;
   font-weight: 700;
-  line-height: 1.4;
-  backdrop-filter: blur(0.35rem);
+  line-height: 1.2;
+  backdrop-filter: blur(0.45rem);
+  text-shadow: 0 0.0625rem 0.18rem rgba(0, 0, 0, 0.35);
+  pointer-events: auto;
 }
 
-.coverStats span {
+.coverMeta span {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.2;
   white-space: nowrap;
 }
 
-.coverStatsSeparator {
+.coverMetaSeparator {
   opacity: 0.72;
 }
 
-.frontBody {
-  display: grid;
-  grid-template-rows: auto auto auto auto auto auto;
-  align-content: start;
-  flex: 0 0 auto;
-  gap: 0.58rem;
-  padding: 0.85rem 0.85rem 0.78rem;
-  min-block-size: 0;
-  overflow: hidden;
-}
-
-.frontBody h3 {
+.coverContent h3 {
   margin: 0;
-  font-size: 1rem;
-  line-height: 1.45;
-  min-block-size: 1.45em;
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.38;
   min-inline-size: 0;
+  color: #ffffff;
+  text-shadow: 0 0.0625rem 0.25rem rgba(0, 0, 0, 0.45);
 }
 
-.frontBody p {
+.coverContent p {
   margin: 0;
-  color: var(--text-secondary);
-  line-height: 1.65;
-  font-size: 0.84rem;
-  min-block-size: 3.3em;
+  color: rgba(255, 255, 255, 0.94);
+  line-height: 1.58;
+  font-size: 0.8rem;
   min-inline-size: 0;
-}
-
-.descriptionText {
-  display: -webkit-box;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  -webkit-box-orient: vertical;
+  overflow: visible;
+  text-shadow: 0 0.0625rem 0.22rem rgba(0, 0, 0, 0.45);
 }
 
 .titleText {
@@ -211,10 +282,12 @@ $ease-flip: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .descriptionText {
+  display: -webkit-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   line-clamp: 2;
-  min-block-size: 3.3em;
-  max-block-size: 3.3em;
 }
 
 .itemTypeChips,
@@ -225,15 +298,23 @@ $ease-flip: cubic-bezier(0.32, 0.72, 0, 1);
 
 .itemTypeChips {
   flex-wrap: wrap;
-  max-block-size: 2rem;
+  align-items: center;
+  max-block-size: 1.5rem;
   overflow: hidden;
+}
+
+.itemTypeChipsRow {
+  margin-block-start: 0;
+}
+
+.coverContent p + .itemTypeChipsRow {
+  margin-block-start: 0;
 }
 
 .tagRow {
   flex-wrap: nowrap;
   align-items: center;
-  block-size: 1.35rem;
-  margin-top: 0.35rem;
+  block-size: 1.5rem;
   min-inline-size: 0;
   overflow-x: auto;
   overflow-y: hidden;
@@ -252,29 +333,49 @@ $ease-flip: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .itemTypeChip {
+  align-items: center !important;
+  block-size: 1.5rem !important;
   max-inline-size: 7.5rem;
-  background: color-mix(in srgb, var(--app-surface-bg) 72%, #eef2ff) !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  color: #ffffff !important;
+  backdrop-filter: blur(0.45rem);
+  box-shadow: 0 0.08rem 0.28rem rgba(0, 0, 0, 0.18);
+}
+
+.itemTypeChip :global(.MuiChip-label) {
+  display: flex;
+  align-items: center;
+  padding-block: 0;
+  line-height: 1.2;
+}
+
+.itemTypeChip :global(.MuiChip-icon) {
+  margin: 0 0.3rem 0 -0.12rem !important;
+  color: rgba(255, 255, 255, 0.92) !important;
 }
 
 .tagChip {
   flex: 0 0 auto;
-  block-size: 1.35rem !important;
+  align-items: center !important;
+  block-size: 1.5rem !important;
   max-inline-size: 7.75rem;
   min-inline-size: 0;
   font-size: 0.68rem !important;
   font-weight: 700 !important;
 }
 
+.overlayTagChip {
+  backdrop-filter: blur(0.45rem);
+  box-shadow: 0 0.08rem 0.32rem rgba(0, 0, 0, 0.22);
+}
+
 .tagChip :global(.MuiChip-label) {
+  display: flex;
+  align-items: center;
   padding-inline: 0.45rem;
-}
-
-.tagChip:first-child {
-  margin-inline-start: 0.2rem;
-}
-
-.tagChip:last-child {
-  margin-inline-end: 0.2rem;
+  padding-block: 0;
+  line-height: 1.2;
 }
 
 .tagText {
@@ -285,50 +386,52 @@ $ease-flip: cubic-bezier(0.32, 0.72, 0, 1);
   white-space: nowrap;
 }
 
+.priceFooter {
+  position: relative;
+  z-index: 3;
+  flex: 0 0 auto;
+  display: flex;
+  inline-size: 100%;
+  min-block-size: 4.25rem;
+  padding: 0;
+  margin: 0;
+}
+
 .priceBar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.7rem;
-  min-block-size: 4.1rem;
-  margin: 0.1rem -0.15rem 0;
-  padding: 0.58rem 0.65rem;
-  border: 0.0625rem solid color-mix(in srgb, variables.$color-info-dark 18%, var(--app-surface-border));
-  border-radius: 0.8rem;
-  background:
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, variables.$color-info-dark 12%, var(--app-surface-bg)),
-      color-mix(in srgb, #22c55e 10%, var(--app-surface-bg))
-    );
-  box-shadow: inset 0 0.0625rem 0 color-mix(in srgb, #ffffff 58%, transparent);
+  flex: 1;
+  inline-size: 100%;
+  block-size: 100%;
+  min-block-size: 4.25rem;
+  padding: 0.75rem 0.85rem;
+  border: none;
+  border-block-start: 0.0625rem solid rgba(255, 255, 255, 0.16);
+  border-radius: 0;
+  background: rgba(0, 0, 0, 0.74);
+  backdrop-filter: blur(2.25rem) saturate(125%);
+  -webkit-backdrop-filter: blur(2.25rem) saturate(125%);
+  box-shadow: inset 0 0.0625rem 0 rgba(255, 255, 255, 0.06);
 }
 
 .priceBarDiscounted {
-  border-color: color-mix(in srgb, #16a34a 34%, var(--app-surface-border));
-  background:
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, #16a34a 14%, var(--app-surface-bg)),
-      color-mix(in srgb, variables.$color-info-dark 10%, var(--app-surface-bg))
-    );
+  border-block-start-color: rgba(134, 239, 172, 0.2);
+  background: rgba(0, 0, 0, 0.7);
 }
 
 .priceBarPurchased {
-  border-color: color-mix(in srgb, #16a34a 36%, var(--app-surface-border));
-  background:
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, #16a34a 15%, var(--app-surface-bg)),
-      color-mix(in srgb, #22c55e 9%, var(--app-surface-bg))
-    );
+  border-block-start-color: rgba(134, 239, 172, 0.24);
+  background: rgba(0, 0, 0, 0.72);
 }
 
 .priceBarLabel {
-  color: var(--text-secondary);
-  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.95rem;
   font-weight: 800;
   white-space: nowrap;
+  text-shadow: 0 0.0625rem 0.18rem rgba(0, 0, 0, 0.35);
 }
 
 .priceContent {
@@ -348,8 +451,8 @@ $ease-flip: cubic-bezier(0.32, 0.72, 0, 1);
 .discountBadge {
   padding: 0.08rem 0.4rem;
   border-radius: 999rem;
-  background: color-mix(in srgb, #16a34a 18%, #ffffff);
-  color: #15803d;
+  background: rgba(22, 163, 74, 0.32);
+  color: #bbf7d0;
   font-size: 0.64rem;
   font-weight: 900;
   line-height: 1.35;
@@ -357,32 +460,34 @@ $ease-flip: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .originalPriceText {
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.68);
   font-size: 0.72rem;
   font-weight: 800;
   line-height: 1.2;
   text-decoration: line-through;
   text-decoration-thickness: 0.1rem;
-  opacity: 0.78;
+  opacity: 0.9;
   white-space: nowrap;
 }
 
 .priceText {
-  color: color-mix(in srgb, variables.$color-info-dark 78%, #0f172a);
-  font-size: 1.05rem;
+  color: #ffffff;
+  font-size: 1.15rem;
   font-weight: 950;
   letter-spacing: -0.01em;
   white-space: nowrap;
+  text-shadow: 0 0.0625rem 0.2rem rgba(0, 0, 0, 0.35);
 }
 
 .purchasedContent {
   display: inline-flex;
   align-items: center;
   gap: 0.32rem;
-  color: #15803d;
-  font-size: 0.95rem;
+  color: #bbf7d0;
+  font-size: 1.05rem;
   font-weight: 950;
   white-space: nowrap;
+  text-shadow: 0 0.0625rem 0.18rem rgba(0, 0, 0, 0.35);
 }
 
 .purchasedContent svg {
@@ -436,65 +541,31 @@ body[data-theme="dark"] {
       linear-gradient(135deg, #1e3a8a, #312e81 48%, #155e75);
   }
 
-  .frontBody p {
-    color: #94a3b8 !important;
+  .coverScrimTop {
+    background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.72) 0%,
+      rgba(0, 0, 0, 0.34) 22%,
+      rgba(0, 0, 0, 0.08) 42%,
+      transparent 58%
+    );
+  }
+
+  .coverMeta {
+    border-radius: 0.375rem;
   }
 
   .priceBar {
-    border-color: color-mix(in srgb, variables.$color-info-dark 32%, #334155);
-    background:
-      linear-gradient(
-        135deg,
-        color-mix(in srgb, variables.$color-info-dark 20%, #0f172a),
-        color-mix(in srgb, #22c55e 16%, #0f172a)
-      );
-    box-shadow: inset 0 0.0625rem 0 rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.78);
+    border-block-start-color: rgba(255, 255, 255, 0.08);
   }
 
   .priceBarDiscounted {
-    border-color: color-mix(in srgb, #22c55e 42%, #334155);
-    background:
-      linear-gradient(
-        135deg,
-        color-mix(in srgb, #16a34a 22%, #0f172a),
-        color-mix(in srgb, variables.$color-info-dark 18%, #0f172a)
-      );
+    background: rgba(0, 0, 0, 0.74);
   }
 
   .priceBarPurchased {
-    border-color: color-mix(in srgb, #22c55e 42%, #334155);
-    background:
-      linear-gradient(
-        135deg,
-        color-mix(in srgb, #22c55e 15%, #0f172a),
-        color-mix(in srgb, #16a34a 10%, var(--app-surface-bg))
-      );
-  }
-
-  .priceBarLabel {
-    color: #94a3b8;
-  }
-
-  .discountBadge {
-    background: color-mix(in srgb, #22c55e 20%, #0f172a);
-    color: #bbf7d0;
-  }
-
-  .originalPriceText {
-    color: #94a3b8;
-  }
-
-  .priceText {
-    color: #dbeafe;
-  }
-
-  .purchasedContent {
-    color: #bbf7d0;
-  }
-
-  .itemTypeChip {
-    background: color-mix(in srgb, #312e81 32%, #1e293b) !important;
-    color: #dbeafe !important;
+    background: rgba(0, 0, 0, 0.76);
   }
 
   .releaseImmediate {

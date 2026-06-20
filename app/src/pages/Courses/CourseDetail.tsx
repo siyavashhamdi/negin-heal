@@ -22,7 +22,6 @@ import {
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import AutoStoriesRoundedIcon from "@mui/icons-material/AutoStoriesRounded";
 import CardGiftcardRoundedIcon from "@mui/icons-material/CardGiftcardRounded";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
@@ -902,13 +901,6 @@ const CourseDetail = (): ReactElement => {
       >
         <div className={styles.mediaDialogHeader}>
           <strong>{selectedMedia?.title}</strong>
-          <IconButton
-            aria-label="بستن نمایشگر محتوا"
-            className={styles.mediaDialogCloseButton}
-            onClick={() => setSelectedMedia(null)}
-          >
-            <CloseRoundedIcon />
-          </IconButton>
         </div>
         <div className={styles.mediaDialogBody}>
           {selectedMedia?.type === "IMAGE" ? (
@@ -924,6 +916,11 @@ const CourseDetail = (): ReactElement => {
               مرورگر شما از پخش صوت پشتیبانی نمی‌کند.
             </audio>
           ) : null}
+        </div>
+        <div className={styles.mediaDialogHeader}>
+          <Button variant="outlined" fullWidth onClick={() => setSelectedMedia(null)}>
+            بستن
+          </Button>
         </div>
       </Dialog>
 

@@ -3,9 +3,10 @@ import {
   HowToRegOutlined as HowToRegOutlinedIcon,
   PersonOffOutlined as PersonOffOutlinedIcon,
 } from "@mui/icons-material";
-import { Avatar, Button, Stack, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Avatar, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { useTranslation } from "../../hooks/useTranslation";
 import EntityConfirmDialogShell from "./EntityConfirmDialogShell";
+import ModalFooterActions from "./ModalFooterActions";
 
 export type EntityToggleActiveMode = "activate" | "deactivate";
 
@@ -61,34 +62,31 @@ const EntityToggleActiveDialog = ({
       icon={icon}
       subjectLine={subjectName}
       footer={
-        <Stack
-          direction={isMobile ? "column-reverse" : "row"}
-          spacing={1.5}
-          sx={{
-            width: "100%",
-            justifyContent: isMobile ? "stretch" : "flex-end",
-            "& .MuiButton-root": {
-              width: isMobile ? "100%" : "auto",
-              minWidth: isMobile ? undefined : "6.5rem",
+        <ModalFooterActions
+          reverseOrderOnMobile={isMobile}
+          actions={[
+            {
+              key: "close",
+              label: "بستن",
+              onClick: onCancel,
+              color: "inherit",
+              variant: "outlined",
+              disabled: loading,
             },
-          }}
-        >
-          <Button onClick={onCancel} color="inherit" variant="outlined" disabled={loading}>
-            {t("table.dataGrid.toggleActiveDialog.cancel")}
-          </Button>
-          <Button
-            onClick={onConfirm}
-            color={isActivate ? "success" : "error"}
-            variant="contained"
-            disabled={loading}
-          >
-            {t(
-              isActivate
-                ? "table.dataGrid.toggleActiveDialog.confirmActivate"
-                : "table.dataGrid.toggleActiveDialog.confirmDeactivate"
-            )}
-          </Button>
-        </Stack>
+            {
+              key: "confirm",
+              label: t(
+                isActivate
+                  ? "table.dataGrid.toggleActiveDialog.confirmActivate"
+                  : "table.dataGrid.toggleActiveDialog.confirmDeactivate"
+              ),
+              onClick: onConfirm,
+              color: isActivate ? "success" : "error",
+              variant: "contained",
+              disabled: loading,
+            },
+          ]}
+        />
       }
     >
       <Typography variant="body1" color="text.secondary" textAlign="center">

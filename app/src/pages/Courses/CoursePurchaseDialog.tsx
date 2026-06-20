@@ -2,9 +2,7 @@ import { useEffect, useMemo, useState, type ReactElement } from "react";
 import {
   Button,
   Dialog,
-  DialogActions,
   DialogContent,
-  IconButton,
   InputAdornment,
   TextField,
   Typography,
@@ -43,6 +41,7 @@ import {
   type UserCoursePaymentMethod,
 } from "./course-detail.api";
 import styles from "./styles/CoursePurchaseDialog.module.scss";
+import ModalFooterActions from "../../shared/crud/ModalFooterActions";
 
 type CoursePurchaseDialogProps = {
   readonly open: boolean;
@@ -539,9 +538,6 @@ export function CoursePurchaseDialog({
           <span>تکمیل خرید دوره</span>
           <h2>{course.title}</h2>
         </div>
-        <IconButton aria-label="بستن پنجره خرید" onClick={onClose}>
-          <CloseRoundedIcon />
-        </IconButton>
       </div>
 
       <DialogContent {...getContentProps({ className: styles.dialogContent })}>
@@ -868,25 +864,32 @@ export function CoursePurchaseDialog({
         </div>
       </DialogContent>
 
-      <DialogActions className={styles.dialogActions}>
-        <Button variant="text" onClick={onClose} disabled={isSubmitting}>
-          انصراف
-        </Button>
-        <Button
-          variant="contained"
-          startIcon={isFreePurchase ? undefined : selectedPaymentOption.icon}
-          onClick={() => void handleSubmit()}
-          disabled={
-            isSubmitting ||
-            (!isFreePurchase &&
-              (isCheckoutConfigLoading ||
-                paymentMethodOptions.length === 0 ||
-                !selectedPaymentOption.isActive))
-          }
-        >
-          {isFreePurchase ? "خرید رایگان" : selectedPaymentOption.actionLabel}
-        </Button>
-      </DialogActions>
+      <ModalFooterActions
+        actions={[
+          {
+            key: "close",
+            label: "بستن",
+            onClick: onClose,
+            variant: "outlined",
+            color: "inherit",
+            disabled: isSubmitting,
+          },
+          {
+            key: "submit",
+            label: isFreePurchase ? "خرید رایگان" : selectedPaymentOption.actionLabel,
+            onClick: () => void handleSubmit(),
+            variant: "contained",
+            color: "primary",
+            icon: isFreePurchase ? undefined : selectedPaymentOption.icon,
+            disabled:
+              isSubmitting ||
+              (!isFreePurchase &&
+                (isCheckoutConfigLoading ||
+                  paymentMethodOptions.length === 0 ||
+                  !selectedPaymentOption.isActive)),
+          },
+        ]}
+      />
     </Dialog>
   );
 }

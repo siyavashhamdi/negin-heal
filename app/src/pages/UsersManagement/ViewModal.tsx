@@ -1,17 +1,11 @@
 import { type ReactElement } from "react";
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Stack, Typography } from "@mui/material";
 import { useTranslation } from "../../hooks/useTranslation";
 import { useUsersManagementEntityTitle } from "./useUsersManagementEntityTitle";
 import { getFileIdFromAccessUrl } from "../../utils/fileAccessUrl.util";
 import type { ManagedUserRecord } from "./users-management.types";
+import EntityModalShell from "../../shared/crud/EntityModalShell";
+import ModalFooterActions from "../../shared/crud/ModalFooterActions";
 
 interface UsersManagementViewModalProps {
   open: boolean;
@@ -43,9 +37,26 @@ const UsersManagementViewModal = ({
   }
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{t("table.entity.modalViewTitle", { title: entityTitle })}</DialogTitle>
-      <DialogContent dividers>
+    <EntityModalShell
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      title={t("table.entity.modalViewTitle", { title: entityTitle })}
+      footer={
+        <ModalFooterActions
+          actions={[
+            {
+              key: "close",
+              label: "بستن",
+              onClick: onClose,
+              variant: "outlined",
+              color: "inherit",
+            },
+          ]}
+        />
+      }
+      pinFooterToBottomOnMobile
+    >
         <Stack spacing={2}>
           <FieldRow
             label={t("pages.usersManagement.viewModal.firstName")}
@@ -74,11 +85,7 @@ const UsersManagementViewModal = ({
             value={record.updatedAt}
           />
         </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>{t("table.dataGrid.modal.close")}</Button>
-      </DialogActions>
-    </Dialog>
+    </EntityModalShell>
   );
 };
 

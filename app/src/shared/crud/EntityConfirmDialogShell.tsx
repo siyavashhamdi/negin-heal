@@ -2,16 +2,12 @@ import { type ReactElement, type ReactNode } from "react";
 import {
   Box,
   Dialog,
-  DialogActions,
   DialogContent,
   DialogTitle,
-  IconButton,
   Typography,
   useTheme,
   type Breakpoint,
 } from "@mui/material";
-import { Close as CloseIcon } from "@mui/icons-material";
-import { useTranslation } from "../../hooks/useTranslation";
 import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
 import { crudModalFooterSx, crudModalTitleSx } from "./modalThemeSx";
 import styles from "./styles/EntityModalShell.module.scss";
@@ -41,7 +37,6 @@ const EntityConfirmDialogShell = ({
 }: EntityConfirmDialogShellProps): ReactElement => {
   const theme = useTheme();
   const { isCompact, dialogProps, getPaperProps, getContentProps } = useMobileDialogProps();
-  const { t } = useTranslation();
 
   return (
     <Dialog
@@ -57,9 +52,6 @@ const EntityConfirmDialogShell = ({
         <Typography variant="h6" component="div" className={styles.modalTitleTypography}>
           {title}
         </Typography>
-        <IconButton aria-label={t("table.dataGrid.modal.close")} onClick={onClose}>
-          <CloseIcon />
-        </IconButton>
       </DialogTitle>
 
       <DialogContent
@@ -80,12 +72,13 @@ const EntityConfirmDialogShell = ({
         </Box>
       </DialogContent>
 
-      <DialogActions
+      <Box
+        component="footer"
         className={styles.confirmDialogActions}
         sx={crudModalFooterSx(theme, { pinFooterToBottomOnMobile: true })}
       >
         {footer}
-      </DialogActions>
+      </Box>
     </Dialog>
   );
 };

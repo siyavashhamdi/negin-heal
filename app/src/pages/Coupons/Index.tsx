@@ -8,17 +8,15 @@ import {
   type FormEvent,
   type ReactElement,
 } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { AddRounded as AddRoundedIcon } from "@mui/icons-material";
 import {
   Autocomplete,
   Box,
-  Button,
   Checkbox,
   Chip,
   CircularProgress,
   Dialog,
-  DialogActions,
   DialogContent,
   DialogTitle,
   FormControlLabel,
@@ -30,7 +28,7 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import { useQuery } from "@apollo/client/react";
-import { useTheme, type Theme } from "@mui/material/styles";
+import { type Theme } from "@mui/material/styles";
 import {
   getCoreRowModel,
   useReactTable,
@@ -58,8 +56,8 @@ import { useTranslation } from "../../hooks/useTranslation";
 import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
 import CrudRowActions from "../../shared/crud/CrudRowActions";
 import EntityDeleteDialog from "../../shared/crud/EntityDeleteDialog";
+import ModalFooterActions from "../../shared/crud/ModalFooterActions";
 import EntityTableShell from "../../shared/crud/EntityTableShell";
-import { crudModalFooterSx } from "../../shared/crud/modalThemeSx";
 import crudPrimitives from "../../shared/crud/styles/crudPrimitives.module.scss";
 import JalaliDateFilterField from "../../shared/table/JalaliDateFilterField";
 import JalaliDateTimeField from "../../shared/table/JalaliDateTimeField";
@@ -247,7 +245,8 @@ function sortingToServerSort(
 }
 
 const CouponsIndex = (): ReactElement => {
-  const theme = useTheme();
+  const location = useLocation();
+  const navigate = useNavigate();
   const isMobile = useMediaQuery((muiTheme: Theme) => muiTheme.breakpoints.down("md"));
   const { isCompact, dialogProps, getPaperProps, getContentProps } = useMobileDialogProps({
     breakpoint: "md",
@@ -379,6 +378,7 @@ const CouponsIndex = (): ReactElement => {
     setForm(null);
     setEditTarget(null);
     setDialogMode("create");
+    navigate(APP_SHELL_ROUTES.moreCoupons);
   };
 
   const [createCoupon, createCouponResult] = useMutationWithSnackbar<
@@ -411,6 +411,7 @@ const CouponsIndex = (): ReactElement => {
     errorMessage: t("pages.coupons.delete.error"),
     onSuccess: () => {
       setDeleteTarget(null);
+      navigate(APP_SHELL_ROUTES.moreCoupons);
       onRefresh();
     },
   });
@@ -444,12 +445,14 @@ const CouponsIndex = (): ReactElement => {
     setDialogMode("create");
     setEditTarget(null);
     setForm(buildInitialCouponForm());
+    navigate(`${APP_SHELL_ROUTES.moreCoupons}/new`);
   };
 
   const openEditDialog = (record: CouponRecord): void => {
     setDialogMode("edit");
     setEditTarget(record);
     setForm(buildInitialCouponForm(record));
+    navigate(`${APP_SHELL_ROUTES.moreCoupons}/${record.id}`);
   };
 
   const setFormField = <TKey extends keyof CouponFormState>(
@@ -524,6 +527,44 @@ const CouponsIndex = (): ReactElement => {
       },
     });
   };
+
+  useEffect(() => {
+    const couponRoutePrefix = `${APP_SHELL_ROUTES.moreCoupons}/`;
+    if (!location.pathname.startsWith(couponRoutePrefix)) {
+      return;
+    }
+
+    const routeSuffix = location.pathname.slice(couponRoutePrefix.length);
+    if (routeSuffix === "new") {
+      if (!form || dialogMode !== "create") {
+        setDialogMode("create");
+        setEditTarget(null);
+        setForm(buildInitialCouponForm());
+      }
+      return;
+    }
+
+    if (routeSuffix.startsWith("delete/")) {
+      const deleteId = routeSuffix.replace("delete/", "");
+      if (!deleteId) {
+        return;
+      }
+      const target = rows.find((row) => row.id === deleteId) ?? null;
+      setDeleteTarget(target);
+      return;
+    }
+
+    if (!routeSuffix) {
+      return;
+    }
+
+    const target = rows.find((row) => row.id === routeSuffix) ?? null;
+    if (target) {
+      setDialogMode("edit");
+      setEditTarget(target);
+      setForm(buildInitialCouponForm(target));
+    }
+  }, [dialogMode, form, location.pathname, rows]);
 
   const renderTextFilter = (
     key: keyof Pick<
@@ -855,7 +896,10 @@ const CouponsIndex = (): ReactElement => {
         cell: ({ row }) => (
           <CrudRowActions
             onEdit={() => openEditDialog(row.original)}
-            onDelete={() => setDeleteTarget(row.original)}
+            onDelete={() => {
+              setDeleteTarget(row.original);
+              navigate(`${APP_SHELL_ROUTES.moreCoupons}/delete/${row.original.id}`);
+            }}
           />
         ),
         enableSorting: false,
@@ -1134,47 +1178,42 @@ const CouponsIndex = (): ReactElement => {
               </Stack>
             ) : null}
           </DialogContent>
-          <DialogActions
-            sx={crudModalFooterSx(theme, {
-              pinFooterToBottomOnMobile: true,
-            })}
-          >
-            <Stack
-              direction={isMobile ? "column-reverse" : "row"}
-              spacing={1.5}
-              sx={{
-                width: "100%",
-                justifyContent: isMobile ? "stretch" : "flex-end",
-                "& .MuiButton-root": {
-                  width: isMobile ? "100%" : "auto",
-                  minWidth: isMobile ? undefined : "8rem",
-                },
-              }}
-            >
-              <Button variant="outlined" color="inherit" onClick={closeDialog} disabled={isSaving}>
-                {t("pages.coupons.edit.cancel")}
-              </Button>
-              <Button
-                type="submit"
-                variant="contained"
-                disabled={isSaving}
-                startIcon={dialogMode === "create" ? <AddRoundedIcon /> : undefined}
-              >
-                {isSaving
+          <ModalFooterActions
+            reverseOrderOnMobile={isMobile}
+            actions={[
+              {
+                key: "close",
+                label: "بستن",
+                onClick: closeDialog,
+                color: "inherit",
+                variant: "outlined",
+                disabled: isSaving,
+              },
+              {
+                key: "submit",
+                label: isSaving
                   ? t("pages.coupons.edit.saving")
                   : dialogMode === "create"
                     ? t("pages.coupons.create.save")
-                    : t("pages.coupons.edit.save")}
-              </Button>
-            </Stack>
-          </DialogActions>
+                    : t("pages.coupons.edit.save"),
+                type: "submit",
+                variant: "contained",
+                color: "primary",
+                disabled: isSaving,
+                icon: dialogMode === "create" ? <AddRoundedIcon /> : undefined,
+              },
+            ]}
+          />
         </Box>
       </Dialog>
 
       <EntityDeleteDialog
         open={deleteTarget != null}
         entityTitle={deleteTarget?.title ?? t("pages.coupons.createEntityTitle")}
-        onCancel={() => setDeleteTarget(null)}
+        onCancel={() => {
+          setDeleteTarget(null);
+          navigate(APP_SHELL_ROUTES.moreCoupons);
+        }}
         onConfirm={handleConfirmDelete}
         loading={deleteCouponResult.loading}
       />

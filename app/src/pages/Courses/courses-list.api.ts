@@ -162,6 +162,24 @@ export const DEFAULT_COURSE_LIST_SORT: CourseListSort = {
   order: "DESC",
 };
 
+export function isCourseFreeForList(item: Pick<CourseListRecord, "priceIrt" | "discount">): boolean {
+  const price = item.priceIrt ?? 0;
+  if (price <= 0) {
+    return true;
+  }
+
+  const discount = item.discount;
+  if (!discount || discount.value <= 0) {
+    return false;
+  }
+
+  if (discount.type === "PERCENTAGE") {
+    return discount.value >= 100;
+  }
+
+  return discount.value >= price;
+}
+
 function trimToNull(value: string): string | null {
   const trimmed = value.trim();
   return trimmed === "" ? null : trimmed;

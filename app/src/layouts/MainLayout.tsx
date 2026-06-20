@@ -46,6 +46,7 @@ import { notifyGeneralUpdateListeners } from "../lib/general-updates-listeners";
 import { APP_SHELL_ROUTES } from "../routing/app-shell-routes";
 import { resolveNotificationActionPayload } from "../utilities/notification-action.util";
 import { showBrowserNotification } from "../utils/browserNotification.util";
+import { scrollToTopOnMobile } from "../utils/scrollToTopOnMobile.util";
 import { SideMenuNav } from "./SideMenuNav";
 import "./styles/MainLayout.scss";
 
@@ -869,6 +870,7 @@ export function MainLayout({
           <nav className="main-layout__mobile-bottom-nav" aria-label="منوی موبایل">
             <NavLink
               to="/courses"
+              onClick={scrollToTopOnMobile}
               className={({ isActive }) =>
                 `main-layout__mobile-bottom-item${
                   isActive ? " main-layout__mobile-bottom-item--active" : ""
@@ -888,6 +890,7 @@ export function MainLayout({
             {isSuperAdmin ? (
               <NavLink
                 to="/payments"
+                onClick={scrollToTopOnMobile}
                 className={({ isActive }) =>
                   `main-layout__mobile-bottom-item${
                     isActive ? " main-layout__mobile-bottom-item--active" : ""
@@ -908,6 +911,7 @@ export function MainLayout({
             {authUser ? (
               <NavLink
                 to="/notifications"
+                onClick={scrollToTopOnMobile}
                 className={({ isActive }) =>
                   `main-layout__mobile-bottom-item${
                     isActive ? " main-layout__mobile-bottom-item--active" : ""
@@ -926,6 +930,7 @@ export function MainLayout({
             ) : null}
             <NavLink
               to={supportNavPath}
+              onClick={scrollToTopOnMobile}
               className={({ isActive }) =>
                 `main-layout__mobile-bottom-item${
                   isActive ? " main-layout__mobile-bottom-item--active" : ""
@@ -948,6 +953,7 @@ export function MainLayout({
             </NavLink>
             <NavLink
               to="/profile"
+              onClick={scrollToTopOnMobile}
               className={({ isActive }) =>
                 `main-layout__mobile-bottom-item${
                   isActive ? " main-layout__mobile-bottom-item--active" : ""
@@ -967,6 +973,7 @@ export function MainLayout({
             </NavLink>
             <NavLink
               to="/more"
+              onClick={scrollToTopOnMobile}
               className={({ isActive }) =>
                 `main-layout__mobile-bottom-item${
                   isActive ? " main-layout__mobile-bottom-item--active" : ""

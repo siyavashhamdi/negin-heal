@@ -1,18 +1,14 @@
 import { type ReactElement } from "react";
 import {
   Box,
-  Button,
   Dialog,
-  DialogActions,
   DialogContent,
   DialogTitle,
-  Stack,
   Typography,
 } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
 import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
 import { useTranslation } from "../../hooks/useTranslation";
-import { crudModalFooterSx } from "./modalThemeSx";
+import ModalFooterActions from "./ModalFooterActions";
 
 interface EntityDeleteDialogProps {
   open: boolean;
@@ -30,7 +26,6 @@ const EntityDeleteDialog = ({
   loading = false,
 }: EntityDeleteDialogProps): ReactElement => {
   const { t } = useTranslation();
-  const theme = useTheme();
   const { isCompact, dialogProps, getPaperProps, getContentProps } = useMobileDialogProps();
 
   return (
@@ -57,31 +52,27 @@ const EntityDeleteDialog = ({
             {t("table.entity.deleteConfirmMessage", { title: entityTitle })}
           </Typography>
         </DialogContent>
-        <DialogActions
-          sx={crudModalFooterSx(theme, {
-            pinFooterToBottomOnMobile: isCompact,
-          })}
-        >
-          <Stack
-            direction={isCompact ? "column-reverse" : "row"}
-            spacing={1.5}
-            sx={{
-              width: "100%",
-              justifyContent: isCompact ? "stretch" : "flex-end",
-              "& .MuiButton-root": {
-                width: isCompact ? "100%" : "auto",
-                minWidth: isCompact ? undefined : "8rem",
-              },
-            }}
-          >
-            <Button onClick={onCancel} color="inherit" variant="outlined" disabled={loading}>
-              {t("table.dataGrid.deleteDialog.cancel")}
-            </Button>
-            <Button onClick={onConfirm} color="error" variant="contained" disabled={loading}>
-              {t("table.dataGrid.deleteDialog.confirm")}
-            </Button>
-          </Stack>
-        </DialogActions>
+        <ModalFooterActions
+          pinFooterToBottomOnMobile={isCompact}
+          actions={[
+            {
+              key: "close",
+              label: "بستن",
+              onClick: onCancel,
+              color: "inherit",
+              variant: "outlined",
+              disabled: loading,
+            },
+            {
+              key: "confirm",
+              label: t("table.dataGrid.deleteDialog.confirm"),
+              onClick: onConfirm,
+              color: "error",
+              variant: "contained",
+              disabled: loading,
+            },
+          ]}
+        />
       </Box>
     </Dialog>
   );

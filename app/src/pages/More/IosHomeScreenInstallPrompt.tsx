@@ -1,8 +1,7 @@
 import AddToHomeScreenRoundedIcon from "@mui/icons-material/AddToHomeScreenRounded";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import IosShareRoundedIcon from "@mui/icons-material/IosShareRounded";
 import PhoneIphoneRoundedIcon from "@mui/icons-material/PhoneIphoneRounded";
-import { Dialog, IconButton } from "@mui/material";
+import { Dialog } from "@mui/material";
 import { useState, type ReactElement } from "react";
 
 import { useTranslation } from "../../hooks/useTranslation";
@@ -67,13 +66,6 @@ const IosHomeScreenInstallPrompt = (): ReactElement | null => {
             <p className={styles.iosInstallDialogEyebrow}>{t("pages.more.iosInstall.guideEyebrow")}</p>
             <h3 id="ios-install-guide-title">{t("pages.more.iosInstall.guideTitle")}</h3>
           </div>
-          <IconButton
-            aria-label={t("pages.more.iosInstall.closeGuide")}
-            onClick={() => setGuideOpen(false)}
-            size="small"
-          >
-            <CloseRoundedIcon />
-          </IconButton>
         </div>
 
         <div className={styles.iosInstallDialogBody}>

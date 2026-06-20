@@ -9,52 +9,6 @@
   margin-inline: auto;
 }
 
-.filterTabs {
-  display: flex;
-  align-items: stretch;
-  gap: 0.35rem;
-  width: 100%;
-  min-width: 0;
-  padding: 0.35rem;
-  border-radius: 999rem;
-  background: color-mix(in srgb, var(--app-surface-bg) 88%, var(--text-secondary) 4%);
-  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 72%, transparent);
-}
-
-.filterTab {
-  display: flex;
-  flex: 1 1 0;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  min-width: 0;
-  min-height: 2.5rem;
-  padding-inline: 0.75rem;
-  border: 0.0625rem solid transparent;
-  border-radius: 999rem;
-  background: transparent;
-  color: var(--text-secondary);
-  font: inherit;
-  font-size: 0.82rem;
-  font-weight: variables.$font-weight-semibold;
-  white-space: nowrap;
-  cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease,
-    border-color 0.2s ease;
-}
-
-.filterTab:hover {
-  color: var(--text-primary);
-}
-
-.filterTabActive {
-  background: var(--app-surface-bg);
-  color: var(--text-primary);
-  border-color: color-mix(in srgb, var(--app-surface-border) 72%, transparent);
-}
-
 .feed {
   display: grid;
   gap: 0.85rem;
@@ -350,16 +304,8 @@
 }
 
 @media (max-width: 720px) {
-  .filterTabs {
-    gap: 0.25rem;
-    padding: 0.25rem;
-    border-radius: 1rem;
-  }
-
-  .filterTab {
-    min-height: 2.35rem;
-    padding-inline: 0.3rem;
-    font-size: 0.72rem;
+  .page {
+    position: relative;
   }
 
   .cardTime {

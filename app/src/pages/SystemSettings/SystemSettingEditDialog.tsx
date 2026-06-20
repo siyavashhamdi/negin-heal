@@ -3,16 +3,13 @@ import { useQuery } from "@apollo/client/react";
 import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
 import {
   Box,
-  Button,
   CircularProgress,
   Dialog,
-  DialogActions,
   DialogContent,
   DialogTitle,
   Stack,
   Typography,
   useMediaQuery,
-  useTheme,
 } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
 
@@ -22,7 +19,7 @@ import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
-import { crudModalFooterSx } from "../../shared/crud/modalThemeSx";
+import ModalFooterActions from "../../shared/crud/ModalFooterActions";
 import type { AppSettingRecord } from "./system-settings-list.api";
 import {
   CommonSettingFields,
@@ -51,7 +48,6 @@ const SystemSettingEditDialog = ({
   onClose,
   onSaved,
 }: SystemSettingEditDialogProps): ReactElement => {
-  const theme = useTheme();
   const isMobile = useMediaQuery((muiTheme: Theme) => muiTheme.breakpoints.down("md"));
   const { dialogProps, getPaperProps, getContentProps } = useMobileDialogProps({
     breakpoint: "md",
@@ -160,34 +156,30 @@ const SystemSettingEditDialog = ({
             </Stack>
           )}
         </DialogContent>
-        <DialogActions sx={crudModalFooterSx(theme, { pinFooterToBottomOnMobile: true })}>
-          <Stack
-            direction={isMobile ? "column-reverse" : "row"}
-            spacing={1.5}
-            sx={{
-              width: "100%",
-              justifyContent: isMobile ? "stretch" : "flex-end",
-              "& .MuiButton-root": {
-                width: isMobile ? "100%" : "auto",
-                minWidth: isMobile ? undefined : "8rem",
-              },
-            }}
-          >
-            <Button variant="outlined" color="inherit" onClick={onClose} disabled={isSaving}>
-              {t("pages.usersManagement.edit.cancel")}
-            </Button>
-            <Button
-              type="submit"
-              variant="contained"
-              startIcon={<SaveRoundedIcon />}
-              disabled={!canSubmit}
-            >
-              {isSaving
+        <ModalFooterActions
+          reverseOrderOnMobile={isMobile}
+          actions={[
+            {
+              key: "close",
+              label: "بستن",
+              onClick: onClose,
+              variant: "outlined",
+              color: "inherit",
+              disabled: isSaving,
+            },
+            {
+              key: "submit",
+              label: isSaving
                 ? t("pages.usersManagement.edit.saving")
-                : t("pages.usersManagement.edit.save")}
-            </Button>
-          </Stack>
-        </DialogActions>
+                : t("pages.usersManagement.edit.save"),
+              type: "submit",
+              variant: "contained",
+              color: "primary",
+              icon: <SaveRoundedIcon />,
+              disabled: !canSubmit,
+            },
+          ]}
+        />
       </Box>
     </Dialog>
   );
