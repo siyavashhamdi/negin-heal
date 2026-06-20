@@ -14,6 +14,7 @@ import { useAuth, type User } from "../contexts/AuthContext";
 import { useAppSettings } from "../contexts/AppSettingsContext";
 import { useSnackbar } from "./useSnackbar";
 import { collectSessionClientContextInput } from "../utils/sessionClientContext.util";
+import { applyUserPreferences } from "../utils/userPreferences.util";
 import type { UserMeGqlResponse } from "../lib/graphql/generated/graphql";
 
 export interface RequestLoginCodeInput {
@@ -158,6 +159,7 @@ async function establishSession(
     return false;
   }
 
+  applyUserPreferences(meResult.data.me.preferences);
   login(accessToken, mapMeToUser(meResult.data.me));
   showSuccess(successMessage);
   return true;

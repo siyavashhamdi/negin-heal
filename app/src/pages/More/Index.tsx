@@ -37,10 +37,15 @@ import {
 import NotificationPermissionCallout from "./NotificationPermissionCallout";
 import AndroidAppDownloadLink from "./AndroidAppDownloadLink";
 import IosHomeScreenInstallPrompt from "./IosHomeScreenInstallPrompt";
+import {
+  applyUserPreferences,
+  readStoredNotificationsEnabled,
+  resolveThemePreference,
+  type ThemePreference,
+} from "../../utils/userPreferences.util";
 import styles from "./styles/more.module.scss";
 
 const hasText = (value: string): boolean => value.trim().length > 0;
-type ThemePreference = "dark" | "light";
 
 type UserProfilePreferencesMutationResult = {
   readonly userProfileUpdate: {
@@ -61,10 +66,6 @@ type UserProfilePreferencesMutationVariables = {
   };
 };
 
-function resolveThemePreference(value: string | null | undefined): ThemePreference | null {
-  return value === "dark" || value === "light" ? value : null;
-}
-
 const More = (): ReactElement => {
   const navigate = useNavigate();
   const apolloClient = useApolloClient();
@@ -82,7 +83,8 @@ const More = (): ReactElement => {
   const serverThemePreference = resolveThemePreference(meData?.me?.preferences?.theme);
   const serverNotificationsEnabled = meData?.me?.preferences?.notificationsEnabled;
   const initialThemePreference = serverThemePreference ?? mode;
-  const initialNotificationsEnabled = serverNotificationsEnabled ?? true;
+  const initialNotificationsEnabled =
+    serverNotificationsEnabled ?? readStoredNotificationsEnabled();
   const { data } = useQuery<AppPrivacyPolicyPageConfigQuery>(APP_PRIVACY_POLICY_PAGE_QUERY, {
     fetchPolicy: "cache-and-network",
     skip: !shouldShowPublicInfoCards,
@@ -150,6 +152,7 @@ const More = (): ReactElement => {
     const nextTheme: ThemePreference = previousTheme === "dark" ? "light" : "dark";
     setPreferredTheme(nextTheme);
     setThemeMode(nextTheme);
+    applyUserPreferences({ theme: nextTheme });
 
     if (!isAuthenticated) {
       return;
@@ -172,6 +175,7 @@ const More = (): ReactElement => {
 
     setPreferredTheme(previousTheme);
     setThemeMode(previousTheme);
+    applyUserPreferences({ theme: previousTheme });
   };
 
   const handleEmptyCacheAndHardReload = (): void => {
@@ -189,6 +193,7 @@ const More = (): ReactElement => {
     const previousValue = notificationsEnabled;
     const nextValue = !previousValue;
     setNotificationsEnabled(nextValue);
+    applyUserPreferences({ notificationsEnabled: nextValue });
 
     const result = await updatePreferences({
       variables: {
@@ -206,6 +211,7 @@ const More = (): ReactElement => {
     }
 
     setNotificationsEnabled(previousValue);
+    applyUserPreferences({ notificationsEnabled: previousValue });
   };
 
   return (

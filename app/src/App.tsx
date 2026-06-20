@@ -13,6 +13,7 @@ import { SnackbarProvider } from "./contexts/SnackbarContext";
 import { LoadingProvider } from "./contexts/LoadingContext";
 import { ApolloErrorHandler } from "./components/ApolloErrorHandler";
 import { LoadingBar } from "./components/LoadingBar";
+import { UserPreferencesSync } from "./components/UserPreferencesSync";
 import { apolloClient } from "./lib/apollo-client";
 import { MainLayout } from "./layouts/MainLayout";
 import { LOCAL_STORAGE_KEYS } from "./constants";
@@ -68,6 +69,7 @@ const App = (): ReactElement => (
           <AuthProvider>
             <AppSettingsProvider>
               <LoadingProvider>
+                <UserPreferencesSync />
                 <ThemedAppTree />
               </LoadingProvider>
             </AppSettingsProvider>
