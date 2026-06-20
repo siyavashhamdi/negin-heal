@@ -68,7 +68,7 @@ export default defineConfig(({ mode }) => {
       react(),
       VitePWA({
         registerType: "autoUpdate",
-        includeAssets: ["logo.svg", "icons/*.png"],
+        includeAssets: ["logo.png", "icons/*.png"],
         manifest: {
           id: "/",
           name: "Negin Heal",

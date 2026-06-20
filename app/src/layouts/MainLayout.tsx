@@ -51,6 +51,21 @@ import "./styles/MainLayout.scss";
 
 const POPOVER_ANCHOR_ORIGIN = { vertical: "bottom", horizontal: "left" } as const;
 const POPOVER_TRANSFORM_ORIGIN = { vertical: "top", horizontal: "left" } as const;
+const LAYOUT_CONTAINER_SX = {
+  maxWidth: "min(96vw, 82.5rem) !important",
+  px: { xs: 1, sm: 1.25, md: 1.5 },
+} as const;
+const HEADER_SX = {
+  py: { xs: 0.75, md: 0.85 },
+  px: { xs: 1.25, sm: 1.45 },
+} as const;
+const BRAND_LOGO_SX = {
+  width: "3.5rem",
+  height: "3.5rem",
+  flexShrink: 0,
+  display: "block",
+  objectFit: "contain",
+} as const;
 const ADMIN_ROLE_BADGE_LABELS = {
   SUPER_ADMIN: "سوپرادمین",
   ADMIN: "ادمین",
@@ -505,21 +520,23 @@ export function MainLayout({
           </IconButton>
         </aside>
       ) : null}
-      <Container maxWidth="lg" className="main-layout__container">
+      <Container maxWidth={false} className="main-layout__container" sx={LAYOUT_CONTAINER_SX}>
         {showHeader ? (
-          <header className="main-layout__header">
+          <Box component="header" className="main-layout__header" sx={HEADER_SX}>
             <div className="main-layout__brand">
               <RouterLink
                 to="/"
                 className="main-layout__brand-link main-layout__brand-link--desktop"
                 aria-label={brandHomeAriaLabel}
               >
-                <img
+                <Box
+                  component="img"
                   className="main-layout__brand-logo"
-                  src="/logo.svg"
+                  src="/logo.png"
                   alt=""
                   decoding="async"
                   aria-hidden
+                  sx={BRAND_LOGO_SX}
                 />
                 <div className="main-layout__brand-text">
                   <h1>
@@ -535,12 +552,14 @@ export function MainLayout({
                 className="main-layout__brand-link main-layout__brand-link--mobile"
                 aria-label={brandHomeAriaLabel}
               >
-                <img
+                <Box
+                  component="img"
                   className="main-layout__brand-logo"
-                  src="/logo.svg"
+                  src="/logo.png"
                   alt=""
                   decoding="async"
                   aria-hidden
+                  sx={BRAND_LOGO_SX}
                 />
                 <div className="main-layout__brand-text">
                   <h1>
@@ -823,7 +842,7 @@ export function MainLayout({
                 </LayoutPopover>
               </div>
             </div>
-          </header>
+          </Box>
         ) : null}
 
         <div className="main-layout__body">

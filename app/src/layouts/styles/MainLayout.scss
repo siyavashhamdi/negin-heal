@@ -75,8 +75,6 @@ $hairline: 0.0625rem solid;
   border-radius: var(--main-layout-panel-radius);
   background: var(--app-surface-bg);
   box-shadow: var(--main-layout-panel-shadow);
-  padding-inline: var(--main-layout-panel-padding);
-  padding-block: 0;
   display: grid;
   gap: 0.9rem;
   inline-size: 100%;

@@ -44,7 +44,7 @@ const UnderConstruction = (): ReactElement => {
         <Box className={styles.brandBlock}>
           <Box
             component="img"
-            src="/logo.svg"
+            src="/logo.png"
             alt={t("layout.header.brand.title")}
             className={styles.logo}
           />

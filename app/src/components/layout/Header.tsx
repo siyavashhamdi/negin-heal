@@ -108,7 +108,7 @@ const Header = (): ReactElement => {
         className={styles.brand}
         aria-label={t("layout.mainLayout.navigation.brandHomeLink", { title: brandTitle })}
       >
-        <Box component="img" src="/logo.svg" alt="" className={styles.logo} aria-hidden />
+        <Box component="img" src="/logo.png" alt="" className={styles.logo} aria-hidden />
         <Box className={styles.brandText}>
           <Typography component="h1" className={styles.title}>
             {brandTitle}{" "}

@@ -69,7 +69,7 @@ const LoginShell = ({ subtitle, children, embedded = false }: LoginShellProps): 
                   <Box className={styles.logoSection}>
                     <Box
                       component="img"
-                      src="/logo.svg"
+                      src="/logo.png"
                       alt={t("layout.header.brand.title")}
                       className={styles.logo}
                     />
