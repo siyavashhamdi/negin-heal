@@ -35,6 +35,7 @@ import {
   type AppTermsOfUsePageConfigQuery,
 } from "./terms-of-use-page.api";
 import NotificationPermissionCallout from "./NotificationPermissionCallout";
+import IosHomeScreenInstallPrompt from "./IosHomeScreenInstallPrompt";
 import styles from "./styles/more.module.scss";
 
 const hasText = (value: string): boolean => value.trim().length > 0;
@@ -268,6 +269,8 @@ const More = (): ReactElement => {
           <NotificationPermissionCallout notificationsEnabled={notificationsEnabled} />
         </section>
       ) : null}
+
+      <IosHomeScreenInstallPrompt />
 
       <div className={styles.linkGrid}>
         {isSuperAdmin ? (

@@ -288,6 +288,32 @@
                 "unsupportedDescription": "برای دریافت اعلان، از Chrome، Safari یا Edge به‌روز روی موبایل یا دسکتاپ استفاده کنید.",
                 "mobileUnsupportedTitle": "این مرورگر روی موبایل اعلان را پشتیبانی نمی‌کند",
                 "mobileUnsupportedDescription": "روی Android از Chrome استفاده کنید. روی iOS باید سایت را با Safari باز کنید و با «Add to Home Screen» به صفحه اصلی اضافه کنید."
+            },
+            "iosInstall": {
+                "cardAriaLabel": "افزودن اپ به صفحه اصلی iPhone",
+                "cardTitle": "افزودن میانبر به صفحه اصلی",
+                "cardDescription": "برای تجربه بهتر و دریافت اعلان روی iPhone، اپ را از Safari به صفحه اصلی اضافه کنید.",
+                "openGuideButton": "راهنمای افزودن به صفحه اصلی",
+                "guideEyebrow": "راهنمای iOS",
+                "guideTitle": "افزودن نگین هیل به صفحه اصلی",
+                "guideIntro": "Safari اجازه افزودن خودکار نمی‌دهد. این سه مرحله را دنبال کنید:",
+                "guideNote": "بعد از افزودن، اپ را از آیکون صفحه اصلی باز کنید — نه از تب Safari.",
+                "guideDoneButton": "متوجه شدم",
+                "closeGuide": "بستن راهنما",
+                "steps": {
+                    "share": {
+                        "title": "دکمه اشتراک‌گذاری را بزنید",
+                        "description": "در پایین Safari روی آیکون اشتراک‌گذاری (مربع با فلش بالا) ضربه بزنید."
+                    },
+                    "add": {
+                        "title": "Add to Home Screen را انتخاب کنید",
+                        "description": "در منو پایین، گزینه «Add to Home Screen» یا «افزودن به صفحه اصلی» را پیدا کنید."
+                    },
+                    "open": {
+                        "title": "روی Add بزنید و از آیکون باز کنید",
+                        "description": "نام «Negin Heal» را تأیید کنید. سپس اپ را از صفحه اصلی iPhone باز کنید."
+                    }
+                }
             }
         },
         "underConstruction": {
