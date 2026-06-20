@@ -10,6 +10,6 @@
         "resolveJsonModule": true,
         "isolatedModules": true
     },
-    "include": ["vite.config.ts", "eslint.config.ts", "src/shared/enamad.config.ts"],
+    "include": ["vite.config.ts", "eslint.config.ts", "src/shared/enamad.constants.ts"],
     "exclude": ["node_modules"]
 }

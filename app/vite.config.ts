@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
-import { ENAMAD_DEV_PROXY_PATH, ENAMAD_LOGO_PATH } from "./src/shared/enamad.config";
+import { ENAMAD_DEV_PROXY_PATH, ENAMAD_LOGO_PATH } from "./src/shared/enamad.constants";
 import {
   PWA_BACKGROUND_COLOR,
   PWA_ICON_192,
