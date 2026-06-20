@@ -553,15 +553,27 @@
 .linkCard {
   display: grid;
   place-items: center;
+  justify-items: center;
   gap: 0.4rem;
   min-block-size: 6.2rem;
+  padding-inline: 0.45rem;
   border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
   border-radius: 1rem;
   background: color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
   color: var(--text-primary);
   font: inherit;
   font-weight: variables.$font-weight-semibold;
+  text-align: center;
   cursor: pointer;
+}
+
+.linkCard span {
+  inline-size: 100%;
+  text-align: center;
+}
+
+a.linkCard {
+  text-decoration: none;
 }
 
 .linkCard svg {

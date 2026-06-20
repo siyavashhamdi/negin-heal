@@ -35,6 +35,7 @@ import {
   type AppTermsOfUsePageConfigQuery,
 } from "./terms-of-use-page.api";
 import NotificationPermissionCallout from "./NotificationPermissionCallout";
+import AndroidAppDownloadLink from "./AndroidAppDownloadLink";
 import IosHomeScreenInstallPrompt from "./IosHomeScreenInstallPrompt";
 import styles from "./styles/more.module.scss";
 
@@ -273,6 +274,7 @@ const More = (): ReactElement => {
       <IosHomeScreenInstallPrompt />
 
       <div className={styles.linkGrid}>
+        <AndroidAppDownloadLink />
         {isSuperAdmin ? (
           <>
             <button

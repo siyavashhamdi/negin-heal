@@ -289,6 +289,9 @@
                 "mobileUnsupportedTitle": "این مرورگر روی موبایل اعلان را پشتیبانی نمی‌کند",
                 "mobileUnsupportedDescription": "روی Android از Chrome استفاده کنید. روی iOS باید سایت را با Safari باز کنید و با «Add to Home Screen» به صفحه اصلی اضافه کنید."
             },
+            "androidDownload": {
+                "linkLabel": "دانلود مستقیم اپ اندروید"
+            },
             "iosInstall": {
                 "cardAriaLabel": "افزودن اپ به صفحه اصلی iPhone",
                 "cardTitle": "افزودن میانبر به صفحه اصلی",
