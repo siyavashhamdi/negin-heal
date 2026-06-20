@@ -1,10 +1,11 @@
+import { PWA_ICON_192 } from "../constants/pwa.constants";
+import { getPwaServiceWorkerRegistration } from "./pwaRegistration.util";
+
 export type BrowserNotificationInput = {
   readonly title: string;
   readonly body: string;
   readonly tag?: string;
 };
-
-const NOTIFICATION_SW_PATH = "/push-sw.js";
 
 export function isSecureBrowserContext(): boolean {
   return typeof window !== "undefined" && window.isSecureContext;
@@ -48,25 +49,8 @@ export function canRequestBrowserNotificationPrompt(
   return permission === "default" || permission === "denied";
 }
 
-async function ensureNotificationServiceWorkerRegistration(): Promise<ServiceWorkerRegistration | null> {
-  if (!("serviceWorker" in navigator)) {
-    return null;
-  }
-
-  try {
-    let registration = await navigator.serviceWorker.getRegistration("/");
-
-    if (!registration) {
-      registration = await navigator.serviceWorker.register(NOTIFICATION_SW_PATH, {
-        scope: "/",
-      });
-    }
-
-    await navigator.serviceWorker.ready;
-    return registration;
-  } catch {
-    return null;
-  }
+function ensureNotificationServiceWorkerRegistration(): Promise<ServiceWorkerRegistration | null> {
+  return getPwaServiceWorkerRegistration();
 }
 
 export async function registerNotificationServiceWorker(): Promise<boolean> {
@@ -108,8 +92,8 @@ async function showNotificationViaServiceWorker(
   await registration.showNotification(input.title, {
     body: input.body,
     tag: input.tag,
-    icon: "/logo.svg",
-    badge: "/logo.svg",
+    icon: PWA_ICON_192,
+    badge: PWA_ICON_192,
     dir: "rtl",
     lang: "fa",
     data: {
@@ -125,7 +109,7 @@ function showNotificationViaPageConstructor(input: BrowserNotificationInput): bo
     new Notification(input.title, {
       body: input.body,
       tag: input.tag,
-      icon: "/logo.svg",
+      icon: PWA_ICON_192,
       dir: "rtl",
       lang: "fa",
     });

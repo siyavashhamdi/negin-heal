@@ -2,7 +2,14 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
+import { VitePWA } from "vite-plugin-pwa";
 import { ENAMAD_DEV_PROXY_PATH, ENAMAD_LOGO_PATH } from "./src/shared/enamad.config";
+import {
+  PWA_BACKGROUND_COLOR,
+  PWA_ICON_192,
+  PWA_ICON_512,
+  PWA_THEME_COLOR,
+} from "./src/constants/pwa.constants";
 
 const appDir = path.dirname(fileURLToPath(import.meta.url));
 
@@ -57,7 +64,59 @@ export default defineConfig(({ mode }) => {
   };
 
   return {
-    plugins: [react()],
+    plugins: [
+      react(),
+      VitePWA({
+        registerType: "autoUpdate",
+        includeAssets: ["logo.svg", "icons/*.png"],
+        manifest: {
+          id: "/",
+          name: "Negin Heal",
+          short_name: "Negin Heal",
+          description: "Negin Heal learning platform",
+          theme_color: PWA_THEME_COLOR,
+          background_color: PWA_BACKGROUND_COLOR,
+          display: "standalone",
+          orientation: "portrait",
+          scope: "/",
+          start_url: "/",
+          lang: "fa",
+          dir: "rtl",
+          categories: ["education", "health"],
+          icons: [
+            {
+              src: PWA_ICON_192,
+              sizes: "192x192",
+              type: "image/png",
+              purpose: "any",
+            },
+            {
+              src: PWA_ICON_512,
+              sizes: "512x512",
+              type: "image/png",
+              purpose: "any",
+            },
+            {
+              src: "/icons/icon-512-maskable.png",
+              sizes: "512x512",
+              type: "image/png",
+              purpose: "maskable",
+            },
+          ],
+        },
+        strategies: "injectManifest",
+        srcDir: "src",
+        filename: "sw.ts",
+        injectManifest: {
+          globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,webmanifest}"],
+        },
+        devOptions: {
+          enabled: true,
+          type: "module",
+          navigateFallback: "index.html",
+        },
+      }),
+    ],
     server: {
       port,
       strictPort: true,

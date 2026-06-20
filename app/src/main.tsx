@@ -3,6 +3,9 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./index.scss";
 import "./i18n/config";
+import { registerPwaServiceWorker } from "./utils/pwaRegistration.util";
+
+registerPwaServiceWorker();
 
 const rootElement = document.getElementById("root");
 

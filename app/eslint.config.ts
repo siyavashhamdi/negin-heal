@@ -108,6 +108,6 @@ export default [
     },
   },
   {
-    ignores: ["dist/**", "node_modules/**", "*.config.js", "*.config.mjs", ".eslintrc.*"],
+    ignores: ["dist/**", "node_modules/**", "*.config.js", "*.config.mjs", ".eslintrc.*", "src/sw.ts"],
   },
 ];
