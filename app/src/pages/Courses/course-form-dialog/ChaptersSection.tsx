@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactElement } from "react";
+import { useEffect, useRef, type ReactElement } from "react";
 import {
   Button,
   Divider,
@@ -12,9 +12,9 @@ import {
   Select,
   Switch,
   TextField,
-  Tooltip,
   Typography,
 } from "@mui/material";
+import { OverflowTooltip } from "../../../shared/OverflowTooltip";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
 import FileUploadField from "../../../shared/forms/FileUploadField";
@@ -49,42 +49,6 @@ type ChaptersSectionProps = {
   readonly stripNumberSeparators: (value: string) => string;
 };
 
-type ChapterStepTitleProps = {
-  readonly title: string;
-};
-
-const ChapterStepTitle = ({ title }: ChapterStepTitleProps): ReactElement => {
-  const titleRef = useRef<HTMLSpanElement | null>(null);
-  const [isOverflowing, setIsOverflowing] = useState(false);
-
-  useEffect(() => {
-    const titleElement = titleRef.current;
-    if (!titleElement) {
-      return undefined;
-    }
-
-    const updateOverflowState = (): void => {
-      setIsOverflowing(titleElement.scrollWidth > titleElement.clientWidth);
-    };
-
-    updateOverflowState();
-    const resizeObserver = new ResizeObserver(updateOverflowState);
-    resizeObserver.observe(titleElement);
-
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, [title]);
-
-  return (
-    <Tooltip title={isOverflowing ? title : ""} arrow>
-      <span ref={titleRef} className={styles.chapterStepTitle}>
-        {title}
-      </span>
-    </Tooltip>
-  );
-};
-
 const ChaptersSection = ({
   chapters,
   activeChapter,
@@ -105,6 +69,22 @@ const ChaptersSection = ({
   onRemoveItem,
   stripNumberSeparators,
 }: ChaptersSectionProps): ReactElement => {
+  const chapterStepsRailRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const rail = chapterStepsRailRef.current;
+    if (!rail) {
+      return;
+    }
+
+    const activeStep = rail.querySelector(`.${styles.chapterStepButtonActive}`);
+    if (!(activeStep instanceof HTMLElement)) {
+      return;
+    }
+
+    activeStep.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "end" });
+  }, [activeChapterIndex, chapters.length]);
+
   const updateActiveChapter = (patch: Partial<DraftChapter>): void => {
     if (!activeChapter) {
       return;
@@ -147,7 +127,7 @@ const ChaptersSection = ({
         </Button>
       </div>
 
-      <div className={styles.chapterStepsRail}>
+      <div ref={chapterStepsRailRef} className={styles.chapterStepsRail}>
         {chapters.map((chapter, index) => (
           <div
             key={chapter.id}
@@ -177,7 +157,12 @@ const ChaptersSection = ({
               onDragEnd={() => onSetDraggedChapterId(null)}
             >
               <span className={styles.chapterStepNumber}>{index + 1}</span>
-              <ChapterStepTitle title={chapter.title.trim() || `فصل ${index + 1}`} />
+              <OverflowTooltip
+                className={styles.chapterStepTitle}
+                title={chapter.title.trim() || `فصل ${index + 1}`}
+              >
+                {chapter.title.trim() || `فصل ${index + 1}`}
+              </OverflowTooltip>
             </button>
           </div>
         ))}

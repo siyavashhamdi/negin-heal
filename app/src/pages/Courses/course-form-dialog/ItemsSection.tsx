@@ -18,6 +18,7 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import DragIndicatorRoundedIcon from "@mui/icons-material/DragIndicatorRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import PlaylistAddRoundedIcon from "@mui/icons-material/PlaylistAddRounded";
+import { OverflowTooltip } from "../../../shared/OverflowTooltip";
 import FileUploadField from "../../../shared/forms/FileUploadField";
 import { buildExistingFilePreview } from "../../../utils/fileAccessUrl.util";
 import RichTextBox from "../../../shared/forms/RichTextBox";
@@ -91,9 +92,12 @@ const ItemsSection = ({
                 <AccordionSummary className={styles.itemSummary}>
                   <div className={styles.itemHead}>
                     <Typography className={styles.itemTitle}>آیتم {index + 1}</Typography>
-                    <Typography className={styles.itemSubtitle}>
+                    <OverflowTooltip
+                      className={styles.itemSubtitle}
+                      title={item.title.trim() || "بدون عنوان"}
+                    >
                       {item.title.trim() || "بدون عنوان"}
-                    </Typography>
+                    </OverflowTooltip>
                     <div className={styles.itemActions}>
                       <IconButton
                         size="small"

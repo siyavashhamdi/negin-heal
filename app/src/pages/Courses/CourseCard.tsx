@@ -1,13 +1,4 @@
-import {
-  useCallback,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type KeyboardEvent,
-  type PointerEvent,
-  type ReactElement,
-  type ReactNode,
-} from "react";
+import { useRef, type KeyboardEvent, type PointerEvent, type ReactElement } from "react";
 import AutoStoriesRoundedIcon from "@mui/icons-material/AutoStoriesRounded";
 import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
@@ -20,6 +11,7 @@ import PhotoRoundedIcon from "@mui/icons-material/PhotoRounded";
 import VolumeUpRoundedIcon from "@mui/icons-material/VolumeUpRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import { Button, Chip, Tooltip } from "@mui/material";
+import { OverflowTooltip } from "../../shared/OverflowTooltip";
 import type { CourseItemType, CourseListRecord, CourseReleaseType } from "./courses-list.api";
 import { getCourseTagChipSx } from "./course-tag-colors.util";
 import styles from "./styles/CourseCard.module.scss";
@@ -94,54 +86,6 @@ function formatDiscountLabel(item: CourseListRecord): string | null {
   }
 
   return `${formatCoursePrice(discount.value)} تخفیف`;
-}
-
-function OverflowTooltip({
-  children,
-  className,
-  title,
-}: {
-  readonly children: ReactNode;
-  readonly className?: string;
-  readonly title: string;
-}): ReactElement {
-  const contentRef = useRef<HTMLSpanElement>(null);
-  const [isOverflowing, setIsOverflowing] = useState(false);
-
-  const updateOverflowState = useCallback((): void => {
-    const element = contentRef.current;
-    if (!element) {
-      return;
-    }
-    setIsOverflowing(element.scrollWidth > element.clientWidth + 1 || element.scrollHeight > element.clientHeight + 1);
-  }, []);
-
-  useLayoutEffect(() => {
-    updateOverflowState();
-    const element = contentRef.current;
-    if (!element) {
-      return;
-    }
-    const resizeObserver = new ResizeObserver(updateOverflowState);
-    resizeObserver.observe(element);
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, [children, updateOverflowState]);
-
-  return (
-    <Tooltip
-      title={title}
-      arrow
-      disableHoverListener={!isOverflowing}
-      disableFocusListener={!isOverflowing}
-      disableTouchListener={!isOverflowing}
-    >
-      <span ref={contentRef} className={className}>
-        {children}
-      </span>
-    </Tooltip>
-  );
 }
 
 const CourseCard = ({
@@ -330,6 +274,14 @@ const CourseCard = ({
             </div>
 
             <div className={styles.priceFooter}>
+              <div className={styles.priceBarBackdrop} aria-hidden="true">
+                {coverImageUrl ? (
+                  <img src={coverImageUrl} alt="" className={styles.priceBarCoverImage} loading="lazy" />
+                ) : (
+                  <span className={styles.priceBarCoverFallback} />
+                )}
+                <span className={styles.priceBarBackdropScrim} />
+              </div>
               <div
                 className={`${styles.priceBar}${
                   item.isPurchased

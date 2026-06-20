@@ -208,14 +208,6 @@ function formatDate(value: string): string {
   return date.toLocaleDateString("fa-IR");
 }
 
-function truncateText(value: string, maxLength = 80): string {
-  const trimmed = value.trim();
-  if (trimmed.length <= maxLength) {
-    return trimmed;
-  }
-  return `${trimmed.slice(0, maxLength)}…`;
-}
-
 function selectTicketListPage(
   data: TicketListQuery | undefined,
 ): ServerPageResult<SupportTicketListItemRow> | null {
@@ -422,7 +414,6 @@ function SupportTicketListInner({
           <Typography
             variant="body2"
             fontWeight={700}
-            title={orEmpty(info.getValue() as string)}
             sx={{
               maxWidth: TITLE_CELL_MAX_WIDTH,
               overflow: "hidden",
@@ -491,7 +482,6 @@ function SupportTicketListInner({
           <Typography
             variant="body2"
             color="text.secondary"
-            title={orEmpty(info.getValue() as string)}
             sx={{
               maxWidth: LAST_MESSAGE_CELL_MAX_WIDTH,
               overflow: "hidden",
@@ -499,7 +489,7 @@ function SupportTicketListInner({
               whiteSpace: "nowrap",
             }}
           >
-            {truncateText(orEmpty(info.getValue() as string))}
+            {orEmpty(info.getValue() as string)}
           </Typography>
         ),
       },

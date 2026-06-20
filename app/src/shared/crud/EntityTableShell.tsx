@@ -5,7 +5,6 @@ import {
   type ReactNode,
   useCallback,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -25,7 +24,6 @@ import {
   TableSortLabel,
   Tooltip,
   Typography,
-  useMediaQuery,
   useTheme,
 } from "@mui/material";
 import { darken, lighten } from "@mui/material/styles";
@@ -46,6 +44,7 @@ import SupplementaryFiltersBar from "../table/SupplementaryFiltersBar";
 import TablePaginationFooter from "../table/TablePaginationFooter";
 import TableToolbar from "../table/TableToolbar";
 import styles from "./styles/EntityTableShell.module.scss";
+import { TruncatedTableCellContent } from "../OverflowTooltip";
 import attentionBadgeStyles from "../table/styles/AttentionBadge.module.scss";
 import { sumColumnWidthsRem, columnWidthPercent } from "../table/resolve-column-widths.util";
 
@@ -94,125 +93,6 @@ function getColumnHeaderLabel<TData>(column: Column<TData, unknown>): string {
     return headerDef;
   }
   return column.id;
-}
-
-const truncatedCellContentSx = {
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-  whiteSpace: "nowrap",
-  minWidth: 0,
-  maxWidth: "100%",
-  "& .MuiTypography-root": {
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-  },
-  "& .MuiChip-root": {
-    maxWidth: "100%",
-  },
-  "& .MuiChip-label": {
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-  },
-} as const;
-
-function measureTruncatedOverflow(element: HTMLDivElement): { overflowing: boolean; text: string } {
-  const measureTargets = [
-    element.querySelector<HTMLElement>(".MuiTypography-root"),
-    element.querySelector<HTMLElement>(".MuiChip-label"),
-    element.querySelector<HTMLElement>(".MuiChip-root"),
-    element,
-  ].filter((node): node is HTMLElement => node != null);
-
-  for (const measureElement of measureTargets) {
-    if (measureElement.scrollWidth > measureElement.clientWidth + 1) {
-      return {
-        overflowing: true,
-        text: (measureElement.textContent ?? "").trim(),
-      };
-    }
-  }
-
-  return { overflowing: false, text: "" };
-}
-
-function TruncatedCellContent({ children }: { children: ReactNode }): ReactElement {
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [isOverflowing, setIsOverflowing] = useState(false);
-  const [tooltipText, setTooltipText] = useState("");
-  const [touchOpen, setTouchOpen] = useState(false);
-  const isTouchPrimary = useMediaQuery("(hover: none) and (pointer: coarse)");
-
-  const updateOverflowState = useCallback((): void => {
-    const element = contentRef.current;
-    if (!element) {
-      return;
-    }
-    const { overflowing, text } = measureTruncatedOverflow(element);
-    setIsOverflowing(overflowing);
-    setTooltipText(text);
-    if (!overflowing) {
-      setTouchOpen(false);
-    }
-  }, []);
-
-  useLayoutEffect(() => {
-    updateOverflowState();
-    const element = contentRef.current;
-    if (!element) {
-      return;
-    }
-    const resizeObserver = new ResizeObserver(updateOverflowState);
-    resizeObserver.observe(element);
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, [children, updateOverflowState]);
-
-  useEffect(() => {
-    if (!touchOpen) {
-      return;
-    }
-    const closeOnScroll = (): void => {
-      setTouchOpen(false);
-    };
-    window.addEventListener("scroll", closeOnScroll, true);
-    return () => {
-      window.removeEventListener("scroll", closeOnScroll, true);
-    };
-  }, [touchOpen]);
-
-  const showTooltip = isOverflowing && tooltipText !== "";
-
-  const handleTouchToggle = (): void => {
-    if (isTouchPrimary && showTooltip) {
-      setTouchOpen((prev) => !prev);
-    }
-  };
-
-  return (
-    <Tooltip
-      title={tooltipText}
-      arrow
-      enterDelay={500}
-      enterTouchDelay={0}
-      leaveTouchDelay={2000}
-      open={isTouchPrimary ? (showTooltip ? touchOpen : false) : undefined}
-      onClose={() => setTouchOpen(false)}
-      disableHoverListener={!showTooltip || isTouchPrimary}
-      disableFocusListener={!showTooltip || isTouchPrimary}
-      disableTouchListener={!showTooltip || isTouchPrimary}
-    >
-      <Box
-        ref={contentRef}
-        sx={truncatedCellContentSx}
-        onClick={handleTouchToggle}
-        aria-label={showTooltip && isTouchPrimary ? tooltipText : undefined}
-      >
-        {children}
-      </Box>
-    </Tooltip>
-  );
 }
 
 interface HiddenColumnFilterSlot<TData extends object> {
@@ -819,7 +699,7 @@ function EntityTableShell<TData extends object>({
                             {isActionsColumn ? (
                               cellContent
                             ) : (
-                              <TruncatedCellContent>{cellContent}</TruncatedCellContent>
+                              <TruncatedTableCellContent>{cellContent}</TruncatedTableCellContent>
                             )}
                           </TableCell>
                         );

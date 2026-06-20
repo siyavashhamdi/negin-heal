@@ -11,6 +11,7 @@ import PostAddRoundedIcon from "@mui/icons-material/PostAddRounded";
 import { IconButton, Tooltip } from "@mui/material";
 import { NavLink } from "react-router-dom";
 import type { ComponentType, ReactElement } from "react";
+import { OverflowTooltip } from "../shared/OverflowTooltip";
 import { useAuth } from "../contexts/AuthContext";
 import { APP_SHELL_ROUTES } from "../routing/app-shell-routes";
 import "./styles/SideMenuNav.scss";
@@ -109,7 +110,9 @@ export function SideMenuNav({
                 }
               >
                 <ItemIcon className="side-menu-nav__item-icon" />
-                <span className="side-menu-nav__item-label">{item.title}</span>
+                <OverflowTooltip className="side-menu-nav__item-label" title={item.title}>
+                  {item.title}
+                </OverflowTooltip>
               </NavLink>
             );
           }
@@ -122,7 +125,9 @@ export function SideMenuNav({
               disabled
             >
               <ItemIcon className="side-menu-nav__item-icon" />
-              <span className="side-menu-nav__item-label">{item.title}</span>
+              <OverflowTooltip className="side-menu-nav__item-label" title={item.title}>
+                {item.title}
+              </OverflowTooltip>
             </button>
           );
         })}
