@@ -1430,7 +1430,7 @@ const PaymentsList = (): ReactElement => {
         onClearFilters={handleClearFilters}
         renderFilterCell={renderFilterCell}
         columnWidthById={COLUMN_WIDTH_BY_ID}
-        tableMinWidth="170rem"
+        columnLayoutMode="fixed"
         noDataLabel={error ? t("errors.general.loadData") : undefined}
         hasActiveFilters={hasAppliedFilters}
         pagination={pagination}

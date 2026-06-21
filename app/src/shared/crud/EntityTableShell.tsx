@@ -3,8 +3,6 @@ import {
   type CSSProperties,
   type ReactElement,
   type ReactNode,
-  useCallback,
-  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -31,7 +29,11 @@ import TableToolbar from "../table/TableToolbar";
 import styles from "./styles/EntityTableShell.module.scss";
 import { TruncatedTableCellContent } from "../OverflowTooltip";
 import attentionBadgeStyles from "../table/styles/AttentionBadge.module.scss";
-import { sumColumnWidthsRem, columnWidthPercent } from "../table/resolve-column-widths.util";
+import {
+  sumColumnWidthsRem,
+  columnWidthPercent,
+  columnWidthRem,
+} from "../table/resolve-column-widths.util";
 import AppTooltip from "../AppTooltip";
 
 interface EntityTableShellToolbarOptions {
@@ -122,6 +124,11 @@ export interface EntityTableShellProps<TData extends object> {
   supplementaryFilters?: ReactNode;
   columnWidthById?: Record<string, string>;
   /**
+   * `ratio` (default): rem values are weights; columns share the table width proportionally.
+   * `fixed`: rem values are absolute column widths; table width is the sum of visible columns.
+   */
+  columnLayoutMode?: "ratio" | "fixed";
+  /**
    * @deprecated No longer affects column layout — data widths come from {@link columnWidthById} only.
    * Filter dropdowns render in a popper and do not require wider columns.
    */
@@ -165,6 +172,7 @@ function EntityTableShell<TData extends object>({
   filtersBelowToolbar,
   supplementaryFilters,
   columnWidthById = {},
+  columnLayoutMode = "ratio",
   columnFilterWidthById: _columnFilterWidthById,
   filterCellColSpanById,
   tableMinWidth: _tableMinWidth,
@@ -180,6 +188,9 @@ function EntityTableShell<TData extends object>({
   const resolvedShowColumnFilters = showColumnFilters ?? internalShowColumnFilters;
   const supplementaryChromeRef = useRef<HTMLDivElement>(null);
   const tableContainerRef = useRef<HTMLDivElement>(null);
+  const listPaperRef = useRef<HTMLDivElement>(null);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const paginationRef = useRef<HTMLDivElement>(null);
   const tableHeadRef = useRef<HTMLTableSectionElement>(null);
   const columnFilterRowRef = useRef<HTMLTableRowElement>(null);
   const [supplementaryChromeHeightPx, setSupplementaryChromeHeightPx] = useState(0);
@@ -225,7 +236,8 @@ function EntityTableShell<TData extends object>({
     () => shellVisibleLeafColumns.map((column) => column.id),
     [shellVisibleLeafColumns]
   );
-  const useFixedColumnWidths = !isMobile || resolvedShowColumnFilters;
+  const useFixedColumnWidths =
+    columnLayoutMode === "fixed" || !isMobile || resolvedShowColumnFilters;
   const tableContentWidth = useMemo(
     () =>
       useFixedColumnWidths
@@ -443,6 +455,7 @@ function EntityTableShell<TData extends object>({
 
   return (
     <Paper
+      ref={listPaperRef}
       elevation={0}
       className={styles.listPaper}
       sx={{
@@ -472,6 +485,7 @@ function EntityTableShell<TData extends object>({
                 } as CSSProperties)
         }
       >
+        <Box ref={toolbarRef} className={styles.tableShellToolbarWrap}>
         <TableToolbar<TData>
           searchValue={searchValue}
           onSearchChange={onSearchChange}
@@ -517,6 +531,7 @@ function EntityTableShell<TData extends object>({
           newButtonText={newButtonText}
           onNewClick={onNewClick}
         />
+        </Box>
 
         {filtersBelowToolbar ? (
           <Box
@@ -534,6 +549,7 @@ function EntityTableShell<TData extends object>({
           <Box ref={supplementaryChromeRef}>{resolvedSupplementaryFilters}</Box>
         </Fade>
 
+        <Box className={styles.tableScrollFrame}>
         <TableContainer
           ref={tableContainerRef}
           className={styles.tableContainerFlex}
@@ -543,8 +559,11 @@ function EntityTableShell<TData extends object>({
             size={isMobile ? "small" : "medium"}
             className={useFixedColumnWidths ? styles.tableLayoutFixed : styles.tableLayoutAuto}
             sx={{
-              width: "100%",
-              ...(tableContentWidth != null ? { minWidth: tableContentWidth } : {}),
+              ...(tableContentWidth != null
+                ? columnLayoutMode === "fixed"
+                  ? { width: tableContentWidth, minWidth: tableContentWidth }
+                  : { width: "100%", minWidth: tableContentWidth }
+                : { width: "100%" }),
               borderCollapse: "separate",
               borderSpacing: 0,
               "& thead .MuiTableCell-head": {
@@ -560,11 +579,14 @@ function EntityTableShell<TData extends object>({
                 <col
                   key={column.id}
                   style={{
-                    width: columnWidthPercent(
-                      column.id,
-                      shellVisibleLeafColumnIds,
-                      effectiveColumnWidthById
-                    ),
+                    width:
+                      columnLayoutMode === "fixed"
+                        ? columnWidthRem(column.id, effectiveColumnWidthById)
+                        : columnWidthPercent(
+                            column.id,
+                            shellVisibleLeafColumnIds,
+                            effectiveColumnWidthById
+                          ),
                   }}
                 />
               ))}
@@ -750,7 +772,9 @@ function EntityTableShell<TData extends object>({
             </TableBody>
           </Table>
         </TableContainer>
+        </Box>
 
+        <Box ref={paginationRef} className={styles.tableShellPaginationWrap}>
         <TablePaginationFooter
           count={pagination.pagedRowsCount}
           total={pagination.totalFiltered}
@@ -765,6 +789,7 @@ function EntityTableShell<TData extends object>({
           })}
           rowsPerPageText={t("table.pagination.rowsPerPage")}
         />
+        </Box>
       </Box>
     </Paper>
   );
