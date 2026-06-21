@@ -24,7 +24,6 @@ import { toPersianDigits, toWesternDigits } from "../../utilities/persian-digits
 import { useLogin } from "../../hooks/useLogin";
 import { API_CONFIG } from "../../config/env";
 import LoginShell from "./LoginShell";
-import { PageBackTextButton } from "../../shared/PageBackNavigation";
 import { LoginCaptchaField } from "./components/LoginCaptchaField";
 import { type LoginNavState } from "./login-nav-state";
 import formStyles from "./styles/LoginFormShared.module.scss";
@@ -48,7 +47,6 @@ interface SignupFormProps {
 export const SignupForm = ({
   embedded = false,
   identity,
-  onEditIdentity,
 }: SignupFormProps): ReactElement => {
   const { t } = useTranslation();
   const { showError } = useSnackbar();
@@ -281,12 +279,6 @@ export const SignupForm = ({
         <Typography component="p" className={verifyStyles.identityValue}>
           {identity.identityKind === "mobile" ? toPersianDigits(identity.identity) : identity.identity}
         </Typography>
-        <PageBackTextButton
-          label={t("auth.login.backToIdentity")}
-          onClick={() => onEditIdentity(identity)}
-          className={verifyStyles.backToIdentityButton}
-          size="small"
-        />
       </Box>
 
       {supportsOtp ? (

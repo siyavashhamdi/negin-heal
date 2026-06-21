@@ -134,6 +134,14 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
   const inputRadius = isDark ? "0.5rem" : "0.75rem";
   const chipRadius = isDark ? "0.375rem" : "0.5rem";
   const listItemRadius = isDark ? "0.5rem" : "0.75rem";
+  const contentSurfaceBg = {
+    backgroundColor: "var(--app-content-surface-bg, var(--app-surface-bg))",
+    backgroundImage: isDark ? "none" : "var(--app-content-surface-gradient)",
+  } as const;
+  const panelSurfaceBg = {
+    backgroundColor: "var(--app-content-surface-bg, var(--app-surface-bg))",
+    backgroundImage: isDark ? "none" : "var(--app-panel-gradient)",
+  } as const;
 
   return createTheme({
     palette: {
@@ -145,8 +153,8 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
       error: colors.error,
       info: colors.info,
       background: {
-        default: isDark ? "#121212" : "#fdf7f9",
-        paper: isDark ? "#1e1e1e" : "#ffffff",
+        default: isDark ? "#121212" : "#fae0ec",
+        paper: isDark ? "#1e1e1e" : "#fff7fb",
       },
       text: {
         primary: isDark ? "#ffffff" : "#3d2c35",
@@ -318,7 +326,10 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
         styleOverrides: {
           root: {
             borderRadius: cardRadius,
-            backgroundImage: "none",
+            ...contentSurfaceBg,
+          },
+          outlined: {
+            ...contentSurfaceBg,
           },
           elevation1: {
             boxShadow: shadows.md,
@@ -331,13 +342,93 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
           },
         },
       },
+      MuiDialog: {
+        styleOverrides: {
+          paper: {
+            ...contentSurfaceBg,
+          },
+        },
+      },
+      MuiDialogTitle: {
+        styleOverrides: {
+          root: {
+            ...contentSurfaceBg,
+          },
+        },
+      },
+      MuiDialogContent: {
+        styleOverrides: {
+          root: {
+            ...contentSurfaceBg,
+          },
+        },
+      },
+      MuiAutocomplete: {
+        styleOverrides: {
+          inputRoot: {
+            alignItems: "center",
+            flexWrap: "nowrap",
+            "&:has(.MuiAutocomplete-tag)": {
+              flexWrap: "wrap",
+              minHeight: "auto",
+              paddingTop: "2px",
+              paddingBottom: "2px",
+            },
+            "&.MuiInputBase-sizeSmall": {
+              minHeight: "2.5rem",
+              paddingTop: 0,
+              paddingBottom: 0,
+              "& .MuiAutocomplete-input": {
+                padding: "8.5px 4px",
+              },
+            },
+            "&:not(.MuiInputBase-sizeSmall)": {
+              minHeight: "3.4375rem",
+              paddingTop: 0,
+              paddingBottom: 0,
+              "& .MuiAutocomplete-input": {
+                padding: "16.5px 4px",
+              },
+            },
+          },
+          paper: {
+            backgroundColor: "var(--app-popover-bg)",
+            backgroundImage: "none",
+            border: "0.0625rem solid color-mix(in srgb, var(--app-surface-border) 72%, transparent)",
+          },
+          listbox: {
+            backgroundColor: "var(--app-popover-bg)",
+          },
+        },
+      },
+      MuiMenu: {
+        styleOverrides: {
+          paper: {
+            backgroundColor: "var(--app-popover-bg)",
+            backgroundImage: "none",
+            border: "0.0625rem solid color-mix(in srgb, var(--app-surface-border) 72%, transparent)",
+          },
+          list: {
+            backgroundColor: "var(--app-popover-bg)",
+          },
+        },
+      },
+      MuiPopover: {
+        styleOverrides: {
+          paper: {
+            backgroundColor: "var(--app-popover-bg)",
+            backgroundImage: "none",
+            border: "0.0625rem solid color-mix(in srgb, var(--app-surface-border) 72%, transparent)",
+          },
+        },
+      },
       MuiAppBar: {
         styleOverrides: {
           root: {
             boxShadow: shadows.md,
-            backgroundImage: "none",
+            backgroundImage: isDark ? "none" : "var(--app-panel-gradient)",
             borderRadius: 0,
-            backgroundColor: isDark ? "#1e1e1e" : "#fdf8f9",
+            backgroundColor: isDark ? "#1e1e1e" : "#fff7fb",
             color: isDark ? "#ffffff" : "#3d2c35",
             "& .MuiIconButton-root": {
               color: isDark ? "#ffffff" : "#3d2c35",
@@ -374,6 +465,12 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
           root: {
             borderRadius: inputRadius,
             ...transparentInputChrome,
+            "&.MuiInputBase-sizeSmall": {
+              minHeight: "2.5rem",
+            },
+            "&:not(.MuiInputBase-sizeSmall)": {
+              minHeight: "3.4375rem",
+            },
             "&:hover": {
               ...transparentInputChrome,
             },

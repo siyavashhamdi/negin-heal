@@ -11,7 +11,6 @@ import {
   useState,
 } from "react";
 import { Badge, Box, Fade, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel, Typography, useTheme } from "@mui/material";
-import { darken, lighten } from "@mui/material/styles";
 import {
   FilterAltOff as FilterAltOffIcon,
   Search as SearchIcon,
@@ -24,6 +23,7 @@ import {
   type Table as TanstackTable,
 } from "@tanstack/react-table";
 import { useTranslation } from "../../hooks/useTranslation";
+import { useElementViewportFillHeight } from "../../hooks/useElementViewportFillHeight";
 import SupplementaryFilterField from "../table/SupplementaryFilterField";
 import SupplementaryFiltersBar from "../table/SupplementaryFiltersBar";
 import TablePaginationFooter from "../table/TablePaginationFooter";
@@ -136,7 +136,11 @@ export interface EntityTableShellProps<TData extends object> {
   pinnedActionColumnId?: string;
   noDataLabel?: string;
   pagination: EntityTableShellPaginationProps;
+  /** On mobile, sizes the shell to the remaining viewport height below the table top. Disabled while column filters are visible. Defaults to true. */
+  fillAvailableHeight?: boolean;
 }
+
+const MOBILE_TABLE_ROWS_MIN_VISIBLE = 10;
 
 function EntityTableShell<TData extends object>({
   table,
@@ -167,6 +171,7 @@ function EntityTableShell<TData extends object>({
   pinnedActionColumnId = "actions",
   noDataLabel,
   pagination,
+  fillAvailableHeight = true,
 }: EntityTableShellProps<TData>): ReactElement {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -182,6 +187,10 @@ function EntityTableShell<TData extends object>({
   const [, setStickyHeaderTopsPx] = useState<number[]>([]);
   const [, setStickyFilterTopPx] = useState<number | null>(null);
   const showColumnFilterRow = resolvedShowColumnFilters && renderFilterCell != null;
+  const useNaturalPageHeight = isMobile && resolvedShowColumnFilters;
+  const shouldFillViewport = fillAvailableHeight && isMobile && !resolvedShowColumnFilters;
+  const { ref: tableShellRef, heightPx: viewportFillHeightPx } =
+    useElementViewportFillHeight(shouldFillViewport);
 
   const toggleShowColumnFilters = (): void => {
     const next = !resolvedShowColumnFilters;
@@ -200,11 +209,12 @@ function EntityTableShell<TData extends object>({
   } = toolbarOptions ?? {};
 
   const pinnedActionColumnBorder = `0.0625rem solid ${theme.palette.divider}`;
-  const opaquePinnedRowHoverBg = useMemo(() => {
-    const paper = theme.palette.background.paper;
-    const o = theme.palette.action.hoverOpacity;
-    return theme.palette.mode === "dark" ? lighten(paper, o) : darken(paper, o);
-  }, [theme]);
+  const tableShellBg = "var(--app-surface-bg)";
+  const tableShellHoverBg =
+    theme.palette.mode === "dark"
+      ? "color-mix(in srgb, var(--app-surface-bg) 90%, #ffffff 10%)"
+      : "color-mix(in srgb, var(--app-surface-bg) 94%, #000000 6%)";
+  const opaquePinnedRowHoverBg = tableShellHoverBg;
 
   // Recompute each render; do not memoize on `table` (stable ref, visibility state changes).
   const shellVisibleLeafColumns = table
@@ -215,7 +225,7 @@ function EntityTableShell<TData extends object>({
     () => shellVisibleLeafColumns.map((column) => column.id),
     [shellVisibleLeafColumns]
   );
-  const useFixedColumnWidths = !isMobile;
+  const useFixedColumnWidths = !isMobile || resolvedShowColumnFilters;
   const tableContentWidth = useMemo(
     () =>
       useFixedColumnWidths
@@ -368,13 +378,14 @@ function EntityTableShell<TData extends object>({
 
   const extraShellHeightPx = supplementaryChromeHeightPx + columnFilterRowHeightPx;
 
-  const pinnedActionHeaderBg = theme.palette.mode === "dark" ? theme.palette.grey[900] : "#f8fafc";
   const bodyRowHeightPx = isMobile ? 48 : 56;
+  const mobileTableRowsMinHeightPx = bodyRowHeightPx * MOBILE_TABLE_ROWS_MIN_VISIBLE;
   const bodyCellSx = useMemo(
     () => ({
       height: bodyRowHeightPx,
       maxHeight: bodyRowHeightPx,
       minHeight: bodyRowHeightPx,
+      maxWidth: 0,
       boxSizing: "border-box" as const,
       py: 0,
       px: 2,
@@ -436,14 +447,29 @@ function EntityTableShell<TData extends object>({
       className={styles.listPaper}
       sx={{
         border: `0.0625rem solid ${theme.palette.divider}`,
+        backgroundColor: tableShellBg,
       }}
     >
       <Box
-        className={styles.tableShell}
+        ref={tableShellRef}
+        className={`${styles.tableShell}${
+          shouldFillViewport && viewportFillHeightPx != null
+            ? ` ${styles.tableShellViewportFill}`
+            : ""
+        }${useNaturalPageHeight ? ` ${styles.tableShellNaturalHeight}` : ""}`}
         style={
-          {
-            "--entity-table-shell-extra": `${extraShellHeightPx}px`,
-          } as CSSProperties
+          shouldFillViewport && viewportFillHeightPx != null
+            ? {
+                minHeight: viewportFillHeightPx,
+                maxHeight: viewportFillHeightPx,
+              }
+            : useNaturalPageHeight
+              ? ({
+                  "--entity-table-rows-min-height": `${mobileTableRowsMinHeightPx}px`,
+                } as CSSProperties)
+              : ({
+                  "--entity-table-shell-extra": `${extraShellHeightPx}px`,
+                } as CSSProperties)
         }
       >
         <TableToolbar<TData>
@@ -508,7 +534,11 @@ function EntityTableShell<TData extends object>({
           <Box ref={supplementaryChromeRef}>{resolvedSupplementaryFilters}</Box>
         </Fade>
 
-        <TableContainer ref={tableContainerRef} className={styles.tableContainerFlex}>
+        <TableContainer
+          ref={tableContainerRef}
+          className={styles.tableContainerFlex}
+          sx={{ backgroundColor: tableShellBg }}
+        >
           <Table
             size={isMobile ? "small" : "medium"}
             className={useFixedColumnWidths ? styles.tableLayoutFixed : styles.tableLayoutAuto}
@@ -518,7 +548,7 @@ function EntityTableShell<TData extends object>({
               borderCollapse: "separate",
               borderSpacing: 0,
               "& thead .MuiTableCell-head": {
-                backgroundColor: pinnedActionHeaderBg,
+                backgroundColor: tableShellBg,
               },
               "& thead tr:last-of-type .MuiTableCell-head": {
                 boxShadow: `inset 0 -0.0625rem 0 ${theme.palette.divider}`,
@@ -563,7 +593,7 @@ function EntityTableShell<TData extends object>({
                           position: "sticky",
                           top: 0,
                           zIndex: headerRowZIndex,
-                          backgroundColor: pinnedActionHeaderBg,
+                          backgroundColor: tableShellBg,
                           fontWeight: 700,
                           whiteSpace: "normal",
                           minWidth: 0,
@@ -571,7 +601,7 @@ function EntityTableShell<TData extends object>({
                           ...pinnedActionCellSx(
                             column.id,
                             headerRowZIndex + 1,
-                            pinnedActionHeaderBg
+                            tableShellBg
                           ),
                         }}
                       >
@@ -625,10 +655,10 @@ function EntityTableShell<TData extends object>({
                             position: "sticky",
                             top: `${headerRowHeightPx}px`,
                             zIndex: 30,
-                            backgroundColor: pinnedActionHeaderBg,
+                            backgroundColor: tableShellBg,
                             minWidth: 0,
                             whiteSpace: isActionsColumn ? "nowrap" : undefined,
-                            ...pinnedActionCellSx(column.id, 31, pinnedActionHeaderBg),
+                            ...pinnedActionCellSx(column.id, 31, tableShellBg),
                           }}
                         >
                           {isActionsColumn && onApplyFilters && onClearFilters ? (
@@ -677,7 +707,7 @@ function EntityTableShell<TData extends object>({
                         if (!cell) {
                           return null;
                         }
-                        const bodyPinnedBg = theme.palette.background.paper;
+                        const bodyPinnedBg = tableShellBg;
                         const isActionsColumn = column.id === pinnedActionColumnId;
                         const cellContent = flexRender(
                           cell.column.columnDef.cell,

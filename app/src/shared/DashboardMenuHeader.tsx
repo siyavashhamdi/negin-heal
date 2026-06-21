@@ -2,7 +2,6 @@ import { type ReactElement, type ReactNode } from "react";
 import { Box, Typography, useMediaQuery } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
 import { useTranslation } from "../hooks/useTranslation";
-import { PageBackIconButton, PageBackTextButton } from "./PageBackNavigation";
 import styles from "./styles/DashboardMenuHeader.module.scss";
 
 export type DashboardMenuHeaderProps = {
@@ -10,24 +9,16 @@ export type DashboardMenuHeaderProps = {
   readonly description?: string;
   readonly imageSrc?: string;
   readonly actions?: ReactNode;
-  /** Fallback route when there is no previous in-app history entry. Defaults to `/dashboard`. */
-  readonly backTo?: string;
-  readonly backLabel?: string;
 };
 
 const DashboardMenuHeader = ({
   title,
   description,
   imageSrc,
-  backTo,
-  backLabel,
   actions,
 }: DashboardMenuHeaderProps): ReactElement => {
   const { t } = useTranslation();
   const isMobile = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"));
-  const resolvedBackTo = backTo ?? "/dashboard";
-  const resolvedBackLabel = backLabel ?? t("layout.mainLayout.navigation.backToDashboard");
-  const showBackLink = Boolean(resolvedBackTo && resolvedBackLabel);
 
   const titleClassName = `${styles.titleHeading}${
     description ? ` ${styles.titleHeadingWithDescription}` : ""
@@ -35,30 +26,16 @@ const DashboardMenuHeader = ({
 
   return (
     <Box className={styles.outer}>
-      <Box dir="ltr" className={styles.rowLtr}>
-        {showBackLink ? (
-          <Box className={styles.backWrap}>
-            {isMobile ? (
-              <PageBackIconButton label={resolvedBackLabel} fallbackTo={resolvedBackTo} />
-            ) : (
-              <PageBackTextButton
-                label={resolvedBackLabel}
-                fallbackTo={resolvedBackTo}
-                size="small"
-              />
-            )}
-          </Box>
+      <Box dir="rtl" className={styles.rowRtl}>
+        {!isMobile && imageSrc ? (
+          <Box
+            component="img"
+            src={imageSrc}
+            alt={t("layout.header.dashboardMenu.imageAlt", { title })}
+            className={styles.titleImg}
+          />
         ) : null}
-
-        <Box dir="rtl" className={styles.rowRtl}>
-          {imageSrc ? (
-            <Box
-              component="img"
-              src={imageSrc}
-              alt={t("layout.header.dashboardMenu.imageAlt", { title })}
-              className={styles.titleImg}
-            />
-          ) : null}
+        {!isMobile ? (
           <Box className={styles.titleColumn}>
             <Typography variant="h4" color="text.primary" className={titleClassName}>
               {title}
@@ -69,8 +46,8 @@ const DashboardMenuHeader = ({
               </Typography>
             ) : null}
           </Box>
-          {actions ? <Box className={styles.actionsWrap}>{actions}</Box> : null}
-        </Box>
+        ) : null}
+        {actions ? <Box className={styles.actionsWrap}>{actions}</Box> : null}
       </Box>
     </Box>
   );

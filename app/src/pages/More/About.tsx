@@ -3,7 +3,6 @@ import { useQuery } from "@apollo/client/react";
 import { type ReactElement } from "react";
 import { APP_ABOUT_PAGE_QUERY } from "../../graphql/queries/appAboutPageConfig.query";
 import EnamadTrustSeal from "../../shared/EnamadTrustSeal";
-import PageBackNavigation from "../../shared/PageBackNavigation";
 import { EMPTY_APP_ABOUT_PAGE, type AppAboutPageConfigQuery } from "./about-page.api";
 import styles from "./styles/more.module.scss";
 import { opaqueShellProps } from "../../shared/opaqueShell";
@@ -18,8 +17,6 @@ const AboutPage = (): ReactElement => {
 
   return (
     <section className={styles.page} aria-busy={loading}>
-      <PageBackNavigation label="بازگشت به سایر" fallbackTo="/more" />
-
       <div className={styles.hero} {...opaqueShellProps}>
         <p>درباره سامانه</p>
         <h2>Negin Heal</h2>

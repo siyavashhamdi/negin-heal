@@ -350,6 +350,77 @@
   }
 }
 
+@mixin content-surface-bg {
+  background-color: var(--app-content-surface-bg, var(--app-surface-bg, #fff7fb));
+  background-image: var(--app-content-surface-gradient, none);
+
+  body[data-theme="dark"] & {
+    background-image: none;
+  }
+}
+
+@mixin content-surface-card {
+  background-color: var(--app-content-surface-bg, #fff7fb);
+  background-image:
+    radial-gradient(
+      ellipse 100% 90% at 100% 0%,
+      color-mix(in srgb, var(--app-layout-glow) 7%, transparent),
+      transparent 55%
+    ),
+    var(--app-content-surface-gradient, none);
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 82%, transparent);
+  box-shadow: 0 0.75rem 2rem rgba(61, 44, 53, 0.07);
+
+  @supports not (background: color-mix(in srgb, #ffffff 50%, #000000)) {
+    background-image: var(--app-content-surface-gradient, none);
+  }
+
+  body[data-theme="dark"] & {
+    background-color: var(--app-content-surface-bg);
+    background-image: none;
+  }
+}
+
+@mixin dark-flat-panel-bg {
+  body[data-theme="dark"] & {
+    background-color: var(--app-surface-bg);
+    background-image: none;
+  }
+}
+
+@mixin light-girlish-panel-bg {
+  background-color: var(--app-surface-bg, #fff3f8);
+  background-image:
+    radial-gradient(
+      ellipse 95% 120% at 100% 0%,
+      rgba(224, 139, 168, 0.2),
+      transparent 62%
+    ),
+    radial-gradient(
+      ellipse 85% 105% at 0% 100%,
+      rgba(183, 148, 199, 0.15),
+      transparent 56%
+    ),
+    var(--app-panel-gradient);
+
+  @supports (background: color-mix(in srgb, #ffffff 50%, #000000)) {
+    background-image:
+      radial-gradient(
+        ellipse 95% 120% at 100% 0%,
+        color-mix(in srgb, var(--app-layout-glow) 20%, transparent),
+        transparent 62%
+      ),
+      radial-gradient(
+        ellipse 85% 105% at 0% 100%,
+        color-mix(in srgb, var(--app-layout-glow-2) 15%, transparent),
+        transparent 56%
+      ),
+      var(--app-panel-gradient);
+  }
+
+  @include dark-flat-panel-bg;
+}
+
 @mixin surface-card {
   @include surface-panel-border;
   @include surface-bg(color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff));

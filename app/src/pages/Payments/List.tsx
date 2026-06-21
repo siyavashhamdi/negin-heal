@@ -49,7 +49,6 @@ import { COURSE_PAYMENT_STATUS_UPDATE_MUTATION } from "../../graphql/mutations/c
 import { COURSE_PAYMENT_DETAIL_QUERY } from "../../graphql/queries/coursePaymentDetail.query";
 import { COURSE_PAYMENT_LIST_QUERY } from "../../graphql/queries/coursePaymentList.query";
 import { COURSE_LIST_QUERY } from "../../graphql/queries/courseList.query";
-import { USER_LIST_QUERY } from "../../graphql/queries/userList.query";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import {
@@ -62,8 +61,12 @@ import EntityConfirmDialogShell from "../../shared/crud/EntityConfirmDialogShell
 import EntityModalShell from "../../shared/crud/EntityModalShell";
 import EntityTableShell from "../../shared/crud/EntityTableShell";
 import ModalFooterActions from "../../shared/crud/ModalFooterActions";
+import { APP_SURFACE_BG } from "../../shared/crud/modalThemeSx";
 import DateTimeValue from "../../shared/display/DateTimeValue";
 import crudPrimitives from "../../shared/crud/styles/crudPrimitives.module.scss";
+import ActiveEndUserPickerField, {
+  type ActiveEndUserOption,
+} from "../../shared/forms/ActiveEndUserPickerField";
 import EntityAutocompleteField from "../../shared/forms/EntityAutocompleteField";
 import FileUploadField from "../../shared/forms/FileUploadField";
 import AppTooltip from "../../shared/AppTooltip";
@@ -80,11 +83,6 @@ import {
   type CourseListQueryVariables,
   type CourseListItemRow,
 } from "../Courses/courses-list.api";
-import {
-  type UserListQuery,
-  type UserListQueryVariables,
-  type UserListItemRow,
-} from "../UsersManagement/users-management-list.api";
 import {
   EMPTY_COURSE_PAYMENT_LIST_FILTERS,
   buildCoursePaymentListQueryVariables,
@@ -144,13 +142,6 @@ type CoursePaymentManualCreateMutationVariables = {
   };
 };
 
-type ManualPaymentUserOption = {
-  readonly id: string;
-  readonly label: string;
-  readonly subtitle: string;
-  readonly row: UserListItemRow;
-};
-
 type ManualPaymentCourseOption = {
   readonly id: string;
   readonly label: string;
@@ -159,23 +150,15 @@ type ManualPaymentCourseOption = {
 };
 
 const LATIN_TEXT_FILTER_KEYS = new Set<keyof CoursePaymentListFilters>([
-  "id",
-  "userId",
-  "courseId",
   "username",
   "userEmail",
   "userPhone",
   "paymentReference",
   "transactionId",
-  "couponId",
   "couponCode",
-  "uploadedReceiptFileId",
 ]);
 
 const COLUMN_WIDTH_BY_ID: Record<string, string> = {
-  id: "14rem",
-  userId: "14rem",
-  courseId: "14rem",
   userFullName: "13rem",
   username: "11rem",
   userEmail: "14rem",
@@ -191,14 +174,10 @@ const COLUMN_WIDTH_BY_ID: Record<string, string> = {
   discountPercentage: "10rem",
   discountAmountIrt: "10rem",
   finalAmountIrt: "10rem",
-  couponId: "14rem",
   couponCode: "9rem",
   couponDiscountType: "10rem",
   couponDiscountValue: "10rem",
-  uploadedReceiptFileId: "14rem",
-  receiptUploadedBy: "14rem",
   isManualStatusChange: "9rem",
-  manualStatusChangedBy: "14rem",
   manualStatusChangedDescription: "16rem",
   createdAt: "10rem",
   updatedAt: "10rem",
@@ -218,8 +197,6 @@ const TABLE_TOOLBAR_OPTIONS = {
 } as const;
 
 const EMPTY_DISPLAY = "—";
-const MANUAL_PAYMENT_DEFAULT_USER_LIMIT = 10;
-const MANUAL_PAYMENT_SEARCH_USER_LIMIT = 200;
 const MANUAL_PAYMENT_COURSE_OPTIONS_LIMIT = 200;
 
 const STATUS_COLOR: Record<
@@ -285,25 +262,6 @@ function formatNumber(value: number | null | undefined): string {
     return EMPTY_DISPLAY;
   }
   return value.toLocaleString("fa-IR").replace(/\u066c/g, ",");
-}
-
-function getUserFullName(row: UserListItemRow): string {
-  const parts = [row.profile?.firstName?.trim(), row.profile?.lastName?.trim()].filter(
-    (part): part is string => Boolean(part)
-  );
-  return parts.length > 0 ? parts.join(" ") : row.username;
-}
-
-function userToManualPaymentOption(row: UserListItemRow): ManualPaymentUserOption {
-  const fullName = getUserFullName(row);
-  const email = row.profile?.email?.trim();
-  return {
-    id: row.id,
-    label: fullName,
-    subtitle: [row.username, email].filter(Boolean).join(" | "),
-    imageUrl: resolveFileAccessUrl(row.profile?.avatarAccessUrl),
-    row,
-  };
 }
 
 function calculateDiscountedCoursePrice(course: CourseListItemRow): number {
@@ -391,7 +349,7 @@ function renderReceiptFileCard(
       sx={{
         p: 2,
         borderRadius: 3,
-        bgcolor: "background.paper",
+        bgcolor: APP_SURFACE_BG,
         borderColor: "divider",
       }}
     >
@@ -448,12 +406,12 @@ function renderReceiptFileCard(
                     position: "absolute",
                     top: 8,
                     left: 8,
-                    bgcolor: "background.paper",
+                    bgcolor: APP_SURFACE_BG,
                     border: 1,
                     borderColor: "divider",
                     boxShadow: 2,
                     "&:hover": {
-                      bgcolor: "background.paper",
+                      bgcolor: APP_SURFACE_BG,
                     },
                   }}
                 >
@@ -559,7 +517,7 @@ function PaymentDetailSection({
       sx={{
         p: 2,
         borderRadius: 3,
-        bgcolor: "background.paper",
+        bgcolor: APP_SURFACE_BG,
         borderColor: "divider",
       }}
     >
@@ -610,9 +568,6 @@ const PaymentsList = (): ReactElement => {
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
-    id: false,
-    userId: false,
-    courseId: false,
     userFullName: true,
     username: true,
     userPhone: true,
@@ -628,14 +583,10 @@ const PaymentsList = (): ReactElement => {
     discountPercentage: false,
     discountAmountIrt: false,
     finalAmountIrt: true,
-    couponId: false,
     couponCode: true,
     couponDiscountType: false,
     couponDiscountValue: false,
-    uploadedReceiptFileId: false,
-    receiptUploadedBy: false,
     isManualStatusChange: false,
-    manualStatusChangedBy: false,
     manualStatusChangedDescription: false,
     createdAt: true,
     updatedAt: false,
@@ -684,8 +635,7 @@ const PaymentsList = (): ReactElement => {
   }, [location.pathname]);
   const reviewPaymentId = reviewPaymentRoute?.paymentId ?? null;
   const isPaidStatusChangeConfirmOpen = reviewPaymentRoute?.isConfirmRoute ?? false;
-  const [manualPaymentUser, setManualPaymentUser] = useState<ManualPaymentUserOption | null>(null);
-  const [manualPaymentUserSearch, setManualPaymentUserSearch] = useState("");
+  const [manualPaymentUser, setManualPaymentUser] = useState<ActiveEndUserOption | null>(null);
   const [manualPaymentCourse, setManualPaymentCourse] = useState<ManualPaymentCourseOption | null>(
     null
   );
@@ -695,28 +645,9 @@ const PaymentsList = (): ReactElement => {
   const [manualCouponCode, setManualCouponCode] = useState("");
   const [manualPaymentDescription, setManualPaymentDescription] = useState("");
   const [manualPaymentEvidenceFile, setManualPaymentEvidenceFile] = useState<File | null>(null);
-  const debouncedManualPaymentUserSearch = useDebounce(manualPaymentUserSearch, 400);
   const debouncedFilters = useDebounce(filters, 500);
   const hasAppliedFilters =
     debouncedSearchQuery.trim() !== "" || hasCoursePaymentFiltersApplied(debouncedFilters);
-
-  const manualPaymentUsersVariables = useMemo<UserListQueryVariables>(() => {
-    const query = debouncedManualPaymentUserSearch.trim();
-    return {
-      input: {
-        filters: {
-          query: query || null,
-          role: "END_USER",
-          status: "ACTIVE",
-        },
-        options: {
-          limit: query ? MANUAL_PAYMENT_SEARCH_USER_LIMIT : MANUAL_PAYMENT_DEFAULT_USER_LIMIT,
-          skip: 0,
-          sort: { createdAt: "DESC" },
-        },
-      },
-    };
-  }, [debouncedManualPaymentUserSearch]);
 
   const manualPaymentCoursesVariables = useMemo<CourseListQueryVariables>(
     () => ({
@@ -788,15 +719,6 @@ const PaymentsList = (): ReactElement => {
     return mapCoursePaymentDetailRowToRecord(paymentDetailData.coursePaymentDetail);
   }, [paymentDetailData, reviewPaymentId]);
 
-  const { data: manualPaymentUsersData, loading: manualPaymentUsersLoading } = useQuery<
-    UserListQuery,
-    UserListQueryVariables
-  >(USER_LIST_QUERY, {
-    variables: manualPaymentUsersVariables,
-    fetchPolicy: "network-only",
-    skip: !manualPaymentRouteOpen,
-  });
-
   const { data: manualPaymentCoursesData, loading: manualPaymentCoursesLoading } = useQuery<
     CourseListQuery,
     CourseListQueryVariables
@@ -827,7 +749,6 @@ const PaymentsList = (): ReactElement => {
     onSuccess: () => {
       navigate(APP_SHELL_ROUTES.payments);
       setManualPaymentUser(null);
-      setManualPaymentUserSearch("");
       setManualPaymentCourse(null);
       setManualPaymentMethod("CARD_TO_CARD");
       setManualPaymentStatus("PAID");
@@ -839,14 +760,6 @@ const PaymentsList = (): ReactElement => {
   });
 
   const [isManualPaymentFileUploading, setIsManualPaymentFileUploading] = useState(false);
-
-  const manualPaymentUserOptions = useMemo(
-    () =>
-      (manualPaymentUsersData?.userList.items ?? [])
-        .filter((user) => user.roles.length === 1 && user.roles[0] === "END_USER")
-        .map(userToManualPaymentOption),
-    [manualPaymentUsersData]
-  );
 
   const manualPaymentCourseOptions = useMemo(
     () =>
@@ -925,21 +838,6 @@ const PaymentsList = (): ReactElement => {
 
   const columns = useMemo<ColumnDef<CoursePaymentRecord>[]>(
     () => [
-      {
-        accessorKey: "id",
-        header: t("table.pages.payments.columns.id"),
-        cell: (info) => textCell(info.getValue(), { tabular: true, latin: true }),
-      },
-      {
-        accessorKey: "userId",
-        header: t("table.pages.payments.columns.userId"),
-        cell: (info) => textCell(info.getValue(), { tabular: true, latin: true }),
-      },
-      {
-        accessorKey: "courseId",
-        header: t("table.pages.payments.columns.courseId"),
-        cell: (info) => textCell(info.getValue(), { tabular: true, latin: true }),
-      },
       {
         accessorKey: "userFullName",
         header: t("table.pages.payments.columns.userFullName"),
@@ -1036,11 +934,6 @@ const PaymentsList = (): ReactElement => {
         cell: (info) => textCell(formatAmount(info.getValue() as number), true),
       },
       {
-        accessorKey: "couponId",
-        header: t("table.pages.payments.columns.couponId"),
-        cell: (info) => textCell(info.getValue(), { tabular: true, latin: true }),
-      },
-      {
         accessorKey: "couponCode",
         header: t("table.pages.payments.columns.couponCode"),
         cell: (info) => textCell(info.getValue(), { latin: true }),
@@ -1059,16 +952,6 @@ const PaymentsList = (): ReactElement => {
         cell: (info) => textCell(formatNumber(info.getValue() as number | null), true),
       },
       {
-        accessorKey: "uploadedReceiptFileId",
-        header: t("table.pages.payments.columns.uploadedReceiptFileId"),
-        cell: (info) => textCell(info.getValue(), { tabular: true, latin: true }),
-      },
-      {
-        accessorKey: "receiptUploadedBy",
-        header: t("table.pages.payments.columns.receiptUploadedBy"),
-        cell: (info) => textCell(info.getValue(), true),
-      },
-      {
         accessorKey: "isManualStatusChange",
         header: t("table.pages.payments.columns.isManualStatusChange"),
         cell: (info) => (
@@ -1079,11 +962,6 @@ const PaymentsList = (): ReactElement => {
             label={info.getValue() ? "بله" : "خیر"}
           />
         ),
-      },
-      {
-        accessorKey: "manualStatusChangedBy",
-        header: t("table.pages.payments.columns.manualStatusChangedBy"),
-        cell: (info) => textCell(info.getValue(), true),
       },
       {
         accessorKey: "manualStatusChangedDescription",
@@ -1172,18 +1050,12 @@ const PaymentsList = (): ReactElement => {
     navigate(`${APP_SHELL_ROUTES.payments}/new`);
   };
 
-  const handleManualPaymentUserSearchChange = useCallback((nextValue: string): void => {
-    setManualPaymentUserSearch(nextValue);
-    setManualPaymentUser(null);
-  }, []);
-
   const closeManualPaymentDialog = (): void => {
     if (createManualPaymentResult.loading) {
       return;
     }
     navigate(APP_SHELL_ROUTES.payments);
     setManualPaymentUser(null);
-    setManualPaymentUserSearch("");
     setManualPaymentCourse(null);
     setManualPaymentMethod("CARD_TO_CARD");
     setManualPaymentStatus("PAID");
@@ -1414,9 +1286,6 @@ const PaymentsList = (): ReactElement => {
     const label = String(column.columnDef.header ?? column.id);
 
     switch (column.id) {
-      case "id":
-      case "userId":
-      case "courseId":
       case "userFullName":
       case "username":
       case "userEmail":
@@ -1425,11 +1294,7 @@ const PaymentsList = (): ReactElement => {
       case "paymentProvider":
       case "paymentReference":
       case "transactionId":
-      case "manualStatusChangedBy":
       case "manualStatusChangedDescription":
-      case "uploadedReceiptFileId":
-      case "receiptUploadedBy":
-      case "couponId":
       case "couponCode":
         return renderTextFilter(column.id as keyof CoursePaymentListFilters, label);
       case "status":
@@ -1525,7 +1390,7 @@ const PaymentsList = (): ReactElement => {
       label={STATUS_LABEL[reviewPayment.status]}
     />
   ) : null;
-  const isManualPaymentOptionsLoading = manualPaymentUsersLoading || manualPaymentCoursesLoading;
+  const isManualPaymentOptionsLoading = manualPaymentCoursesLoading;
   const canSubmitManualPayment =
     manualPaymentUser != null &&
     manualPaymentCourse != null &&
@@ -1565,7 +1430,7 @@ const PaymentsList = (): ReactElement => {
         onClearFilters={handleClearFilters}
         renderFilterCell={renderFilterCell}
         columnWidthById={COLUMN_WIDTH_BY_ID}
-        tableMinWidth="220rem"
+        tableMinWidth="170rem"
         noDataLabel={error ? t("errors.general.loadData") : undefined}
         hasActiveFilters={hasAppliedFilters}
         pagination={pagination}
@@ -1591,7 +1456,7 @@ const PaymentsList = (): ReactElement => {
         <Stack spacing={2}>
           <Paper
             variant="outlined"
-            sx={{ p: 2, borderRadius: 3, bgcolor: "background.paper", borderColor: "divider" }}
+            sx={{ p: 2, borderRadius: 3, bgcolor: APP_SURFACE_BG, borderColor: "divider" }}
           >
             <Stack spacing={2}>
               <Box>
@@ -1604,18 +1469,10 @@ const PaymentsList = (): ReactElement => {
               </Box>
 
               <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-                <EntityAutocompleteField
-                  options={manualPaymentUserOptions}
+                <ActiveEndUserPickerField
                   value={manualPaymentUser}
-                  inputValue={manualPaymentUser ? manualPaymentUser.label : manualPaymentUserSearch}
-                  loading={manualPaymentUsersLoading}
-                  onInputChange={handleManualPaymentUserSearchChange}
                   onChange={setManualPaymentUser}
-                  noOptionsText="کاربر فعال با نقش کاربر نهایی پیدا نشد."
-                  label="کاربر"
-                  placeholder="جستجو براساس نام، نام کاربری، ایمیل یا موبایل"
-                  imageVariant="circular"
-                  latinSubtitle
+                  enabled={manualPaymentRouteOpen}
                   required
                 />
 
@@ -1647,6 +1504,7 @@ const PaymentsList = (): ReactElement => {
                   select
                   fullWidth
                   required
+                  size="small"
                   label="روش پرداخت"
                   value={manualPaymentMethod}
                   onChange={(event) =>
@@ -1664,6 +1522,7 @@ const PaymentsList = (): ReactElement => {
                   select
                   required
                   fullWidth
+                  size="small"
                   label="وضعیت پرداخت"
                   value={manualPaymentStatus}
                   onChange={(event) =>
@@ -1680,6 +1539,7 @@ const PaymentsList = (): ReactElement => {
 
               <TextField
                 fullWidth
+                size="small"
                 label="کد تخفیف"
                 value={manualCouponCode}
                 onChange={(event) => setManualCouponCode(event.target.value)}
@@ -1728,6 +1588,7 @@ const PaymentsList = (): ReactElement => {
                 fullWidth
                 multiline
                 minRows={3}
+                size="small"
                 label="توضیح بررسی دستی"
                 value={manualPaymentDescription}
                 onChange={(event) => setManualPaymentDescription(event.target.value)}
@@ -1910,7 +1771,7 @@ const PaymentsList = (): ReactElement => {
               sx={{
                 p: 2,
                 borderRadius: 3,
-                bgcolor: "background.paper",
+                bgcolor: APP_SURFACE_BG,
                 borderColor: "divider",
               }}
             >

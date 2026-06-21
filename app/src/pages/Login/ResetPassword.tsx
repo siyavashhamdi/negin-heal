@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactElement } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import {
   Alert,
   Box,
@@ -23,7 +23,6 @@ import { usePasswordReset } from "../../hooks/usePasswordReset";
 import { PasswordPolicyChecklist } from "../../shared/auth/PasswordPolicyChecklist";
 import { arePasswordRulesPassed } from "../../utils/passwordPolicy.util";
 import LoginShell from "./LoginShell";
-import { PageBackTextButton } from "../../shared/PageBackNavigation";
 import formStyles from "./styles/LoginFormShared.module.scss";
 
 const getTokenFromLocation = (searchParams: URLSearchParams): string =>
@@ -32,7 +31,6 @@ const getTokenFromLocation = (searchParams: URLSearchParams): string =>
 const ResetPassword = (): ReactElement => {
   const { t } = useTranslation();
   const { showError } = useSnackbar();
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { resetPassword, resettingPassword } = usePasswordReset();
 
@@ -52,10 +50,6 @@ const ResetPassword = (): ReactElement => {
     confirmPassword.trim().length > 0 &&
     passwordsMatch &&
     passwordRulesPassed;
-
-  const goToLogin = (): void => {
-    navigate("/login", { replace: true });
-  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
@@ -108,11 +102,6 @@ const ResetPassword = (): ReactElement => {
           <Typography component="p" className={formStyles.formLead}>
             {t("auth.login.resetPasswordCompletedLead")}
           </Typography>
-          <PageBackTextButton
-            label={t("auth.login.backToSignIn")}
-            onClick={goToLogin}
-            className={formStyles.formTextButton}
-          />
         </Box>
       </LoginShell>
     );
@@ -220,13 +209,6 @@ const ResetPassword = (): ReactElement => {
             ? t("auth.login.resettingPassword")
             : t("auth.login.resetPasswordButton")}
         </Button>
-
-        <PageBackTextButton
-          label={t("auth.login.backToSignIn")}
-          onClick={goToLogin}
-          className={formStyles.formTextButton}
-          disabled={resettingPassword}
-        />
       </form>
     </LoginShell>
   );

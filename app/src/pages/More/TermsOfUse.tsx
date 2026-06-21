@@ -2,7 +2,6 @@ import GavelRoundedIcon from "@mui/icons-material/GavelRounded";
 import { useQuery } from "@apollo/client/react";
 import { type ReactElement } from "react";
 import { APP_TERMS_OF_USE_PAGE_QUERY } from "../../graphql/queries/appTermsOfUsePageConfig.query";
-import PageBackNavigation from "../../shared/PageBackNavigation";
 import {
   EMPTY_APP_TERMS_OF_USE_PAGE,
   type AppTermsOfUsePageConfigQuery,
@@ -23,8 +22,6 @@ const TermsOfUsePage = (): ReactElement => {
 
   return (
     <section className={styles.page} aria-busy={loading}>
-      <PageBackNavigation label="بازگشت به سایر" fallbackTo="/more" />
-
       <div className={styles.hero} {...opaqueShellProps}>
         <p>شرایط استفاده</p>
         <h2>شرایط استفاده از سامانه</h2>

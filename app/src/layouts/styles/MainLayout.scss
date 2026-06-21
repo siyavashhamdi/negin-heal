@@ -42,13 +42,13 @@ $hairline: 0.0625rem solid;
   background:
     radial-gradient(
       ellipse 125% 95% at 88% -6%,
-      color-mix(in srgb, var(--app-layout-glow) 10%, transparent) 0%,
-      transparent 58%
+      color-mix(in srgb, var(--app-layout-glow) 26%, transparent) 0%,
+      transparent 62%
     ),
     radial-gradient(
       ellipse 100% 80% at 8% 104%,
-      color-mix(in srgb, var(--app-layout-glow-2) 7%, transparent) 0%,
-      transparent 52%
+      color-mix(in srgb, var(--app-layout-glow-2) 20%, transparent) 0%,
+      transparent 56%
     ),
     var(--app-layout-bg);
   display: flex;
@@ -74,7 +74,7 @@ $hairline: 0.0625rem solid;
 .main-layout__header {
   border: $hairline color-mix(in srgb, var(--app-surface-border) 74%, transparent);
   border-radius: var(--main-layout-panel-radius);
-  background: var(--app-surface-bg);
+  @include mixins.light-girlish-panel-bg;
   box-shadow: var(--main-layout-panel-shadow);
   padding-inline: var(--main-layout-panel-padding);
   padding-block: 0;
@@ -189,7 +189,7 @@ $hairline: 0.0625rem solid;
   border: $hairline color-mix(in srgb, var(--app-surface-border) 70%, transparent);
   border-radius: 0.85rem;
   padding-inline: 0.25rem;
-  @include mixins.surface-bg(color-mix(in srgb, var(--app-surface-bg) 92%, variables.$color-grey-100));
+  @include mixins.surface-bg(color-mix(in srgb, var(--app-surface-bg) 78%, var(--app-layout-glow) 22%));
 }
 
 .main-layout__notification-badge.MuiBadge-root .MuiBadge-badge {
@@ -223,7 +223,7 @@ $hairline: 0.0625rem solid;
   border-radius: 1.05rem;
   background:
     radial-gradient(circle at top left, var(--general-update-popup-accent-soft), transparent 58%),
-    color-mix(in srgb, var(--app-surface-bg) 96%, #ffffff);
+    var(--app-panel-gradient);
   color: var(--text-primary);
   box-shadow:
     0 1.1rem 2.6rem color-mix(in srgb, #0f172a 18%, transparent),
@@ -364,16 +364,14 @@ $hairline: 0.0625rem solid;
 }
 
 .main-layout__icon-button.MuiIconButton-root:hover {
-  background: color-mix(in srgb, var(--app-surface-bg) 85%, var(--app-layout-glow) 12%);
+  background: color-mix(in srgb, var(--app-surface-bg) 72%, var(--app-layout-glow) 28%);
   color: var(--text-primary);
 }
 
 .main-layout__notifications-popover {
   @include popover-shell;
   width: min(92vw, 23rem);
-  background:
-    radial-gradient(circle at top left, color-mix(in srgb, variables.$color-primary-light 18%, transparent), transparent 52%),
-    var(--app-surface-bg);
+  @include mixins.light-girlish-panel-bg;
 }
 
 .main-layout__notifications-panel {
@@ -440,7 +438,7 @@ $hairline: 0.0625rem solid;
   gap: 0.5rem;
   border-radius: 0.7rem;
   padding: 0.45rem;
-  background: color-mix(in srgb, var(--app-surface-bg) 92%, var(--text-secondary) 6%);
+  background: color-mix(in srgb, var(--app-surface-bg) 82%, var(--app-layout-glow) 18%);
 }
 
 .main-layout__notification-item h4 {
@@ -481,9 +479,7 @@ $hairline: 0.0625rem solid;
 
 .main-layout__settings-popover {
   @include popover-shell;
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, variables.$color-secondary-main 14%, transparent), transparent 54%),
-    var(--app-surface-bg);
+  @include mixins.light-girlish-panel-bg;
 }
 
 .main-layout__settings-panel {
@@ -514,9 +510,7 @@ $hairline: 0.0625rem solid;
 
 .main-layout__help-popover {
   @include popover-shell;
-  background:
-    radial-gradient(circle at top left, color-mix(in srgb, variables.$color-primary-main 12%, transparent), transparent 54%),
-    var(--app-surface-bg);
+  @include mixins.light-girlish-panel-bg;
 }
 
 .main-layout__help-panel {
@@ -551,7 +545,7 @@ $hairline: 0.0625rem solid;
   padding-inline: 0.6rem;
   border-radius: 0.65rem;
   border-color: variables.$color-grey-300;
-  background: color-mix(in srgb, var(--app-surface-bg) 92%, #ffffff);
+  background: color-mix(in srgb, var(--app-surface-bg) 76%, var(--app-layout-glow) 24%);
   color: var(--text-secondary);
   font-weight: variables.$font-weight-semibold;
   box-shadow: none;
@@ -559,7 +553,7 @@ $hairline: 0.0625rem solid;
 
 .main-layout__header-button.MuiButton-root:hover {
   border-color: variables.$color-accent-soft-border;
-  background: variables.$color-accent-soft-bg;
+  background: color-mix(in srgb, variables.$color-accent-soft-bg 72%, var(--app-layout-glow) 28%);
   color: variables.$color-primary-dark;
 }
 
@@ -569,7 +563,7 @@ $hairline: 0.0625rem solid;
   border: $hairline color-mix(in srgb, var(--app-surface-border) 70%, transparent);
   border-radius: variables.$border-radius-lg;
   padding: 0.15rem 0.3rem 0.15rem 0.15rem;
-  @include mixins.surface-bg(color-mix(in srgb, var(--app-surface-bg) 92%, variables.$color-grey-100));
+  @include mixins.surface-bg(color-mix(in srgb, var(--app-surface-bg) 78%, var(--app-layout-glow) 22%));
   display: flex;
   align-items: center;
   align-self: stretch;
@@ -604,9 +598,7 @@ $hairline: 0.0625rem solid;
   @include popover-shell;
   width: min(92vw, 20rem);
   color: var(--text-primary);
-  background:
-    radial-gradient(circle at top left, color-mix(in srgb, variables.$color-secondary-dark 14%, transparent), transparent 54%),
-    var(--app-surface-bg);
+  @include mixins.light-girlish-panel-bg;
 }
 
 .main-layout__user-panel {
@@ -661,8 +653,8 @@ $hairline: 0.0625rem solid;
 .main-layout__settings-item:hover,
 .main-layout__help-item:hover,
 .main-layout__user-action-item:hover {
-  border-color: color-mix(in srgb, var(--app-layout-glow) 38%, var(--app-surface-border));
-  background: color-mix(in srgb, var(--app-surface-bg) 88%, var(--app-layout-glow) 10%);
+  border-color: color-mix(in srgb, var(--app-layout-glow) 48%, var(--app-surface-border));
+  background: color-mix(in srgb, var(--app-surface-bg) 76%, var(--app-layout-glow) 24%);
   transform: translateY(-0.0625rem);
 }
 
@@ -702,9 +694,7 @@ $hairline: 0.0625rem solid;
   margin-top: 0.625rem;
   border: $hairline color-mix(in srgb, var(--app-surface-border) 74%, transparent);
   border-radius: var(--main-layout-panel-radius);
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, variables.$color-primary-main 9%, transparent), transparent 54%),
-    var(--app-surface-bg);
+  @include mixins.light-girlish-panel-bg;
   box-shadow: var(--main-layout-panel-shadow);
   padding: 0.75rem;
   min-width: 0;
@@ -725,27 +715,16 @@ $hairline: 0.0625rem solid;
   display: flex;
   flex-direction: column;
   inline-size: 100%;
-  margin-top: 0.625rem;
-  border: $hairline color-mix(in srgb, var(--app-surface-border) 74%, transparent);
-  border-radius: var(--main-layout-panel-radius);
-  padding: clamp(1rem, 2.8vw, 1.8rem);
-  background:
-    radial-gradient(circle at top left, color-mix(in srgb, variables.$color-primary-main 8%, transparent), transparent 50%),
-    var(--app-surface-bg);
-  box-shadow: var(--main-layout-panel-shadow);
-}
-
-.main-layout__content > * {
-  flex: 1 1 auto;
-}
-
-.main-layout--support-page .main-layout__content {
   margin-top: 0.35rem;
   border: 0;
   border-radius: 0;
   padding: 0;
   background: transparent;
   box-shadow: none;
+}
+
+.main-layout__content > * {
+  flex: 1 1 auto;
 }
 
 .main-layout__mobile-bottom-nav {
@@ -823,7 +802,7 @@ $hairline: 0.0625rem solid;
 .main-layout__mobile-bottom-item:focus-visible,
 .main-layout__mobile-bottom-item--active {
   color: variables.$color-info-dark;
-  background-color: rgba(155, 122, 173, 0.13);
+  background-color: rgba(201, 86, 126, 0.18);
 }
 
 .main-layout__mobile-bottom-item:focus-visible {
@@ -871,6 +850,7 @@ $hairline: 0.0625rem solid;
 @media (max-width: ($layout-break - 0.0625rem)) {
   .main-layout {
     --main-layout-panel-padding: 0.82rem;
+    --app-mobile-bottom-reserve: calc(4.8rem + env(safe-area-inset-bottom, 0px));
     background: var(--app-layout-bg);
   }
 
@@ -888,17 +868,17 @@ $hairline: 0.0625rem solid;
     transform: translate3d(0, 0, 0);
     background: linear-gradient(
       to bottom,
-      rgba(253, 247, 249, 0.68),
-      rgba(253, 247, 249, 0.96)
+      rgba(250, 224, 236, 0.82),
+      rgba(250, 224, 236, 0.98)
     );
     backdrop-filter: blur(0.08rem);
     -webkit-backdrop-filter: blur(0.08rem);
 
-    @supports (background: color-mix(in srgb, #fdf7f9 68%, transparent)) {
+    @supports (background: color-mix(in srgb, #fae0ec 68%, transparent)) {
       background: linear-gradient(
         to bottom,
-        color-mix(in srgb, var(--app-layout-bg) 68%, transparent),
-        color-mix(in srgb, var(--app-layout-bg) 96%, transparent)
+        color-mix(in srgb, #fae0ec 82%, transparent),
+        color-mix(in srgb, #fae0ec 98%, transparent)
       );
     }
   }
@@ -919,22 +899,12 @@ $hairline: 0.0625rem solid;
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .main-layout--courses-page .main-layout__content {
-    margin-top: 0.35rem;
-    border: 0;
-    border-radius: 0;
-    padding: 0;
-    background: transparent;
-    box-shadow: none;
-  }
-
   .main-layout__side-menu--desktop {
     display: none;
   }
 
   .main-layout__brand-text p {
-    font-size: 0.85rem;
-    line-height: 1.65;
+    display: none;
   }
 
   .main-layout__brand-link--desktop {
@@ -986,7 +956,8 @@ $hairline: 0.0625rem solid;
     padding: 0.42rem;
     border: $hairline rgba(61, 44, 53, 0.1);
     border-radius: 1.35rem;
-    @include mixins.mobile-floating-shell;
+    @include mixins.light-girlish-panel-bg;
+    box-shadow: 0 0.65rem 1.5rem rgba(15, 23, 42, 0.14);
   }
 
   .main-layout__mobile-bottom-badge .MuiBadge-badge {
@@ -1003,33 +974,22 @@ body[data-theme="dark"] {
   }
 
   .main-layout__header {
-    background: var(--app-surface-bg);
+    background-color: var(--app-surface-bg);
+    background-image: none;
+  }
+
+  .main-layout__side-menu,
+  .main-layout__mobile-bottom-nav {
+    background-color: var(--app-surface-bg);
+    background-image: none;
   }
 
   .main-layout__content {
-    background:
-      radial-gradient(circle at top left, rgba(56, 189, 248, 0.09), transparent 50%),
-      linear-gradient(
-        180deg,
-        color-mix(in srgb, var(--app-surface-bg) 92%, #1e2b45) 0%,
-        color-mix(in srgb, var(--app-surface-bg) 86%, #111c2f) 100%
-      );
-    box-shadow:
-      0 0.1rem 0.2rem rgba(0, 0, 0, 0.26),
-      inset 0 0.0625rem 0 rgba(255, 255, 255, 0.07);
+    background: transparent;
+    box-shadow: none;
   }
 
   @media (max-width: ($layout-break - 0.0625rem)) {
-    .main-layout--courses-page .main-layout__content {
-      background: transparent;
-      box-shadow: none;
-    }
-
-    .main-layout--support-page .main-layout__content {
-      background: transparent;
-      box-shadow: none;
-    }
-
     .main-layout::after {
       background: linear-gradient(
         to bottom,

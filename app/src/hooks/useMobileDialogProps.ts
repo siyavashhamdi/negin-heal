@@ -1,5 +1,6 @@
 import type { Breakpoint, SxProps, Theme } from "@mui/material";
 import { useMediaQuery, useTheme } from "@mui/material";
+import { appSurfacePaperSx } from "../shared/crud/modalThemeSx";
 
 type UseMobileDialogPropsOptions = {
   readonly breakpoint?: Breakpoint;
@@ -26,6 +27,7 @@ export function useCompactViewport(breakpoint: Breakpoint = "md"): boolean {
 
 export function useMobileDialogProps(options?: UseMobileDialogPropsOptions) {
   const breakpoint = options?.breakpoint ?? "md";
+  const theme = useTheme();
   const isCompact = useCompactViewport(breakpoint);
 
   const dialogProps = {
@@ -38,7 +40,9 @@ export function useMobileDialogProps(options?: UseMobileDialogPropsOptions) {
 
   const getPaperProps = ({ className, sx }: PaperPropsOptions = {}) => ({
     className,
+    "data-opaque-shell": true,
     sx: {
+      ...appSurfacePaperSx(theme),
       display: "flex",
       flexDirection: "column",
       overflow: "hidden",
@@ -63,6 +67,7 @@ export function useMobileDialogProps(options?: UseMobileDialogPropsOptions) {
   const getContentProps = ({ className, sx }: ContentPropsOptions = {}) => ({
     className,
     sx: {
+      ...appSurfacePaperSx(theme),
       flex: 1,
       minHeight: 0,
       overflowY: "auto",

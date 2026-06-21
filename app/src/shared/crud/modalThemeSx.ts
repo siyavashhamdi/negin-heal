@@ -2,11 +2,40 @@ import { alpha, type SxProps, type Theme } from "@mui/material/styles";
 
 const hairline = (color: string): string => `0.0625rem solid ${color}`;
 
+/** Neutral elevated surface for tables, dialogs, and boxes (`index.scss`). */
+export const APP_CONTENT_SURFACE_BG = "var(--app-content-surface-bg, var(--app-surface-bg))";
+
+/** Matches layout header / table shell surfaces (`index.scss` --app-surface-bg). */
+export const APP_SURFACE_BG = APP_CONTENT_SURFACE_BG;
+
+/** Soft pink panel wash for light mode chrome only (`index.scss` --app-panel-gradient). */
+export const APP_PANEL_GRADIENT = "var(--app-panel-gradient)";
+
+/** Soft blush wash for tables / boxes in light mode. */
+export const APP_CONTENT_SURFACE_GRADIENT = "var(--app-content-surface-gradient)";
+
+function contentSurfaceSx(theme: Theme): SxProps<Theme> {
+  if (theme.palette.mode === "dark") {
+    return {
+      backgroundColor: APP_CONTENT_SURFACE_BG,
+      backgroundImage: "none",
+    };
+  }
+
+  return {
+    backgroundColor: APP_CONTENT_SURFACE_BG,
+    backgroundImage: APP_CONTENT_SURFACE_GRADIENT,
+  };
+}
+
+export function appSurfacePaperSx(theme: Theme): SxProps<Theme> {
+  return contentSurfaceSx(theme);
+}
+
 export function crudModalTitleSx(theme: Theme): SxProps<Theme> {
   return {
     borderBottom: hairline(theme.palette.divider),
-    backgroundColor:
-      theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.02)",
+    ...contentSurfaceSx(theme),
     /** Breathing room between the title bar and the dialog body (create / edit / view). */
     mb: theme.spacing(1.5),
   };
@@ -30,13 +59,15 @@ export function crudModalFooterSx(
         }
       : {}),
     borderTop: hairline(theme.palette.divider),
-    backgroundColor:
-      theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.02)",
+    ...contentSurfaceSx(theme),
   };
 }
 
+export function crudModalContentSx(theme: Theme): SxProps<Theme> {
+  return contentSurfaceSx(theme);
+}
+
 export function viewModalSectionHeaderSx(theme: Theme): SxProps<Theme> {
-  const isDark = theme.palette.mode === "dark";
   const primary = theme.palette.primary.main;
 
   return {
@@ -48,8 +79,11 @@ export function viewModalSectionHeaderSx(theme: Theme): SxProps<Theme> {
     py: theme.spacing(2),
     border: hairline(theme.palette.divider),
     borderRadius: theme.shape.borderRadius,
-    backgroundColor: isDark ? "rgba(255, 255, 255, 0.04)" : "rgba(0, 0, 0, 0.02)",
-    backgroundImage: `linear-gradient(90deg, ${alpha(primary, isDark ? 0.18 : 0.1)} 0%, ${alpha(primary, isDark ? 0.06 : 0.03)} 55%, transparent 100%)`,
+    ...contentSurfaceSx(theme),
+    backgroundImage:
+      theme.palette.mode === "dark"
+        ? `linear-gradient(90deg, ${alpha(primary, 0.18)} 0%, ${alpha(primary, 0.06)} 55%, transparent 100%)`
+        : `${APP_CONTENT_SURFACE_GRADIENT}, linear-gradient(90deg, ${alpha(primary, 0.08)} 0%, ${alpha(primary, 0.02)} 55%, transparent 100%)`,
   };
 }
 

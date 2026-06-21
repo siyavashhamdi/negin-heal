@@ -60,6 +60,7 @@ const IosHomeScreenInstallPrompt = (): ReactElement | null => {
         fullWidth
         maxWidth="xs"
         classes={{ paper: styles.iosInstallDialogPaper }}
+        PaperProps={{ "data-opaque-shell": true }}
         aria-labelledby="ios-install-guide-title"
       >
         <div className={styles.iosInstallDialogHeader}>

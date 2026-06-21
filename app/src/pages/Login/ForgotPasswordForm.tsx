@@ -19,7 +19,6 @@ import { useSnackbar } from "../../hooks/useSnackbar";
 import { usePasswordReset } from "../../hooks/usePasswordReset";
 import { API_CONFIG } from "../../config/env";
 import LoginShell from "./LoginShell";
-import { PageBackTextButton } from "../../shared/PageBackNavigation";
 import { LoginCaptchaField } from "./components/LoginCaptchaField";
 import { type LoginNavState } from "./login-nav-state";
 import {
@@ -38,7 +37,6 @@ interface ForgotPasswordFormProps {
 export const ForgotPasswordForm = ({
   embedded = false,
   initialIdentity = null,
-  onBackToLogin,
 }: ForgotPasswordFormProps): ReactElement => {
   const { t } = useTranslation();
   const { showError } = useSnackbar();
@@ -132,12 +130,6 @@ export const ForgotPasswordForm = ({
           <Typography component="p" className={formStyles.formLead}>
             {t("auth.login.forgotPasswordSubmittedHint")}
           </Typography>
-
-          <PageBackTextButton
-            label={t("auth.login.backToSignIn")}
-            onClick={onBackToLogin}
-            className={formStyles.formTextButton}
-          />
         </>
       </LoginShell>
     );
@@ -223,13 +215,6 @@ export const ForgotPasswordForm = ({
             ? t("auth.login.sendingResetLink")
             : t("auth.login.sendResetLink")}
         </Button>
-
-        <PageBackTextButton
-          label={t("auth.login.backToSignIn")}
-          onClick={onBackToLogin}
-          className={formStyles.formTextButton}
-          disabled={requestingResetLink}
-        />
       </form>
     </LoginShell>
   );

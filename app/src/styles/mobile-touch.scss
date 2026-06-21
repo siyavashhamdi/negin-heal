@@ -2,16 +2,33 @@
 
 // Opaque shells for WebViews without color-mix() / flaky var() support.
 [data-opaque-shell],
-.main-layout__mobile-bottom-nav {
-  background-color: #ffffff !important;
+.main-layout__mobile-bottom-nav,
+.MuiDialog-paper {
+  background-color: #fff7fb !important;
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  isolation: isolate;
+}
+
+.MuiMenu-paper,
+.MuiPopover-paper,
+.MuiAutocomplete-paper {
+  background-color: #fff3f8 !important;
   -webkit-transform: translate3d(0, 0, 0);
   transform: translate3d(0, 0, 0);
   isolation: isolate;
 }
 
 body[data-theme="dark"] [data-opaque-shell],
-body[data-theme="dark"] .main-layout__mobile-bottom-nav {
+body[data-theme="dark"] .main-layout__mobile-bottom-nav,
+body[data-theme="dark"] .MuiDialog-paper {
   background-color: #172033 !important;
+}
+
+body[data-theme="dark"] .MuiMenu-paper,
+body[data-theme="dark"] .MuiPopover-paper,
+body[data-theme="dark"] .MuiAutocomplete-paper {
+  background-color: #1a2840 !important;
 }
 
 // iOS auto-zooms focused inputs smaller than 16px, which can reflow the page and drop focus.

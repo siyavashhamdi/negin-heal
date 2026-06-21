@@ -893,8 +893,6 @@ const CouponsIndex = (): ReactElement => {
       <DashboardMenuHeader
         title={t("pages.coupons.title")}
         description={t("pages.coupons.subtitle")}
-        backTo={APP_SHELL_ROUTES.more}
-        backLabel={t("pages.coupons.backToMore")}
       />
       <EntityTableShell<CouponListRecord>
         table={table}

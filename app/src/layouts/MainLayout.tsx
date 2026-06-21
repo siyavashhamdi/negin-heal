@@ -17,7 +17,7 @@ import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import { Avatar, Badge, Box, Button, Container, Divider, IconButton, Popover } from "@mui/material";
 import { useQuery } from "@apollo/client/react";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from "react";
-import { Link as RouterLink, NavLink, useLocation } from "react-router-dom";
+import { Link as RouterLink, NavLink } from "react-router-dom";
 import Footer from "../components/layout/Footer";
 import { useAuth } from "../contexts/AuthContext";
 import { useThemeMode } from "../contexts/ThemeContext";
@@ -202,7 +202,6 @@ export function MainLayout({
   const { mode, toggleTheme } = useThemeMode();
   const { logout, user: authUser } = useAuth();
   const { user, avatarUrl, loading: userLoading } = useMe();
-  const location = useLocation();
 
   const [notificationAnchorEl, setNotificationAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [settingsAnchorEl, setSettingsAnchorEl] = useState<HTMLButtonElement | null>(null);
@@ -223,7 +222,6 @@ export function MainLayout({
   const settingsPopoverId = isSettingsOpen ? "main-layout-settings-popover" : undefined;
   const helpPopoverId = isHelpOpen ? "main-layout-help-popover" : undefined;
   const userPopoverId = isUserOpen ? "main-layout-user-popover" : undefined;
-  const isCoursesRoute = location.pathname.startsWith("/courses");
   const roles = authUser?.roles ?? [];
   const isEndUser = roles.includes("END_USER");
   const isSuperAdmin = roles.includes("SUPER_ADMIN");
@@ -444,7 +442,6 @@ export function MainLayout({
       className={[
         "main-layout",
         isSideMenuCollapsed ? "main-layout--side-menu-collapsed" : "",
-        isCoursesRoute ? "main-layout--courses-page" : "",
       ]
         .filter(Boolean)
         .join(" ")}

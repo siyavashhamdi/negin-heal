@@ -2,7 +2,6 @@ import PrivacyTipRoundedIcon from "@mui/icons-material/PrivacyTipRounded";
 import { useQuery } from "@apollo/client/react";
 import { type ReactElement } from "react";
 import { APP_PRIVACY_POLICY_PAGE_QUERY } from "../../graphql/queries/appPrivacyPolicyPageConfig.query";
-import PageBackNavigation from "../../shared/PageBackNavigation";
 import {
   EMPTY_APP_PRIVACY_POLICY_PAGE,
   type AppPrivacyPolicyPageConfigQuery,
@@ -23,8 +22,6 @@ const PrivacyPolicyPage = (): ReactElement => {
 
   return (
     <section className={styles.page} aria-busy={loading}>
-      <PageBackNavigation label="بازگشت به سایر" fallbackTo="/more" />
-
       <div className={styles.hero} {...opaqueShellProps}>
         <p>حریم خصوصی</p>
         <h2>سیاست حریم خصوصی</h2>

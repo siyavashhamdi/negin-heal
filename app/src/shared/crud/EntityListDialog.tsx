@@ -1,12 +1,16 @@
 import { type ReactElement, type ReactNode, useRef } from "react";
 import { useScrollContainerToTopOnOpen } from "../../hooks/useScrollContainerToTopOnOpen";
+import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
 import {
   Dialog,
   DialogContent,
   DialogTitle,
   Typography,
+  useTheme,
   type DialogProps,
 } from "@mui/material";
+import { crudModalTitleSx } from "./modalThemeSx";
+import styles from "./styles/EntityModalShell.module.scss";
 
 interface EntityListDialogProps {
   readonly open: boolean;
@@ -28,7 +32,9 @@ const EntityListDialog = ({
   maxWidth = "xl",
   resetKey,
 }: EntityListDialogProps): ReactElement => {
+  const theme = useTheme();
   const contentRef = useRef<HTMLDivElement>(null);
+  const { dialogProps, getPaperProps, getContentProps } = useMobileDialogProps();
   const { onEntered } = useScrollContainerToTopOnOpen(open, contentRef, resetKey);
 
   return (
@@ -37,17 +43,20 @@ const EntityListDialog = ({
       onClose={onClose}
       fullWidth
       maxWidth={maxWidth}
-      scroll="paper"
+      {...dialogProps}
       TransitionProps={{ onEntered }}
       aria-labelledby="entity-list-dialog-title"
+      PaperProps={getPaperProps()}
     >
       <DialogTitle
         id="entity-list-dialog-title"
+        className={styles.modalDialogTitle}
         sx={{
+          ...crudModalTitleSx(theme),
           pb: description ? 1 : undefined,
         }}
       >
-        <Typography variant="h6" component="p" fontWeight={700}>
+        <Typography variant="h6" component="p" className={styles.modalTitleTypography}>
           {title}
         </Typography>
         {description ? (
@@ -59,11 +68,12 @@ const EntityListDialog = ({
       <DialogContent
         ref={contentRef}
         dividers
-        sx={{
-          p: { xs: 1, sm: 2 },
-          maxHeight: "calc(100vh - 10rem)",
-          overflow: "auto",
-        }}
+        {...getContentProps({
+          sx: {
+            p: { xs: 1, sm: 2 },
+            maxHeight: "calc(100vh - 10rem)",
+          },
+        })}
       >
         {children}
       </DialogContent>

@@ -19,7 +19,21 @@
             "forgotPassword": "بازیابی گذرواژه",
             "genericPage": "صفحه",
             "moreSystemSettings": "تنظیمات سامانه",
-            "moreCoupons": "کدهای تخفیف"
+            "moreCoupons": "کدهای تخفیف",
+            "moreGlobalAnouncement": "ارسال اعلان عمومی",
+            "resetPassword": "تغییر گذرواژه",
+            "paymentCallback": "نتیجه پرداخت",
+            "courseCreate": "دوره جدید",
+            "courseEdit": "ویرایش دوره",
+            "courseDetail": "جزئیات دوره",
+            "coursePurchase": "تکمیل خرید دوره",
+            "contentViewer": "نمایش محتوا",
+            "paymentManualCreate": "ثبت دستی پرداخت",
+            "paymentReview": "بررسی پرداخت",
+            "paymentStatusChange": "تغییر وضعیت پرداخت‌شده",
+            "systemSettingEdit": "ویرایش تنظیمات سامانه",
+            "profileEdit": "ویرایش اطلاعات کاربری",
+            "profilePassword": "تغییر رمز عبور"
         }
     }
 }

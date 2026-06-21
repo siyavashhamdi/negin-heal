@@ -159,9 +159,6 @@ export type CoursePaymentDetailQueryVariables = {
 
 export type CoursePaymentListFilters = {
   query: string;
-  id: string;
-  userId: string;
-  courseId: string;
   userFullName: string;
   username: string;
   userEmail: string;
@@ -182,11 +179,7 @@ export type CoursePaymentListFilters = {
   finalAmountIrtMin: string;
   finalAmountIrtMax: string;
   isManualStatusChange: "ALL" | "true" | "false";
-  manualStatusChangedBy: string;
   manualStatusChangedDescription: string;
-  uploadedReceiptFileId: string;
-  receiptUploadedBy: string;
-  couponId: string;
   couponCode: string;
   couponDiscountType: CouponDiscountType | "ALL";
   couponDiscountValueMin: string;
@@ -209,9 +202,6 @@ export type CoursePaymentListFilters = {
 
 export const EMPTY_COURSE_PAYMENT_LIST_FILTERS: CoursePaymentListFilters = {
   query: "",
-  id: "",
-  userId: "",
-  courseId: "",
   userFullName: "",
   username: "",
   userEmail: "",
@@ -232,11 +222,7 @@ export const EMPTY_COURSE_PAYMENT_LIST_FILTERS: CoursePaymentListFilters = {
   finalAmountIrtMin: "",
   finalAmountIrtMax: "",
   isManualStatusChange: "ALL",
-  manualStatusChangedBy: "",
   manualStatusChangedDescription: "",
-  uploadedReceiptFileId: "",
-  receiptUploadedBy: "",
-  couponId: "",
   couponCode: "",
   couponDiscountType: "ALL",
   couponDiscountValueMin: "",
@@ -548,9 +534,6 @@ export function buildCoursePaymentListQueryVariables(
         fullName: trimToNull(filters.userFullName),
         email: trimToNull(filters.userEmail),
         mobilePhone: trimToNull(filters.userPhone),
-        id: trimToNull(filters.id),
-        userId: trimToNull(filters.userId),
-        courseId: trimToNull(filters.courseId),
         userFullName: trimToNull(filters.userFullName),
         username: trimToNull(filters.username),
         userEmail: trimToNull(filters.userEmail),
@@ -572,11 +555,7 @@ export function buildCoursePaymentListQueryVariables(
         finalAmountIrtMax: numberToNull(filters.finalAmountIrtMax),
         isManualStatusChange:
           filters.isManualStatusChange === "ALL" ? null : filters.isManualStatusChange === "true",
-        manualStatusChangedBy: trimToNull(filters.manualStatusChangedBy),
         manualStatusChangedDescription: trimToNull(filters.manualStatusChangedDescription),
-        uploadedReceiptFileId: trimToNull(filters.uploadedReceiptFileId),
-        receiptUploadedBy: trimToNull(filters.receiptUploadedBy),
-        couponId: trimToNull(filters.couponId),
         couponCode: trimToNull(filters.couponCode),
         couponDiscountType: enumToNull(filters.couponDiscountType),
         couponDiscountValueMin: numberToNull(filters.couponDiscountValueMin),

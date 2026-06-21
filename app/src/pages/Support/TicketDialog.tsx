@@ -21,8 +21,6 @@ import { SUPER_ADMIN_TICKET_SEND_MUTATION } from "../../graphql/mutations/superA
 import { TICKET_CLOSE_MUTATION } from "../../graphql/mutations/ticketClose.mutation";
 import { USER_TICKET_CLOSE_MUTATION } from "../../graphql/mutations/userTicketClose.mutation";
 import { USER_TICKET_SEND_MUTATION } from "../../graphql/mutations/userTicketSend.mutation";
-import { USER_LIST_QUERY } from "../../graphql/queries/userList.query";
-import { useDebounce } from "../../hooks/useDebounce";
 import { USER_ME_QUERY } from "../../graphql/queries/userMe.query";
 import { type UserMeGqlResponse, type UserMeResponse } from "../../hooks/useMe";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
@@ -30,7 +28,9 @@ import { useTranslation } from "../../hooks/useTranslation";
 import EntityModalShell from "../../shared/crud/EntityModalShell";
 import ModalFooterActions, { type ModalFooterAction } from "../../shared/crud/ModalFooterActions";
 import DateTimeValue from "../../shared/display/DateTimeValue";
-import EntityAutocompleteField from "../../shared/forms/EntityAutocompleteField";
+import ActiveEndUserPickerField, {
+  type ActiveEndUserOption,
+} from "../../shared/forms/ActiveEndUserPickerField";
 import FileUploadField from "../../shared/forms/FileUploadField";
 import {
   buildExistingFilePreview,
@@ -42,11 +42,6 @@ import {
   FILE_UPLOAD_POLICY,
   FILE_UPLOAD_POLICY_MAX_SIZE_BYTES,
 } from "../../constants/fileUploadPolicies";
-import {
-  type UserListQuery,
-  type UserListQueryVariables,
-  type UserListItemRow,
-} from "../UsersManagement/users-management-list.api";
 import {
   TICKET_CATEGORY_LABEL,
   TICKET_CATEGORY_OPTIONS,
@@ -120,12 +115,7 @@ type TicketCloseMutationVariables = {
   readonly id: string;
 };
 
-type EndUserOption = {
-  readonly id: string;
-  readonly label: string;
-  readonly subtitle: string;
-  readonly row: UserListItemRow;
-};
+const EMPTY_DISPLAY = "—";
 
 export type TicketDialogMode = "create" | "view";
 
@@ -141,10 +131,6 @@ export type TicketDialogProps = {
   readonly onClose: () => void;
   readonly onSuccess: () => void;
 };
-
-const EMPTY_DISPLAY = "—";
-const END_USER_DEFAULT_OPTIONS_LIMIT = 10;
-const END_USER_SEARCH_OPTIONS_LIMIT = 200;
 
 function TicketDateField({
   label,
@@ -174,26 +160,6 @@ function formatUserDisplayName(user: SupportTicketMessage["senderUser"]): string
     return parts.join(" ");
   }
   return user.username?.trim() || "فرستنده نامشخص";
-}
-
-function getUserFullName(row: UserListItemRow): string {
-  const parts = [row.profile?.firstName?.trim(), row.profile?.lastName?.trim()].filter(
-    (part): part is string => Boolean(part)
-  );
-
-  return parts.length > 0 ? parts.join(" ") : row.username;
-}
-
-function userToEndUserOption(row: UserListItemRow): EndUserOption {
-  const phone = row.profile?.phoneNumber?.trim();
-  const email = row.profile?.email?.trim();
-
-  return {
-    id: row.id,
-    label: getUserFullName(row),
-    subtitle: [row.username, phone || email].filter(Boolean).join(" | "),
-    row,
-  };
 }
 
 function getMessageTone(
@@ -587,10 +553,8 @@ const TicketDialog = ({
   const [category, setCategory] = useState<TicketCategory>(defaultCategory);
   const [priority, setPriority] = useState<TicketPriority>("MEDIUM");
   const [messageBody, setMessageBody] = useState("");
-  const [selectedEndUser, setSelectedEndUser] = useState<EndUserOption | null>(null);
-  const [endUserSearch, setEndUserSearch] = useState("");
+  const [selectedEndUser, setSelectedEndUser] = useState<ActiveEndUserOption | null>(null);
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
-  const debouncedEndUserSearch = useDebounce(endUserSearch, 400);
 
   const resetForm = (): void => {
     setTitle("");
@@ -598,7 +562,6 @@ const TicketDialog = ({
     setPriority("MEDIUM");
     setMessageBody("");
     setSelectedEndUser(null);
-    setEndUserSearch("");
     setAttachmentFile(null);
   };
 
@@ -614,39 +577,6 @@ const TicketDialog = ({
   };
 
   const [isAttachmentUploading, setIsAttachmentUploading] = useState(false);
-
-  const endUserOptionsVariables = useMemo<UserListQueryVariables>(() => {
-    const query = debouncedEndUserSearch.trim();
-
-    return {
-      input: {
-        filters: {
-          query: query || null,
-          role: "END_USER",
-          status: "ACTIVE",
-        },
-        options: {
-          limit: query ? END_USER_SEARCH_OPTIONS_LIMIT : END_USER_DEFAULT_OPTIONS_LIMIT,
-          skip: 0,
-          sort: { createdAt: "DESC" },
-        },
-      },
-    };
-  }, [debouncedEndUserSearch]);
-
-  const { data: endUserOptionsData, loading: endUserOptionsLoading } = useQuery<
-    UserListQuery,
-    UserListQueryVariables
-  >(USER_LIST_QUERY, {
-    variables: endUserOptionsVariables,
-    fetchPolicy: "cache-first",
-    skip: !open || mode !== "create" || !isSuperAdmin,
-  });
-
-  const endUserOptions = useMemo(
-    () => (endUserOptionsData?.userList.items ?? []).map(userToEndUserOption),
-    [endUserOptionsData]
-  );
 
   const [sendUserTicket, sendUserTicketResult] = useMutationWithSnackbar<
     UserTicketSendMutation,
@@ -873,17 +803,10 @@ const TicketDialog = ({
         {mode === "create" ? (
           <>
             {isSuperAdmin ? (
-              <EntityAutocompleteField
-                options={endUserOptions}
+              <ActiveEndUserPickerField
                 value={selectedEndUser}
-                inputValue={endUserSearch}
-                loading={endUserOptionsLoading}
-                onInputChange={setEndUserSearch}
                 onChange={setSelectedEndUser}
-                noOptionsText={t("pages.support.create.endUserNoOptions")}
-                label={t("pages.support.create.endUserIdLabel")}
-                helperText={t("pages.support.create.endUserIdHelp")}
-                placeholder={t("pages.support.create.endUserSearchPlaceholder")}
+                enabled={open && mode === "create" && isSuperAdmin}
                 required
               />
             ) : null}

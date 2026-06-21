@@ -1,4 +1,5 @@
 @use "../../../styles/variables" as variables;
+@use "../../../styles/mixins" as mixins;
 
 // 56.25rem ≈ 900px — stack vs three-column footer
 $layout-break: 56.25rem;
@@ -10,7 +11,7 @@ $hairline: 0.0625rem solid;
   width: 100%;
   border: $hairline color-mix(in srgb, var(--app-surface-border) 74%, transparent);
   border-radius: variables.$border-radius-lg;
-  background: var(--app-surface-bg);
+  @include mixins.light-girlish-panel-bg;
   box-shadow: $shadow-elevated;
   padding: clamp(variables.$spacing-1-5, 1.8vw, 1.1rem);
 }
@@ -163,6 +164,11 @@ $hairline: 0.0625rem solid;
 }
 
 body[data-theme="dark"] {
+  .footer:not(.footerEmbedded) {
+    background-color: var(--app-surface-bg);
+    background-image: none;
+  }
+
   .footerEmbedded {
     border-top-color: rgba(255, 255, 255, 0.16);
   }

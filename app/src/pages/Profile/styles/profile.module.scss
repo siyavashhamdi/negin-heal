@@ -100,6 +100,14 @@
   font-weight: variables.$font-weight-semibold;
 }
 
+@include mixins.respond-below(sm) {
+  .hero h2,
+  .hero p,
+  .hero .eyebrow {
+    display: none;
+  }
+}
+
 .cardGrid {
   display: grid;
   gap: 0.65rem;

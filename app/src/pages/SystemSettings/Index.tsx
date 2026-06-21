@@ -495,8 +495,6 @@ const SystemSettingsIndex = (): ReactElement => {
       <DashboardMenuHeader
         title={t("pages.appSettings.title")}
         description={t("pages.appSettings.subtitle")}
-        backTo={APP_SHELL_ROUTES.more}
-        backLabel={t("pages.appSettings.backToMore")}
       />
       <EntityTableShell<AppSettingRecord>
         table={table}

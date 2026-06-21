@@ -123,6 +123,12 @@
   font-size: 0.95rem;
 }
 
+@include mixins.respond-below(sm) {
+  .hero {
+    display: none;
+  }
+}
+
 .sectionHeading {
   display: flex;
   align-items: end;

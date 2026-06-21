@@ -45,13 +45,15 @@ function EntityOptionThumbnail({
   imageUrl,
   label,
   variant,
+  size = "small",
 }: {
   readonly imageUrl?: string | null;
   readonly label: string;
   readonly variant: EntityAutocompleteImageVariant;
+  readonly size?: TextFieldProps["size"];
 }): ReactElement {
   const avatarVariant = variant === "circular" ? "circular" : "rounded";
-  const avatarSize = 32;
+  const avatarSize = size === "small" ? 24 : 32;
   const avatarSx = {
     width: avatarSize,
     height: avatarSize,
@@ -81,7 +83,7 @@ function EntityOptionThumbnail({
           placeItems: "center",
         }}
       >
-        <ImageNotSupportedRoundedIcon sx={{ fontSize: 18, display: "block" }} />
+        <ImageNotSupportedRoundedIcon sx={{ fontSize: size === "small" ? 14 : 18, display: "block" }} />
       </Avatar>
     );
   }
@@ -163,6 +165,7 @@ export default function EntityAutocompleteField<TOption extends EntityAutocomple
               imageUrl={option.imageUrl}
               label={option.label}
               variant={imageVariant}
+              size={size}
             />
             <Stack spacing={0.25} sx={{ minWidth: 0 }}>
               <Typography variant="body2" fontWeight={700} noWrap>
@@ -183,6 +186,7 @@ export default function EntityAutocompleteField<TOption extends EntityAutocomple
       renderInput={(params) => (
         <TextField
           {...params}
+          size={size}
           required={required}
           label={label}
           placeholder={placeholder}
@@ -196,6 +200,7 @@ export default function EntityAutocompleteField<TOption extends EntityAutocomple
                     imageUrl={value.imageUrl}
                     label={value.label}
                     variant={imageVariant}
+                    size={size}
                   />
                 </Box>
                 {params.InputProps.startAdornment}

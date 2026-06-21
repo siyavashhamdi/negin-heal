@@ -11,7 +11,6 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useMe } from "../../hooks/useMe";
 import { useTranslation } from "../../hooks/useTranslation";
 import ThemeToggle from "../ThemeToggle";
-import { PageBackTextButton, usePageBackNavigation } from "../../shared/PageBackNavigation";
 import styles from "./styles/header.module.scss";
 import AppTooltip from "../../shared/AppTooltip";
 
@@ -85,13 +84,6 @@ const Header = (): ReactElement => {
     : authUser?.roles?.includes("ADMIN")
       ? ADMIN_ROLE_BADGE_LABELS.ADMIN
       : null;
-
-  const navigateBack = usePageBackNavigation("/dashboard");
-
-  const handleBackToDashboard = (): void => {
-    setUserAnchor(null);
-    navigateBack();
-  };
 
   return (
     <Box component="header" className={styles.header}>
@@ -247,12 +239,6 @@ const Header = (): ReactElement => {
           <Typography className={styles.popoverItem}>
             {t("layout.header.panels.user.popoverSecurity")}
           </Typography>
-          <Divider />
-          <PageBackTextButton
-            label={t("layout.mainLayout.navigation.backToDashboard")}
-            onClick={handleBackToDashboard}
-            className={styles.popoverDashboardButton}
-          />
         </Box>
       </HeaderPopover>
     </Box>

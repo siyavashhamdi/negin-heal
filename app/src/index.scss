@@ -33,13 +33,22 @@ body {
   --app-layout-glow-2: #b794c7;
   --app-layout-bg: linear-gradient(
     165deg,
-    #fdf7f9 0%,
-    #fcf0f5 38%,
-    #faf5fc 72%,
-    #f8f0f4 100%
+    #fae0ec 0%,
+    #f8d4e6 38%,
+    #f5daf2 72%,
+    #f2d0e6 100%
   );
-  --app-surface-bg: #ffffff;
+  --app-surface-bg: #fff7fb;
+  --app-content-surface-bg: #fff7fb;
+  --app-content-surface-gradient: linear-gradient(
+    160deg,
+    #fffafc 0%,
+    #fff5fa 52%,
+    #fff0f7 100%
+  );
+  --app-panel-gradient: linear-gradient(148deg, #fff3f8 0%, #fce6f2 46%, #f8e2f6 100%);
   --app-surface-border: rgba(61, 44, 53, 0.1);
+  --app-popover-bg: color-mix(in srgb, var(--app-content-surface-bg) 82%, var(--app-layout-glow) 18%);
   --app-accent-soft-bg: #fce7f3;
   --app-accent-soft-border: #f9a8d4;
   --app-accent-soft-fg: #a8436a;
@@ -60,7 +69,10 @@ body {
     #17243a 100%
   );
   --app-surface-bg: #172033;
+  --app-content-surface-bg: #172033;
+  --app-content-surface-gradient: none;
   --app-surface-border: rgba(148, 163, 184, 0.28);
+  --app-popover-bg: color-mix(in srgb, var(--app-surface-bg) 88%, var(--app-layout-glow-2) 12%);
   --text-primary: #f8fafc;
   --text-secondary: #a7b2c5;
   --divider: rgba(255, 255, 255, 0.12);

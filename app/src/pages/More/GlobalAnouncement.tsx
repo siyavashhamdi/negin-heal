@@ -165,8 +165,6 @@ const GlobalAnouncement = (): ReactElement => {
       <DashboardMenuHeader
         title="ارسال اعلان عمومی"
         description="ارسال اعلان زنده برای کاربران فعال و مشترک در کانال عمومی"
-        backTo={APP_SHELL_ROUTES.more}
-        backLabel="بازگشت به سایر"
       />
 
       <Paper

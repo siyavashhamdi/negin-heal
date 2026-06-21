@@ -10,7 +10,8 @@ $breakpoint-md: 900px;
   justify-content: space-between;
   width: 100%;
   align-items: center;
-  background-color: rgba(0, 0, 0, 0.01);
+  background-color: var(--app-content-surface-bg, var(--app-surface-bg));
+  background-image: var(--app-content-surface-gradient, none);
 
   @media (min-width: $breakpoint-md) {
     padding-inline: 16px;
@@ -21,12 +22,14 @@ $breakpoint-md: 900px;
 }
 
 :global(html[data-theme="dark"]) .toolbar {
-  background-color: rgba(255, 255, 255, 0.02);
+  background-color: var(--app-content-surface-bg, var(--app-surface-bg));
+  background-image: none;
   border-bottom-color: rgba(255, 255, 255, 0.12);
 }
 
 :global(html[data-theme="light"]) .toolbar {
-  background-color: rgba(0, 0, 0, 0.01);
+  background-color: var(--app-content-surface-bg, var(--app-surface-bg));
+  background-image: var(--app-content-surface-gradient, none);
 }
 
 .leftCluster {
