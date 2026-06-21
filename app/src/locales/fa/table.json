@@ -73,7 +73,12 @@
             },
             "modal": {
                 "close": "بستن",
-                "closeAria": "بستن"
+                "closeAria": "بستن",
+                "unsavedChangesTitle": "تأیید بستن فرم",
+                "unsavedChangesMessage": "تغییراتی در این فرم ایجاد کرده‌اید که هنوز ذخیره نشده‌اند.",
+                "unsavedChangesHint": "آیا از بستن فرم اطمینان دارید؟",
+                "unsavedChangesStay": "انصراف",
+                "unsavedChangesDiscard": "بله، بستن فرم"
             }
         },
         "entity": {

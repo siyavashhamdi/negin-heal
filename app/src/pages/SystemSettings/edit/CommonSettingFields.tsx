@@ -6,7 +6,7 @@ import type {
   AppSettingEditFormState,
   UpdateEditFormState,
 } from "./types";
-import { TECHNICAL_VALUE_INPUT_SX } from "./shared";
+import { TECHNICAL_VALUE_INPUT_SX, MULTILINE_TEXTAREA_MIN_ROWS, MULTILINE_TEXTAREA_MAX_ROWS } from "./shared";
 import SectionPaper from "./SectionPaper";
 
 interface CommonSettingFieldsProps {
@@ -47,7 +47,8 @@ const CommonSettingFields = ({
     <TextField
       fullWidth
       multiline
-      minRows={2}
+      minRows={MULTILINE_TEXTAREA_MIN_ROWS}
+      maxRows={MULTILINE_TEXTAREA_MAX_ROWS}
       label="توضیحات"
       value={form.description}
       onChange={(event) => updateForm({ description: event.target.value })}

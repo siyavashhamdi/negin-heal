@@ -1,6 +1,7 @@
 import { type ReactElement, type ReactNode } from "react";
 import { Button, Stack, type ButtonProps } from "@mui/material";
 import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
+import { useEntityModalRequestClose } from "./entityModalCloseContext";
 import { MODAL_CLOSE_LABEL } from "./modalFooterActions.util";
 
 type FooterActionColor = NonNullable<ButtonProps["color"]>;
@@ -60,6 +61,7 @@ export default function ModalFooterActions({
   reverseOrderOnMobile = true,
 }: ModalFooterActionsProps): ReactElement {
   const { isCompact } = useMobileDialogProps();
+  const requestModalClose = useEntityModalRequestClose();
 
   return (
     <Stack
@@ -75,11 +77,20 @@ export default function ModalFooterActions({
       {actions.map((action) => {
         const presentation = resolveActionPresentation(action);
 
+        const handleClick = (): void => {
+          if (action.isCloseButton && requestModalClose) {
+            requestModalClose();
+            return;
+          }
+
+          action.onClick?.();
+        };
+
         return (
           <Button
             key={action.key}
             type={action.type ?? "button"}
-            onClick={action.onClick}
+            onClick={handleClick}
             color={presentation.color}
             variant={presentation.variant}
             startIcon={action.icon}

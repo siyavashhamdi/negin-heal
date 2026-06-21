@@ -157,6 +157,19 @@ $breakpoint-md: 60rem;
 $breakpoint-lg: 80rem;
 $breakpoint-xl: 120rem;
 
+// Form controls — matches default MUI TextField in course edit dialog
+$input-min-height: 3.4375rem;
+
+// Multiline textareas — fixed 4 visible rows, scroll beyond
+$multiline-textarea-min-rows: 4;
+$multiline-textarea-max-rows: 4;
+$multiline-textarea-min-height: calc(
+  #{$multiline-textarea-min-rows} * 1.4375rem + 2.0625rem
+);
+$multiline-textarea-max-height: calc(
+  #{$multiline-textarea-max-rows} * 1.4375rem + 2.0625rem
+);
+
 // Layout
 $header-height: 4rem;
 $drawer-width: 17.5rem;

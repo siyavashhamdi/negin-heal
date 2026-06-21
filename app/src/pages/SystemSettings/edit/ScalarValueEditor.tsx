@@ -64,6 +64,7 @@ const ScalarValueEditor = ({
           fullWidth
           multiline={isLargeHtml}
           minRows={isLargeHtml ? HTML_TEXTAREA_ROWS : undefined}
+          maxRows={isLargeHtml ? HTML_TEXTAREA_ROWS : undefined}
           label={isLargeHtml ? "محتوای HTML" : "مقدار متنی"}
           value={form.scalarValue}
           onChange={(event) => updateForm({ scalarValue: event.target.value })}

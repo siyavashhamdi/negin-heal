@@ -86,7 +86,8 @@
   display: flex;
   flex-direction: column;
   gap: variables.$spacing-1;
-  text-align: right;
+  text-align: justify;
+  text-align-last: start;
   padding-bottom: variables.$spacing-1;
   border-bottom: 0.0625rem solid rgba(0, 0, 0, 0.08);
 
@@ -113,6 +114,8 @@
   font-size: variables.$font-size-sm;
   font-weight: variables.$font-weight-normal;
   line-height: 1.6;
+  text-align: justify;
+  text-align-last: start;
   color: variables.$color-text-secondary;
 
   [data-theme="dark"] & {
@@ -147,12 +150,13 @@
   :global {
     .MuiOutlinedInput-root {
       border-radius: variables.$border-radius-md;
+      align-items: center;
       transition: all variables.$transition-duration-standard
         variables.$transition-easing-ease-in-out;
     }
 
     .MuiInputBase-input {
-      padding: variables.$spacing-1 0;
+      padding: 0;
       text-align: center;
       font-size: 1.25rem;
       font-weight: variables.$font-weight-semibold;

@@ -17,10 +17,10 @@ class UserSignupProfileGqlInput {
   @IsNotEmpty({ message: "First name is required" })
   firstName: string;
 
-  @Field({ description: "User last name" })
+  @Field({ nullable: true, description: "User last name" })
+  @IsOptional()
   @IsString({ message: "Last name must be a string" })
-  @IsNotEmpty({ message: "Last name is required" })
-  lastName: string;
+  lastName?: string | null;
 }
 
 @InputType()
@@ -47,7 +47,8 @@ export class UserSignupGqlInput {
   mobile?: string;
 
   @Field(() => UserSignupProfileGqlInput, {
-    description: "Mandatory profile data for signup",
+    description:
+      "Profile data for signup (first name required; last name optional)",
   })
   @ValidateNested()
   @Type(() => UserSignupProfileGqlInput)

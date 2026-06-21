@@ -46,20 +46,33 @@ function EntityOptionThumbnail({
   label,
   variant,
   size = "small",
+  context = "input",
 }: {
   readonly imageUrl?: string | null;
   readonly label: string;
   readonly variant: EntityAutocompleteImageVariant;
   readonly size?: TextFieldProps["size"];
+  readonly context?: "input" | "option";
 }): ReactElement {
   const avatarVariant = variant === "circular" ? "circular" : "rounded";
-  const avatarSize = size === "small" ? 24 : 32;
+  const avatarSize =
+    context === "option"
+      ? size === "small"
+        ? 44
+        : 52
+      : size === "small"
+        ? 24
+        : 32;
   const avatarSx = {
     width: avatarSize,
     height: avatarSize,
     bgcolor: "action.hover",
     flexShrink: 0,
   } as const;
+  const placeholderIconSize =
+    context === "option" ? (size === "small" ? 22 : 26) : size === "small" ? 14 : 18;
+  const initialFontSize =
+    context === "option" ? (size === "small" ? "1.125rem" : "1.25rem") : size === "small" ? "0.875rem" : "1rem";
 
   if (imageUrl) {
     return (
@@ -83,7 +96,7 @@ function EntityOptionThumbnail({
           placeItems: "center",
         }}
       >
-        <ImageNotSupportedRoundedIcon sx={{ fontSize: size === "small" ? 14 : 18, display: "block" }} />
+        <ImageNotSupportedRoundedIcon sx={{ fontSize: placeholderIconSize, display: "block" }} />
       </Avatar>
     );
   }
@@ -101,7 +114,7 @@ function EntityOptionThumbnail({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        fontSize: "0.875rem",
+        fontSize: initialFontSize,
         fontWeight: 700,
         userSelect: "none",
       }}
@@ -166,6 +179,7 @@ export default function EntityAutocompleteField<TOption extends EntityAutocomple
               label={option.label}
               variant={imageVariant}
               size={size}
+              context="option"
             />
             <Stack spacing={0.25} sx={{ minWidth: 0 }}>
               <Typography variant="body2" fontWeight={700} noWrap>
@@ -201,6 +215,7 @@ export default function EntityAutocompleteField<TOption extends EntityAutocomple
                     label={value.label}
                     variant={imageVariant}
                     size={size}
+                    context="input"
                   />
                 </Box>
                 {params.InputProps.startAdornment}

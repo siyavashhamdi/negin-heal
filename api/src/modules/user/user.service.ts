@@ -504,8 +504,12 @@ export class UserService {
 
     const profile: Record<string, string> = {
       firstName: input.profile.firstName.trim(),
-      lastName: input.profile.lastName.trim(),
     };
+
+    const lastName = this.normalizeOptionalText(input.profile.lastName);
+    if (lastName) {
+      profile.lastName = lastName;
+    }
 
     if (email) {
       profile.email = email;

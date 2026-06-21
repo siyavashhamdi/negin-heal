@@ -99,6 +99,7 @@ const EmailTemplatesEditor = ({
               fullWidth
               multiline
               minRows={HTML_TEXTAREA_ROWS}
+              maxRows={HTML_TEXTAREA_ROWS}
               label="HTML قالب"
               value={template.html}
               onChange={(event) =>

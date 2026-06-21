@@ -16,6 +16,7 @@ import { Link as RouterLink, Navigate, useLocation, useNavigate } from "react-ro
 import { useAuth } from "../../contexts/AuthContext";
 import { useMobileAppLayout } from "../../hooks/useMobileAppLayout";
 import { useMe, type UserMeGqlResponse } from "../../hooks/useMe";
+import { resolveMeUserDisplayName, resolveStoredUserDisplayName } from "../../utils/storedUser.util";
 import { LoginRequiredState } from "../../shared/auth/LoginRequiredState";
 import { PasswordPolicyChecklist } from "../../shared/auth/PasswordPolicyChecklist";
 import { USER_PROFILE_UPDATE_MUTATION } from "../../graphql/mutations/userProfileUpdate.mutation";
@@ -35,6 +36,7 @@ import {
   FILE_UPLOAD_POLICY_MAX_SIZE_BYTES,
 } from "../../constants/fileUploadPolicies";
 import { hasFormChanges } from "../../utils/formChange.util";
+import { MULTILINE_TEXTAREA_MIN_ROWS, MULTILINE_TEXTAREA_MAX_ROWS } from "../../constants/multilineTextarea.constants";
 import { arePasswordRulesPassed } from "../../utils/passwordPolicy.util";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { useSnackbar } from "../../hooks/useSnackbar";
@@ -107,10 +109,19 @@ function optionalTextInput(value: string): string | null {
   return trimmed ? trimmed : null;
 }
 
+function isProfileEditFormValid(form: ProfileEditForm): boolean {
+  return form.username.trim().length > 0 && form.firstName.trim().length > 0;
+}
+
+const latinFieldInputProps = {
+  className: styles.latinInput,
+  dir: "ltr",
+} as const;
+
 const AuthenticatedProfile = (): ReactElement => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user: authUser } = useAuth();
   const { user: profileUser, avatarUrl, loading: isProfileLoading, refetch } = useMe();
   const { showError, showSuccess } = useSnackbar();
   const isEditRoute = location.pathname === `${APP_SHELL_ROUTES.profile}/edit`;
@@ -143,11 +154,9 @@ const AuthenticatedProfile = (): ReactElement => {
   });
 
   const displayName =
-    profileUser?.profile?.firstName && profileUser.profile.lastName
-      ? `${profileUser.profile.firstName} ${profileUser.profile.lastName}`
-      : profileUser?.profile?.firstName ||
-        profileUser?.username ||
-        "کاربر";
+    isProfileLoading || !profileUser
+      ? resolveStoredUserDisplayName(authUser, "کاربر")
+      : resolveMeUserDisplayName(profileUser, "کاربر");
   const userInitial = displayName.trim().slice(0, 1) || "؟";
   const displayRoles =
     profileUser?.roles?.filter((role) => role !== "END_USER") ?? [];
@@ -175,7 +184,7 @@ const AuthenticatedProfile = (): ReactElement => {
     initialEditForm != null && hasFormChanges(initialEditForm, editForm);
 
   const canSubmitProfileEdit =
-    editForm.username.trim().length > 0 && hasProfileEditChanges;
+    isProfileEditFormValid(editForm) && hasProfileEditChanges;
 
   useEffect(() => {
     if (!isEditRoute) {
@@ -372,13 +381,20 @@ const AuthenticatedProfile = (): ReactElement => {
     event.preventDefault();
 
     const username = editForm.username.trim();
+    const firstName = editForm.firstName.trim();
+
     if (!username) {
       showError("نام کاربری الزامی است.");
       return;
     }
 
+    if (!firstName) {
+      showError("نام الزامی است.");
+      return;
+    }
+
     const profileInput: ProfileUpdateInput = {
-      firstName: optionalTextInput(editForm.firstName),
+      firstName,
       lastName: optionalTextInput(editForm.lastName),
       bio: optionalTextInput(editForm.bio),
     };
@@ -503,7 +519,7 @@ const AuthenticatedProfile = (): ReactElement => {
         </div>
         <div>
           <p className={styles.eyebrow}>پروفایل</p>
-          <h2>{isProfileLoading ? "در حال دریافت اطلاعات..." : displayName}</h2>
+          <h2>{displayName}</h2>
           {roleLabel ? <p>{roleLabel}</p> : null}
         </div>
       </div>
@@ -528,7 +544,10 @@ const AuthenticatedProfile = (): ReactElement => {
       <EntityModalShell
         open={isEditRoute}
         onClose={closeEditDialog}
+        disableClose={isSavingProfile}
+        hasUnsavedChanges={canSubmitProfileEdit}
         title="ویرایش اطلاعات کاربری"
+        subtitle="نام، تصویر و اطلاعات عمومی حساب را به‌روز کنید."
         maxWidth="sm"
         useFormWrapper
         onSubmit={handleSubmitEdit}
@@ -553,14 +572,20 @@ const AuthenticatedProfile = (): ReactElement => {
         }
       >
         {isEditMeLoading ? (
-          <Stack alignItems="center" justifyContent="center" spacing={2} sx={{ minHeight: 240 }}>
+          <Stack
+            alignItems="center"
+            justifyContent="center"
+            spacing={2}
+            className={styles.editProfileModalBody}
+            sx={{ minHeight: 240 }}
+          >
             <CircularProgress />
             <Typography variant="body2" color="text.secondary">
               در حال دریافت اطلاعات کاربر...
             </Typography>
           </Stack>
         ) : editProfileUser ? (
-        <Stack spacing={2}>
+        <Stack spacing={2} className={styles.editProfileModalBody}>
               <TextField
                 label="نام کاربری"
                 value={editForm.username}
@@ -569,12 +594,14 @@ const AuthenticatedProfile = (): ReactElement => {
                 fullWidth
                 size="small"
                 autoComplete="username"
+                inputProps={latinFieldInputProps}
               />
               <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
                 <TextField
                   label="نام"
                   value={editForm.firstName}
                   onChange={(event) => setEditField("firstName", event.target.value)}
+                  required
                   fullWidth
                   size="small"
                   autoComplete="given-name"
@@ -597,6 +624,7 @@ const AuthenticatedProfile = (): ReactElement => {
                 type="email"
                 autoComplete="email"
                 disabled={isEmailLocked}
+                inputProps={{ ...latinFieldInputProps, inputMode: "email" }}
                 helperText={isEmailLocked ? "برای تغییر ایمیل با پشتیبانی تماس بگیرید." : undefined}
               />
               <TextField
@@ -607,6 +635,7 @@ const AuthenticatedProfile = (): ReactElement => {
                 size="small"
                 autoComplete="tel"
                 disabled={isPhoneNumberLocked}
+                inputProps={{ ...latinFieldInputProps, inputMode: "tel" }}
                 helperText={
                   isPhoneNumberLocked
                     ? "برای تغییر شماره موبایل با پشتیبانی تماس بگیرید."
@@ -620,7 +649,8 @@ const AuthenticatedProfile = (): ReactElement => {
                 fullWidth
                 size="small"
                 multiline
-                minRows={3}
+                minRows={MULTILINE_TEXTAREA_MIN_ROWS}
+                maxRows={MULTILINE_TEXTAREA_MAX_ROWS}
               />
               {hasLockedContactField ? (
                 <Alert severity="info">
@@ -638,7 +668,10 @@ const AuthenticatedProfile = (): ReactElement => {
       <EntityModalShell
         open={isPasswordRoute}
         onClose={closePasswordDialog}
+        disableClose={isChangingPassword}
+        hasUnsavedChanges={canSubmitPasswordChange}
         title="تغییر رمز عبور"
+        subtitle="رمز عبور جدید باید با سیاست امنیتی سامانه سازگار باشد."
         maxWidth="sm"
         useFormWrapper
         onSubmit={handleSubmitPassword}

@@ -248,6 +248,8 @@ $ease-flip: cubic-bezier(0.32, 0.72, 0, 1);
   min-inline-size: 0;
   color: #ffffff;
   text-shadow: 0 0.0625rem 0.25rem rgba(0, 0, 0, 0.45);
+  text-align: justify;
+  text-align-last: start;
 }
 
 .coverContent p {
@@ -258,6 +260,8 @@ $ease-flip: cubic-bezier(0.32, 0.72, 0, 1);
   min-inline-size: 0;
   overflow: visible;
   text-shadow: 0 0.0625rem 0.22rem rgba(0, 0, 0, 0.45);
+  text-align: justify;
+  text-align-last: start;
 }
 
 .titleText {
@@ -275,6 +279,8 @@ $ease-flip: cubic-bezier(0.32, 0.72, 0, 1);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   line-clamp: 2;
+  text-align: justify;
+  text-align-last: start;
 }
 
 .itemTypeChips,

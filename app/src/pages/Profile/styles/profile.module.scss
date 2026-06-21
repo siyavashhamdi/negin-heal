@@ -162,6 +162,22 @@
   padding-block: 0.62rem !important;
 }
 
+.editProfileModalBody {
+  margin-top: variables.$spacing-2;
+}
+
+.latinInput {
+  direction: ltr;
+  font-family: variables.$font-family-latin !important;
+  text-align: left;
+
+  &::placeholder {
+    direction: rtl;
+    font-family: variables.$font-family !important;
+    text-align: right;
+  }
+}
+
 body[data-theme="dark"] {
   .hero,
   .actionCard {

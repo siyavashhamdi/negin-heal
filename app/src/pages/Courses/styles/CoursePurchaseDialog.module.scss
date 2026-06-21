@@ -214,8 +214,8 @@
 
 .couponForm :global(.MuiButton-root) {
   align-self: start;
-  block-size: 2.5rem;
-  min-block-size: 2.5rem;
+  block-size: variables.$input-min-height;
+  min-block-size: variables.$input-min-height;
   padding-block: 0;
 }
 
@@ -254,6 +254,8 @@
   font-size: 0.82rem;
   font-weight: 850;
   line-height: 1.7;
+  text-align: justify;
+  text-align-last: start;
 }
 
 .sectionHeading h3 {
@@ -265,6 +267,8 @@
   margin: 0.2rem 0 0;
   color: var(--text-secondary);
   font-size: 0.84rem;
+  text-align: justify;
+  text-align-last: start;
 }
 
 .methodGrid {
@@ -378,6 +382,8 @@
   margin: 0 !important;
   color: var(--text-secondary) !important;
   line-height: 1.8 !important;
+  text-align: justify;
+  text-align-last: start;
 }
 
 .gatewayPanel,
@@ -400,6 +406,8 @@
   color: var(--text-secondary);
   font-size: 0.78rem;
   line-height: 1.7;
+  text-align: justify;
+  text-align-last: start;
 }
 
 .copyRow {

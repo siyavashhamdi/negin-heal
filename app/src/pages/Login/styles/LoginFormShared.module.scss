@@ -1,4 +1,5 @@
 @use "../../../styles/variables" as variables;
+@use "../../../styles/mixins" as mixins;
 
 .loginForm {
   display: flex;
@@ -11,7 +12,8 @@
   color: variables.$color-text-secondary;
   font-size: variables.$font-size-sm;
   line-height: 1.8;
-  text-align: right;
+  text-align: justify;
+  text-align-last: start;
 }
 
 .formIntroPanel,
@@ -25,6 +27,8 @@
   background:
     radial-gradient(circle at top left, color-mix(in srgb, variables.$color-primary-main 8%, transparent), transparent 48%),
     color-mix(in srgb, var(--app-surface-bg) 94%, white);
+  text-align: justify;
+  text-align-last: start;
 
   [data-theme="dark"] & {
     background:
@@ -34,8 +38,7 @@
 }
 
 .successPanel {
-  align-items: center;
-  text-align: center;
+  align-items: stretch;
 }
 
 .panelTitle {
@@ -44,6 +47,8 @@
   font-size: 1.125rem;
   font-weight: variables.$font-weight-bold;
   line-height: 1.6;
+  text-align: justify;
+  text-align-last: start;
 
   [data-theme="dark"] & {
     color: rgba(255, 255, 255, 0.95);
@@ -60,7 +65,13 @@
   direction: rtl;
   align-items: center;
   border-radius: variables.$border-radius-md;
-  text-align: right;
+  text-align: justify;
+  text-align-last: start;
+
+  :global(.MuiAlert-message) {
+    text-align: justify;
+    text-align-last: start;
+  }
 
   :global(.MuiAlert-icon) {
     margin-left: variables.$spacing-1;
@@ -82,6 +93,8 @@
   :global {
     .MuiOutlinedInput-root {
       position: relative;
+      align-items: center;
+      min-height: variables.$input-min-height;
       border-radius: variables.$border-radius-md;
       background-color: transparent !important;
       transition: all variables.$transition-duration-standard
@@ -158,13 +171,18 @@
 
     .MuiInputAdornment-positionStart {
       position: absolute;
+      top: 50%;
       left: 0.85rem;
+      transform: translateY(-50%);
       margin: 0;
     }
 
     .MuiInputBase-input {
       direction: ltr;
       text-align: left;
+      font-family: variables.$font-family-latin !important;
+      padding-block: 0;
+      line-height: 1.4375;
       padding-left: 2.65rem !important;
       background-color: transparent !important;
 
@@ -211,6 +229,18 @@
       &::selection {
         background-color: variables.$color-primary-light;
         color: variables.$color-primary-contrast;
+      }
+
+      &::placeholder {
+        font-family: variables.$font-family !important;
+        direction: rtl;
+        text-align: right;
+      }
+
+      @include mixins.respond-below(sm) {
+        &::placeholder {
+          font-size: 0.8125rem !important;
+        }
       }
     }
   }

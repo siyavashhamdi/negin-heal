@@ -112,6 +112,7 @@ const JsonValueEditor = ({ jsonValue, updateJson }: JsonValueEditorProps): React
             fullWidth
             multiline
             minRows={HTML_TEXTAREA_ROWS}
+            maxRows={HTML_TEXTAREA_ROWS}
             label="JSON خام"
             value={jsonValue.value}
             onChange={(event) =>

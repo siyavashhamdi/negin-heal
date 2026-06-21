@@ -114,9 +114,15 @@ const SystemSettingEditDialog = ({
   return (
     <EntityModalShell
       open={open}
-      onClose={isSaving ? () => undefined : onClose}
+      onClose={onClose}
+      disableClose={isSaving}
+      hasUnsavedChanges={canSubmit}
       title="ویرایش تنظیمات سامانه"
-      subtitle={detail?.label ?? detail?.key ?? ""}
+      subtitle={
+        detail?.label?.trim() ||
+        detail?.key?.trim() ||
+        "مقدار و وضعیت این تنظیم را تغییر دهید."
+      }
       maxWidth="lg"
       resetKey={settingId != null ? `${settingId}-${Boolean(form)}` : undefined}
       useFormWrapper

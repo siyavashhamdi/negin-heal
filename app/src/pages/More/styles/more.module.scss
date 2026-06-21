@@ -573,6 +573,8 @@
   color: var(--text-secondary);
   font-size: 0.8rem;
   line-height: 1.85;
+  text-align: justify;
+  text-align-last: start;
 }
 
 .iosInstallSteps {
@@ -632,6 +634,8 @@
   color: var(--text-secondary);
   font-size: 0.76rem;
   line-height: 1.8;
+  text-align: justify;
+  text-align-last: start;
 }
 
 .iosInstallSafariHint {
@@ -909,6 +913,8 @@ a.linkCard {
   color: var(--text-secondary);
   font-size: 0.79rem;
   line-height: 1.8;
+  text-align: justify;
+  text-align-last: start;
 }
 
 .aboutPanel {
@@ -955,6 +961,8 @@ a.linkCard {
   gap: 0.75rem;
   color: var(--text-secondary);
   line-height: 1.95;
+  text-align: justify;
+  text-align-last: start;
 }
 
 .aboutContent h2,

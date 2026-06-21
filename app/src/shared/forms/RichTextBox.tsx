@@ -27,6 +27,7 @@ import FormatUnderlinedRoundedIcon from "@mui/icons-material/FormatUnderlinedRou
 import OpenInFullRoundedIcon from "@mui/icons-material/OpenInFullRounded";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import { useMaxRoutePreview } from "../../hooks/useMaxRoutePreview";
+import { MULTILINE_TEXTAREA_MIN_ROWS } from "../../constants/multilineTextarea.constants";
 import EntityModalShell from "../crud/EntityModalShell";
 import ModalFooterActions from "../crud/ModalFooterActions";
 import styles from "./RichTextBox.module.scss";
@@ -64,7 +65,6 @@ type ActiveFormats = {
   readonly indented: boolean;
 };
 
-const rowHeightPx = 24;
 const indentStepPx = 24;
 const blockSelector = "blockquote, div, h1, h2, h3, h4, h5, h6, li, p";
 const defaultActiveFormats: ActiveFormats = {
@@ -179,6 +179,7 @@ function RichTextBoxRender({
           open={showInternalModal}
           onClose={handleCloseModal}
           title={dialogTitle}
+          subtitle="پیش‌نمایش و ویرایش متن"
           maxWidth="lg"
           disableAutoFocus
           disableRestoreFocus
@@ -211,7 +212,7 @@ const RichTextBox = ({
   value,
   onChange,
   placeholder,
-  minRows = 4,
+  minRows = MULTILINE_TEXTAREA_MIN_ROWS,
   required = false,
   mode = "edit",
   hideLabel = false,
@@ -266,7 +267,7 @@ const RichTextBoxEditor = ({
   value,
   onChange,
   placeholder,
-  minRows,
+  minRows: _minRows,
   required,
   previewId,
 }: RichTextBoxEditorProps): ReactElement => {
@@ -339,10 +340,11 @@ const RichTextBoxEditor = ({
     maxRoutePreview.close();
   }, [flushEditableValue, maxRoutePreview]);
 
-  const minHeight = useMemo(
-    () => `${Math.max(2, minRows) * rowHeightPx}px`,
-    [minRows],
-  );
+  const fieldHeightStyle = {
+    minHeight: "var(--app-multiline-textarea-min-height)",
+    maxHeight: "var(--app-multiline-textarea-max-height)",
+    overflowY: "auto" as const,
+  };
 
   const getSelectedBlocks = useCallback((editable: HTMLElement): HTMLElement[] => {
     const selection = window.getSelection();
@@ -717,7 +719,10 @@ const RichTextBoxEditor = ({
       variant === "modal"
         ? `${styles.markupEditor} ${styles.markupEditorMax}`
         : styles.markupEditor;
-    const editorMinHeight = variant === "modal" ? "100%" : minHeight;
+    const editorStyle =
+      variant === "modal"
+        ? { minHeight: "100%" }
+        : fieldHeightStyle;
 
     return (
       <>
@@ -776,7 +781,7 @@ const RichTextBoxEditor = ({
               aria-multiline
               suppressContentEditableWarning
               data-placeholder={isFocused ? placeholder ?? "" : ""}
-              style={{ minHeight: editorMinHeight }}
+              style={editorStyle}
               onFocus={() => setIsFocused(true)}
               onInput={handleInput}
               onBlur={handleBlur}
@@ -787,7 +792,7 @@ const RichTextBoxEditor = ({
               className={markupClassName}
               value={value}
               placeholder={isFocused ? "HTML را وارد کنید" : ""}
-              style={{ minHeight: editorMinHeight }}
+              style={editorStyle}
               dir="ltr"
               spellCheck={false}
               onFocus={() => setIsFocused(true)}
@@ -804,7 +809,7 @@ const RichTextBoxEditor = ({
     <>
       <Box ref={rootRef} className={rootClassName}>
         {maxRoutePreview.isOpen ? (
-          <div className={styles.inlineEditorPlaceholder} style={{ minHeight }} aria-hidden />
+          <div className={styles.inlineEditorPlaceholder} style={fieldHeightStyle} aria-hidden />
         ) : (
           renderEditorSurface("inline")
         )}
@@ -814,6 +819,7 @@ const RichTextBoxEditor = ({
         open={maxRoutePreview.isOpen}
         onClose={handleCloseMaximize}
         title={label}
+        subtitle="پیش‌نمایش و ویرایش متن"
         maxWidth="lg"
         disableAutoFocus
         disableRestoreFocus

@@ -43,6 +43,11 @@ const UsersManagementViewModal = ({
       onClose={onClose}
       maxWidth="sm"
       title={t("table.entity.modalViewTitle", { title: entityTitle })}
+      subtitle={
+        [record.firstName, record.lastName].filter(Boolean).join(" ").trim() ||
+        record.username?.trim() ||
+        t("pages.usersManagement.viewModal.subtitle")
+      }
       footer={
         <ModalFooterActions
           actions={[

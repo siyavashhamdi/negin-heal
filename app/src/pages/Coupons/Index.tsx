@@ -52,6 +52,7 @@ import { useSnackbar } from "../../hooks/useSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
 import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
 import { hasFormChanges } from "../../utils/formChange.util";
+import { MULTILINE_TEXTAREA_MIN_ROWS, MULTILINE_TEXTAREA_MAX_ROWS } from "../../constants/multilineTextarea.constants";
 import CrudRowActions from "../../shared/crud/CrudRowActions";
 import EntityDeleteDialog from "../../shared/crud/EntityDeleteDialog";
 import EntityModalShell from "../../shared/crud/EntityModalShell";
@@ -922,13 +923,22 @@ const CouponsIndex = (): ReactElement => {
 
       <EntityModalShell
         open={couponDialogOpen}
-        onClose={isSaving ? () => undefined : closeDialog}
+        onClose={closeDialog}
+        disableClose={isSaving}
+        hasUnsavedChanges={Boolean(form && canSubmitCouponForm)}
         maxWidth="lg"
         resetKey={editCouponId != null ? `${editCouponId}-${Boolean(editCouponRecord)}` : undefined}
         title={
           dialogMode === "create"
             ? t("pages.coupons.create.title")
             : t("pages.coupons.edit.title")
+        }
+        subtitle={
+          dialogMode === "create"
+            ? t("pages.coupons.create.subtitle")
+            : editCouponRecord?.code?.trim() ||
+              form?.code?.trim() ||
+              t("pages.coupons.edit.subtitle")
         }
         useFormWrapper
         onSubmit={handleSubmit}
@@ -992,7 +1002,8 @@ const CouponsIndex = (): ReactElement => {
                   fullWidth
                   size="small"
                   multiline
-                  minRows={3}
+                  minRows={MULTILINE_TEXTAREA_MIN_ROWS}
+                  maxRows={MULTILINE_TEXTAREA_MAX_ROWS}
                 />
 
                 <Stack direction={{ xs: "column", md: "row" }} spacing={2}>

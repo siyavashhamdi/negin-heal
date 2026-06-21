@@ -876,6 +876,7 @@ const FileUploadField = ({
         open={isPreviewDialogOpen && previewUrl != null}
         onClose={handleClosePreviewDialog}
         title={previewSource?.name ?? ""}
+        subtitle="پیش‌نمایش فایل انتخاب‌شده"
         maxWidth="lg"
         showVisibleScrollbar
         footer={

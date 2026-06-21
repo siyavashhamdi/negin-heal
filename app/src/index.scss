@@ -1,5 +1,6 @@
 @use "styles/fonts";
 @use "styles/variables";
+@use "styles/mixins" as mixins;
 @use "styles/mobile-touch";
 
 // Global reset
@@ -56,6 +57,52 @@ body {
   --text-primary: #3d2c35;
   --text-secondary: #7a6872;
   --divider: #eadde3;
+  --app-input-min-height: #{variables.$input-min-height};
+  --app-multiline-textarea-min-rows: #{variables.$multiline-textarea-min-rows};
+  --app-multiline-textarea-min-height: #{variables.$multiline-textarea-min-height};
+  --app-multiline-textarea-max-height: #{variables.$multiline-textarea-max-height};
+}
+
+// Single-line inputs — same height as course edit dialog TextField (multiline excluded)
+.MuiOutlinedInput-root:not(.MuiInputBase-multiline):not(:has(.MuiAutocomplete-tag)) {
+  min-height: var(--app-input-min-height);
+  align-items: center;
+}
+
+.MuiOutlinedInput-root:not(.MuiInputBase-multiline) {
+  .MuiInputBase-input:not(.MuiInputBase-inputMultiline),
+  .MuiSelect-select {
+    padding-block: 0;
+    line-height: 1.4375;
+  }
+}
+
+// size="small" — same resting label / placeholder alignment as course edit (medium) fields
+.MuiOutlinedInput-root.MuiInputBase-sizeSmall:not(.MuiInputBase-multiline):not(:has(.MuiAutocomplete-tag)) {
+  min-height: var(--app-input-min-height);
+  align-items: center;
+
+  .MuiInputBase-input:not(.MuiInputBase-inputMultiline),
+  .MuiSelect-select {
+    padding-block: 0 !important;
+    line-height: 1.4375;
+  }
+}
+
+.MuiOutlinedInput-root.MuiInputBase-multiline,
+.MuiOutlinedInput-root:has(.MuiAutocomplete-tag) {
+  min-height: auto;
+}
+
+.MuiOutlinedInput-root.MuiInputBase-multiline textarea,
+.MuiOutlinedInput-root.MuiInputBase-multiline .MuiInputBase-inputMultiline {
+  box-sizing: border-box;
+  min-height: var(--app-multiline-textarea-min-height);
+  max-height: var(--app-multiline-textarea-max-height);
+  overflow-y: auto !important;
+  resize: none;
+  line-height: 1.4375;
+  @include mixins.visible-scrollbars;
 }
 
 [data-theme="dark"] {
@@ -126,6 +173,33 @@ body {
     display: none;
     width: 0;
     height: 0;
+  }
+
+  // Multiline inputs / rich editors — show vertical scrollbar when content overflows.
+  .MuiOutlinedInput-root.MuiInputBase-multiline textarea,
+  .MuiOutlinedInput-root.MuiInputBase-multiline .MuiInputBase-inputMultiline {
+    @include mixins.visible-scrollbars;
+  }
+}
+
+[data-theme="dark"] {
+  @media (max-width: (variables.$breakpoint-sm - 0.0625rem)) {
+    .MuiOutlinedInput-root.MuiInputBase-multiline textarea,
+    .MuiOutlinedInput-root.MuiInputBase-multiline .MuiInputBase-inputMultiline {
+      scrollbar-color: #4b5563 #1f2937;
+
+      &::-webkit-scrollbar-track {
+        background: #1f2937;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background: #4b5563;
+      }
+
+      &::-webkit-scrollbar-thumb:hover {
+        background: #6b7280;
+      }
+    }
   }
 }
 

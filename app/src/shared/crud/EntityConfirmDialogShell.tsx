@@ -11,12 +11,14 @@ import {
 } from "@mui/material";
 import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
 import { crudModalFooterSx, crudModalTitleSx } from "./modalThemeSx";
+import confirmStyles from "./styles/EntityConfirmDialog.module.scss";
 import styles from "./styles/EntityModalShell.module.scss";
 
 export interface EntityConfirmDialogShellProps {
   open: boolean;
-  title: string;
-  onClose: () => void;
+  /** Omit for icon/message-only confirmations (delete, unsaved changes). */
+  title?: string;
+  onClose?: () => void;
   /** Optional icon shown above the message (e.g. activate/deactivate). */
   icon?: ReactNode;
   /** Optional highlighted subject line (e.g. member name). */
@@ -26,6 +28,12 @@ export interface EntityConfirmDialogShellProps {
   maxWidth?: Breakpoint;
   /** Re-run scroll reset when dialog content identity changes. */
   resetKey?: unknown;
+  paperClassName?: string;
+  titleClassName?: string;
+  contentClassName?: string;
+  bodyClassName?: string;
+  actionsClassName?: string;
+  subjectClassName?: string;
 }
 
 const EntityConfirmDialogShell = ({
@@ -38,11 +46,32 @@ const EntityConfirmDialogShell = ({
   footer,
   maxWidth = "xs",
   resetKey,
+  paperClassName,
+  titleClassName,
+  contentClassName,
+  bodyClassName,
+  actionsClassName,
+  subjectClassName,
 }: EntityConfirmDialogShellProps): ReactElement => {
   const theme = useTheme();
   const contentRef = useRef<HTMLDivElement>(null);
   const { isCompact, dialogProps, getPaperProps, getContentProps } = useMobileDialogProps();
   const { onEntered } = useScrollContainerToTopOnOpen(open, contentRef, resetKey);
+
+  const dialogTitleClassName = [styles.modalDialogTitle, titleClassName].filter(Boolean).join(" ");
+  const showTitle = Boolean(title?.trim());
+
+  const dialogContentClassName = [
+    isCompact ? styles.confirmDialogContentMobile : styles.confirmDialogContentDesktop,
+    !showTitle ? confirmStyles.confirmDialogContentNoTitle : undefined,
+    contentClassName,
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const dialogBodyClassName = [styles.confirmDialogBody, bodyClassName].filter(Boolean).join(" ");
+  const dialogActionsClassName = [styles.confirmDialogActions, actionsClassName]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <Dialog
@@ -52,27 +81,33 @@ const EntityConfirmDialogShell = ({
       {...dialogProps}
       TransitionProps={{ onEntered }}
       PaperProps={getPaperProps({
-        className: isCompact ? styles.modalPaperMobileFlex : undefined,
+        className: [isCompact ? styles.modalPaperMobileFlex : undefined, paperClassName]
+          .filter(Boolean)
+          .join(" ") || undefined,
       })}
     >
-      <DialogTitle className={styles.modalDialogTitle} sx={crudModalTitleSx(theme)}>
-        <Typography variant="h6" component="div" className={styles.modalTitleTypography}>
-          {title}
-        </Typography>
-      </DialogTitle>
+      {showTitle ? (
+        <DialogTitle className={dialogTitleClassName} sx={crudModalTitleSx(theme)}>
+          <Typography variant="h6" component="div" className={styles.modalTitleTypography}>
+            {title}
+          </Typography>
+        </DialogTitle>
+      ) : null}
 
       <DialogContent
         ref={contentRef}
         {...getContentProps({
-          className: isCompact
-            ? styles.confirmDialogContentMobile
-            : styles.confirmDialogContentDesktop,
+          className: dialogContentClassName,
         })}
       >
-        <Box className={styles.confirmDialogBody}>
+        <Box className={dialogBodyClassName}>
           {icon ? <Box className={styles.confirmDialogIconWrap}>{icon}</Box> : null}
           {subjectLine ? (
-            <Typography variant="subtitle1" component="p" className={styles.confirmDialogSubject}>
+            <Typography
+              variant="subtitle1"
+              component="p"
+              className={[styles.confirmDialogSubject, subjectClassName].filter(Boolean).join(" ")}
+            >
               {subjectLine}
             </Typography>
           ) : null}
@@ -82,7 +117,7 @@ const EntityConfirmDialogShell = ({
 
       <Box
         component="footer"
-        className={styles.confirmDialogActions}
+        className={dialogActionsClassName}
         sx={crudModalFooterSx(theme, { pinFooterToBottomOnMobile: true })}
       >
         {footer}

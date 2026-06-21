@@ -43,6 +43,7 @@ export const DashboardAppRoutes = (): ReactElement => {
       <Route path={`${APP_SHELL_ROUTES.courses}/new`} element={<CoursesIndex />} />
       <Route path={`${APP_SHELL_ROUTES.courses}/edit/:courseId`} element={<CoursesIndex />} />
       <Route path={`${APP_SHELL_ROUTES.courses}/delete/:courseId`} element={<CoursesIndex />} />
+      <Route path={`${APP_SHELL_ROUTES.courses}/flip/:courseId`} element={<CoursesIndex />} />
       <Route path={APP_SHELL_ROUTES.courses} element={<CoursesIndex />} />
       <Route path={APP_SHELL_ROUTES.courseDetail} element={<CourseDetail />} />
       <Route path={APP_SHELL_ROUTES.more} element={wrapProtected(<More />)} />
@@ -80,6 +81,7 @@ export const DashboardAppRoutes = (): ReactElement => {
       <Route path={`${APP_SHELL_ROUTES.courses}/:courseId/purchase`} element={<CourseDetail />} />
       <Route path={`${APP_SHELL_ROUTES.courses}/new/max`} element={<CoursesIndex />} />
       <Route path={`${APP_SHELL_ROUTES.courses}/edit/:courseId/max`} element={<CoursesIndex />} />
+      <Route path={`${APP_SHELL_ROUTES.courses}/flip/:courseId/max`} element={<CoursesIndex />} />
       <Route path={`${APP_SHELL_ROUTES.courses}/:courseId/max`} element={<CourseDetail />} />
       <Route path={`${APP_SHELL_ROUTES.users}/*`} element={wrapProtected(<UsersManagementIndex />)} />
       <Route

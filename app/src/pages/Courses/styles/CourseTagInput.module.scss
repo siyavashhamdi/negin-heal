@@ -13,7 +13,7 @@ $field-label-float-scale: 0.75;
   align-items: center;
   flex-wrap: wrap;
   gap: 0.35rem;
-  min-block-size: 3.5rem;
+  min-block-size: variables.$input-min-height;
   border: 0.0625rem solid color-mix(in srgb, var(--text-primary) 23%, transparent);
   border-radius: variables.$border-radius-md;
   padding: 0.875rem 0.875rem 0.75rem;

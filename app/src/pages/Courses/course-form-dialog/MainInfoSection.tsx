@@ -12,6 +12,7 @@ import {
   Typography,
 } from "@mui/material";
 import FileUploadField from "../../../shared/forms/FileUploadField";
+import { MULTILINE_TEXTAREA_MIN_ROWS, MULTILINE_TEXTAREA_MAX_ROWS } from "../../../constants/multilineTextarea.constants";
 import {
   FILE_UPLOAD_POLICY_MAX_SIZE_BYTES,
 } from "../../../constants/fileUploadPolicies";
@@ -91,7 +92,8 @@ const MainInfoSection = ({
         <TextField
           fullWidth
           multiline
-          minRows={2}
+          minRows={MULTILINE_TEXTAREA_MIN_ROWS}
+          maxRows={MULTILINE_TEXTAREA_MAX_ROWS}
           label="توضیحات"
           value={description}
           onChange={(event) => onDescriptionChange(event.target.value)}

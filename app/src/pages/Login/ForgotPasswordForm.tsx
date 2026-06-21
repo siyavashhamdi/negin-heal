@@ -1,12 +1,14 @@
 import { useCallback, useMemo, useState, type ReactElement } from "react";
 import {
-  Alert,
   Button,
+  Box,
   CircularProgress,
   InputAdornment,
   TextField,
   Typography,
+  useMediaQuery,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import {
   AlternateEmail as AlternateEmailIcon,
   CheckCircle as CheckCircleIcon,
@@ -25,6 +27,7 @@ import {
   createForgotPasswordPrefill,
   detectPasswordResetIdentityKind,
   EMAIL_REGEX,
+  sanitizeAuthIdentityInput,
 } from "./password-reset-form.util";
 import formStyles from "./styles/LoginFormShared.module.scss";
 
@@ -41,8 +44,10 @@ export const ForgotPasswordForm = ({
   const { t } = useTranslation();
   const { showError } = useSnackbar();
   const { requestResetLink, requestingResetLink } = usePasswordReset();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const initialValues = useMemo(
-    () => createForgotPasswordPrefill(initialIdentity),
+    () => sanitizeAuthIdentityInput(createForgotPasswordPrefill(initialIdentity)),
     [initialIdentity],
   );
 
@@ -119,7 +124,7 @@ export const ForgotPasswordForm = ({
   if (submitted) {
     return (
       <LoginShell embedded={embedded} subtitle={t("auth.login.forgotPasswordSubmittedSubtitle")}>
-        <>
+        <Box className={formStyles.successPanel}>
           <CheckCircleIcon className={formStyles.successIcon} />
           <Typography component="h2" className={formStyles.panelTitle}>
             {t("auth.login.forgotPasswordSubmittedTitle")}
@@ -130,7 +135,7 @@ export const ForgotPasswordForm = ({
           <Typography component="p" className={formStyles.formLead}>
             {t("auth.login.forgotPasswordSubmittedHint")}
           </Typography>
-        </>
+        </Box>
       </LoginShell>
     );
   }
@@ -150,15 +155,23 @@ export const ForgotPasswordForm = ({
         <TextField
           fullWidth
           label={t("auth.login.identityFieldTitle")}
-          placeholder={t("auth.login.identityPlaceholder")}
+          placeholder={t(
+            isMobile ? "auth.login.identityPlaceholderMobile" : "auth.login.identityPlaceholder",
+          )}
           variant="outlined"
           type="text"
           value={identity}
           onChange={(event) => {
-            setIdentity(event.target.value);
+            setIdentity(sanitizeAuthIdentityInput(event.target.value));
             setFieldError(null);
           }}
           className={formStyles.textField}
+          inputProps={{
+            lang: "en",
+            spellCheck: "false",
+            autoCapitalize: "off",
+            autoCorrect: "off",
+          }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -182,10 +195,6 @@ export const ForgotPasswordForm = ({
               : t("auth.login.forgotPasswordHelper")
           }
         />
-
-        <Alert severity="info" className={formStyles.formAlert}>
-          {t("auth.login.forgotPasswordPrivacyHint")}
-        </Alert>
 
         {captchaEnabled ? (
           <LoginCaptchaField

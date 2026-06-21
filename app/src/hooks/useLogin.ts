@@ -14,6 +14,7 @@ import { useAuth, type User } from "../contexts/AuthContext";
 import { useSnackbar } from "./useSnackbar";
 import { collectSessionClientContextInput } from "../utils/sessionClientContext.util";
 import { applyUserPreferences } from "../utils/userPreferences.util";
+import { mapMeToUser } from "../utils/storedUser.util";
 import type { UserMeGqlResponse } from "../lib/graphql/generated/graphql";
 
 export interface RequestLoginCodeInput {
@@ -45,7 +46,7 @@ export interface SignupInput {
   mobile?: string;
   profile: {
     firstName: string;
-    lastName: string;
+    lastName?: string;
   };
   password?: string;
   signupCode?: string;
@@ -107,14 +108,6 @@ interface UserSignupResponse {
 
 interface UserMeResponse {
   me: UserMeGqlResponse;
-}
-
-function mapMeToUser(me: UserMeGqlResponse): User {
-  return {
-    id: String(me.id),
-    username: me.username,
-    roles: me.roles.map((role) => String(role)),
-  };
 }
 
 function extractGraphQLErrorCode(error: unknown): string | undefined {
@@ -372,7 +365,9 @@ export const useLogin = () => {
             mobile: input.mobile?.trim() || undefined,
             profile: {
               firstName: input.profile.firstName.trim(),
-              lastName: input.profile.lastName.trim(),
+              ...(input.profile.lastName?.trim()
+                ? { lastName: input.profile.lastName.trim() }
+                : {}),
             },
             password: input.password?.trim() || undefined,
             signupCode: input.signupCode?.trim() || undefined,

@@ -22,6 +22,7 @@ import type {
 } from "./types";
 import {
   COMMON_TEXTAREA_ROWS,
+  MULTILINE_TEXTAREA_MIN_ROWS,
   TECHNICAL_VALUE_INPUT_SX,
   removeAt,
   replaceAt,
@@ -95,6 +96,7 @@ const SupportTextFields = ({
         fullWidth
         multiline={field.multiline}
         minRows={field.multiline ? COMMON_TEXTAREA_ROWS : undefined}
+        maxRows={field.multiline ? COMMON_TEXTAREA_ROWS : undefined}
         type={field.type ?? "text"}
         label={field.label}
         value={String(config[field.key] ?? "")}
@@ -241,6 +243,7 @@ const SupportContactEditor = ({
                   fullWidth
                   multiline={field.multiline}
                   minRows={field.multiline ? COMMON_TEXTAREA_ROWS : undefined}
+                  maxRows={field.multiline ? COMMON_TEXTAREA_ROWS : undefined}
                   label={field.label}
                   value={config.faqPage[field.key]}
                   onChange={(event) =>
@@ -311,7 +314,8 @@ const SupportContactEditor = ({
                         key={field}
                         fullWidth
                         multiline={field === "description"}
-                        minRows={field === "description" ? 2 : undefined}
+                        minRows={field === "description" ? MULTILINE_TEXTAREA_MIN_ROWS : undefined}
+                        maxRows={field === "description" ? MULTILINE_TEXTAREA_MAX_ROWS : undefined}
                         label={label}
                         value={section[field]}
                         onChange={(event) =>
@@ -385,6 +389,7 @@ const SupportContactEditor = ({
                             fullWidth
                             multiline={Boolean(multiline)}
                             minRows={multiline ? COMMON_TEXTAREA_ROWS : undefined}
+                            maxRows={multiline ? COMMON_TEXTAREA_ROWS : undefined}
                             label={label}
                             value={item[field]}
                             onChange={(event) =>

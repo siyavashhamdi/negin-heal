@@ -128,6 +128,15 @@ $field-label-float-scale: 0.75;
   overflow-wrap: anywhere;
 }
 
+.editor,
+.markupEditor {
+  box-sizing: border-box;
+  min-height: var(--app-multiline-textarea-min-height);
+  max-height: var(--app-multiline-textarea-max-height);
+  overflow-y: auto;
+  @include mixins.visible-scrollbars;
+}
+
 .renderContent {
   border-color: color-mix(in srgb, var(--app-surface-border) 70%, transparent);
   background: color-mix(in srgb, #ffffff 72%, var(--app-surface-bg));

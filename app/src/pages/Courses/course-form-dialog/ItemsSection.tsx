@@ -25,6 +25,7 @@ import {
 import { buildExistingFilePreview } from "../../../utils/fileAccessUrl.util";
 import { getFieldUploadPercent, type UploadProgressEntry } from "../../../utils/uploadProgress.util";
 import RichTextBox from "../../../shared/forms/RichTextBox";
+import { MULTILINE_TEXTAREA_MIN_ROWS } from "../../../constants/multilineTextarea.constants";
 import type { DraftChapter, DraftItem, DraftItemContentType } from "./types";
 import { setDragTransferData } from "./reorder-drag.util";
 import styles from "./styles/ItemsSection.module.scss";
@@ -225,7 +226,7 @@ const ItemsSection = ({
                           value={item.article}
                           onChange={(nextValue) => updateCurrentItem({ article: nextValue })}
                           placeholder="متن مقاله را وارد کنید"
-                          minRows={12}
+                          minRows={MULTILINE_TEXTAREA_MIN_ROWS}
                           required
                         />
                       </Grid>

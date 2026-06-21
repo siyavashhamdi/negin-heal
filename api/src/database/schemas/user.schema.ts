@@ -58,6 +58,7 @@ export const UserAuthenticationSchema = new MongooseSchema(
 export const UserProfileSchema = new MongooseSchema(
   {
     firstName: { type: String },
+    /** Optional family name; users may register and update profile without it. */
     lastName: { type: String },
     email: {
       lowercase: true,
@@ -106,6 +107,7 @@ export type UserAuthentication = {
 
 export type UserProfile = {
   firstName?: string;
+  /** Optional family name. */
   lastName?: string;
   email?: string;
   avatarFileId?: Types.ObjectId;

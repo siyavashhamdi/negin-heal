@@ -72,6 +72,7 @@ import FileUploadField from "../../shared/forms/FileUploadField";
 import AppTooltip from "../../shared/AppTooltip";
 import { getFileIdFromAccessUrl, resolveFileAccessUrl } from "../../utils/fileAccessUrl.util";
 import { hasFormChanges } from "../../utils/formChange.util";
+import { MULTILINE_TEXTAREA_MIN_ROWS, MULTILINE_TEXTAREA_MAX_ROWS } from "../../constants/multilineTextarea.constants";
 import { uploadFile } from "../../utils/fileUpload.util";
 import {
   FILE_UPLOAD_POLICY,
@@ -1439,9 +1440,12 @@ const PaymentsList = (): ReactElement => {
       <EntityModalShell
         open={manualPaymentRouteOpen}
         onClose={closeManualPaymentDialog}
+        disableClose={createManualPaymentResult.loading || isManualPaymentFileUploading}
+        hasUnsavedChanges={canSubmitManualPayment}
         maxWidth="md"
         title="ثبت دستی پرداخت"
-        subtitle="این فرم فقط برای ثبت پرداخت توسط پشتیبانی استفاده می‌شود"
+        subtitle={t("pages.payments.manualCreate.subtitle")}
+        relaxedHeaderSpacing
         footer={
           <ManualPaymentDialogActions
             onCancel={closeManualPaymentDialog}
@@ -1454,148 +1458,133 @@ const PaymentsList = (): ReactElement => {
         }
       >
         <Stack spacing={2}>
-          <Paper
-            variant="outlined"
-            sx={{ p: 2, borderRadius: 3, bgcolor: APP_SURFACE_BG, borderColor: "divider" }}
-          >
-            <Stack spacing={2}>
-              <Box>
-                <Typography variant="subtitle1" fontWeight={900}>
-                  اطلاعات پرداخت
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  کاربر نهایی و دوره فعال پولی را انتخاب کنید.
-                </Typography>
-              </Box>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+            <ActiveEndUserPickerField
+              value={manualPaymentUser}
+              onChange={setManualPaymentUser}
+              enabled={manualPaymentRouteOpen}
+              required
+            />
 
-              <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-                <ActiveEndUserPickerField
-                  value={manualPaymentUser}
-                  onChange={setManualPaymentUser}
-                  enabled={manualPaymentRouteOpen}
-                  required
-                />
+            <EntityAutocompleteField
+              options={manualPaymentCourseOptions}
+              value={manualPaymentCourse}
+              loading={manualPaymentCoursesLoading}
+              onChange={setManualPaymentCourse}
+              disabled={!manualPaymentUser}
+              noOptionsText={
+                manualPaymentUser
+                  ? "دوره فعال پولیِ پرداخت‌نشده برای این کاربر پیدا نشد."
+                  : "دوره فعال پولی پیدا نشد."
+              }
+              label="دوره"
+              placeholder="انتخاب دوره فعال پولی"
+              helperText={
+                manualPaymentUser
+                  ? "فقط دوره‌های فعال پولی که این کاربر هنوز پرداخت نکرده نمایش داده می‌شوند."
+                  : "ابتدا کاربر را انتخاب کنید تا دوره‌های قابل ثبت نمایش داده شوند."
+              }
+              imageVariant="rounded"
+              required
+            />
+          </Stack>
 
-                <EntityAutocompleteField
-                  options={manualPaymentCourseOptions}
-                  value={manualPaymentCourse}
-                  loading={manualPaymentCoursesLoading}
-                  onChange={setManualPaymentCourse}
-                  disabled={!manualPaymentUser}
-                  noOptionsText={
-                    manualPaymentUser
-                      ? "دوره فعال پولیِ پرداخت‌نشده برای این کاربر پیدا نشد."
-                      : "دوره فعال پولی پیدا نشد."
-                  }
-                  label="دوره"
-                  placeholder="انتخاب دوره فعال پولی"
-                  helperText={
-                    manualPaymentUser
-                      ? "فقط دوره‌های فعال پولی که این کاربر هنوز پرداخت نکرده نمایش داده می‌شوند."
-                      : "ابتدا کاربر را انتخاب کنید تا دوره‌های قابل ثبت نمایش داده شوند."
-                  }
-                  imageVariant="rounded"
-                  required
-                />
-              </Stack>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+            <TextField
+              select
+              fullWidth
+              required
+              size="small"
+              label="روش پرداخت"
+              value={manualPaymentMethod}
+              onChange={(event) =>
+                setManualPaymentMethod(event.target.value as UserCoursePaymentMethod)
+              }
+            >
+              {MANUAL_PAYMENT_METHOD_OPTIONS.map((method) => (
+                <MenuItem key={method} value={method}>
+                  {PAYMENT_METHOD_LABEL[method]}
+                </MenuItem>
+              ))}
+            </TextField>
 
-              <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-                <TextField
-                  select
-                  fullWidth
-                  required
-                  size="small"
-                  label="روش پرداخت"
-                  value={manualPaymentMethod}
-                  onChange={(event) =>
-                    setManualPaymentMethod(event.target.value as UserCoursePaymentMethod)
-                  }
-                >
-                  {MANUAL_PAYMENT_METHOD_OPTIONS.map((method) => (
-                    <MenuItem key={method} value={method}>
-                      {PAYMENT_METHOD_LABEL[method]}
-                    </MenuItem>
-                  ))}
-                </TextField>
+            <TextField
+              select
+              required
+              fullWidth
+              size="small"
+              label="وضعیت پرداخت"
+              value={manualPaymentStatus}
+              onChange={(event) =>
+                setManualPaymentStatus(event.target.value as UserCoursePurchaseStatus)
+              }
+            >
+              {REVIEW_STATUS_OPTIONS.map((value) => (
+                <MenuItem key={value} value={value}>
+                  {STATUS_LABEL[value]}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Stack>
 
-                <TextField
-                  select
-                  required
-                  fullWidth
-                  size="small"
-                  label="وضعیت پرداخت"
-                  value={manualPaymentStatus}
-                  onChange={(event) =>
-                    setManualPaymentStatus(event.target.value as UserCoursePurchaseStatus)
-                  }
-                >
-                  {REVIEW_STATUS_OPTIONS.map((value) => (
-                    <MenuItem key={value} value={value}>
-                      {STATUS_LABEL[value]}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Stack>
+          <TextField
+            fullWidth
+            size="small"
+            label="کد تخفیف"
+            value={manualCouponCode}
+            onChange={(event) => setManualCouponCode(event.target.value)}
+            inputProps={{
+              className: styles.latinInput,
+              dir: "ltr",
+            }}
+            InputProps={{
+              endAdornment: manualCouponCode ? (
+                <InputAdornment position="end">
+                  <AppTooltip title="پاک کردن کد تخفیف" arrow>
+                    <IconButton
+                      size="small"
+                      edge="end"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => setManualCouponCode("")}
+                      aria-label="پاک کردن کد تخفیف"
+                    >
+                      <ClearRoundedIcon fontSize="small" />
+                    </IconButton>
+                  </AppTooltip>
+                </InputAdornment>
+              ) : null,
+            }}
+          />
 
-              <TextField
-                fullWidth
-                size="small"
-                label="کد تخفیف"
-                value={manualCouponCode}
-                onChange={(event) => setManualCouponCode(event.target.value)}
-                inputProps={{
-                  className: styles.latinInput,
-                  dir: "ltr",
-                }}
-                InputProps={{
-                  endAdornment: manualCouponCode ? (
-                    <InputAdornment position="end">
-                      <AppTooltip title="پاک کردن کد تخفیف" arrow>
-                        <IconButton
-                          size="small"
-                          edge="end"
-                          onMouseDown={(event) => event.preventDefault()}
-                          onClick={() => setManualCouponCode("")}
-                          aria-label="پاک کردن کد تخفیف"
-                        >
-                          <ClearRoundedIcon fontSize="small" />
-                        </IconButton>
-                      </AppTooltip>
-                    </InputAdornment>
-                  ) : null,
-                }}
-              />
+          <Box>
+            <FileUploadField
+              label="فایل پرداخت"
+              file={manualPaymentEvidenceFile}
+              onChange={setManualPaymentEvidenceFile}
+              accept="image/*,application/pdf"
+              allowedFormatsLabel="تصویر یا PDF"
+              maxSizeLabel="حداکثر ۱۰ مگابایت"
+              maxSizeBytes={FILE_UPLOAD_POLICY_MAX_SIZE_BYTES.PAYMENT_EVIDENCE}
+              dropTitle="فایل پرداخت را انتخاب کنید"
+              mobileDropTitle="انتخاب فایل پرداخت"
+              dropHint=""
+              mobileDropHint=""
+              removeLabel="حذف فایل"
+              invalidLabel="فایل نامعتبر است"
+            />
+          </Box>
 
-              <Box>
-                <FileUploadField
-                  label="فایل پرداخت"
-                  file={manualPaymentEvidenceFile}
-                  onChange={setManualPaymentEvidenceFile}
-                  accept="image/*,application/pdf"
-                  allowedFormatsLabel="تصویر یا PDF"
-                  maxSizeLabel="حداکثر ۱۰ مگابایت"
-                  maxSizeBytes={FILE_UPLOAD_POLICY_MAX_SIZE_BYTES.PAYMENT_EVIDENCE}
-                  dropTitle="فایل پرداخت را انتخاب کنید"
-                  mobileDropTitle="انتخاب فایل پرداخت"
-                  dropHint=""
-                  mobileDropHint=""
-                  removeLabel="حذف فایل"
-                  invalidLabel="فایل نامعتبر است"
-                />
-              </Box>
-
-              <TextField
-                fullWidth
-                multiline
-                minRows={3}
-                size="small"
-                label="توضیح بررسی دستی"
-                value={manualPaymentDescription}
-                onChange={(event) => setManualPaymentDescription(event.target.value)}
-                placeholder="مثلاً پرداخت توسط پشتیبانی تایید و ثبت شد."
-              />
-            </Stack>
-          </Paper>
+          <TextField
+            fullWidth
+            multiline
+            minRows={MULTILINE_TEXTAREA_MIN_ROWS}
+            maxRows={MULTILINE_TEXTAREA_MAX_ROWS}
+            size="small"
+            label="توضیح بررسی دستی"
+            value={manualPaymentDescription}
+            onChange={(event) => setManualPaymentDescription(event.target.value)}
+            placeholder="مثلاً پرداخت توسط پشتیبانی تایید و ثبت شد."
+          />
 
           {isManualPaymentOptionsLoading ? (
             <Typography variant="body2" color="text.secondary">
@@ -1608,12 +1597,16 @@ const PaymentsList = (): ReactElement => {
       <EntityModalShell
         open={reviewPaymentId != null}
         onClose={closeReviewDialog}
+        disableClose={updatePaymentStatusResult.loading}
+        hasUnsavedChanges={canSubmitReview}
         maxWidth="lg"
         resetKey={
           reviewPaymentId != null ? `${reviewPaymentId}-${Boolean(reviewPayment)}` : undefined
         }
         title="بررسی پرداخت"
-        subtitle={reviewPayment?.courseTitle ?? EMPTY_DISPLAY}
+        subtitle={
+          reviewPayment?.courseTitle?.trim() || t("pages.payments.review.subtitle")
+        }
         footer={
           <ReviewPaymentDialogActions
             onCancel={closeReviewDialog}
@@ -1804,7 +1797,8 @@ const PaymentsList = (): ReactElement => {
                   <TextField
                     fullWidth
                     multiline
-                    minRows={3}
+                    minRows={MULTILINE_TEXTAREA_MIN_ROWS}
+                    maxRows={MULTILINE_TEXTAREA_MAX_ROWS}
                     label="توضیح بررسی دستی"
                     value={reviewDescription}
                     onChange={(event) => setReviewDescription(event.target.value)}

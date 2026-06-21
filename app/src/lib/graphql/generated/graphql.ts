@@ -2401,7 +2401,7 @@ export type UserSignupProfileGqlInput = {
   /** User first name */
   firstName: Scalars["String"]["input"];
   /** User last name */
-  lastName: Scalars["String"]["input"];
+  lastName?: InputMaybe<Scalars["String"]["input"]>;
 };
 
 /** Status of the user account */

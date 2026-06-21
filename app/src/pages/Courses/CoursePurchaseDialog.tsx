@@ -534,7 +534,7 @@ export function CoursePurchaseDialog({
       open={open}
       onClose={isSubmitting ? () => undefined : onClose}
       title="تکمیل خرید دوره"
-      subtitle={course.title}
+      subtitle={course.title.trim() || "روش پرداخت را انتخاب کنید و خرید را نهایی کنید."}
       maxWidth="md"
       disableAutoFocus
       disableRestoreFocus

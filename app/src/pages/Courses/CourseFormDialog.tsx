@@ -11,6 +11,7 @@ import {
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { useSnackbar } from "../../hooks/useSnackbar";
+import { useTranslation } from "../../hooks/useTranslation";
 import EntityConfirmDialogShell from "../../shared/crud/EntityConfirmDialogShell";
 import EntityModalShell from "../../shared/crud/EntityModalShell";
 import { COURSE_CREATE_MUTATION } from "../../graphql/mutations/courseCreate.mutation";
@@ -328,6 +329,7 @@ const CourseFormDialog = ({
   onSaved,
   courseId,
 }: CourseFormDialogProps): ReactElement => {
+  const { t } = useTranslation();
   const { showError, updateUploadProgress, hideUploadProgress } = useSnackbar();
   const isEditMode = Boolean(courseId);
   const { data, loading: detailLoading } = useQuery<CourseDetailQuery, CourseDetailQueryVariables>(
@@ -958,8 +960,15 @@ const CourseFormDialog = ({
     <>
       <EntityModalShell
         open={open}
-        onClose={() => (isSubmitting ? undefined : closeDialog())}
+        onClose={closeDialog}
+        disableClose={isSubmitting}
+        hasUnsavedChanges={canSubmit}
         title={isEditMode ? "ویرایش دوره" : "دوره جدید"}
+        subtitle={
+          isEditMode
+            ? t("pages.courses.form.edit.subtitle")
+            : t("pages.courses.form.create.subtitle")
+        }
         maxWidth="lg"
         pinFooterToBottomOnMobile
         resetKey={isEditMode ? `${courseId ?? ""}-${isEditFormReady}` : undefined}

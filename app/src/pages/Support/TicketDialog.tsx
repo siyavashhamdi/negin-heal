@@ -16,15 +16,17 @@ import {
 import { useQuery } from "@apollo/client/react";
 import { alpha, type Theme, useTheme } from "@mui/material/styles";
 
+import { resolveMeUserDisplayName } from "../../utils/storedUser.util";
 import { useAuth } from "../../contexts/AuthContext";
 import { SUPER_ADMIN_TICKET_SEND_MUTATION } from "../../graphql/mutations/superAdminTicketSend.mutation";
 import { TICKET_CLOSE_MUTATION } from "../../graphql/mutations/ticketClose.mutation";
 import { USER_TICKET_CLOSE_MUTATION } from "../../graphql/mutations/userTicketClose.mutation";
 import { USER_TICKET_SEND_MUTATION } from "../../graphql/mutations/userTicketSend.mutation";
 import { USER_ME_QUERY } from "../../graphql/queries/userMe.query";
-import { type UserMeGqlResponse, type UserMeResponse } from "../../hooks/useMe";
+import { type UserMeResponse } from "../../hooks/useMe";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
+import { MULTILINE_TEXTAREA_MIN_ROWS, MULTILINE_TEXTAREA_MAX_ROWS } from "../../constants/multilineTextarea.constants";
 import EntityModalShell from "../../shared/crud/EntityModalShell";
 import ModalFooterActions, { type ModalFooterAction } from "../../shared/crud/ModalFooterActions";
 import DateTimeValue from "../../shared/display/DateTimeValue";
@@ -271,24 +273,6 @@ function sortMessagesBySentAt(messages: readonly SupportTicketMessage[]): Suppor
 function getProfileStyleInitial(displayName: string): string {
   const trimmed = displayName.trim();
   return trimmed.slice(0, 1) || "?";
-}
-
-function formatMeDisplayName(
-  meUser: UserMeGqlResponse | null,
-  fallbackUsername?: string | null
-): string {
-  if (!meUser) {
-    return fallbackUsername?.trim() || "کاربر";
-  }
-
-  const firstName = meUser.profile?.firstName?.trim();
-  const lastName = meUser.profile?.lastName?.trim();
-
-  if (firstName && lastName) {
-    return `${firstName} ${lastName}`;
-  }
-
-  return firstName || meUser.username?.trim() || fallbackUsername?.trim() || "کاربر";
 }
 
 function resolveMessageAvatarUrl(
@@ -542,7 +526,7 @@ const TicketDialog = ({
   const isMobile = useMediaQuery((muiTheme: Theme) => muiTheme.breakpoints.down("md"));
   const currentUserId = user?.id?.trim();
   const currentUserDisplayName = useMemo(
-    () => formatMeDisplayName(meUser, user?.username),
+    () => resolveMeUserDisplayName(meUser, user?.username ?? "کاربر"),
     [meUser, user?.username]
   );
   const roles = user?.roles ?? [];
@@ -756,6 +740,11 @@ const TicketDialog = ({
   const dialogTitle =
     mode === "create" ? t("pages.support.create.title") : t("pages.support.view.title");
 
+  const dialogSubtitle =
+    mode === "create"
+      ? t("pages.support.create.subtitle")
+      : record?.title?.trim() || t("pages.support.view.subtitle");
+
   const footerActions: ModalFooterAction[] = [
     {
       key: "close",
@@ -791,8 +780,12 @@ const TicketDialog = ({
     <EntityModalShell
       open={open}
       title={dialogTitle}
+      subtitle={dialogSubtitle}
       onClose={handleClose}
+      disableClose={isSubmitting}
+      hasUnsavedChanges={canSubmitTicket}
       maxWidth="md"
+      relaxedHeaderSpacing={mode === "create"}
       resetKey={mode === "view" ? `${record?.id ?? ""}-${detailLoading}` : undefined}
       useFormWrapper
       onSubmit={handleSubmit}
@@ -976,7 +969,8 @@ const TicketDialog = ({
               fullWidth
               size="small"
               multiline
-              minRows={4}
+              minRows={MULTILINE_TEXTAREA_MIN_ROWS}
+              maxRows={MULTILINE_TEXTAREA_MAX_ROWS}
             />
             <FileUploadField
               label={t("pages.support.attachments.label")}

@@ -15,3 +15,10 @@ export {
   LOGIN_CAPTCHA_MAX_AUTO_REFRESHES,
 } from "./captcha.constants";
 export { SNACKBAR_AUTO_HIDE_DURATION_MS } from "./snackbar.constants";
+export {
+  MULTILINE_TEXTAREA_MIN_ROWS,
+  MULTILINE_TEXTAREA_MAX_ROWS,
+  MULTILINE_TEXTAREA_MIN_HEIGHT_CSS,
+  MULTILINE_TEXTAREA_MAX_HEIGHT_CSS,
+  multilineTextareaMinHeightPx,
+} from "./multilineTextarea.constants";

@@ -27,6 +27,7 @@ import { GLOBAL_ANOUNCEMENT_SEND_MUTATION } from "../../graphql/mutations/global
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
+import { MULTILINE_TEXTAREA_MIN_ROWS, MULTILINE_TEXTAREA_MAX_ROWS } from "../../constants/multilineTextarea.constants";
 import DashboardMenuHeader from "../../shared/DashboardMenuHeader";
 import NotificationActionFields, {
   EMPTY_NOTIFICATION_ACTION_FORM,
@@ -222,7 +223,8 @@ const GlobalAnouncement = (): ReactElement => {
             fullWidth
             required
             multiline
-            minRows={5}
+            minRows={MULTILINE_TEXTAREA_MIN_ROWS}
+            maxRows={MULTILINE_TEXTAREA_MAX_ROWS}
           />
 
           <TextField

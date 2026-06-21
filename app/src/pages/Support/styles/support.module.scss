@@ -93,6 +93,8 @@
   max-inline-size: 45rem;
   color: var(--text-secondary);
   line-height: 1.85;
+  text-align: justify;
+  text-align-last: start;
 }
 
 .heroMeta {
@@ -186,7 +188,8 @@
   color: var(--text-secondary);
   font-size: 0.8rem;
   line-height: 1.5;
-  text-align: end;
+  text-align: justify;
+  text-align-last: start;
 }
 
 .contactIconRow {
@@ -410,6 +413,8 @@
   padding-inline-start: 1.35rem;
   color: var(--text-secondary);
   line-height: 1.8;
+  text-align: justify;
+  text-align-last: start;
 }
 
 .tipList li::before {
@@ -439,7 +444,8 @@
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 0.55rem;
-  padding: 0.72rem 0.85rem;
+  min-block-size: variables.$input-min-height;
+  padding: 0 0.85rem;
   border: 0.0625rem solid rgba(61, 44, 53, 0.1);
   border-radius: 1rem;
   @include mixins.surface-bg(color-mix(in srgb, var(--app-surface-bg) 88%, #ffffff));
@@ -466,6 +472,7 @@
   background: transparent;
   color: var(--text-primary);
   font: inherit;
+  line-height: 1.4375;
 }
 
 .faqSearch input::placeholder {
@@ -665,6 +672,13 @@
   padding: 0 1rem 1rem;
   color: var(--text-secondary);
   line-height: 1.9;
+  text-align: justify;
+  text-align-last: start;
+
+  p {
+    text-align: justify;
+    text-align-last: start;
+  }
 }
 
 .faqEmpty {

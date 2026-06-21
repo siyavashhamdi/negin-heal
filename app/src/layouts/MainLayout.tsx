@@ -23,6 +23,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useThemeMode } from "../contexts/ThemeContext";
 import { BADGE_COUNT_QUERY } from "../graphql/queries/badgeCount.query";
 import { useMe } from "../hooks/useMe";
+import { resolveMeUserDisplayName, resolveStoredUserDisplayName } from "../utils/storedUser.util";
 import { useSnackbar } from "../hooks/useSnackbar";
 import { useTranslation } from "../hooks/useTranslation";
 import {
@@ -402,22 +403,16 @@ export function MainLayout({
       : null;
 
   const { userDisplayName, userInitial } = useMemo(() => {
-    let name: string;
-    if (userLoading) {
-      name = authUser?.username ?? fallbackUser;
-    } else if (!user) {
-      name = authUser?.username ?? fallbackUser;
-    } else if (user.profile?.firstName && user.profile?.lastName) {
-      name = `${user.profile.firstName} ${user.profile.lastName}`;
-    } else {
-      name = user.profile?.firstName || user.username || fallbackUser;
-    }
+    const name =
+      userLoading || !user
+        ? resolveStoredUserDisplayName(authUser, fallbackUser)
+        : resolveMeUserDisplayName(user, fallbackUser);
     const trimmed = name.trim();
     return {
       userDisplayName: name,
       userInitial: trimmed.slice(0, 1) || "?",
     };
-  }, [authUser?.username, fallbackUser, user, userLoading]);
+  }, [authUser, fallbackUser, user, userLoading]);
 
   const themeToggleLabel =
     mode === "light"

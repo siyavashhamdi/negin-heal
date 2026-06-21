@@ -9,6 +9,7 @@ import { useMemo, useState, type ReactElement, type ReactNode } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useMe } from "../../hooks/useMe";
+import { resolveMeUserDisplayName, resolveStoredUserDisplayName } from "../../utils/storedUser.util";
 import { useTranslation } from "../../hooks/useTranslation";
 import ThemeToggle from "../ThemeToggle";
 import styles from "./styles/header.module.scss";
@@ -58,21 +59,13 @@ const Header = (): ReactElement => {
   }, [t]);
 
   const { displayName, avatarLetter } = useMemo(() => {
-    let name: string;
-    if (userLoading) {
-      name = authUser?.username ?? "";
-    } else if (!user) {
-      name = authUser?.username ?? "";
-    } else if (user.profile?.firstName && user.profile?.lastName) {
-      name = `${user.profile.firstName} ${user.profile.lastName}`;
-    } else if (user.profile?.firstName) {
-      name = user.profile.firstName;
-    } else {
-      name = user.username;
-    }
+    const name =
+      userLoading || !user
+        ? resolveStoredUserDisplayName(authUser, authUser?.username ?? "")
+        : resolveMeUserDisplayName(user, authUser?.username ?? "");
     const letter = name.trim().slice(0, 1);
     return { displayName: name, avatarLetter: letter || "?" };
-  }, [authUser?.username, user, userLoading]);
+  }, [authUser, user, userLoading]);
 
   const brandTitle = t("layout.header.brand.title");
   const isPublicAudience = !authUser || authUser.roles.includes("END_USER");

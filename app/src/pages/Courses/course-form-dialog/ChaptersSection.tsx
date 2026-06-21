@@ -15,6 +15,7 @@ import {
   Typography,
 } from "@mui/material";
 import { OverflowTooltip } from "../../../shared/OverflowTooltip";
+import { MULTILINE_TEXTAREA_MIN_ROWS, MULTILINE_TEXTAREA_MAX_ROWS } from "../../../constants/multilineTextarea.constants";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
 import ItemsSection from "./ItemsSection";
@@ -221,7 +222,8 @@ const ChaptersSection = ({
               <TextField
                 fullWidth
                 multiline
-                minRows={2}
+                minRows={MULTILINE_TEXTAREA_MIN_ROWS}
+                maxRows={MULTILINE_TEXTAREA_MAX_ROWS}
                 label="توضیحات فصل"
                 value={activeChapter.description}
                 onChange={(event) => updateActiveChapter({ description: event.target.value })}

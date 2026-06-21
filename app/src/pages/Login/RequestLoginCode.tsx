@@ -5,7 +5,9 @@ import {
   CircularProgress,
   InputAdornment,
   Typography,
+  useMediaQuery,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import {
   AlternateEmail as AlternateEmailIcon,
   ArrowBack as ArrowBackIcon,
@@ -17,7 +19,7 @@ import { useSnackbar } from "../../hooks/useSnackbar";
 import { useLogin } from "../../hooks/useLogin";
 import LoginShell from "./LoginShell";
 import { type LoginNavState } from "./login-nav-state";
-import { EMAIL_REGEX, MOBILE_REGEX } from "./password-reset-form.util";
+import { EMAIL_REGEX, MOBILE_REGEX, sanitizeAuthIdentityInput } from "./password-reset-form.util";
 import formStyles from "./styles/LoginFormShared.module.scss";
 
 const detectIdentityKind = (identity: string): LoginNavState["identityKind"] => {
@@ -53,8 +55,12 @@ const RequestLoginCode = ({
   const { t } = useTranslation();
   const { showError } = useSnackbar();
   const { resolveAuthIdentity, loading } = useLogin();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const [identity, setIdentity] = useState(() => initialPrefill?.identity ?? "");
+  const [identity, setIdentity] = useState(() =>
+    sanitizeAuthIdentityInput(initialPrefill?.identity ?? ""),
+  );
   const [fieldError, setFieldError] = useState(false);
 
   const canSubmit = identity.trim().length > 0;
@@ -117,15 +123,23 @@ const RequestLoginCode = ({
         <TextField
           fullWidth
           label={t("auth.login.identityFieldTitle")}
-          placeholder={t("auth.login.identityPlaceholder")}
+          placeholder={t(
+            isMobile ? "auth.login.identityPlaceholderMobile" : "auth.login.identityPlaceholder",
+          )}
           variant="outlined"
           type="text"
           value={identity}
           onChange={(event) => {
-            setIdentity(event.target.value);
+            setIdentity(sanitizeAuthIdentityInput(event.target.value));
             setFieldError(false);
           }}
           className={formStyles.textField}
+          inputProps={{
+            lang: "en",
+            spellCheck: "false",
+            autoCapitalize: "off",
+            autoCorrect: "off",
+          }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">

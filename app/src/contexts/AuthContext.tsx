@@ -23,6 +23,8 @@ export interface User {
   id: string;
   username: string;
   roles: string[];
+  firstName?: string | null;
+  lastName?: string | null;
 }
 
 /**
@@ -34,6 +36,7 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (token: string, user: User) => void;
+  syncUser: (userData: User) => void;
   logout: () => void;
 }
 
@@ -109,6 +112,17 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
     navigate(APP_SHELL_ROUTES.dashboard);
   };
 
+  const syncUser = useCallback((userData: User): void => {
+    setUser((currentUser) => {
+      if (!currentUser || currentUser.id !== userData.id) {
+        return currentUser;
+      }
+
+      localStorage.setItem("user", JSON.stringify(userData));
+      return userData;
+    });
+  }, []);
+
   const clearLocalAuthSession = useCallback((): void => {
     setAccessToken(null);
     setUser(null);
@@ -154,6 +168,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
     isAuthenticated: Boolean(accessToken) && Boolean(user),
     isLoading,
     login,
+    syncUser,
     logout,
   };
 

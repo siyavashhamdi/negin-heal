@@ -31,6 +31,7 @@ import {
   type FileAccessUrl,
 } from "../../utils/fileAccessUrl.util";
 import { hasFormChanges } from "../../utils/formChange.util";
+import { MULTILINE_TEXTAREA_MIN_ROWS, MULTILINE_TEXTAREA_MAX_ROWS } from "../../constants/multilineTextarea.constants";
 import { uploadFile } from "../../utils/fileUpload.util";
 import {
   FILE_UPLOAD_POLICY,
@@ -974,12 +975,21 @@ const UsersManagementList = (): ReactElement => {
       <EntityModalShell
         open={userDialogOpen}
         onClose={handleCloseEditDialog}
+        disableClose={isSavingUser}
+        hasUnsavedChanges={canSubmitUserForm}
         maxWidth="lg"
         resetKey={editUserId != null ? `${editUserId}-${Boolean(editUserRecord)}` : undefined}
         title={
           dialogMode === "create"
             ? t("pages.usersManagement.create.title")
             : t("pages.usersManagement.edit.title")
+        }
+        subtitle={
+          dialogMode === "create"
+            ? t("pages.usersManagement.create.subtitle")
+            : editUserRecord?.fullName?.trim() ||
+              editUserRecord?.username?.trim() ||
+              t("pages.usersManagement.edit.subtitle")
         }
         useFormWrapper
         onSubmit={handleSubmitEdit}
@@ -1065,7 +1075,8 @@ const UsersManagementList = (): ReactElement => {
                     fullWidth
                     size="small"
                     multiline
-                    minRows={3}
+                    minRows={MULTILINE_TEXTAREA_MIN_ROWS}
+                    maxRows={MULTILINE_TEXTAREA_MAX_ROWS}
                   />
                 </Stack>
 

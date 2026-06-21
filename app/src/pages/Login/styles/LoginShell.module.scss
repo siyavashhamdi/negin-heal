@@ -198,6 +198,9 @@
 .welcomeSubtitle {
   color: variables.$color-text-secondary;
   font-size: variables.$font-size-sm;
+  line-height: 1.8;
+  text-align: justify;
+  text-align-last: start;
 }
 
 .loginFormHolder {

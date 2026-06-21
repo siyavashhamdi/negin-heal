@@ -1034,6 +1034,7 @@ const CourseDetail = (): ReactElement => {
         open={isMaxRouteOpen && selectedItemViewer != null}
         onClose={closeItemViewer}
         title={selectedItemViewer?.title ?? "نمایش محتوا"}
+        subtitle="نمایش کامل محتوای درس"
         maxWidth="lg"
         disableAutoFocus
         disableRestoreFocus

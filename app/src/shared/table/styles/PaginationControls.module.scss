@@ -68,14 +68,6 @@ $breakpoint-sm: 600px;
   @media (min-width: $breakpoint-sm) {
     font-size: 0.875rem;
   }
-
-  :global(.MuiSelect-select) {
-    padding-block: 8px;
-
-    @media (min-width: $breakpoint-sm) {
-      padding-block: 10px;
-    }
-  }
 }
 
 .pagination {

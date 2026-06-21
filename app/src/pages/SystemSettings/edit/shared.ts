@@ -1,3 +1,8 @@
+import {
+  MULTILINE_TEXTAREA_MIN_ROWS,
+  MULTILINE_TEXTAREA_MAX_ROWS,
+} from "../../../constants/multilineTextarea.constants";
+
 export type TextFieldConfig<T extends string> = {
   readonly key: T;
   readonly label: string;
@@ -5,8 +10,13 @@ export type TextFieldConfig<T extends string> = {
   readonly type?: "text" | "number" | "password" | "email" | "url";
 };
 
-export const COMMON_TEXTAREA_ROWS = 4;
-export const HTML_TEXTAREA_ROWS = 10;
+/** @deprecated Use MULTILINE_TEXTAREA_MIN_ROWS from constants. */
+export const COMMON_TEXTAREA_ROWS = MULTILINE_TEXTAREA_MIN_ROWS;
+
+/** @deprecated Use MULTILINE_TEXTAREA_MIN_ROWS from constants. */
+export const HTML_TEXTAREA_ROWS = MULTILINE_TEXTAREA_MIN_ROWS;
+
+export { MULTILINE_TEXTAREA_MIN_ROWS, MULTILINE_TEXTAREA_MAX_ROWS };
 
 export const TECHNICAL_VALUE_INPUT_SX = {
   "& .MuiInputBase-input": {

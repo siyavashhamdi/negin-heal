@@ -18,7 +18,6 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
-import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useBadgeCountFirstPageReload } from "../../hooks/useBadgeCountFirstPageReload";
@@ -114,7 +113,6 @@ const CoursesIndex = (): ReactElement => {
   const isEndUser = authUser?.roles?.includes("END_USER") === true;
   const isPublicCourseView = !authUser || isEndUser;
 
-  const [flippedItemId, setFlippedItemId] = useState<string | null>(null);
   const [filters, setFilters] = useState<CourseListFilters>(DEFAULT_COURSE_LIST_FILTERS);
   const [searchQuery, setSearchQuery] = useState(DEFAULT_COURSE_LIST_FILTERS.query);
   const [sort, setSort] = useState<CourseListSort>(DEFAULT_COURSE_LIST_SORT);
@@ -143,6 +141,8 @@ const CoursesIndex = (): ReactElement => {
   const isCreateDialogOpen = courseFormPath === `${APP_SHELL_ROUTES.courses}/new`;
   const editTargetId =
     /^\/courses\/edit\/([^/]+)$/.exec(courseFormPath)?.[1] ?? null;
+  const flippedItemId =
+    /^\/courses\/flip\/([^/]+)$/.exec(courseFormPath)?.[1] ?? null;
   const isCourseFormDialogOpen = isCreateDialogOpen || editTargetId != null;
 
   const closeCourseFormDialog = (): void => {
@@ -194,8 +194,17 @@ const CoursesIndex = (): ReactElement => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
+  const closeFlippedItem = (): void => {
+    navigate(APP_SHELL_ROUTES.courses);
+  };
+
   const toggleFlippedItem = (itemId: string): void => {
-    setFlippedItemId((current) => (current === itemId ? null : itemId));
+    if (flippedItemId === itemId) {
+      closeFlippedItem();
+      return;
+    }
+
+    navigate(`${APP_SHELL_ROUTES.courses}/flip/${itemId}`);
   };
 
   const clearSearch = (): void => {
@@ -605,13 +614,13 @@ const CoursesIndex = (): ReactElement => {
     const handlePointerDown = (event: MouseEvent): void => {
       const target = event.target as HTMLElement | null;
       if (!target?.closest(`[data-card-id="${flippedItemId}"]`)) {
-        setFlippedItemId(null);
+        closeFlippedItem();
       }
     };
 
     const handleKeyDown = (event: globalThis.KeyboardEvent): void => {
       if (event.key === "Escape") {
-        setFlippedItemId(null);
+        closeFlippedItem();
       }
     };
 
@@ -1094,13 +1103,9 @@ const CoursesIndex = (): ReactElement => {
         onCancel={closeDeleteDialog}
         onConfirm={handleDeleteConfirm}
         loading={deleteCourseResult.loading}
-        icon={
-          <Box className={styles.deleteDialogIcon}>
-            <WarningAmberRoundedIcon />
-          </Box>
-        }
+        prominent
       >
-        <Typography variant="body2" className={styles.deleteDialogHint}>
+        <Typography variant="body2">
           فایل‌های جداشده این دوره نیز حذف می‌شوند و این عملیات قابل بازگشت نیست.
         </Typography>
       </EntityDeleteDialog>

@@ -124,6 +124,9 @@ const transparentInputChrome = {
   backgroundImage: "none",
 } as const;
 
+/** Default single-line TextField height (course edit dialog reference). */
+const INPUT_MIN_HEIGHT = "3.4375rem";
+
 export const createAppTheme = (mode: PaletteMode): Theme => {
   const isDark = mode === "dark";
   const colors = isDark ? darkColors : lightColors;
@@ -374,21 +377,21 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
               paddingTop: "2px",
               paddingBottom: "2px",
             },
-            "&.MuiInputBase-sizeSmall": {
-              minHeight: "2.5rem",
+            "&:not(:has(.MuiAutocomplete-tag))": {
+              minHeight: INPUT_MIN_HEIGHT,
               paddingTop: 0,
               paddingBottom: 0,
+              alignItems: "center",
               "& .MuiAutocomplete-input": {
-                padding: "8.5px 4px",
+                padding: "0 4px",
+                lineHeight: 1.4375,
               },
             },
-            "&:not(.MuiInputBase-sizeSmall)": {
-              minHeight: "3.4375rem",
+            "&.MuiInputBase-sizeSmall:not(:has(.MuiAutocomplete-tag))": {
+              minHeight: INPUT_MIN_HEIGHT,
               paddingTop: 0,
               paddingBottom: 0,
-              "& .MuiAutocomplete-input": {
-                padding: "16.5px 4px",
-              },
+              alignItems: "center",
             },
           },
           paper: {
@@ -450,12 +453,32 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
           },
         },
       },
+      MuiInputLabel: {
+        styleOverrides: {
+          sizeSmall: {
+            "&.MuiInputLabel-outlined:not(.MuiInputLabel-shrink)": {
+              transform: "translate(14px, 16px) scale(1)",
+            },
+          },
+        },
+      },
       MuiInputBase: {
         styleOverrides: {
           root: {
             ...transparentInputChrome,
+            "&.MuiInputBase-sizeSmall:not(.MuiInputBase-multiline):not(:has(.MuiAutocomplete-tag))": {
+              minHeight: INPUT_MIN_HEIGHT,
+              alignItems: "center",
+            },
             "& .MuiInputBase-input": {
               ...transparentInputChrome,
+            },
+          },
+          inputSizeSmall: {
+            "&:not(.MuiInputBase-inputMultiline)": {
+              padding: "0 14px",
+              lineHeight: 1.4375,
+              height: "auto",
             },
           },
         },
@@ -465,12 +488,19 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
           root: {
             borderRadius: inputRadius,
             ...transparentInputChrome,
-            "&.MuiInputBase-sizeSmall": {
-              minHeight: "2.5rem",
+            "&:not(.MuiInputBase-multiline)": {
+              minHeight: INPUT_MIN_HEIGHT,
+              alignItems: "center",
             },
-            "&:not(.MuiInputBase-sizeSmall)": {
-              minHeight: "3.4375rem",
+            "&.MuiInputBase-multiline": {
+              minHeight: "auto",
             },
+            "&:not(.MuiInputBase-multiline) .MuiInputBase-input:not(.MuiInputBase-inputMultiline), &:not(.MuiInputBase-multiline) .MuiSelect-select":
+              {
+                paddingTop: 0,
+                paddingBottom: 0,
+                lineHeight: 1.4375,
+              },
             "&:hover": {
               ...transparentInputChrome,
             },

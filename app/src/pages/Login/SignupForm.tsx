@@ -82,7 +82,6 @@ export const SignupForm = ({
   const otpReady = signupCodeRequested && VERIFICATION_CODE_REGEX.test(verificationCode.trim());
   const formReady =
     firstName.trim().length > 0 &&
-    lastName.trim().length > 0 &&
     hasAnyIdentity &&
     (mode === "password" ? passwordReady : otpReady) &&
     (!captchaEnabled || captchaValid);
@@ -182,9 +181,9 @@ export const SignupForm = ({
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
 
-    if (!firstName.trim() || !lastName.trim()) {
+    if (!firstName.trim()) {
       setHasError(true);
-      showError(t("auth.login.errors.signupNameRequired"));
+      showError(t("auth.login.errors.signupFirstNameRequired"));
       return;
     }
 
@@ -239,7 +238,7 @@ export const SignupForm = ({
       mobile: mobile.trim() || undefined,
       profile: {
         firstName: firstName.trim(),
-        lastName: lastName.trim(),
+        ...(lastName.trim() ? { lastName: lastName.trim() } : {}),
       },
       password: mode === "password" ? password : undefined,
       signupCode: mode === "otp" ? verificationCode.trim() : undefined,
@@ -318,6 +317,7 @@ export const SignupForm = ({
           onChange={(event) => setFirstName(event.target.value)}
           className={formStyles.textField}
           disabled={loading}
+          required
           error={hasError && !firstName.trim()}
         />
 
@@ -328,7 +328,6 @@ export const SignupForm = ({
           onChange={(event) => setLastName(event.target.value)}
           className={formStyles.textField}
           disabled={loading}
-          error={hasError && !lastName.trim()}
         />
 
         <TextField
