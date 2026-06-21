@@ -19,7 +19,7 @@ const AndroidAppDownloadLink = (): ReactElement | null => {
     <a
       href={getAndroidAppDownloadUrl()}
       className={styles.linkCard}
-      download="negin-heal-android.apk"
+      download="negin-heal.apk"
     >
       <AndroidRoundedIcon />
       <span>{t("pages.more.androidDownload.linkLabel")}</span>

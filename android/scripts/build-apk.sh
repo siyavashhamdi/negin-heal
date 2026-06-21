@@ -17,7 +17,7 @@ npx bubblewrap build --skipPwaValidation
 
 APK_SOURCE="${ROOT_DIR}/app-release-signed.apk"
 PUBLIC_APP_DIR="${ROOT_DIR}/../app/public/app"
-PUBLIC_APK_NAME="negin-heal-android.apk"
+PUBLIC_APK_NAME="negin-heal.apk"
 PUBLIC_APK_PATH="${PUBLIC_APP_DIR}/${PUBLIC_APK_NAME}"
 
 mkdir -p "${PUBLIC_APP_DIR}"

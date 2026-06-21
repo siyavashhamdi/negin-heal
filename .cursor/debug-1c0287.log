@@ -1,0 +1,2 @@
+{"sessionId":"1c0287","runId":"pre-fix","hypothesisId":"H1","location":"emulator-logcat","message":"Crash confirmed before fix","data":{"error":"NoSuchMethodError setLaunchHandlerClientMode","cause":"androidbrowserhelper 2.6.2 with androidx.browser 1.8.0"},"timestamp":1747784815732}
+{"sessionId":"1c0287","runId":"post-fix","hypothesisId":"H1","location":"emulator-logcat","message":"LauncherActivity.onCreate after super - no crash","data":{"pid":9712,"launchUrl":"https://neginheal.ir/","fatalException":false},"timestamp":1747786158429}

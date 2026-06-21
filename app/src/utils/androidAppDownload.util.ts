@@ -1,4 +1,4 @@
-const ANDROID_APP_DOWNLOAD_PATH = "/app/negin-heal-android.apk";
+const ANDROID_APP_DOWNLOAD_PATH = "/app/negin-heal.apk";
 
 type WindowWithNativeBridge = Window & {
   readonly Capacitor?: { readonly getPlatform?: () => string };

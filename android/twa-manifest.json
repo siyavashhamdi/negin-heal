@@ -25,7 +25,7 @@
   "appVersionCode": 1,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
-  "webManifestUrl": "http://127.0.0.1:18765/manifest.webmanifest",
+  "webManifestUrl": "https://neginheal.ir/manifest.webmanifest",
   "fallbackType": "customtabs",
   "features": {},
   "alphaDependencies": {

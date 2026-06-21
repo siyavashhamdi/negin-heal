@@ -31,7 +31,7 @@ lerna-debug.log*
 # Environment variables
 .env
 
-# public/app/negin-heal-android.apk is committed for direct APK download
+# public/app/negin-heal.apk is committed for direct APK download
 
 # Testing
 coverage

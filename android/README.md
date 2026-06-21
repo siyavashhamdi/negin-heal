@@ -30,7 +30,7 @@ Output:
 
 - `app-release-signed.apk` — install and test on a device
 - `app-release-bundle.aab` — upload to Google Play
-- `../app/public/app/negin-heal-android.apk` — copy for web download (e.g. `https://neginheal.ir/app/negin-heal-android.apk`)
+- `../app/public/app/negin-heal.apk` — copy for web download (e.g. `https://neginheal.ir/app/negin-heal.apk`)
 
 Default keystore passwords are in `.env.example`. Override for builds:
 
