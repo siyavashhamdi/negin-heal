@@ -40,8 +40,17 @@ import {
   getFileIdFromAccessUrl,
   type FileAccessUrl,
 } from "../../utils/fileAccessUrl.util";
-import { uploadFile } from "../../utils/fileUpload.util";
+import {
+  FILE_UPLOAD_POLICY,
+  FILE_UPLOAD_POLICY_MAX_SIZE_BYTES,
+} from "../../constants/fileUploadPolicies";
+import { uploadFile, FileUploadError } from "../../utils/fileUpload.util";
 import { hasFormChanges } from "../../utils/formChange.util";
+import {
+  calculateBatchUploadPercent,
+  getFieldUploadPercent,
+  type UploadProgressEntry,
+} from "../../utils/uploadProgress.util";
 import ModalFooterActions from "../../shared/crud/ModalFooterActions";
 
 type CourseFormDialogProps = {
@@ -70,10 +79,28 @@ type UploadedCourseFiles = {
 };
 
 type UploadTask = {
+  readonly fieldId: string;
   readonly file: File;
   readonly errorMessage: string;
   readonly applyFileId: (uploadedFileId: string, files: UploadedCourseFiles) => UploadedCourseFiles;
 };
+
+const COURSE_COVER_UPLOAD_FIELD_ID = "course-cover-image";
+
+function getCourseItemUploadFieldId(itemId: string): string {
+  return `course-item-file-${itemId}`;
+}
+
+function hasPendingLocalFileSelections(
+  coverImageFile: File | null,
+  chapters: DraftChapter[],
+): boolean {
+  if (coverImageFile != null) {
+    return true;
+  }
+
+  return chapters.some((chapter) => chapter.items.some((item) => item.file != null));
+}
 
 let tempIdCounter = 0;
 function createTempId(prefix: string): string {
@@ -301,7 +328,7 @@ const CourseFormDialog = ({
   onSaved,
   courseId,
 }: CourseFormDialogProps): ReactElement => {
-  const { showError } = useSnackbar();
+  const { showError, updateUploadProgress, hideUploadProgress } = useSnackbar();
   const isEditMode = Boolean(courseId);
   const { data, loading: detailLoading } = useQuery<CourseDetailQuery, CourseDetailQueryVariables>(
     COURSE_DETAIL_QUERY,
@@ -339,6 +366,7 @@ const CourseFormDialog = ({
     },
   );
   const [initialSnapshot, setInitialSnapshot] = useState<CourseFormSnapshot | null>(null);
+  const appliedFormKeyRef = useRef<string | null>(null);
 
   const activeChapterIndex = useMemo(
     () => chapters.findIndex((chapter) => chapter.id === activeChapterId),
@@ -429,7 +457,15 @@ const CourseFormDialog = ({
   };
 
   const resetForm = (): void => {
+    appliedFormKeyRef.current = null;
     applyFormState(null);
+  };
+
+  const handleCoverImageFileChange = (file: File | null): void => {
+    setCoverImageFile(file);
+    if (file != null) {
+      setCoverImageAccessUrl(null);
+    }
   };
 
   const closeDialog = (): void => {
@@ -440,16 +476,31 @@ const CourseFormDialog = ({
 
   useEffect(() => {
     if (!open) {
+      appliedFormKeyRef.current = null;
       return;
     }
+
     if (!isEditMode) {
+      if (appliedFormKeyRef.current === "__create__") {
+        return;
+      }
+
       applyFormState(null);
+      appliedFormKeyRef.current = "__create__";
       return;
     }
-    if (detailCourse) {
-      applyFormState(detailCourse);
+
+    if (!detailCourse || !courseId) {
+      return;
     }
-  }, [detailCourse, isEditMode, open]);
+
+    if (appliedFormKeyRef.current === courseId) {
+      return;
+    }
+
+    applyFormState(detailCourse);
+    appliedFormKeyRef.current = courseId;
+  }, [courseId, detailCourse, isEditMode, open]);
 
   const [createCourse, createCourseResult] = useMutationWithSnackbar<
     CourseWriteMutationResult,
@@ -476,6 +527,9 @@ const CourseFormDialog = ({
   });
 
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
+  const [uploadProgressByFieldId, setUploadProgressByFieldId] = useState<
+    Record<string, UploadProgressEntry>
+  >({});
   const isSubmitting =
     createCourseResult.loading ||
     updateCourseResult.loading ||
@@ -483,17 +537,67 @@ const CourseFormDialog = ({
   const isEditFormReady = !isEditMode || (detailCourse != null && !detailLoading);
   const hasCreateInput = title.trim().length > 0;
   const hasEditFormChanges =
-    initialSnapshot != null && hasFormChanges(initialSnapshot, currentSnapshot);
+    initialSnapshot != null &&
+    (hasFormChanges(initialSnapshot, currentSnapshot) ||
+      hasPendingLocalFileSelections(coverImageFile, chapters));
   const canSubmit =
     isEditFormReady &&
     !isSubmitting &&
     (isEditMode ? hasEditFormChanges : hasCreateInput);
 
-  const uploadAndGetFileId = async (file: File): Promise<string | null> => {
+  useEffect(() => {
+    const activeUploadCount = Object.keys(uploadProgressByFieldId).length;
+    if (activeUploadCount === 0) {
+      hideUploadProgress();
+      return;
+    }
+
+    updateUploadProgress(calculateBatchUploadPercent(uploadProgressByFieldId));
+  }, [hideUploadProgress, updateUploadProgress, uploadProgressByFieldId]);
+
+  const uploadAndGetFileId = async (file: File, fieldId: string): Promise<string | null> => {
+    const uploadPolicy =
+      fieldId === COURSE_COVER_UPLOAD_FIELD_ID
+        ? FILE_UPLOAD_POLICY.COURSE_COVER
+        : FILE_UPLOAD_POLICY.COURSE_ITEM;
+    const accept =
+      uploadPolicy === FILE_UPLOAD_POLICY.COURSE_COVER ? "image/*" : "*/*";
+
+    setUploadProgressByFieldId((previous) => ({
+      ...previous,
+      [fieldId]: { loaded: 0, total: file.size },
+    }));
+
     try {
-      const result = await uploadFile(file);
+      const result = await uploadFile(file, {
+        policy: uploadPolicy,
+        accept,
+        maxSizeBytes: FILE_UPLOAD_POLICY_MAX_SIZE_BYTES[uploadPolicy],
+        onProgress: (progress) => {
+          setUploadProgressByFieldId((previous) => ({
+            ...previous,
+            [fieldId]: {
+              loaded: Math.round((progress.percent / 100) * file.size),
+              total: file.size,
+            },
+          }));
+        },
+      });
+      setUploadProgressByFieldId((previous) => {
+        const next = { ...previous };
+        delete next[fieldId];
+        return next;
+      });
       return getFileIdFromAccessUrl(result.accessUrl);
-    } catch {
+    } catch (error) {
+      setUploadProgressByFieldId((previous) => {
+        const next = { ...previous };
+        delete next[fieldId];
+        return next;
+      });
+      if (error instanceof FileUploadError && error.message.trim()) {
+        showError(error.message);
+      }
       return null;
     }
   };
@@ -651,6 +755,7 @@ const CourseFormDialog = ({
 
     if (coverImageFile) {
       uploadTasks.push({
+        fieldId: COURSE_COVER_UPLOAD_FIELD_ID,
         file: coverImageFile,
         errorMessage: "آپلود فایل کاور انجام نشد.",
         applyFileId: (uploadedFileId, files) => ({
@@ -664,6 +769,7 @@ const CourseFormDialog = ({
       for (const item of chapter.items) {
         if (item.contentType === "FILE" && item.file) {
           uploadTasks.push({
+            fieldId: getCourseItemUploadFieldId(item.id),
             file: item.file,
             errorMessage: "آپلود فایل آیتم انجام نشد.",
             applyFileId: (uploadedFileId, files) => ({
@@ -681,7 +787,7 @@ const CourseFormDialog = ({
     const uploadResults = await Promise.all(
       uploadTasks.map(async (task) => ({
         task,
-        uploadedFileId: await uploadAndGetFileId(task.file),
+        uploadedFileId: await uploadAndGetFileId(task.file, task.fieldId),
       })),
     );
 
@@ -739,11 +845,13 @@ const CourseFormDialog = ({
     setFreeCourseConfirmOpen(false);
     const parsedDiscountValue = parseOptionalNumber(discountValue);
     setIsUploadingFiles(true);
+    setUploadProgressByFieldId({});
     let uploadedFiles: UploadedCourseFiles | null = null;
     try {
       uploadedFiles = await uploadSelectedFiles();
     } finally {
       setIsUploadingFiles(false);
+      setUploadProgressByFieldId({});
     }
     if (!uploadedFiles) {
       return;
@@ -890,7 +998,7 @@ const CourseFormDialog = ({
             description={description}
             onDescriptionChange={setDescription}
             coverImageFile={coverImageFile}
-            onCoverImageFileChange={setCoverImageFile}
+            onCoverImageFileChange={handleCoverImageFileChange}
             coverImageExistingFile={buildExistingFilePreview(
               coverImageAccessUrl,
               title.trim() || "کاور دوره",
@@ -913,6 +1021,10 @@ const CourseFormDialog = ({
             onDiscountValueChange={setDiscountValue}
             formatIntegerWithThousands={formatIntegerWithThousands}
             sanitizePercentageValue={sanitizePercentageValue}
+            uploadProgress={getFieldUploadPercent(
+              uploadProgressByFieldId[COURSE_COVER_UPLOAD_FIELD_ID],
+            )}
+            uploading={COURSE_COVER_UPLOAD_FIELD_ID in uploadProgressByFieldId}
           />
 
           <Divider />
@@ -923,6 +1035,7 @@ const CourseFormDialog = ({
             activeChapterIndex={activeChapterIndex}
             expandedItemByChapter={expandedItemByChapter}
             hasPositivePrice={hasPositivePrice}
+            uploadProgressByFieldId={uploadProgressByFieldId}
             onAddChapter={addChapter}
             onSelectChapterIndex={handleSelectChapterIndex}
             onSetDraggedChapterId={handleSetDraggedChapterId}

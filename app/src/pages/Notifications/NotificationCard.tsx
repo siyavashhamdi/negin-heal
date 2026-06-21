@@ -22,6 +22,7 @@ import {
   type NotificationRecord,
 } from "./notifications-list.api";
 import styles from "./styles/notifications.module.scss";
+import { opaqueShellProps } from "../../shared/opaqueShell";
 import AppTooltip from "../../shared/AppTooltip";
 
 type NotificationCardProps = {
@@ -133,7 +134,7 @@ const NotificationCard = ({
   };
 
   return (
-    <article className={cardClassName} aria-labelledby={`notification-title-${notification.id}`}>
+    <article className={cardClassName} {...opaqueShellProps} aria-labelledby={`notification-title-${notification.id}`}>
       <div className={styles.cardAccent} aria-hidden="true" />
 
       <div className={styles.cardBody}>

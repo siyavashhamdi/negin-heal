@@ -79,3 +79,60 @@
     }
   }
 }
+
+.uploadProgressSnackbar {
+  top: max(#{variables.$spacing-2}, env(safe-area-inset-top, 0px)) !important;
+  bottom: auto !important;
+  inset-inline: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  transform: none !important;
+  padding-inline: max(0.75rem, env(safe-area-inset-left, 0px))
+    max(0.75rem, env(safe-area-inset-right, 0px)) !important;
+  box-sizing: border-box;
+
+  @include mixins.respond-to(sm) {
+    inset-inline: auto !important;
+    width: auto !important;
+    max-width: 28rem !important;
+    padding-inline: 0 !important;
+  }
+}
+
+.uploadProgressAlert {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+
+  @include mixins.respond-to(sm) {
+    min-width: 20rem;
+    width: 100%;
+  }
+
+  :global(.MuiAlert-message) {
+    width: 100%;
+    overflow: visible;
+    max-height: none;
+  }
+}
+
+.uploadProgressContent {
+  display: flex;
+  flex-direction: column;
+  gap: variables.$spacing-1;
+  inline-size: 100%;
+}
+
+.uploadProgressLabel {
+  font-weight: variables.$font-weight-medium;
+}
+
+.uploadProgressBar {
+  inline-size: 100%;
+  border-radius: variables.$border-radius-full;
+  background-color: rgba(255, 255, 255, 0.28);
+
+  :global(.MuiLinearProgress-bar) {
+    border-radius: variables.$border-radius-full;
+  }
+}

@@ -7,6 +7,7 @@ import { useState, type ReactElement } from "react";
 import { useTranslation } from "../../hooks/useTranslation";
 import { shouldShowIosHomeScreenInstallPrompt } from "../../utils/iosHomeScreenInstall.util";
 import styles from "./styles/more.module.scss";
+import { opaqueShellProps } from "../../shared/opaqueShell";
 
 const IOS_INSTALL_STEPS = [
   {
@@ -36,7 +37,7 @@ const IosHomeScreenInstallPrompt = (): ReactElement | null => {
 
   return (
     <>
-      <section className={styles.iosInstallCard} aria-label={t("pages.more.iosInstall.cardAriaLabel")}>
+      <section className={styles.iosInstallCard} aria-label={t("pages.more.iosInstall.cardAriaLabel")} {...opaqueShellProps}>
         <div className={styles.iosInstallIcon} aria-hidden="true">
           <AddToHomeScreenRoundedIcon />
         </div>

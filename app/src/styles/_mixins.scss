@@ -265,3 +265,129 @@
   }
 }
 
+// ============================================
+// Surface fallbacks (older WebViews lack color-mix)
+// ============================================
+
+@mixin surface-bg($mix: null) {
+  background-color: #ffffff;
+  background-color: var(--app-surface-bg, #ffffff);
+
+  @if $mix != null {
+    @supports (background: color-mix(in srgb, #ffffff 50%, #000000)) {
+      background: $mix;
+    }
+  }
+}
+
+@mixin surface-bg-color($mix: null) {
+  background-color: #ffffff;
+  background-color: var(--app-surface-bg, #ffffff);
+
+  @if $mix != null {
+    @supports (background-color: color-mix(in srgb, #ffffff 50%, #000000)) {
+      background-color: $mix;
+    }
+  }
+}
+
+@mixin surface-border-color($mix: null) {
+  border-color: rgba(61, 44, 53, 0.1);
+  border-color: var(--app-surface-border, rgba(61, 44, 53, 0.1));
+
+  @if $mix != null {
+    @supports (border-color: color-mix(in srgb, #ffffff 50%, #000000)) {
+      border-color: $mix;
+    }
+  }
+}
+
+@mixin mobile-floating-shell {
+  @include surface-border-color(color-mix(in srgb, var(--app-surface-border) 76%, transparent));
+  @include surface-bg(color-mix(in srgb, var(--app-surface-bg) 97%, var(--app-layout-glow) 3%));
+  box-shadow: 0 0.65rem 1.5rem rgba(15, 23, 42, 0.14);
+
+  @supports (background: color-mix(in srgb, #0f172a 12%, transparent)) {
+    box-shadow: 0 0.65rem 1.5rem color-mix(in srgb, #0f172a 12%, transparent);
+  }
+
+  isolation: isolate;
+  transform: translate3d(0, 0, 0);
+}
+
+@mixin dark-floating-shell {
+  background-color: #172033;
+  background-color: var(--app-surface-bg, #172033);
+
+  @supports (background: color-mix(in srgb, #172033 82%, #0f172a)) {
+    background: color-mix(in srgb, var(--app-surface-bg) 82%, #0f172a);
+  }
+}
+
+@mixin dark-floating-shell-gradient {
+  border-color: rgba(148, 163, 184, 0.28);
+  background-color: #172033;
+  box-shadow:
+    0 0.1rem 0.18rem rgba(0, 0, 0, 0.24),
+    inset 0 0.0625rem 0 rgba(255, 255, 255, 0.08);
+
+  @supports (background: color-mix(in srgb, #172033 90%, #1e2b45)) {
+    @include surface-border-color(color-mix(in srgb, #94a3b8 18%, transparent));
+    background:
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--app-surface-bg) 90%, #1e2b45) 0%,
+        color-mix(in srgb, #1e3a5f 28%, var(--app-surface-bg)) 100%
+      );
+  }
+}
+
+@mixin surface-panel-border {
+  border-color: rgba(61, 44, 53, 0.1);
+
+  @supports (border-color: color-mix(in srgb, #ffffff 50%, #000000)) {
+    border-color: color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  }
+}
+
+@mixin surface-card {
+  @include surface-panel-border;
+  @include surface-bg(color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff));
+}
+
+@mixin surface-card-light {
+  @include surface-panel-border;
+  @include surface-bg(color-mix(in srgb, var(--app-surface-bg) 96%, #ffffff));
+}
+
+@mixin surface-panel-dark {
+  background-color: #172033;
+
+  @supports (background: color-mix(in srgb, #172033 86%, #0f172a)) {
+    background: color-mix(in srgb, var(--app-surface-bg) 86%, #0f172a);
+  }
+}
+
+@mixin surface-hero($glow-position: top right) {
+  @include surface-panel-border;
+  background-color: #ffffff;
+
+  @if $glow-position == top right {
+    background-image: radial-gradient(circle at top right, rgba(224, 139, 168, 0.14), transparent 58%);
+  } @else {
+    background-image: radial-gradient(circle at top left, rgba(224, 139, 168, 0.14), transparent 58%);
+  }
+
+  @supports (background: color-mix(in srgb, #ffffff 50%, #000000)) {
+    @if $glow-position == top right {
+      background:
+        radial-gradient(circle at top right, color-mix(in srgb, var(--app-layout-glow) 14%, transparent), transparent 58%),
+        color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+    } @else {
+      background:
+        radial-gradient(circle at top left, color-mix(in srgb, var(--app-layout-glow) 14%, transparent), transparent 58%),
+        color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+    }
+  }
+}
+

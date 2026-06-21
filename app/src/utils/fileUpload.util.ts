@@ -1,8 +1,32 @@
 import { LOCAL_STORAGE_KEYS } from "../constants";
+import type { FileUploadPolicyId } from "../constants/fileUploadPolicies";
+import {
+  FILE_UPLOAD_POLICY_MAX_SIZE_BYTES,
+} from "../constants/fileUploadPolicies";
 import type { FileAccessUrl } from "./fileAccessUrl.util";
 import { compressImageForUpload } from "./imageCompression.util";
+import {
+  resolveUploadValidationErrorMessage,
+  validateSelectedUploadFile,
+} from "./fileUploadValidation.util";
 
 const FILE_UPLOAD_PATH = "/api/v1/files/upload";
+
+/** Share of the bar reserved for compression before the network upload starts. */
+const COMPRESSION_PROGRESS_SHARE = 10;
+
+function toUploadPercent(loaded: number, total: number, phase: "prepare" | "upload"): number {
+  if (total <= 0) {
+    return phase === "prepare" ? 0 : COMPRESSION_PROGRESS_SHARE;
+  }
+
+  const ratio = Math.min(1, loaded / total);
+  if (phase === "prepare") {
+    return Math.round(ratio * COMPRESSION_PROGRESS_SHARE);
+  }
+
+  return Math.round(COMPRESSION_PROGRESS_SHARE + ratio * (100 - COMPRESSION_PROGRESS_SHARE));
+}
 
 export type FileUploadResult = {
   readonly name: string;
@@ -11,6 +35,20 @@ export type FileUploadResult = {
   readonly path: string;
   readonly uploadedAt: string;
   readonly accessUrl: FileAccessUrl;
+};
+
+export type FileUploadProgress = {
+  readonly loaded: number;
+  readonly total: number;
+  readonly percent: number;
+};
+
+export type FileUploadOptions = {
+  readonly accessToken?: string | null;
+  readonly onProgress?: (progress: FileUploadProgress) => void;
+  readonly policy?: FileUploadPolicyId;
+  readonly accept?: string;
+  readonly maxSizeBytes?: number;
 };
 
 export class FileUploadError extends Error {
@@ -42,7 +80,7 @@ function resolveUploadErrorMessage(body: unknown, fallback: string): string {
 
 export async function uploadFile(
   file: File,
-  options?: { readonly accessToken?: string | null },
+  options?: FileUploadOptions,
 ): Promise<FileUploadResult> {
   const token =
     options?.accessToken ?? localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
@@ -50,27 +88,95 @@ export async function uploadFile(
     throw new FileUploadError("Not authenticated", 401);
   }
 
-  const uploadFilePayload = await compressImageForUpload(file);
+  const uploadPolicy = options?.policy ?? "ANY";
+  const maxSizeBytes =
+    options?.maxSizeBytes ?? FILE_UPLOAD_POLICY_MAX_SIZE_BYTES[uploadPolicy];
 
-  const response = await fetch(FILE_UPLOAD_PATH, {
-    method: "PUT",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": uploadFilePayload.type || "application/octet-stream",
-      "X-File-Name": encodeURIComponent(uploadFilePayload.name),
-    },
-    body: uploadFilePayload,
+  const validation = validateSelectedUploadFile(file, {
+    accept: options?.accept ?? "*/*",
+    maxSizeBytes,
   });
-
-  if (!response.ok) {
-    let message = "File upload failed";
-    try {
-      message = resolveUploadErrorMessage(await response.json(), message);
-    } catch {
-      // Keep fallback message when the error body is not JSON.
-    }
-    throw new FileUploadError(message, response.status);
+  if (!validation.valid) {
+    throw new FileUploadError(
+      resolveUploadValidationErrorMessage(validation.reason, "File upload failed"),
+    );
   }
 
-  return (await response.json()) as FileUploadResult;
+  options?.onProgress?.({
+    loaded: 0,
+    total: file.size,
+    percent: 0,
+  });
+
+  const uploadFilePayload = await compressImageForUpload(file);
+
+  options?.onProgress?.({
+    loaded: file.size,
+    total: file.size,
+    percent: toUploadPercent(file.size, file.size, "prepare"),
+  });
+
+  return new Promise<FileUploadResult>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", FILE_UPLOAD_PATH);
+    xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+    xhr.setRequestHeader(
+      "Content-Type",
+      uploadFilePayload.type || "application/octet-stream",
+    );
+    xhr.setRequestHeader("X-File-Name", encodeURIComponent(uploadFilePayload.name));
+    xhr.setRequestHeader("X-Upload-Policy", uploadPolicy);
+
+    const reportUploadProgress = (loaded: number, total: number): void => {
+      if (!options?.onProgress) {
+        return;
+      }
+
+      const safeTotal = total > 0 ? total : uploadFilePayload.size;
+      options.onProgress({
+        loaded,
+        total: safeTotal,
+        percent: toUploadPercent(loaded, safeTotal, "upload"),
+      });
+    };
+
+    xhr.upload.onprogress = (event) => {
+      const total = event.lengthComputable ? event.total : uploadFilePayload.size;
+      reportUploadProgress(event.loaded, total);
+    };
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        options?.onProgress?.({
+          loaded: uploadFilePayload.size,
+          total: uploadFilePayload.size,
+          percent: 100,
+        });
+        try {
+          resolve(JSON.parse(xhr.responseText) as FileUploadResult);
+        } catch {
+          reject(new FileUploadError("Invalid upload response", xhr.status));
+        }
+        return;
+      }
+
+      let message = "File upload failed";
+      try {
+        message = resolveUploadErrorMessage(JSON.parse(xhr.responseText), message);
+      } catch {
+        // Keep fallback message when the error body is not JSON.
+      }
+      reject(new FileUploadError(message, xhr.status));
+    };
+
+    xhr.onerror = () => {
+      reject(new FileUploadError("File upload failed"));
+    };
+
+    xhr.onabort = () => {
+      reject(new FileUploadError("File upload cancelled"));
+    };
+
+    xhr.send(uploadFilePayload);
+  });
 }

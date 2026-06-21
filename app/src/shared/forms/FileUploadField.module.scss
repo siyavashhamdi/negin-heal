@@ -106,6 +106,37 @@ $field-label-float-scale: 0.75;
   box-shadow: 0 0 0 0.125rem rgba(variables.$color-primary-main, 0.12);
 }
 
+.dropzoneUploading {
+  pointer-events: none;
+  cursor: default;
+}
+
+.uploadProgressOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: variables.$spacing-1;
+  padding: 1rem;
+  border-radius: variables.$border-radius-md;
+  background-color: var(--app-surface-bg);
+  background-color: color-mix(in srgb, var(--app-surface-bg) 82%, transparent);
+  backdrop-filter: blur(0.125rem);
+}
+
+.uploadProgressBar {
+  inline-size: 100%;
+}
+
+.uploadProgressLabel {
+  text-align: center;
+  color: var(--text-secondary);
+  font-weight: variables.$font-weight-medium;
+}
+
 .dropzoneError {
   border-color: variables.$color-error-main;
 }

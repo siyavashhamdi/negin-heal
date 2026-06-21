@@ -1,4 +1,5 @@
 @use "../../../styles/variables" as variables;
+@use "../../../styles/mixins" as mixins;
 
 .page {
   display: grid;
@@ -11,13 +12,22 @@
   overflow: hidden;
   position: relative;
   padding: clamp(1.1rem, 3vw, 1.65rem);
-  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  border: 0.0625rem solid rgba(61, 44, 53, 0.1);
   border-radius: 1.5rem;
-  background:
-    radial-gradient(circle at top left, color-mix(in srgb, variables.$color-primary-main 24%, transparent), transparent 44%),
-    linear-gradient(135deg, color-mix(in srgb, var(--app-layout-glow) 12%, transparent), transparent 52%),
-    color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
-  box-shadow: 0 1.5rem 4rem color-mix(in srgb, #0f172a 8%, transparent);
+  background-color: #ffffff;
+  background-image:
+    radial-gradient(circle at top left, rgba(201, 86, 126, 0.24), transparent 44%),
+    linear-gradient(135deg, rgba(224, 139, 168, 0.12), transparent 52%);
+
+  @supports (background: color-mix(in srgb, #ffffff 50%, #000000)) {
+    border-color: color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+    background:
+      radial-gradient(circle at top left, color-mix(in srgb, variables.$color-primary-main 24%, transparent), transparent 44%),
+      linear-gradient(135deg, color-mix(in srgb, var(--app-layout-glow) 12%, transparent), transparent 52%),
+      color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+  }
+
+  box-shadow: 0 1.5rem 4rem rgba(15, 23, 42, 0.08);
 }
 
 .hero::after {
@@ -98,9 +108,9 @@
   align-items: center;
   gap: 0.45rem;
   padding: 0.52rem 0.75rem;
-  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 74%, transparent);
+  border: 0.0625rem solid rgba(61, 44, 53, 0.1);
   border-radius: 999rem;
-  background: color-mix(in srgb, var(--app-surface-bg) 78%, #ffffff);
+  @include mixins.surface-bg(color-mix(in srgb, var(--app-surface-bg) 78%, #ffffff));
   color: var(--text-secondary);
   font-size: 0.82rem;
   line-height: 1.6;
@@ -144,9 +154,9 @@
   inline-size: 100%;
   min-block-size: 10rem;
   padding: 1rem;
-  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  border: 0.0625rem solid rgba(61, 44, 53, 0.1);
   border-radius: 1.2rem;
-  background: color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+  @include mixins.surface-card;
   color: var(--text-primary);
   font: inherit;
   text-align: start;
@@ -170,9 +180,13 @@
 
 .cardPrimary {
   border-color: color-mix(in srgb, variables.$color-primary-main 42%, var(--app-surface-border));
-  background:
-    linear-gradient(135deg, color-mix(in srgb, variables.$color-primary-main 10%, transparent), transparent 62%),
-    color-mix(in srgb, var(--app-surface-bg) 96%, #ffffff);
+  background-color: #ffffff;
+
+  @supports (background: color-mix(in srgb, #ffffff 50%, #000000)) {
+    background:
+      linear-gradient(135deg, color-mix(in srgb, variables.$color-primary-main 10%, transparent), transparent 62%),
+      color-mix(in srgb, var(--app-surface-bg) 96%, #ffffff);
+  }
 }
 
 .cardIcon {
@@ -232,11 +246,17 @@
   display: grid;
   gap: 0.85rem;
   padding: 1rem;
-  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  border: 0.0625rem solid rgba(61, 44, 53, 0.1);
   border-radius: 1.25rem;
-  background:
-    linear-gradient(135deg, color-mix(in srgb, #2dd4bf 10%, transparent), transparent 64%),
-    color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+  background-color: #ffffff;
+  background-image: linear-gradient(135deg, rgba(45, 212, 191, 0.1), transparent 64%);
+
+  @supports (background: color-mix(in srgb, #ffffff 50%, #000000)) {
+    border-color: color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+    background:
+      linear-gradient(135deg, color-mix(in srgb, #2dd4bf 10%, transparent), transparent 64%),
+      color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+  }
 }
 
 .panelIntro {
@@ -285,10 +305,10 @@
   grid-template-columns: minmax(0, 1fr);
   gap: 0.75rem;
   padding: 0.85rem;
-  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  border: 0.0625rem solid rgba(61, 44, 53, 0.1);
   border-radius: 1.25rem;
-  background: color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
-  box-shadow: 0 0.8rem 2rem color-mix(in srgb, #0f172a 5%, transparent);
+  @include mixins.surface-card;
+  box-shadow: 0 0.8rem 2rem rgba(15, 23, 42, 0.05);
 }
 
 .faqSearch {
@@ -297,9 +317,9 @@
   align-items: center;
   gap: 0.55rem;
   padding: 0.72rem 0.85rem;
-  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  border: 0.0625rem solid rgba(61, 44, 53, 0.1);
   border-radius: 1rem;
-  background: color-mix(in srgb, var(--app-surface-bg) 88%, #ffffff);
+  @include mixins.surface-bg(color-mix(in srgb, var(--app-surface-bg) 88%, #ffffff));
   color: var(--text-secondary);
 }
 
@@ -359,10 +379,10 @@
   display: grid;
   gap: 0.85rem;
   padding: 1rem;
-  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  border: 0.0625rem solid rgba(61, 44, 53, 0.1);
   border-radius: 1.25rem;
-  background: color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
-  box-shadow: 0 0.8rem 2rem color-mix(in srgb, #0f172a 5%, transparent);
+  @include mixins.surface-card;
+  box-shadow: 0 0.8rem 2rem rgba(15, 23, 42, 0.05);
 }
 
 .faqSectionHeader {
@@ -457,9 +477,9 @@
   justify-items: center;
   gap: 0.65rem;
   padding: 1.3rem;
-  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  border: 0.0625rem solid rgba(61, 44, 53, 0.1);
   border-radius: 1.25rem;
-  background: color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+  @include mixins.surface-card;
   text-align: center;
 }
 
@@ -478,13 +498,17 @@ body[data-theme="dark"] {
   .faqToolbar,
   .faqSection,
   .faqEmpty {
-    background: color-mix(in srgb, var(--app-surface-bg) 86%, #0f172a);
+    @include mixins.surface-panel-dark;
   }
 
   .heroMeta span,
   .faqSearch,
   .faqItem {
-    background: color-mix(in srgb, var(--app-surface-bg) 82%, #0f172a);
+    background-color: #172033;
+
+    @supports (background: color-mix(in srgb, #172033 82%, #0f172a)) {
+      background: color-mix(in srgb, var(--app-surface-bg) 82%, #0f172a);
+    }
   }
 }
 

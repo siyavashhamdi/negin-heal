@@ -1,7 +1,26 @@
 @use "variables" as variables;
 
+// Opaque shells for WebViews without color-mix() / flaky var() support.
+[data-opaque-shell],
+.main-layout__mobile-bottom-nav {
+  background-color: #ffffff !important;
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  isolation: isolate;
+}
+
+body[data-theme="dark"] [data-opaque-shell],
+body[data-theme="dark"] .main-layout__mobile-bottom-nav {
+  background-color: #172033 !important;
+}
+
 // iOS auto-zooms focused inputs smaller than 16px, which can reflow the page and drop focus.
 @media (max-width: (variables.$breakpoint-sm - 0.0625rem)) {
+  html,
+  body {
+    overscroll-behavior: none;
+  }
+
   .MuiInputBase-input,
   .MuiInputBase-inputMultiline,
   .MuiSelect-select,

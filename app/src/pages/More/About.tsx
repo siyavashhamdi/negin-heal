@@ -7,6 +7,7 @@ import { APP_ABOUT_PAGE_QUERY } from "../../graphql/queries/appAboutPageConfig.q
 import EnamadTrustSeal from "../../shared/EnamadTrustSeal";
 import { EMPTY_APP_ABOUT_PAGE, type AppAboutPageConfigQuery } from "./about-page.api";
 import styles from "./styles/more.module.scss";
+import { opaqueShellProps } from "../../shared/opaqueShell";
 
 const hasText = (value: string): boolean => value.trim().length > 0;
 
@@ -19,13 +20,13 @@ const AboutPage = (): ReactElement => {
 
   return (
     <section className={styles.page} aria-busy={loading}>
-      <div className={styles.hero}>
+      <div className={styles.hero} {...opaqueShellProps}>
         <p>درباره سامانه</p>
         <h2>Negin Heal</h2>
         <span>معرفی کوتاه امکانات، هدف و تجربه کاربری سامانه</span>
       </div>
 
-      <div className={styles.aboutPanel}>
+      <div className={styles.aboutPanel} {...opaqueShellProps}>
         <div className={styles.aboutHeader}>
           <span className={styles.aboutIcon}>
             <InfoOutlinedIcon />

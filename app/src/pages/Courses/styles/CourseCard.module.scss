@@ -563,6 +563,38 @@ $ease-flip: cubic-bezier(0.32, 0.72, 0, 1);
   inline-size: 100%;
 }
 
+@media (max-width: (variables.$breakpoint-sm - 0.0625rem)) {
+  .flipCard {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 27.5rem;
+    contain: layout style paint;
+  }
+
+  .flipCard:hover {
+    transform: none;
+  }
+
+  .flipCard:hover .flipFace {
+    box-shadow:
+      0 0.85rem 1.8rem rgba(15, 23, 42, 0.1),
+      0 0.1rem 0.28rem rgba(15, 23, 42, 0.08),
+      inset 0 0.0625rem 0 rgba(255, 255, 255, 0.75);
+  }
+
+  .releaseTypeChip,
+  .statusChip,
+  .itemTypeChip,
+  .overlayTagChip,
+  .priceBar {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .tagRow {
+    touch-action: pan-y;
+  }
+}
+
 body[data-theme="dark"] {
   .flipFace {
     border-color: color-mix(in srgb, #94a3b8 18%, transparent);

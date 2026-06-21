@@ -462,42 +462,47 @@ const CourseDetail = (): ReactElement => {
       return;
     }
 
-    let animationFrameId = 0;
-    const mobileMediaQuery = window.matchMedia("(max-width: 37.5rem)");
+    const purchaseCard = purchaseCardRef.current;
+    if (!purchaseCard) {
+      return;
+    }
 
-    const updatePinnedPriceBar = (): void => {
-      const purchaseCard = purchaseCardRef.current;
-      if (!purchaseCard || !mobileMediaQuery.matches) {
+    const mobileMediaQuery = window.matchMedia("(max-width: 37.5rem)");
+    const updatePinnedPriceBar = (isIntersecting: boolean): void => {
+      if (!mobileMediaQuery.matches) {
         setIsMobilePriceBarVisible(false);
         return;
       }
 
-      setIsMobilePriceBarVisible(purchaseCard.getBoundingClientRect().bottom <= 0);
+      setIsMobilePriceBarVisible(!isIntersecting);
     };
 
-    const requestPinnedPriceBarUpdate = (): void => {
-      if (animationFrameId) {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        updatePinnedPriceBar(entry.isIntersecting);
+      },
+      {
+        threshold: 0,
+        rootMargin: "0px",
+      },
+    );
+
+    const handleViewportChange = (): void => {
+      if (!mobileMediaQuery.matches) {
+        setIsMobilePriceBarVisible(false);
         return;
       }
 
-      animationFrameId = window.requestAnimationFrame(() => {
-        animationFrameId = 0;
-        updatePinnedPriceBar();
-      });
+      const rect = purchaseCard.getBoundingClientRect();
+      updatePinnedPriceBar(rect.bottom > 0 && rect.top < window.innerHeight);
     };
 
-    updatePinnedPriceBar();
-    window.addEventListener("scroll", requestPinnedPriceBarUpdate, { passive: true });
-    window.addEventListener("resize", requestPinnedPriceBarUpdate);
-    mobileMediaQuery.addEventListener("change", updatePinnedPriceBar);
+    observer.observe(purchaseCard);
+    mobileMediaQuery.addEventListener("change", handleViewportChange);
 
     return () => {
-      if (animationFrameId) {
-        window.cancelAnimationFrame(animationFrameId);
-      }
-      window.removeEventListener("scroll", requestPinnedPriceBarUpdate);
-      window.removeEventListener("resize", requestPinnedPriceBarUpdate);
-      mobileMediaQuery.removeEventListener("change", updatePinnedPriceBar);
+      observer.disconnect();
+      mobileMediaQuery.removeEventListener("change", handleViewportChange);
     };
   }, [canAccessCourse, course, hasPendingPurchase]);
 
@@ -770,6 +775,7 @@ const CourseDetail = (): ReactElement => {
           className={`${styles.mobilePinnedPriceBar}${
             isMobilePriceBarVisible ? ` ${styles.mobilePinnedPriceBarVisible}` : ""
           }`}
+          data-opaque-shell
           aria-hidden={!isMobilePriceBarVisible}
         >
           <div className={styles.mobilePinnedPriceInfo}>

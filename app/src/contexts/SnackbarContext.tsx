@@ -8,7 +8,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
-import { Snackbar, Alert, Slide, useMediaQuery, useTheme } from "@mui/material";
+import { Snackbar, Alert, Box, LinearProgress, Slide, Typography, useMediaQuery, useTheme } from "@mui/material";
 import type { SlideProps } from "@mui/material/Slide";
 import { SNACKBAR_AUTO_HIDE_DURATION_MS } from "../constants/snackbar.constants";
 import {
@@ -49,6 +49,7 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
     };
   }, [isMobile]);
   const [open, setOpen] = useState(false);
+  const [uploadProgressPercent, setUploadProgressPercent] = useState<number | null>(null);
   const [snackbarInstance, setSnackbarInstance] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -132,6 +133,14 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
     },
     [showSnackbar],
   );
+
+  const updateUploadProgress = useCallback((percent: number) => {
+    setUploadProgressPercent(Math.min(100, Math.max(0, Math.round(percent))));
+  }, []);
+
+  const hideUploadProgress = useCallback(() => {
+    setUploadProgressPercent(null);
+  }, []);
 
   /**
    * Handle snackbar close
@@ -255,6 +264,8 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
     showError,
     showWarning,
     showInfo,
+    updateUploadProgress,
+    hideUploadProgress,
   };
 
   return (
@@ -293,6 +304,28 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
           }}
         >
           {snackbarData.message}
+        </Alert>
+      </Snackbar>
+      <Snackbar
+        open={uploadProgressPercent != null}
+        autoHideDuration={null}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        className={styles.uploadProgressSnackbar}
+        sx={{
+          zIndex: (muiTheme) => muiTheme.zIndex.snackbar + 1,
+        }}
+      >
+        <Alert severity="info" variant="filled" className={styles.uploadProgressAlert}>
+          <Box className={styles.uploadProgressContent}>
+            <Typography variant="body2" className={styles.uploadProgressLabel}>
+              در حال آپلود... {uploadProgressPercent?.toLocaleString("fa-IR")}٪
+            </Typography>
+            <LinearProgress
+              variant="determinate"
+              value={uploadProgressPercent ?? 0}
+              className={styles.uploadProgressBar}
+            />
+          </Box>
         </Alert>
       </Snackbar>
     </SnackbarContext.Provider>

@@ -257,11 +257,9 @@ const CoursesIndex = (): ReactElement => {
     }
 
     lastMobileScrollYRef.current = window.scrollY;
+    let animationFrameId = 0;
 
-    const handleScroll = (): void => {
-      const scrollY = window.scrollY;
-      const didScroll = Math.abs(scrollY - lastMobileScrollYRef.current) > 1;
-      lastMobileScrollYRef.current = scrollY;
+    const collapseMobileFilterOnScroll = (): void => {
       const isOpeningMobileFilter = performance.now() < mobileFilterOpenGuardUntilRef.current;
       const activeElement = document.activeElement;
       const hasOpenDialog =
@@ -269,23 +267,49 @@ const CoursesIndex = (): ReactElement => {
       const isDialogFocused =
         activeElement instanceof HTMLElement &&
         activeElement.closest(".MuiDialog-root, [role='dialog']") !== null;
-      const shouldIgnoreScrollForDialog = hasOpenDialog || isDialogFocused;
 
-      if (didScroll && !isOpeningMobileFilter && !shouldIgnoreScrollForDialog) {
-        setShowFilterSections(false);
-        setIsMobileFilterOpen(hasActiveFilters);
+      if (isOpeningMobileFilter || hasOpenDialog || isDialogFocused) {
+        return;
       }
-      if (didScroll && !isOpeningMobileFilter && !shouldIgnoreScrollForDialog) {
-        const searchInput = searchInputRef.current;
-        if (searchInput && activeElement === searchInput) {
-          searchInput.blur();
-        }
+
+      setShowFilterSections((current) => (current ? false : current));
+      setIsMobileFilterOpen((current) => {
+        const next = hasActiveFilters;
+        return current === next ? current : next;
+      });
+    };
+
+    const handleScroll = (): void => {
+      const scrollY = window.scrollY;
+      const didScroll = Math.abs(scrollY - lastMobileScrollYRef.current) > 1;
+      lastMobileScrollYRef.current = scrollY;
+
+      if (!didScroll || animationFrameId) {
+        return;
+      }
+
+      animationFrameId = window.requestAnimationFrame(() => {
+        animationFrameId = 0;
+        collapseMobileFilterOnScroll();
+      });
+    };
+
+    const handleScrollEnd = (): void => {
+      const activeElement = document.activeElement;
+      const searchInput = searchInputRef.current;
+      if (searchInput && activeElement === searchInput) {
+        searchInput.blur();
       }
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("scrollend", handleScrollEnd, { passive: true });
     return () => {
+      if (animationFrameId) {
+        window.cancelAnimationFrame(animationFrameId);
+      }
       window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("scrollend", handleScrollEnd);
     };
   }, [hasActiveFilters, isEndUser, isMobile]);
 
@@ -688,6 +712,7 @@ const CoursesIndex = (): ReactElement => {
           className={`${styles.filterPanel}${
             shouldShowFilterPanelContent ? "" : ` ${styles.filterPanelCollapsed}`
           }`}
+          data-opaque-shell
           elevation={0}
         >
           {shouldShowFilterPanelContent ? (

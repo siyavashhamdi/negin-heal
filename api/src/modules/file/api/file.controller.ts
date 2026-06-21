@@ -16,6 +16,10 @@ import { Request, Response } from "express";
 import { SecurityConfig } from "../../../config/security.config";
 import { RestAuthGuard } from "../../auth";
 import { FileService } from "../file.service";
+import {
+  assertFileAllowedByPolicy,
+  resolveFileUploadPolicy,
+} from "../file-upload-policy.util";
 
 @Controller("files")
 export class FileController {
@@ -28,13 +32,15 @@ export class FileController {
     @Headers("content-type") contentType?: string,
     @Headers("x-file-name") encodedFileName?: string,
     @Headers("content-length") contentLengthHeader?: string,
+    @Headers("x-upload-policy") uploadPolicyHeader?: string,
   ) {
-    const maxSize = SecurityConfig.getMaxRequestSize();
+    const uploadPolicy = resolveFileUploadPolicy(uploadPolicyHeader);
+    const globalMaxSize = SecurityConfig.getMaxRequestSize();
     const sizeBytes = Number.parseInt(contentLengthHeader ?? "", 10);
     if (!Number.isFinite(sizeBytes) || sizeBytes < 0) {
       throw new BadRequestException("Content-Length header is required");
     }
-    if (sizeBytes > maxSize) {
+    if (sizeBytes > globalMaxSize) {
       throw new BadRequestException("File size exceeds the allowed limit");
     }
 
@@ -57,11 +63,19 @@ export class FileController {
     const mimeType =
       contentType?.split(";")[0]?.trim() || "application/octet-stream";
 
+    assertFileAllowedByPolicy({
+      mimeType,
+      fileName: name,
+      sizeBytes,
+      policy: uploadPolicy,
+    });
+
     const uploadedFile = await this.fileService.uploadFromStream({
       name,
       mimeType,
       sizeBytes,
       stream: request,
+      uploadPolicy,
     });
 
     return {

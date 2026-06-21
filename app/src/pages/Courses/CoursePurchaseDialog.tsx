@@ -28,6 +28,10 @@ import { showErrorIfNotQueued } from "../../utilities/graphql-error.util";
 import { getFileIdFromAccessUrl } from "../../utils/fileAccessUrl.util";
 import { uploadFile } from "../../utils/fileUpload.util";
 import {
+  FILE_UPLOAD_POLICY,
+  FILE_UPLOAD_POLICY_MAX_SIZE_BYTES,
+} from "../../constants/fileUploadPolicies";
+import {
   formatCoursePrice,
   type CourseDetailRecord,
   type CoursePurchaseSubmitMutation,
@@ -378,7 +382,11 @@ export function CoursePurchaseDialog({
 
   const uploadReceiptFile = async (file: File): Promise<string | null> => {
     try {
-      const uploadedFile = await uploadFile(file);
+      const uploadedFile = await uploadFile(file, {
+        policy: FILE_UPLOAD_POLICY.PAYMENT_RECEIPT,
+        accept: "image/*,.pdf",
+        maxSizeBytes: FILE_UPLOAD_POLICY_MAX_SIZE_BYTES.PAYMENT_RECEIPT,
+      });
       return getFileIdFromAccessUrl(uploadedFile.accessUrl);
     } catch (error) {
       showErrorIfNotQueued(showError, error);
@@ -795,6 +803,7 @@ export function CoursePurchaseDialog({
                         accept="image/*,.pdf"
                         allowedFormatsLabel="JPG, PNG, PDF"
                         maxSizeLabel="حداکثر ۵ مگابایت"
+                        maxSizeBytes={FILE_UPLOAD_POLICY_MAX_SIZE_BYTES.PAYMENT_RECEIPT}
                         dropTitle="رسید پرداخت را اینجا رها کنید"
                         mobileDropTitle="انتخاب رسید پرداخت"
                         dropHint="یا برای انتخاب فایل کلیک کنید"

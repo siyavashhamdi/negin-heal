@@ -36,6 +36,7 @@ import NotificationActionFields, {
   type NotificationActionFormState,
 } from "./NotificationActionFields";
 import styles from "./styles/more.module.scss";
+import { opaqueShellProps } from "../../shared/opaqueShell";
 
 type GlobalAnouncementSendMutationResult = {
   readonly globalAnouncementSend: {
@@ -168,7 +169,12 @@ const GlobalAnouncement = (): ReactElement => {
         backLabel="بازگشت به سایر"
       />
 
-      <Paper className={styles.globalAnouncementPanel} component="form" onSubmit={handleSubmit}>
+      <Paper
+        className={styles.globalAnouncementPanel}
+        component="form"
+        onSubmit={handleSubmit}
+        {...opaqueShellProps}
+      >
         <Box className={styles.globalAnouncementIcon}>
           <CampaignRoundedIcon />
         </Box>

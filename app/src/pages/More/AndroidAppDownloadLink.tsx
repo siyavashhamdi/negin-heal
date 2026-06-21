@@ -7,6 +7,7 @@ import {
   shouldShowAndroidAppDownloadLink,
 } from "../../utils/androidAppDownload.util";
 import styles from "./styles/more.module.scss";
+import { opaqueShellProps } from "../../shared/opaqueShell";
 
 const AndroidAppDownloadLink = (): ReactElement | null => {
   const { t } = useTranslation();
@@ -20,6 +21,7 @@ const AndroidAppDownloadLink = (): ReactElement | null => {
       href={getAndroidAppDownloadUrl()}
       className={styles.linkCard}
       download="negin-heal.apk"
+      {...opaqueShellProps}
     >
       <AndroidRoundedIcon />
       <span>{t("pages.more.androidDownload.linkLabel")}</span>

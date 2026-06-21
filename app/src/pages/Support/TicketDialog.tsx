@@ -38,6 +38,10 @@ import {
 } from "../../utils/fileAccessUrl.util";
 import { uploadFile as uploadFileToApi } from "../../utils/fileUpload.util";
 import {
+  FILE_UPLOAD_POLICY,
+  FILE_UPLOAD_POLICY_MAX_SIZE_BYTES,
+} from "../../constants/fileUploadPolicies";
+import {
   type UserPickerListQuery,
   type UserListQueryVariables,
   type UserPickerListRow,
@@ -730,7 +734,11 @@ const TicketDialog = ({
 
     setIsAttachmentUploading(true);
     try {
-      const uploadedFile = await uploadFileToApi(attachmentFile);
+      const uploadedFile = await uploadFileToApi(attachmentFile, {
+        policy: FILE_UPLOAD_POLICY.SUPPORT_ATTACHMENT,
+        accept: "image/*,application/pdf,.doc,.docx,.txt,video/*,audio/*",
+        maxSizeBytes: FILE_UPLOAD_POLICY_MAX_SIZE_BYTES.SUPPORT_ATTACHMENT,
+      });
       const fileId = getFileIdFromAccessUrl(uploadedFile.accessUrl);
       if (!fileId) {
         return undefined;
@@ -1077,6 +1085,7 @@ const TicketDialog = ({
               accept="image/*,application/pdf,.doc,.docx,.txt,video/*,audio/*"
               allowedFormatsLabel={t("pages.support.attachments.allowedFormats")}
               maxSizeLabel={t("pages.support.attachments.maxSize")}
+              maxSizeBytes={FILE_UPLOAD_POLICY_MAX_SIZE_BYTES.SUPPORT_ATTACHMENT}
               dropTitle={t("pages.support.attachments.dropTitle")}
               mobileDropTitle={t("pages.support.attachments.mobileDropTitle")}
               dropHint={t("pages.support.attachments.dropHint")}

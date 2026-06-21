@@ -25,6 +25,7 @@ import type {
   ExpandedItemByChapter,
   VisibleAfterUnit,
 } from "./types";
+import type { UploadProgressEntry } from "../../../utils/uploadProgress.util";
 import styles from "./styles/ChaptersSection.module.scss";
 
 type ChaptersSectionProps = {
@@ -53,6 +54,7 @@ type ChaptersSectionProps = {
   readonly onAddItem: (chapterId: string) => void;
   readonly onRemoveItem: (chapterId: string, itemId: string) => void;
   readonly stripNumberSeparators: (value: string) => string;
+  readonly uploadProgressByFieldId?: Readonly<Record<string, UploadProgressEntry>>;
 };
 
 const ChaptersSection = ({
@@ -74,6 +76,7 @@ const ChaptersSection = ({
   onAddItem,
   onRemoveItem,
   stripNumberSeparators,
+  uploadProgressByFieldId = {},
 }: ChaptersSectionProps): ReactElement => {
   const chapterStepsRailRef = useRef<HTMLDivElement>(null);
 
@@ -279,6 +282,7 @@ const ChaptersSection = ({
             onUpdateItem={onUpdateItem}
             onAddItem={onAddItem}
             onRemoveItem={onRemoveItem}
+            uploadProgressByFieldId={uploadProgressByFieldId}
           />
         </Paper>
       ) : null}

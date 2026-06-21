@@ -63,7 +63,7 @@ export class SecurityConfig {
 
   /**
    * Get max request size in bytes.
-   * Default supports up to 50MB binary file uploads.
+   * Default supports up to 1GB uploads (course item files).
    */
   static getMaxRequestSize(): number {
     const maxSize = process.env.MAX_REQUEST_SIZE;
@@ -74,7 +74,7 @@ export class SecurityConfig {
       }
     }
 
-    return 50 * 1024 * 1024;
+    return 1024 * 1024 * 1024;
   }
 
   /**

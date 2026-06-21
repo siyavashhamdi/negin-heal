@@ -117,6 +117,7 @@ export async function bootstrap() {
       "Content-Type",
       "Authorization",
       "X-File-Name",
+      "X-Upload-Policy",
       "X-Apollo-Operation-Name",
       "apollo-require-preflight",
     ],

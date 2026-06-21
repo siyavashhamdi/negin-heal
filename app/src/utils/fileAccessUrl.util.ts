@@ -47,7 +47,13 @@ export function resolveFileAccessUrl(
 export function getFileIdFromAccessUrl(
   access: FileAccessUrl | null | undefined,
 ): string | null {
-  const fileId = access?.fileId?.trim();
+  const rawFileId = access?.fileId;
+  if (rawFileId == null) {
+    return null;
+  }
+
+  const fileId =
+    typeof rawFileId === "string" ? rawFileId.trim() : String(rawFileId).trim();
   return fileId || null;
 }
 

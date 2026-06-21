@@ -26,6 +26,7 @@ import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import type { UserMeResponse } from "../../hooks/useMe";
 import TicketDialog from "../Support/TicketDialog";
 import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
+import { opaqueShellProps } from "../../shared/opaqueShell";
 import { emptyCacheAndHardReload } from "../../utils/hardReload.util";
 import {
   EMPTY_APP_PRIVACY_POLICY_PAGE,
@@ -228,13 +229,13 @@ const More = (): ReactElement => {
 
   return (
     <section className={styles.page}>
-      <div className={styles.hero}>
+      <div className={styles.hero} {...opaqueShellProps}>
         <p>سایر</p>
         <h2>تنظیمات و میانبرها</h2>
         <span>دسترسی سریع به امکانات عمومی پنل</span>
       </div>
 
-      <div className={styles.themeCard}>
+      <div className={styles.themeCard} {...opaqueShellProps}>
         <div className={styles.themeIcon}>
           {isDarkMode ? <DarkModeRoundedIcon /> : <LightModeRoundedIcon />}
         </div>
@@ -260,7 +261,7 @@ const More = (): ReactElement => {
       </div>
 
       {isAuthenticated ? (
-        <section className={styles.notificationsSection} aria-label="تنظیمات اعلان‌ها">
+        <section className={styles.notificationsSection} aria-label="تنظیمات اعلان‌ها" {...opaqueShellProps}>
           <div className={styles.preferenceRow}>
             <div className={styles.preferenceIcon}>
               <NotificationsRoundedIcon />
@@ -298,6 +299,7 @@ const More = (): ReactElement => {
             <button
               type="button"
               className={styles.linkCard}
+              {...opaqueShellProps}
               onClick={() => navigate(APP_SHELL_ROUTES.users)}
             >
               <PeopleAltRoundedIcon />
@@ -306,6 +308,7 @@ const More = (): ReactElement => {
             <button
               type="button"
               className={styles.linkCard}
+              {...opaqueShellProps}
               onClick={() => navigate(APP_SHELL_ROUTES.moreSystemSettings)}
             >
               <SettingsRoundedIcon />
@@ -314,6 +317,7 @@ const More = (): ReactElement => {
             <button
               type="button"
               className={`${styles.linkCard} ${styles.globalAnouncementCard}`}
+              {...opaqueShellProps}
               onClick={() => navigate(APP_SHELL_ROUTES.moreGlobalAnouncement)}
             >
               <CampaignRoundedIcon />
@@ -322,6 +326,7 @@ const More = (): ReactElement => {
             <button
               type="button"
               className={`${styles.linkCard} ${styles.couponsCard}`}
+              {...opaqueShellProps}
               onClick={() => navigate(APP_SHELL_ROUTES.moreCoupons)}
             >
               <ConfirmationNumberRoundedIcon />
@@ -333,6 +338,7 @@ const More = (): ReactElement => {
           <button
             type="button"
             className={styles.linkCard}
+            {...opaqueShellProps}
             onClick={() => navigate("/more/privacy-policy")}
           >
             <PrivacyTipRoundedIcon />
@@ -343,6 +349,7 @@ const More = (): ReactElement => {
           <button
             type="button"
             className={styles.linkCard}
+            {...opaqueShellProps}
             onClick={() => navigate("/more/terms-of-use")}
           >
             <GavelRoundedIcon />
@@ -350,7 +357,7 @@ const More = (): ReactElement => {
           </button>
         ) : null}
         {shouldShowPublicInfoCards ? (
-          <button type="button" className={styles.linkCard} onClick={() => navigate("/more/about")}>
+          <button type="button" className={styles.linkCard} {...opaqueShellProps} onClick={() => navigate("/more/about")}>
             <InfoOutlinedIcon />
             <span>درباره سامانه</span>
           </button>
@@ -359,6 +366,7 @@ const More = (): ReactElement => {
           <button
             type="button"
             className={`${styles.linkCard} ${styles.bugReportCard}`}
+            {...opaqueShellProps}
             onClick={() => setBugReportDialogOpen(true)}
           >
             <BugReportRoundedIcon />
@@ -368,6 +376,7 @@ const More = (): ReactElement => {
         <button
           type="button"
           className={styles.linkCard}
+          {...opaqueShellProps}
           disabled={isHardReloading}
           aria-busy={isHardReloading}
           aria-label="پاکسازی کَش و بارگذاری مجدد"

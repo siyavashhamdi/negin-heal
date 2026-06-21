@@ -19,7 +19,11 @@ import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import PlaylistAddRoundedIcon from "@mui/icons-material/PlaylistAddRounded";
 import { OverflowTooltip } from "../../../shared/OverflowTooltip";
 import FileUploadField from "../../../shared/forms/FileUploadField";
+import {
+  FILE_UPLOAD_POLICY_MAX_SIZE_BYTES,
+} from "../../../constants/fileUploadPolicies";
 import { buildExistingFilePreview } from "../../../utils/fileAccessUrl.util";
+import { getFieldUploadPercent, type UploadProgressEntry } from "../../../utils/uploadProgress.util";
 import RichTextBox from "../../../shared/forms/RichTextBox";
 import type { DraftChapter, DraftItem, DraftItemContentType } from "./types";
 import { setDragTransferData } from "./reorder-drag.util";
@@ -38,6 +42,7 @@ type ItemsSectionProps = {
   readonly onUpdateItem: (chapterId: string, itemId: string, patch: Partial<DraftItem>) => void;
   readonly onAddItem: (chapterId: string) => void;
   readonly onRemoveItem: (chapterId: string, itemId: string) => void;
+  readonly uploadProgressByFieldId?: Readonly<Record<string, UploadProgressEntry>>;
 };
 
 function getContentTypePatch(nextContentType: DraftItemContentType): Partial<DraftItem> {
@@ -62,6 +67,7 @@ const ItemsSection = ({
   onUpdateItem,
   onAddItem,
   onRemoveItem,
+  uploadProgressByFieldId = {},
 }: ItemsSectionProps): ReactElement => {
   return (
     <>
@@ -176,10 +182,15 @@ const ItemsSection = ({
                       <Grid item xs={12}>
                         <div className={styles.uploaderRow}>
                           <FileUploadField
-                            previewId={`course-item-file-${chapter.id}-${index}`}
+                            previewId={`course-item-file-${item.id}`}
                             label="فایل آیتم"
                             file={item.file}
-                            onChange={(file) => updateCurrentItem({ file })}
+                            onChange={(file) =>
+                              updateCurrentItem({
+                                file,
+                                ...(file != null ? { fileAccessUrl: null } : {}),
+                              })
+                            }
                             existingFile={buildExistingFilePreview(
                               item.fileAccessUrl,
                               item.title.trim() || "فایل آیتم",
@@ -189,7 +200,8 @@ const ItemsSection = ({
                             }
                             accept="*/*"
                             allowedFormatsLabel="فرمت مجاز: همه"
-                            maxSizeLabel="حداکثر: ۵۰MB"
+                            maxSizeLabel="حداکثر: ۱ گیگابایت"
+                            maxSizeBytes={FILE_UPLOAD_POLICY_MAX_SIZE_BYTES.COURSE_ITEM}
                             dropTitle="انتخاب فایل آیتم"
                             mobileDropTitle="انتخاب فایل آیتم"
                             dropHint="هنگام ایجاد دوره آپلود می‌شود"
@@ -197,6 +209,10 @@ const ItemsSection = ({
                             removeLabel="حذف فایل"
                             invalidLabel="فایل معتبر نیست"
                             required
+                            uploading={`course-item-file-${item.id}` in uploadProgressByFieldId}
+                            uploadProgress={getFieldUploadPercent(
+                              uploadProgressByFieldId[`course-item-file-${item.id}`],
+                            )}
                           />
                         </div>
                       </Grid>

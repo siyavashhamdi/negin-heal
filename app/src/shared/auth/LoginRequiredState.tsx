@@ -4,6 +4,7 @@ import { type ReactElement, type ReactNode } from "react";
 import { Link as RouterLink, useLocation } from "react-router-dom";
 import { useMobileAppLayout } from "../../hooks/useMobileAppLayout";
 import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
+import { opaqueShellProps } from "../opaqueShell";
 import styles from "./LoginRequiredState.module.scss";
 
 type LoginRequiredStateProps = {
@@ -31,6 +32,7 @@ export const LoginRequiredState = ({
     <section
       className={[styles.panel, className].filter(Boolean).join(" ")}
       aria-labelledby="login-required-title"
+      {...opaqueShellProps}
     >
       <div className={styles.iconWrap} aria-hidden="true">
         {icon ?? <LoginRoundedIcon />}

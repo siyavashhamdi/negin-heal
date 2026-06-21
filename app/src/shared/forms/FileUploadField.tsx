@@ -11,7 +11,7 @@ import {
   type ReactElement,
   type SyntheticEvent,
 } from "react";
-import { Box, IconButton, Typography, useMediaQuery } from "@mui/material";
+import { Box, IconButton, LinearProgress, Typography, useMediaQuery } from "@mui/material";
 import {
   ArticleRounded,
   AudiotrackRounded,
@@ -34,6 +34,9 @@ import {
   buildPdfEmbedUrl,
   type ExistingFilePreview,
 } from "../../utils/fileAccessUrl.util";
+import {
+  validateSelectedUploadFile,
+} from "../../utils/fileUploadValidation.util";
 import { isEndUserRole } from "../../utils/authRole.util";
 import { useAuth } from "../../contexts/AuthContext";
 import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
@@ -68,6 +71,7 @@ interface FileUploadFieldProps {
   accept: string;
   allowedFormatsLabel: string;
   maxSizeLabel: string;
+  maxSizeBytes?: number;
   dropTitle: string;
   mobileDropTitle?: string;
   dropHint: string;
@@ -91,6 +95,9 @@ interface FileUploadFieldProps {
   previewDialogOpen?: boolean;
   onPreviewDialogOpen?: () => void;
   onPreviewDialogClose?: () => void;
+  uploading?: boolean;
+  uploadProgress?: number | null;
+  uploadingLabel?: string;
 }
 
 function formatFileSize(bytes: number): string {
@@ -157,6 +164,7 @@ const FileUploadField = ({
   accept,
   allowedFormatsLabel,
   maxSizeLabel,
+  maxSizeBytes,
   dropTitle,
   mobileDropTitle,
   dropHint,
@@ -179,6 +187,9 @@ const FileUploadField = ({
   previewDialogOpen,
   onPreviewDialogOpen,
   onPreviewDialogClose,
+  uploading = false,
+  uploadProgress = null,
+  uploadingLabel = "در حال آپلود...",
 }: FileUploadFieldProps): ReactElement => {
   const { user } = useAuth();
   const restrictDownloadForEndUser = useMemo(
@@ -449,15 +460,21 @@ const FileUploadField = ({
 
   const handlePick = useCallback(
     (nextFile: File | null) => {
-      if (nextFile != null && isExecutableFileType(nextFile.type, nextFile.name)) {
-        setHasPickError(true);
-        return;
+      if (nextFile != null) {
+        const validation = validateSelectedUploadFile(nextFile, {
+          accept,
+          maxSizeBytes: maxSizeBytes ?? Number.MAX_SAFE_INTEGER,
+        });
+        if (!validation.valid) {
+          setHasPickError(true);
+          return;
+        }
       }
 
       setHasPickError(false);
       onChange(nextFile);
     },
-    [onChange]
+    [accept, maxSizeBytes, onChange],
   );
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>): void => {
@@ -498,6 +515,9 @@ const FileUploadField = ({
   };
 
   const handleRemove = (event: SyntheticEvent): void => {
+    if (uploading) {
+      return;
+    }
     stopActionEvent(event);
     pauseMediaElement(inlineVideoRef.current);
     pauseMediaElement(inlineAudioRef.current);
@@ -589,6 +609,9 @@ const FileUploadField = ({
   };
 
   const handleDropzoneClick = (): void => {
+    if (uploading) {
+      return;
+    }
     if (readOnly) {
       if (hasFile) {
         openReadOnlyPreview();
@@ -603,6 +626,9 @@ const FileUploadField = ({
       return;
     }
     event.preventDefault();
+    if (uploading) {
+      return;
+    }
     if (readOnly) {
       if (hasFile) {
         openReadOnlyPreview();
@@ -691,6 +717,7 @@ const FileUploadField = ({
           hasPickError ? styles.dropzoneError : "",
           hasFile ? styles.dropzoneHasFile : "",
           isDragActive ? styles.dropzoneDragActive : "",
+          uploading ? styles.dropzoneUploading : "",
           fullWidth ? styles.dropzoneFullWidth : "",
           readOnly ? styles.dropzoneReadOnly : "",
           readOnly && hasFile && (supportsMaximize || supportsViewPopup)
@@ -797,7 +824,7 @@ const FileUploadField = ({
                         )}
                       </IconButton>
                     ) : null}
-                    {isPreviewActionEnabled("remove") ? (
+                    {isPreviewActionEnabled("remove") && !uploading ? (
                       <IconButton
                         size="small"
                         color="error"
@@ -813,6 +840,19 @@ const FileUploadField = ({
             </Box>
           </Box>
         )}
+        {uploading ? (
+          <Box className={styles.uploadProgressOverlay} aria-live="polite">
+            <LinearProgress
+              variant={uploadProgress == null ? "indeterminate" : "determinate"}
+              value={uploadProgress ?? 0}
+              className={styles.uploadProgressBar}
+            />
+            <Typography variant="caption" className={styles.uploadProgressLabel}>
+              {uploadingLabel}
+              {uploadProgress != null ? ` ${uploadProgress}%` : ""}
+            </Typography>
+          </Box>
+        ) : null}
       </Box>
       {!readOnly ? (
         <input

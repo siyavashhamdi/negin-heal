@@ -51,7 +51,7 @@ function SegmentFilterTabs<T extends string>({
     return tabsElement;
   }
 
-  return <div className={styles.pinnedShell}>{tabsElement}</div>;
+  return <div className={styles.pinnedShell} data-opaque-shell>{tabsElement}</div>;
 }
 
 export default SegmentFilterTabs;

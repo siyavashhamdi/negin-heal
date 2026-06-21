@@ -15,6 +15,8 @@ export interface SnackbarContextValue {
   showError: (message: string, duration?: number) => void;
   showWarning: (message: string, duration?: number) => void;
   showInfo: (message: string, duration?: number) => void;
+  updateUploadProgress: (percent: number) => void;
+  hideUploadProgress: () => void;
 }
 
 /**

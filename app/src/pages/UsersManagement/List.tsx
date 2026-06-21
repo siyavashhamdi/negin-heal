@@ -32,6 +32,10 @@ import {
 } from "../../utils/fileAccessUrl.util";
 import { hasFormChanges } from "../../utils/formChange.util";
 import { uploadFile } from "../../utils/fileUpload.util";
+import {
+  FILE_UPLOAD_POLICY,
+  FILE_UPLOAD_POLICY_MAX_SIZE_BYTES,
+} from "../../constants/fileUploadPolicies";
 import { USER_LIST_QUERY } from "../../graphql/queries/userList.query";
 import { USER_DETAIL_QUERY } from "../../graphql/queries/userDetail.query";
 import { useDebounce } from "../../hooks/useDebounce";
@@ -371,6 +375,7 @@ const UsersManagementList = (): ReactElement => {
   const [editForm, setEditForm] = useState<UserEditFormState | null>(null);
   const [initialEditForm, setInitialEditForm] = useState<UserEditFormState | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const appliedDialogKeyRef = useRef<string | null>(null);
 
   const hasAppliedFilters = useMemo(
     () => debouncedSearchQuery.trim() !== "" || hasManagedUsersColumnFiltersApplied(appliedFilters),
@@ -801,6 +806,7 @@ const UsersManagementList = (): ReactElement => {
     if (isSavingUser) {
       return;
     }
+    appliedDialogKeyRef.current = null;
     setEditTarget(null);
     setEditForm(null);
     setInitialEditForm(null);
@@ -821,24 +827,36 @@ const UsersManagementList = (): ReactElement => {
 
   useEffect(() => {
     if (isCreateRoute) {
+      if (appliedDialogKeyRef.current === "__create__") {
+        return;
+      }
+
       const nextForm = buildCreateFormState();
       setDialogMode("create");
       setEditTarget(null);
       setInitialEditForm(nextForm);
       setEditForm(nextForm);
       setAvatarFile(null);
+      appliedDialogKeyRef.current = "__create__";
       return;
     }
 
-    if (editUserRecord) {
-      const nextForm = buildEditFormState(editUserRecord);
-      setDialogMode("edit");
-      setEditTarget(editUserRecord);
-      setInitialEditForm(nextForm);
-      setEditForm(nextForm);
-      setAvatarFile(null);
+    if (!editUserRecord || !editUserId) {
+      return;
     }
-  }, [editUserRecord, isCreateRoute]);
+
+    if (appliedDialogKeyRef.current === editUserId) {
+      return;
+    }
+
+    const nextForm = buildEditFormState(editUserRecord);
+    setDialogMode("edit");
+    setEditTarget(editUserRecord);
+    setInitialEditForm(nextForm);
+    setEditForm(nextForm);
+    setAvatarFile(null);
+    appliedDialogKeyRef.current = editUserId;
+  }, [editUserId, editUserRecord, isCreateRoute]);
 
   const setEditField = <TField extends keyof UserEditFormState>(
     field: TField,
@@ -850,7 +868,11 @@ const UsersManagementList = (): ReactElement => {
   const uploadSelectedAvatar = async (file: File): Promise<string | null> => {
     setIsAvatarUploading(true);
     try {
-      const uploadedFile = await uploadFile(file);
+      const uploadedFile = await uploadFile(file, {
+        policy: FILE_UPLOAD_POLICY.AVATAR,
+        accept: "image/*",
+        maxSizeBytes: FILE_UPLOAD_POLICY_MAX_SIZE_BYTES.AVATAR,
+      });
       return getFileIdFromAccessUrl(uploadedFile.accessUrl);
     } catch {
       showError(t("pages.usersManagement.avatarUpload.error"));
@@ -1080,6 +1102,7 @@ const UsersManagementList = (): ReactElement => {
                   accept="image/*"
                   allowedFormatsLabel={t("pages.usersManagement.avatarUpload.allowedFormats")}
                   maxSizeLabel={t("pages.usersManagement.avatarUpload.maxSize")}
+                  maxSizeBytes={FILE_UPLOAD_POLICY_MAX_SIZE_BYTES.AVATAR}
                   dropTitle={t("pages.usersManagement.avatarUpload.dropTitle")}
                   mobileDropTitle={t("pages.usersManagement.avatarUpload.mobileDropTitle")}
                   dropHint={t("pages.usersManagement.avatarUpload.dropHint")}

@@ -857,10 +857,37 @@ export function MainLayout({
           <div className="main-layout__content">{children}</div>
         </div>
 
-        {showHeader ? (
-          <nav className="main-layout__mobile-bottom-nav" aria-label="منوی موبایل">
+        {showFooter ? <Footer /> : null}
+      </Container>
+
+      {showHeader ? (
+        <nav
+          className="main-layout__mobile-bottom-nav"
+          data-opaque-shell
+          aria-label="منوی موبایل"
+        >
+          <NavLink
+            to="/courses"
+            onClick={scrollToTopOnMobile}
+            className={({ isActive }) =>
+              `main-layout__mobile-bottom-item${
+                isActive ? " main-layout__mobile-bottom-item--active" : ""
+              }`
+            }
+          >
+            <Badge
+              badgeContent={coursesBadgeCount}
+              color="primary"
+              max={999}
+              className="main-layout__mobile-bottom-badge"
+            >
+              <MenuBookRoundedIcon />
+            </Badge>
+            <span>دوره‌ها</span>
+          </NavLink>
+          {isSuperAdmin ? (
             <NavLink
-              to="/courses"
+              to="/payments"
               onClick={scrollToTopOnMobile}
               className={({ isActive }) =>
                 `main-layout__mobile-bottom-item${
@@ -869,116 +896,93 @@ export function MainLayout({
               }
             >
               <Badge
-                badgeContent={coursesBadgeCount}
-                color="primary"
+                badgeContent={paymentBadgeCount}
+                color="warning"
                 max={999}
+                className="main-layout__mobile-bottom-badge main-layout__mobile-bottom-badge--payments"
+              >
+                <AccountBalanceWalletRoundedIcon />
+              </Badge>
+              <span>پرداخت‌ها</span>
+            </NavLink>
+          ) : null}
+          {authUser ? (
+            <NavLink
+              to="/notifications"
+              onClick={scrollToTopOnMobile}
+              className={({ isActive }) =>
+                `main-layout__mobile-bottom-item${
+                  isActive ? " main-layout__mobile-bottom-item--active" : ""
+                }`
+              }
+            >
+              <Badge
+                badgeContent={notificationBadgeCount}
+                color="error"
                 className="main-layout__mobile-bottom-badge"
               >
-                <MenuBookRoundedIcon />
+                <NotificationsNoneRoundedIcon />
               </Badge>
-              <span>دوره‌ها</span>
+              <span>اعلان‌ها</span>
             </NavLink>
-            {isSuperAdmin ? (
-              <NavLink
-                to="/payments"
-                onClick={scrollToTopOnMobile}
-                className={({ isActive }) =>
-                  `main-layout__mobile-bottom-item${
-                    isActive ? " main-layout__mobile-bottom-item--active" : ""
-                  }`
-                }
-              >
-                <Badge
-                  badgeContent={paymentBadgeCount}
-                  color="warning"
-                  max={999}
-                  className="main-layout__mobile-bottom-badge main-layout__mobile-bottom-badge--payments"
-                >
-                  <AccountBalanceWalletRoundedIcon />
-                </Badge>
-                <span>پرداخت‌ها</span>
-              </NavLink>
-            ) : null}
-            {authUser ? (
-              <NavLink
-                to="/notifications"
-                onClick={scrollToTopOnMobile}
-                className={({ isActive }) =>
-                  `main-layout__mobile-bottom-item${
-                    isActive ? " main-layout__mobile-bottom-item--active" : ""
-                  }`
-                }
-              >
-                <Badge
-                  badgeContent={notificationBadgeCount}
-                  color="error"
-                  className="main-layout__mobile-bottom-badge"
-                >
-                  <NotificationsNoneRoundedIcon />
-                </Badge>
-                <span>اعلان‌ها</span>
-              </NavLink>
-            ) : null}
-            <NavLink
-              to={supportNavPath}
-              onClick={scrollToTopOnMobile}
-              className={({ isActive }) =>
-                `main-layout__mobile-bottom-item${
-                  isActive ? " main-layout__mobile-bottom-item--active" : ""
-                }`
-              }
+          ) : null}
+          <NavLink
+            to={supportNavPath}
+            onClick={scrollToTopOnMobile}
+            className={({ isActive }) =>
+              `main-layout__mobile-bottom-item${
+                isActive ? " main-layout__mobile-bottom-item--active" : ""
+              }`
+            }
+          >
+            <span
+              className={[
+                "main-layout__mobile-bottom-icon-wrap",
+                supportBadgeCount > 0
+                  ? "main-layout__mobile-bottom-icon-wrap--attention"
+                  : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
             >
-              <span
-                className={[
-                  "main-layout__mobile-bottom-icon-wrap",
-                  supportBadgeCount > 0
-                    ? "main-layout__mobile-bottom-icon-wrap--attention"
-                    : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-              >
-                <ConfirmationNumberRoundedIcon />
-              </span>
-              <span>پشتیبانی</span>
-            </NavLink>
-            <NavLink
-              to="/profile"
-              onClick={scrollToTopOnMobile}
-              className={({ isActive }) =>
-                `main-layout__mobile-bottom-item${
-                  isActive ? " main-layout__mobile-bottom-item--active" : ""
-                }`
-              }
-            >
-              {authUser && avatarUrl ? (
-                <Avatar
-                  className="main-layout__mobile-bottom-avatar"
-                  src={avatarUrl}
-                  alt={userDisplayName}
-                />
-              ) : (
-                <PersonRoundedIcon />
-              )}
-              <span>پروفایل</span>
-            </NavLink>
-            <NavLink
-              to="/more"
-              onClick={scrollToTopOnMobile}
-              className={({ isActive }) =>
-                `main-layout__mobile-bottom-item${
-                  isActive ? " main-layout__mobile-bottom-item--active" : ""
-                }`
-              }
-            >
-              <MoreHorizRoundedIcon />
-              <span>سایر</span>
-            </NavLink>
-          </nav>
-        ) : null}
-
-        {showFooter ? <Footer /> : null}
-      </Container>
+              <ConfirmationNumberRoundedIcon />
+            </span>
+            <span>پشتیبانی</span>
+          </NavLink>
+          <NavLink
+            to="/profile"
+            onClick={scrollToTopOnMobile}
+            className={({ isActive }) =>
+              `main-layout__mobile-bottom-item${
+                isActive ? " main-layout__mobile-bottom-item--active" : ""
+              }`
+            }
+          >
+            {authUser && avatarUrl ? (
+              <Avatar
+                className="main-layout__mobile-bottom-avatar"
+                src={avatarUrl}
+                alt={userDisplayName}
+              />
+            ) : (
+              <PersonRoundedIcon />
+            )}
+            <span>پروفایل</span>
+          </NavLink>
+          <NavLink
+            to="/more"
+            onClick={scrollToTopOnMobile}
+            className={({ isActive }) =>
+              `main-layout__mobile-bottom-item${
+                isActive ? " main-layout__mobile-bottom-item--active" : ""
+              }`
+            }
+          >
+            <MoreHorizRoundedIcon />
+            <span>سایر</span>
+          </NavLink>
+        </nav>
+      ) : null}
     </Box>
   );
 }

@@ -18,6 +18,10 @@ import {
 } from "../../utils/browserNotification.util";
 import { getFileIdFromAccessUrl } from "../../utils/fileAccessUrl.util";
 import { uploadFile, type FileUploadResult } from "../../utils/fileUpload.util";
+import {
+  FILE_UPLOAD_POLICY,
+  FILE_UPLOAD_POLICY_MAX_SIZE_BYTES,
+} from "../../constants/fileUploadPolicies";
 import styles from "./styles/dashboard.module.scss";
 
 type UserSendSampleEmailMutationResponse = {
@@ -35,7 +39,8 @@ const PUSH_RETRY_DELAY_MS = 30_000;
 
 const Dashboard = (): ReactElement => {
   const { t } = useTranslation();
-  const { showError, showSuccess, showWarning } = useSnackbar();
+  const { showError, showSuccess, showWarning, updateUploadProgress, hideUploadProgress } =
+    useSnackbar();
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [sampleEmailTo, setSampleEmailTo] = useState<string>("");
@@ -94,8 +99,14 @@ const Dashboard = (): ReactElement => {
     }
 
     setUploadLoading(true);
+    updateUploadProgress(0);
     try {
-      const uploadedFile = await uploadFile(selectedFile);
+      const uploadedFile = await uploadFile(selectedFile, {
+        policy: FILE_UPLOAD_POLICY.ANY,
+        accept: "*/*",
+        maxSizeBytes: FILE_UPLOAD_POLICY_MAX_SIZE_BYTES.ANY,
+        onProgress: ({ percent }) => updateUploadProgress(percent),
+      });
       setLastUpload(uploadedFile);
       setSelectedFile(null);
       showSuccess(t("pages.dashboard.uploader.success"));
@@ -103,6 +114,7 @@ const Dashboard = (): ReactElement => {
       showError("آپلود فایل انجام نشد.");
     } finally {
       setUploadLoading(false);
+      hideUploadProgress();
     }
   };
 
@@ -274,6 +286,7 @@ const Dashboard = (): ReactElement => {
                 accept="*/*"
                 allowedFormatsLabel={t("pages.dashboard.uploader.allowedFormats")}
                 maxSizeLabel={t("pages.dashboard.uploader.maxSize")}
+                maxSizeBytes={FILE_UPLOAD_POLICY_MAX_SIZE_BYTES.ANY}
                 dropTitle={t("pages.dashboard.uploader.dropTitle")}
                 dropHint={t("pages.dashboard.uploader.dropHint")}
                 removeLabel={t("pages.dashboard.uploader.removeLabel")}

@@ -20,6 +20,11 @@ import {
   FileAccessUrlDescriptor,
 } from "./file-access-url.util";
 import { FileUploadGqlResponse } from "./graphql/responses";
+import {
+  FILE_UPLOAD_POLICIES,
+  type FileUploadPolicyRule,
+} from "./file-upload-policy.constants";
+import { assertFileAllowedByPolicy } from "./file-upload-policy.util";
 import { isExecutableFileType } from "./executable-file-type.util";
 import { ImageCompressionService } from "./image-compression.service";
 
@@ -79,6 +84,7 @@ export class FileService {
     mimeType: string;
     sizeBytes: number;
     stream: Readable;
+    uploadPolicy?: FileUploadPolicyRule;
   }): Promise<StoredFileUploadResult> {
     if (!params.name.trim()) {
       throw new BadRequestException("File name is required");
@@ -92,12 +98,25 @@ export class FileService {
       throw new BadRequestException("Executable files are not allowed");
     }
 
+    const uploadPolicy =
+      params.uploadPolicy ?? FILE_UPLOAD_POLICIES.ANY;
+
+    assertFileAllowedByPolicy({
+      mimeType: params.mimeType,
+      fileName: params.name,
+      sizeBytes: params.sizeBytes,
+      policy: uploadPolicy,
+    });
+
     await this.ensureBucket();
 
     const uploadedAt = new Date();
     const bucket = env.MINIO_BUCKET;
     const objectKey = this.buildObjectName(params.name, uploadedAt);
-    const uploadPayload = await this.prepareUploadPayload(params);
+    const uploadPayload = await this.prepareUploadPayload({
+      ...params,
+      uploadPolicy,
+    });
 
     await this.minioClient.putObject(
       bucket,
@@ -826,6 +845,7 @@ export class FileService {
     mimeType: string;
     sizeBytes: number;
     stream: Readable;
+    uploadPolicy: FileUploadPolicyRule;
   }): Promise<{
     body: Buffer | Readable;
     mimeType: string;
@@ -845,11 +865,21 @@ export class FileService {
       };
     }
 
-    const maxSizeBytes = SecurityConfig.getMaxRequestSize();
+    const maxSizeBytes = Math.min(
+      SecurityConfig.getMaxRequestSize(),
+      params.uploadPolicy.maxSizeBytes,
+    );
     const inputBuffer = await this.readStreamToBuffer(
       params.stream,
       maxSizeBytes,
     );
+
+    assertFileAllowedByPolicy({
+      mimeType: params.mimeType,
+      fileName: params.name,
+      sizeBytes: inputBuffer.length,
+      policy: params.uploadPolicy,
+    });
     const compressionResult = await this.imageCompressionService.compress(
       inputBuffer,
       params.mimeType,

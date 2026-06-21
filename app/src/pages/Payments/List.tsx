@@ -62,6 +62,10 @@ import FileUploadField from "../../shared/forms/FileUploadField";
 import { getFileIdFromAccessUrl } from "../../utils/fileAccessUrl.util";
 import { hasFormChanges } from "../../utils/formChange.util";
 import { uploadFile } from "../../utils/fileUpload.util";
+import {
+  FILE_UPLOAD_POLICY,
+  FILE_UPLOAD_POLICY_MAX_SIZE_BYTES,
+} from "../../constants/fileUploadPolicies";
 import JalaliDateFilterField from "../../shared/table/JalaliDateFilterField";
 import {
   type CourseListQuery,
@@ -1127,7 +1131,11 @@ const PaymentsList = (): ReactElement => {
   const uploadManualPaymentEvidence = async (file: File): Promise<string | null> => {
     setIsManualPaymentFileUploading(true);
     try {
-      const uploadedFile = await uploadFile(file);
+      const uploadedFile = await uploadFile(file, {
+        policy: FILE_UPLOAD_POLICY.PAYMENT_EVIDENCE,
+        accept: "image/*,application/pdf",
+        maxSizeBytes: FILE_UPLOAD_POLICY_MAX_SIZE_BYTES.PAYMENT_EVIDENCE,
+      });
       return getFileIdFromAccessUrl(uploadedFile.accessUrl);
     } catch {
       showError("آپلود فایل پرداخت انجام نشد.");
@@ -1529,7 +1537,8 @@ const PaymentsList = (): ReactElement => {
                     onChange={setManualPaymentEvidenceFile}
                     accept="image/*,application/pdf"
                     allowedFormatsLabel="تصویر یا PDF"
-                    maxSizeLabel="برای رسید یا مستند پرداخت"
+                    maxSizeLabel="حداکثر ۱۰ مگابایت"
+                    maxSizeBytes={FILE_UPLOAD_POLICY_MAX_SIZE_BYTES.PAYMENT_EVIDENCE}
                     dropTitle="فایل پرداخت را انتخاب کنید"
                     mobileDropTitle="انتخاب فایل پرداخت"
                     dropHint=""

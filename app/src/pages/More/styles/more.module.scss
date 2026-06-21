@@ -1,4 +1,5 @@
 @use "../../../styles/variables" as variables;
+@use "../../../styles/mixins" as mixins;
 
 .page {
   display: grid;
@@ -8,14 +9,8 @@
 .hero {
   padding: 1rem;
   border-radius: 1.15rem;
-  background:
-    radial-gradient(
-      circle at top left,
-      color-mix(in srgb, var(--app-layout-glow) 14%, transparent),
-      transparent 58%
-    ),
-    color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
-  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  border: 0.0625rem solid rgba(61, 44, 53, 0.1);
+  @include mixins.surface-hero(top left);
 }
 
 .hero p,
@@ -46,8 +41,8 @@
   gap: 0.75rem;
   padding: 0.85rem;
   border-radius: 1rem;
-  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
-  background: color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+  border: 0.0625rem solid rgba(61, 44, 53, 0.1);
+  @include mixins.surface-card;
 }
 
 .themeIcon {
@@ -137,8 +132,8 @@
   gap: 0;
   overflow: hidden;
   border-radius: 1rem;
-  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
-  background: color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+  border: 0.0625rem solid rgba(61, 44, 53, 0.1);
+  @include mixins.surface-card;
 }
 
 .preferenceRow {
@@ -318,14 +313,20 @@
   gap: 0.75rem;
   padding: 0.9rem;
   border-radius: 1rem;
-  border: 0.0625rem solid color-mix(in srgb, #2563eb 24%, var(--app-surface-border));
-  background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, #2563eb 12%, transparent),
-      transparent 52%
-    ),
-    color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+  border: 0.0625rem solid rgba(37, 99, 235, 0.24);
+  background-color: #ffffff;
+  background-image: radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 52%);
+
+  @supports (background: color-mix(in srgb, #ffffff 50%, #000000)) {
+    border-color: color-mix(in srgb, #2563eb 24%, var(--app-surface-border));
+    background:
+      radial-gradient(
+        circle at top right,
+        color-mix(in srgb, #2563eb 12%, transparent),
+        transparent 52%
+      ),
+      color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+  }
 }
 
 .iosInstallIcon {
@@ -557,9 +558,9 @@
   gap: 0.4rem;
   min-block-size: 6.2rem;
   padding-inline: 0.45rem;
-  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  border: 0.0625rem solid rgba(61, 44, 53, 0.1);
   border-radius: 1rem;
-  background: color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+  @include mixins.surface-card;
   color: var(--text-primary);
   font: inherit;
   font-weight: variables.$font-weight-semibold;
@@ -628,16 +629,23 @@ a.linkCard {
   display: grid;
   gap: 1rem;
   padding: clamp(1rem, 3vw, 1.4rem);
-  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  border: 0.0625rem solid rgba(61, 44, 53, 0.1);
   border-radius: 1.2rem;
-  background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, #7c3aed 12%, transparent),
-      transparent 42%
-    ),
-    color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
-  box-shadow: 0 0.8rem 2rem color-mix(in srgb, #0f172a 5%, transparent);
+  background-color: #ffffff;
+  background-image: radial-gradient(circle at top right, rgba(124, 58, 237, 0.12), transparent 42%);
+  box-shadow: 0 0.8rem 2rem rgba(15, 23, 42, 0.05);
+
+  @supports (background: color-mix(in srgb, #ffffff 50%, #000000)) {
+    border-color: color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+    background:
+      radial-gradient(
+        circle at top right,
+        color-mix(in srgb, #7c3aed 12%, transparent),
+        transparent 42%
+      ),
+      color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+    box-shadow: 0 0.8rem 2rem color-mix(in srgb, #0f172a 5%, transparent);
+  }
 }
 
 .globalAnouncementIcon {
@@ -750,16 +758,23 @@ a.linkCard {
   display: grid;
   gap: 1rem;
   padding: clamp(1rem, 3vw, 1.35rem);
-  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  border: 0.0625rem solid rgba(61, 44, 53, 0.1);
   border-radius: 1.2rem;
-  background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, #1976d2 11%, transparent),
-      transparent 42%
-    ),
-    color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
-  box-shadow: 0 0.8rem 2rem color-mix(in srgb, #0f172a 5%, transparent);
+  background-color: #ffffff;
+  background-image: radial-gradient(circle at top right, rgba(25, 118, 210, 0.11), transparent 42%);
+  box-shadow: 0 0.8rem 2rem rgba(15, 23, 42, 0.05);
+
+  @supports (background: color-mix(in srgb, #ffffff 50%, #000000)) {
+    border-color: color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+    background:
+      radial-gradient(
+        circle at top right,
+        color-mix(in srgb, #1976d2 11%, transparent),
+        transparent 42%
+      ),
+      color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+    box-shadow: 0 0.8rem 2rem color-mix(in srgb, #0f172a 5%, transparent);
+  }
 }
 
 .aboutHeader {
@@ -886,7 +901,7 @@ body[data-theme="dark"] {
   .linkCard,
   .globalAnouncementPanel,
   .aboutPanel {
-    background: color-mix(in srgb, var(--app-surface-bg) 86%, #0f172a);
+    @include mixins.surface-panel-dark;
   }
 
   .bugReportCard {

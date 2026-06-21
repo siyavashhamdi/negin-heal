@@ -1,4 +1,5 @@
 @use "../../styles/variables" as variables;
+@use "../../styles/mixins" as mixins;
 
 .panel {
   display: grid;
@@ -8,16 +9,22 @@
   max-width: 28rem;
   margin-inline: auto;
   padding: 2.25rem 1.5rem;
-  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  border: 0.0625rem solid rgba(61, 44, 53, 0.1);
   border-radius: 1.25rem;
-  background:
-    radial-gradient(
-      circle at top center,
-      color-mix(in srgb, var(--app-layout-glow) 16%, transparent),
-      transparent 62%
-    ),
-    color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+  background-color: #ffffff;
+  background-image: radial-gradient(circle at top center, rgba(224, 139, 168, 0.16), transparent 62%);
   text-align: center;
+
+  @supports (background: color-mix(in srgb, #ffffff 50%, #000000)) {
+    border-color: color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+    background:
+      radial-gradient(
+        circle at top center,
+        color-mix(in srgb, var(--app-layout-glow) 16%, transparent),
+        transparent 62%
+      ),
+      color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+  }
 }
 
 .iconWrap {
@@ -72,12 +79,17 @@
 
 body[data-theme="dark"] {
   .panel {
-    background:
-      radial-gradient(
-        circle at top center,
-        color-mix(in srgb, var(--app-layout-glow) 18%, transparent),
-        transparent 62%
-      ),
-      color-mix(in srgb, var(--app-surface-bg) 86%, #0f172a);
+    @include mixins.surface-panel-dark;
+    background-image: radial-gradient(circle at top center, rgba(56, 189, 248, 0.18), transparent 62%);
+
+    @supports (background: color-mix(in srgb, #172033 86%, #0f172a)) {
+      background:
+        radial-gradient(
+          circle at top center,
+          color-mix(in srgb, var(--app-layout-glow) 18%, transparent),
+          transparent 62%
+        ),
+        color-mix(in srgb, var(--app-surface-bg) 86%, #0f172a);
+    }
   }
 }

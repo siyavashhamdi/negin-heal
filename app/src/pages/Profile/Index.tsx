@@ -26,12 +26,21 @@ import {
   type FileAccessUrl,
 } from "../../utils/fileAccessUrl.util";
 import { uploadFile } from "../../utils/fileUpload.util";
+import {
+  resolveUploadValidationErrorMessage,
+  validateSelectedUploadFile,
+} from "../../utils/fileUploadValidation.util";
+import {
+  FILE_UPLOAD_POLICY,
+  FILE_UPLOAD_POLICY_MAX_SIZE_BYTES,
+} from "../../constants/fileUploadPolicies";
 import { hasFormChanges } from "../../utils/formChange.util";
 import { arePasswordRulesPassed } from "../../utils/passwordPolicy.util";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import ModalFooterActions from "../../shared/crud/ModalFooterActions";
 import { APP_SHELL_ROUTES, isProfileAuthRoute } from "../../routing/app-shell-routes";
+import { opaqueShellProps } from "../../shared/opaqueShell";
 import { ProfileAuthRoutes } from "./ProfileAuthRoutes";
 import styles from "./styles/profile.module.scss";
 import AppTooltip from "../../shared/AppTooltip";
@@ -315,15 +324,25 @@ const AuthenticatedProfile = (): ReactElement => {
       return;
     }
 
-    if (!file.type.startsWith("image/")) {
-      showError("لطفا یک فایل تصویر انتخاب کنید.");
+    const validation = validateSelectedUploadFile(file, {
+      accept: "image/*",
+      maxSizeBytes: FILE_UPLOAD_POLICY_MAX_SIZE_BYTES.AVATAR,
+    });
+    if (!validation.valid) {
+      showError(
+        resolveUploadValidationErrorMessage(validation.reason, "فایل تصویر معتبر نیست."),
+      );
       return;
     }
 
     setIsAvatarUploading(true);
     let avatarFileId: string | null = null;
     try {
-      const uploadResult = await uploadFile(file);
+      const uploadResult = await uploadFile(file, {
+        policy: FILE_UPLOAD_POLICY.AVATAR,
+        accept: "image/*",
+        maxSizeBytes: FILE_UPLOAD_POLICY_MAX_SIZE_BYTES.AVATAR,
+      });
       avatarFileId = getFileIdFromAccessUrl(uploadResult.accessUrl);
     } catch {
       showError("آپلود تصویر پروفایل انجام نشد.");
@@ -432,7 +451,7 @@ const AuthenticatedProfile = (): ReactElement => {
 
   return (
     <section className={styles.page}>
-      <div className={styles.hero}>
+      <div className={styles.hero} {...opaqueShellProps}>
         <div className={styles.avatarWrap}>
           <Avatar className={styles.avatar} src={avatarUrl ?? undefined} alt={displayName}>
             {userInitial}
@@ -492,14 +511,14 @@ const AuthenticatedProfile = (): ReactElement => {
       </div>
 
       <div className={styles.cardGrid}>
-        <button type="button" className={styles.actionCard} onClick={openEditDialog}>
+        <button type="button" className={styles.actionCard} {...opaqueShellProps} onClick={openEditDialog}>
           <PersonRoundedIcon />
           <span>
             <strong>ویرایش اطلاعات کاربری</strong>
             <small>نام، اطلاعات تماس و مشخصات پروفایل</small>
           </span>
         </button>
-        <button type="button" className={styles.actionCard} onClick={openPasswordDialog}>
+        <button type="button" className={styles.actionCard} {...opaqueShellProps} onClick={openPasswordDialog}>
           <PasswordRoundedIcon />
           <span>
             <strong>تغییر رمز عبور</strong>

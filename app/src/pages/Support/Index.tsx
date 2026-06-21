@@ -23,6 +23,7 @@ import {
   type SupportContactConfigQuery,
 } from "./support-contact.api";
 import styles from "./styles/support.module.scss";
+import { opaqueShellProps } from "../../shared/opaqueShell";
 
 type ChannelIcon = ComponentType<{ className?: string }>;
 
@@ -80,7 +81,7 @@ const Support = (): ReactElement => {
 
   return (
     <section className={styles.page} aria-busy={loading}>
-      <div className={styles.hero}>
+      <div className={styles.hero} {...opaqueShellProps}>
         <div className={styles.heroContent}>
           <div className={styles.heroIcon}>
             <HelpCenterRoundedIcon />
@@ -113,7 +114,7 @@ const Support = (): ReactElement => {
       {hasMainCards ? (
         <div className={styles.grid}>
           {hasFaqCard ? (
-            <button type="button" className={styles.card} onClick={() => navigate("/support/faq")}>
+            <button type="button" className={styles.card} {...opaqueShellProps} onClick={() => navigate("/support/faq")}>
               <span className={styles.cardIcon}>
                 <HelpCenterRoundedIcon />
               </span>
@@ -131,6 +132,7 @@ const Support = (): ReactElement => {
             <button
               type="button"
               className={`${styles.card} ${styles.cardPrimary}`}
+              {...opaqueShellProps}
               onClick={() => openChannel(ticketChannel)}
             >
               <span className={styles.cardIcon}>
@@ -174,6 +176,7 @@ const Support = (): ReactElement => {
                   key={`${channel.type}-${channel.href}`}
                   type="button"
                   className={styles.card}
+                  {...opaqueShellProps}
                   onClick={() => openChannel(channel)}
                 >
                   <span className={styles.cardIcon}>
@@ -199,7 +202,7 @@ const Support = (): ReactElement => {
       ) : null}
 
       {quickTips.length > 0 ? (
-        <div className={styles.supportPanel}>
+        <div className={styles.supportPanel} {...opaqueShellProps}>
           {hasTipsSectionHeading ? (
             <div className={styles.panelIntro}>
               <TipsAndUpdatesRoundedIcon />

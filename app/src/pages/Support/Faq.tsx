@@ -19,6 +19,7 @@ import {
   type SupportFaqSection,
 } from "./support-contact.api";
 import styles from "./styles/support.module.scss";
+import { opaqueShellProps } from "../../shared/opaqueShell";
 
 const SECTION_ICONS: Record<string, ComponentType<{ className?: string }>> = {
   account: AccountCircleRoundedIcon,
@@ -102,7 +103,7 @@ const SupportFaq = (): ReactElement => {
 
   return (
     <section className={styles.page} aria-busy={loading}>
-      <div className={styles.hero}>
+      <div className={styles.hero} {...opaqueShellProps}>
         <div className={styles.heroContent}>
           <div className={styles.heroIcon}>
             <HelpCenterRoundedIcon />
@@ -115,7 +116,7 @@ const SupportFaq = (): ReactElement => {
         </div>
       </div>
 
-      <div className={styles.faqToolbar}>
+      <div className={styles.faqToolbar} {...opaqueShellProps}>
         <label className={styles.faqSearch}>
           <SearchRoundedIcon />
           {hasText(faqPage.searchLabel) ? <span>{faqPage.searchLabel}</span> : null}
@@ -142,7 +143,7 @@ const SupportFaq = (): ReactElement => {
           {filteredSections.map((section) => {
             const SectionIcon = SECTION_ICONS[section.id] ?? HelpCenterRoundedIcon;
             return (
-              <section key={section.id} className={styles.faqSection}>
+              <section key={section.id} className={styles.faqSection} {...opaqueShellProps}>
                 <div className={styles.faqSectionHeader}>
                   <span className={styles.faqSectionIcon}>
                     <SectionIcon />
@@ -188,7 +189,7 @@ const SupportFaq = (): ReactElement => {
           })}
         </div>
       ) : (
-        <div className={styles.faqEmpty}>
+        <div className={styles.faqEmpty} {...opaqueShellProps}>
           <HelpCenterRoundedIcon />
           {hasText(faqPage.emptyTitle) ? <h3>{faqPage.emptyTitle}</h3> : null}
           {hasText(faqPage.emptyDescription) ? <p>{faqPage.emptyDescription}</p> : null}

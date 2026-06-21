@@ -12,6 +12,9 @@ import {
   Typography,
 } from "@mui/material";
 import FileUploadField from "../../../shared/forms/FileUploadField";
+import {
+  FILE_UPLOAD_POLICY_MAX_SIZE_BYTES,
+} from "../../../constants/fileUploadPolicies";
 import type { ExistingFilePreview } from "../../../utils/fileAccessUrl.util";
 import CourseTagInput from "../CourseTagInput";
 import type { DiscountKind } from "./types";
@@ -41,6 +44,8 @@ type MainInfoSectionProps = {
   readonly onDiscountValueChange: (value: string) => void;
   readonly formatIntegerWithThousands: (value: string) => string;
   readonly sanitizePercentageValue: (value: string) => string;
+  readonly uploading?: boolean;
+  readonly uploadProgress?: number | null;
 };
 
 const MainInfoSection = ({
@@ -67,6 +72,8 @@ const MainInfoSection = ({
   onDiscountValueChange,
   formatIntegerWithThousands,
   sanitizePercentageValue,
+  uploading = false,
+  uploadProgress = null,
 }: MainInfoSectionProps): ReactElement => (
   <section className={styles.section}>
     <Typography className={styles.sectionTitle}>اطلاعات اصلی</Typography>
@@ -119,12 +126,15 @@ const MainInfoSection = ({
             accept="image/*"
             allowedFormatsLabel="فرمت مجاز: تصویر"
             maxSizeLabel="حداکثر: ۲۰MB"
+            maxSizeBytes={FILE_UPLOAD_POLICY_MAX_SIZE_BYTES.COURSE_COVER}
             dropTitle="انتخاب یا رها کردن کاور"
             mobileDropTitle="انتخاب کاور"
             dropHint="هنگام ایجاد دوره آپلود می‌شود"
             mobileDropHint="هنگام ایجاد دوره آپلود می‌شود"
             removeLabel="حذف فایل"
             invalidLabel="فایل انتخاب شده معتبر نیست"
+            uploading={uploading}
+            uploadProgress={uploadProgress}
           />
         </div>
       </Grid>

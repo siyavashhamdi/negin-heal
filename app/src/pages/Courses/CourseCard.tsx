@@ -105,7 +105,14 @@ const CourseCard = ({
     item.releaseType === "GRADUAL" ? styles.releaseGradual : styles.releaseImmediate;
   const statusChipClass = item.isActive ? styles.statusActive : styles.statusInactive;
   const tagRowRef = useRef<HTMLDivElement>(null);
-  const tagDragStateRef = useRef({ pointerId: -1, startX: 0, startScrollLeft: 0 });
+  const tagDragStateRef = useRef({
+    pointerId: -1,
+    startX: 0,
+    startY: 0,
+    startScrollLeft: 0,
+    isHorizontalDrag: false,
+    decided: false,
+  });
   const discountedPrice = getDiscountedPrice(item);
   const discountLabel = discountedPrice == null ? null : formatDiscountLabel(item);
 
@@ -119,7 +126,21 @@ const CourseCard = ({
     tagDragStateRef.current = {
       pointerId: event.pointerId,
       startX: event.clientX,
+      startY: event.clientY,
       startScrollLeft: tagRow.scrollLeft,
+      isHorizontalDrag: false,
+      decided: false,
+    };
+  };
+
+  const resetTagDragState = (): void => {
+    tagDragStateRef.current = {
+      pointerId: -1,
+      startX: 0,
+      startY: 0,
+      startScrollLeft: 0,
+      isHorizontalDrag: false,
+      decided: false,
     };
   };
 
@@ -129,6 +150,29 @@ const CourseCard = ({
     if (!tagRow || dragState.pointerId !== event.pointerId) {
       return;
     }
+
+    const deltaX = Math.abs(event.clientX - dragState.startX);
+    const deltaY = Math.abs(event.clientY - dragState.startY);
+
+    if (!dragState.decided) {
+      if (deltaX < 6 && deltaY < 6) {
+        return;
+      }
+
+      dragState.decided = true;
+      dragState.isHorizontalDrag = deltaX > deltaY;
+
+      if (!dragState.isHorizontalDrag) {
+        tagRow.releasePointerCapture(event.pointerId);
+        resetTagDragState();
+        return;
+      }
+    }
+
+    if (!dragState.isHorizontalDrag) {
+      return;
+    }
+
     event.preventDefault();
     event.stopPropagation();
     tagRow.scrollLeft = dragState.startScrollLeft + dragState.startX - event.clientX;
@@ -141,7 +185,7 @@ const CourseCard = ({
     }
     event.stopPropagation();
     tagRow?.releasePointerCapture(event.pointerId);
-    tagDragStateRef.current = { pointerId: -1, startX: 0, startScrollLeft: 0 };
+    resetTagDragState();
   };
 
   return (

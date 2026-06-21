@@ -1,4 +1,5 @@
 @use "../../../styles/variables" as variables;
+@use "../../../styles/mixins" as mixins;
 
 $layout-lg: 75rem;
 $layout-md: 62rem;
@@ -62,10 +63,10 @@ $layout-sm: variables.$breakpoint-sm;
 }
 
 .filterPanel {
-  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 70%, transparent);
+  border: 0.0625rem solid rgba(61, 44, 53, 0.1);
   border-radius: 1rem !important;
   padding: 0.85rem;
-  background: color-mix(in srgb, var(--app-surface-bg) 96%, #ffffff);
+  @include mixins.surface-bg(color-mix(in srgb, var(--app-surface-bg) 96%, #ffffff));
 }
 
 .searchSection {
@@ -191,17 +192,8 @@ $layout-sm: variables.$breakpoint-sm;
     z-index: 5;
     top: 0.65rem;
     padding: 0.68rem;
-    border-color: color-mix(in srgb, var(--app-surface-border) 76%, transparent);
     border-radius: 1.35rem !important;
-    background:
-      linear-gradient(
-        135deg,
-        color-mix(in srgb, var(--app-surface-bg) 92%, #ffffff) 0%,
-        color-mix(in srgb, var(--app-surface-bg) 82%, var(--app-layout-glow) 10%) 100%
-      );
-    box-shadow: 0 1rem 2.5rem color-mix(in srgb, #0f172a 18%, transparent);
-    backdrop-filter: blur(1rem);
-    -webkit-backdrop-filter: blur(1rem);
+    @include mixins.mobile-floating-shell;
   }
 
   .filterPanel > * {
@@ -508,16 +500,7 @@ body[data-theme="dark"] {
   }
 
   .filterPanel {
-    border-color: color-mix(in srgb, #94a3b8 18%, transparent);
-    background:
-      linear-gradient(
-        135deg,
-        color-mix(in srgb, var(--app-surface-bg) 90%, #1e2b45) 0%,
-        color-mix(in srgb, #1e3a5f 28%, var(--app-surface-bg)) 100%
-      );
-    box-shadow:
-      0 0.1rem 0.18rem rgba(0, 0, 0, 0.24),
-      inset 0 0.0625rem 0 rgba(255, 255, 255, 0.08);
+    @include mixins.dark-floating-shell-gradient;
   }
 
   .filterPanelCollapsed {
