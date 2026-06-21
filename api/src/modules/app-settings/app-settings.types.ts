@@ -5,6 +5,7 @@ export type StoredAppSettingJsonValue = object | string | number | boolean;
 export type SupportContactChannelType =
   | "WHATSAPP"
   | "TELEGRAM"
+  | "INSTAGRAM"
   | "TICKET"
   | "EMAIL"
   | "PHONE";
@@ -145,6 +146,7 @@ export type StoredSupportContactConfigValue = {
   responseTimeLabel?: unknown;
   whatsapp?: unknown;
   telegram?: unknown;
+  instagram?: unknown;
   faqTitle?: unknown;
   faqDescription?: unknown;
   ticketTitle?: unknown;

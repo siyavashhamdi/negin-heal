@@ -54,6 +54,7 @@ const supportMainFields: readonly TextFieldConfig<keyof SupportContactForm>[] = 
 const supportChannelFields: readonly TextFieldConfig<keyof SupportContactForm>[] = [
   { key: "whatsapp", label: "واتساپ", type: "url" },
   { key: "telegram", label: "تلگرام", type: "url" },
+  { key: "instagram", label: "اینستاگرام", type: "url" },
   { key: "email", label: "ایمیل", type: "email" },
   { key: "phone", label: "تلفن" },
 ];

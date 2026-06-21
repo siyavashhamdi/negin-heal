@@ -103,16 +103,20 @@ const SupportFaq = (): ReactElement => {
 
   return (
     <section className={styles.page} aria-busy={loading}>
-      <div className={styles.hero} {...opaqueShellProps}>
-        <div className={styles.heroContent}>
-          <div className={styles.heroIcon}>
-            <HelpCenterRoundedIcon />
-          </div>
-          <div className={styles.heroText}>
-            {hasText(faqPage.eyebrow) ? <p>{faqPage.eyebrow}</p> : null}
-            {hasText(faqPage.heading) ? <h2>{faqPage.heading}</h2> : null}
-            {hasText(faqPage.subtitle) ? <span>{faqPage.subtitle}</span> : null}
-          </div>
+      <div className={`${styles.hero} ${styles.faqHero}`} {...opaqueShellProps}>
+        <div className={styles.faqHeroContent}>
+          {hasText(faqPage.eyebrow) ? <p className={styles.faqHeroEyebrow}>{faqPage.eyebrow}</p> : null}
+          {hasText(faqPage.heading) ? (
+            <div className={styles.faqHeroHeading}>
+              <span className={styles.faqHeroIcon}>
+                <HelpCenterRoundedIcon />
+              </span>
+              <h2>{faqPage.heading}</h2>
+            </div>
+          ) : null}
+          {hasText(faqPage.subtitle) ? (
+            <span className={styles.faqHeroSubtitle}>{faqPage.subtitle}</span>
+          ) : null}
         </div>
       </div>
 
@@ -145,13 +149,15 @@ const SupportFaq = (): ReactElement => {
             return (
               <section key={section.id} className={styles.faqSection} {...opaqueShellProps}>
                 <div className={styles.faqSectionHeader}>
-                  <span className={styles.faqSectionIcon}>
-                    <SectionIcon />
-                  </span>
-                  <div>
+                  <div className={styles.faqSectionHeading}>
+                    <span className={styles.faqSectionIcon}>
+                      <SectionIcon />
+                    </span>
                     <h3>{section.title}</h3>
-                    {hasText(section.description) ? <p>{section.description}</p> : null}
                   </div>
+                  {hasText(section.description) ? (
+                    <p className={styles.faqSectionDescription}>{section.description}</p>
+                  ) : null}
                 </div>
 
                 <div className={styles.faqItems}>

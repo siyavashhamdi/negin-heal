@@ -158,6 +158,20 @@ type ManualPaymentCourseOption = {
   readonly row: CourseListItemRow;
 };
 
+const LATIN_TEXT_FILTER_KEYS = new Set<keyof CoursePaymentListFilters>([
+  "id",
+  "userId",
+  "courseId",
+  "username",
+  "userEmail",
+  "userPhone",
+  "paymentReference",
+  "transactionId",
+  "couponId",
+  "couponCode",
+  "uploadedReceiptFileId",
+]);
+
 const COLUMN_WIDTH_BY_ID: Record<string, string> = {
   id: "14rem",
   userId: "14rem",
@@ -1292,17 +1306,29 @@ const PaymentsList = (): ReactElement => {
     });
   };
 
-  const renderTextFilter = (key: keyof CoursePaymentListFilters, label: string): ReactElement => (
-    <TextField
-      size="small"
-      fullWidth
-      aria-label={label}
-      value={filters[key]}
-      onChange={(event) =>
-        setFilterValue(key, event.target.value as CoursePaymentListFilters[typeof key])
-      }
-    />
-  );
+  const renderTextFilter = (key: keyof CoursePaymentListFilters, label: string): ReactElement => {
+    const latin = LATIN_TEXT_FILTER_KEYS.has(key);
+
+    return (
+      <TextField
+        size="small"
+        fullWidth
+        aria-label={label}
+        value={filters[key]}
+        onChange={(event) =>
+          setFilterValue(key, event.target.value as CoursePaymentListFilters[typeof key])
+        }
+        inputProps={
+          latin
+            ? {
+              className: styles.latinInput,
+              dir: "ltr",
+            }
+            : undefined
+        }
+      />
+    );
+  };
 
   const renderSelectFilter = <TValue extends string>(
     key: keyof CoursePaymentListFilters,

@@ -1,6 +1,7 @@
 export type SupportContactChannelType =
   | "WHATSAPP"
   | "TELEGRAM"
+  | "INSTAGRAM"
   | "TICKET"
   | "EMAIL"
   | "PHONE";

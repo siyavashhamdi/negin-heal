@@ -739,6 +739,15 @@ $hairline: 0.0625rem solid;
   flex: 1 1 auto;
 }
 
+.main-layout--support-page .main-layout__content {
+  margin-top: 0.35rem;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
 .main-layout__mobile-bottom-nav {
   display: none;
 }
@@ -1012,6 +1021,11 @@ body[data-theme="dark"] {
 
   @media (max-width: ($layout-break - 0.0625rem)) {
     .main-layout--courses-page .main-layout__content {
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .main-layout--support-page .main-layout__content {
       background: transparent;
       box-shadow: none;
     }

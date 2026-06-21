@@ -123,6 +123,7 @@ export type SupportContactForm = {
   responseTimeLabel: string;
   whatsapp: string;
   telegram: string;
+  instagram: string;
   email: string;
   phone: string;
   faqTitle: string;

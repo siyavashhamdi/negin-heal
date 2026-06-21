@@ -8,7 +8,7 @@
 
 .hero {
   display: grid;
-  gap: 1.2rem;
+  gap: 0.45rem;
   overflow: hidden;
   position: relative;
   padding: clamp(1.1rem, 3vw, 1.65rem);
@@ -98,7 +98,9 @@
 .heroMeta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.55rem;
+  align-items: center;
+  column-gap: 0.15rem;
+  row-gap: 0.1rem;
   position: relative;
   z-index: 1;
 }
@@ -106,19 +108,19 @@
 .heroMeta span {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.52rem 0.75rem;
+  gap: 0.28rem;
+  padding: 0.22rem 0.5rem;
   border: 0.0625rem solid rgba(61, 44, 53, 0.1);
   border-radius: 999rem;
   @include mixins.surface-bg(color-mix(in srgb, var(--app-surface-bg) 78%, #ffffff));
   color: var(--text-secondary);
-  font-size: 0.82rem;
-  line-height: 1.6;
+  font-size: 0.78rem;
+  line-height: 1.25;
 }
 
 .heroMeta svg {
   color: variables.$color-primary-main;
-  font-size: 1.08rem;
+  font-size: 0.95rem;
 }
 
 .sectionHeading {
@@ -140,20 +142,116 @@
   font-size: 0.84rem;
 }
 
+.contactSection {
+  display: grid;
+  gap: 0.75rem;
+  inline-size: 100%;
+  padding: 0.85rem 0.95rem;
+  border: 0.0625rem solid rgba(61, 44, 53, 0.1);
+  border-radius: 1.2rem;
+  @include mixins.surface-card;
+  box-shadow: 0 0.8rem 2rem color-mix(in srgb, #0f172a 5%, transparent);
+}
+
+.contactSectionIntro {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.contactSectionIntro p,
+.contactSectionIntro h3 {
+  margin: 0;
+}
+
+.contactSectionIntro p {
+  color: variables.$color-primary-main;
+  font-size: 0.78rem;
+  font-weight: variables.$font-weight-semibold;
+}
+
+.contactSectionIntro h3 {
+  margin-block-start: 0.1rem;
+  font-size: 1rem;
+}
+
+.contactSectionIntro > span {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  text-align: end;
+}
+
+.contactIconRow {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.35rem, 2.5vw, 0.75rem);
+  inline-size: 100%;
+  max-inline-size: 100%;
+}
+
+.contactIconItem {
+  display: flex;
+  flex: 0 1 auto;
+  min-inline-size: 0;
+}
+
+.contactIconButton {
+  display: inline-grid;
+  place-items: center;
+  inline-size: clamp(2rem, 12vw, 2.85rem);
+  block-size: clamp(2rem, 12vw, 2.85rem);
+  max-inline-size: 2.85rem;
+  max-block-size: 2.85rem;
+  border: 0.0625rem solid color-mix(in srgb, variables.$color-primary-main 22%, var(--app-surface-border));
+  border-radius: clamp(0.65rem, 3vw, 0.95rem);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, variables.$color-primary-main 12%, transparent), transparent 70%),
+    color-mix(in srgb, var(--app-surface-bg) 92%, #ffffff);
+  color: variables.$color-primary-main;
+  text-decoration: none;
+  cursor: pointer;
+  font-size: clamp(1rem, 4.2vw, 1.35rem);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease,
+    background 160ms ease;
+
+  &:hover,
+  &:focus-visible {
+    transform: translateY(-0.08rem);
+    border-color: color-mix(in srgb, variables.$color-primary-main 48%, var(--app-surface-border));
+    outline: none;
+    box-shadow:
+      0 0.65rem 1.5rem color-mix(in srgb, variables.$color-primary-main 16%, transparent),
+      0 0 0 0.16rem color-mix(in srgb, variables.$color-primary-main 10%, transparent);
+  }
+}
+
+.contactIconGlyph {
+  font-size: 1em;
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
   gap: 0.75rem;
+  align-items: stretch;
 }
 
 .card {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
-  gap: 0.8rem;
+  gap: 0.65rem;
   inline-size: 100%;
-  min-block-size: 10rem;
-  padding: 1rem;
+  block-size: 100%;
+  min-block-size: 6.75rem;
+  padding: 0.8rem 0.9rem;
   border: 0.0625rem solid rgba(61, 44, 53, 0.1);
   border-radius: 1.2rem;
   @include mixins.surface-card;
@@ -192,18 +290,20 @@
 .cardIcon {
   display: inline-grid;
   place-items: center;
-  inline-size: 2.7rem;
-  block-size: 2.7rem;
-  border-radius: 0.95rem;
+  flex: 0 0 auto;
+  inline-size: 2.1rem;
+  block-size: 2.1rem;
+  border-radius: 0.75rem;
   background: color-mix(in srgb, variables.$color-primary-main 11%, transparent);
   color: variables.$color-primary-main;
 }
 
 .cardIcon svg {
-  font-size: 1.35rem;
+  font-size: 1.1rem;
 }
 
 .cardArrow {
+  align-self: start;
   color: variables.$color-primary-main;
   font-size: 1.05rem;
   opacity: 0.72;
@@ -220,16 +320,32 @@
 
 .cardBody {
   display: grid;
-  gap: 0.32rem;
+  gap: 0.22rem;
+  align-content: start;
+  min-block-size: 0;
+}
+
+.cardHeading {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-inline-size: 0;
+}
+
+.cardHeading strong {
+  min-inline-size: 0;
 }
 
 .cardBody strong {
-  font-size: 1rem;
+  font-size: 0.95rem;
+  line-height: 1.35;
 }
 
 .cardBody small {
   color: var(--text-secondary);
-  line-height: 1.6;
+  line-height: 1.45;
+  font-size: 0.82rem;
+  padding-inline-start: calc(2.1rem + 0.55rem);
 }
 
 .cardBody b {
@@ -238,7 +354,8 @@
   direction: ltr;
   unicode-bidi: isolate;
   font-family: variables.$font-family-latin;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
+  line-height: 1.35;
   text-align: start;
 }
 
@@ -370,6 +487,61 @@
   font-size: 0.9rem;
 }
 
+.faqHeroContent {
+  display: grid;
+  gap: 0.55rem;
+  position: relative;
+  z-index: 1;
+}
+
+.faqHeroEyebrow {
+  margin: 0;
+  color: variables.$color-primary-main;
+  font-size: 0.78rem;
+  font-weight: variables.$font-weight-semibold;
+}
+
+.faqHeroHeading {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-inline-size: 0;
+}
+
+.faqHeroHeading h2 {
+  margin: 0;
+  font-size: clamp(1.35rem, 4vw, 2rem);
+  letter-spacing: -0.03em;
+}
+
+.faqHeroIcon {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  inline-size: 2.45rem;
+  block-size: 2.45rem;
+  border-radius: 0.85rem;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, variables.$color-primary-main 22%, transparent), color-mix(in srgb, #2dd4bf 16%, transparent)),
+    color-mix(in srgb, var(--app-surface-bg) 78%, #ffffff);
+  color: variables.$color-primary-main;
+  box-shadow: inset 0 0 0 0.0625rem color-mix(in srgb, variables.$color-primary-main 18%, transparent);
+}
+
+.faqHeroIcon svg {
+  font-size: 1.2rem;
+}
+
+.faqHeroSubtitle {
+  display: block;
+  inline-size: 100%;
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.85;
+  text-align: justify;
+  text-align-last: start;
+}
+
 .faqSections {
   display: grid;
   gap: 0.85rem;
@@ -386,24 +558,39 @@
 }
 
 .faqSectionHeader {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.faqSectionHeading {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.55rem;
+  min-inline-size: 0;
+}
+
+.faqSectionHeading h3 {
+  margin: 0;
+  min-inline-size: 0;
 }
 
 .faqSectionIcon {
   display: inline-grid;
   flex: 0 0 auto;
   place-items: center;
-  inline-size: 2.8rem;
-  block-size: 2.8rem;
-  border-radius: 1rem;
+  inline-size: 2.1rem;
+  block-size: 2.1rem;
+  border-radius: 0.75rem;
   background: color-mix(in srgb, variables.$color-primary-main 10%, transparent);
   color: variables.$color-primary-main;
 }
 
+.faqSectionIcon svg {
+  font-size: 1.1rem;
+}
+
 .faqSectionHeader h3,
-.faqSectionHeader p,
+.faqSectionDescription,
 .faqItem h4,
 .faqAnswer p,
 .faqEmpty h3,
@@ -415,11 +602,13 @@
   font-size: 1.05rem;
 }
 
-.faqSectionHeader p {
-  margin-block-start: 0.15rem;
+.faqSectionDescription {
+  inline-size: 100%;
   color: var(--text-secondary);
   font-size: 0.78rem;
   line-height: 1.7;
+  text-align: justify;
+  text-align-last: start;
 }
 
 .faqItems {
@@ -494,6 +683,7 @@
 body[data-theme="dark"] {
   .hero,
   .card,
+  .contactSection,
   .supportPanel,
   .faqToolbar,
   .faqSection,
@@ -529,7 +719,17 @@ body[data-theme="dark"] {
     flex-direction: column;
   }
 
+  .contactSectionIntro {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .contactSectionIntro > span {
+    text-align: start;
+  }
+
   .heroMeta span {
-    inline-size: 100%;
+    flex: 1 1 auto;
+    max-inline-size: 100%;
   }
 }

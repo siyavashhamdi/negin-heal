@@ -106,6 +106,10 @@ const SUPPORT_CONTACT_COPY: Record<
     label: "تلگرام",
     description: "ارسال پیام مستقیم و دریافت راهنمایی مرحله‌به‌مرحله.",
   },
+  INSTAGRAM: {
+    label: "اینستاگرام",
+    description: "پیگیری اخبار، اعلان‌ها و ارتباط از طریق پیام مستقیم.",
+  },
   EMAIL: {
     label: "ایمیل",
     description: "برای ارسال توضیحات کامل، مستندات یا پیوست‌های مرتبط.",
@@ -514,8 +518,9 @@ export class AppSettingsService {
   ): SupportContactChannelConfig[] {
     return (
       [
-        ["WHATSAPP", storedConfig.whatsapp],
+        ["INSTAGRAM", storedConfig.instagram],
         ["TELEGRAM", storedConfig.telegram],
+        ["WHATSAPP", storedConfig.whatsapp],
         ["EMAIL", storedConfig.email],
         ["PHONE", storedConfig.phone],
       ] as const
@@ -575,6 +580,11 @@ export class AppSettingsService {
       return username ? `@${username}` : value;
     }
 
+    if (type === "INSTAGRAM") {
+      const username = this.extractInstagramUsername(value);
+      return username ? `@${username}` : value;
+    }
+
     if (type === "WHATSAPP") {
       const phoneDigits = this.extractWhatsappPhoneDigits(value);
       return phoneDigits ? `+${phoneDigits}` : value;
@@ -604,12 +614,42 @@ export class AppSettingsService {
       return `https://t.me/${value.replace(/^@/, "")}`;
     }
 
+    if (type === "INSTAGRAM") {
+      const username = this.extractInstagramUsername(value);
+      return username ? `https://instagram.com/${username}` : value;
+    }
+
     if (type === "EMAIL") {
       return `mailto:${value}`;
     }
 
     const phoneValue = value.replace(/[^\d+]/g, "");
     return phoneValue ? `tel:${phoneValue}` : value;
+  }
+
+  private extractInstagramUsername(value: string): string | null {
+    const trimmedValue = value.trim();
+    if (trimmedValue.startsWith("@")) {
+      return trimmedValue.slice(1).trim() || null;
+    }
+
+    try {
+      const url = new URL(trimmedValue);
+      const hostname = url.hostname.replace(/^www\./, "").toLowerCase();
+      if (hostname !== "instagram.com") {
+        return null;
+      }
+
+      const pathSegments = url.pathname.split("/").filter(Boolean);
+      const username = pathSegments[0];
+      if (!username || ["p", "reel", "reels", "stories"].includes(username)) {
+        return null;
+      }
+
+      return username.replace(/^@/, "") || null;
+    } catch {
+      return trimmedValue.replace(/^@/, "") || null;
+    }
   }
 
   private extractTelegramUsername(value: string): string | null {

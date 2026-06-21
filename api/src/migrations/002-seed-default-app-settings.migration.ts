@@ -368,6 +368,7 @@ const DEFAULT_SUPPORT_CONTACT_VALUE = {
   responseTimeLabel: "میانگین پاسخ کمتر از ۲ ساعت کاری",
   whatsapp: "https://wa.me/989000000000",
   telegram: "https://t.me/neginheal_support",
+  instagram: "https://instagram.com/neginheal",
   faqTitle: "سوالات پرتکرار",
   faqDescription: "پاسخ سریع به سوال‌های رایج قبل از ارسال درخواست پشتیبانی.",
   ticketTitle: "ثبت تیکت پشتیبانی",
@@ -587,7 +588,7 @@ const DEFAULT_APP_SETTINGS: readonly DefaultAppSettingSeed[] = [
     value: DEFAULT_SUPPORT_CONTACT_VALUE,
     valueType: AppSettingValueType.JSON,
     description:
-      "تنظیمات صفحه پشتیبانی شامل واتساپ، تلگرام، ایمیل، تلفن و نکات راهنما",
+      "تنظیمات صفحه پشتیبانی شامل واتساپ، تلگرام، اینستاگرام، ایمیل، تلفن و نکات راهنما",
     isActive: true,
   },
   {
@@ -658,17 +659,42 @@ export class Migration002_SeedDefaultAppSettings extends BaseMigration {
       });
 
       if (existingSetting) {
-        if (
-          setting.valueType === AppSettingValueType.JSON &&
-          typeof existingSetting.value === "string"
-        ) {
-          const parsedValue = this.parseJsonSettingValue(existingSetting.value);
-          if (parsedValue !== null) {
+        if (setting.valueType === AppSettingValueType.JSON) {
+          const existingValue =
+            typeof existingSetting.value === "string"
+              ? this.parseJsonSettingValue(existingSetting.value)
+              : existingSetting.value;
+
+          if (this.isPlainObject(existingValue) && this.isPlainObject(setting.value)) {
+            const mergedValue = this.mergeMissingJsonKeys(
+              existingValue as Record<string, unknown>,
+              setting.value as Record<string, unknown>,
+            );
+            const hasChanges =
+              JSON.stringify(mergedValue) !== JSON.stringify(existingValue);
+
+            if (hasChanges) {
+              await appSettingsCollection.updateOne(
+                { _id: existingSetting._id },
+                {
+                  $set: {
+                    value: mergedValue,
+                    "audit.updatedAt": new Date(),
+                  },
+                },
+              );
+              console.log(`🔁 Upgraded app setting ${setting.key} with missing defaults`);
+            }
+          } else if (
+            typeof existingSetting.value === "string" &&
+            existingValue !== null &&
+            this.isPlainObject(existingValue)
+          ) {
             await appSettingsCollection.updateOne(
               { _id: existingSetting._id },
               {
                 $set: {
-                  value: parsedValue,
+                  value: existingValue,
                   "audit.updatedAt": new Date(),
                 },
               },
@@ -723,6 +749,34 @@ export class Migration002_SeedDefaultAppSettings extends BaseMigration {
     console.log(
       `✅ Migration ${this.version} (${this.name}) rolled back - Removed ${result.deletedCount} setting(s)`,
     );
+  }
+
+  private isPlainObject(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
+  }
+
+  private mergeMissingJsonKeys(
+    existingValue: Record<string, unknown>,
+    defaultValue: Record<string, unknown>,
+  ): Record<string, unknown> {
+    const mergedValue = { ...existingValue };
+
+    for (const [key, defaultEntry] of Object.entries(defaultValue)) {
+      if (!(key in mergedValue)) {
+        mergedValue[key] = defaultEntry;
+        continue;
+      }
+
+      const currentEntry = mergedValue[key];
+      if (
+        this.isPlainObject(currentEntry) &&
+        this.isPlainObject(defaultEntry)
+      ) {
+        mergedValue[key] = this.mergeMissingJsonKeys(currentEntry, defaultEntry);
+      }
+    }
+
+    return mergedValue;
   }
 
   private parseJsonSettingValue(value: string): unknown | null {

@@ -2,6 +2,7 @@ import ChatRoundedIcon from "@mui/icons-material/ChatRounded";
 import ConfirmationNumberRoundedIcon from "@mui/icons-material/ConfirmationNumberRounded";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import HelpCenterRoundedIcon from "@mui/icons-material/HelpCenterRounded";
+import InstagramIcon from "@mui/icons-material/Instagram";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import PhoneInTalkRoundedIcon from "@mui/icons-material/PhoneInTalkRounded";
 import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
@@ -12,6 +13,7 @@ import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import { useQuery } from "@apollo/client/react";
 import { useMemo, type ComponentType, type ReactElement } from "react";
 import { useNavigate } from "react-router-dom";
+import AppTooltip from "../../shared/AppTooltip";
 import { useAuth } from "../../contexts/AuthContext";
 import { SUPPORT_CONTACT_QUERY } from "../../graphql/queries/supportContactConfig.query";
 import {
@@ -30,10 +32,19 @@ type ChannelIcon = ComponentType<{ className?: string }>;
 const CHANNEL_ICONS: Record<SupportContactChannelType, ChannelIcon> = {
   WHATSAPP: WhatsAppIcon,
   TELEGRAM: TelegramIcon,
+  INSTAGRAM: InstagramIcon,
   TICKET: ConfirmationNumberRoundedIcon,
   EMAIL: EmailRoundedIcon,
   PHONE: PhoneInTalkRoundedIcon,
 };
+
+const CONTACT_CHANNEL_ORDER: readonly SupportContactChannelType[] = [
+  "INSTAGRAM",
+  "TELEGRAM",
+  "WHATSAPP",
+  "EMAIL",
+  "PHONE",
+];
 
 function hasText(value?: string | null): boolean {
   return value?.trim().length ? true : false;
@@ -44,6 +55,81 @@ function getVisibleChannels(config: SupportContactConfig): readonly SupportConta
     .filter((channel) => channel.isActive && hasText(channel.label) && hasText(channel.href))
     .sort((first, second) => Number(second.isPrimary) - Number(first.isPrimary));
 }
+
+function buildChannelTooltip(channel: SupportContactChannel): string {
+  const showValue = hasText(channel.value) && channel.value !== channel.label;
+  const lines = [channel.label];
+
+  if (hasText(channel.description)) {
+    lines.push(channel.description);
+  }
+
+  if (showValue) {
+    lines.push("");
+    lines.push(channel.value);
+  }
+
+  return lines.join("\n");
+}
+
+interface ContactIconLinkProps {
+  readonly channel: SupportContactChannel;
+  readonly Icon: ChannelIcon;
+  readonly onOpen: (channel: SupportContactChannel) => void;
+}
+
+const ContactIconLink = ({ channel, Icon, onOpen }: ContactIconLinkProps): ReactElement => {
+  const isInternal = isInternalSupportHref(channel.href);
+  const tooltip = buildChannelTooltip(channel);
+  const icon = <Icon className={styles.contactIconGlyph} />;
+
+  if (isInternal) {
+    return (
+      <AppTooltip
+        title={tooltip}
+        arrow
+        placement="top"
+        slotProps={{
+          tooltip: {
+            sx: { whiteSpace: "pre-line", textAlign: "start" },
+          },
+        }}
+      >
+        <button
+          type="button"
+          className={styles.contactIconButton}
+          aria-label={channel.label}
+          onClick={() => onOpen(channel)}
+        >
+          {icon}
+        </button>
+      </AppTooltip>
+    );
+  }
+
+  return (
+    <AppTooltip
+      title={tooltip}
+      arrow
+      placement="top"
+      slotProps={{
+        tooltip: {
+          sx: { whiteSpace: "pre-line", textAlign: "start" },
+        },
+      }}
+    >
+      <a
+        className={styles.contactIconButton}
+        href={channel.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={channel.label}
+      >
+        {icon}
+      </a>
+    </AppTooltip>
+  );
+};
 
 const Support = (): ReactElement => {
   const navigate = useNavigate();
@@ -56,7 +142,16 @@ const Support = (): ReactElement => {
   const ticketChannel = isAuthenticated
     ? visibleChannels.find((channel) => channel.type === "TICKET")
     : undefined;
-  const contactChannels = visibleChannels.filter((channel) => channel.type !== "TICKET");
+  const contactChannels = useMemo(
+    () =>
+      visibleChannels
+        .filter((channel) => channel.type !== "TICKET")
+        .sort(
+          (first, second) =>
+            CONTACT_CHANNEL_ORDER.indexOf(first.type) - CONTACT_CHANNEL_ORDER.indexOf(second.type),
+        ),
+    [visibleChannels],
+  );
   const hasFaqCard = hasText(supportConfig.faqTitle);
   const hasMainCards = hasFaqCard || ticketChannel != null;
   const quickTips = useMemo(
@@ -115,11 +210,13 @@ const Support = (): ReactElement => {
         <div className={styles.grid}>
           {hasFaqCard ? (
             <button type="button" className={styles.card} {...opaqueShellProps} onClick={() => navigate("/support/faq")}>
-              <span className={styles.cardIcon}>
-                <HelpCenterRoundedIcon />
-              </span>
               <span className={styles.cardBody}>
-                <strong>{supportConfig.faqTitle}</strong>
+                <span className={styles.cardHeading}>
+                  <span className={styles.cardIcon}>
+                    <HelpCenterRoundedIcon />
+                  </span>
+                  <strong>{supportConfig.faqTitle}</strong>
+                </span>
                 {hasText(supportConfig.faqDescription) ? (
                   <small>{supportConfig.faqDescription}</small>
                 ) : null}
@@ -135,11 +232,13 @@ const Support = (): ReactElement => {
               {...opaqueShellProps}
               onClick={() => openChannel(ticketChannel)}
             >
-              <span className={styles.cardIcon}>
-                <ConfirmationNumberRoundedIcon />
-              </span>
               <span className={styles.cardBody}>
-                <strong>{ticketChannel.label}</strong>
+                <span className={styles.cardHeading}>
+                  <span className={styles.cardIcon}>
+                    <ConfirmationNumberRoundedIcon />
+                  </span>
+                  <strong>{ticketChannel.label}</strong>
+                </span>
                 {hasText(ticketChannel.description) ? (
                   <small>{ticketChannel.description}</small>
                 ) : null}
@@ -151,9 +250,9 @@ const Support = (): ReactElement => {
       ) : null}
 
       {contactChannels.length > 0 ? (
-        <>
+        <div className={styles.contactSection} {...opaqueShellProps}>
           {hasContactSectionHeading ? (
-            <div className={styles.sectionHeading}>
+            <div className={styles.contactSectionIntro}>
               <div>
                 {hasText(supportConfig.contactSectionEyebrow) ? (
                   <p>{supportConfig.contactSectionEyebrow}</p>
@@ -168,37 +267,17 @@ const Support = (): ReactElement => {
             </div>
           ) : null}
 
-          <div className={styles.grid}>
+          <div className={styles.contactIconRow} role="list" aria-label={supportConfig.contactSectionHeading || "راه‌های ارتباطی"}>
             {contactChannels.map((channel) => {
               const Icon = CHANNEL_ICONS[channel.type] ?? ChatRoundedIcon;
               return (
-                <button
-                  key={`${channel.type}-${channel.href}`}
-                  type="button"
-                  className={styles.card}
-                  {...opaqueShellProps}
-                  onClick={() => openChannel(channel)}
-                >
-                  <span className={styles.cardIcon}>
-                    <Icon />
-                  </span>
-                  <span className={styles.cardBody}>
-                    <strong>{channel.label}</strong>
-                    {hasText(channel.description) ? (
-                      <small>{channel.description}</small>
-                    ) : null}
-                    {hasText(channel.value) && channel.value !== channel.label ? (
-                      <b dir="ltr" lang="en">
-                        {channel.value}
-                      </b>
-                    ) : null}
-                  </span>
-                  <OpenInNewRoundedIcon className={styles.cardArrow} />
-                </button>
+                <div key={`${channel.type}-${channel.href}`} className={styles.contactIconItem} role="listitem">
+                  <ContactIconLink channel={channel} Icon={Icon} onOpen={openChannel} />
+                </div>
               );
             })}
           </div>
-        </>
+        </div>
       ) : null}
 
       {quickTips.length > 0 ? (
