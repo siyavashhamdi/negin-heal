@@ -562,6 +562,8 @@ const CourseFormDialog = ({
         : FILE_UPLOAD_POLICY.COURSE_ITEM;
     const accept =
       uploadPolicy === FILE_UPLOAD_POLICY.COURSE_COVER ? "image/*" : "*/*";
+    const allowedFormatsLabel =
+      uploadPolicy === FILE_UPLOAD_POLICY.COURSE_COVER ? "تصویر" : "همه";
 
     setUploadProgressByFieldId((previous) => ({
       ...previous,
@@ -572,6 +574,7 @@ const CourseFormDialog = ({
       const result = await uploadFile(file, {
         policy: uploadPolicy,
         accept,
+        allowedFormatsLabel,
         maxSizeBytes: FILE_UPLOAD_POLICY_MAX_SIZE_BYTES[uploadPolicy],
         onProgress: (progress) => {
           setUploadProgressByFieldId((previous) => ({

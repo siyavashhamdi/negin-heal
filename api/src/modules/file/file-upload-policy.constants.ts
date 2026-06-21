@@ -11,8 +11,6 @@ export const FILE_UPLOAD_POLICY = {
 export type FileUploadPolicyId =
   (typeof FILE_UPLOAD_POLICY)[keyof typeof FILE_UPLOAD_POLICY];
 
-const ONE_GIBIBYTE = 1024 * 1024 * 1024;
-
 export type FileUploadPolicyRule = {
   readonly maxSizeBytes: number;
   readonly allowedMimePatterns: readonly string[] | null;
@@ -33,7 +31,7 @@ export const FILE_UPLOAD_POLICIES: Record<FileUploadPolicyId, FileUploadPolicyRu
     allowedMimePatterns: ["image/"],
   },
   [FILE_UPLOAD_POLICY.COURSE_ITEM]: {
-    maxSizeBytes: ONE_GIBIBYTE,
+    maxSizeBytes: 50 * 1024 * 1024,
     allowedMimePatterns: null,
   },
   [FILE_UPLOAD_POLICY.SUPPORT_ATTACHMENT]: {

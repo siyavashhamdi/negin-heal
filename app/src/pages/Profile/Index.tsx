@@ -27,7 +27,7 @@ import {
 } from "../../utils/fileAccessUrl.util";
 import { uploadFile } from "../../utils/fileUpload.util";
 import {
-  resolveUploadValidationErrorMessage,
+  getUploadValidationErrorMessage,
   validateSelectedUploadFile,
 } from "../../utils/fileUploadValidation.util";
 import {
@@ -329,9 +329,7 @@ const AuthenticatedProfile = (): ReactElement => {
       maxSizeBytes: FILE_UPLOAD_POLICY_MAX_SIZE_BYTES.AVATAR,
     });
     if (!validation.valid) {
-      showError(
-        resolveUploadValidationErrorMessage(validation.reason, "فایل تصویر معتبر نیست."),
-      );
+      showError(getUploadValidationErrorMessage(validation, "فایل تصویر معتبر نیست."));
       return;
     }
 

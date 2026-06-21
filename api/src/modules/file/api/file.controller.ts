@@ -40,9 +40,6 @@ export class FileController {
     if (!Number.isFinite(sizeBytes) || sizeBytes < 0) {
       throw new BadRequestException("Content-Length header is required");
     }
-    if (sizeBytes > globalMaxSize) {
-      throw new BadRequestException("File size exceeds the allowed limit");
-    }
 
     const trimmedFileName = encodedFileName?.trim();
     if (!trimmedFileName) {
@@ -69,6 +66,10 @@ export class FileController {
       sizeBytes,
       policy: uploadPolicy,
     });
+
+    if (sizeBytes > globalMaxSize) {
+      throw new BadRequestException("حجم فایل بیش از حد مجاز است.");
+    }
 
     const uploadedFile = await this.fileService.uploadFromStream({
       name,

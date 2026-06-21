@@ -6,7 +6,7 @@ import {
 import type { FileAccessUrl } from "./fileAccessUrl.util";
 import { compressImageForUpload } from "./imageCompression.util";
 import {
-  resolveUploadValidationErrorMessage,
+  getUploadValidationErrorMessage,
   validateSelectedUploadFile,
 } from "./fileUploadValidation.util";
 
@@ -49,6 +49,7 @@ export type FileUploadOptions = {
   readonly policy?: FileUploadPolicyId;
   readonly accept?: string;
   readonly maxSizeBytes?: number;
+  readonly allowedFormatsLabel?: string;
 };
 
 export class FileUploadError extends Error {
@@ -95,11 +96,10 @@ export async function uploadFile(
   const validation = validateSelectedUploadFile(file, {
     accept: options?.accept ?? "*/*",
     maxSizeBytes,
+    allowedFormatsLabel: options?.allowedFormatsLabel,
   });
   if (!validation.valid) {
-    throw new FileUploadError(
-      resolveUploadValidationErrorMessage(validation.reason, "File upload failed"),
-    );
+    throw new FileUploadError(getUploadValidationErrorMessage(validation, "File upload failed"));
   }
 
   options?.onProgress?.({

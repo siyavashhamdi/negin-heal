@@ -34,9 +34,7 @@ import {
   buildPdfEmbedUrl,
   type ExistingFilePreview,
 } from "../../utils/fileAccessUrl.util";
-import {
-  validateSelectedUploadFile,
-} from "../../utils/fileUploadValidation.util";
+import { validateSelectedUploadFile } from "../../utils/fileUploadValidation.util";
 import { isEndUserRole } from "../../utils/authRole.util";
 import { useAuth } from "../../contexts/AuthContext";
 import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
@@ -214,6 +212,7 @@ const FileUploadField = ({
   const [textPreviewLoading, setTextPreviewLoading] = useState(false);
   const [textPreviewError, setTextPreviewError] = useState<string | null>(null);
   const [hasPickError, setHasPickError] = useState(false);
+  const [pickErrorMessage, setPickErrorMessage] = useState<string | null>(null);
   const selectedPreviewUrl = useMemo(() => (file ? URL.createObjectURL(file) : undefined), [file]);
   const effectiveDropTitle = isMobile ? mobileDropTitle : dropTitle;
   const effectiveDropHint = isMobile ? mobileDropHint : dropHint;
@@ -464,17 +463,20 @@ const FileUploadField = ({
         const validation = validateSelectedUploadFile(nextFile, {
           accept,
           maxSizeBytes: maxSizeBytes ?? Number.MAX_SAFE_INTEGER,
+          allowedFormatsLabel,
         });
         if (!validation.valid) {
           setHasPickError(true);
+          setPickErrorMessage(validation.message);
           return;
         }
       }
 
       setHasPickError(false);
+      setPickErrorMessage(null);
       onChange(nextFile);
     },
-    [accept, maxSizeBytes, onChange],
+    [accept, allowedFormatsLabel, maxSizeBytes, onChange],
   );
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>): void => {
@@ -526,6 +528,7 @@ const FileUploadField = ({
     closePreviewDialog();
     setIsPlayingInline(false);
     setHasPickError(false);
+    setPickErrorMessage(null);
     if (file != null) {
       handlePick(null);
       return;
@@ -866,7 +869,7 @@ const FileUploadField = ({
       ) : null}
       {error || hasPickError ? (
         <Typography variant="caption" color="error">
-          {invalidLabel}
+          {pickErrorMessage ?? invalidLabel}
         </Typography>
       ) : null}
       <EntityModalShell

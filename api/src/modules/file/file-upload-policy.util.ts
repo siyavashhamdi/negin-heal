@@ -64,33 +64,67 @@ export function resolveFileUploadPolicy(
   return FILE_UPLOAD_POLICIES[FILE_UPLOAD_POLICY.ANY];
 }
 
+function describePolicyAllowedFormats(policy: FileUploadPolicyRule): string {
+  if (policy.allowedMimePatterns == null) {
+    return "همه";
+  }
+
+  const labels: string[] = [];
+  for (const pattern of policy.allowedMimePatterns) {
+    if (pattern === "image/") {
+      labels.push("تصویر");
+    } else if (pattern === "video/") {
+      labels.push("ویدیو");
+    } else if (pattern === "audio/") {
+      labels.push("صوت");
+    } else if (pattern === "text/") {
+      labels.push("متن");
+    } else if (pattern === "application/pdf") {
+      labels.push("PDF");
+    } else {
+      labels.push(pattern);
+    }
+  }
+
+  if (policy.allowedExtensions?.includes(".doc")) {
+    labels.push("Word (.doc)");
+  }
+  if (policy.allowedExtensions?.includes(".docx")) {
+    labels.push("Word (.docx)");
+  }
+  if (policy.allowedExtensions?.includes(".txt")) {
+    labels.push("متن (.txt)");
+  }
+
+  return [...new Set(labels)].join("، ") || "محدود";
+}
+
 export function assertFileAllowedByPolicy(params: {
   mimeType: string;
   fileName: string;
   sizeBytes: number;
   policy: FileUploadPolicyRule;
 }): void {
+  if (params.policy.allowedMimePatterns != null) {
+    const normalizedMimeType =
+      normalizeMimeType(params.mimeType) ||
+      resolveMimeTypeFromFileName(params.fileName);
+    const extension = extname(params.fileName).toLowerCase();
+
+    const matchesMime = params.policy.allowedMimePatterns.some((pattern) =>
+      patternMatchesMime(pattern, normalizedMimeType),
+    );
+    const matchesExtension =
+      extension.length > 0 &&
+      (params.policy.allowedExtensions?.includes(extension) ?? false);
+
+    if (!matchesMime && !matchesExtension) {
+      const allowedFormats = describePolicyAllowedFormats(params.policy);
+      throw new BadRequestException(`فرمت مجاز نیست. فرمت مجاز: ${allowedFormats}`);
+    }
+  }
+
   if (params.sizeBytes > params.policy.maxSizeBytes) {
-    throw new BadRequestException("File size exceeds the allowed limit for this upload type");
-  }
-
-  if (params.policy.allowedMimePatterns == null) {
-    return;
-  }
-
-  const normalizedMimeType =
-    normalizeMimeType(params.mimeType) ||
-    resolveMimeTypeFromFileName(params.fileName);
-  const extension = extname(params.fileName).toLowerCase();
-
-  const matchesMime = params.policy.allowedMimePatterns.some((pattern) =>
-    patternMatchesMime(pattern, normalizedMimeType),
-  );
-  const matchesExtension =
-    extension.length > 0 &&
-    (params.policy.allowedExtensions?.includes(extension) ?? false);
-
-  if (!matchesMime && !matchesExtension) {
-    throw new BadRequestException("File type is not allowed for this upload");
+    throw new BadRequestException("حجم فایل بیش از حد مجاز است.");
   }
 }

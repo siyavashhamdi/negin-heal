@@ -905,7 +905,7 @@ export class FileService {
       totalLength += bufferChunk.length;
 
       if (totalLength > maxSizeBytes) {
-        throw new BadRequestException("File size exceeds the allowed limit");
+        throw new BadRequestException("حجم فایل بیش از حد مجاز است.");
       }
 
       chunks.push(bufferChunk);
