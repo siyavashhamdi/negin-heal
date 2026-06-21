@@ -1,4 +1,5 @@
 @use "../../../styles/variables" as variables;
+@use "../../../styles/mixins" as mixins;
 
 .credentialHeader {
   display: flex;
@@ -74,6 +75,10 @@
   width: fit-content;
   max-width: 100%;
   margin-top: variables.$spacing-1;
+
+  @include mixins.respond-below(sm) {
+    display: none;
+  }
 }
 
 .verificationCodeContainer {

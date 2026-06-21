@@ -1,7 +1,9 @@
+import { EMAIL_REGEX, isValidMobilePhone } from "../../utilities/contact-validation.util";
 import { toWesternDigits } from "../../utilities/persian-digits.util";
 import { type LoginNavState } from "./login-nav-state";
 
-export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export { EMAIL_REGEX, isValidEmail, isValidMobilePhone } from "../../utilities/contact-validation.util";
+
 export const MOBILE_REGEX = /^(?:\+?98|0)?9\d{9}$/;
 
 /** Username, email, and mobile — Latin digits/letters and common email/mobile symbols only. */
@@ -18,13 +20,12 @@ export const detectPasswordResetIdentityKind = (
   identity: string,
 ): LoginNavState["identityKind"] => {
   const trimmedIdentity = identity.trim();
-  const digitsOnly = trimmedIdentity.replace(/\D/g, "");
 
   if (EMAIL_REGEX.test(trimmedIdentity)) {
     return "email";
   }
 
-  if (MOBILE_REGEX.test(trimmedIdentity) || /^9\d{9}$/.test(digitsOnly)) {
+  if (isValidMobilePhone(trimmedIdentity) || MOBILE_REGEX.test(trimmedIdentity)) {
     return "mobile";
   }
 

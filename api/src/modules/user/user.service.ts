@@ -58,6 +58,11 @@ import { SortingOrder } from "../../common/pagination/input";
 import { buildSortOptions } from "../../common/pagination/utils";
 import { env } from "../../config";
 import {
+  isValidEmail,
+  isValidMobilePhone,
+  normalizeMobilePhone,
+} from "../../utils/contact-validation.util";
+import {
   UserCreateGqlInput,
   UserForgotPasswordGqlInput,
   UserListGqlInput,
@@ -385,7 +390,7 @@ export class UserService {
     const normalizedMobile = this.normalizePhoneNumber(mobile);
 
     if (!normalizedMobile) {
-      throw new IdentityRequiredException();
+      throw new BadRequestException("شماره موبایل وارد شده معتبر نیست.");
     }
 
     await this.throwIfAnyIdentityAlreadyExists({ mobile: normalizedMobile });
@@ -470,6 +475,18 @@ export class UserService {
 
     if (!username && !email && !mobile) {
       throw new IdentityRequiredException();
+    }
+
+    if (email && !isValidEmail(email)) {
+      throw new BadRequestException("ایمیل وارد شده معتبر نیست.");
+    }
+
+    if (input.mobile?.trim() && !mobile) {
+      throw new BadRequestException("شماره موبایل وارد شده معتبر نیست.");
+    }
+
+    if (input.username?.trim()) {
+      this.userSecurityService.throwIfUsernameLengthIsInvalid(input.username);
     }
 
     const password = input.password?.trim();
@@ -600,10 +617,10 @@ export class UserService {
     );
 
     // Calculate expiration time based on rememberMe flag
-    // If rememberMe is true, use 30 days, otherwise use default (24h)
+    // If rememberMe is true, use 30 days, otherwise use default (60d / 2 months)
     const expiresIn = rememberMe
       ? process.env.JWT_REMEMBER_ME_EXPIRES_IN || "30d"
-      : process.env.JWT_EXPIRES_IN || "24h";
+      : process.env.JWT_EXPIRES_IN || "60d";
     const expiresInSeconds = this.parseExpiresIn(expiresIn);
     const expiresAt = new Date(Date.now() + expiresInSeconds * 1000);
 
@@ -808,27 +825,23 @@ export class UserService {
     if (!value) {
       return false;
     }
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    return isValidEmail(value);
   }
 
   private normalizePhoneNumber(value: string): string | undefined {
-    const trimmed = value?.trim();
-    if (!trimmed) {
-      return undefined;
-    }
+    return normalizeMobilePhone(value);
+  }
 
-    const digits = trimmed.replace(/\D/g, "");
-    if (/^09\d{9}$/.test(digits)) {
-      return digits;
+  private throwIfInvalidEmail(value: string | undefined): void {
+    if (value && !isValidEmail(value)) {
+      throw new BadRequestException("ایمیل وارد شده معتبر نیست.");
     }
-    if (/^9\d{9}$/.test(digits)) {
-      return `0${digits}`;
-    }
-    if (/^989\d{9}$/.test(digits)) {
-      return `0${digits.slice(2)}`;
-    }
+  }
 
-    return trimmed;
+  private throwIfInvalidMobilePhone(value: string | undefined): void {
+    if (value && !isValidMobilePhone(value)) {
+      throw new BadRequestException("شماره موبایل وارد شده معتبر نیست.");
+    }
   }
 
   private verifyPendingSignupCode(mobile: string, signupCode: string): void {
@@ -931,7 +944,7 @@ export class UserService {
   private parseExpiresIn(expiresIn: string): number {
     const match = expiresIn.match(/^(\d+)([smhd])$/);
     if (!match) {
-      return 24 * 60 * 60; // Default to 24 hours
+      return 60 * 24 * 60 * 60; // Default to 60 days (2 months)
     }
 
     const value = parseInt(match[1], 10);
@@ -947,7 +960,7 @@ export class UserService {
       case "d":
         return value * 24 * 60 * 60;
       default:
-        return 24 * 60 * 60;
+        return 60 * 24 * 60 * 60;
     }
   }
 
@@ -985,6 +998,7 @@ export class UserService {
     const username = this.normalizeUsernameOrEmail(
       this.normalizeRequiredText(input.username, "Username"),
     );
+    this.userSecurityService.throwIfUsernameLengthIsInvalid(username);
     const password = this.normalizeRequiredText(input.password, "Password");
     await this.userSecurityService.throwIfPasswordPolicyIsViolated(password);
 
@@ -1326,14 +1340,17 @@ export class UserService {
 
     const email = this.normalizeOptionalText(profile.email);
     if (email) {
+      this.throwIfInvalidEmail(email);
       normalizedProfile.email = this.normalizeUsernameOrEmail(email);
     }
 
-    const phoneNumber = profile.phoneNumber
-      ? this.normalizePhoneNumber(profile.phoneNumber)
-      : undefined;
-    if (phoneNumber) {
-      normalizedProfile.phoneNumber = phoneNumber;
+    const phoneNumberRaw = this.normalizeOptionalText(profile.phoneNumber);
+    if (phoneNumberRaw) {
+      this.throwIfInvalidMobilePhone(phoneNumberRaw);
+      const phoneNumber = this.normalizePhoneNumber(phoneNumberRaw);
+      if (phoneNumber) {
+        normalizedProfile.phoneNumber = phoneNumber;
+      }
     }
 
     const bio = this.normalizeOptionalText(profile.bio);
@@ -1363,6 +1380,7 @@ export class UserService {
 
     if (this.hasOwnInputField(input, "username")) {
       const username = this.normalizeRequiredText(input.username, "Username");
+      this.userSecurityService.throwIfUsernameLengthIsInvalid(username);
       set.username = this.normalizeUsernameOrEmail(username);
     }
 
@@ -1433,7 +1451,10 @@ export class UserService {
       unset,
     });
     this.applyNullableNormalizedTextUpdate(profile, "email", "profile.email", {
-      normalize: (value) => this.normalizeUsernameOrEmail(value),
+      normalize: (value) => {
+        this.throwIfInvalidEmail(value);
+        return this.normalizeUsernameOrEmail(value);
+      },
       set,
       unset,
     });
@@ -1442,7 +1463,10 @@ export class UserService {
       "phoneNumber",
       "profile.phoneNumber",
       {
-        normalize: (value) => this.normalizePhoneNumber(value),
+        normalize: (value) => {
+          this.throwIfInvalidMobilePhone(value);
+          return this.normalizePhoneNumber(value);
+        },
         set,
         unset,
       },

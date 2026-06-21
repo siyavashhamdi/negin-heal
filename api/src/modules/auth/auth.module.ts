@@ -23,8 +23,8 @@ import { SecurityConfig } from "../../config/security.config";
     JwtModule.register({
       secret: SecurityConfig.validateJwtSecret(),
       signOptions: {
-        // @ts-expect-error - StringValue accepts string values like "24h"
-        expiresIn: env.JWT_EXPIRES_IN || "24h",
+        // @ts-expect-error - StringValue accepts string values like "60d"
+        expiresIn: env.JWT_EXPIRES_IN || "60d",
       },
     }),
   ],

@@ -13,7 +13,10 @@ import {
   Typography,
 } from "@mui/material";
 import {
+  AlternateEmail as AlternateEmailIcon,
   Lock as LockIcon,
+  Person as PersonIcon,
+  Phone as PhoneIcon,
   Sms as SmsIcon,
   Visibility,
   VisibilityOff,
@@ -25,9 +28,31 @@ import { useLogin } from "../../hooks/useLogin";
 import { API_CONFIG } from "../../config/env";
 import LoginShell from "./LoginShell";
 import { LoginCaptchaField } from "./components/LoginCaptchaField";
+import { LoginAdornedTextField } from "./components/LoginAdornedTextField";
 import { type LoginNavState } from "./login-nav-state";
+import {
+  isValidEmail,
+  isValidMobilePhone,
+  sanitizeAuthIdentityInput,
+} from "./password-reset-form.util";
+import { sanitizeMobilePhoneInput } from "../../utilities/mobile-phone.util";
+import { isValidUsernameLength } from "../../utils/usernamePolicy.util";
 import formStyles from "./styles/LoginFormShared.module.scss";
 import verifyStyles from "./styles/VerifyLoginCode.module.scss";
+
+const latinFieldInputProps = {
+  className: formStyles.latinInput,
+  dir: "ltr",
+  lang: "en",
+  spellCheck: "false",
+  autoCapitalize: "off",
+  autoCorrect: "off",
+} as const;
+
+const persianFieldInputProps = {
+  className: formStyles.persianInput,
+  dir: "rtl",
+} as const;
 
 const VERIFICATION_CODE_LENGTH = 6;
 const VERIFICATION_CODE_REGEX = /^\d{4,6}$/;
@@ -169,6 +194,12 @@ export const SignupForm = ({
       return;
     }
 
+    if (!isValidMobilePhone(mobile)) {
+      setHasError(true);
+      showError(t("auth.login.errors.invalidMobile"));
+      return;
+    }
+
     const sent = await requestSignupCode(mobile);
     if (sent) {
       setSignupCodeRequested(true);
@@ -190,6 +221,24 @@ export const SignupForm = ({
     if (!hasAnyIdentity) {
       setHasError(true);
       showError(t("auth.login.errors.signupIdentityRequired"));
+      return;
+    }
+
+    if (email.trim() && !isValidEmail(email)) {
+      setHasError(true);
+      showError(t("auth.login.errors.invalidEmail"));
+      return;
+    }
+
+    if (mobile.trim() && !isValidMobilePhone(mobile)) {
+      setHasError(true);
+      showError(t("auth.login.errors.invalidMobile"));
+      return;
+    }
+
+    if (username.trim() && !isValidUsernameLength(username)) {
+      setHasError(true);
+      showError(t("auth.login.errors.usernameMinLength"));
       return;
     }
 
@@ -316,6 +365,7 @@ export const SignupForm = ({
           value={firstName}
           onChange={(event) => setFirstName(event.target.value)}
           className={formStyles.textField}
+          inputProps={persianFieldInputProps}
           disabled={loading}
           required
           error={hasError && !firstName.trim()}
@@ -327,47 +377,67 @@ export const SignupForm = ({
           value={lastName}
           onChange={(event) => setLastName(event.target.value)}
           className={formStyles.textField}
+          inputProps={persianFieldInputProps}
           disabled={loading}
         />
 
-        <TextField
+        <LoginAdornedTextField
           fullWidth
           label={t("auth.login.usernameOptionalFieldTitle")}
           value={username}
-          onChange={(event) => setUsername(event.target.value)}
-          className={formStyles.textField}
+          onChange={(event) => setUsername(sanitizeAuthIdentityInput(event.target.value))}
+          inputProps={latinFieldInputProps}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <PersonIcon className={formStyles.inputIcon} />
+              </InputAdornment>
+            ),
+          }}
           disabled={loading}
         />
 
-        <TextField
+        <LoginAdornedTextField
           fullWidth
           label={t("auth.login.emailOptionalFieldTitle")}
           value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          className={formStyles.textField}
+          onChange={(event) => setEmail(sanitizeAuthIdentityInput(event.target.value))}
+          inputProps={{ ...latinFieldInputProps, inputMode: "email" }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <AlternateEmailIcon className={formStyles.inputIcon} />
+              </InputAdornment>
+            ),
+          }}
           disabled={loading}
         />
 
-        <TextField
+        <LoginAdornedTextField
           fullWidth
           label={t("auth.login.mobileOptionalFieldTitle")}
           value={mobile}
-          onChange={(event) => setMobile(event.target.value)}
-          className={formStyles.textField}
+          onChange={(event) => setMobile(sanitizeMobilePhoneInput(event.target.value))}
+          inputProps={{ ...latinFieldInputProps, inputMode: "numeric" }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <PhoneIcon className={formStyles.inputIcon} />
+              </InputAdornment>
+            ),
+          }}
           disabled={loading}
         />
 
         {mode === "password" ? (
           <>
-            <TextField
+            <LoginAdornedTextField
               fullWidth
               label={t("auth.login.passwordFieldTitle")}
-              placeholder={t("auth.login.passwordPlaceholder")}
-              variant="outlined"
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              className={formStyles.textField}
+              endAdornmentOnlyWhenLabelShrunk
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -391,14 +461,19 @@ export const SignupForm = ({
               error={hasError && !password.trim()}
             />
 
-            <TextField
+            <LoginAdornedTextField
               fullWidth
               label={t("auth.login.confirmPasswordFieldTitle")}
-              variant="outlined"
               type={showPassword ? "text" : "password"}
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
-              className={formStyles.textField}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LockIcon className={formStyles.inputIcon} />
+                  </InputAdornment>
+                ),
+              }}
               autoComplete="new-password"
               disabled={loading}
               error={hasError && Boolean(confirmPassword) && password !== confirmPassword}

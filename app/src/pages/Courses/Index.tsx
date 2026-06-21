@@ -683,36 +683,30 @@ const CoursesIndex = (): ReactElement => {
 
   return (
     <section className={styles.page}>
-      <header className={styles.hero}>
-        <div className={styles.heroHead}>
-          <h2>
-            {t("pages.courses.heroTitle")}
-          </h2>
-          {!isPublicCourseView ? (
-            <>
-              <AppTooltip title="دوره جدید" arrow>
-                <IconButton
-                  color="primary"
-                  onClick={openCreateCourseDialog}
-                  className={styles.createCourseIconButton}
-                  aria-label="دوره جدید"
-                >
-                  <AddRoundedIcon />
-                </IconButton>
-              </AppTooltip>
-              <Button
-                variant="contained"
-                startIcon={<AddRoundedIcon />}
+      {!isPublicCourseView ? (
+        <header className={styles.hero}>
+          <div className={styles.heroHead}>
+            <AppTooltip title="دوره جدید" arrow>
+              <IconButton
+                color="primary"
                 onClick={openCreateCourseDialog}
-                className={styles.createCourseButton}
+                className={styles.createCourseIconButton}
+                aria-label="دوره جدید"
               >
-                دوره جدید
-              </Button>
-            </>
-          ) : null}
-        </div>
-        <p>{t("pages.courses.heroDescription")}</p>
-      </header>
+                <AddRoundedIcon />
+              </IconButton>
+            </AppTooltip>
+            <Button
+              variant="contained"
+              startIcon={<AddRoundedIcon />}
+              onClick={openCreateCourseDialog}
+              className={styles.createCourseButton}
+            >
+              دوره جدید
+            </Button>
+          </div>
+        </header>
+      ) : null}
 
       {isEndUser ? (
         <EndUserCourseFilterTabs activeTab={endUserTab} onChange={handleEndUserTabChange} />

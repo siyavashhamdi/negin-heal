@@ -6,12 +6,14 @@ import {
   IsEnum,
   IsOptional,
   IsString,
+  MinLength,
   ValidateNested,
 } from "class-validator";
 import { Field, ID, InputType } from "@nestjs/graphql";
 import { Types } from "mongoose";
 
 import { UserRole, UserStatus } from "../../../../enums";
+import { MIN_USERNAME_LENGTH } from "../../../../utils/username-policy.util";
 import {
   toObjectId,
   toObjectIdOptional,
@@ -101,6 +103,9 @@ export class UserUpdateGqlInput {
   @Field({ nullable: true, description: "Unique username" })
   @IsOptional()
   @IsString({ message: "Username must be a string" })
+  @MinLength(MIN_USERNAME_LENGTH, {
+    message: `Username must be at least ${MIN_USERNAME_LENGTH} characters long`,
+  })
   username?: string;
 
   @Field(() => UserUpdateProfileGqlInput, {

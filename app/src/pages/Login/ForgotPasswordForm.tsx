@@ -4,11 +4,8 @@ import {
   Box,
   CircularProgress,
   InputAdornment,
-  TextField,
   Typography,
-  useMediaQuery,
 } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
 import {
   AlternateEmail as AlternateEmailIcon,
   CheckCircle as CheckCircleIcon,
@@ -22,11 +19,13 @@ import { usePasswordReset } from "../../hooks/usePasswordReset";
 import { API_CONFIG } from "../../config/env";
 import LoginShell from "./LoginShell";
 import { LoginCaptchaField } from "./components/LoginCaptchaField";
+import { LoginAdornedTextField } from "./components/LoginAdornedTextField";
 import { type LoginNavState } from "./login-nav-state";
 import {
   createForgotPasswordPrefill,
   detectPasswordResetIdentityKind,
   EMAIL_REGEX,
+  isValidMobilePhone,
   sanitizeAuthIdentityInput,
 } from "./password-reset-form.util";
 import formStyles from "./styles/LoginFormShared.module.scss";
@@ -44,8 +43,6 @@ export const ForgotPasswordForm = ({
   const { t } = useTranslation();
   const { showError } = useSnackbar();
   const { requestResetLink, requestingResetLink } = usePasswordReset();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const initialValues = useMemo(
     () => sanitizeAuthIdentityInput(createForgotPasswordPrefill(initialIdentity)),
     [initialIdentity],
@@ -76,6 +73,12 @@ export const ForgotPasswordForm = ({
     if (trimmedIdentity.includes("@") && !EMAIL_REGEX.test(trimmedIdentity)) {
       setFieldError("email");
       showError(t("auth.login.errors.invalidEmail"));
+      return;
+    }
+
+    if (identityKind === "mobile" && !isValidMobilePhone(trimmedIdentity)) {
+      setFieldError("identity");
+      showError(t("auth.login.errors.invalidMobile"));
       return;
     }
 
@@ -152,20 +155,15 @@ export const ForgotPasswordForm = ({
           </Typography>
         </div>
 
-        <TextField
+        <LoginAdornedTextField
           fullWidth
           label={t("auth.login.identityFieldTitle")}
-          placeholder={t(
-            isMobile ? "auth.login.identityPlaceholderMobile" : "auth.login.identityPlaceholder",
-          )}
-          variant="outlined"
           type="text"
           value={identity}
           onChange={(event) => {
             setIdentity(sanitizeAuthIdentityInput(event.target.value));
             setFieldError(null);
           }}
-          className={formStyles.textField}
           inputProps={{
             lang: "en",
             spellCheck: "false",

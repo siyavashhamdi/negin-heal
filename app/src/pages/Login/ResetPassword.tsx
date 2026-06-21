@@ -7,12 +7,10 @@ import {
   CircularProgress,
   IconButton,
   InputAdornment,
-  TextField,
   Typography,
 } from "@mui/material";
 import {
   CheckCircle as CheckCircleIcon,
-  Key as KeyIcon,
   Lock as LockIcon,
   Visibility,
   VisibilityOff,
@@ -23,6 +21,7 @@ import { usePasswordReset } from "../../hooks/usePasswordReset";
 import { PasswordPolicyChecklist } from "../../shared/auth/PasswordPolicyChecklist";
 import { arePasswordRulesPassed } from "../../utils/passwordPolicy.util";
 import LoginShell from "./LoginShell";
+import { LoginAdornedTextField } from "./components/LoginAdornedTextField";
 import formStyles from "./styles/LoginFormShared.module.scss";
 
 const getTokenFromLocation = (searchParams: URLSearchParams): string =>
@@ -125,18 +124,16 @@ const ResetPassword = (): ReactElement => {
           </Alert>
         ) : null}
 
-        <TextField
+        <LoginAdornedTextField
           fullWidth
           label={t("auth.login.newPasswordFieldTitle")}
-          placeholder={t("auth.login.newPasswordPlaceholder")}
-          variant="outlined"
           type={showPassword ? "text" : "password"}
           value={newPassword}
           onChange={(event) => {
             setNewPassword(event.target.value);
             setHasError(false);
           }}
-          className={formStyles.textField}
+          endAdornmentOnlyWhenLabelShrunk
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -163,22 +160,19 @@ const ResetPassword = (): ReactElement => {
 
         <PasswordPolicyChecklist password={newPassword} />
 
-        <TextField
+        <LoginAdornedTextField
           fullWidth
           label={t("auth.login.confirmPasswordFieldTitle")}
-          placeholder={t("auth.login.confirmNewPasswordPlaceholder")}
-          variant="outlined"
           type={showPassword ? "text" : "password"}
           value={confirmPassword}
           onChange={(event) => {
             setConfirmPassword(event.target.value);
             setHasError(false);
           }}
-          className={formStyles.textField}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <KeyIcon className={formStyles.inputIcon} />
+                <LockIcon className={formStyles.inputIcon} />
               </InputAdornment>
             ),
           }}

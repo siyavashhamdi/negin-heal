@@ -1,6 +1,7 @@
 import { Document, Schema as MongooseSchema, Types } from "mongoose";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { UserRole, UserStatus } from "../../enums";
+import { normalizeMobilePhone } from "../../utils/contact-validation.util";
 import { BaseIdTimestampableBlameableSchema } from "./base.schema";
 import { timestampablePlugin } from "../plugins/timestampable.plugin";
 import { blameablePlugin } from "../plugins/blameable.plugin";
@@ -12,23 +13,11 @@ function normalizeEmail(value?: string | null): string | undefined {
 }
 
 function normalizePhoneNumber(value?: string | null): string | undefined {
-  const trimmed = value?.trim();
-  if (!trimmed) {
+  if (!value?.trim()) {
     return undefined;
   }
 
-  const digits = trimmed.replace(/\D/g, "");
-  if (/^09\d{9}$/.test(digits)) {
-    return digits;
-  }
-  if (/^9\d{9}$/.test(digits)) {
-    return `0${digits}`;
-  }
-  if (/^989\d{9}$/.test(digits)) {
-    return `0${digits.slice(2)}`;
-  }
-
-  return trimmed;
+  return normalizeMobilePhone(value);
 }
 
 /**

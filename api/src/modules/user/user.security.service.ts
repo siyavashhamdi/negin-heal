@@ -1,7 +1,7 @@
 import { Model } from "mongoose";
 
 import { InjectModel } from "@nestjs/mongoose";
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 
 import { User, UserDocument } from "../../database/schemas";
 import {
@@ -9,7 +9,7 @@ import {
   AccountLockedException,
   PasswordPolicyViolationException,
 } from "../../exceptions";
-import { PasswordValidator } from "@/utils";
+import { PasswordValidator, UsernameValidator } from "@/utils";
 
 @Injectable()
 export class UserSecurityService {
@@ -40,5 +40,12 @@ export class UserSecurityService {
     }
 
     return passwordValidation;
+  }
+
+  throwIfUsernameLengthIsInvalid(username: string): void {
+    const usernameValidation = UsernameValidator.validate(username);
+    if (!usernameValidation.valid) {
+      throw new BadRequestException("نام کاربری باید حداقل ۵ کاراکتر باشد.");
+    }
   }
 }

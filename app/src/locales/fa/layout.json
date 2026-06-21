@@ -106,7 +106,7 @@
                     "popoverSecurity": "تنظیمات امنیت حساب",
                     "chipAriaLabel": "اطلاعات کاربر",
                     "openProfile": "ورود به پروفایل",
-                    "changePassword": "تغییر رمز عبور",
+                    "changePassword": "تغییر گذرواژه",
                     "___sampleItems": [
                         {
                             "id": "user-action-1",
@@ -121,7 +121,7 @@
                         {
                             "id": "user-action-3",
                             "title": "تنظیمات امنیت حساب",
-                            "description": "مدیریت رمز عبور، نشست‌های فعال و ورود دومرحله‌ای."
+                            "description": "مدیریت گذرواژه، نشست‌های فعال و ورود دومرحله‌ای."
                         }
                     ]
                 },

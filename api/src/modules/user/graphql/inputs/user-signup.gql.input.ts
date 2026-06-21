@@ -3,11 +3,13 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  MinLength,
   ValidateIf,
   ValidateNested,
 } from "class-validator";
 import { Type } from "class-transformer";
 import { Field, InputType } from "@nestjs/graphql";
+import { MIN_USERNAME_LENGTH } from "../../../../utils/username-policy.util";
 import { SessionClientContextGqlInput } from "./session-client-context.gql.input";
 
 @InputType()
@@ -29,6 +31,10 @@ export class UserSignupGqlInput {
   @ValidateIf((value: UserSignupGqlInput) => !value.email && !value.mobile)
   @IsString({ message: "Username must be a string" })
   @IsNotEmpty({ message: "At least one identity is required" })
+  @ValidateIf((_, value) => typeof value === "string" && value.trim().length > 0)
+  @MinLength(MIN_USERNAME_LENGTH, {
+    message: `Username must be at least ${MIN_USERNAME_LENGTH} characters long`,
+  })
   @IsOptional()
   username?: string;
 

@@ -25,6 +25,7 @@ import { API_CONFIG } from "../../config/env";
 import { LOGIN_CAPTCHA_FAILED_ATTEMPTS_THRESHOLD } from "../../constants";
 import { toPersianDigits, toWesternDigits } from "../../utilities/persian-digits.util";
 import LoginShell from "./LoginShell";
+import { LoginAdornedTextField } from "./components/LoginAdornedTextField";
 import { LoginCaptchaField } from "./components/LoginCaptchaField";
 import { type LoginNavState } from "./login-nav-state";
 import formStyles from "./styles/LoginFormShared.module.scss";
@@ -311,18 +312,16 @@ export const VerifyLoginCodeForm = ({
 
       {mode === "password" ? (
         <form onSubmit={handlePasswordSubmit} className={formStyles.loginForm}>
-          <TextField
+          <LoginAdornedTextField
             fullWidth
             label={t("auth.login.passwordFieldTitle")}
-            placeholder={t("auth.login.passwordPlaceholder")}
-            variant="outlined"
             type={showPassword ? "text" : "password"}
             value={password}
             onChange={(event) => {
               setPassword(event.target.value);
               setHasError(false);
             }}
-            className={formStyles.textField}
+            endAdornmentOnlyWhenLabelShrunk
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">

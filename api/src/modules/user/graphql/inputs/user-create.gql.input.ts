@@ -5,17 +5,22 @@ import {
   IsEnum,
   IsOptional,
   IsString,
+  MinLength,
   ValidateNested,
 } from "class-validator";
 import { Field, InputType } from "@nestjs/graphql";
 
 import { UserRole, UserStatus } from "../../../../enums";
+import { MIN_USERNAME_LENGTH } from "../../../../utils/username-policy.util";
 import { UserUpdateProfileGqlInput } from "./user-update.gql.input";
 
 @InputType()
 export class UserCreateGqlInput {
   @Field({ description: "Unique username" })
   @IsString({ message: "Username must be a string" })
+  @MinLength(MIN_USERNAME_LENGTH, {
+    message: `Username must be at least ${MIN_USERNAME_LENGTH} characters long`,
+  })
   username: string;
 
   @Field({ description: "Initial account password" })

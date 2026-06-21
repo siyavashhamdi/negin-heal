@@ -1,12 +1,19 @@
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from "react";
 import { useQuery } from "@apollo/client/react";
-import { Box, CircularProgress, IconButton, InputAdornment, TextField, Typography } from "@mui/material";
+import { Box, CircularProgress, IconButton, InputAdornment, Typography } from "@mui/material";
 import { Replay as ReplayIcon, Security as SecurityIcon } from "@mui/icons-material";
 import { useTranslation } from "../../../hooks/useTranslation";
 import { USER_LOGIN_CAPTCHA_QUERY } from "../../../graphql/queries/userLoginCaptcha.query";
 import { LOGIN_CAPTCHA_MAX_AUTO_REFRESHES } from "../../../constants";
+import { toWesternDigits } from "../../../utilities/persian-digits.util";
+import { LoginAdornedTextField } from "./LoginAdornedTextField";
 import formStyles from "../styles/LoginFormShared.module.scss";
 import captchaStyles from "../styles/RequestLoginCode.module.scss";
+
+const CAPTCHA_INPUT_ALLOWED_CHARS = /[^a-zA-Z0-9]/g;
+
+const sanitizeCaptchaInput = (value: string): string =>
+  toWesternDigits(value).replace(CAPTCHA_INPUT_ALLOWED_CHARS, "").slice(0, 128).toUpperCase();
 
 interface UserLoginCaptchaResponse {
   userLoginCaptcha: {
@@ -99,7 +106,7 @@ export const LoginCaptchaField = ({
   }, [refetch]);
 
   const handleValueChange = (nextValue: string): void => {
-    setCaptchaValue(nextValue);
+    setCaptchaValue(sanitizeCaptchaInput(nextValue));
   };
 
   return (
@@ -134,15 +141,13 @@ export const LoginCaptchaField = ({
           </Box>
         </Box>
 
-        <TextField
+        <LoginAdornedTextField
           fullWidth
           label={t("auth.login.captchaInputLabel")}
-          placeholder={t("auth.login.captchaInputPlaceholder")}
-          variant="outlined"
           type="text"
           value={captchaValue}
-          onChange={(event) => handleValueChange(event.target.value.slice(0, 128))}
-          className={`${formStyles.textField} ${captchaStyles.captchaInputField}`}
+          onChange={(event) => handleValueChange(event.target.value)}
+          className={captchaStyles.captchaInputField}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -156,6 +161,11 @@ export const LoginCaptchaField = ({
           inputProps={{
             maxLength: 128,
             spellCheck: false,
+            className: formStyles.latinInput,
+            dir: "ltr",
+            lang: "en",
+            autoCapitalize: "off",
+            autoCorrect: "off",
           }}
         />
       </Box>

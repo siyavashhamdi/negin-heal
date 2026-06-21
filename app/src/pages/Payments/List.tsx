@@ -57,6 +57,7 @@ import {
 } from "../../hooks/useServerPaginatedQuery";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
+import { sanitizeMobilePhoneInput } from "../../utilities/mobile-phone.util";
 import EntityConfirmDialogShell from "../../shared/crud/EntityConfirmDialogShell";
 import EntityModalShell from "../../shared/crud/EntityModalShell";
 import EntityTableShell from "../../shared/crud/EntityTableShell";
@@ -158,6 +159,8 @@ const LATIN_TEXT_FILTER_KEYS = new Set<keyof CoursePaymentListFilters>([
   "transactionId",
   "couponCode",
 ]);
+
+const MOBILE_PHONE_FILTER_KEYS = new Set<keyof CoursePaymentListFilters>(["userPhone"]);
 
 const COLUMN_WIDTH_BY_ID: Record<string, string> = {
   userFullName: "13rem",
@@ -1181,6 +1184,7 @@ const PaymentsList = (): ReactElement => {
 
   const renderTextFilter = (key: keyof CoursePaymentListFilters, label: string): ReactElement => {
     const latin = LATIN_TEXT_FILTER_KEYS.has(key);
+    const numericPhone = MOBILE_PHONE_FILTER_KEYS.has(key);
 
     return (
       <TextField
@@ -1188,15 +1192,18 @@ const PaymentsList = (): ReactElement => {
         fullWidth
         aria-label={label}
         value={filters[key]}
-        onChange={(event) =>
-          setFilterValue(key, event.target.value as CoursePaymentListFilters[typeof key])
-        }
+        onChange={(event) => {
+          const rawValue = event.target.value;
+          const nextValue = numericPhone ? sanitizeMobilePhoneInput(rawValue) : rawValue;
+          setFilterValue(key, nextValue as CoursePaymentListFilters[typeof key]);
+        }}
         inputProps={
           latin
             ? {
-              className: styles.latinInput,
-              dir: "ltr",
-            }
+                className: styles.latinInput,
+                dir: "ltr",
+                ...(numericPhone ? { inputMode: "numeric" as const } : {}),
+              }
             : undefined
         }
       />

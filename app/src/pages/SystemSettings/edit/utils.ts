@@ -405,7 +405,7 @@ function serializeJsonForm(jsonForm: JsonFormState): JsonValue {
         port: finiteNumber(jsonForm.config.port, "پورت SMTP"),
         secure: jsonForm.config.secure,
         username: requiredText(jsonForm.config.username, "نام کاربری ایمیل"),
-        password: requiredText(jsonForm.config.password, "رمز عبور ایمیل"),
+        password: requiredText(jsonForm.config.password, "گذرواژه ایمیل"),
         fromName: requiredText(jsonForm.config.fromName, "نام فرستنده"),
         fromEmail: requiredText(jsonForm.config.fromEmail, "ایمیل فرستنده"),
       };

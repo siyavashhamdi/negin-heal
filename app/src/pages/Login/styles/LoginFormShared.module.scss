@@ -158,9 +158,12 @@
       right: 1rem;
       text-align: right;
       transform-origin: top right;
-      transform: translate(0, 1rem) scale(1);
 
-      &.MuiInputLabel-shrink {
+      &.MuiInputLabel-outlined:not(.MuiInputLabel-shrink) {
+        transform: translate(0, 1rem) scale(1);
+      }
+
+      &.MuiInputLabel-outlined.MuiInputLabel-shrink {
         transform: translate(0, -0.5625rem) scale(0.75);
       }
 
@@ -173,17 +176,23 @@
       position: absolute;
       top: 50%;
       left: 0.85rem;
+      right: auto;
+      transform: translateY(-50%);
+      margin: 0;
+    }
+
+    .MuiInputAdornment-positionEnd {
+      position: absolute;
+      top: 50%;
+      right: 0.85rem;
+      left: auto;
       transform: translateY(-50%);
       margin: 0;
     }
 
     .MuiInputBase-input {
-      direction: ltr;
-      text-align: left;
-      font-family: variables.$font-family-latin !important;
       padding-block: 0;
       line-height: 1.4375;
-      padding-left: 2.65rem !important;
       background-color: transparent !important;
 
       [data-theme="dark"] & {
@@ -230,6 +239,13 @@
         background-color: variables.$color-primary-light;
         color: variables.$color-primary-contrast;
       }
+    }
+
+    .MuiOutlinedInput-root:has(.MuiInputAdornment-positionStart) .MuiInputBase-input {
+      direction: ltr;
+      text-align: left;
+      font-family: variables.$font-family-latin !important;
+      padding-left: 2.65rem !important;
 
       &::placeholder {
         font-family: variables.$font-family !important;
@@ -243,12 +259,57 @@
         }
       }
     }
+
+    .MuiOutlinedInput-root:has(.MuiInputAdornment-positionEnd) .MuiInputBase-input {
+      padding-right: 2.65rem !important;
+    }
   }
+}
+
+.latinInput {
+  direction: ltr;
+  font-family: variables.$font-family-latin !important;
+  text-align: left;
+
+  &::placeholder {
+    direction: rtl;
+    font-family: variables.$font-family !important;
+    text-align: right;
+  }
+}
+
+.persianInput {
+  direction: rtl;
+  font-family: variables.$font-family !important;
+  text-align: right;
 }
 
 .inputIcon {
   color: variables.$color-primary-main;
   font-size: 1.25rem !important;
+}
+
+.passwordInputField {
+  :global {
+    .MuiInputAdornment-positionStart {
+      left: 0.75rem;
+    }
+
+    .MuiOutlinedInput-root:has(.MuiInputAdornment-positionStart) .MuiInputBase-input {
+      padding-left: 1.5rem !important;
+      padding-right: 2.65rem !important;
+    }
+
+    .MuiInputAdornment-positionEnd {
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .MuiOutlinedInput-root[data-label-shrunk="true"] .MuiInputAdornment-positionEnd {
+      visibility: visible;
+      pointer-events: auto;
+    }
+  }
 }
 
 .loginButton {

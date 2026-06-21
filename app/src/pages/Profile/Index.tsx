@@ -17,6 +17,9 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useMobileAppLayout } from "../../hooks/useMobileAppLayout";
 import { useMe, type UserMeGqlResponse } from "../../hooks/useMe";
 import { resolveMeUserDisplayName, resolveStoredUserDisplayName } from "../../utils/storedUser.util";
+import { sanitizeMobilePhoneInput } from "../../utilities/mobile-phone.util";
+import { isValidEmail, isValidMobilePhone } from "../../utilities/contact-validation.util";
+import { isValidUsernameLength } from "../../utils/usernamePolicy.util";
 import { LoginRequiredState } from "../../shared/auth/LoginRequiredState";
 import { PasswordPolicyChecklist } from "../../shared/auth/PasswordPolicyChecklist";
 import { USER_PROFILE_UPDATE_MUTATION } from "../../graphql/mutations/userProfileUpdate.mutation";
@@ -110,7 +113,7 @@ function optionalTextInput(value: string): string | null {
 }
 
 function isProfileEditFormValid(form: ProfileEditForm): boolean {
-  return form.username.trim().length > 0 && form.firstName.trim().length > 0;
+  return isValidUsernameLength(form.username) && form.firstName.trim().length > 0;
 }
 
 const latinFieldInputProps = {
@@ -388,6 +391,11 @@ const AuthenticatedProfile = (): ReactElement => {
       return;
     }
 
+    if (!isValidUsernameLength(username)) {
+      showError("نام کاربری باید حداقل ۵ کاراکتر باشد.");
+      return;
+    }
+
     if (!firstName) {
       showError("نام الزامی است.");
       return;
@@ -399,9 +407,19 @@ const AuthenticatedProfile = (): ReactElement => {
       bio: optionalTextInput(editForm.bio),
     };
     if (!isEmailLocked) {
+      const emailValue = editForm.email.trim();
+      if (emailValue && !isValidEmail(emailValue)) {
+        showError("ایمیل وارد شده معتبر نیست.");
+        return;
+      }
       profileInput.email = optionalTextInput(editForm.email);
     }
     if (!isPhoneNumberLocked) {
+      const phoneValue = editForm.phoneNumber.trim();
+      if (phoneValue && !isValidMobilePhone(phoneValue)) {
+        showError("شماره موبایل وارد شده معتبر نیست.");
+        return;
+      }
       profileInput.phoneNumber = optionalTextInput(editForm.phoneNumber);
     }
 
@@ -429,17 +447,17 @@ const AuthenticatedProfile = (): ReactElement => {
     const confirmPassword = passwordForm.confirmPassword.trim();
 
     if (!currentPassword || !newPassword || !confirmPassword) {
-      showError("لطفا همه فیلدهای رمز عبور را تکمیل کنید.");
+      showError("لطفا همه فیلدهای گذرواژه را تکمیل کنید.");
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      showError("رمز عبور جدید و تکرار آن یکسان نیستند.");
+      showError("گذرواژه جدید و تکرار آن یکسان نیستند.");
       return;
     }
 
     if (!arePasswordRulesPassed(newPassword)) {
-      showError("رمز عبور جدید باید شرایط امنیتی نمایش‌داده‌شده را داشته باشد.");
+      showError("گذرواژه جدید باید شرایط امنیتی نمایش‌داده‌شده را داشته باشد.");
       return;
     }
 
@@ -535,8 +553,8 @@ const AuthenticatedProfile = (): ReactElement => {
         <button type="button" className={styles.actionCard} {...opaqueShellProps} onClick={openPasswordDialog}>
           <PasswordRoundedIcon />
           <span>
-            <strong>تغییر رمز عبور</strong>
-            <small>به‌روزرسانی رمز عبور حساب کاربری</small>
+            <strong>تغییر گذرواژه</strong>
+            <small>به‌روزرسانی گذرواژه حساب کاربری</small>
           </span>
         </button>
       </div>
@@ -630,12 +648,14 @@ const AuthenticatedProfile = (): ReactElement => {
               <TextField
                 label="شماره موبایل"
                 value={editForm.phoneNumber}
-                onChange={(event) => setEditField("phoneNumber", event.target.value)}
+                onChange={(event) =>
+                  setEditField("phoneNumber", sanitizeMobilePhoneInput(event.target.value))
+                }
                 fullWidth
                 size="small"
                 autoComplete="tel"
                 disabled={isPhoneNumberLocked}
-                inputProps={{ ...latinFieldInputProps, inputMode: "tel" }}
+                inputProps={{ ...latinFieldInputProps, inputMode: "numeric" }}
                 helperText={
                   isPhoneNumberLocked
                     ? "برای تغییر شماره موبایل با پشتیبانی تماس بگیرید."
@@ -670,8 +690,8 @@ const AuthenticatedProfile = (): ReactElement => {
         onClose={closePasswordDialog}
         disableClose={isChangingPassword}
         hasUnsavedChanges={canSubmitPasswordChange}
-        title="تغییر رمز عبور"
-        subtitle="رمز عبور جدید باید با سیاست امنیتی سامانه سازگار باشد."
+        title="تغییر گذرواژه"
+        subtitle="گذرواژه جدید باید با سیاست امنیتی سامانه سازگار باشد."
         maxWidth="sm"
         useFormWrapper
         onSubmit={handleSubmitPassword}
@@ -687,7 +707,7 @@ const AuthenticatedProfile = (): ReactElement => {
               },
               {
                 key: "submit",
-                label: isChangingPassword ? "در حال ذخیره..." : "ذخیره رمز عبور",
+                label: isChangingPassword ? "در حال ذخیره..." : "ذخیره گذرواژه",
                 type: "submit",
                 disabled: isChangingPassword || !canSubmitPasswordChange,
               },
@@ -697,7 +717,7 @@ const AuthenticatedProfile = (): ReactElement => {
       >
         <Stack spacing={2}>
               <TextField
-                label="رمز عبور فعلی"
+                label="گذرواژه فعلی"
                 value={passwordForm.currentPassword}
                 onChange={(event) => setPasswordField("currentPassword", event.target.value)}
                 required
@@ -707,7 +727,7 @@ const AuthenticatedProfile = (): ReactElement => {
                 autoComplete="current-password"
               />
               <TextField
-                label="رمز عبور جدید"
+                label="گذرواژه جدید"
                 value={passwordForm.newPassword}
                 onChange={(event) => setPasswordField("newPassword", event.target.value)}
                 required
@@ -718,7 +738,7 @@ const AuthenticatedProfile = (): ReactElement => {
               />
               <PasswordPolicyChecklist password={passwordForm.newPassword} />
               <TextField
-                label="تکرار رمز عبور جدید"
+                label="تکرار گذرواژه جدید"
                 value={passwordForm.confirmPassword}
                 onChange={(event) => setPasswordField("confirmPassword", event.target.value)}
                 required
@@ -729,7 +749,7 @@ const AuthenticatedProfile = (): ReactElement => {
                 error={Boolean(passwordForm.confirmPassword) && !passwordsMatch}
                 helperText={
                   passwordForm.confirmPassword && !passwordsMatch
-                    ? "رمز عبور جدید و تکرار آن یکسان نیستند."
+                    ? "گذرواژه جدید و تکرار آن یکسان نیستند."
                     : undefined
                 }
               />
@@ -739,7 +759,7 @@ const AuthenticatedProfile = (): ReactElement => {
       <EntityConfirmDialogShell
         open={logoutCountdown !== null}
         onClose={logout}
-        title="رمز عبور تغییر کرد"
+        title="گذرواژه تغییر کرد"
         footer={
           <ModalFooterActions
             reverseOrderOnMobile={false}
@@ -754,7 +774,7 @@ const AuthenticatedProfile = (): ReactElement => {
         }
       >
         <Alert severity="success">
-          رمز عبور با موفقیت به‌روزرسانی شد. برای ادامه، باید دوباره وارد حساب شوید.
+          گذرواژه با موفقیت به‌روزرسانی شد. برای ادامه، باید دوباره وارد حساب شوید.
           خروج خودکار تا {logoutCountdown ?? 0} ثانیه دیگر انجام می‌شود.
         </Alert>
       </EntityConfirmDialogShell>

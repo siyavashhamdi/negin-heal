@@ -1,13 +1,10 @@
 import { useState, type ReactElement } from "react";
 import {
-  TextField,
   Button,
   CircularProgress,
   InputAdornment,
   Typography,
-  useMediaQuery,
 } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
 import {
   AlternateEmail as AlternateEmailIcon,
   ArrowBack as ArrowBackIcon,
@@ -19,18 +16,18 @@ import { useSnackbar } from "../../hooks/useSnackbar";
 import { useLogin } from "../../hooks/useLogin";
 import LoginShell from "./LoginShell";
 import { type LoginNavState } from "./login-nav-state";
-import { EMAIL_REGEX, MOBILE_REGEX, sanitizeAuthIdentityInput } from "./password-reset-form.util";
+import { EMAIL_REGEX, isValidMobilePhone, sanitizeAuthIdentityInput } from "./password-reset-form.util";
+import { LoginAdornedTextField } from "./components/LoginAdornedTextField";
 import formStyles from "./styles/LoginFormShared.module.scss";
 
 const detectIdentityKind = (identity: string): LoginNavState["identityKind"] => {
   const trimmedIdentity = identity.trim();
-  const digitsOnly = trimmedIdentity.replace(/\D/g, "");
 
   if (EMAIL_REGEX.test(trimmedIdentity)) {
     return "email";
   }
 
-  if (MOBILE_REGEX.test(trimmedIdentity) || /^9\d{9}$/.test(digitsOnly)) {
+  if (isValidMobilePhone(trimmedIdentity)) {
     return "mobile";
   }
 
@@ -55,8 +52,6 @@ const RequestLoginCode = ({
   const { t } = useTranslation();
   const { showError } = useSnackbar();
   const { resolveAuthIdentity, loading } = useLogin();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [identity, setIdentity] = useState(() =>
     sanitizeAuthIdentityInput(initialPrefill?.identity ?? ""),
@@ -95,10 +90,17 @@ const RequestLoginCode = ({
       return;
     }
 
+    const identityKind = detectIdentityKind(trimmedIdentity);
+    if (identityKind === "mobile" && !isValidMobilePhone(trimmedIdentity)) {
+      setFieldError(true);
+      showError(t("auth.login.errors.invalidMobile"));
+      return;
+    }
+
     setFieldError(false);
     const navState: LoginNavState = {
       identity: trimmedIdentity,
-      identityKind: detectIdentityKind(trimmedIdentity),
+      identityKind,
     };
     const exists = await resolveAuthIdentity({ identity: trimmedIdentity });
     if (exists === null) {
@@ -120,20 +122,15 @@ const RequestLoginCode = ({
           {t("auth.login.identityStepLead")}
         </Typography>
 
-        <TextField
+        <LoginAdornedTextField
           fullWidth
           label={t("auth.login.identityFieldTitle")}
-          placeholder={t(
-            isMobile ? "auth.login.identityPlaceholderMobile" : "auth.login.identityPlaceholder",
-          )}
-          variant="outlined"
           type="text"
           value={identity}
           onChange={(event) => {
             setIdentity(sanitizeAuthIdentityInput(event.target.value));
             setFieldError(false);
           }}
-          className={formStyles.textField}
           inputProps={{
             lang: "en",
             spellCheck: "false",

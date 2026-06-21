@@ -47,6 +47,9 @@ import {
 } from "../../hooks/useServerPaginatedQuery";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
+import { sanitizeMobilePhoneInput } from "../../utilities/mobile-phone.util";
+import { isValidEmail, isValidMobilePhone } from "../../utilities/contact-validation.util";
+import { isValidUsernameLength } from "../../utils/usernamePolicy.util";
 import CrudRowActions from "../../shared/crud/CrudRowActions";
 import EntityTableShell from "../../shared/crud/EntityTableShell";
 import FileUploadField from "../../shared/forms/FileUploadField";
@@ -436,7 +439,7 @@ const UsersManagementList = (): ReactElement => {
 
   const isCreateFormReady =
     editForm != null &&
-    editForm.username.trim().length > 0 &&
+    isValidUsernameLength(editForm.username) &&
     editForm.roles.length > 0 &&
     editForm.password.trim().length > 0;
 
@@ -636,7 +639,8 @@ const UsersManagementList = (): ReactElement => {
       ManagedUsersListFilters,
       "username" | "firstName" | "lastName" | "fullName" | "email" | "phoneNumber"
     >,
-    label: string
+    label: string,
+    sanitize?: (value: string) => string,
   ): ReactElement => {
     const textFilterValue = pendingFilters[key];
     return (
@@ -645,12 +649,14 @@ const UsersManagementList = (): ReactElement => {
         fullWidth
         aria-label={label}
         value={textFilterValue}
-        onChange={(event) =>
+        onChange={(event) => {
+          const nextValue = sanitize ? sanitize(event.target.value) : event.target.value;
           setPendingFilters((prev) => ({
             ...prev,
-            [key]: event.target.value,
-          }))
-        }
+            [key]: nextValue,
+          }));
+        }}
+        inputProps={key === "phoneNumber" ? { inputMode: "numeric", dir: "ltr" } : undefined}
         InputProps={{
           endAdornment:
             textFilterValue.trim() !== "" ? (
@@ -742,7 +748,11 @@ const UsersManagementList = (): ReactElement => {
       return renderTextFilter("email", t("table.pages.usersManagement.columns.email"));
     }
     if (column.id === "phoneNumber") {
-      return renderTextFilter("phoneNumber", t("table.pages.usersManagement.columns.phoneNumber"));
+      return renderTextFilter(
+        "phoneNumber",
+        t("table.pages.usersManagement.columns.phoneNumber"),
+        sanitizeMobilePhoneInput,
+      );
     }
     if (column.id === "roles") {
       return renderSelectFilter(
@@ -878,8 +888,25 @@ const UsersManagementList = (): ReactElement => {
       return;
     }
 
+    if (!isValidUsernameLength(username)) {
+      showError(t("pages.usersManagement.validation.usernameMinLength"));
+      return;
+    }
+
     if (editForm.roles.length === 0) {
       showError(t("pages.usersManagement.edit.rolesRequired"));
+      return;
+    }
+
+    const emailValue = editForm.email.trim();
+    if (emailValue && !isValidEmail(emailValue)) {
+      showError(t("pages.usersManagement.validation.invalidEmail"));
+      return;
+    }
+
+    const phoneValue = editForm.phoneNumber.trim();
+    if (phoneValue && !isValidMobilePhone(phoneValue)) {
+      showError(t("pages.usersManagement.validation.invalidPhoneNumber"));
       return;
     }
 
@@ -1047,9 +1074,12 @@ const UsersManagementList = (): ReactElement => {
                   <TextField
                     label={t("table.pages.usersManagement.columns.phoneNumber")}
                     value={editForm.phoneNumber}
-                    onChange={(event) => setEditField("phoneNumber", event.target.value)}
+                    onChange={(event) =>
+                      setEditField("phoneNumber", sanitizeMobilePhoneInput(event.target.value))
+                    }
                     fullWidth
                     size="small"
+                    inputProps={{ inputMode: "numeric", dir: "ltr" }}
                   />
                 </Stack>
 

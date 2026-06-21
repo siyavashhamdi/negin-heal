@@ -29,7 +29,7 @@ const smtpFields = [
   { key: "host", label: "هاست SMTP" },
   { key: "port", label: "پورت", type: "number" },
   { key: "username", label: "نام کاربری" },
-  { key: "password", label: "رمز عبور", type: "password" },
+  { key: "password", label: "گذرواژه", type: "password" },
   { key: "fromName", label: "نام فرستنده" },
   { key: "fromEmail", label: "ایمیل فرستنده", type: "email" },
 ] as const;
