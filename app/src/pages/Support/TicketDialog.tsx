@@ -21,7 +21,7 @@ import { SUPER_ADMIN_TICKET_SEND_MUTATION } from "../../graphql/mutations/superA
 import { TICKET_CLOSE_MUTATION } from "../../graphql/mutations/ticketClose.mutation";
 import { USER_TICKET_CLOSE_MUTATION } from "../../graphql/mutations/userTicketClose.mutation";
 import { USER_TICKET_SEND_MUTATION } from "../../graphql/mutations/userTicketSend.mutation";
-import { USER_PICKER_LIST_QUERY } from "../../graphql/queries/userPickerList.query";
+import { USER_LIST_QUERY } from "../../graphql/queries/userList.query";
 import { useDebounce } from "../../hooks/useDebounce";
 import { USER_ME_QUERY } from "../../graphql/queries/userMe.query";
 import { type UserMeGqlResponse, type UserMeResponse } from "../../hooks/useMe";
@@ -29,6 +29,7 @@ import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
 import EntityModalShell from "../../shared/crud/EntityModalShell";
 import ModalFooterActions, { type ModalFooterAction } from "../../shared/crud/ModalFooterActions";
+import DateTimeValue from "../../shared/display/DateTimeValue";
 import EntityAutocompleteField from "../../shared/forms/EntityAutocompleteField";
 import FileUploadField from "../../shared/forms/FileUploadField";
 import {
@@ -42,9 +43,9 @@ import {
   FILE_UPLOAD_POLICY_MAX_SIZE_BYTES,
 } from "../../constants/fileUploadPolicies";
 import {
-  type UserPickerListQuery,
+  type UserListQuery,
   type UserListQueryVariables,
-  type UserPickerListRow,
+  type UserListItemRow,
 } from "../UsersManagement/users-management-list.api";
 import {
   TICKET_CATEGORY_LABEL,
@@ -123,7 +124,7 @@ type EndUserOption = {
   readonly id: string;
   readonly label: string;
   readonly subtitle: string;
-  readonly row: UserPickerListRow;
+  readonly row: UserListItemRow;
 };
 
 export type TicketDialogMode = "create" | "view";
@@ -145,25 +146,21 @@ const EMPTY_DISPLAY = "—";
 const END_USER_DEFAULT_OPTIONS_LIMIT = 10;
 const END_USER_SEARCH_OPTIONS_LIMIT = 200;
 
-function formatPersianDateTime(date: Date): string {
-  const datePart = date.toLocaleDateString("fa-IR");
-  const timePart = date.toLocaleTimeString("fa-IR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-
-  return `${timePart} · ${datePart}`;
-}
-
-function formatDateTime(value: string): string {
-  if (!value.trim()) {
-    return EMPTY_DISPLAY;
-  }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return EMPTY_DISPLAY;
-  }
-  return formatPersianDateTime(date);
+function TicketDateField({
+  label,
+  value,
+}: {
+  readonly label: string;
+  readonly value?: string | null;
+}): ReactElement {
+  return (
+    <Stack spacing={0.25}>
+      <Typography variant="body2" color="text.secondary">
+        {label}
+      </Typography>
+      <DateTimeValue value={value} />
+    </Stack>
+  );
 }
 
 function formatUserDisplayName(user: SupportTicketMessage["senderUser"]): string {
@@ -179,7 +176,7 @@ function formatUserDisplayName(user: SupportTicketMessage["senderUser"]): string
   return user.username?.trim() || "فرستنده نامشخص";
 }
 
-function getUserFullName(row: UserPickerListRow): string {
+function getUserFullName(row: UserListItemRow): string {
   const parts = [row.profile?.firstName?.trim(), row.profile?.lastName?.trim()].filter(
     (part): part is string => Boolean(part)
   );
@@ -187,14 +184,14 @@ function getUserFullName(row: UserPickerListRow): string {
   return parts.length > 0 ? parts.join(" ") : row.username;
 }
 
-function userToEndUserOption(row: UserPickerListRow): EndUserOption {
+function userToEndUserOption(row: UserListItemRow): EndUserOption {
   const phone = row.profile?.phoneNumber?.trim();
   const email = row.profile?.email?.trim();
 
   return {
     id: row.id,
     label: getUserFullName(row),
-    subtitle: [row.username, phone || email].filter(Boolean).join(" · "),
+    subtitle: [row.username, phone || email].filter(Boolean).join(" | "),
     row,
   };
 }
@@ -264,7 +261,7 @@ function getMessageToneStyle(
 function getMessageBubbleSx(
   isOwnMessage: boolean,
   toneStyle: { border: string; background: string },
-  theme: Theme,
+  theme: Theme
 ) {
   const borderColor = alpha(toneStyle.border, theme.palette.mode === "dark" ? 0.72 : 0.42);
   const cornerRadius = "1.125rem";
@@ -297,25 +294,12 @@ function getMessageSentAtTimestamp(value?: string | null): number {
   return Number.isNaN(date.getTime()) ? 0 : date.getTime();
 }
 
-function sortMessagesBySentAt(
-  messages: readonly SupportTicketMessage[],
-): SupportTicketMessage[] {
+function sortMessagesBySentAt(messages: readonly SupportTicketMessage[]): SupportTicketMessage[] {
   return [...messages].sort((left, right) => {
     const leftTimestamp = getMessageSentAtTimestamp(left.sentAt);
     const rightTimestamp = getMessageSentAtTimestamp(right.sentAt);
     return leftTimestamp - rightTimestamp;
   });
-}
-
-function formatMessageDateTime(value?: string | null): string {
-  if (!value?.trim()) {
-    return EMPTY_DISPLAY;
-  }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return EMPTY_DISPLAY;
-  }
-  return formatPersianDateTime(date);
 }
 
 function getProfileStyleInitial(displayName: string): string {
@@ -325,7 +309,7 @@ function getProfileStyleInitial(displayName: string): string {
 
 function formatMeDisplayName(
   meUser: UserMeGqlResponse | null,
-  fallbackUsername?: string | null,
+  fallbackUsername?: string | null
 ): string {
   if (!meUser) {
     return fallbackUsername?.trim() || "کاربر";
@@ -345,7 +329,7 @@ function resolveMessageAvatarUrl(
   message: SupportTicketMessage,
   tone: "own" | "support" | "user",
   currentUserAvatarUrl: string | null,
-  ticketOwnerAvatarUrl: string | null,
+  ticketOwnerAvatarUrl: string | null
 ): string | null {
   const senderAvatarUrl = resolveFileAccessUrl(message.senderUser?.profile?.avatarAccessUrl);
   if (senderAvatarUrl) {
@@ -504,12 +488,11 @@ function MessageBubble({
     isEndUserView && isOwnMessage ? "شما" : formatUserDisplayName(message.senderUser);
   const avatarDisplayName = isOwnMessage ? currentUserDisplayName : senderName;
   const messageNumber = `#${(messageIndex + 1).toLocaleString("fa-IR")}`;
-  const sentAtLabel = formatMessageDateTime(message.sentAt);
   const avatarUrl = resolveMessageAvatarUrl(
     message,
     tone,
     currentUserAvatarUrl,
-    ticketOwnerAvatarUrl,
+    ticketOwnerAvatarUrl
   );
 
   return (
@@ -548,13 +531,7 @@ function MessageBubble({
             >
               {messageNumber}
             </Typography>
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ fontVariantNumeric: "tabular-nums" }}
-            >
-              {sentAtLabel}
-            </Typography>
+            <DateTimeValue value={message.sentAt} />
           </Stack>
         </Stack>
 
@@ -600,7 +577,7 @@ const TicketDialog = ({
   const currentUserId = user?.id?.trim();
   const currentUserDisplayName = useMemo(
     () => formatMeDisplayName(meUser, user?.username),
-    [meUser, user?.username],
+    [meUser, user?.username]
   );
   const roles = user?.roles ?? [];
   const isEndUserView = !roles.includes("SUPER_ADMIN") && !roles.includes("ADMIN");
@@ -658,9 +635,9 @@ const TicketDialog = ({
   }, [debouncedEndUserSearch]);
 
   const { data: endUserOptionsData, loading: endUserOptionsLoading } = useQuery<
-    UserPickerListQuery,
+    UserListQuery,
     UserListQueryVariables
-  >(USER_PICKER_LIST_QUERY, {
+  >(USER_LIST_QUERY, {
     variables: endUserOptionsVariables,
     fetchPolicy: "cache-first",
     skip: !open || mode !== "create" || !isSuperAdmin,
@@ -825,12 +802,12 @@ const TicketDialog = ({
 
   const conversationMessages = useMemo(
     () => (record ? sortMessagesBySentAt(record.messages) : []),
-    [record],
+    [record]
   );
 
   const ticketOwnerAvatarUrl = useMemo(
     () => resolveFileAccessUrl(record?.createdByUser?.profile?.avatarAccessUrl) ?? null,
-    [record?.createdByUser?.profile?.avatarAccessUrl],
+    [record?.createdByUser?.profile?.avatarAccessUrl]
   );
 
   const handleCloseTicket = (): void => {
@@ -872,10 +849,7 @@ const TicketDialog = ({
   if (mode === "create" || canReply) {
     footerActions.push({
       key: "submit",
-      label:
-        mode === "create"
-          ? t("pages.support.create.submit")
-          : t("pages.support.reply.submit"),
+      label: mode === "create" ? t("pages.support.create.submit") : t("pages.support.reply.submit"),
       type: "submit",
       variant: "contained",
       color: "primary",
@@ -1001,14 +975,16 @@ const TicketDialog = ({
                 <Typography variant="body2" color="text.secondary">
                   {t("table.pages.support.columns.createdByUserName")}: {record.createdByUserName}
                 </Typography>
+                <TicketDateField
+                  label={t("table.pages.support.columns.createdAt")}
+                  value={record.createdAt}
+                />
+                <TicketDateField
+                  label={t("table.pages.support.columns.updatedAt")}
+                  value={record.updatedAt}
+                />
                 <Typography variant="body2" color="text.secondary">
-                  {t("table.pages.support.columns.createdAt")}: {formatDateTime(record.createdAt)}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {t("table.pages.support.columns.updatedAt")}: {formatDateTime(record.updatedAt)}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  پیام‌ها: {record.messageCount.toLocaleString("fa-IR")} · پیوست:{" "}
+                  پیام‌ها: {record.messageCount.toLocaleString("fa-IR")} | پیوست:{" "}
                   {record.attachmentCount.toLocaleString("fa-IR")}
                 </Typography>
                 {record.closedAt ? (
@@ -1021,9 +997,10 @@ const TicketDialog = ({
                           ] ?? record.closedBy)
                         : EMPTY_DISPLAY}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {t("table.pages.support.columns.closedAt")}: {formatDateTime(record.closedAt)}
-                    </Typography>
+                    <TicketDateField
+                      label={t("table.pages.support.columns.closedAt")}
+                      value={record.closedAt}
+                    />
                   </>
                 ) : null}
               </Box>

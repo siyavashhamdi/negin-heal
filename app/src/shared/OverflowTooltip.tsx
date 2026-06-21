@@ -2,11 +2,9 @@ import { Box, useMediaQuery } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material/styles";
 import {
   useCallback,
-  useEffect,
   useLayoutEffect,
   useRef,
   useState,
-  type MouseEvent,
   type ReactElement,
   type ReactNode,
 } from "react";
@@ -82,10 +80,9 @@ export function OverflowTooltip({
   const contentRef = useRef<HTMLElement>(null);
   const [isOverflowing, setIsOverflowing] = useState(false);
   const [detectedText, setDetectedText] = useState("");
-  const [touchOpen, setTouchOpen] = useState(false);
   const isMobileLayout = useMobileAppLayout();
   const isTouchPrimary = useMediaQuery("(hover: none) and (pointer: coarse)");
-  const useTouchToggle = isMobileLayout || isTouchPrimary;
+  const useTouchLongPress = isMobileLayout || isTouchPrimary;
   const tooltipText = title ?? detectedText;
 
   const updateOverflowState = useCallback((): void => {
@@ -96,9 +93,6 @@ export function OverflowTooltip({
     const { overflowing, text } = measureOverflow(element, measureNested);
     setIsOverflowing(overflowing);
     setDetectedText(text);
-    if (!overflowing) {
-      setTouchOpen(false);
-    }
   }, [measureNested]);
 
   useLayoutEffect(() => {
@@ -114,52 +108,18 @@ export function OverflowTooltip({
     };
   }, [children, updateOverflowState]);
 
-  useEffect(() => {
-    if (!touchOpen) {
-      return;
-    }
-    const closeOnScroll = (): void => {
-      setTouchOpen(false);
-    };
-    window.addEventListener("scroll", closeOnScroll, true);
-    return () => {
-      window.removeEventListener("scroll", closeOnScroll, true);
-    };
-  }, [touchOpen]);
-
   const showTooltip = isOverflowing && tooltipText !== "";
-
-  const handleTouchToggle = (event: MouseEvent<HTMLElement>): void => {
-    if (!useTouchToggle || !showTooltip) {
-      return;
-    }
-    if (!touchOpen) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-    setTouchOpen((prev) => !prev);
-  };
 
   return (
     <AppTooltip
       title={tooltipText}
       arrow
       enterDelay={500}
-      enterTouchDelay={0}
-      open={useTouchToggle ? (showTooltip ? touchOpen : false) : undefined}
-      onClose={() => setTouchOpen(false)}
-      disableHoverListener={!showTooltip || useTouchToggle}
-      disableFocusListener={!showTooltip || useTouchToggle}
-      disableTouchListener={!showTooltip || useTouchToggle}
+      disableHoverListener={!showTooltip || useTouchLongPress}
+      disableFocusListener={!showTooltip || useTouchLongPress}
+      disableTouchListener={!showTooltip}
     >
-      <Box
-        component={component}
-        ref={contentRef}
-        className={className}
-        sx={sx}
-        onClick={handleTouchToggle}
-        aria-label={showTooltip && useTouchToggle ? tooltipText : undefined}
-      >
+      <Box component={component} ref={contentRef} className={className} sx={sx}>
         {children}
       </Box>
     </AppTooltip>

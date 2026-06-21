@@ -202,16 +202,16 @@ $layout-sm: variables.$breakpoint-sm;
   }
 
   .filterPanelCollapsed {
-    position: sticky;
     z-index: 1285;
     justify-self: start;
-    inline-size: auto;
-    block-size: auto;
+    inline-size: fit-content;
+    block-size: fit-content;
     margin-block-end: calc(-2.85rem - 0.85rem);
-    padding: 0;
+    padding: 0 !important;
     border: none !important;
     border-radius: 0 !important;
     background: transparent !important;
+    background-color: transparent !important;
     box-shadow: none !important;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
@@ -506,6 +506,7 @@ body[data-theme="dark"] {
   .filterPanelCollapsed {
     border: none !important;
     background: transparent !important;
+    background-color: transparent !important;
     box-shadow: none !important;
   }
 }

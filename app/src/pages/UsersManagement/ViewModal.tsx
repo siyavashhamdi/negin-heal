@@ -1,4 +1,4 @@
-import { type ReactElement } from "react";
+import { type ReactElement, type ReactNode } from "react";
 import { Stack, Typography } from "@mui/material";
 import { useTranslation } from "../../hooks/useTranslation";
 import { useUsersManagementEntityTitle } from "./useUsersManagementEntityTitle";
@@ -6,6 +6,7 @@ import { getFileIdFromAccessUrl } from "../../utils/fileAccessUrl.util";
 import type { ManagedUserRecord } from "./users-management.types";
 import EntityModalShell from "../../shared/crud/EntityModalShell";
 import ModalFooterActions from "../../shared/crud/ModalFooterActions";
+import DateTimeValue from "../../shared/display/DateTimeValue";
 
 interface UsersManagementViewModalProps {
   open: boolean;
@@ -13,7 +14,7 @@ interface UsersManagementViewModalProps {
   onClose: () => void;
 }
 
-function FieldRow({ label, value }: { label: string; value: string }): ReactElement {
+function FieldRow({ label, value }: { label: string; value: ReactNode }): ReactElement {
   return (
     <Stack spacing={0.5}>
       <Typography variant="caption" color="text.secondary">
@@ -76,11 +77,11 @@ const UsersManagementViewModal = ({
           <FieldRow label={t("pages.usersManagement.viewModal.status")} value={record.status} />
           <FieldRow
             label={t("pages.usersManagement.viewModal.createdAt")}
-            value={record.createdAt}
+            value={<DateTimeValue value={record.createdAt} emphasizeDate />}
           />
           <FieldRow
             label={t("pages.usersManagement.viewModal.updatedAt")}
-            value={record.updatedAt}
+            value={<DateTimeValue value={record.updatedAt} emphasizeDate />}
           />
         </Stack>
     </EntityModalShell>

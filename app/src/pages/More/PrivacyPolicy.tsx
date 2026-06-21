@@ -1,9 +1,8 @@
-import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import PrivacyTipRoundedIcon from "@mui/icons-material/PrivacyTipRounded";
 import { useQuery } from "@apollo/client/react";
 import { type ReactElement } from "react";
-import { useNavigate } from "react-router-dom";
 import { APP_PRIVACY_POLICY_PAGE_QUERY } from "../../graphql/queries/appPrivacyPolicyPageConfig.query";
+import PageBackNavigation from "../../shared/PageBackNavigation";
 import {
   EMPTY_APP_PRIVACY_POLICY_PAGE,
   type AppPrivacyPolicyPageConfigQuery,
@@ -14,7 +13,6 @@ import { opaqueShellProps } from "../../shared/opaqueShell";
 const hasText = (value: string): boolean => value.trim().length > 0;
 
 const PrivacyPolicyPage = (): ReactElement => {
-  const navigate = useNavigate();
   const { data, loading } = useQuery<AppPrivacyPolicyPageConfigQuery>(
     APP_PRIVACY_POLICY_PAGE_QUERY,
     {
@@ -25,6 +23,8 @@ const PrivacyPolicyPage = (): ReactElement => {
 
   return (
     <section className={styles.page} aria-busy={loading}>
+      <PageBackNavigation label="بازگشت به سایر" fallbackTo="/more" />
+
       <div className={styles.hero} {...opaqueShellProps}>
         <p>حریم خصوصی</p>
         <h2>سیاست حریم خصوصی</h2>
@@ -36,10 +36,6 @@ const PrivacyPolicyPage = (): ReactElement => {
           <span className={styles.aboutIcon}>
             <PrivacyTipRoundedIcon />
           </span>
-          <button type="button" onClick={() => navigate("/more")}>
-            بازگشت
-            <ArrowBackRoundedIcon />
-          </button>
         </div>
 
         {hasText(privacyPolicyPage.html) ? (

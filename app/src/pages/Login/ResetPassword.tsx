@@ -11,7 +11,6 @@ import {
   Typography,
 } from "@mui/material";
 import {
-  ArrowForward as ArrowForwardIcon,
   CheckCircle as CheckCircleIcon,
   Key as KeyIcon,
   Lock as LockIcon,
@@ -24,6 +23,7 @@ import { usePasswordReset } from "../../hooks/usePasswordReset";
 import { PasswordPolicyChecklist } from "../../shared/auth/PasswordPolicyChecklist";
 import { arePasswordRulesPassed } from "../../utils/passwordPolicy.util";
 import LoginShell from "./LoginShell";
+import { PageBackTextButton } from "../../shared/PageBackNavigation";
 import formStyles from "./styles/LoginFormShared.module.scss";
 
 const getTokenFromLocation = (searchParams: URLSearchParams): string =>
@@ -108,15 +108,11 @@ const ResetPassword = (): ReactElement => {
           <Typography component="p" className={formStyles.formLead}>
             {t("auth.login.resetPasswordCompletedLead")}
           </Typography>
-          <Button
-            type="button"
-            variant="contained"
-            className={formStyles.loginButton}
+          <PageBackTextButton
+            label={t("auth.login.backToSignIn")}
             onClick={goToLogin}
-            startIcon={<ArrowForwardIcon fontSize="small" />}
-          >
-            {t("auth.login.backToSignIn")}
-          </Button>
+            className={formStyles.formTextButton}
+          />
         </Box>
       </LoginShell>
     );
@@ -225,16 +221,12 @@ const ResetPassword = (): ReactElement => {
             : t("auth.login.resetPasswordButton")}
         </Button>
 
-        <Button
-          type="button"
-          variant="text"
-          className={formStyles.formTextButton}
+        <PageBackTextButton
+          label={t("auth.login.backToSignIn")}
           onClick={goToLogin}
+          className={formStyles.formTextButton}
           disabled={resettingPassword}
-          startIcon={<ArrowForwardIcon fontSize="small" />}
-        >
-          {t("auth.login.backToSignIn")}
-        </Button>
+        />
       </form>
     </LoginShell>
   );

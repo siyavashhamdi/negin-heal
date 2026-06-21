@@ -213,14 +213,12 @@ const CourseCard = ({
                 <ImageNotSupportedRoundedIcon />
               </span>
             )}
-            <div className={styles.coverScrimTop} aria-hidden="true" />
 
             <div className={styles.topChipsRow} onClick={(event) => event.stopPropagation()}>
               {isManagement ? (
                 <AppTooltip
                   title={item.isActive ? "وضعیت فعال" : "وضعیت غیرفعال"}
                   arrow
-                  enterTouchDelay={0}
                   leaveTouchDelay={2200}
                 >
                   <span className={styles.statusChipWrap}>
@@ -242,7 +240,6 @@ const CourseCard = ({
               <AppTooltip
                 title={RELEASE_TYPE_TOOLTIP_LABEL[item.releaseType]}
                 arrow
-                enterTouchDelay={0}
                 leaveTouchDelay={2200}
               >
                 <span className={styles.releaseTypeChipWrap}>
@@ -321,7 +318,7 @@ const CourseCard = ({
             <div className={styles.priceFooter}>
               <div className={styles.priceBarBackdrop} aria-hidden="true">
                 {coverImageUrl ? (
-                  <img src={coverImageUrl} alt="" className={styles.priceBarCoverImage} loading="lazy" />
+                  <img src={coverImageUrl} alt="" className={styles.priceBarCoverImage} loading="eager" />
                 ) : (
                   <span className={styles.priceBarCoverFallback} />
                 )}

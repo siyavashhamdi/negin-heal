@@ -23,7 +23,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "kill:port": "lsof -ti:3000 | xargs kill -9 2>/dev/null || echo \"No process found on port 3000\"",
     "seed:courses": "tsx -r tsconfig-paths/register src/scripts/seed-real-courses.ts",
-    "seed:coupons": "tsx -r tsconfig-paths/register src/scripts/seed-real-coupons.ts"
+    "seed:coupons": "tsx -r tsconfig-paths/register src/scripts/seed-real-coupons.ts",
+    "seed:notifications": "tsx -r tsconfig-paths/register src/scripts/seed-notifications.ts"
   },
   "dependencies": {
     "@apollo/server": "^4.9.5",

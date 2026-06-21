@@ -1250,6 +1250,7 @@ export class UserService {
         { "profile.lastName": searchRegex },
         { "profile.email": searchRegex },
         { "profile.phoneNumber": searchRegex },
+        this.buildFullNameSearchCondition(filters.query),
       ]);
     }
 
@@ -1277,7 +1278,7 @@ export class UserService {
     );
 
     if (filters.role) {
-      query.roles = filters.role;
+      query.roles = { $eq: [filters.role] };
     }
 
     if (filters.status) {
@@ -1808,6 +1809,28 @@ export class UserService {
     return {
       $regex: this.escapeRegex(value),
       $options: "i",
+    };
+  }
+
+  private buildFullNameSearchCondition(searchText: string): FilterQuery<User> {
+    return {
+      $expr: {
+        $regexMatch: {
+          input: {
+            $trim: {
+              input: {
+                $concat: [
+                  { $ifNull: ["$profile.firstName", ""] },
+                  " ",
+                  { $ifNull: ["$profile.lastName", ""] },
+                ],
+              },
+            },
+          },
+          regex: this.escapeRegex(searchText),
+          options: "i",
+        },
+      },
     };
   }
 

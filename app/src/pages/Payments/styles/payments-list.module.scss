@@ -1,0 +1,12 @@
+@use "../../../styles/variables" as variables;
+
+.latinInput {
+  direction: ltr;
+  font-family: variables.$font-family-latin !important;
+  text-align: left;
+}
+
+.latinText {
+  direction: ltr;
+  font-family: variables.$font-family-latin !important;
+}

@@ -215,6 +215,65 @@
   line-height: 1.65;
 }
 
+.notificationCalloutTitleRow,
+.androidInstallTitleRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.45rem;
+}
+
+.notificationCalloutTitleRow strong,
+.androidInstallTitleRow strong {
+  flex: 1;
+  min-width: 0;
+}
+
+.calloutInfoToggle {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  margin: 0;
+  padding: 0;
+  border: 0.0625rem solid color-mix(in srgb, var(--text-secondary) 24%, var(--app-surface-border));
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--text-secondary) 6%, transparent);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease,
+    color 140ms ease;
+}
+
+.calloutInfoToggle:hover {
+  border-color: color-mix(in srgb, variables.$color-primary-main 34%, var(--app-surface-border));
+  background: color-mix(in srgb, variables.$color-primary-main 8%, transparent);
+  color: variables.$color-primary-main;
+}
+
+.calloutInfoToggle:focus-visible {
+  outline: 0.16rem solid color-mix(in srgb, variables.$color-primary-main 42%, transparent);
+  outline-offset: 0.14rem;
+}
+
+.calloutInfoToggleActive {
+  border-color: color-mix(in srgb, variables.$color-primary-main 38%, var(--app-surface-border));
+  background: color-mix(in srgb, variables.$color-primary-main 12%, transparent);
+  color: variables.$color-primary-main;
+}
+
+.notificationCalloutExpandable {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.notificationCalloutExpandable[hidden] {
+  display: none;
+}
+
 .notificationCalloutContent p {
   margin: 0;
   color: var(--text-secondary);
@@ -374,6 +433,97 @@
 
 .iosInstallButton:focus-visible {
   outline: 0.16rem solid color-mix(in srgb, #2563eb 42%, transparent);
+  outline-offset: 0.16rem;
+}
+
+.androidInstallCard {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.75rem;
+  padding: 0.9rem;
+  border-radius: 1rem;
+  border: 0.0625rem solid rgba(61, 161, 105, 0.24);
+  background-color: #ffffff;
+  background-image: radial-gradient(circle at top right, rgba(61, 161, 105, 0.12), transparent 52%);
+
+  @supports (background: color-mix(in srgb, #ffffff 50%, #000000)) {
+    border-color: color-mix(in srgb, #3da169 24%, var(--app-surface-border));
+    background:
+      radial-gradient(
+        circle at top right,
+        color-mix(in srgb, #3da169 12%, transparent),
+        transparent 52%
+      ),
+      color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+  }
+}
+
+.androidInstallIcon {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 2.55rem;
+  block-size: 2.55rem;
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, #3da169 14%, transparent);
+  color: #3da169;
+}
+
+.androidInstallContent {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.androidInstallContent strong {
+  color: var(--text-primary);
+  font-size: 0.92rem;
+  line-height: 1.65;
+}
+
+.androidInstallContent > p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.79rem;
+  line-height: 1.85;
+}
+
+.androidInstallAccessNote {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.75rem;
+  border: 0.0625rem solid color-mix(in srgb, #3da169 22%, var(--app-surface-border));
+  background: color-mix(in srgb, #3da169 7%, transparent);
+}
+
+.androidInstallAccessNote[hidden] {
+  display: none;
+}
+
+.androidInstallAccessNote p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  line-height: 1.85;
+}
+
+.androidInstallButton {
+  justify-self: start;
+  min-block-size: 2.35rem;
+  padding: 0.45rem 0.95rem;
+  border: 0;
+  border-radius: 999rem;
+  background: #3da169;
+  color: #ffffff;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: variables.$font-weight-semibold;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.androidInstallButton:focus-visible {
+  outline: 0.16rem solid color-mix(in srgb, #3da169 42%, transparent);
   outline-offset: 0.16rem;
 }
 
@@ -780,7 +930,6 @@ a.linkCard {
 .aboutHeader {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 0.8rem;
 }
 
@@ -792,25 +941,6 @@ a.linkCard {
   border-radius: 1rem;
   background: color-mix(in srgb, #1976d2 12%, transparent);
   color: #1976d2;
-}
-
-.aboutHeader button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  min-block-size: 2.3rem;
-  padding: 0.45rem 0.75rem;
-  border: 0.0625rem solid color-mix(in srgb, #1976d2 26%, var(--app-surface-border));
-  border-radius: 999rem;
-  background: color-mix(in srgb, #1976d2 7%, transparent);
-  color: #1976d2;
-  font: inherit;
-  font-weight: variables.$font-weight-semibold;
-  cursor: pointer;
-}
-
-.aboutHeader button svg {
-  font-size: 1.05rem;
 }
 
 .aboutContent {
@@ -898,6 +1028,7 @@ body[data-theme="dark"] {
   .themeCard,
   .notificationsSection,
   .iosInstallCard,
+  .androidInstallCard,
   .linkCard,
   .globalAnouncementPanel,
   .aboutPanel {
@@ -994,6 +1125,21 @@ body[data-theme="dark"] {
         transparent 52%
       ),
       color-mix(in srgb, var(--app-surface-bg) 86%, #0f172a);
+  }
+
+  .androidInstallCard {
+    background:
+      radial-gradient(
+        circle at top right,
+        color-mix(in srgb, #3da169 16%, transparent),
+        transparent 52%
+      ),
+      color-mix(in srgb, var(--app-surface-bg) 86%, #0f172a);
+  }
+
+  .androidInstallAccessNote {
+    background: color-mix(in srgb, #3da169 10%, #0f172a);
+    border-color: color-mix(in srgb, #3da169 24%, var(--app-surface-border));
   }
 
   .iosInstallStep {

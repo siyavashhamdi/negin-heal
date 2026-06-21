@@ -41,6 +41,7 @@ import CrudRowActions from "../../shared/crud/CrudRowActions";
 import EntityTableShell from "../../shared/crud/EntityTableShell";
 import JalaliDateFilterField from "../../shared/table/JalaliDateFilterField";
 import crudPrimitives from "../../shared/crud/styles/crudPrimitives.module.scss";
+import DateTimeValue from "../../shared/display/DateTimeValue";
 import TicketDialog, { type TicketDialogMode } from "./TicketDialog";
 import {
   buildTicketListQueryVariables,
@@ -186,17 +187,6 @@ const PRIORITY_COLOR: Record<
 function orEmpty(value: string): string {
   const trimmed = value.trim();
   return trimmed === "" || trimmed === "-" ? EMPTY_DISPLAY : trimmed;
-}
-
-function formatDate(value: string): string {
-  if (!value.trim()) {
-    return EMPTY_DISPLAY;
-  }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return EMPTY_DISPLAY;
-  }
-  return date.toLocaleDateString("fa-IR");
 }
 
 function selectTicketListPage(
@@ -522,11 +512,7 @@ function SupportTicketListInner({
       {
         accessorKey: "closedAt",
         header: t("table.pages.support.columns.closedAt"),
-        cell: (info) => (
-          <Typography variant="body2" className={crudPrimitives.tabularNums}>
-            {formatDate(info.getValue() as string)}
-          </Typography>
-        ),
+        cell: (info) => <DateTimeValue value={info.getValue() as string} />,
       },
       {
         accessorKey: "createdByUserName",
@@ -545,20 +531,12 @@ function SupportTicketListInner({
       {
         accessorKey: "createdAt",
         header: t("table.pages.support.columns.createdAt"),
-        cell: (info) => (
-          <Typography variant="body2" className={crudPrimitives.tabularNums}>
-            {formatDate(info.getValue() as string)}
-          </Typography>
-        ),
+        cell: (info) => <DateTimeValue value={info.getValue() as string} />,
       },
       {
         accessorKey: "updatedAt",
         header: t("table.pages.support.columns.updatedAt"),
-        cell: (info) => (
-          <Typography variant="body2" className={crudPrimitives.tabularNums}>
-            {formatDate(info.getValue() as string)}
-          </Typography>
-        ),
+        cell: (info) => <DateTimeValue value={info.getValue() as string} />,
       },
       {
         id: "actions",

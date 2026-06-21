@@ -1,3 +1,4 @@
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import NotificationsOffRoundedIcon from "@mui/icons-material/NotificationsOffRounded";
 import ShieldRoundedIcon from "@mui/icons-material/ShieldRounded";
@@ -6,6 +7,7 @@ import { useState, type ReactElement } from "react";
 import { useBrowserNotificationPermission } from "../../hooks/useBrowserNotificationPermission";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
+import AppTooltip from "../../shared/AppTooltip";
 import {
   canRequestBrowserNotificationPrompt,
   isBrowserNotificationDeliverySupported,
@@ -50,6 +52,7 @@ const NotificationPermissionCallout = ({
   const { showError, showSuccess, showWarning } = useSnackbar();
   const { permission, refreshPermission } = useBrowserNotificationPermission();
   const [isRequesting, setIsRequesting] = useState(false);
+  const [isBlockedDetailsExpanded, setIsBlockedDetailsExpanded] = useState(false);
 
   if (!isSecureBrowserContext()) {
     return (
@@ -99,6 +102,7 @@ const NotificationPermissionCallout = ({
 
   const isDenied = permission === "denied";
   const showBrowserPromptButton = canRequestBrowserNotificationPrompt(permission);
+  const blockedDetailsId = "notification-blocked-details";
 
   const handleRequestBrowserPermission = async (): Promise<void> => {
     setIsRequesting(true);
@@ -138,31 +142,56 @@ const NotificationPermissionCallout = ({
       </div>
 
       <div className={styles.notificationCalloutContent}>
-        <strong>
-          {permission === "granted"
-            ? t("pages.more.notifications.browserGrantedTitle")
-            : isDenied
-              ? t("pages.more.notifications.blockedTitle")
+        {isDenied ? (
+          <div className={styles.notificationCalloutTitleRow}>
+            <strong>{t("pages.more.notifications.blockedTitle")}</strong>
+            <AppTooltip title={t("pages.more.infoToggleTooltip")} arrow>
+              <button
+                type="button"
+                className={`${styles.calloutInfoToggle} ${isBlockedDetailsExpanded ? styles.calloutInfoToggleActive : ""}`}
+                aria-expanded={isBlockedDetailsExpanded}
+                aria-controls={blockedDetailsId}
+                aria-label={t("pages.more.notifications.blockedDetailsToggleLabel")}
+                onClick={() => setIsBlockedDetailsExpanded((current) => !current)}
+              >
+                <InfoOutlinedIcon fontSize="small" />
+              </button>
+            </AppTooltip>
+          </div>
+        ) : (
+          <strong>
+            {permission === "granted"
+              ? t("pages.more.notifications.browserGrantedTitle")
               : t("pages.more.notifications.promptTitle")}
-        </strong>
-        <p>
-          {permission === "granted"
-            ? t("pages.more.notifications.browserGrantedDescription")
-            : isDenied
-              ? t("pages.more.notifications.blockedDescription")
-              : t("pages.more.notifications.promptDescription")}
-        </p>
+          </strong>
+        )}
 
         {isDenied ? (
-          <p className={styles.notificationCalloutHelp}>
-            {t(`pages.more.notifications.${resolveBlockedHelpKey()}`)}
+          <div
+            id={blockedDetailsId}
+            role="region"
+            hidden={!isBlockedDetailsExpanded}
+            className={styles.notificationCalloutExpandable}
+          >
+            <p>{t("pages.more.notifications.blockedDescription")}</p>
+            <p className={styles.notificationCalloutHelp}>
+              {t(`pages.more.notifications.${resolveBlockedHelpKey()}`)}
+            </p>
+          </div>
+        ) : (
+          <p>
+            {permission === "granted"
+              ? t("pages.more.notifications.browserGrantedDescription")
+              : t("pages.more.notifications.promptDescription")}
           </p>
-        ) : permission === "granted" ? null : (
+        )}
+
+        {!isDenied && permission !== "granted" ? (
           <ul className={styles.notificationCalloutBenefits}>
             <li>{t("pages.more.notifications.benefitChapters")}</li>
             <li>{t("pages.more.notifications.benefitAnnouncements")}</li>
           </ul>
-        )}
+        ) : null}
 
         {showBrowserPromptButton ? (
           <div className={styles.notificationCalloutActions}>
@@ -179,12 +208,14 @@ const NotificationPermissionCallout = ({
                   ? t("pages.more.notifications.retryBrowserPromptButton")
                   : t("pages.more.notifications.browserPromptButton")}
             </button>
-            <span className={styles.notificationCalloutPrivacy}>
-              <ShieldRoundedIcon aria-hidden="true" />
-              {isDenied
-                ? t("pages.more.notifications.blockedButtonHint")
-                : t("pages.more.notifications.privacyNote")}
-            </span>
+            {!isDenied || isBlockedDetailsExpanded ? (
+              <span className={styles.notificationCalloutPrivacy}>
+                <ShieldRoundedIcon aria-hidden="true" />
+                {isDenied
+                  ? t("pages.more.notifications.blockedButtonHint")
+                  : t("pages.more.notifications.privacyNote")}
+              </span>
+            ) : null}
           </div>
         ) : null}
 

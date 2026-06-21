@@ -53,6 +53,7 @@ import JalaliDateFilterField from "../../shared/table/JalaliDateFilterField";
 import EntityModalShell from "../../shared/crud/EntityModalShell";
 import ModalFooterActions from "../../shared/crud/ModalFooterActions";
 import crudPrimitives from "../../shared/crud/styles/crudPrimitives.module.scss";
+import DateTimeValue from "../../shared/display/DateTimeValue";
 import {
   EMPTY_MANAGED_USERS_LIST_FILTERS,
   hasManagedUsersColumnFiltersApplied,
@@ -245,17 +246,6 @@ function buildEditFormState(record: ManagedUserRecord): UserEditFormState {
       : "ACTIVE",
     password: "",
   };
-}
-
-function formatDate(value: string): string {
-  if (!value.trim()) {
-    return EMPTY_DISPLAY;
-  }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return EMPTY_DISPLAY;
-  }
-  return date.toLocaleDateString("fa-IR");
 }
 
 function UserAvatarCell({
@@ -529,11 +519,7 @@ const UsersManagementList = (): ReactElement => {
       {
         accessorKey: "createdAt",
         header: t("table.pages.usersManagement.columns.createdAt"),
-        cell: (info) => (
-          <Typography variant="body2" className={crudPrimitives.tabularNums}>
-            {formatDate(info.getValue() as string)}
-          </Typography>
-        ),
+        cell: (info) => <DateTimeValue value={info.getValue() as string} />,
       },
       {
         accessorKey: "status",
@@ -581,11 +567,7 @@ const UsersManagementList = (): ReactElement => {
       {
         accessorKey: "updatedAt",
         header: t("table.pages.usersManagement.columns.updatedAt"),
-        cell: (info) => (
-          <Typography variant="body2" className={crudPrimitives.tabularNums}>
-            {formatDate(info.getValue() as string)}
-          </Typography>
-        ),
+        cell: (info) => <DateTimeValue value={info.getValue() as string} />,
       },
       {
         id: "actions",

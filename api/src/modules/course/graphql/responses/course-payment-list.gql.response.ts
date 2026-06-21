@@ -380,6 +380,18 @@ export class CoursePaymentListGqlResponse {
 
   @Field(() => ID, {
     nullable: true,
+    description: "User ID that initially created the payment record",
+  })
+  createdBy?: Types.ObjectId;
+
+  @Field(() => CoursePaymentRelatedUserGqlResponse, {
+    nullable: true,
+    description: "User that initially created the payment record",
+  })
+  createdByUser?: CoursePaymentRelatedUserGqlResponse;
+
+  @Field(() => ID, {
+    nullable: true,
     description: "User ID that manually changed the status",
   })
   manualStatusChangedBy?: Types.ObjectId;

@@ -369,6 +369,27 @@ function EntityTableShell<TData extends object>({
   const extraShellHeightPx = supplementaryChromeHeightPx + columnFilterRowHeightPx;
 
   const pinnedActionHeaderBg = theme.palette.mode === "dark" ? theme.palette.grey[900] : "#f8fafc";
+  const bodyRowHeightPx = isMobile ? 48 : 56;
+  const bodyCellSx = useMemo(
+    () => ({
+      height: bodyRowHeightPx,
+      maxHeight: bodyRowHeightPx,
+      minHeight: bodyRowHeightPx,
+      boxSizing: "border-box" as const,
+      py: 0,
+      px: 2,
+      verticalAlign: "middle" as const,
+      overflow: "hidden",
+    }),
+    [bodyRowHeightPx],
+  );
+  const bodyRowSx = useMemo(
+    () => ({
+      height: bodyRowHeightPx,
+      maxHeight: bodyRowHeightPx,
+    }),
+    [bodyRowHeightPx],
+  );
   const headerRowRef = useRef<HTMLTableRowElement>(null);
   const [headerRowHeightPx, setHeaderRowHeightPx] = useState(isMobile ? 40 : 56);
 
@@ -650,7 +671,7 @@ function EntityTableShell<TData extends object>({
                 pagedRows.map((row) => {
                   const visibleCells = row.getVisibleCells();
                   return (
-                    <TableRow key={row.id} hover>
+                    <TableRow key={row.id} hover sx={bodyRowSx}>
                       {shellVisibleLeafColumns.map((column) => {
                         const cell = visibleCells.find((c) => c.column.id === column.id);
                         if (!cell) {
@@ -669,7 +690,7 @@ function EntityTableShell<TData extends object>({
                             className={isActionsColumn ? styles.actionsColumnCell : undefined}
                             sx={{
                               minWidth: 0,
-                              overflow: "hidden",
+                              ...bodyCellSx,
                               ...pinnedActionCellSx(column.id, 1, bodyPinnedBg),
                               ...(isActionsColumn && !isMobile
                                 ? {
@@ -682,11 +703,13 @@ function EntityTableShell<TData extends object>({
                                 : {}),
                             }}
                           >
-                            {isActionsColumn ? (
-                              cellContent
-                            ) : (
-                              <TruncatedTableCellContent>{cellContent}</TruncatedTableCellContent>
-                            )}
+                            <Box className={styles.bodyCellContent}>
+                              {isActionsColumn ? (
+                                cellContent
+                              ) : (
+                                <TruncatedTableCellContent>{cellContent}</TruncatedTableCellContent>
+                              )}
+                            </Box>
                           </TableCell>
                         );
                       })}

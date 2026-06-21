@@ -9,6 +9,7 @@ import {
 } from "react";
 import {
   ArticleRounded as ArticleRoundedIcon,
+  ClearRounded as ClearRoundedIcon,
   CloseFullscreenRounded as CloseFullscreenRoundedIcon,
   FullscreenRounded as FullscreenRoundedIcon,
   ImageRounded as ImageRoundedIcon,
@@ -16,10 +17,13 @@ import {
   PictureAsPdfRounded as PictureAsPdfRoundedIcon,
 } from "@mui/icons-material";
 import {
+  Alert,
   Box,
   Chip,
   CircularProgress,
+  DialogContentText,
   IconButton,
+  InputAdornment,
   MenuItem,
   Paper,
   Stack,
@@ -45,7 +49,7 @@ import { COURSE_PAYMENT_STATUS_UPDATE_MUTATION } from "../../graphql/mutations/c
 import { COURSE_PAYMENT_DETAIL_QUERY } from "../../graphql/queries/coursePaymentDetail.query";
 import { COURSE_PAYMENT_LIST_QUERY } from "../../graphql/queries/coursePaymentList.query";
 import { COURSE_LIST_QUERY } from "../../graphql/queries/courseList.query";
-import { USER_PICKER_LIST_QUERY } from "../../graphql/queries/userPickerList.query";
+import { USER_LIST_QUERY } from "../../graphql/queries/userList.query";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import {
@@ -54,12 +58,16 @@ import {
 } from "../../hooks/useServerPaginatedQuery";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
+import EntityConfirmDialogShell from "../../shared/crud/EntityConfirmDialogShell";
 import EntityModalShell from "../../shared/crud/EntityModalShell";
 import EntityTableShell from "../../shared/crud/EntityTableShell";
+import ModalFooterActions from "../../shared/crud/ModalFooterActions";
+import DateTimeValue from "../../shared/display/DateTimeValue";
 import crudPrimitives from "../../shared/crud/styles/crudPrimitives.module.scss";
 import EntityAutocompleteField from "../../shared/forms/EntityAutocompleteField";
 import FileUploadField from "../../shared/forms/FileUploadField";
-import { getFileIdFromAccessUrl } from "../../utils/fileAccessUrl.util";
+import AppTooltip from "../../shared/AppTooltip";
+import { getFileIdFromAccessUrl, resolveFileAccessUrl } from "../../utils/fileAccessUrl.util";
 import { hasFormChanges } from "../../utils/formChange.util";
 import { uploadFile } from "../../utils/fileUpload.util";
 import {
@@ -73,9 +81,9 @@ import {
   type CourseListItemRow,
 } from "../Courses/courses-list.api";
 import {
-  type UserPickerListQuery,
+  type UserListQuery,
   type UserListQueryVariables,
-  type UserPickerListRow,
+  type UserListItemRow,
 } from "../UsersManagement/users-management-list.api";
 import {
   EMPTY_COURSE_PAYMENT_LIST_FILTERS,
@@ -100,6 +108,7 @@ import {
   PaymentRowActions,
   ReviewPaymentDialogActions,
 } from "./PaymentActions";
+import styles from "./styles/payments-list.module.scss";
 import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
 
 type CoursePaymentStatusUpdateMutation = {
@@ -139,7 +148,7 @@ type ManualPaymentUserOption = {
   readonly id: string;
   readonly label: string;
   readonly subtitle: string;
-  readonly row: UserPickerListRow;
+  readonly row: UserListItemRow;
 };
 
 type ManualPaymentCourseOption = {
@@ -250,17 +259,6 @@ const COUPON_DISCOUNT_TYPE_LABEL: Record<CouponDiscountType, string> = {
   FIXED_AMOUNT: "مبلغ ثابت",
 };
 
-function formatDate(value: string): string {
-  if (!value.trim()) {
-    return EMPTY_DISPLAY;
-  }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return EMPTY_DISPLAY;
-  }
-  return date.toLocaleDateString("fa-IR");
-}
-
 function formatAmount(value: number | null | undefined): string {
   if (value == null) {
     return EMPTY_DISPLAY;
@@ -275,21 +273,21 @@ function formatNumber(value: number | null | undefined): string {
   return value.toLocaleString("fa-IR").replace(/\u066c/g, ",");
 }
 
-function getUserFullName(row: UserPickerListRow): string {
+function getUserFullName(row: UserListItemRow): string {
   const parts = [row.profile?.firstName?.trim(), row.profile?.lastName?.trim()].filter(
-    (part): part is string => Boolean(part),
+    (part): part is string => Boolean(part)
   );
   return parts.length > 0 ? parts.join(" ") : row.username;
 }
 
-function userToManualPaymentOption(row: UserPickerListRow): ManualPaymentUserOption {
+function userToManualPaymentOption(row: UserListItemRow): ManualPaymentUserOption {
   const fullName = getUserFullName(row);
-  const phone = row.profile?.phoneNumber?.trim();
   const email = row.profile?.email?.trim();
   return {
     id: row.id,
     label: fullName,
-    subtitle: [row.username, phone || email].filter(Boolean).join(" · "),
+    subtitle: [row.username, email].filter(Boolean).join(" | "),
+    imageUrl: resolveFileAccessUrl(row.profile?.avatarAccessUrl),
     row,
   };
 }
@@ -313,7 +311,8 @@ function courseToManualPaymentOption(row: CourseListItemRow): ManualPaymentCours
   return {
     id: row.id,
     label: row.title,
-    subtitle: `${formatAmount(finalPrice)} · ${row.isActive ? "فعال" : "غیرفعال"}`,
+    subtitle: formatAmount(finalPrice),
+    imageUrl: resolveFileAccessUrl(row.coverImageAccessUrl),
     row,
   };
 }
@@ -359,7 +358,7 @@ function getReceiptFileIcon(mimeType: string): ReactElement {
 function renderReceiptFileCard(
   record: CoursePaymentRecord,
   isExpanded: boolean,
-  onToggleExpanded: () => void,
+  onToggleExpanded: () => void
 ): ReactElement | null {
   if (!isUploadedReceiptPresent(record)) {
     return null;
@@ -456,11 +455,17 @@ function renderReceiptFileCard(
             )}
           </Box>
           <Stack spacing={0.75} minWidth={0} flex={1}>
-            <Typography variant="body1" fontWeight={800} sx={{ overflowWrap: "anywhere" }}>
+            <Typography
+              variant="body1"
+              fontWeight={800}
+              className={styles.latinText}
+              sx={{ overflowWrap: "anywhere" }}
+            >
               {title}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {mimeType || "نوع فایل نامشخص"} ·{" "}
+              <span className={styles.latinText}>{mimeType || "نوع فایل نامشخص"}</span>
+              {" | "}
               {formatFileSize(record.uploadedReceiptFileSizeBytes)}
             </Typography>
             {record.receiptUploaderName !== "-" ? (
@@ -476,7 +481,7 @@ function renderReceiptFileCard(
 }
 
 function selectCoursePaymentListPage(
-  data: CoursePaymentListQuery | undefined,
+  data: CoursePaymentListQuery | undefined
 ): ServerPageResult<CoursePaymentListItemRow> | null {
   const page = data?.coursePaymentList;
   if (!page) {
@@ -496,17 +501,43 @@ function selectCoursePaymentListPage(
   };
 }
 
+type TextCellOptions = {
+  readonly tabular?: boolean;
+  readonly latin?: boolean;
+};
+
+function normalizeTextCellOptions(options: boolean | TextCellOptions = false): TextCellOptions {
+  return typeof options === "boolean" ? { tabular: options } : options;
+}
+
 type DetailItem = {
   readonly label: string;
   readonly value: string | ReactElement;
+  readonly latin?: boolean;
 };
+
+function LatinDetailValue({
+  value,
+  fontWeight = 600,
+}: {
+  readonly value: string;
+  readonly fontWeight?: number;
+}): ReactElement {
+  return (
+    <Typography variant="body2" fontWeight={fontWeight} className={styles.latinText}>
+      {value || EMPTY_DISPLAY}
+    </Typography>
+  );
+}
 
 function PaymentDetailSection({
   title,
   items,
+  twoColumnsOnMobile = false,
 }: {
   readonly title: string;
   readonly items: readonly DetailItem[];
+  readonly twoColumnsOnMobile?: boolean;
 }): ReactElement {
   return (
     <Paper
@@ -514,7 +545,8 @@ function PaymentDetailSection({
       sx={{
         p: 2,
         borderRadius: 3,
-        bgcolor: "background.default",
+        bgcolor: "background.paper",
+        borderColor: "divider",
       }}
     >
       <Typography variant="subtitle1" fontWeight={800} gutterBottom>
@@ -524,7 +556,9 @@ function PaymentDetailSection({
         sx={{
           display: "grid",
           gap: 1.25,
-          gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" },
+          gridTemplateColumns: twoColumnsOnMobile
+            ? "repeat(2, minmax(0, 1fr))"
+            : { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" },
         }}
       >
         {items.map((item) => (
@@ -534,9 +568,13 @@ function PaymentDetailSection({
             </Typography>
             <Box sx={{ mt: 0.25, overflowWrap: "anywhere" }}>
               {typeof item.value === "string" ? (
-                <Typography variant="body2" fontWeight={600}>
-                  {item.value || EMPTY_DISPLAY}
-                </Typography>
+                item.latin ? (
+                  <LatinDetailValue value={item.value} />
+                ) : (
+                  <Typography variant="body2" fontWeight={600}>
+                    {item.value || EMPTY_DISPLAY}
+                  </Typography>
+                )
               ) : (
                 item.value
               )}
@@ -597,7 +635,7 @@ const PaymentsList = (): ReactElement => {
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const [filters, setFilters] = useState<CoursePaymentListFilters>(
-    EMPTY_COURSE_PAYMENT_LIST_FILTERS,
+    EMPTY_COURSE_PAYMENT_LIST_FILTERS
   );
   const [reviewStatus, setReviewStatus] = useState<UserCoursePurchaseStatus>("PENDING");
   const [reviewDescription, setReviewDescription] = useState("");
@@ -606,24 +644,36 @@ const PaymentsList = (): ReactElement => {
     description: string;
   } | null>(null);
   const [isReceiptPreviewExpanded, setIsReceiptPreviewExpanded] = useState(false);
+  const [pendingPaidStatusChange, setPendingPaidStatusChange] =
+    useState<UserCoursePurchaseStatus | null>(null);
   const manualPaymentRouteOpen = location.pathname === `${APP_SHELL_ROUTES.payments}/new`;
-  const reviewPaymentId = useMemo(() => {
+  const reviewPaymentRoute = useMemo(() => {
     const paymentRoutePrefix = `${APP_SHELL_ROUTES.payments}/`;
     if (!location.pathname.startsWith(paymentRoutePrefix)) {
       return null;
     }
 
-    const routeId = location.pathname.slice(paymentRoutePrefix.length);
-    if (!routeId || routeId === "new") {
+    const remainder = location.pathname.slice(paymentRoutePrefix.length);
+    if (!remainder || remainder === "new") {
       return null;
     }
 
-    return routeId;
+    const [paymentId, segment] = remainder.split("/");
+    if (!paymentId) {
+      return null;
+    }
+
+    return {
+      paymentId,
+      isConfirmRoute: segment === "confirm",
+    };
   }, [location.pathname]);
+  const reviewPaymentId = reviewPaymentRoute?.paymentId ?? null;
+  const isPaidStatusChangeConfirmOpen = reviewPaymentRoute?.isConfirmRoute ?? false;
   const [manualPaymentUser, setManualPaymentUser] = useState<ManualPaymentUserOption | null>(null);
   const [manualPaymentUserSearch, setManualPaymentUserSearch] = useState("");
   const [manualPaymentCourse, setManualPaymentCourse] = useState<ManualPaymentCourseOption | null>(
-    null,
+    null
   );
   const [manualPaymentMethod, setManualPaymentMethod] =
     useState<UserCoursePaymentMethod>("CARD_TO_CARD");
@@ -660,19 +710,20 @@ const PaymentsList = (): ReactElement => {
         filters: {
           isActive: true,
           hasPrice: true,
+          includeUserId: manualPaymentUser?.id ?? null,
         },
         options: {
           limit: MANUAL_PAYMENT_COURSE_OPTIONS_LIMIT,
-          sort: { title: "ASC" },
+          sort: { createdAt: "DESC" },
         },
       },
     }),
-    [],
+    [manualPaymentUser?.id]
   );
 
   const setFilterValue = <K extends keyof CoursePaymentListFilters>(
     key: K,
-    value: CoursePaymentListFilters[K],
+    value: CoursePaymentListFilters[K]
   ): void => {
     setFilters((previous) => ({ ...previous, [key]: value }));
   };
@@ -680,7 +731,7 @@ const PaymentsList = (): ReactElement => {
   const buildVariables = useCallback(
     ({ page, pageSize }: { page: number; pageSize: number }) =>
       buildCoursePaymentListQueryVariables(debouncedSearchQuery, debouncedFilters, page, pageSize),
-    [debouncedFilters, debouncedSearchQuery],
+    [debouncedFilters, debouncedSearchQuery]
   );
 
   const {
@@ -712,7 +763,7 @@ const PaymentsList = (): ReactElement => {
       variables: { input: { id: reviewPaymentId ?? "" } },
       skip: !reviewPaymentId,
       fetchPolicy: "network-only",
-    },
+    }
   );
 
   const reviewPayment = useMemo(() => {
@@ -724,11 +775,11 @@ const PaymentsList = (): ReactElement => {
   }, [paymentDetailData, reviewPaymentId]);
 
   const { data: manualPaymentUsersData, loading: manualPaymentUsersLoading } = useQuery<
-    UserPickerListQuery,
+    UserListQuery,
     UserListQueryVariables
-  >(USER_PICKER_LIST_QUERY, {
+  >(USER_LIST_QUERY, {
     variables: manualPaymentUsersVariables,
-    fetchPolicy: "cache-first",
+    fetchPolicy: "network-only",
     skip: !manualPaymentRouteOpen,
   });
 
@@ -737,8 +788,8 @@ const PaymentsList = (): ReactElement => {
     CourseListQueryVariables
   >(COURSE_LIST_QUERY, {
     variables: manualPaymentCoursesVariables,
-    fetchPolicy: "cache-first",
-    skip: !manualPaymentRouteOpen,
+    fetchPolicy: "network-only",
+    skip: !manualPaymentRouteOpen || !manualPaymentUser,
   });
 
   const [updatePaymentStatus, updatePaymentStatusResult] = useMutationWithSnackbar<
@@ -760,7 +811,7 @@ const PaymentsList = (): ReactElement => {
     successMessage: "پرداخت دستی با موفقیت ثبت شد.",
     errorMessage: "ثبت پرداخت دستی انجام نشد.",
     onSuccess: () => {
-      setIsManualPaymentDialogOpen(false);
+      navigate(APP_SHELL_ROUTES.payments);
       setManualPaymentUser(null);
       setManualPaymentUserSearch("");
       setManualPaymentCourse(null);
@@ -776,8 +827,11 @@ const PaymentsList = (): ReactElement => {
   const [isManualPaymentFileUploading, setIsManualPaymentFileUploading] = useState(false);
 
   const manualPaymentUserOptions = useMemo(
-    () => (manualPaymentUsersData?.userList.items ?? []).map(userToManualPaymentOption),
-    [manualPaymentUsersData],
+    () =>
+      (manualPaymentUsersData?.userList.items ?? [])
+        .filter((user) => user.roles.length === 1 && user.roles[0] === "END_USER")
+        .map(userToManualPaymentOption),
+    [manualPaymentUsersData]
   );
 
   const manualPaymentCourseOptions = useMemo(
@@ -786,7 +840,7 @@ const PaymentsList = (): ReactElement => {
         .filter((course) => course.isActive !== false)
         .filter((course) => calculateDiscountedCoursePrice(course) > 0)
         .map(courseToManualPaymentOption),
-    [manualPaymentCoursesData],
+    [manualPaymentCoursesData]
   );
 
   useEffect(() => {
@@ -802,11 +856,15 @@ const PaymentsList = (): ReactElement => {
   }, [error, showError, t]);
 
   useEffect(() => {
+    setManualPaymentCourse(null);
+  }, [manualPaymentUser?.id]);
+
+  useEffect(() => {
     if (!manualPaymentCourse) {
       return;
     }
     const isStillAvailable = manualPaymentCourseOptions.some(
-      (course) => course.id === manualPaymentCourse.id,
+      (course) => course.id === manualPaymentCourse.id
     );
     if (!isStillAvailable) {
       setManualPaymentCourse(null);
@@ -833,34 +891,40 @@ const PaymentsList = (): ReactElement => {
     setIsReceiptPreviewExpanded(false);
   }, [reviewPayment]);
 
-  const textCell = (value: unknown, tabular = false): ReactElement => (
-    <Typography variant="body2" className={tabular ? crudPrimitives.tabularNums : undefined}>
-      {String(value || EMPTY_DISPLAY)}
-    </Typography>
-  );
+  const textCell = (value: unknown, options: boolean | TextCellOptions = false): ReactElement => {
+    const { tabular = false, latin = false } = normalizeTextCellOptions(options);
+    const className = [
+      tabular ? crudPrimitives.tabularNums : undefined,
+      latin ? styles.latinText : undefined,
+    ]
+      .filter(Boolean)
+      .join(" ");
 
-  const dateCell = (value: unknown): ReactElement => (
-    <Typography variant="body2" className={crudPrimitives.tabularNums}>
-      {formatDate(String(value || ""))}
-    </Typography>
-  );
+    return (
+      <Typography variant="body2" className={className || undefined}>
+        {String(value || EMPTY_DISPLAY)}
+      </Typography>
+    );
+  };
+
+  const dateCell = (value: unknown): ReactElement => <DateTimeValue value={String(value || "")} />;
 
   const columns = useMemo<ColumnDef<CoursePaymentRecord>[]>(
     () => [
       {
         accessorKey: "id",
         header: t("table.pages.payments.columns.id"),
-        cell: (info) => textCell(info.getValue(), true),
+        cell: (info) => textCell(info.getValue(), { tabular: true, latin: true }),
       },
       {
         accessorKey: "userId",
         header: t("table.pages.payments.columns.userId"),
-        cell: (info) => textCell(info.getValue(), true),
+        cell: (info) => textCell(info.getValue(), { tabular: true, latin: true }),
       },
       {
         accessorKey: "courseId",
         header: t("table.pages.payments.columns.courseId"),
-        cell: (info) => textCell(info.getValue(), true),
+        cell: (info) => textCell(info.getValue(), { tabular: true, latin: true }),
       },
       {
         accessorKey: "userFullName",
@@ -874,17 +938,17 @@ const PaymentsList = (): ReactElement => {
       {
         accessorKey: "username",
         header: t("table.pages.payments.columns.username"),
-        cell: (info) => textCell(info.getValue()),
+        cell: (info) => textCell(info.getValue(), { latin: true }),
       },
       {
         accessorKey: "userPhone",
         header: t("table.pages.payments.columns.userPhone"),
-        cell: (info) => textCell(info.getValue(), true),
+        cell: (info) => textCell(info.getValue(), { tabular: true, latin: true }),
       },
       {
         accessorKey: "userEmail",
         header: t("table.pages.payments.columns.userEmail"),
-        cell: (info) => textCell(info.getValue(), true),
+        cell: (info) => textCell(info.getValue(), { tabular: true, latin: true }),
       },
       {
         accessorKey: "courseTitle",
@@ -930,12 +994,12 @@ const PaymentsList = (): ReactElement => {
       {
         accessorKey: "paymentReference",
         header: t("table.pages.payments.columns.paymentReference"),
-        cell: (info) => textCell(info.getValue(), true),
+        cell: (info) => textCell(info.getValue(), { tabular: true, latin: true }),
       },
       {
         accessorKey: "transactionId",
         header: t("table.pages.payments.columns.transactionId"),
-        cell: (info) => textCell(info.getValue(), true),
+        cell: (info) => textCell(info.getValue(), { tabular: true, latin: true }),
       },
       {
         accessorKey: "amountIrt",
@@ -960,12 +1024,12 @@ const PaymentsList = (): ReactElement => {
       {
         accessorKey: "couponId",
         header: t("table.pages.payments.columns.couponId"),
-        cell: (info) => textCell(info.getValue(), true),
+        cell: (info) => textCell(info.getValue(), { tabular: true, latin: true }),
       },
       {
         accessorKey: "couponCode",
         header: t("table.pages.payments.columns.couponCode"),
-        cell: (info) => textCell(info.getValue()),
+        cell: (info) => textCell(info.getValue(), { latin: true }),
       },
       {
         accessorKey: "couponDiscountType",
@@ -983,7 +1047,7 @@ const PaymentsList = (): ReactElement => {
       {
         accessorKey: "uploadedReceiptFileId",
         header: t("table.pages.payments.columns.uploadedReceiptFileId"),
-        cell: (info) => textCell(info.getValue(), true),
+        cell: (info) => textCell(info.getValue(), { tabular: true, latin: true }),
       },
       {
         accessorKey: "receiptUploadedBy",
@@ -1051,13 +1115,15 @@ const PaymentsList = (): ReactElement => {
         id: "actions",
         header: t("table.columns.actions"),
         cell: ({ row }) => (
-          <PaymentRowActions onReview={() => navigate(`${APP_SHELL_ROUTES.payments}/${row.original.id}`)} />
+          <PaymentRowActions
+            onReview={() => navigate(`${APP_SHELL_ROUTES.payments}/${row.original.id}`)}
+          />
         ),
         enableSorting: false,
         enableHiding: false,
       },
     ],
-    [t],
+    [t]
   );
 
   const table = useReactTable({
@@ -1092,6 +1158,11 @@ const PaymentsList = (): ReactElement => {
     navigate(`${APP_SHELL_ROUTES.payments}/new`);
   };
 
+  const handleManualPaymentUserSearchChange = useCallback((nextValue: string): void => {
+    setManualPaymentUserSearch(nextValue);
+    setManualPaymentUser(null);
+  }, []);
+
   const closeManualPaymentDialog = (): void => {
     if (createManualPaymentResult.loading) {
       return;
@@ -1109,8 +1180,56 @@ const PaymentsList = (): ReactElement => {
 
   const closeReviewDialog = (): void => {
     setIsReceiptPreviewExpanded(false);
+    setPendingPaidStatusChange(null);
     navigate(APP_SHELL_ROUTES.payments);
   };
+
+  const closePaidStatusChangeConfirm = (): void => {
+    setPendingPaidStatusChange(null);
+    if (reviewPaymentId) {
+      navigate(`${APP_SHELL_ROUTES.payments}/${reviewPaymentId}`);
+    }
+  };
+
+  const confirmPaidStatusChange = (): void => {
+    if (pendingPaidStatusChange) {
+      setReviewStatus(pendingPaidStatusChange);
+    }
+    setPendingPaidStatusChange(null);
+    if (reviewPaymentId) {
+      navigate(`${APP_SHELL_ROUTES.payments}/${reviewPaymentId}`);
+    }
+  };
+
+  const handleReviewStatusChange = (nextStatus: UserCoursePurchaseStatus): void => {
+    if (!reviewPaymentId) {
+      return;
+    }
+
+    if (reviewStatus === "PAID" && nextStatus !== "PAID") {
+      setPendingPaidStatusChange(nextStatus);
+      navigate(`${APP_SHELL_ROUTES.payments}/${reviewPaymentId}/confirm`);
+      return;
+    }
+
+    setReviewStatus(nextStatus);
+  };
+
+  useEffect(() => {
+    if (isPaidStatusChangeConfirmOpen) {
+      return;
+    }
+
+    setPendingPaidStatusChange(null);
+  }, [isPaidStatusChangeConfirmOpen]);
+
+  useEffect(() => {
+    if (!isPaidStatusChangeConfirmOpen || pendingPaidStatusChange != null || !reviewPaymentId) {
+      return;
+    }
+
+    navigate(`${APP_SHELL_ROUTES.payments}/${reviewPaymentId}`, { replace: true });
+  }, [isPaidStatusChangeConfirmOpen, navigate, pendingPaidStatusChange, reviewPaymentId]);
 
   const handleSubmitReview = (): void => {
     if (!reviewPaymentId) {
@@ -1188,33 +1307,33 @@ const PaymentsList = (): ReactElement => {
   const renderSelectFilter = <TValue extends string>(
     key: keyof CoursePaymentListFilters,
     label: string,
-    options: ReadonlyArray<{ value: TValue; label: string }>,
+    options: ReadonlyArray<{ value: TValue; label: string }>
   ): ReactElement => (
-      <TextField
-        select
-        size="small"
-        fullWidth
-        aria-label={label}
-        value={filters[key]}
-        onChange={(event) =>
-          setFilterValue(key, event.target.value as CoursePaymentListFilters[typeof key])
-        }
-      >
-        <MenuItem value="ALL">همه</MenuItem>
-        {options.map((option) => (
-          <MenuItem key={option.value} value={option.value}>
-            {option.label}
-          </MenuItem>
-        ))}
-      </TextField>
-    );
+    <TextField
+      select
+      size="small"
+      fullWidth
+      aria-label={label}
+      value={filters[key]}
+      onChange={(event) =>
+        setFilterValue(key, event.target.value as CoursePaymentListFilters[typeof key])
+      }
+    >
+      <MenuItem value="ALL">همه</MenuItem>
+      {options.map((option) => (
+        <MenuItem key={option.value} value={option.value}>
+          {option.label}
+        </MenuItem>
+      ))}
+    </TextField>
+  );
 
   const renderRangeFilter = (
     minKey: keyof CoursePaymentListFilters,
     maxKey: keyof CoursePaymentListFilters,
     minLabel: string,
     maxLabel: string,
-    type: "text" | "number" | "date" = "number",
+    type: "text" | "number" | "date" = "number"
   ): ReactElement => {
     if (type === "date") {
       return (
@@ -1294,7 +1413,7 @@ const PaymentsList = (): ReactElement => {
           Object.entries(STATUS_LABEL).map(([value, optionLabel]) => ({
             value: value as UserCoursePurchaseStatus,
             label: optionLabel,
-          })),
+          }))
         );
       case "paymentMethod":
         return renderSelectFilter<UserCoursePaymentMethod>(
@@ -1303,7 +1422,7 @@ const PaymentsList = (): ReactElement => {
           Object.entries(PAYMENT_METHOD_LABEL).map(([value, optionLabel]) => ({
             value: value as UserCoursePaymentMethod,
             label: optionLabel,
-          })),
+          }))
         );
       case "currency":
         return renderSelectFilter<UserCoursePurchaseCurrency>(
@@ -1312,7 +1431,7 @@ const PaymentsList = (): ReactElement => {
           Object.entries(CURRENCY_LABEL).map(([value, optionLabel]) => ({
             value: value as UserCoursePurchaseCurrency,
             label: optionLabel,
-          })),
+          }))
         );
       case "couponDiscountType":
         return renderSelectFilter<CouponDiscountType>(
@@ -1321,7 +1440,7 @@ const PaymentsList = (): ReactElement => {
           Object.entries(COUPON_DISCOUNT_TYPE_LABEL).map(([value, optionLabel]) => ({
             value: value as CouponDiscountType,
             label: optionLabel,
-          })),
+          }))
         );
       case "isManualStatusChange":
         return renderSelectFilter<"true" | "false">("isManualStatusChange", label, [
@@ -1335,14 +1454,14 @@ const PaymentsList = (): ReactElement => {
           "discountPercentageMin",
           "discountPercentageMax",
           "از درصد",
-          "تا درصد",
+          "تا درصد"
         );
       case "discountAmountIrt":
         return renderRangeFilter(
           "discountAmountIrtMin",
           "discountAmountIrtMax",
           "از تخفیف",
-          "تا تخفیف",
+          "تا تخفیف"
         );
       case "finalAmountIrt":
         return renderRangeFilter("finalAmountIrtMin", "finalAmountIrtMax", "از مبلغ", "تا مبلغ");
@@ -1351,7 +1470,7 @@ const PaymentsList = (): ReactElement => {
           "couponDiscountValueMin",
           "couponDiscountValueMax",
           "از مقدار",
-          "تا مقدار",
+          "تا مقدار"
         );
       case "createdAt":
       case "updatedAt":
@@ -1365,7 +1484,7 @@ const PaymentsList = (): ReactElement => {
           `${column.id}To` as keyof CoursePaymentListFilters,
           `از ${label}`,
           `تا ${label}`,
-          "date",
+          "date"
         );
       default:
         return null;
@@ -1436,9 +1555,7 @@ const PaymentsList = (): ReactElement => {
           <ManualPaymentDialogActions
             onCancel={closeManualPaymentDialog}
             onSubmit={handleSubmitManualPayment}
-            cancelDisabled={
-              createManualPaymentResult.loading || isManualPaymentFileUploading
-            }
+            cancelDisabled={createManualPaymentResult.loading || isManualPaymentFileUploading}
             submitDisabled={!canSubmitManualPayment}
             isUploadingFile={isManualPaymentFileUploading}
             isSubmitting={createManualPaymentResult.loading}
@@ -1446,133 +1563,168 @@ const PaymentsList = (): ReactElement => {
         }
       >
         <Stack spacing={2}>
-            <Paper
-              variant="outlined"
-              sx={{ p: 2, borderRadius: 3, bgcolor: "background.paper", borderColor: "divider" }}
-            >
-              <Stack spacing={2}>
-                <Box>
-                  <Typography variant="subtitle1" fontWeight={900}>
-                    اطلاعات پرداخت
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    کاربر نهایی و دوره فعال پولی را انتخاب کنید.
-                  </Typography>
-                </Box>
+          <Paper
+            variant="outlined"
+            sx={{ p: 2, borderRadius: 3, bgcolor: "background.paper", borderColor: "divider" }}
+          >
+            <Stack spacing={2}>
+              <Box>
+                <Typography variant="subtitle1" fontWeight={900}>
+                  اطلاعات پرداخت
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  کاربر نهایی و دوره فعال پولی را انتخاب کنید.
+                </Typography>
+              </Box>
 
-                <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-                  <EntityAutocompleteField
-                    options={manualPaymentUserOptions}
-                    value={manualPaymentUser}
-                    inputValue={manualPaymentUserSearch}
-                    loading={manualPaymentUsersLoading}
-                    onInputChange={setManualPaymentUserSearch}
-                    onChange={setManualPaymentUser}
-                    noOptionsText="کاربر فعال با نقش کاربر نهایی پیدا نشد."
-                    label="کاربر"
-                    placeholder="جستجو براساس نام، نام کاربری یا موبایل"
-                    required
-                  />
-
-                  <EntityAutocompleteField
-                    options={manualPaymentCourseOptions}
-                    value={manualPaymentCourse}
-                    loading={manualPaymentCoursesLoading}
-                    onChange={setManualPaymentCourse}
-                    noOptionsText="دوره فعال پولی پیدا نشد."
-                    label="دوره"
-                    placeholder="انتخاب دوره فعال پولی"
-                    helperText="همه دوره‌های فعال پولی قابل انتخاب هستند."
-                    required
-                  />
-                </Stack>
-
-                <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-                  <TextField
-                    select
-                    fullWidth
-                    required
-                    label="روش پرداخت"
-                    value={manualPaymentMethod}
-                    onChange={(event) =>
-                      setManualPaymentMethod(event.target.value as UserCoursePaymentMethod)
-                    }
-                  >
-                    {MANUAL_PAYMENT_METHOD_OPTIONS.map((method) => (
-                      <MenuItem key={method} value={method}>
-                        {PAYMENT_METHOD_LABEL[method]}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-
-                  <TextField
-                    select
-                    required
-                    fullWidth
-                    label="وضعیت پرداخت"
-                    value={manualPaymentStatus}
-                    onChange={(event) =>
-                      setManualPaymentStatus(event.target.value as UserCoursePurchaseStatus)
-                    }
-                  >
-                    {REVIEW_STATUS_OPTIONS.map((value) => (
-                      <MenuItem key={value} value={value}>
-                        {STATUS_LABEL[value]}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                </Stack>
-
-                <TextField
-                  fullWidth
-                  label="کد تخفیف"
-                  value={manualCouponCode}
-                  onChange={(event) => setManualCouponCode(event.target.value)}
+              <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+                <EntityAutocompleteField
+                  options={manualPaymentUserOptions}
+                  value={manualPaymentUser}
+                  inputValue={manualPaymentUser ? manualPaymentUser.label : manualPaymentUserSearch}
+                  loading={manualPaymentUsersLoading}
+                  onInputChange={handleManualPaymentUserSearchChange}
+                  onChange={setManualPaymentUser}
+                  noOptionsText="کاربر فعال با نقش کاربر نهایی پیدا نشد."
+                  label="کاربر"
+                  placeholder="جستجو براساس نام، نام کاربری، ایمیل یا موبایل"
+                  imageVariant="circular"
+                  latinSubtitle
+                  required
                 />
 
-                <Box>
-                  <FileUploadField
-                    label="فایل پرداخت"
-                    file={manualPaymentEvidenceFile}
-                    onChange={setManualPaymentEvidenceFile}
-                    accept="image/*,application/pdf"
-                    allowedFormatsLabel="تصویر یا PDF"
-                    maxSizeLabel="حداکثر ۱۰ مگابایت"
-                    maxSizeBytes={FILE_UPLOAD_POLICY_MAX_SIZE_BYTES.PAYMENT_EVIDENCE}
-                    dropTitle="فایل پرداخت را انتخاب کنید"
-                    mobileDropTitle="انتخاب فایل پرداخت"
-                    dropHint=""
-                    mobileDropHint=""
-                    removeLabel="حذف فایل"
-                    invalidLabel="فایل نامعتبر است"
-                  />
-                </Box>
-
-                <TextField
-                  fullWidth
-                  multiline
-                  minRows={3}
-                  label="توضیح بررسی دستی"
-                  value={manualPaymentDescription}
-                  onChange={(event) => setManualPaymentDescription(event.target.value)}
-                  placeholder="مثلاً پرداخت توسط پشتیبانی تایید و ثبت شد."
+                <EntityAutocompleteField
+                  options={manualPaymentCourseOptions}
+                  value={manualPaymentCourse}
+                  loading={manualPaymentCoursesLoading}
+                  onChange={setManualPaymentCourse}
+                  disabled={!manualPaymentUser}
+                  noOptionsText={
+                    manualPaymentUser
+                      ? "دوره فعال پولیِ پرداخت‌نشده برای این کاربر پیدا نشد."
+                      : "دوره فعال پولی پیدا نشد."
+                  }
+                  label="دوره"
+                  placeholder="انتخاب دوره فعال پولی"
+                  helperText={
+                    manualPaymentUser
+                      ? "فقط دوره‌های فعال پولی که این کاربر هنوز پرداخت نکرده نمایش داده می‌شوند."
+                      : "ابتدا کاربر را انتخاب کنید تا دوره‌های قابل ثبت نمایش داده شوند."
+                  }
+                  imageVariant="rounded"
+                  required
                 />
               </Stack>
-            </Paper>
 
-            {isManualPaymentOptionsLoading ? (
-              <Typography variant="body2" color="text.secondary">
-                در حال آماده‌سازی گزینه‌های قابل انتخاب...
-              </Typography>
-            ) : null}
-          </Stack>
+              <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+                <TextField
+                  select
+                  fullWidth
+                  required
+                  label="روش پرداخت"
+                  value={manualPaymentMethod}
+                  onChange={(event) =>
+                    setManualPaymentMethod(event.target.value as UserCoursePaymentMethod)
+                  }
+                >
+                  {MANUAL_PAYMENT_METHOD_OPTIONS.map((method) => (
+                    <MenuItem key={method} value={method}>
+                      {PAYMENT_METHOD_LABEL[method]}
+                    </MenuItem>
+                  ))}
+                </TextField>
+
+                <TextField
+                  select
+                  required
+                  fullWidth
+                  label="وضعیت پرداخت"
+                  value={manualPaymentStatus}
+                  onChange={(event) =>
+                    setManualPaymentStatus(event.target.value as UserCoursePurchaseStatus)
+                  }
+                >
+                  {REVIEW_STATUS_OPTIONS.map((value) => (
+                    <MenuItem key={value} value={value}>
+                      {STATUS_LABEL[value]}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Stack>
+
+              <TextField
+                fullWidth
+                label="کد تخفیف"
+                value={manualCouponCode}
+                onChange={(event) => setManualCouponCode(event.target.value)}
+                inputProps={{
+                  className: styles.latinInput,
+                  dir: "ltr",
+                }}
+                InputProps={{
+                  endAdornment: manualCouponCode ? (
+                    <InputAdornment position="end">
+                      <AppTooltip title="پاک کردن کد تخفیف" arrow>
+                        <IconButton
+                          size="small"
+                          edge="end"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => setManualCouponCode("")}
+                          aria-label="پاک کردن کد تخفیف"
+                        >
+                          <ClearRoundedIcon fontSize="small" />
+                        </IconButton>
+                      </AppTooltip>
+                    </InputAdornment>
+                  ) : null,
+                }}
+              />
+
+              <Box>
+                <FileUploadField
+                  label="فایل پرداخت"
+                  file={manualPaymentEvidenceFile}
+                  onChange={setManualPaymentEvidenceFile}
+                  accept="image/*,application/pdf"
+                  allowedFormatsLabel="تصویر یا PDF"
+                  maxSizeLabel="حداکثر ۱۰ مگابایت"
+                  maxSizeBytes={FILE_UPLOAD_POLICY_MAX_SIZE_BYTES.PAYMENT_EVIDENCE}
+                  dropTitle="فایل پرداخت را انتخاب کنید"
+                  mobileDropTitle="انتخاب فایل پرداخت"
+                  dropHint=""
+                  mobileDropHint=""
+                  removeLabel="حذف فایل"
+                  invalidLabel="فایل نامعتبر است"
+                />
+              </Box>
+
+              <TextField
+                fullWidth
+                multiline
+                minRows={3}
+                label="توضیح بررسی دستی"
+                value={manualPaymentDescription}
+                onChange={(event) => setManualPaymentDescription(event.target.value)}
+                placeholder="مثلاً پرداخت توسط پشتیبانی تایید و ثبت شد."
+              />
+            </Stack>
+          </Paper>
+
+          {isManualPaymentOptionsLoading ? (
+            <Typography variant="body2" color="text.secondary">
+              در حال آماده‌سازی گزینه‌های قابل انتخاب...
+            </Typography>
+          ) : null}
+        </Stack>
       </EntityModalShell>
 
       <EntityModalShell
         open={reviewPaymentId != null}
         onClose={closeReviewDialog}
         maxWidth="lg"
-        resetKey={reviewPaymentId != null ? `${reviewPaymentId}-${Boolean(reviewPayment)}` : undefined}
+        resetKey={
+          reviewPaymentId != null ? `${reviewPaymentId}-${Boolean(reviewPayment)}` : undefined
+        }
         title="بررسی پرداخت"
         subtitle={reviewPayment?.courseTitle ?? EMPTY_DISPLAY}
         footer={
@@ -1593,149 +1745,227 @@ const PaymentsList = (): ReactElement => {
           </Stack>
         ) : (
           <Stack spacing={2}>
-              <PaymentDetailSection
-                title="خلاصه پرداخت"
-                items={[
-                  { label: "وضعیت", value: reviewStatusChip ?? EMPTY_DISPLAY },
-                  {
-                    label: "روش پرداخت",
-                    value: PAYMENT_METHOD_LABEL[reviewPayment.paymentMethod],
-                  },
-                  { label: "واحد", value: CURRENCY_LABEL[reviewPayment.currency] },
-                  { label: "مبلغ اولیه", value: formatAmount(reviewPayment.amountIrt) },
-                  {
-                    label: "درصد تخفیف",
-                    value: formatNumber(reviewPayment.discountPercentage),
-                  },
-                  {
-                    label: "مبلغ تخفیف",
-                    value: formatAmount(reviewPayment.discountAmountIrt),
-                  },
-                  {
-                    label: "مبلغ نهایی",
-                    value: formatAmount(reviewPayment.finalAmountIrt),
-                  },
-                ]}
-              />
+            <PaymentDetailSection
+              title="پرداخت‌کننده و دوره"
+              items={[
+                { label: "نام پرداخت‌کننده", value: reviewPayment.userFullName },
+                { label: "نام کاربری", value: reviewPayment.username, latin: true },
+                { label: "ایمیل", value: reviewPayment.userEmail, latin: true },
+                { label: "شماره تماس", value: reviewPayment.userPhone, latin: true },
+                { label: "دوره", value: reviewPayment.courseTitle },
+              ]}
+            />
 
-              <PaymentDetailSection
-                title="پرداخت‌کننده و دوره"
-                items={[
-                  { label: "نام پرداخت‌کننده", value: reviewPayment.userFullName },
-                  { label: "نام کاربری", value: reviewPayment.username },
-                  { label: "ایمیل", value: reviewPayment.userEmail },
-                  { label: "شماره تماس", value: reviewPayment.userPhone },
-                  { label: "دوره", value: reviewPayment.courseTitle },
-                ]}
-              />
+            <PaymentDetailSection
+              title="خلاصه پرداخت"
+              twoColumnsOnMobile
+              items={[
+                { label: "وضعیت", value: reviewStatusChip ?? EMPTY_DISPLAY },
+                {
+                  label: "روش پرداخت",
+                  value: PAYMENT_METHOD_LABEL[reviewPayment.paymentMethod],
+                },
+                { label: "واحد", value: CURRENCY_LABEL[reviewPayment.currency] },
+                { label: "مبلغ اولیه", value: formatAmount(reviewPayment.amountIrt) },
+                {
+                  label: "درصد تخفیف",
+                  value: formatNumber(reviewPayment.discountPercentage),
+                },
+                {
+                  label: "مبلغ تخفیف",
+                  value: formatAmount(reviewPayment.discountAmountIrt),
+                },
+                {
+                  label: "مبلغ نهایی",
+                  value: formatAmount(reviewPayment.finalAmountIrt),
+                },
+              ]}
+            />
 
-              <PaymentDetailSection
-                title="اطلاعات تراکنش"
-                items={[
-                  { label: "درگاه/ارائه‌دهنده", value: reviewPayment.paymentProvider },
-                  { label: "کد/مرجع پرداخت", value: reviewPayment.paymentReference },
-                  { label: "شناسه تراکنش", value: reviewPayment.transactionId },
-                ]}
-              />
+            <PaymentDetailSection
+              title="اطلاعات تراکنش"
+              items={[
+                { label: "درگاه/ارائه‌دهنده", value: reviewPayment.paymentProvider, latin: true },
+                {
+                  label: "کد/مرجع پرداخت",
+                  value: reviewPayment.paymentReference,
+                  latin: true,
+                },
+                {
+                  label: "شناسه تراکنش",
+                  value: reviewPayment.transactionId,
+                  latin: true,
+                },
+              ]}
+            />
 
-              <PaymentDetailSection
-                title="کد تخفیف"
-                items={[
-                  { label: "کد تخفیف", value: reviewPayment.couponCode },
-                  {
-                    label: "نوع تخفیف",
-                    value: reviewPayment.couponDiscountType
-                      ? COUPON_DISCOUNT_TYPE_LABEL[reviewPayment.couponDiscountType]
-                      : EMPTY_DISPLAY,
-                  },
-                  {
-                    label: "مقدار تخفیف",
-                    value: formatNumber(reviewPayment.couponDiscountValue),
-                  },
-                ]}
-              />
+            <PaymentDetailSection
+              title="کد تخفیف"
+              twoColumnsOnMobile
+              items={[
+                { label: "کد تخفیف", value: reviewPayment.couponCode, latin: true },
+                {
+                  label: "نوع تخفیف",
+                  value: reviewPayment.couponDiscountType
+                    ? COUPON_DISCOUNT_TYPE_LABEL[reviewPayment.couponDiscountType]
+                    : EMPTY_DISPLAY,
+                },
+                {
+                  label: "مقدار تخفیف",
+                  value: formatNumber(reviewPayment.couponDiscountValue),
+                },
+              ]}
+            />
 
-              <PaymentDetailSection
-                title="زمان‌بندی وضعیت‌ها"
-                items={[
-                  { label: "تاریخ ثبت", value: formatDate(reviewPayment.createdAt) },
-                  { label: "آخرین بروزرسانی", value: formatDate(reviewPayment.updatedAt) },
-                  { label: "تاریخ انتظار", value: formatDate(reviewPayment.pendingAt) },
-                  { label: "تاریخ پرداخت", value: formatDate(reviewPayment.paidAt) },
-                  { label: "تاریخ خطا", value: formatDate(reviewPayment.failedAt) },
-                  { label: "تاریخ مرجوعی", value: formatDate(reviewPayment.refundedAt) },
-                  { label: "تاریخ لغو", value: formatDate(reviewPayment.cancelledAt) },
-                ]}
-              />
+            <PaymentDetailSection
+              title="زمان‌بندی وضعیت‌ها"
+              twoColumnsOnMobile
+              items={[
+                {
+                  label: "تاریخ ثبت",
+                  value: <DateTimeValue value={reviewPayment.createdAt} emphasizeDate />,
+                },
+                {
+                  label: "آخرین بروزرسانی",
+                  value: <DateTimeValue value={reviewPayment.updatedAt} emphasizeDate />,
+                },
+                {
+                  label: "تاریخ انتظار",
+                  value: <DateTimeValue value={reviewPayment.pendingAt} emphasizeDate />,
+                },
+                {
+                  label: "تاریخ پرداخت",
+                  value: <DateTimeValue value={reviewPayment.paidAt} emphasizeDate />,
+                },
+                {
+                  label: "تاریخ خطا",
+                  value: <DateTimeValue value={reviewPayment.failedAt} emphasizeDate />,
+                },
+                {
+                  label: "تاریخ مرجوعی",
+                  value: <DateTimeValue value={reviewPayment.refundedAt} emphasizeDate />,
+                },
+                {
+                  label: "تاریخ لغو",
+                  value: <DateTimeValue value={reviewPayment.cancelledAt} emphasizeDate />,
+                },
+              ]}
+            />
 
-              <PaymentDetailSection
-                title="بررسی دستی"
-                items={[
-                  {
-                    label: "تغییر دستی",
-                    value: reviewPayment.isManualStatusChange ? "بله" : "خیر",
-                  },
-                  {
-                    label: "تغییردهنده دستی",
-                    value: reviewPayment.manualStatusChangerName,
-                  },
-                ]}
-              />
+            <PaymentDetailSection
+              title="ثبت اولیه و تغییر وضعیت"
+              twoColumnsOnMobile
+              items={[
+                {
+                  label: "ثبت اولیه توسط",
+                  value: reviewPayment.submittedInitiallyByAdmin ? "پشتیبانی" : "کاربر",
+                },
+                {
+                  label: "ثبت‌کننده",
+                  value: reviewPayment.createdByUserName,
+                },
+                {
+                  label: "تغییر دستی",
+                  value: reviewPayment.isManualStatusChange ? "بله" : "خیر",
+                },
+                {
+                  label: "تغییردهنده دستی",
+                  value: reviewPayment.manualStatusChangerName,
+                },
+              ]}
+            />
 
-              {renderReceiptFileCard(reviewPayment, isReceiptPreviewExpanded, () =>
-                setIsReceiptPreviewExpanded((previous) => !previous),
-              )}
+            {renderReceiptFileCard(reviewPayment, isReceiptPreviewExpanded, () =>
+              setIsReceiptPreviewExpanded((previous) => !previous)
+            )}
 
-              <Paper
-                variant="outlined"
-                sx={{
-                  p: 2,
-                  borderRadius: 3,
-                  bgcolor: "background.paper",
-                  borderColor: "divider",
-                }}
-              >
-                <Stack spacing={2}>
-                  <Box>
-                    <Typography variant="subtitle1" fontWeight={900}>
-                      ثبت نتیجه بررسی
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      وضعیت پرداخت الزامی است. توضیح بررسی دستی اختیاری است.
-                    </Typography>
-                  </Box>
-                  <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-                    <TextField
-                      select
-                      required
-                      fullWidth
-                      label="وضعیت پرداخت"
-                      value={reviewStatus}
-                      onChange={(event) =>
-                        setReviewStatus(event.target.value as UserCoursePurchaseStatus)
-                      }
-                    >
-                      {REVIEW_STATUS_OPTIONS.map((value) => (
-                        <MenuItem key={value} value={value}>
-                          {STATUS_LABEL[value]}
-                        </MenuItem>
-                      ))}
-                    </TextField>
-                    <TextField
-                      fullWidth
-                      multiline
-                      minRows={3}
-                      label="توضیح بررسی دستی"
-                      value={reviewDescription}
-                      onChange={(event) => setReviewDescription(event.target.value)}
-                      placeholder="مثلاً رسید بررسی شد و پرداخت تایید گردید."
-                    />
-                  </Stack>
+            <Paper
+              variant="outlined"
+              sx={{
+                p: 2,
+                borderRadius: 3,
+                bgcolor: "background.paper",
+                borderColor: "divider",
+              }}
+            >
+              <Stack spacing={2}>
+                <Box>
+                  <Typography variant="subtitle1" fontWeight={900}>
+                    ثبت نتیجه بررسی
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    وضعیت پرداخت الزامی است. توضیح بررسی دستی اختیاری است.
+                  </Typography>
+                </Box>
+                <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+                  <TextField
+                    select
+                    required
+                    fullWidth
+                    label="وضعیت پرداخت"
+                    value={reviewStatus}
+                    onChange={(event) =>
+                      handleReviewStatusChange(event.target.value as UserCoursePurchaseStatus)
+                    }
+                  >
+                    {REVIEW_STATUS_OPTIONS.map((value) => (
+                      <MenuItem key={value} value={value}>
+                        {STATUS_LABEL[value]}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                  <TextField
+                    fullWidth
+                    multiline
+                    minRows={3}
+                    label="توضیح بررسی دستی"
+                    value={reviewDescription}
+                    onChange={(event) => setReviewDescription(event.target.value)}
+                    placeholder="مثلاً رسید بررسی شد و پرداخت تایید گردید."
+                  />
                 </Stack>
-              </Paper>
-            </Stack>
+              </Stack>
+            </Paper>
+          </Stack>
         )}
       </EntityModalShell>
+
+      <EntityConfirmDialogShell
+        open={isPaidStatusChangeConfirmOpen && pendingPaidStatusChange != null}
+        onClose={closePaidStatusChangeConfirm}
+        title="تغییر وضعیت پرداخت‌شده"
+        resetKey={`${reviewPaymentId ?? ""}-${pendingPaidStatusChange ?? ""}`}
+        footer={
+          <ModalFooterActions
+            actions={[
+              {
+                key: "close",
+                isCloseButton: true,
+                onClick: closePaidStatusChangeConfirm,
+              },
+              {
+                key: "confirm",
+                label: "تایید تغییر وضعیت",
+                onClick: confirmPaidStatusChange,
+                variant: "contained",
+                color: "warning",
+              },
+            ]}
+          />
+        }
+      >
+        <Stack spacing={2}>
+          <Alert severity="warning">
+            این پرداخت در وضعیت «پرداخت‌شده» است. تغییر وضعیت ممکن است دسترسی کاربر به دوره را تحت
+            تاثیر قرار دهد.
+          </Alert>
+          <DialogContentText>
+            آیا از تغییر وضعیت از «{STATUS_LABEL.PAID}» به «
+            {pendingPaidStatusChange ? STATUS_LABEL[pendingPaidStatusChange] : EMPTY_DISPLAY}» مطمئن
+            هستید؟
+          </DialogContentText>
+        </Stack>
+      </EntityConfirmDialogShell>
     </>
   );
 };

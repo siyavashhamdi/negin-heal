@@ -121,6 +121,8 @@ export type CoursePaymentDetailRow = {
   readonly receiptUploader?: CoursePaymentRelatedUser | null;
   readonly isManualStatusChange: boolean;
   readonly submittedInitiallyByAdmin: boolean;
+  readonly createdBy?: string | null;
+  readonly createdByUser?: CoursePaymentRelatedUser | null;
   readonly manualStatusChangedBy?: string | null;
   readonly manualStatusChanger?: CoursePaymentRelatedUser | null;
   readonly manualStatusChangedDescription?: string | null;
@@ -352,6 +354,9 @@ export type CoursePaymentRecord = {
   readonly receiptUploaderUsername: string;
   readonly isManualStatusChange: boolean;
   readonly submittedInitiallyByAdmin: boolean;
+  readonly createdBy: string;
+  readonly createdByUserName: string;
+  readonly createdByUsername: string;
   readonly manualStatusChangedBy: string;
   readonly manualStatusChangerName: string;
   readonly manualStatusChangerUsername: string;
@@ -449,6 +454,9 @@ export function mapCoursePaymentListRowToRecord(row: CoursePaymentListItemRow): 
     receiptUploaderUsername: EMPTY_DISPLAY,
     isManualStatusChange: row.isManualStatusChange,
     submittedInitiallyByAdmin: false,
+    createdBy: EMPTY_DISPLAY,
+    createdByUserName: EMPTY_DISPLAY,
+    createdByUsername: EMPTY_DISPLAY,
     manualStatusChangedBy: display(row.manualStatusChangedBy),
     manualStatusChangerName: EMPTY_DISPLAY,
     manualStatusChangerUsername: EMPTY_DISPLAY,
@@ -508,6 +516,9 @@ export function mapCoursePaymentDetailRowToRecord(row: CoursePaymentDetailRow): 
     receiptUploaderUsername: display(row.receiptUploader?.username),
     isManualStatusChange: row.isManualStatusChange,
     submittedInitiallyByAdmin: row.submittedInitiallyByAdmin === true,
+    createdBy: display(row.createdBy),
+    createdByUserName: display(row.createdByUser?.fullName ?? row.createdByUser?.username),
+    createdByUsername: display(row.createdByUser?.username),
     manualStatusChangedBy: display(row.manualStatusChangedBy),
     manualStatusChangerName: display(
       row.manualStatusChanger?.fullName ?? row.manualStatusChanger?.username,

@@ -875,17 +875,21 @@ $hairline: 0.0625rem solid;
     block-size: calc(7.05rem + env(safe-area-inset-bottom));
     border-radius: 1.5rem 1.5rem 0 0;
     pointer-events: none;
+    isolation: isolate;
+    transform: translate3d(0, 0, 0);
     background: linear-gradient(
       to bottom,
-      rgba(253, 247, 249, 0.88),
-      #fdf7f9
+      rgba(253, 247, 249, 0.68),
+      rgba(253, 247, 249, 0.96)
     );
+    backdrop-filter: blur(0.08rem);
+    -webkit-backdrop-filter: blur(0.08rem);
 
-    @supports (background: color-mix(in srgb, #fdf7f9 88%, transparent)) {
+    @supports (background: color-mix(in srgb, #fdf7f9 68%, transparent)) {
       background: linear-gradient(
         to bottom,
-        color-mix(in srgb, var(--app-layout-bg) 88%, transparent),
-        var(--app-layout-bg)
+        color-mix(in srgb, var(--app-layout-bg) 68%, transparent),
+        color-mix(in srgb, var(--app-layout-bg) 96%, transparent)
       );
     }
   }
@@ -1015,9 +1019,17 @@ body[data-theme="dark"] {
     .main-layout::after {
       background: linear-gradient(
         to bottom,
-        rgba(11, 18, 32, 0.88),
-        #0b1220
+        rgba(11, 18, 32, 0.68),
+        rgba(11, 18, 32, 0.96)
       );
+
+      @supports (background: color-mix(in srgb, #0b1220 68%, transparent)) {
+        background: linear-gradient(
+          to bottom,
+          color-mix(in srgb, var(--app-layout-bg) 68%, transparent),
+          color-mix(in srgb, var(--app-layout-bg) 96%, transparent)
+        );
+      }
     }
   }
 

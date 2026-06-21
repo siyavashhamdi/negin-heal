@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import {
-  Link as RouterLink,
   useLocation,
   useNavigate,
   useParams,
@@ -13,12 +12,10 @@ import {
   Chip,
   CircularProgress,
   Collapse,
-  IconButton,
   Paper,
   Skeleton,
   Typography,
 } from "@mui/material";
-import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import AutoStoriesRoundedIcon from "@mui/icons-material/AutoStoriesRounded";
 import CardGiftcardRoundedIcon from "@mui/icons-material/CardGiftcardRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
@@ -42,6 +39,7 @@ import {
 import { setMaxRouteOwner, clearMaxRouteOwner } from "../../routing/max-route-owner.store";
 import { setPostLoginRedirect } from "../../routing/post-login-redirect";
 import { resolveFileAccessUrl, buildExistingFilePreview } from "../../utils/fileAccessUrl.util";
+import PageBackNavigation from "../../shared/PageBackNavigation";
 import { applyBlankTargetToRichTextLinks } from "../../utils/richTextHtml.util";
 import { USER_COURSE_DETAIL_QUERY } from "../../graphql/queries/userCourseDetail.query";
 import { COURSE_CHAPTER_COMPLETE_MUTATION } from "../../graphql/mutations/courseChapterComplete.mutation";
@@ -659,24 +657,11 @@ const CourseDetail = (): ReactElement => {
 
   return (
     <section className={styles.page}>
-      <div className={styles.topBar}>
-        <Button
-          component={RouterLink}
-          to="/courses"
-          variant="text"
-          startIcon={<ArrowBackRoundedIcon />}
-        >
-          بازگشت به دوره‌ها
-        </Button>
-      </div>
-      <IconButton
-        component={RouterLink}
-        to="/courses"
-        className={styles.mobileTopBackButton}
-        aria-label="بازگشت به دوره‌ها"
-      >
-        <ArrowBackRoundedIcon />
-      </IconButton>
+      <PageBackNavigation
+        label="بازگشت به دوره‌ها"
+        fallbackTo="/courses"
+        mobileOverlay
+      />
 
       <Paper className={styles.hero} elevation={0}>
         <div className={styles.heroMedia}>

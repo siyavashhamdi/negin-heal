@@ -41,6 +41,7 @@ import { useTranslation } from "../../hooks/useTranslation";
 import CrudRowActions from "../../shared/crud/CrudRowActions";
 import EntityTableShell from "../../shared/crud/EntityTableShell";
 import crudPrimitives from "../../shared/crud/styles/crudPrimitives.module.scss";
+import DateTimeValue from "../../shared/display/DateTimeValue";
 import DashboardMenuHeader from "../../shared/DashboardMenuHeader";
 import JalaliDateFilterField from "../../shared/table/JalaliDateFilterField";
 import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
@@ -96,20 +97,6 @@ const SORTABLE_FIELDS = new Set<AppSettingListSortField>([
   "valueType",
   "isActive",
 ]);
-
-function formatDate(value: string): string {
-  if (!value.trim()) {
-    return EMPTY_DISPLAY;
-  }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return EMPTY_DISPLAY;
-  }
-  return new Intl.DateTimeFormat("fa-IR", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
-}
 
 function textCell(value: unknown, monospace = false): ReactElement {
   return (
@@ -323,12 +310,12 @@ const SystemSettingsIndex = (): ReactElement => {
       {
         accessorKey: "createdAt",
         header: t("table.pages.appSettings.columns.createdAt"),
-        cell: (info) => textCell(formatDate(info.getValue() as string), true),
+        cell: (info) => <DateTimeValue value={info.getValue() as string} />,
       },
       {
         accessorKey: "updatedAt",
         header: t("table.pages.appSettings.columns.updatedAt"),
-        cell: (info) => textCell(formatDate(info.getValue() as string), true),
+        cell: (info) => <DateTimeValue value={info.getValue() as string} />,
       },
       {
         id: "actions",

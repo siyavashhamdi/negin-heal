@@ -58,6 +58,7 @@ import EntityModalShell from "../../shared/crud/EntityModalShell";
 import ModalFooterActions from "../../shared/crud/ModalFooterActions";
 import EntityTableShell from "../../shared/crud/EntityTableShell";
 import crudPrimitives from "../../shared/crud/styles/crudPrimitives.module.scss";
+import DateTimeValue from "../../shared/display/DateTimeValue";
 import JalaliDateFilterField from "../../shared/table/JalaliDateFilterField";
 import JalaliDateTimeField from "../../shared/table/JalaliDateTimeField";
 import DashboardMenuHeader from "../../shared/DashboardMenuHeader";
@@ -159,20 +160,6 @@ const SORTABLE_FIELDS = new Set<CouponListSortField>([
   "isFirstPurchaseOnly",
   "isActive",
 ]);
-
-function formatDate(value: string): string {
-  if (!value.trim()) {
-    return EMPTY_DISPLAY;
-  }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return EMPTY_DISPLAY;
-  }
-  return new Intl.DateTimeFormat("fa-IR", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
-}
 
 function formatNumber(value: number | null | undefined): string {
   if (typeof value !== "number" || Number.isNaN(value)) {
@@ -807,12 +794,12 @@ const CouponsIndex = (): ReactElement => {
       {
         accessorKey: "startsAt",
         header: t("table.pages.coupons.columns.startsAt"),
-        cell: (info) => textCell(formatDate(info.getValue() as string), true),
+        cell: (info) => <DateTimeValue value={info.getValue() as string} />,
       },
       {
         accessorKey: "expiresAt",
         header: t("table.pages.coupons.columns.expiresAt"),
-        cell: (info) => textCell(formatDate(info.getValue() as string), true),
+        cell: (info) => <DateTimeValue value={info.getValue() as string} />,
       },
       {
         accessorKey: "isFirstPurchaseOnly",
@@ -856,12 +843,12 @@ const CouponsIndex = (): ReactElement => {
       {
         accessorKey: "createdAt",
         header: t("table.pages.coupons.columns.createdAt"),
-        cell: (info) => textCell(formatDate(info.getValue() as string), true),
+        cell: (info) => <DateTimeValue value={info.getValue() as string} />,
       },
       {
         accessorKey: "updatedAt",
         header: t("table.pages.coupons.columns.updatedAt"),
-        cell: (info) => textCell(formatDate(info.getValue() as string), true),
+        cell: (info) => <DateTimeValue value={info.getValue() as string} />,
       },
       {
         id: "actions",

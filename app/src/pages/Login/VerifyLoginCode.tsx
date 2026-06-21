@@ -13,7 +13,6 @@ import {
   Typography,
 } from "@mui/material";
 import {
-  ArrowForward as ArrowForwardIcon,
   Lock as LockIcon,
   Sms as SmsIcon,
   Visibility,
@@ -26,6 +25,7 @@ import { API_CONFIG } from "../../config/env";
 import { LOGIN_CAPTCHA_FAILED_ATTEMPTS_THRESHOLD } from "../../constants";
 import { toPersianDigits, toWesternDigits } from "../../utilities/persian-digits.util";
 import LoginShell from "./LoginShell";
+import { PageBackTextButton } from "../../shared/PageBackNavigation";
 import { LoginCaptchaField } from "./components/LoginCaptchaField";
 import { type LoginNavState } from "./login-nav-state";
 import formStyles from "./styles/LoginFormShared.module.scss";
@@ -290,16 +290,12 @@ export const VerifyLoginCodeForm = ({
         <Typography component="p" className={verifyStyles.identityValue}>
           {identity.identityKind === "mobile" ? toPersianDigits(identity.identity) : identity.identity}
         </Typography>
-        <Button
-          type="button"
-          variant="text"
-          size="small"
+        <PageBackTextButton
+          label={t("auth.login.backToIdentity")}
           onClick={() => onEditIdentity(identity)}
           className={verifyStyles.backToIdentityButton}
-          startIcon={<ArrowForwardIcon fontSize="small" aria-hidden />}
-        >
-          {t("auth.login.backToIdentity")}
-        </Button>
+          size="small"
+        />
       </Box>
 
       {supportsOtp ? (

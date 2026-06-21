@@ -6,11 +6,12 @@ import {
   SettingsRounded as SettingsIcon,
 } from "@mui/icons-material";
 import { useMemo, useState, type ReactElement, type ReactNode } from "react";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useMe } from "../../hooks/useMe";
 import { useTranslation } from "../../hooks/useTranslation";
 import ThemeToggle from "../ThemeToggle";
+import { PageBackTextButton, usePageBackNavigation } from "../../shared/PageBackNavigation";
 import styles from "./styles/header.module.scss";
 import AppTooltip from "../../shared/AppTooltip";
 
@@ -43,7 +44,6 @@ function HeaderPopover(props: {
 
 const Header = (): ReactElement => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { user, avatarUrl, loading: userLoading } = useMe();
   const { logout, user: authUser } = useAuth();
   const [notificationAnchor, setNotificationAnchor] = useState<HTMLButtonElement | null>(null);
@@ -86,9 +86,11 @@ const Header = (): ReactElement => {
       ? ADMIN_ROLE_BADGE_LABELS.ADMIN
       : null;
 
-  const goDashboard = (): void => {
+  const navigateBack = usePageBackNavigation("/dashboard");
+
+  const handleBackToDashboard = (): void => {
     setUserAnchor(null);
-    navigate("/dashboard");
+    navigateBack();
   };
 
   return (
@@ -246,9 +248,11 @@ const Header = (): ReactElement => {
             {t("layout.header.panels.user.popoverSecurity")}
           </Typography>
           <Divider />
-          <Button variant="text" className={styles.popoverDashboardButton} onClick={goDashboard}>
-            {t("layout.mainLayout.navigation.backToDashboard")}
-          </Button>
+          <PageBackTextButton
+            label={t("layout.mainLayout.navigation.backToDashboard")}
+            onClick={handleBackToDashboard}
+            className={styles.popoverDashboardButton}
+          />
         </Box>
       </HeaderPopover>
     </Box>

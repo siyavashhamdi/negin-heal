@@ -30,32 +30,6 @@
   }
 }
 
-.backTextButton {
-  padding-inline: variables.$spacing-0-5;
-  padding-block: 0.125rem;
-  min-width: 0;
-  text-transform: none;
-  font-weight: variables.$font-weight-semibold;
-
-  :global(.MuiButton-endIcon) {
-    margin-inline-start: variables.$spacing-1;
-  }
-}
-
-.backArrowIcon {
-  font-size: 1.125rem;
-  transform: scaleX(-1);
-}
-
-.mobileBackIcon {
-  transform: scaleX(-1);
-}
-
-.backIconButton {
-  border-radius: variables.$border-radius-lg;
-  box-shadow: variables.$shadow-md;
-}
-
 .rowRtl {
   direction: rtl;
   flex: 1 1 0;

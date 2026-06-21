@@ -88,6 +88,7 @@ type CourseListFilterInput = {
   hasPrice?: boolean | null;
   hasFreeChapter?: boolean | null;
   isPurchased?: boolean | null;
+  includeUserId?: string | null;
   minPriceIrt?: number | null;
   maxPriceIrt?: number | null;
   tagsAny?: string[] | null;

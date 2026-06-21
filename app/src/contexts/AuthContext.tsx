@@ -3,6 +3,7 @@ import {
   useContext,
   useState,
   useEffect,
+  useCallback,
   type ReactNode,
   type ReactElement,
 } from "react";
@@ -13,6 +14,7 @@ import { apolloClient } from "../lib/apollo-client";
 import { APP_SHELL_ROUTES } from "../routing/app-shell-routes";
 import { consumePostLoginRedirect } from "../routing/post-login-redirect";
 import { USER_LOGOUT_MUTATION } from "../graphql/mutations/userLogout.mutation";
+import { subscribeAuthSessionExpired } from "../lib/auth-session-expired-listeners";
 
 /**
  * User data structure
@@ -107,21 +109,33 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
     navigate(APP_SHELL_ROUTES.dashboard);
   };
 
+  const clearLocalAuthSession = useCallback((): void => {
+    setAccessToken(null);
+    setUser(null);
+    localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+    localStorage.removeItem("user");
+  }, []);
+
+  const redirectToLoginAfterLogout = useCallback((): void => {
+    navigate(
+      isMobileAppLayoutViewport() ? APP_SHELL_ROUTES.profileLogin : APP_SHELL_ROUTES.login,
+    );
+  }, [navigate]);
+
+  useEffect(() => {
+    return subscribeAuthSessionExpired(clearLocalAuthSession);
+  }, [clearLocalAuthSession]);
+
   /**
    * Logout function
    * Clears auth state and redirects to login
    */
-  const logout = (): void => {
+  const logout = useCallback((): void => {
     const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
 
     const finishLogout = (): void => {
-      setAccessToken(null);
-      setUser(null);
-      localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
-      localStorage.removeItem("user");
-      navigate(
-        isMobileAppLayoutViewport() ? APP_SHELL_ROUTES.profileLogin : APP_SHELL_ROUTES.login,
-      );
+      clearLocalAuthSession();
+      redirectToLoginAfterLogout();
     };
 
     if (!token) {
@@ -132,7 +146,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
     void apolloClient.mutate({ mutation: USER_LOGOUT_MUTATION }).finally(() => {
       finishLogout();
     });
-  };
+  }, [clearLocalAuthSession, redirectToLoginAfterLogout]);
 
   const value: AuthContextValue = {
     user,

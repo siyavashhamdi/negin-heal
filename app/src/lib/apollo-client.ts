@@ -7,6 +7,7 @@ import { getMainDefinition } from "@apollo/client/utilities";
 import { LOCAL_STORAGE_KEYS } from "../constants";
 import { paginatedQueryTypePolicies } from "./apollo/paginated-query-cache.policy";
 import { queueApolloError } from "../components/apollo-error-queue";
+import { notifyAuthSessionExpired } from "./auth-session-expired-listeners";
 import { extractGraphQLErrorMessage, type ApolloErrorLike, type GraphQLErrorExtensions } from "../utilities/graphql-error.util";
 
 const httpLink = new HttpLink({
@@ -71,6 +72,8 @@ const errorLink = new ErrorLink(({ error }) => {
   }
 
   if (CombinedGraphQLErrors.is(error)) {
+    let shouldLogout = false;
+
     for (const graphQLError of error.errors) {
       logGraphQlDiagnostic(graphQLError.message, graphQLError.locations, graphQLError.path);
 
@@ -81,8 +84,12 @@ const errorLink = new ErrorLink(({ error }) => {
       const errorCode =
         gql.code ?? (graphQLError.extensions as { code?: string } | undefined)?.code;
       if (errorCode === "UNAUTHENTICATED") {
-        localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+        shouldLogout = true;
       }
+    }
+
+    if (shouldLogout) {
+      notifyAuthSessionExpired();
     }
     return;
   }
@@ -98,7 +105,7 @@ const errorLink = new ErrorLink(({ error }) => {
     queueApolloError(userFriendlyMessage);
 
     if (error.statusCode === 401) {
-      localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+      notifyAuthSessionExpired();
     }
     return;
   }

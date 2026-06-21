@@ -59,6 +59,14 @@ export const COURSE_PAYMENT_DETAIL_QUERY = gql`
       }
       isManualStatusChange
       submittedInitiallyByAdmin
+      createdBy
+      createdByUser {
+        id
+        fullName
+        username
+        email
+        phone
+      }
       manualStatusChangedBy
       manualStatusChanger {
         id

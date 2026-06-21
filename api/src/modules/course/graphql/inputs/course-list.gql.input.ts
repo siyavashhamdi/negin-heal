@@ -3,13 +3,14 @@ import {
   IsArray,
   IsBoolean,
   IsEnum,
+  IsMongoId,
   IsNumber,
   IsOptional,
   IsString,
   Min,
   ValidateNested,
 } from "class-validator";
-import { Field, Float, InputType } from "@nestjs/graphql";
+import { Field, Float, ID, InputType } from "@nestjs/graphql";
 
 import { CourseItemType, CourseReleaseType } from "../../../../enums";
 import {
@@ -131,6 +132,15 @@ export class CourseListFilterInput {
   @IsOptional()
   @IsBoolean({ message: "hasFreeChapter filter must be a boolean" })
   hasFreeChapter?: boolean;
+
+  @Field(() => ID, {
+    nullable: true,
+    description:
+      "Scope the course list for a specific user by excluding courses they have already paid for.",
+  })
+  @IsOptional()
+  @IsMongoId({ message: "includeUserId must be a valid Mongo ID" })
+  includeUserId?: string;
 }
 
 @InputType()

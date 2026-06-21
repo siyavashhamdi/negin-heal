@@ -1,13 +1,14 @@
+import DoneAllOutlinedIcon from "@mui/icons-material/DoneAllOutlined";
 import InboxOutlinedIcon from "@mui/icons-material/InboxOutlined";
 import { Alert, Button, CircularProgress, Skeleton, Stack } from "@mui/material";
+import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneRounded";
 import { type ReactElement, useCallback, useEffect, useRef, useState } from "react";
-import { Navigate } from "react-router-dom";
 
 import { GENERAL_SUBSCRIPTION_UPDATE_TYPES } from "../../constants";
 import { useAuth } from "../../contexts/AuthContext";
 import { subscribeGeneralUpdates } from "../../lib/general-updates-listeners";
-import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
 import { useTranslation } from "../../hooks/useTranslation";
+import { LoginRequiredState } from "../../shared/auth/LoginRequiredState";
 import NotificationCard from "./NotificationCard";
 import NotificationFilterTabs from "./NotificationFilterTabs";
 import type { NotificationFilterTab } from "./notifications-list.api";
@@ -29,6 +30,8 @@ const NotificationsContent = (): ReactElement => {
     markAsUnread,
     archive,
     unarchive,
+    markAllLoadedAsRead,
+    canMarkAllAsRead,
     isUpdating,
   } = useNotificationList();
   const feedRef = useRef<HTMLDivElement>(null);
@@ -63,6 +66,20 @@ const NotificationsContent = (): ReactElement => {
   return (
     <section className={styles.page}>
       <NotificationFilterTabs activeTab={activeTab} onChange={handleTabChange} />
+
+      {canMarkAllAsRead ? (
+        <Button
+          size="small"
+          variant="outlined"
+          fullWidth
+          className={styles.markAllReadButton}
+          startIcon={<DoneAllOutlinedIcon fontSize="small" />}
+          disabled={isUpdating || loading}
+          onClick={() => void markAllLoadedAsRead()}
+        >
+          {t("pages.notifications.markAllRead")}
+        </Button>
+      ) : null}
 
       {error ? (
         <Alert
@@ -138,9 +155,17 @@ const NotificationsContent = (): ReactElement => {
 
 const Notifications = (): ReactElement => {
   const { isAuthenticated } = useAuth();
+  const { t } = useTranslation();
 
   if (!isAuthenticated) {
-    return <Navigate to={APP_SHELL_ROUTES.courses} replace />;
+    return (
+      <LoginRequiredState
+        eyebrow={t("pages.notifications.eyebrow")}
+        title={t("pages.notifications.loginRequired.title")}
+        description={t("pages.notifications.loginRequired.description")}
+        icon={<NotificationsNoneRoundedIcon />}
+      />
+    );
   }
 
   return <NotificationsContent />;

@@ -622,7 +622,17 @@ export class CourseService {
 
     const [course, user, existingUserCourse] = await Promise.all([
       this.courseModel.findOne({ _id: input.courseId, isActive: true }).exec(),
-      this.userModel.findById(input.userId).exec(),
+      this.userModel
+        .findOne({
+          _id: input.userId,
+          status: UserStatus.ACTIVE,
+          roles: { $eq: [UserRole.END_USER] },
+          $or: [
+            { "audit.deletedAt": null },
+            { "audit.deletedAt": { $exists: false } },
+          ],
+        })
+        .exec(),
       this.userCourseModel
         .findOne({
           courseId: input.courseId,
@@ -642,24 +652,20 @@ export class CourseService {
     }
 
     if (!user) {
-      throw new NotFoundException("User not found");
-    }
-
-    if (user.status !== UserStatus.ACTIVE) {
       throw new BadRequestException(
-        "Manual payment can only be created for active users",
+        "Manual payment can only be created for active END_USER accounts",
       );
     }
 
-    if (!user.roles?.includes(UserRole.END_USER)) {
-      throw new BadRequestException(
-        "Manual payment can only be created for END_USER accounts",
-      );
+    if (
+      existingUserCourse?.purchase.status === UserCoursePurchaseStatus.PAID
+    ) {
+      throw new ConflictException("این کاربر قبلاً این دوره را پرداخت کرده است");
     }
 
     if (existingUserCourse) {
       throw new ConflictException(
-        "This user already has a course payment record for this course",
+        "This user already has a purchase record for this course",
       );
     }
 
@@ -684,9 +690,6 @@ export class CourseService {
     );
 
     const now = new Date();
-    const manualStatusChangedDescription = this.normalizeOptionalText(
-      input.manualStatusChangedDescription,
-    );
     const userCourse = new this.userCourseModel({
       userId: input.userId,
       courseId: course._id,
@@ -714,9 +717,7 @@ export class CourseService {
             : UserCoursePurchaseCurrency.IRT,
         paymentMethod: input.paymentMethod,
         submittedInitiallyByAdmin: true,
-        isManualStatusChange: true,
-        manualStatusChangedBy: adminUserId,
-        manualStatusChangedDescription,
+        isManualStatusChange: false,
         uploadedReceiptFileId,
         receiptUploadedBy: uploadedReceiptFileId ? adminUserId : undefined,
         couponSnapshot: manualPriceSummary.couponSnapshot,
@@ -752,7 +753,13 @@ export class CourseService {
     const { filters, options } = input || {};
     const limit =
       options?.limit ?? PAGINATION_CONSTANT.CURSOR_BASED.DEFAULT_LIMIT;
-    const baseFilterQuery = await this.buildListFilterQuery(filters);
+    const includeUserId = filters?.includeUserId;
+    const baseFilterQuery = await this.applyIncludeUserIdFilter(
+      await this.buildListFilterQuery(
+        includeUserId ? { ...filters, includeUserId: undefined } : filters,
+      ),
+      includeUserId,
+    );
     const sortFieldMap: Record<CourseListSortField, string> = {
       createdAt: "audit.createdAt",
       updatedAt: "audit.updatedAt",
@@ -1774,6 +1781,34 @@ export class CourseService {
     )
       ? CourseReleaseType.GRADUAL
       : CourseReleaseType.IMMEDIATE;
+  }
+
+  private async applyIncludeUserIdFilter(
+    filterQuery: FilterQuery<Course>,
+    includeUserId?: string,
+  ): Promise<FilterQuery<Course>> {
+    if (!includeUserId?.trim()) {
+      return filterQuery;
+    }
+
+    if (!Types.ObjectId.isValid(includeUserId)) {
+      return filterQuery;
+    }
+
+    const paidCourseIds = await this.userCourseModel
+      .find({
+        userId: new Types.ObjectId(includeUserId),
+        "purchase.status": UserCoursePurchaseStatus.PAID,
+      })
+      .select({ courseId: 1 })
+      .lean<Array<{ courseId: Types.ObjectId }>>()
+      .exec();
+
+    const purchasedCourseObjectIds = paidCourseIds.map((entry) => entry.courseId);
+
+    return {
+      $and: [filterQuery, { _id: { $nin: purchasedCourseObjectIds } }],
+    };
   }
 
   private async applyUserCoursePurchaseFilter(
@@ -2805,6 +2840,9 @@ export class CourseService {
     const fileIds = new Set<string>();
 
     userCourses.forEach((userCourse) => {
+      if (userCourse.audit?.createdBy) {
+        userIds.add(userCourse.audit.createdBy.toString());
+      }
       const purchase = userCourse.purchase;
       if (purchase.receiptUploadedBy) {
         userIds.add(purchase.receiptUploadedBy.toString());
@@ -2987,6 +3025,12 @@ export class CourseService {
           )
         : undefined,
     );
+    const createdByUser = this.toCoursePaymentRelatedUserResponse(
+      userCourse.audit?.createdBy,
+      userCourse.audit?.createdBy
+        ? relatedLookups.usersById.get(userCourse.audit.createdBy.toString())
+        : undefined,
+    );
 
     return {
       id: userCourse._id,
@@ -3033,6 +3077,8 @@ export class CourseService {
       receiptUploader,
       isManualStatusChange: purchase.isManualStatusChange,
       submittedInitiallyByAdmin: purchase.submittedInitiallyByAdmin === true,
+      createdBy: userCourse.audit?.createdBy,
+      createdByUser,
       manualStatusChangedBy: purchase.manualStatusChangedBy,
       manualStatusChanger,
       manualStatusChangedDescription: purchase.manualStatusChangedDescription,

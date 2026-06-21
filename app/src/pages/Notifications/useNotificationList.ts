@@ -12,6 +12,7 @@ import {
 import { USER_NOTIFICATION_LIST_QUERY } from "../../graphql/queries/userNotificationList.query";
 import { USER_NOTIFICATION_UPDATE_MUTATION } from "../../graphql/mutations/userNotificationUpdate.mutation";
 import { useSnackbar } from "../../hooks/useSnackbar";
+import { useTranslation } from "../../hooks/useTranslation";
 import { useBadgeCountFirstPageReload } from "../../hooks/useBadgeCountFirstPageReload";
 import { showErrorIfNotQueued } from "../../utilities/graphql-error.util";
 import {
@@ -93,6 +94,7 @@ export const useNotificationList = (): UseNotificationListResult => {
     },
   );
 
+  const { t } = useTranslation();
   const { showError, showSuccess } = useSnackbar();
 
   const [updateNotifications, updateResult] = useMutation<
@@ -297,8 +299,12 @@ export const useNotificationList = (): UseNotificationListResult => {
   );
 
   const markAllLoadedAsRead = useCallback(async (): Promise<void> => {
-    await runUpdate(actionableUnreadIds, "SET_AS_READ", "همه اعلان‌های نمایش‌داده‌شده خوانده شد.");
-  }, [actionableUnreadIds, runUpdate]);
+    await runUpdate(
+      actionableUnreadIds,
+      "SET_AS_READ",
+      t("pages.notifications.markAllReadSuccess"),
+    );
+  }, [actionableUnreadIds, runUpdate, t]);
 
   return {
     activeTab,

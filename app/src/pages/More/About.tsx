@@ -1,10 +1,9 @@
-import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { useQuery } from "@apollo/client/react";
 import { type ReactElement } from "react";
-import { useNavigate } from "react-router-dom";
 import { APP_ABOUT_PAGE_QUERY } from "../../graphql/queries/appAboutPageConfig.query";
 import EnamadTrustSeal from "../../shared/EnamadTrustSeal";
+import PageBackNavigation from "../../shared/PageBackNavigation";
 import { EMPTY_APP_ABOUT_PAGE, type AppAboutPageConfigQuery } from "./about-page.api";
 import styles from "./styles/more.module.scss";
 import { opaqueShellProps } from "../../shared/opaqueShell";
@@ -12,7 +11,6 @@ import { opaqueShellProps } from "../../shared/opaqueShell";
 const hasText = (value: string): boolean => value.trim().length > 0;
 
 const AboutPage = (): ReactElement => {
-  const navigate = useNavigate();
   const { data, loading } = useQuery<AppAboutPageConfigQuery>(APP_ABOUT_PAGE_QUERY, {
     fetchPolicy: "cache-and-network",
   });
@@ -20,6 +18,8 @@ const AboutPage = (): ReactElement => {
 
   return (
     <section className={styles.page} aria-busy={loading}>
+      <PageBackNavigation label="بازگشت به سایر" fallbackTo="/more" />
+
       <div className={styles.hero} {...opaqueShellProps}>
         <p>درباره سامانه</p>
         <h2>Negin Heal</h2>
@@ -31,10 +31,6 @@ const AboutPage = (): ReactElement => {
           <span className={styles.aboutIcon}>
             <InfoOutlinedIcon />
           </span>
-          <button type="button" onClick={() => navigate("/more")}>
-            بازگشت
-            <ArrowBackRoundedIcon />
-          </button>
         </div>
 
         {hasText(aboutPage.html) ? (

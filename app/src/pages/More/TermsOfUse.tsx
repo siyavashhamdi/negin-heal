@@ -1,9 +1,8 @@
-import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import GavelRoundedIcon from "@mui/icons-material/GavelRounded";
 import { useQuery } from "@apollo/client/react";
 import { type ReactElement } from "react";
-import { useNavigate } from "react-router-dom";
 import { APP_TERMS_OF_USE_PAGE_QUERY } from "../../graphql/queries/appTermsOfUsePageConfig.query";
+import PageBackNavigation from "../../shared/PageBackNavigation";
 import {
   EMPTY_APP_TERMS_OF_USE_PAGE,
   type AppTermsOfUsePageConfigQuery,
@@ -14,7 +13,6 @@ import { opaqueShellProps } from "../../shared/opaqueShell";
 const hasText = (value: string): boolean => value.trim().length > 0;
 
 const TermsOfUsePage = (): ReactElement => {
-  const navigate = useNavigate();
   const { data, loading } = useQuery<AppTermsOfUsePageConfigQuery>(
     APP_TERMS_OF_USE_PAGE_QUERY,
     {
@@ -25,6 +23,8 @@ const TermsOfUsePage = (): ReactElement => {
 
   return (
     <section className={styles.page} aria-busy={loading}>
+      <PageBackNavigation label="بازگشت به سایر" fallbackTo="/more" />
+
       <div className={styles.hero} {...opaqueShellProps}>
         <p>شرایط استفاده</p>
         <h2>شرایط استفاده از سامانه</h2>
@@ -36,10 +36,6 @@ const TermsOfUsePage = (): ReactElement => {
           <span className={styles.aboutIcon}>
             <GavelRoundedIcon />
           </span>
-          <button type="button" onClick={() => navigate("/more")}>
-            بازگشت
-            <ArrowBackRoundedIcon />
-          </button>
         </div>
 
         {hasText(termsOfUsePage.html) ? (

@@ -9,7 +9,6 @@ import {
 } from "@mui/material";
 import {
   AlternateEmail as AlternateEmailIcon,
-  ArrowForward as ArrowForwardIcon,
   CheckCircle as CheckCircleIcon,
   MarkEmailUnread as MarkEmailUnreadIcon,
   Person as PersonIcon,
@@ -20,6 +19,7 @@ import { useSnackbar } from "../../hooks/useSnackbar";
 import { usePasswordReset } from "../../hooks/usePasswordReset";
 import { API_CONFIG } from "../../config/env";
 import LoginShell from "./LoginShell";
+import { PageBackTextButton } from "../../shared/PageBackNavigation";
 import { LoginCaptchaField } from "./components/LoginCaptchaField";
 import { type LoginNavState } from "./login-nav-state";
 import {
@@ -133,15 +133,11 @@ export const ForgotPasswordForm = ({
             {t("auth.login.forgotPasswordSubmittedHint")}
           </Typography>
 
-          <Button
-            type="button"
-            variant="contained"
-            className={formStyles.loginButton}
+          <PageBackTextButton
+            label={t("auth.login.backToSignIn")}
             onClick={onBackToLogin}
-            startIcon={<ArrowForwardIcon fontSize="small" />}
-          >
-            {t("auth.login.backToSignIn")}
-          </Button>
+            className={formStyles.formTextButton}
+          />
         </>
       </LoginShell>
     );
@@ -228,16 +224,12 @@ export const ForgotPasswordForm = ({
             : t("auth.login.sendResetLink")}
         </Button>
 
-        <Button
-          type="button"
-          variant="text"
-          className={formStyles.formTextButton}
+        <PageBackTextButton
+          label={t("auth.login.backToSignIn")}
           onClick={onBackToLogin}
-          startIcon={<ArrowForwardIcon fontSize="small" />}
+          className={formStyles.formTextButton}
           disabled={requestingResetLink}
-        >
-          {t("auth.login.backToSignIn")}
-        </Button>
+        />
       </form>
     </LoginShell>
   );

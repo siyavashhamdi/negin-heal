@@ -710,9 +710,9 @@ const CoursesIndex = (): ReactElement => {
       ) : (
         <Paper
           className={`${styles.filterPanel}${
-            shouldShowFilterPanelContent ? "" : ` ${styles.filterPanelCollapsed}`
+            isMobile && !shouldShowFilterPanelContent ? ` ${styles.filterPanelCollapsed}` : ""
           }`}
-          data-opaque-shell
+          {...(shouldShowFilterPanelContent ? { "data-opaque-shell": true } : {})}
           elevation={0}
         >
           {shouldShowFilterPanelContent ? (

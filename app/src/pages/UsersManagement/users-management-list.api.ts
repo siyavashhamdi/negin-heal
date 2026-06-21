@@ -24,17 +24,6 @@ export type UserListItemRow = {
   readonly updatedAt?: string | null;
 };
 
-export type UserPickerListRow = {
-  readonly id: string;
-  readonly username: string;
-  readonly profile?: {
-    readonly firstName?: string | null;
-    readonly lastName?: string | null;
-    readonly email?: string | null;
-    readonly phoneNumber?: string | null;
-  } | null;
-};
-
 export type UserDetailRow = {
   readonly id: string;
   readonly username: string;
@@ -48,18 +37,6 @@ export type UserDetailRow = {
 export type UserListQuery = {
   userList: {
     items: UserListItemRow[];
-    pagination: {
-      limit: number;
-      skip: number;
-      total: number;
-      count: number;
-    };
-  };
-};
-
-export type UserPickerListQuery = {
-  userList: {
-    items: UserPickerListRow[];
     pagination: {
       limit: number;
       skip: number;
@@ -223,7 +200,7 @@ export function buildUserListQueryVariables(
   };
 }
 
-/** @deprecated Use UserListItemRow for admin list or UserPickerListRow for autocomplete. */
+/** @deprecated Use UserListItemRow instead. */
 export type UserListRow = UserListItemRow;
 
 /** @deprecated Use mapUserListItemRowToRecord instead. */

@@ -292,8 +292,9 @@ const More = (): ReactElement => {
 
       <IosHomeScreenInstallPrompt />
 
+      <AndroidAppDownloadLink />
+
       <div className={styles.linkGrid}>
-        <AndroidAppDownloadLink />
         {isSuperAdmin ? (
           <>
             <button

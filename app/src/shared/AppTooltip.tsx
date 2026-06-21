@@ -7,7 +7,6 @@ import {
   useEffect,
   useRef,
   useState,
-  type MouseEvent,
   type ReactElement,
   type SyntheticEvent,
 } from "react";
@@ -15,6 +14,7 @@ import { useMobileAppLayout } from "../hooks/useMobileAppLayout";
 import {
   isOutsideTooltipTrigger,
   MOBILE_TOOLTIP_DISMISS_MS,
+  MOBILE_TOOLTIP_LONG_PRESS_MS,
 } from "./mobileTooltip.util";
 
 export type AppTooltipProps = TooltipProps;
@@ -29,7 +29,7 @@ export default function AppTooltip({
   disableFocusListener,
   disableTouchListener,
   leaveTouchDelay = MOBILE_TOOLTIP_DISMISS_MS,
-  enterTouchDelay = 0,
+  enterTouchDelay,
   ...rest
 }: AppTooltipProps): ReactElement {
   const isMobileLayout = useMobileAppLayout();
@@ -48,8 +48,10 @@ export default function AppTooltip({
       : mobileOpen
     : openProp;
 
-  type ClickableChildProps = {
-    onClick?: (event: MouseEvent<HTMLElement>) => void;
+  const resolvedEnterTouchDelay =
+    enterTouchDelay ?? (useMobileBehavior ? MOBILE_TOOLTIP_LONG_PRESS_MS : 700);
+
+  type TriggerChildProps = {
     ref?: React.Ref<HTMLElement>;
   };
 
@@ -82,25 +84,6 @@ export default function AppTooltip({
     };
   }, [closeMobileTooltip, isTooltipOpen, useMobileBehavior]);
 
-  const handleTriggerClick = useCallback(
-    (event: MouseEvent<HTMLElement>): void => {
-      if (!useMobileBehavior || isControlled) {
-        return;
-      }
-
-      if (!mobileOpen) {
-        event.preventDefault();
-        event.stopPropagation();
-        setMobileOpen(true);
-        onOpen?.(event);
-        return;
-      }
-
-      setMobileOpen(false);
-    },
-    [isControlled, mobileOpen, onOpen, useMobileBehavior],
-  );
-
   const resolvedOpen = useMobileBehavior
     ? isControlled
       ? openProp
@@ -108,12 +91,8 @@ export default function AppTooltip({
     : openProp;
 
   const enhancedChild = childElement
-    ? cloneElement(childElement as ReactElement<ClickableChildProps>, {
+    ? cloneElement(childElement as ReactElement<TriggerChildProps>, {
         ref: mergedTriggerRef,
-        onClick: (event: MouseEvent<HTMLElement>) => {
-          childElement.props.onClick?.(event);
-          handleTriggerClick(event);
-        },
       })
     : children;
 
@@ -122,6 +101,12 @@ export default function AppTooltip({
       {...rest}
       title={title}
       open={resolvedOpen}
+      onOpen={(event) => {
+        if (useMobileBehavior && !isControlled) {
+          setMobileOpen(true);
+        }
+        onOpen?.(event);
+      }}
       onClose={(event) => {
         if (useMobileBehavior && !isControlled) {
           setMobileOpen(false);
@@ -130,9 +115,9 @@ export default function AppTooltip({
       }}
       disableHoverListener={useMobileBehavior || disableHoverListener}
       disableFocusListener={useMobileBehavior || disableFocusListener}
-      disableTouchListener={useMobileBehavior || disableTouchListener}
+      disableTouchListener={disableTouchListener}
       leaveTouchDelay={leaveTouchDelay}
-      enterTouchDelay={enterTouchDelay}
+      enterTouchDelay={resolvedEnterTouchDelay}
     >
       {enhancedChild}
     </Tooltip>

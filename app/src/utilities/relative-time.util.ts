@@ -3,7 +3,33 @@ import { toPersianDigits } from "./persian-digits.util";
 const MINUTE_SECONDS = 60;
 const HOUR_SECONDS = 60 * MINUTE_SECONDS;
 const DAY_SECONDS = 24 * HOUR_SECONDS;
-const WEEK_SECONDS = 7 * DAY_SECONDS;
+
+export const RELATIVE_TIME_THRESHOLD_SECONDS = 7 * DAY_SECONDS;
+
+function isCalendarYesterday(date: Date, now = new Date()): boolean {
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  return (
+    date.getFullYear() === yesterday.getFullYear() &&
+    date.getMonth() === yesterday.getMonth() &&
+    date.getDate() === yesterday.getDate()
+  );
+}
+
+export function shouldUseRelativeTimeLabel(value?: string | Date | null, now = Date.now()): boolean {
+  if (!value) {
+    return false;
+  }
+
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return false;
+  }
+
+  const diffSeconds = Math.floor((now - date.getTime()) / 1000);
+  return diffSeconds >= 0 && diffSeconds < RELATIVE_TIME_THRESHOLD_SECONDS;
+}
 
 /**
  * Human-readable relative time label in Persian for notification timestamps.
@@ -34,7 +60,11 @@ export const formatRelativeTimeLabel = (value?: string | Date | null): string =>
     return `${toPersianDigits(hours)} ساعت پیش`;
   }
 
-  if (diffSeconds < WEEK_SECONDS) {
+  if (isCalendarYesterday(date)) {
+    return "دیروز";
+  }
+
+  if (diffSeconds < RELATIVE_TIME_THRESHOLD_SECONDS) {
     const days = Math.floor(diffSeconds / DAY_SECONDS);
     return `${toPersianDigits(days)} روز پیش`;
   }

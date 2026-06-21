@@ -1,18 +1,16 @@
 import { type ReactElement, type ReactNode } from "react";
-import { Link as RouterLink } from "react-router-dom";
-import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
-import { Box, Button, IconButton, Typography, useMediaQuery } from "@mui/material";
+import { Box, Typography, useMediaQuery } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
 import { useTranslation } from "../hooks/useTranslation";
+import { PageBackIconButton, PageBackTextButton } from "./PageBackNavigation";
 import styles from "./styles/DashboardMenuHeader.module.scss";
-import AppTooltip from "./AppTooltip";
 
 export type DashboardMenuHeaderProps = {
   readonly title: string;
   readonly description?: string;
   readonly imageSrc?: string;
   readonly actions?: ReactNode;
-  /** Defaults to `/dashboard`. Set both `backTo` and `backLabel` to `""` to hide. */
+  /** Fallback route when there is no previous in-app history entry. Defaults to `/dashboard`. */
   readonly backTo?: string;
   readonly backLabel?: string;
 };
@@ -41,39 +39,13 @@ const DashboardMenuHeader = ({
         {showBackLink ? (
           <Box className={styles.backWrap}>
             {isMobile ? (
-              <AppTooltip title={resolvedBackLabel} arrow enterTouchDelay={0}>
-                <IconButton
-                  component={RouterLink}
-                  to={resolvedBackTo}
-                  aria-label={resolvedBackLabel}
-                  size="small"
-                  className={styles.backIconButton}
-                  sx={{
-                    bgcolor: "primary.main",
-                    color: "primary.contrastText",
-                    "&:hover": {
-                      bgcolor: "primary.dark",
-                    },
-                    "&:focus-visible": {
-                      bgcolor: "primary.dark",
-                    },
-                  }}
-                >
-                  <ArrowBackIosNewRoundedIcon fontSize="small" className={styles.mobileBackIcon} />
-                </IconButton>
-              </AppTooltip>
+              <PageBackIconButton label={resolvedBackLabel} fallbackTo={resolvedBackTo} />
             ) : (
-              <Button
-                component={RouterLink}
-                to={resolvedBackTo}
-                variant="text"
-                color="primary"
+              <PageBackTextButton
+                label={resolvedBackLabel}
+                fallbackTo={resolvedBackTo}
                 size="small"
-                endIcon={<ArrowBackIosNewRoundedIcon className={styles.backArrowIcon} />}
-                className={styles.backTextButton}
-              >
-                {resolvedBackLabel}
-              </Button>
+              />
             )}
           </Box>
         ) : null}

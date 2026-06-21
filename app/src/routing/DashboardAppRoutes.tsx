@@ -92,6 +92,7 @@ export const DashboardAppRoutes = (): ReactElement => {
           )
         }
       />
+      <Route path="*" element={<Navigate to={APP_SHELL_ROUTES.courses} replace />} />
     </Routes>
   );
 };
