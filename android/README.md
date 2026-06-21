@@ -62,7 +62,7 @@ If `npm run build` fails after running `npm run update:project`, the update scri
 
 - Aliyun Maven mirrors when `dl.google.com` is unreachable
 - `compileSdkVersion 35` and `buildToolsVersion 35.0.1` to match installed SDK packages
-- Stable `androidx.browser:1.8.0` instead of the alpha dependency from `androidbrowserhelper`
+- Stable `androidbrowserhelper:2.5.0` (compatible with compileSdk 35; 2.6.2 requires androidx.browser 1.9.0+)
 
 Ensure your Android SDK has `platforms;android-35` and `build-tools;35.0.1` installed. The build script writes `local.properties` automatically from `ANDROID_SDK_ROOT`, `ANDROID_HOME`, or `~/Library/Android/sdk`.
 

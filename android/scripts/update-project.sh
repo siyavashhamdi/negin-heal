@@ -74,9 +74,9 @@ if grep -q 'versionName ""' "${ROOT_DIR}/app/build.gradle"; then
   fi
 fi
 
-# androidbrowserhelper 2.6.2 pulls an alpha browser lib that needs API 36 + AGP 8.9.1.
+# Pin a stable androidbrowserhelper version compatible with compileSdk 35.
 APP_BUILD_GRADLE="${ROOT_DIR}/app/build.gradle"
-if ! grep -q "androidx.browser:browser:1.8.0" "${APP_BUILD_GRADLE}"; then
+if ! grep -q "androidbrowserhelper:2.5.0" "${APP_BUILD_GRADLE}"; then
   python3 - "${APP_BUILD_GRADLE}" <<'PY'
 from pathlib import Path
 import re
@@ -87,10 +87,7 @@ text = path.read_text()
 replacement = """dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 
-    implementation('com.google.androidbrowserhelper:androidbrowserhelper:2.6.2') {
-        exclude group: 'androidx.browser', module: 'browser'
-    }
-    implementation 'androidx.browser:browser:1.8.0'
+    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
 }
 """
 text = re.sub(r"dependencies \{[\s\S]*?\n\}", replacement, text, count=1)
