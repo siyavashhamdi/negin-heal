@@ -20,7 +20,7 @@ const TablePaginationFooter = ({
       className={barClass}
       sx={{
         borderTop: `1px solid ${theme.palette.divider}`,
-        backgroundColor: "var(--app-surface-bg)",
+        backgroundColor: theme.palette.mode === "dark" ? "rgba(255,255,255,0.03)" : "#fafafa",
       }}
     >
       <PaginationControls {...paginationProps} />
