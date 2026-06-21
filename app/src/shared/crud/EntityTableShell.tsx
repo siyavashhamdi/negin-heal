@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { Badge, Box, Fade, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel, Typography, useTheme } from "@mui/material";
+import { Badge, Box, Fade, IconButton, Paper, Table, TableBody, TableCell, TableHead, TableRow, TableSortLabel, Typography, useTheme } from "@mui/material";
 import { darken, lighten } from "@mui/material/styles";
 import {
   FilterAltOff as FilterAltOffIcon,
@@ -209,6 +209,8 @@ function EntityTableShell<TData extends object>({
   } = toolbarOptions ?? {};
 
   const pinnedActionColumnBorder = `0.0625rem solid ${theme.palette.divider}`;
+  const tableCellRowBorder = `1px solid ${theme.palette.divider}`;
+  const tableRowDividerShadow = `inset 0 -0.0625rem 0 ${theme.palette.divider}`;
   const opaquePinnedRowHoverBg = useMemo(() => {
     const paper = theme.palette.background.paper;
     const o = theme.palette.action.hoverOpacity;
@@ -498,7 +500,8 @@ function EntityTableShell<TData extends object>({
           <Box ref={supplementaryChromeRef}>{resolvedSupplementaryFilters}</Box>
         </Fade>
 
-        <TableContainer ref={tableContainerRef} className={styles.tableContainerFlex}>
+        <Box className={styles.tableScrollFrame}>
+          <Box ref={tableContainerRef} className={styles.tableContainerFlex}>
           <Table
             size={isMobile ? "small" : "medium"}
             className={useFixedColumnWidths ? styles.tableLayoutFixed : styles.tableLayoutAuto}
@@ -510,11 +513,13 @@ function EntityTableShell<TData extends object>({
                 : { width: "100%" }),
               borderCollapse: "separate",
               borderSpacing: 0,
+              "& tbody .MuiTableCell-root": {
+                borderBottom: tableCellRowBorder,
+              },
               "& thead .MuiTableCell-head": {
                 backgroundColor: pinnedActionHeaderBg,
-              },
-              "& thead tr:last-of-type .MuiTableCell-head": {
-                boxShadow: `inset 0 -0.0625rem 0 ${theme.palette.divider}`,
+                borderBottom: "none",
+                boxShadow: tableRowDividerShadow,
               },
             }}
           >
@@ -713,7 +718,10 @@ function EntityTableShell<TData extends object>({
               )}
             </TableBody>
           </Table>
-        </TableContainer>
+          </Box>
+          <Box className={styles.tableSideRailStart} aria-hidden />
+          <Box className={styles.tableSideRailEnd} aria-hidden />
+        </Box>
 
         <TablePaginationFooter
           count={pagination.pagedRowsCount}
