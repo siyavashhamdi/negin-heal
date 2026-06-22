@@ -9,8 +9,12 @@ KEY_PASS="${BUBBLEWRAP_KEY_PASSWORD:-neginheal}"
 
 if [[ -f "${KEYSTORE}" ]]; then
   echo "Keystore already exists at ${KEYSTORE}"
+  bash "${ROOT_DIR}/scripts/print-fingerprint.sh" || true
   exit 0
 fi
+
+echo "warning: This creates a NEW signing key." >&2
+echo "warning: For Cafe Bazaar updates to ir.neginheal.app, restore your existing production keystore instead." >&2
 
 if [[ ! -x "${JDK_HOME}/bin/keytool" ]]; then
   echo "JDK 17 not found at ${JDK_HOME}."

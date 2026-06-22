@@ -1,42 +1,42 @@
-# Negin Heal Android (TWA)
+# Negin Heal Android (Capacitor)
 
-Trusted Web Activity wrapper for [https://neginheal.ir/](https://neginheal.ir/). The APK only provides a launcher icon and splash screen; all app content loads from the live website and updates automatically when you deploy the web app.
+Capacitor WebView shell for [https://neginheal.ir/](https://neginheal.ir/). The native APK provides a launcher icon, splash screen, and Android System WebView — **no Chrome dependency** and no “Running in Chrome?” disclosure. App content loads from the live website and updates automatically when you deploy the web app.
 
 - **Package ID:** `ir.neginheal.app`
-- **Config:** `twa-manifest.json`
+- **Config:** `app/capacitor.config.ts`
+- **Version:** `android/app-version.json`
 
 ## Prerequisites
 
-- Node.js 14+
-- JDK 17 (Bubblewrap uses `~/.bubblewrap/jdk` or set `BUBBLEWRAP_JDK_HOME`)
-- Android SDK with build-tools 34+ (`ANDROID_HOME` or `~/Library/Android/sdk`)
-
-Configure Bubblewrap paths if needed:
-
-```bash
-npx bubblewrap doctor
-npx bubblewrap updateConfig --jdkPath="/path/to/jdk-17" --androidSdkPath="/path/to/android-sdk"
-```
+- Node.js 18+
+- JDK 17 (`JAVA_HOME`)
+- Android SDK with `platforms;android-35` and `build-tools;35.0.1` (`ANDROID_HOME` or `~/Library/Android/sdk`)
 
 ## Build the APK
 
 ```bash
 cd android
-npm install          # first time only
 npm run build
 ```
 
+This will:
+
+1. Build the web app (`app/`)
+2. Run `cap sync android`
+3. Produce signed release APK and AAB
+
 Output:
 
-- `app-release-signed.apk` — install and test on a device
-- `app-release-bundle.aab` — upload to Google Play
-- `../app/public/app/negin-heal.apk` — copy for web download (e.g. `https://neginheal.ir/app/negin-heal.apk`)
+- `app/build/outputs/apk/release/app-release.apk` — install and test on a device
+- `app/build/outputs/bundle/release/app-release.aab` — upload to Cafe Bazaar
+- `app-release-signed.apk` — copy at repo root for convenience
+- `../app/public/app/negin-heal.apk` — copy for web download (`https://neginheal.ir/app/negin-heal.apk`)
 
 Default keystore passwords are in `.env.example`. Override for builds:
 
 ```bash
-export BUBBLEWRAP_KEYSTORE_PASSWORD='your-password'
-export BUBBLEWRAP_KEY_PASSWORD='your-password'
+export ANDROID_KEYSTORE_PASSWORD='your-password'
+export ANDROID_KEY_PASSWORD='your-password'
 npm run build
 ```
 
@@ -46,88 +46,74 @@ Create a signing keystore (first time only):
 npm run setup:keystore
 ```
 
+**Updating an existing Cafe Bazaar listing:** you must sign with the **same keystore** as previous releases. Restore your backed-up `android.keystore` to `android/android.keystore` before building. Verify:
+
+```bash
+npm run verify:keystore
+```
+
+Expected production fingerprint (from the original TWA release):
+
+`C7:61:73:0B:0E:0F:63:9C:33:71:16:ED:F1:E1:EC:06:E6:94:D7:80:43:E4:A0:4E:BE:AD:CE:09:87:07:26:DF`
+
+Local test builds with a different key: `SKIP_KEYSTORE_VERIFY=1 npm run build`
+
 ## Other commands
 
 | Command | Purpose |
 |---------|---------|
-| `npm run update:project` | Regenerate Android files after editing `twa-manifest.json` |
-| `npm run fingerprint` | Print SHA-256 certificate fingerprint |
-| `npm run assetlinks` | Generate Digital Asset Links JSON via Bubblewrap |
+| `npm run sync` | Sync web assets and plugins after `app/` changes |
 | `npm run verify:release` | Verify APK/AAB targetSdk, versionCode, and structure before upload |
-| `npm run install:apk` | Install the signed APK on a connected device |
-| `npm run doctor` | Check JDK and Android SDK configuration |
+| `npm run fingerprint` | Print SHA-256 certificate fingerprint |
 
-## Troubleshooting
+From `app/`:
 
-If `npm run build` fails after running `npm run update:project`, the update script re-applies local fixes for:
+| Command | Purpose |
+|---------|---------|
+| `npm run cap:sync` | Sync Capacitor Android project |
+| `npm run cap:open` | Open Android project in Android Studio |
 
-- Aliyun Maven mirrors when `dl.google.com` is unreachable
-- `compileSdkVersion 35`, `targetSdkVersion 35`, and `buildToolsVersion 35.0.1` (Cafe Bazaar and Google Play require `targetSdkVersion` >= 34)
-- Stable `androidbrowserhelper:2.5.0` (compatible with compileSdk 35; 2.6.2 requires androidx.browser 1.9.0+)
+## Release a new version
 
-`npm run build` verifies the signed APK reports `targetSdkVersion >= 34` before copying it to `app/public/app/`.
+1. Bump `versionCode` and `versionName` in `android/app-version.json`
+2. Run `npm run build` in `android/`
+3. Run `npm run verify:release`
+4. Upload **`app-release-signed.apk`** or **`app-release-bundle.aab`** to Cafe Bazaar
 
-Before uploading to Cafe Bazaar, also run:
+## Cafe Bazaar requirements
+
+| Requirement | Value |
+|-------------|-------|
+| `targetSdkVersion` | **35** (pinned in `variables.gradle`) |
+| `minSdkVersion` | **23** |
+| `compileSdkVersion` | **35** |
+| Permissions | `INTERNET` only |
+| Launcher activity | `ir.neginheal.app.MainActivity` |
+
+Before upload:
 
 ```bash
 npm run verify:release
 ```
 
-Upload **`app-release-signed.apk`** or **`app-release-bundle.aab`** with **versionCode 3** (not version 2). Investigators can confirm `targetSdkVersion: 35` with:
+Confirm target SDK:
 
 ```bash
 $ANDROID_HOME/build-tools/*/aapt2 dump badging app-release-signed.apk | grep targetSdk
 ```
 
+## Troubleshooting
+
+If Gradle cannot reach `dl.google.com`, build scripts add Aliyun Maven mirrors automatically via `scripts/apply-build-fixes.sh`.
+
 Ensure your Android SDK has `platforms;android-35` and `build-tools;35.0.1` installed. The build script writes `local.properties` automatically from `ANDROID_SDK_ROOT`, `ANDROID_HOME`, or `~/Library/Android/sdk`.
 
-## Before Play Store release
+## Architecture notes
 
-### 1. Deploy `assetlinks.json`
+- Uses **Android System WebView**, not Chrome Custom Tabs / TWA
+- Loads production content from `https://neginheal.ir` via Capacitor `server.url`
+- Offline fallback page: `app/public/capacitor-offline.html` (Persian)
+- Native shell bootstrap: `app/src/native/capacitorBootstrap.ts` (status bar, back button, splash)
+- Icons are generated into `android/app/src/main/res/` by `app/scripts/generate-pwa-icons.mjs`
 
-The file lives at `app/public/.well-known/assetlinks.json` and is regenerated on each `npm run build` in `android/`. After building the APK, **redeploy the web app** so production serves real JSON at:
-
-`https://neginheal.ir/.well-known/assetlinks.json`
-
-Verify (must return `content-type: application/json`, not HTML):
-
-```bash
-curl -sI https://neginheal.ir/.well-known/assetlinks.json
-curl -s https://neginheal.ir/.well-known/assetlinks.json
-```
-
-Example content (the second entry is required for Cafe Bazaar TWA validation):
-
-```json
-[
-  {
-    "relation": ["delegate_permission/common.handle_all_urls"],
-    "target": {
-      "namespace": "android_app",
-      "package_name": "ir.neginheal.app",
-      "sha256_cert_fingerprints": [
-        "C7:61:73:0B:0E:0F:63:9C:33:71:16:ED:F1:E1:EC:06:E6:94:D7:80:43:E4:A0:4E:BE:AD:CE:09:87:07:26:DF"
-      ]
-    }
-  },
-  {
-    "relation": ["check_validation"],
-    "target": {
-      "namespace": "cafebazaar_twa",
-      "package_name": "ir.neginheal.app"
-    }
-  }
-]
-```
-
-See [Cafe Bazaar TWA guide](https://developers.cafebazaar.ir/fa/document/feature/trusted-web-application/).
-
-Run `npm run fingerprint` again if you create a new keystore, then `npm run sync:assetlinks` and redeploy.
-
-### 2. Fix static file serving on production
-
-`https://neginheal.ir/icons/icon-512.png` and `/manifest.webmanifest` must be served as static files, not SPA HTML fallback. Update nginx or your static server so those paths are excluded from the single-page-app rewrite.
-
-### 3. Use a production keystore
-
-Keep `android.keystore` out of git (already in `.gitignore`) and back it up safely. Use a dedicated release keystore for Play Store uploads.
+Keep `android.keystore` out of git (already in `.gitignore`) and back it up safely.
