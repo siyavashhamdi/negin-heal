@@ -1,12 +1,19 @@
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from "react";
 import { useQuery } from "@apollo/client/react";
-import { Box, CircularProgress, IconButton, InputAdornment, Typography } from "@mui/material";
+import {
+  Box,
+  CircularProgress,
+  FormLabel,
+  IconButton,
+  InputAdornment,
+} from "@mui/material";
 import { Replay as ReplayIcon, Security as SecurityIcon } from "@mui/icons-material";
 import { useTranslation } from "../../../hooks/useTranslation";
 import { USER_LOGIN_CAPTCHA_QUERY } from "../../../graphql/queries/userLoginCaptcha.query";
 import { LOGIN_CAPTCHA_MAX_AUTO_REFRESHES } from "../../../constants";
 import { toWesternDigits } from "../../../utilities/persian-digits.util";
 import { LoginAdornedTextField } from "./LoginAdornedTextField";
+import { RequiredFieldLabel } from "./RequiredFieldLabel";
 import formStyles from "../styles/LoginFormShared.module.scss";
 import captchaStyles from "../styles/RequestLoginCode.module.scss";
 
@@ -27,6 +34,7 @@ interface UserLoginCaptchaResponse {
 export interface LoginCaptchaFieldProps {
   readonly disabled?: boolean;
   readonly error?: boolean;
+  readonly required?: boolean;
   readonly onCaptchaChange: (input: {
     captchaId: string;
     value: string;
@@ -37,6 +45,7 @@ export interface LoginCaptchaFieldProps {
 export const LoginCaptchaField = ({
   disabled = false,
   error = false,
+  required = false,
   onCaptchaChange,
 }: LoginCaptchaFieldProps): ReactElement => {
   const { t } = useTranslation();
@@ -111,9 +120,11 @@ export const LoginCaptchaField = ({
 
   return (
     <Box className={captchaStyles.captchaWrapper}>
-      <Typography component="div" className={captchaStyles.captchaSectionTitle}>
-        {t("auth.login.captchaLabel")}
-      </Typography>
+      <FormLabel component="div" className={captchaStyles.captchaSectionTitle}>
+        <RequiredFieldLabel required={required}>
+          {t("auth.login.captchaLabel")}
+        </RequiredFieldLabel>
+      </FormLabel>
 
       <Box className={captchaStyles.captchaRow}>
         <Box className={captchaStyles.captchaDisplayPanel}>
@@ -158,6 +169,7 @@ export const LoginCaptchaField = ({
           autoComplete="off"
           disabled={disabled}
           error={error}
+          required={required}
           inputProps={{
             maxLength: 128,
             spellCheck: false,

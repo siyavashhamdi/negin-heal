@@ -232,3 +232,49 @@ export function normalizeAuthIdentityForSubmit(value: string): string {
 
   return sanitized.toLowerCase();
 }
+
+export type AuthIdentityLookupField =
+  | "username"
+  | "profile.email"
+  | "profile.phoneNumber";
+
+export interface AuthIdentityLookup {
+  normalizedIdentity: string;
+  kind: AuthIdentityKind;
+  field: AuthIdentityLookupField;
+  value: string;
+}
+
+export function resolveAuthIdentityLookup(identity: string): AuthIdentityLookup {
+  const normalizedIdentity = normalizeAuthIdentityForSubmit(identity);
+  const kind = detectAuthIdentityKind(normalizedIdentity);
+
+  if (kind === "email") {
+    return {
+      normalizedIdentity,
+      kind,
+      field: "profile.email",
+      value: normalizedIdentity,
+    };
+  }
+
+  if (kind === "mobile") {
+    const value =
+      normalizeAuthIdentityMobileForSubmit(normalizedIdentity) ??
+      normalizedIdentity;
+
+    return {
+      normalizedIdentity,
+      kind,
+      field: "profile.phoneNumber",
+      value,
+    };
+  }
+
+  return {
+    normalizedIdentity,
+    kind,
+    field: "username",
+    value: normalizedIdentity,
+  };
+}

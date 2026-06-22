@@ -1,6 +1,7 @@
 import { useState, type ReactElement } from "react";
 import { TextField, type TextFieldProps } from "@mui/material";
 import formStyles from "../styles/LoginFormShared.module.scss";
+import { RequiredFieldLabel } from "./RequiredFieldLabel";
 
 type LoginAdornedTextFieldProps = TextFieldProps & {
   /** Hide InputProps.endAdornment until the label floats up (focus or value). */
@@ -14,6 +15,9 @@ type LoginAdornedTextFieldProps = TextFieldProps & {
  */
 export function LoginAdornedTextField({
   value,
+  required,
+  label,
+  inputProps,
   InputLabelProps,
   InputProps,
   className,
@@ -39,6 +43,12 @@ export function LoginAdornedTextField({
     <TextField
       {...props}
       value={value}
+      label={
+        <RequiredFieldLabel required={required}>
+          {label}
+        </RequiredFieldLabel>
+      }
+      required={false}
       variant={variant}
       className={[
         formStyles.textField,
@@ -50,8 +60,13 @@ export function LoginAdornedTextField({
       InputLabelProps={{
         ...InputLabelProps,
         shrink: labelShrunk,
+        required: false,
       }}
       InputProps={resolvedInputProps}
+      inputProps={{
+        ...inputProps,
+        ...(required ? { "aria-required": true } : {}),
+      }}
       onFocus={(event) => {
         setFocused(true);
         onFocus?.(event);

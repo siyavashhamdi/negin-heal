@@ -1,4 +1,3 @@
-import { detectAuthIdentityKind } from "../../utilities/auth-identity.util";
 import { type LoginNavState } from "./login-nav-state";
 
 export {
@@ -13,9 +12,12 @@ export {
   isAuthIdentityMobileMode,
   normalizeAuthIdentityForSubmit,
   resolveAuthIdentityIconKind,
+  resolveAuthIdentityValidationMessageKey,
   resolveInvalidAuthIdentityErrorKind,
   sanitizeAuthIdentityInput,
   tryNormalizeAuthIdentityMobile,
+  validateSubmittedAuthIdentity,
+  type SubmittedAuthIdentityValidationError,
 } from "../../utilities/auth-identity.util";
 
 export {
@@ -29,7 +31,3 @@ export {
 export const createForgotPasswordPrefill = (
   identity?: LoginNavState | null,
 ): string => identity?.identity ?? "";
-
-export const detectPasswordResetIdentityKind = (
-  identity: string,
-): LoginNavState["identityKind"] => detectAuthIdentityKind(identity);

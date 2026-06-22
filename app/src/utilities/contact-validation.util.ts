@@ -17,11 +17,15 @@ import {
   normalizeAuthIdentityForSubmit,
   normalizeAuthIdentityMobileForSubmit,
   resolveAuthIdentityIconKind,
+  resolveAuthIdentityValidationMessageKey,
   resolveInvalidAuthIdentityErrorKind,
   sanitizeAuthIdentityInput,
   tryNormalizeAuthIdentityMobile,
+  validateSubmittedAuthIdentity,
   type AuthIdentityKind,
   type AuthIdentityValidationErrorKind,
+  type SubmittedAuthIdentityValidationError,
+  type SubmittedAuthIdentityValidationResult,
 } from "./auth-identity.util";
 
 export {
@@ -42,11 +46,15 @@ export {
   normalizeAuthIdentityForSubmit,
   normalizeAuthIdentityMobileForSubmit,
   resolveAuthIdentityIconKind,
+  resolveAuthIdentityValidationMessageKey,
   resolveInvalidAuthIdentityErrorKind,
   sanitizeAuthIdentityInput,
   tryNormalizeAuthIdentityMobile,
+  validateSubmittedAuthIdentity,
   type AuthIdentityKind,
   type AuthIdentityValidationErrorKind,
+  type SubmittedAuthIdentityValidationError,
+  type SubmittedAuthIdentityValidationResult,
 };
 
 export const latinIdentityFieldInputProps = {

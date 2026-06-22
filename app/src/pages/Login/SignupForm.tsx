@@ -5,6 +5,7 @@ import {
   Checkbox,
   CircularProgress,
   FormControlLabel,
+  FormLabel,
   IconButton,
   InputAdornment,
   TextField,
@@ -105,6 +106,9 @@ export const SignupForm = ({
 
   const verificationCode = verificationDigits.join("");
   const captchaEnabled = API_CONFIG.CAPTCHA_ENABLED;
+  const lockedIdentityKind = identity.identity.trim()
+    ? identity.identityKind
+    : null;
   const hasAnyIdentity = useMemo(
     () => Boolean(username.trim() || email.trim() || mobile.trim()),
     [email, mobile, username],
@@ -124,6 +128,18 @@ export const SignupForm = ({
     hasAnyIdentity &&
     (mode === "password" ? passwordReady : otpReady) &&
     (!captchaEnabled || captchaValid);
+
+  const isIdentityFieldRequired = (
+    kind: NonNullable<LoginNavState["identityKind"]>,
+  ): boolean => {
+    if (lockedIdentityKind === kind) {
+      return true;
+    }
+    if (mode === "otp") {
+      return kind === "mobile";
+    }
+    return !lockedIdentityKind;
+  };
 
   const updateDigits = (updater: (digits: string[]) => string[]): void => {
     setVerificationDigits((previous) => updater([...previous]));
@@ -427,7 +443,8 @@ export const SignupForm = ({
               </InputAdornment>
             ),
           }}
-          disabled={loading}
+          disabled={loading || lockedIdentityKind === "username"}
+          required={isIdentityFieldRequired("username")}
         />
 
         <LoginAdornedTextField
@@ -443,7 +460,8 @@ export const SignupForm = ({
               </InputAdornment>
             ),
           }}
-          disabled={loading}
+          disabled={loading || lockedIdentityKind === "email"}
+          required={isIdentityFieldRequired("email")}
         />
 
         <LoginAdornedTextField
@@ -462,11 +480,12 @@ export const SignupForm = ({
               </InputAdornment>
             ),
           }}
-          disabled={loading}
+          disabled={loading || lockedIdentityKind === "mobile"}
           error={hasError && mobileInvalid}
           helperText={
             hasError && mobileInvalid ? t("auth.login.errors.invalidMobile") : undefined
           }
+          required={isIdentityFieldRequired("mobile")}
         />
 
         {mode === "password" ? (
@@ -502,6 +521,7 @@ export const SignupForm = ({
               autoComplete="new-password"
               disabled={loading}
               error={hasError && !passwordRulesPassed}
+              required
             />
 
             <LoginAdornedTextField
@@ -523,10 +543,19 @@ export const SignupForm = ({
               autoComplete="new-password"
               disabled={loading}
               error={hasError && Boolean(confirmPassword) && !passwordsMatch}
+              required
             />
           </>
         ) : (
           <Box className={verifyStyles.verificationCodeContainer}>
+            <FormLabel
+              required
+              component="legend"
+              id="signup-otp-section-title"
+              className={verifyStyles.verificationCodeSectionTitle}
+            >
+              {t("auth.login.verificationCodeSectionTitle")}
+            </FormLabel>
             <Button
               type="button"
               variant="outlined"
@@ -541,7 +570,11 @@ export const SignupForm = ({
                   : t("auth.login.sendVerificationCode")}
             </Button>
 
-            <Box className={verifyStyles.verificationCodeInputs}>
+            <Box
+              className={verifyStyles.verificationCodeInputs}
+              role="group"
+              aria-labelledby="signup-otp-section-title"
+            >
               {verificationDigits.map((digit, index) => (
                 <TextField
                   key={`signup-verification-digit-${index}`}
@@ -578,6 +611,7 @@ export const SignupForm = ({
             key={`signup-captcha-${captchaVersion}`}
             disabled={loading}
             error={hasError}
+            required
             onCaptchaChange={handleCaptchaChange}
           />
         ) : null}

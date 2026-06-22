@@ -30,6 +30,9 @@ export {
   isValidAuthIdentityMobileInput,
   normalizeAuthIdentityForSubmit,
   normalizeAuthIdentityMobileForSubmit,
+  resolveAuthIdentityLookup,
   tryNormalizeAuthIdentityMobile,
   type AuthIdentityKind,
+  type AuthIdentityLookup,
+  type AuthIdentityLookupField,
 } from "./auth-identity.util";

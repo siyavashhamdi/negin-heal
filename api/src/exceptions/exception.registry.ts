@@ -1,4 +1,8 @@
 import { Exception } from "./base.exception";
+import {
+  IdentityAlreadyExistsException,
+  resolveDuplicateIdentityFieldFromMessage,
+} from "./identity-already-exists.exception";
 import * as ExceptionClasses from "./index";
 
 /**
@@ -40,6 +44,11 @@ export class ExceptionRegistry {
     const ExceptionClass = this.registry.get(name);
     if (!ExceptionClass) {
       return null;
+    }
+
+    if (name === IdentityAlreadyExistsException.name) {
+      const field = resolveDuplicateIdentityFieldFromMessage(errorMessage);
+      return new IdentityAlreadyExistsException(field);
     }
 
     // Try no arguments first (for exceptions that don't need payload)

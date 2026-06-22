@@ -35,6 +35,21 @@ export const EXCEPTION_CONSTANT = {
     message: "The provided identity is already used by another account!",
   },
 
+  USERNAME_ALREADY_EXISTS: {
+    code: "USERNAME_ALREADY_EXISTS",
+    message: "This username is already used by another account!",
+  },
+
+  EMAIL_ALREADY_EXISTS: {
+    code: "EMAIL_ALREADY_EXISTS",
+    message: "This email is already used by another account!",
+  },
+
+  MOBILE_ALREADY_EXISTS: {
+    code: "MOBILE_ALREADY_EXISTS",
+    message: "This mobile number is already used by another account!",
+  },
+
   SIGNUP_CREDENTIAL_REQUIRED: {
     code: "SIGNUP_CREDENTIAL_REQUIRED",
     message: "Password or signup verification code is required!",

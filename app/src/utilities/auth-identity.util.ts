@@ -1,4 +1,5 @@
 import { toWesternDigits } from "./persian-digits.util";
+import { isValidUsernameLength } from "../utils/usernamePolicy.util";
 
 /**
  * Combined auth identity field (username | email | mobile).
@@ -40,7 +41,11 @@ export const LATIN_USERNAME_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9._-]*$/i;
 export const LATIN_EMAIL_CHARSET_REGEX = /^[a-zA-Z0-9+][a-zA-Z0-9@._+-]*$/;
 
 export type AuthIdentityKind = "email" | "mobile" | "username";
-export type AuthIdentityValidationErrorKind = "email" | "mobile" | "identity";
+export type AuthIdentityValidationErrorKind =
+  | "email"
+  | "mobile"
+  | "identity"
+  | "usernameMinLength";
 
 function normalizeIdentityValue(value: string): string {
   return toWesternDigits(value.trim());
@@ -182,7 +187,7 @@ export const isValidAuthIdentity = (value: string): boolean => {
     return isValidAuthIdentityMobileValue(trimmed);
   }
 
-  return true;
+  return isValidUsernameLength(trimmed);
 };
 
 export const detectAuthIdentityKind = (identity: string): AuthIdentityKind => {
@@ -213,6 +218,10 @@ export const resolveInvalidAuthIdentityErrorKind = (
     return "mobile";
   }
 
+  if (!isValidUsernameLength(trimmed)) {
+    return "usernameMinLength";
+  }
+
   return "identity";
 };
 
@@ -241,3 +250,68 @@ export const resolveAuthIdentityIconKind = (identity: string): AuthIdentityKind 
 
 export const isAuthIdentityMobile = (value: string): boolean =>
   tryNormalizeAuthIdentityMobile(value) !== undefined;
+
+export type SubmittedAuthIdentityValidationError =
+  | "required"
+  | AuthIdentityValidationErrorKind;
+
+export type SubmittedAuthIdentityValidationResult =
+  | {
+      ok: true;
+      trimmed: string;
+      normalized: string;
+      kind: AuthIdentityKind;
+    }
+  | {
+      ok: false;
+      error: SubmittedAuthIdentityValidationError;
+    };
+
+export const validateSubmittedAuthIdentity = (
+  value: string,
+): SubmittedAuthIdentityValidationResult => {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return { ok: false, error: "required" };
+  }
+
+  if (!isValidAuthIdentity(trimmed)) {
+    return {
+      ok: false,
+      error: resolveInvalidAuthIdentityErrorKind(trimmed),
+    };
+  }
+
+  const normalized = normalizeAuthIdentityForSubmit(trimmed);
+
+  return {
+    ok: true,
+    trimmed,
+    normalized,
+    kind: detectAuthIdentityKind(normalized),
+  };
+};
+
+export const resolveAuthIdentityValidationMessageKey = (
+  error: SubmittedAuthIdentityValidationError,
+  options?: { requiredMessageKey?: string },
+): string => {
+  if (error === "required") {
+    return options?.requiredMessageKey ?? "auth.login.errors.identityRequired";
+  }
+
+  if (error === "email") {
+    return "auth.login.errors.invalidEmail";
+  }
+
+  if (error === "mobile") {
+    return "auth.login.errors.invalidMobile";
+  }
+
+  if (error === "usernameMinLength") {
+    return "auth.login.errors.usernameMinLength";
+  }
+
+  return "auth.login.errors.identityInvalid";
+};

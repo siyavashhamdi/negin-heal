@@ -87,6 +87,11 @@
   margin-top: variables.$spacing-1;
 }
 
+.requiredFieldLabelAsterisk {
+  color: variables.$color-error-main;
+  font-weight: variables.$font-weight-bold;
+}
+
 .textField {
   direction: rtl;
 
@@ -156,8 +161,13 @@
       direction: rtl;
       left: auto;
       right: 1rem;
+      overflow: visible;
       text-align: right;
       transform-origin: top right;
+
+      :global(.MuiFormLabel-asterisk) {
+        color: variables.$color-error-main;
+      }
 
       &.MuiInputLabel-outlined:not(.MuiInputLabel-shrink) {
         transform: translate(0, 1rem) scale(1);

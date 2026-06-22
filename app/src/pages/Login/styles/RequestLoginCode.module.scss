@@ -8,11 +8,16 @@
 }
 
 .captchaSectionTitle {
+  display: block;
   margin: 0;
   font-size: variables.$font-size-sm;
   font-weight: variables.$font-weight-semibold;
   color: variables.$color-text-secondary;
   text-align: right;
+
+  :global(.MuiFormLabel-asterisk) {
+    color: variables.$color-error-main;
+  }
 }
 
 .captchaRow {

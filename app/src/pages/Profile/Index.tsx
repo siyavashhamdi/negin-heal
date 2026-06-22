@@ -212,9 +212,7 @@ const AuthenticatedProfile = (): ReactElement => {
   const [updateProfile, updateProfileResult] = useMutationWithSnackbar<
     UserProfileUpdateMutationResult,
     UserProfileUpdateMutationVariables
-  >(USER_PROFILE_UPDATE_MUTATION, {
-    errorMessage: "به‌روزرسانی پروفایل انجام نشد.",
-  });
+  >(USER_PROFILE_UPDATE_MUTATION);
 
   const displayName =
     isProfileLoading || !profileUser

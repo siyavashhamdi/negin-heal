@@ -40,6 +40,7 @@ import {
 import {
   ExpiredPasswordResetTokenException,
   IdentityAlreadyExistsException,
+  type DuplicateIdentityField,
   IdentityRequiredException,
   InvalidCredentialsException,
   CaptchaExpiredException,
@@ -57,11 +58,13 @@ import { PAGINATION_CONSTANT } from "../../constants/pagination.constant";
 import { SortingOrder } from "../../common/pagination/input";
 import { buildSortOptions } from "../../common/pagination/utils";
 import { env } from "../../config";
+import { MongodbErrorUtil } from "../../utils/mongodb-error.util";
 import {
   isValidEmail,
   isValidMobilePhone,
+  normalizeAuthIdentityForSubmit,
   normalizeAuthIdentityMobileForSubmit,
-  tryNormalizeAuthIdentityMobile,
+  resolveAuthIdentityLookup,
 } from "../../utils/contact-validation.util";
 import {
   sanitizeLatinEmail,
@@ -224,7 +227,7 @@ export class UserService {
       expiresAt: new Date(Date.now() + this.LOGIN_CODE_TTL_MS),
     });
 
-    const normalizedIdentity = identity?.trim().toLowerCase();
+    const normalizedIdentity = normalizeAuthIdentityForSubmit(identity);
     const isEmailIdentity = this.looksLikeEmail(normalizedIdentity);
     const userEmail = user.profile?.email?.trim().toLowerCase();
     const shouldSendEmail = Boolean(isEmailIdentity && userEmail);
@@ -398,7 +401,7 @@ export class UserService {
       throw new BadRequestException("شماره موبایل وارد شده معتبر نیست.");
     }
 
-    await this.throwIfAnyIdentityAlreadyExists({ mobile: normalizedMobile });
+    await this.assertIdentityFieldsAreUnique({ mobile: normalizedMobile });
 
     const code = this.generateLoginCode();
     this.signupCodesByMobile.set(normalizedMobile, {
@@ -513,13 +516,14 @@ export class UserService {
       await this.userSecurityService.throwIfPasswordPolicyIsViolated(password);
     }
 
-    await this.throwIfAnyIdentityAlreadyExists({ username, email, mobile });
+    await this.assertIdentityFieldsAreUnique({ username, email, mobile });
 
     const finalUsername = await this.resolveSignupUsername(
       username,
       email,
       mobile,
     );
+    await this.assertUsernameIsUnique(finalUsername);
     const finalPassword = password || randomBytes(24).toString("base64url");
     const passwordSalt = await bcrypt.genSalt(this.SALT_ROUNDS);
     const passwordHash = await bcrypt.hash(finalPassword, passwordSalt);
@@ -541,19 +545,24 @@ export class UserService {
       profile.phoneNumber = mobile;
     }
 
-    const [createdUser] = await this.userModel.create([
-      {
-        username: finalUsername,
-        authentication: {
-          passwordHash,
-          passwordSalt,
-          failedLoginAttempts: 0,
+    let createdUser: UserDocument;
+    try {
+      [createdUser] = await this.userModel.create([
+        {
+          username: finalUsername,
+          authentication: {
+            passwordHash,
+            passwordSalt,
+            failedLoginAttempts: 0,
+          },
+          profile,
+          roles: [UserRole.END_USER],
+          status: UserStatus.ACTIVE,
         },
-        profile,
-        roles: [UserRole.END_USER],
-        status: UserStatus.ACTIVE,
-      },
-    ]);
+      ]);
+    } catch (error) {
+      this.rethrowIfDuplicateIdentityKey(error);
+    }
 
     if (mobile) {
       this.signupCodesByMobile.delete(mobile);
@@ -670,23 +679,12 @@ export class UserService {
   }
 
   private buildIdentityFilter(identity: string): FilterQuery<User> {
-    const trimmedIdentity = identity.trim();
-
-    if (this.looksLikeEmail(trimmedIdentity)) {
-      return {
-        "profile.email": this.normalizeUsernameOrEmail(trimmedIdentity),
-      };
-    }
-
-    const localMobile = tryNormalizeAuthIdentityMobile(trimmedIdentity);
-    if (localMobile) {
-      return {
-        "profile.phoneNumber": localMobile,
-      };
-    }
+    const lookup = resolveAuthIdentityLookup(
+      normalizeAuthIdentityForSubmit(identity),
+    );
 
     return {
-      username: this.normalizeUsernameOrEmail(trimmedIdentity),
+      [lookup.field]: lookup.value,
     };
   }
 
@@ -758,39 +756,146 @@ export class UserService {
       : this.DEFAULT_PASSWORD_RESET_TOKEN_TTL_MINUTES;
   }
 
-  private async throwIfAnyIdentityAlreadyExists(identity: {
+  private async assertUsernameIsUnique(
+    username: string,
+    excludeUserId?: Types.ObjectId,
+  ): Promise<void> {
+    const normalizedUsername = this.normalizeUsernameOrEmail(username);
+    const duplicateExists = await this.userModel.exists({
+      username: normalizedUsername,
+      ...(excludeUserId ? { _id: { $ne: excludeUserId } } : {}),
+    });
+
+    if (duplicateExists) {
+      throw new IdentityAlreadyExistsException("username");
+    }
+  }
+
+  private async assertEmailIsUnique(
+    email: string,
+    excludeUserId?: Types.ObjectId,
+  ): Promise<void> {
+    const normalizedEmail = this.normalizeUsernameOrEmail(email);
+    const duplicateExists = await this.userModel.exists({
+      "profile.email": normalizedEmail,
+      ...(excludeUserId ? { _id: { $ne: excludeUserId } } : {}),
+    });
+
+    if (duplicateExists) {
+      throw new IdentityAlreadyExistsException("email");
+    }
+  }
+
+  private async assertMobileIsUnique(
+    mobile: string,
+    excludeUserId?: Types.ObjectId,
+  ): Promise<void> {
+    const normalizedMobile = this.normalizePhoneNumber(mobile);
+    if (!normalizedMobile) {
+      return;
+    }
+
+    const duplicateExists = await this.userModel.exists({
+      "profile.phoneNumber": normalizedMobile,
+      ...(excludeUserId ? { _id: { $ne: excludeUserId } } : {}),
+    });
+
+    if (duplicateExists) {
+      throw new IdentityAlreadyExistsException("mobile");
+    }
+  }
+
+  private async assertIdentityFieldsAreUnique(identity: {
     username?: string;
     email?: string;
     mobile?: string;
   }): Promise<void> {
-    const conditions: FilterQuery<User>[] = [];
+    const hasAnyIdentity = Boolean(
+      identity.username?.trim() ||
+        identity.email?.trim() ||
+        identity.mobile?.trim(),
+    );
 
-    if (identity.username) {
-      conditions.push({
-        username: this.normalizeUsernameOrEmail(identity.username),
-      });
-    }
-
-    if (identity.email) {
-      conditions.push({
-        "profile.email": this.normalizeUsernameOrEmail(identity.email),
-      });
-    }
-
-    if (identity.mobile) {
-      conditions.push({
-        "profile.phoneNumber": identity.mobile,
-      });
-    }
-
-    if (conditions.length === 0) {
+    if (!hasAnyIdentity) {
       throw new IdentityRequiredException();
     }
 
-    const user = await this.userModel.findOne({ $or: conditions });
-    if (user) {
-      throw new IdentityAlreadyExistsException();
+    if (identity.username?.trim()) {
+      await this.assertUsernameIsUnique(identity.username);
     }
+
+    if (identity.email?.trim()) {
+      await this.assertEmailIsUnique(identity.email);
+    }
+
+    if (identity.mobile?.trim()) {
+      await this.assertMobileIsUnique(identity.mobile);
+    }
+  }
+
+  private async assertUpdateIdentityFieldsAreUnique(
+    input: UserUpdateGqlInput,
+  ): Promise<void> {
+    if (this.hasOwnInputField(input, "username")) {
+      const username = this.normalizeOptionalText(input.username);
+      if (username) {
+        await this.assertUsernameIsUnique(username, input.id);
+      }
+    }
+
+    if (input.profile && this.hasOwnInputField(input.profile, "email")) {
+      const email = this.normalizeOptionalText(input.profile.email);
+      if (email) {
+        await this.assertEmailIsUnique(email, input.id);
+      }
+    }
+
+    if (input.profile && this.hasOwnInputField(input.profile, "phoneNumber")) {
+      const phoneNumber = input.profile.phoneNumber
+        ? this.normalizePhoneNumber(input.profile.phoneNumber)
+        : undefined;
+      if (phoneNumber) {
+        await this.assertMobileIsUnique(phoneNumber, input.id);
+      }
+    }
+  }
+
+  private rethrowIfDuplicateIdentityKey(error: unknown): never {
+    if (MongodbErrorUtil.isDuplicateKeyError(error)) {
+      throw new IdentityAlreadyExistsException(
+        this.resolveDuplicateIdentityField(error),
+      );
+    }
+
+    throw error;
+  }
+
+  private resolveDuplicateIdentityField(
+    error: unknown,
+  ): DuplicateIdentityField | undefined {
+    if (!error || typeof error !== "object" || !("keyPattern" in error)) {
+      return undefined;
+    }
+
+    const keyPattern = (error as { keyPattern?: Record<string, unknown> })
+      .keyPattern;
+    if (!keyPattern) {
+      return undefined;
+    }
+
+    if ("username" in keyPattern) {
+      return "username";
+    }
+
+    if ("profile.email" in keyPattern) {
+      return "email";
+    }
+
+    if ("profile.phoneNumber" in keyPattern) {
+      return "mobile";
+    }
+
+    return undefined;
   }
 
   private normalizeUsernameOrEmail(value: string): string {
@@ -986,7 +1091,7 @@ export class UserService {
     const email = profile.email;
     const mobile = profile.phoneNumber;
 
-    await this.throwIfAnyIdentityAlreadyExists({
+    await this.assertIdentityFieldsAreUnique({
       username,
       email,
       mobile,
@@ -994,19 +1099,24 @@ export class UserService {
 
     const passwordSalt = await bcrypt.genSalt(this.SALT_ROUNDS);
     const passwordHash = await bcrypt.hash(password, passwordSalt);
-    const [createdUser] = await this.userModel.create([
-      {
-        username,
-        authentication: {
-          passwordHash,
-          passwordSalt,
-          failedLoginAttempts: 0,
+    let createdUser: UserDocument;
+    try {
+      [createdUser] = await this.userModel.create([
+        {
+          username,
+          authentication: {
+            passwordHash,
+            passwordSalt,
+            failedLoginAttempts: 0,
+          },
+          profile,
+          roles: input.roles,
+          status: input.status ?? UserStatus.ACTIVE,
         },
-        profile,
-        roles: input.roles,
-        status: input.status ?? UserStatus.ACTIVE,
-      },
-    ]);
+      ]);
+    } catch (error) {
+      this.rethrowIfDuplicateIdentityKey(error);
+    }
 
     return this.toUserMutationResponse(
       createdUser.toObject() as UserListRecord,
@@ -1028,7 +1138,7 @@ export class UserService {
       throw new NotFoundException("User not found");
     }
 
-    await this.throwIfUpdateIdentityAlreadyExists(input);
+    await this.assertUpdateIdentityFieldsAreUnique(input);
 
     const { passwordChanged, shouldRevokeSessions, update } =
       await this.buildUserUpdate(input, existingUser);
@@ -1039,13 +1149,18 @@ export class UserService {
       );
     }
 
-    const updatedUser = await this.userModel
-      .findByIdAndUpdate(input.id, update, {
-        new: true,
-        runValidators: true,
-      })
-      .lean<UserListRecord>()
-      .exec();
+    let updatedUser: UserListRecord | null;
+    try {
+      updatedUser = await this.userModel
+        .findByIdAndUpdate(input.id, update, {
+          new: true,
+          runValidators: true,
+        })
+        .lean<UserListRecord>()
+        .exec();
+    } catch (error) {
+      this.rethrowIfDuplicateIdentityKey(error);
+    }
 
     if (!updatedUser) {
       throw new NotFoundException("User not found");
@@ -1523,56 +1638,6 @@ export class UserService {
 
     if (!avatarFile.mimeType?.startsWith("image/")) {
       throw new BadRequestException("Avatar file must be an image");
-    }
-  }
-
-  private async throwIfUpdateIdentityAlreadyExists(
-    input: UserUpdateGqlInput,
-  ): Promise<void> {
-    const conditions: FilterQuery<User>[] = [];
-
-    if (this.hasOwnInputField(input, "username")) {
-      const username = this.normalizeOptionalText(input.username);
-      if (username) {
-        conditions.push({ username: this.normalizeUsernameOrEmail(username) });
-      }
-    }
-
-    if (input.profile && this.hasOwnInputField(input.profile, "email")) {
-      const email = this.normalizeOptionalText(input.profile.email);
-      if (email) {
-        conditions.push({
-          "profile.email": this.normalizeUsernameOrEmail(email),
-        });
-      }
-    }
-
-    if (input.profile && this.hasOwnInputField(input.profile, "phoneNumber")) {
-      const phoneNumber = input.profile.phoneNumber
-        ? this.normalizePhoneNumber(input.profile.phoneNumber)
-        : undefined;
-      if (phoneNumber) {
-        conditions.push({
-          "profile.phoneNumber": phoneNumber,
-        });
-      }
-    }
-
-    if (conditions.length === 0) {
-      return;
-    }
-
-    const duplicateUser = await this.userModel
-      .findOne({
-        _id: { $ne: input.id },
-        $or: conditions,
-      })
-      .select({ _id: 1 })
-      .lean()
-      .exec();
-
-    if (duplicateUser) {
-      throw new IdentityAlreadyExistsException();
     }
   }
 

@@ -11,15 +11,12 @@ import { useLogin } from "../../hooks/useLogin";
 import LoginShell from "./LoginShell";
 import { type LoginNavState } from "./login-nav-state";
 import {
-  detectAuthIdentityKind,
-  isValidAuthIdentity,
-  latinIdentityFieldInputProps,
-  normalizeAuthIdentityForSubmit,
-  resolveInvalidAuthIdentityErrorKind,
   sanitizeAuthIdentityInput,
+  resolveAuthIdentityValidationMessageKey,
+  validateSubmittedAuthIdentity,
+  type SubmittedAuthIdentityValidationError,
 } from "./password-reset-form.util";
-import { AuthIdentityInputAdornment } from "./components/AuthIdentityInputAdornment";
-import { LoginAdornedTextField } from "./components/LoginAdornedTextField";
+import { AuthIdentityTextField } from "./components/AuthIdentityTextField";
 import formStyles from "./styles/LoginFormShared.module.scss";
 
 export interface RequestLoginCodeProps {
@@ -44,59 +41,40 @@ const RequestLoginCode = ({
   const [identity, setIdentity] = useState(() =>
     sanitizeAuthIdentityInput(initialPrefill?.identity ?? ""),
   );
-  const [fieldError, setFieldError] = useState(false);
+  const [fieldError, setFieldError] =
+    useState<SubmittedAuthIdentityValidationError | null>(null);
 
   const canSubmit = identity.trim().length > 0;
 
   const handleForgotPasswordClick = (): void => {
-    const trimmedIdentity = identity.trim();
-    if (!trimmedIdentity) {
+    const validation = validateSubmittedAuthIdentity(identity);
+    if (!validation.ok) {
       onForgotPassword(null);
       return;
     }
 
-    const normalizedIdentity = normalizeAuthIdentityForSubmit(trimmedIdentity);
     onForgotPassword({
-      identity: normalizedIdentity,
-      identityKind: detectAuthIdentityKind(normalizedIdentity),
+      identity: validation.normalized,
+      identityKind: validation.kind,
     });
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
 
-    const trimmedIdentity = identity.trim();
-    const normalizedIdentity = normalizeAuthIdentityForSubmit(trimmedIdentity);
-
-    if (!trimmedIdentity) {
-      setFieldError(true);
-      showError(t("auth.login.errors.identityRequired"));
+    const validation = validateSubmittedAuthIdentity(identity);
+    if (!validation.ok) {
+      setFieldError(validation.error);
+      showError(t(resolveAuthIdentityValidationMessageKey(validation.error)));
       return;
     }
 
-    if (!isValidAuthIdentity(trimmedIdentity)) {
-      setFieldError(true);
-      const errorKind = resolveInvalidAuthIdentityErrorKind(trimmedIdentity);
-      showError(
-        t(
-          errorKind === "email"
-            ? "auth.login.errors.invalidEmail"
-            : errorKind === "mobile"
-              ? "auth.login.errors.invalidMobile"
-              : "auth.login.errors.identityInvalid",
-        ),
-      );
-      return;
-    }
-
-    const identityKind = detectAuthIdentityKind(normalizedIdentity);
-
-    setFieldError(false);
+    setFieldError(null);
     const navState: LoginNavState = {
-      identity: normalizedIdentity,
-      identityKind,
+      identity: validation.normalized,
+      identityKind: validation.kind,
     };
-    const exists = await resolveAuthIdentity({ identity: normalizedIdentity });
+    const exists = await resolveAuthIdentity({ identity: validation.normalized });
     if (exists === null) {
       return;
     }
@@ -116,31 +94,16 @@ const RequestLoginCode = ({
           {t("auth.login.identityStepLead")}
         </Typography>
 
-        <LoginAdornedTextField
-          fullWidth
-          label={t("auth.login.identityFieldTitle")}
-          type="text"
+        <AuthIdentityTextField
           value={identity}
-          onChange={(event) => {
-            setIdentity(sanitizeAuthIdentityInput(event.target.value));
-            setFieldError(false);
+          onChange={(nextValue) => {
+            setIdentity(nextValue);
+            setFieldError(null);
           }}
-          inputProps={{
-            ...latinIdentityFieldInputProps,
-            inputMode: "text",
-            className: formStyles.latinInput,
-          }}
-          InputProps={{
-            startAdornment: <AuthIdentityInputAdornment identity={identity} />,
-          }}
-          autoComplete="username"
           autoFocus
+          required
           error={fieldError}
-          helperText={
-            fieldError
-              ? t("auth.login.errors.identityRequired")
-              : t("auth.login.identityHelper")
-          }
+          helperText={t("auth.login.identityHelper")}
         />
 
         <Button

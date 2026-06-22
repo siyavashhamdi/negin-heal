@@ -15,18 +15,15 @@ import { usePasswordReset } from "../../hooks/usePasswordReset";
 import { API_CONFIG } from "../../config/env";
 import LoginShell from "./LoginShell";
 import { LoginCaptchaField } from "./components/LoginCaptchaField";
-import { LoginAdornedTextField } from "./components/LoginAdornedTextField";
+import { AuthIdentityTextField } from "./components/AuthIdentityTextField";
 import { type LoginNavState } from "./login-nav-state";
 import {
   createForgotPasswordPrefill,
-  detectPasswordResetIdentityKind,
-  isValidAuthIdentity,
-  latinIdentityFieldInputProps,
-  normalizeAuthIdentityForSubmit,
-  resolveInvalidAuthIdentityErrorKind,
+  resolveAuthIdentityValidationMessageKey,
   sanitizeAuthIdentityInput,
+  validateSubmittedAuthIdentity,
+  type SubmittedAuthIdentityValidationError,
 } from "./password-reset-form.util";
-import { AuthIdentityInputAdornment } from "./components/AuthIdentityInputAdornment";
 import formStyles from "./styles/LoginFormShared.module.scss";
 
 interface ForgotPasswordFormProps {
@@ -53,46 +50,41 @@ export const ForgotPasswordForm = ({
   const [captchaValid, setCaptchaValid] = useState(false);
   const [captchaVersion, setCaptchaVersion] = useState(0);
   const [submitted, setSubmitted] = useState(false);
-  const [fieldError, setFieldError] = useState<"identity" | "email" | "mobile" | null>(null);
+  const [fieldError, setFieldError] =
+    useState<SubmittedAuthIdentityValidationError | null>(null);
+  const [captchaError, setCaptchaError] = useState(false);
 
   const trimmedIdentity = identity.trim();
-  const normalizedIdentity = normalizeAuthIdentityForSubmit(trimmedIdentity);
-  const identityKind = detectPasswordResetIdentityKind(normalizedIdentity);
   const captchaEnabled = API_CONFIG.CAPTCHA_ENABLED;
-  const canSubmit = trimmedIdentity.length > 0 && (!captchaEnabled || captchaValid);
+  const canSubmit =
+    trimmedIdentity.length > 0 && (!captchaEnabled || captchaValid);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
 
-    if (!canSubmit) {
-      setFieldError("identity");
-      showError(t("auth.login.errors.passwordResetIdentityRequired"));
-      return;
-    }
-
-    if (!isValidAuthIdentity(trimmedIdentity)) {
-      const errorKind = resolveInvalidAuthIdentityErrorKind(trimmedIdentity);
-      setFieldError(errorKind === "email" ? "email" : errorKind === "mobile" ? "mobile" : "identity");
+    const validation = validateSubmittedAuthIdentity(identity);
+    if (!validation.ok) {
+      setFieldError(validation.error);
       showError(
         t(
-          errorKind === "email"
-            ? "auth.login.errors.invalidEmail"
-            : errorKind === "mobile"
-              ? "auth.login.errors.invalidMobile"
-              : "auth.login.errors.identityInvalid",
+          resolveAuthIdentityValidationMessageKey(validation.error, {
+            requiredMessageKey: "auth.login.errors.passwordResetIdentityRequired",
+          }),
         ),
       );
       return;
     }
 
     if (captchaEnabled && !captchaValid) {
+      setCaptchaError(true);
       showError(t("auth.login.errors.captchaRequired"));
       return;
     }
 
     setFieldError(null);
+    setCaptchaError(false);
     const success = await requestResetLink({
-      identity: normalizedIdentity,
+      identity: validation.normalized,
       captchaId: captchaEnabled ? captchaId : undefined,
       captchaValue: captchaEnabled ? captchaValue : undefined,
     });
@@ -123,6 +115,7 @@ export const ForgotPasswordForm = ({
       setCaptchaId(nextCaptchaId);
       setCaptchaValue(value);
       setCaptchaValid(isValid);
+      setCaptchaError(false);
     },
     [],
   );
@@ -158,43 +151,26 @@ export const ForgotPasswordForm = ({
           </Typography>
         </div>
 
-        <LoginAdornedTextField
-          fullWidth
-          label={t("auth.login.identityFieldTitle")}
-          type="text"
+        <AuthIdentityTextField
           value={identity}
-          onChange={(event) => {
-            setIdentity(sanitizeAuthIdentityInput(event.target.value));
+          onChange={(nextValue) => {
+            setIdentity(nextValue);
             setFieldError(null);
           }}
-          inputProps={{
-            ...latinIdentityFieldInputProps,
-            inputMode: "text",
-            className: formStyles.latinInput,
-          }}
-          InputProps={{
-            startAdornment: <AuthIdentityInputAdornment identity={identity} />,
-          }}
-          autoComplete="username"
           autoFocus
           disabled={requestingResetLink}
-          error={fieldError !== null}
-          helperText={
-            fieldError === "email"
-              ? t("auth.login.errors.invalidEmail")
-              : fieldError === "mobile"
-                ? t("auth.login.errors.invalidMobile")
-              : fieldError === "identity"
-                ? t("auth.login.errors.identityInvalid")
-                : t("auth.login.forgotPasswordHelper")
-          }
+          required
+          error={fieldError}
+          requiredMessageKey="auth.login.errors.passwordResetIdentityRequired"
+          helperText={t("auth.login.forgotPasswordHelper")}
         />
 
         {captchaEnabled ? (
           <LoginCaptchaField
             key={`forgot-password-captcha-${captchaVersion}`}
             disabled={requestingResetLink}
-            error={false}
+            error={captchaError}
+            required
             onCaptchaChange={handleCaptchaChange}
           />
         ) : null}
