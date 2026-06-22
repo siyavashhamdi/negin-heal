@@ -10,28 +10,6 @@ let graphqlWsClient: Client | null = null;
 let lifecycleListenersRegistered = false;
 let isWsConnected = false;
 
-type GraphqlWsConnectionListener = (connected: boolean) => void;
-
-const connectionListeners = new Set<GraphqlWsConnectionListener>();
-
-function notifyConnectionListeners(connected: boolean): void {
-  isWsConnected = connected;
-  connectionListeners.forEach((listener) => {
-    listener(connected);
-  });
-}
-
-export function subscribeGraphqlWsConnection(
-  listener: GraphqlWsConnectionListener,
-): () => void {
-  connectionListeners.add(listener);
-  listener(isWsConnected);
-
-  return () => {
-    connectionListeners.delete(listener);
-  };
-}
-
 function isBrowserOpenForSubscriptionRetry(): boolean {
   return typeof window !== "undefined" && !isBrowserUnloading;
 }
@@ -89,10 +67,10 @@ function createGraphqlWsClient(): Client {
     },
     on: {
       connected: () => {
-        notifyConnectionListeners(true);
+        isWsConnected = true;
       },
       closed: () => {
-        notifyConnectionListeners(false);
+        isWsConnected = false;
       },
     },
   });
@@ -119,17 +97,9 @@ export function isGraphqlWsConnected(): boolean {
 export async function disposeGraphqlWsClient(): Promise<void> {
   const client = graphqlWsClient;
   graphqlWsClient = null;
-  notifyConnectionListeners(false);
+  isWsConnected = false;
 
   if (client) {
     await client.dispose();
   }
-}
-
-/**
- * Drop the current WebSocket client so the next subscription reconnects with
- * fresh auth headers (for example after login/logout).
- */
-export async function resetGraphqlWsClient(): Promise<void> {
-  await disposeGraphqlWsClient();
 }

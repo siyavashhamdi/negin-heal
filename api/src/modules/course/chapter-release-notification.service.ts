@@ -12,6 +12,7 @@ import {
   UserCourseDocument,
 } from "../../database/schemas";
 import {
+  GeneralSubscriptionUpdateType,
   GlobalAnouncementMessageType,
   NotificationMode,
   NotificationSource,
@@ -318,8 +319,9 @@ export class ChapterReleaseNotificationService {
       throw error;
     }
 
-    await this.userSubscriptionService.publishNotificationToUser({
+    await this.userSubscriptionService.publishToUser({
       userId: userCourse.userId.toString(),
+      updateType: GeneralSubscriptionUpdateType.NOTIFICATION,
       targetId: notification._id.toString(),
       payload: subscriptionPayload,
     });

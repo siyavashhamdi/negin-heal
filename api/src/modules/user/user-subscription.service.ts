@@ -43,13 +43,6 @@ export interface PublishGeneralUpdateInput {
   payload?: Record<string, unknown>;
 }
 
-export interface PublishNotificationUpdateInput {
-  userId: string;
-  targetId?: string;
-  payload?: Record<string, unknown>;
-  badgePayload?: Record<string, unknown>;
-}
-
 @Injectable()
 export class UserSubscriptionService {
   private readonly pubSub = new PubSub();
@@ -189,58 +182,6 @@ export class UserSubscriptionService {
     });
 
     return true;
-  }
-
-  async publishNotificationToUser(
-    input: PublishNotificationUpdateInput,
-  ): Promise<boolean> {
-    const notificationPublished = await this.publishToUser({
-      userId: input.userId,
-      updateType: GeneralSubscriptionUpdateType.NOTIFICATION,
-      targetId: input.targetId,
-      payload: input.payload,
-    });
-
-    await this.publishToUser({
-      userId: input.userId,
-      updateType: GeneralSubscriptionUpdateType.BADGE_COUNTS,
-      payload: input.badgePayload ?? {
-        source: "NOTIFICATION",
-        action: "UPDATED",
-      },
-    });
-
-    return notificationPublished;
-  }
-
-  async publishNotificationToUsers(
-    userIds: string[],
-    update: Omit<PublishNotificationUpdateInput, "userId">,
-  ): Promise<number> {
-    let publishedCount = 0;
-    const uniqueUserIds = new Set([...userIds]);
-
-    for (const userId of uniqueUserIds) {
-      const didPublish = await this.publishNotificationToUser({
-        userId,
-        ...update,
-      });
-
-      if (didPublish) {
-        publishedCount += 1;
-      }
-    }
-
-    return publishedCount;
-  }
-
-  async publishNotificationToActiveUsers(
-    update: Omit<PublishNotificationUpdateInput, "userId">,
-  ): Promise<number> {
-    const activeUserIds = this.getActiveSubscribedUserIds(
-      GeneralSubscriptionUpdateType.NOTIFICATION,
-    );
-    return this.publishNotificationToUsers(activeUserIds, update);
   }
 
   async publishToUsers(

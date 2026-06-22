@@ -1,11 +1,11 @@
 import { useSubscription } from "@apollo/client/react";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import {
   GENERAL_SUBSCRIPTION_UPDATE_TYPES,
   type GeneralSubscriptionUpdateType,
 } from "../constants";
 import { GENERAL_UPDATES_SUBSCRIPTION } from "../graphql/subscriptions/generalUpdates.subscription";
-import { isGraphqlWsConnected, subscribeGraphqlWsConnection, WS_SUBSCRIPTION_RETRY_ATTEMPTS } from "../lib/graphql-ws-client";
+import { WS_SUBSCRIPTION_RETRY_ATTEMPTS } from "../lib/graphql-ws-client";
 import { isRecoverableSubscriptionError } from "../lib/subscription-error.util";
 
 const WS_SUBSCRIPTION_RESTART_BASE_DELAY_MS = 1_000;
@@ -53,7 +53,7 @@ export const useGeneralUpdatesSubscription = ({
   const restartRef = useRef<(() => void) | null>(null);
   const restartAttemptRef = useRef(0);
   const restartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const subscriptionAliveRef = useRef(false);
+  const subscriptionAliveRef = useRef(enabled);
   const callbacksRef = useRef<SubscriptionCallbacks>({
     onNotification,
     onBadgeCounts,
@@ -103,20 +103,15 @@ export const useGeneralUpdatesSubscription = ({
     }, delayMs);
   }, [clearRestartTimer]);
 
-  const subscriptionVariables = useMemo<GeneralUpdatesSubscriptionVariables>(
-    () => ({
-      updateTypes: updateTypes && updateTypes.length ? [...updateTypes] : undefined,
-    }),
-    [updateTypes],
-  );
-
   const { restart } = useSubscription<
     GeneralUpdatesSubscriptionData,
     GeneralUpdatesSubscriptionVariables
   >(GENERAL_UPDATES_SUBSCRIPTION, {
     skip: !enabled,
     ignoreResults: true,
-    variables: subscriptionVariables,
+    variables: {
+      updateTypes: updateTypes && updateTypes.length ? updateTypes : undefined,
+    },
     onData: ({ data }) => {
       subscriptionAliveRef.current = true;
       restartAttemptRef.current = 0;
@@ -166,18 +161,9 @@ export const useGeneralUpdatesSubscription = ({
   }, [restart]);
 
   useEffect(() => {
-    if (!enabled) {
-      return undefined;
-    }
+    subscriptionAliveRef.current = enabled;
 
-    return subscribeGraphqlWsConnection((connected) => {
-      subscriptionAliveRef.current = connected;
-    });
-  }, [enabled]);
-
-  useEffect(() => {
     if (!enabled) {
-      subscriptionAliveRef.current = false;
       clearRestartTimer();
       restartAttemptRef.current = 0;
       return;
@@ -186,13 +172,10 @@ export const useGeneralUpdatesSubscription = ({
     const recoverDeadSubscription = (): void => {
       if (
         !enabledRef.current ||
+        subscriptionAliveRef.current ||
         document.visibilityState !== "visible" ||
         !navigator.onLine
       ) {
-        return;
-      }
-
-      if (subscriptionAliveRef.current && isGraphqlWsConnected()) {
         return;
       }
 

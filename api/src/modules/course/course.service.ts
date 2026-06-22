@@ -16,7 +16,7 @@ import {
   CourseItemType,
   CourseReleaseType,
   CouponDiscountType,
-  GlobalAnouncementMessageType,
+  GeneralSubscriptionUpdateType,
   NotificationMode,
   NotificationSource,
   UserRole,
@@ -3158,7 +3158,6 @@ export class CourseService {
     };
     const subscriptionPayload: Record<string, unknown> = {
       ...notificationPayload,
-      messageType: GlobalAnouncementMessageType.SNACKBAR,
       title,
       description: message,
       mode: NotificationMode.SUCCESS,
@@ -3175,8 +3174,9 @@ export class CourseService {
       payload: notificationPayload,
     });
 
-    await this.userSubscriptionService.publishNotificationToUser({
+    await this.userSubscriptionService.publishToUser({
       userId: userCourse.userId.toString(),
+      updateType: GeneralSubscriptionUpdateType.NOTIFICATION,
       targetId: notification._id.toString(),
       payload: subscriptionPayload,
     });
