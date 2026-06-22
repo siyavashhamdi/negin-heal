@@ -1,4 +1,5 @@
 export enum GeneralSubscriptionUpdateType {
   NOTIFICATION = "NOTIFICATION",
   BADGE_COUNTS = "BADGE_COUNTS",
+  VERIFICATION_STATUS = "VERIFICATION_STATUS",
 }

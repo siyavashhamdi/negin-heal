@@ -71,26 +71,6 @@ export type AppSettingKeyListGqlInput = {
   options?: InputMaybe<AppSettingKeyListOffsetPageOptionsParamsInput>;
 };
 
-export type AppSettingKeyListGqlResponse = {
-  __typename?: "AppSettingKeyListGqlResponse";
-  /** Date when the app setting was created */
-  createdAt?: Maybe<Scalars["DateTime"]["output"]>;
-  /** Admin-facing app setting description */
-  description?: Maybe<Scalars["String"]["output"]>;
-  /** App setting ID */
-  id: Scalars["ID"]["output"];
-  /** Whether this app setting is currently active */
-  isActive: Scalars["Boolean"]["output"];
-  /** Unique app setting key */
-  key: Scalars["String"]["output"];
-  /** Admin-facing app setting label */
-  label: Scalars["String"]["output"];
-  /** Date when the app setting was last updated */
-  updatedAt?: Maybe<Scalars["DateTime"]["output"]>;
-  /** Stored value type for this app setting */
-  valueType: AppSettingValueType;
-};
-
 export type AppSettingKeyListOffsetPageOptionsParamsInput = {
   /** Maximum number of records to return */
   limit?: InputMaybe<Scalars["Int"]["input"]>;
@@ -103,7 +83,7 @@ export type AppSettingKeyListOffsetPageOptionsParamsInput = {
 export type AppSettingKeyListPaginatedOffsetGqlResponse = {
   __typename?: "AppSettingKeyListPaginatedOffsetGqlResponse";
   /** List of app setting keys */
-  items: Array<AppSettingKeyListGqlResponse>;
+  items: Array<AppSettingKeyListSummaryGqlResponse>;
   /** Pagination metadata */
   pagination: PaginationOffsetResponse;
 };
@@ -121,6 +101,26 @@ export type AppSettingKeyListSortOptionInput = {
   updatedAt?: InputMaybe<SortingOrder>;
   /** Sort by value type */
   valueType?: InputMaybe<SortingOrder>;
+};
+
+export type AppSettingKeyListSummaryGqlResponse = {
+  __typename?: "AppSettingKeyListSummaryGqlResponse";
+  /** Date when the app setting was created */
+  createdAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** Admin-facing app setting description */
+  description?: Maybe<Scalars["String"]["output"]>;
+  /** App setting ID */
+  id: Scalars["ID"]["output"];
+  /** Whether this app setting is currently active */
+  isActive: Scalars["Boolean"]["output"];
+  /** Unique app setting key */
+  key: Scalars["String"]["output"];
+  /** Admin-facing app setting label */
+  label: Scalars["String"]["output"];
+  /** Date when the app setting was last updated */
+  updatedAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** Stored value type for this app setting */
+  valueType: AppSettingValueType;
 };
 
 export type AppSettingMutationGqlResponse = {
@@ -221,6 +221,11 @@ export type CouponCreateGqlInput = {
 };
 
 export type CouponDeleteGqlInput = {
+  /** Coupon ID */
+  id: Scalars["ID"]["input"];
+};
+
+export type CouponDetailGqlInput = {
   /** Coupon ID */
   id: Scalars["ID"]["input"];
 };
@@ -344,7 +349,7 @@ export type CouponListOffsetPageOptionsParamsInput = {
 export type CouponListPaginatedOffsetGqlResponse = {
   __typename?: "CouponListPaginatedOffsetGqlResponse";
   /** List of coupons */
-  items: Array<CouponListGqlResponse>;
+  items: Array<CouponListSummaryGqlResponse>;
   /** Pagination metadata */
   pagination: PaginationOffsetResponse;
 };
@@ -374,6 +379,36 @@ export type CouponListSortOptionInput = {
   totalUsageLimit?: InputMaybe<SortingOrder>;
   /** Sort by last update date */
   updatedAt?: InputMaybe<SortingOrder>;
+};
+
+export type CouponListSummaryGqlResponse = {
+  __typename?: "CouponListSummaryGqlResponse";
+  /** Coupon code */
+  code: Scalars["String"]["output"];
+  /** Date when the coupon was created */
+  createdAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** Coupon discount type */
+  discountType: CouponDiscountType;
+  /** Coupon discount value. Percentage or fixed amount based on discountType */
+  discountValue: Scalars["Float"]["output"];
+  /** Date when this coupon expires */
+  expiresAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** Coupon ID */
+  id: Scalars["ID"]["output"];
+  /** Whether this coupon is currently active */
+  isActive: Scalars["Boolean"]["output"];
+  /** Whether the coupon is restricted to first purchases only */
+  isFirstPurchaseOnly: Scalars["Boolean"]["output"];
+  /** Remaining total uses before the total usage limit is reached, if limited */
+  remainingTotalUsageCount?: Maybe<Scalars["Int"]["output"]>;
+  /** Date when this coupon becomes valid */
+  startsAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** Coupon display title */
+  title: Scalars["String"]["output"];
+  /** Total committed purchases that used this coupon */
+  totalUsageCount: Scalars["Int"]["output"];
+  /** Date when the coupon was last updated */
+  updatedAt?: Maybe<Scalars["DateTime"]["output"]>;
 };
 
 export type CouponUpdateGqlInput = {
@@ -440,6 +475,27 @@ export type CouponValidateGqlResponse = {
   title?: Maybe<Scalars["String"]["output"]>;
 };
 
+export type CourseChapterCompleteGqlInput = {
+  /** Stable chapter key to mark as completed */
+  chapterKey: Scalars["String"]["input"];
+  /** Course ID containing the chapter */
+  courseId: Scalars["ID"]["input"];
+};
+
+export type CourseChapterCompleteGqlResponse = {
+  __typename?: "CourseChapterCompleteGqlResponse";
+  /** Total unlocked chapters the learner can complete in this course right now */
+  accessibleChapterCount: Scalars["Int"]["output"];
+  /** Total chapters the learner has marked complete in this course */
+  completedChapterCount: Scalars["Int"]["output"];
+  /** Completed chapter key */
+  key: Scalars["String"]["output"];
+  /** Chapter title snapshot at completion time */
+  titleSnapshot: Scalars["String"]["output"];
+  /** When the learner confirmed chapter completion */
+  userCompletedAt: Scalars["DateTime"]["output"];
+};
+
 export type CourseChapterGqlInput = {
   /** Chapter description */
   description?: InputMaybe<Scalars["String"]["input"]>;
@@ -493,6 +549,11 @@ export type CourseCreateGqlInput = {
 };
 
 export type CourseDeleteGqlInput = {
+  /** Course ID */
+  id: Scalars["ID"]["input"];
+};
+
+export type CourseDetailGqlInput = {
   /** Course ID */
   id: Scalars["ID"]["input"];
 };
@@ -571,8 +632,12 @@ export type CourseListFilterInput = {
   hasFreeChapter?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** Filter courses by whether a price is set */
   hasPrice?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Scope the course list for a specific user by excluding courses they have already paid for. */
+  includeUserId?: InputMaybe<Scalars["ID"]["input"]>;
   /** Filter by active state */
   isActive?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Filter by whether the current user has purchased the course. Used by userCourseList. */
+  isPurchased?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** Filter courses containing at least one calculated item type. ARTICLE means an item without fileId. */
   itemType?: InputMaybe<CourseItemType>;
   /** Maximum price in IRT */
@@ -645,7 +710,7 @@ export type CourseListItemGqlResponse = {
 export type CourseListPaginatedCursorGqlResponse = {
   __typename?: "CourseListPaginatedCursorGqlResponse";
   /** List of courses */
-  items: Array<CourseListGqlResponse>;
+  items: Array<CourseListSummaryGqlResponse>;
   /** Pagination metadata */
   pagination: PaginationCursorResponse;
 };
@@ -665,6 +730,36 @@ export type CourseListSortOptionInput = {
   updatedAt?: InputMaybe<SortingOrder>;
 };
 
+export type CourseListSummaryGqlResponse = {
+  __typename?: "CourseListSummaryGqlResponse";
+  /** Number of chapters in the course */
+  chapterCount: Scalars["Int"]["output"];
+  /** Signed access descriptor for the course cover image */
+  coverImageAccessUrl?: Maybe<FileAccessUrlGqlResponse>;
+  /** Course description */
+  description?: Maybe<Scalars["String"]["output"]>;
+  /** Optional course discount */
+  discount?: Maybe<CourseListDiscountGqlResponse>;
+  /** Course ID */
+  id: Scalars["ID"]["output"];
+  /** Whether the course is active */
+  isActive: Scalars["Boolean"]["output"];
+  /** Number of items in the course */
+  itemCount: Scalars["Int"]["output"];
+  /** Calculated content types available in this course */
+  itemTypes: Array<CourseItemType>;
+  /** Course price in IRT */
+  priceIrt?: Maybe<Scalars["Float"]["output"]>;
+  /** Calculated release strategy. GRADUAL means at least one chapter has visibleAfterMinutes. */
+  releaseType: CourseReleaseType;
+  /** Course display rank used for manual ordering */
+  sortOrder?: Maybe<Scalars["Float"]["output"]>;
+  /** Course tags */
+  tags: Array<Scalars["String"]["output"]>;
+  /** Course title */
+  title: Scalars["String"]["output"];
+};
+
 export type CoursePaymentCourseSnapshotGqlResponse = {
   __typename?: "CoursePaymentCourseSnapshotGqlResponse";
   /** Course description snapshot */
@@ -673,6 +768,29 @@ export type CoursePaymentCourseSnapshotGqlResponse = {
   id: Scalars["ID"]["output"];
   /** Original course price in IRT */
   priceIrt: Scalars["Float"]["output"];
+  /** Course title snapshot */
+  title: Scalars["String"]["output"];
+};
+
+export type CoursePaymentDetailGqlInput = {
+  /** User-course purchase record ID */
+  id: Scalars["ID"]["input"];
+};
+
+export type CoursePaymentListCouponSummaryGqlResponse = {
+  __typename?: "CoursePaymentListCouponSummaryGqlResponse";
+  /** Coupon code */
+  code: Scalars["String"]["output"];
+  /** Coupon ID */
+  couponId: Scalars["ID"]["output"];
+  /** Coupon discount type */
+  discountType: CouponDiscountType;
+  /** Coupon discount value. Percentage or fixed amount based on discountType */
+  discountValue: Scalars["Float"]["output"];
+};
+
+export type CoursePaymentListCourseSummaryGqlResponse = {
+  __typename?: "CoursePaymentListCourseSummaryGqlResponse";
   /** Course title snapshot */
   title: Scalars["String"]["output"];
 };
@@ -801,6 +919,10 @@ export type CoursePaymentListGqlResponse = {
   courseId: Scalars["ID"]["output"];
   /** Payment submitted date */
   createdAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** User ID that initially created the payment record */
+  createdBy?: Maybe<Scalars["ID"]["output"]>;
+  /** User that initially created the payment record */
+  createdByUser?: Maybe<CoursePaymentRelatedUserGqlResponse>;
   /** Payment currency */
   currency: UserCoursePurchaseCurrency;
   /** Discount amount in IRT */
@@ -856,9 +978,89 @@ export type CoursePaymentListGqlResponse = {
 export type CoursePaymentListPaginatedOffsetGqlResponse = {
   __typename?: "CoursePaymentListPaginatedOffsetGqlResponse";
   /** List of course payments */
-  items: Array<CoursePaymentListGqlResponse>;
+  items: Array<CoursePaymentListSummaryGqlResponse>;
   /** Pagination metadata */
   pagination: PaginationOffsetResponse;
+};
+
+export type CoursePaymentListReceiptFileSummaryGqlResponse = {
+  __typename?: "CoursePaymentListReceiptFileSummaryGqlResponse";
+  /** Signed access descriptor for reading the stored receipt file */
+  accessUrl?: Maybe<FileAccessUrlGqlResponse>;
+};
+
+export type CoursePaymentListSummaryGqlResponse = {
+  __typename?: "CoursePaymentListSummaryGqlResponse";
+  /** Original amount in IRT */
+  amountIrt: Scalars["Float"]["output"];
+  /** Cancelled status date */
+  cancelledAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** Applied coupon snapshot, if any */
+  coupon?: Maybe<CoursePaymentListCouponSummaryGqlResponse>;
+  /** Course snapshot captured when the purchase was submitted */
+  course: CoursePaymentListCourseSummaryGqlResponse;
+  /** Course ID */
+  courseId: Scalars["ID"]["output"];
+  /** Payment submitted date */
+  createdAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** Payment currency */
+  currency: UserCoursePurchaseCurrency;
+  /** Discount amount in IRT */
+  discountAmountIrt?: Maybe<Scalars["Float"]["output"]>;
+  /** Discount percentage applied by course discount */
+  discountPercentage?: Maybe<Scalars["Float"]["output"]>;
+  /** Failed status date */
+  failedAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** Final payable amount in IRT */
+  finalAmountIrt: Scalars["Float"]["output"];
+  /** User-course purchase record ID */
+  id: Scalars["ID"]["output"];
+  /** Whether the payment status was changed manually */
+  isManualStatusChange: Scalars["Boolean"]["output"];
+  /** User ID that manually changed the status */
+  manualStatusChangedBy?: Maybe<Scalars["ID"]["output"]>;
+  /** Manual status-change description */
+  manualStatusChangedDescription?: Maybe<Scalars["String"]["output"]>;
+  /** Paid status date */
+  paidAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** Payment method */
+  paymentMethod: UserCoursePaymentMethod;
+  /** Payment provider, if any */
+  paymentProvider?: Maybe<Scalars["String"]["output"]>;
+  /** Gateway authority or manual reference */
+  paymentReference?: Maybe<Scalars["String"]["output"]>;
+  /** Pending status date */
+  pendingAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** User ID that uploaded the receipt */
+  receiptUploadedBy?: Maybe<Scalars["ID"]["output"]>;
+  /** Refunded status date */
+  refundedAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** Payment status */
+  status: UserCoursePurchaseStatus;
+  /** Gateway ref ID or crypto transaction ID */
+  transactionId?: Maybe<Scalars["String"]["output"]>;
+  /** Last payment update date */
+  updatedAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** Uploaded receipt file metadata */
+  uploadedReceiptFile?: Maybe<CoursePaymentListReceiptFileSummaryGqlResponse>;
+  /** Buyer snapshot captured when the purchase was submitted */
+  user: CoursePaymentListUserSummaryGqlResponse;
+  /** Buyer user ID */
+  userId: Scalars["ID"]["output"];
+};
+
+export type CoursePaymentListUserSummaryGqlResponse = {
+  __typename?: "CoursePaymentListUserSummaryGqlResponse";
+  /** Buyer email snapshot */
+  email: Scalars["String"]["output"];
+  /** Buyer full name snapshot */
+  fullName: Scalars["String"]["output"];
+  /** Buyer mobile phone snapshot */
+  mobilePhone?: Maybe<Scalars["String"]["output"]>;
+  /** Buyer phone snapshot */
+  phone?: Maybe<Scalars["String"]["output"]>;
+  /** Buyer username snapshot */
+  username: Scalars["String"]["output"];
 };
 
 export type CoursePaymentManualCreateGqlInput = {
@@ -1044,6 +1246,7 @@ export type GeneralSubscriptionGqlResponse = {
 export const GeneralSubscriptionUpdateType = {
   BADGE_COUNTS: "BADGE_COUNTS",
   NOTIFICATION: "NOTIFICATION",
+  VERIFICATION_STATUS: "VERIFICATION_STATUS",
 } as const;
 
 export type GeneralSubscriptionUpdateType =
@@ -1089,6 +1292,8 @@ export type Mutation = {
   couponDelete: Scalars["Boolean"]["output"];
   /** Update a coupon's discount rules, usage limits, course applicability, or active status */
   couponUpdate: CouponListGqlResponse;
+  /** Confirm completion of an unlocked course chapter for the authenticated learner */
+  courseChapterComplete: CourseChapterCompleteGqlResponse;
   /** Create a course with chapters and items, returning calculated release and item types */
   courseCreate: CourseListGqlResponse;
   /** Delete a course and remove its detached file attachments */
@@ -1115,20 +1320,18 @@ export type Mutation = {
   ticketClose: TicketListGqlResponse;
   /** Create a user account with profile, avatar file, roles, status, and initial password */
   userCreate: UserMutationGqlResponse;
-  /** Request a password reset link using username, email, or phone number */
+  /** Request a password reset code using username, email, or phone number */
   userForgotPassword: UserPasswordResetGqlResponse;
   /** Login and get JWT access token */
   userLogin: UserLoginGqlResponse;
-  /** Logout and revoke the current session token */
+  /** Logout and mark the current session as logged out */
   userLogout: Scalars["Boolean"]["output"];
   /** Bulk update current-user notifications by setting them read, unread, or archived */
   userNotificationUpdate: NotificationUpdateGqlResponse;
   /** Update the authenticated user's user document: account info, profile, preferences, avatar file, or password */
   userProfileUpdate: UserMutationGqlResponse;
-  /** Reset account password using an emailed reset link */
+  /** Reset account password using the emailed one-time code and account identity */
   userResetPassword: UserPasswordResetGqlResponse;
-  /** Send a sample email using configured SMTP credentials to a target email for dashboard testing */
-  userSendSampleEmail: UserRequestLoginCodeGqlResponse;
   /** Create an END_USER account using username/email/mobile and start a session */
   userSignup: UserLoginGqlResponse;
   /** Close one of the current end-user's support tickets */
@@ -1155,6 +1358,10 @@ export type MutationCouponDeleteArgs = {
 
 export type MutationCouponUpdateArgs = {
   input: CouponUpdateGqlInput;
+};
+
+export type MutationCourseChapterCompleteArgs = {
+  input: CourseChapterCompleteGqlInput;
 };
 
 export type MutationCourseCreateArgs = {
@@ -1227,10 +1434,6 @@ export type MutationUserProfileUpdateArgs = {
 
 export type MutationUserResetPasswordArgs = {
   input: UserResetPasswordGqlInput;
-};
-
-export type MutationUserSendSampleEmailArgs = {
-  to?: InputMaybe<Scalars["String"]["input"]>;
 };
 
 export type MutationUserSignupArgs = {
@@ -1519,7 +1722,7 @@ export type Query = {
   appAboutPageConfig: AppAboutPageConfigGqlResponse;
   /** Get configured privacy policy HTML content */
   appPrivacyPolicyPageConfig: AppPrivacyPolicyPageConfigGqlResponse;
-  /** Get one app setting with its editable value for SUPER_ADMIN */
+  /** Get full app setting data for SUPER_ADMIN and ADMIN, including the editable value */
   appSettingDetail: AppSettingMutationGqlResponse;
   /** Get a paginated, filterable, sortable SUPER_ADMIN list of app setting keys using offset-based pagination */
   appSettingKeyList: AppSettingKeyListPaginatedOffsetGqlResponse;
@@ -1527,14 +1730,20 @@ export type Query = {
   appTermsOfUsePageConfig: AppTermsOfUsePageConfigGqlResponse;
   /** Get configured application version label */
   appVersionConfig: AppVersionConfigGqlResponse;
-  /** Get role-aware sidebar badge counts for the current logged-in user */
+  /** Get role-aware sidebar badge counts. Anonymous users receive active course count only. */
   badgeCount: BadgeCountGqlResponse;
+  /** Get full coupon data for SUPER_ADMIN and ADMIN, including applicable courses for editing */
+  couponDetail: CouponListGqlResponse;
   /** Get a paginated, filterable, sortable SUPER_ADMIN list of coupons using offset-based pagination */
   couponList: CouponListPaginatedOffsetGqlResponse;
   /** Validate a coupon for the current user's course purchase */
   couponValidate: CouponValidateGqlResponse;
+  /** Get full course data for SUPER_ADMIN and ADMIN, including chapters and items for editing */
+  courseDetail: CourseListGqlResponse;
   /** Get a paginated, filterable, sortable admin list of courses with calculated release and item types */
   courseList: CourseListPaginatedCursorGqlResponse;
+  /** Get full course payment data for SUPER_ADMIN and ADMIN, including receipt and audit fields for review */
+  coursePaymentDetail: CoursePaymentListGqlResponse;
   /** Get paginated list of all course payments from user-course purchase records */
   coursePaymentList: CoursePaymentListPaginatedOffsetGqlResponse;
   /** Get the currently authenticated user's information */
@@ -1543,18 +1752,24 @@ export type Query = {
   paymentCheckoutConfig: PaymentCheckoutConfigGqlResponse;
   /** Get configured support contact channels */
   supportContactConfig: SupportContactConfigGqlResponse;
+  /** Get full support ticket data for SUPER_ADMIN and ADMIN, including messages and attachments for review */
+  ticketDetail: TicketListGqlResponse;
   /** Get a paginated, filterable, sortable super-admin list of support tickets using offset-based pagination */
   ticketList: TicketListPaginatedOffsetGqlResponse;
   /** Get active course details for anonymous users and END_USER accounts with locked content redacted */
   userCourseDetail: UserCourseDetailGqlResponse;
   /** Get active courses for anonymous users and END_USER views with purchase state */
   userCourseList: UserCourseListPaginatedCursorGqlResponse;
+  /** Get full user data for SUPER_ADMIN and ADMIN, including profile fields for editing */
+  userDetail: UserListGqlResponse;
   /** Get a paginated, filterable, sortable super-admin list of users using offset-based pagination */
   userList: UserListPaginatedOffsetGqlResponse;
   /** Generate a captcha challenge for password login */
   userLoginCaptcha: UserLoginCaptchaGqlResponse;
   /** Get a cursor-paginated, filterable, sortable list of notifications visible to the current user */
   userNotificationList: NotificationListPaginatedCursorGqlResponse;
+  /** Get full support ticket data for the current END_USER, including messages and attachments for viewing and replying */
+  userTicketDetail: UserTicketListGqlResponse;
   /** Get a paginated, filterable, sortable list of support tickets owned by the current END_USER */
   userTicketList: UserTicketListPaginatedOffsetGqlResponse;
 };
@@ -1567,6 +1782,10 @@ export type QueryAppSettingKeyListArgs = {
   input: AppSettingKeyListGqlInput;
 };
 
+export type QueryCouponDetailArgs = {
+  input: CouponDetailGqlInput;
+};
+
 export type QueryCouponListArgs = {
   input: CouponListGqlInput;
 };
@@ -1575,12 +1794,24 @@ export type QueryCouponValidateArgs = {
   input: CouponValidateGqlInput;
 };
 
+export type QueryCourseDetailArgs = {
+  input: CourseDetailGqlInput;
+};
+
 export type QueryCourseListArgs = {
   input: CourseListGqlInput;
 };
 
+export type QueryCoursePaymentDetailArgs = {
+  input: CoursePaymentDetailGqlInput;
+};
+
 export type QueryCoursePaymentListArgs = {
   input: CoursePaymentListGqlInput;
+};
+
+export type QueryTicketDetailArgs = {
+  input: TicketDetailGqlInput;
 };
 
 export type QueryTicketListArgs = {
@@ -1595,6 +1826,10 @@ export type QueryUserCourseListArgs = {
   input: CourseListGqlInput;
 };
 
+export type QueryUserDetailArgs = {
+  input: UserDetailGqlInput;
+};
+
 export type QueryUserListArgs = {
   input: UserListGqlInput;
 };
@@ -1603,8 +1838,53 @@ export type QueryUserNotificationListArgs = {
   input: NotificationListGqlInput;
 };
 
+export type QueryUserTicketDetailArgs = {
+  input: UserTicketDetailGqlInput;
+};
+
 export type QueryUserTicketListArgs = {
   input: UserTicketListGqlInput;
+};
+
+export type SessionClientContextGqlInput = {
+  appVersion?: InputMaybe<Scalars["String"]["input"]>;
+  architecture?: InputMaybe<Scalars["String"]["input"]>;
+  bitness?: InputMaybe<Scalars["String"]["input"]>;
+  browserName?: InputMaybe<Scalars["String"]["input"]>;
+  browserVersion?: InputMaybe<Scalars["String"]["input"]>;
+  /** browser | ios_app | android_app | installed_pwa */
+  clientType?: InputMaybe<Scalars["String"]["input"]>;
+  /** dark | light | no-preference */
+  colorScheme?: InputMaybe<Scalars["String"]["input"]>;
+  connectionType?: InputMaybe<Scalars["String"]["input"]>;
+  cookiesEnabled?: InputMaybe<Scalars["Boolean"]["input"]>;
+  cpuCores?: InputMaybe<Scalars["Int"]["input"]>;
+  /** mobile | tablet | desktop | unknown */
+  deviceCategory?: InputMaybe<Scalars["String"]["input"]>;
+  deviceMemoryGb?: InputMaybe<Scalars["Float"]["input"]>;
+  /** Device model when available */
+  deviceModel?: InputMaybe<Scalars["String"]["input"]>;
+  /** Human-readable device name */
+  deviceName?: InputMaybe<Scalars["String"]["input"]>;
+  devicePixelRatio?: InputMaybe<Scalars["Float"]["input"]>;
+  downlinkMbps?: InputMaybe<Scalars["Float"]["input"]>;
+  engineName?: InputMaybe<Scalars["String"]["input"]>;
+  language?: InputMaybe<Scalars["String"]["input"]>;
+  languages?: InputMaybe<Scalars["String"]["input"]>;
+  maxTouchPoints?: InputMaybe<Scalars["Int"]["input"]>;
+  osName?: InputMaybe<Scalars["String"]["input"]>;
+  osVersion?: InputMaybe<Scalars["String"]["input"]>;
+  pageUrl?: InputMaybe<Scalars["String"]["input"]>;
+  pdfViewerEnabled?: InputMaybe<Scalars["Boolean"]["input"]>;
+  platform?: InputMaybe<Scalars["String"]["input"]>;
+  referrer?: InputMaybe<Scalars["String"]["input"]>;
+  rttMs?: InputMaybe<Scalars["Int"]["input"]>;
+  saveData?: InputMaybe<Scalars["Boolean"]["input"]>;
+  screenResolution?: InputMaybe<Scalars["String"]["input"]>;
+  timezone?: InputMaybe<Scalars["String"]["input"]>;
+  timezoneOffset?: InputMaybe<Scalars["String"]["input"]>;
+  touchInput?: InputMaybe<Scalars["Boolean"]["input"]>;
+  viewportSize?: InputMaybe<Scalars["String"]["input"]>;
 };
 
 /** Sorting order */
@@ -1758,6 +2038,11 @@ export const TicketClosedBy = {
 } as const;
 
 export type TicketClosedBy = (typeof TicketClosedBy)[keyof typeof TicketClosedBy];
+export type TicketDetailGqlInput = {
+  /** Ticket ID */
+  id: Scalars["ID"]["input"];
+};
+
 export type TicketListFilterInput = {
   /** Filter tickets containing this attachment file ID */
   attachmentFileId?: InputMaybe<Scalars["ID"]["input"]>;
@@ -1852,7 +2137,7 @@ export type TicketListOffsetPageOptionsParamsInput = {
 export type TicketListPaginatedOffsetGqlResponse = {
   __typename?: "TicketListPaginatedOffsetGqlResponse";
   /** List of support tickets */
-  items: Array<TicketListGqlResponse>;
+  items: Array<TicketListSummaryGqlResponse>;
   /** Pagination metadata */
   pagination: PaginationOffsetResponse;
 };
@@ -1876,6 +2161,62 @@ export type TicketListSortOptionInput = {
   updatedAt?: InputMaybe<SortingOrder>;
 };
 
+export type TicketListSummaryGqlResponse = {
+  __typename?: "TicketListSummaryGqlResponse";
+  /** Total number of attachments across messages */
+  attachmentCount: Scalars["Int"]["output"];
+  /** Ticket category */
+  category: TicketCategory;
+  /** Date when the ticket was closed */
+  closedAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** Actor type that closed the ticket */
+  closedBy?: Maybe<TicketClosedBy>;
+  /** Minimal user that closed the ticket */
+  closedByUser?: Maybe<TicketListUserSummaryGqlResponse>;
+  /** User ID that closed the ticket */
+  closedByUserId?: Maybe<Scalars["ID"]["output"]>;
+  /** Date when the ticket was created */
+  createdAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** Minimal user that created the ticket */
+  createdByUser?: Maybe<TicketListUserSummaryGqlResponse>;
+  /** User ID that created the ticket */
+  createdByUserId?: Maybe<Scalars["ID"]["output"]>;
+  /** Ticket ID */
+  id: Scalars["ID"]["output"];
+  /** Body of the most recent message */
+  lastMessageBody: Scalars["String"]["output"];
+  /** Number of messages in the ticket */
+  messageCount: Scalars["Int"]["output"];
+  /** Ticket priority */
+  priority: TicketPriority;
+  /** Ticket lifecycle status */
+  status: TicketStatus;
+  /** Ticket title */
+  title: Scalars["String"]["output"];
+  /** Date when the ticket was last updated */
+  updatedAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** Minimal user that last updated the ticket */
+  updatedByUser?: Maybe<TicketListUserSummaryGqlResponse>;
+  /** User ID that last updated the ticket */
+  updatedByUserId?: Maybe<Scalars["ID"]["output"]>;
+};
+
+export type TicketListUserSummaryGqlResponse = {
+  __typename?: "TicketListUserSummaryGqlResponse";
+  /** User profile information for list display */
+  profile?: Maybe<TicketListUserSummaryProfileGqlResponse>;
+  /** Username */
+  username?: Maybe<Scalars["String"]["output"]>;
+};
+
+export type TicketListUserSummaryProfileGqlResponse = {
+  __typename?: "TicketListUserSummaryProfileGqlResponse";
+  /** User's first name */
+  firstName?: Maybe<Scalars["String"]["output"]>;
+  /** User's last name */
+  lastName?: Maybe<Scalars["String"]["output"]>;
+};
+
 export type TicketMessageGqlResponse = {
   __typename?: "TicketMessageGqlResponse";
   /** Minimal stored file metadata for message attachments */
@@ -1884,6 +2225,8 @@ export type TicketMessageGqlResponse = {
   body: Scalars["String"]["output"];
   /** Minimal user that sent this message */
   senderUser?: Maybe<TicketUserMinimalGqlResponse>;
+  /** Date and time when the message was sent */
+  sentAt?: Maybe<Scalars["DateTime"]["output"]>;
 };
 
 /** Support ticket priority */
@@ -1947,6 +2290,8 @@ export type UserCourseDetailChapterGqlResponse = {
   __typename?: "UserCourseDetailChapterGqlResponse";
   /** Chapter description */
   description?: Maybe<Scalars["String"]["output"]>;
+  /** Whether the authenticated learner has confirmed completion of this chapter */
+  isCompleted: Scalars["Boolean"]["output"];
   /** Whether this chapter is free to access */
   isFree: Scalars["Boolean"]["output"];
   /** Whether this chapter content is hidden from the current viewer */
@@ -1959,6 +2304,8 @@ export type UserCourseDetailChapterGqlResponse = {
   title: Scalars["String"]["output"];
   /** When this chapter becomes available for a paid viewer under gradual release */
   unlocksAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** When the learner confirmed completion of this chapter */
+  userCompletedAt?: Maybe<Scalars["DateTime"]["output"]>;
   /** Number of minutes after purchase/enrollment when visible */
   visibleAfterMinutes?: Maybe<Scalars["Int"]["output"]>;
 };
@@ -1970,8 +2317,12 @@ export type UserCourseDetailGqlInput = {
 
 export type UserCourseDetailGqlResponse = {
   __typename?: "UserCourseDetailGqlResponse";
+  /** Number of chapters currently unlocked and eligible for completion */
+  accessibleChapterCount: Scalars["Int"]["output"];
   /** Course chapters with locked content redacted */
   chapters: Array<UserCourseDetailChapterGqlResponse>;
+  /** Number of unlocked chapters the learner has confirmed complete */
+  completedChapterCount: Scalars["Int"]["output"];
   /** Signed access descriptor for the course cover image */
   coverImageAccessUrl?: Maybe<FileAccessUrlGqlResponse>;
   /** Course description */
@@ -2094,6 +2445,11 @@ export type UserCreateGqlInput = {
   username: Scalars["String"]["input"];
 };
 
+export type UserDetailGqlInput = {
+  /** User ID */
+  id: Scalars["ID"]["input"];
+};
+
 export type UserForgotPasswordGqlInput = {
   /** Captcha challenge identifier issued by the backend */
   captchaId?: InputMaybe<Scalars["String"]["input"]>;
@@ -2173,7 +2529,7 @@ export type UserListOffsetPageOptionsParamsInput = {
 export type UserListPaginatedOffsetGqlResponse = {
   __typename?: "UserListPaginatedOffsetGqlResponse";
   /** List of users */
-  items: Array<UserListGqlResponse>;
+  items: Array<UserListSummaryGqlResponse>;
   /** Pagination metadata */
   pagination: PaginationOffsetResponse;
 };
@@ -2213,6 +2569,40 @@ export type UserListSortOptionInput = {
   username?: InputMaybe<SortingOrder>;
 };
 
+export type UserListSummaryGqlResponse = {
+  __typename?: "UserListSummaryGqlResponse";
+  /** Date when the user was created */
+  createdAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** User ID */
+  id: Scalars["ID"]["output"];
+  /** User profile details for list display */
+  profile?: Maybe<UserListSummaryProfileGqlResponse>;
+  /** User roles */
+  roles: Array<UserRole>;
+  /** User account status */
+  status: UserStatus;
+  /** Date when the user was last updated */
+  updatedAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** Username */
+  username: Scalars["String"]["output"];
+};
+
+export type UserListSummaryProfileGqlResponse = {
+  __typename?: "UserListSummaryProfileGqlResponse";
+  /** Signed access descriptor for the user's avatar */
+  avatarAccessUrl?: Maybe<FileAccessUrlGqlResponse>;
+  /** User biography */
+  bio?: Maybe<Scalars["String"]["output"]>;
+  /** User's email address */
+  email?: Maybe<Scalars["String"]["output"]>;
+  /** User's first name */
+  firstName?: Maybe<Scalars["String"]["output"]>;
+  /** User's last name */
+  lastName?: Maybe<Scalars["String"]["output"]>;
+  /** User's phone number */
+  phoneNumber?: Maybe<Scalars["String"]["output"]>;
+};
+
 export type UserLoginCaptchaGqlResponse = {
   __typename?: "UserLoginCaptchaGqlResponse";
   /** Unique captcha identifier used for verification */
@@ -2230,6 +2620,8 @@ export type UserLoginGqlInput = {
   captchaId?: InputMaybe<Scalars["String"]["input"]>;
   /** Captcha answer entered by the user */
   captchaValue?: InputMaybe<Scalars["String"]["input"]>;
+  /** Client device and browser context captured at login time */
+  clientContext?: InputMaybe<SessionClientContextGqlInput>;
   /** User identity: registered username, email, or phone number */
   identity: Scalars["String"]["input"];
   /** User password */
@@ -2356,10 +2748,12 @@ export type UserRequestSignupCodeGqlInput = {
 };
 
 export type UserResetPasswordGqlInput = {
+  /** Username, email, or phone number used when requesting the password reset code */
+  identity: Scalars["String"]["input"];
   /** New account password */
   newPassword: Scalars["String"]["input"];
-  /** Password reset link sent by email, or the token from that link */
-  resetLink: Scalars["String"]["input"];
+  /** One-time password reset code sent by email */
+  otp: Scalars["String"]["input"];
 };
 
 export type UserResolveAuthIdentityGqlResponse = {
@@ -2381,13 +2775,15 @@ export type UserSignupGqlInput = {
   captchaId?: InputMaybe<Scalars["String"]["input"]>;
   /** Captcha answer entered by the user */
   captchaValue?: InputMaybe<Scalars["String"]["input"]>;
+  /** Client device and browser context captured at signup time */
+  clientContext?: InputMaybe<SessionClientContextGqlInput>;
   /** Email address */
   email?: InputMaybe<Scalars["String"]["input"]>;
   /** Mobile phone number */
   mobile?: InputMaybe<Scalars["String"]["input"]>;
   /** Account password for signup */
   password?: InputMaybe<Scalars["String"]["input"]>;
-  /** Mandatory profile data for signup */
+  /** Profile data for signup (first name required; last name optional) */
   profile: UserSignupProfileGqlInput;
   /** If true, the newly-created session will be remembered longer (e.g. 30 days) */
   rememberMe?: InputMaybe<Scalars["Boolean"]["input"]>;
@@ -2413,6 +2809,11 @@ export const UserStatus = {
 } as const;
 
 export type UserStatus = (typeof UserStatus)[keyof typeof UserStatus];
+export type UserTicketDetailGqlInput = {
+  /** Ticket ID */
+  id: Scalars["ID"]["input"];
+};
+
 export type UserTicketListFilterInput = {
   /** Filter tickets containing this attachment file ID */
   attachmentFileId?: InputMaybe<Scalars["ID"]["input"]>;
@@ -2488,9 +2889,37 @@ export type UserTicketListGqlResponse = {
 export type UserTicketListPaginatedOffsetGqlResponse = {
   __typename?: "UserTicketListPaginatedOffsetGqlResponse";
   /** List of current user's support tickets */
-  items: Array<UserTicketListGqlResponse>;
+  items: Array<UserTicketListSummaryGqlResponse>;
   /** Pagination metadata */
   pagination: PaginationOffsetResponse;
+};
+
+export type UserTicketListSummaryGqlResponse = {
+  __typename?: "UserTicketListSummaryGqlResponse";
+  /** Total number of attachments across messages */
+  attachmentCount: Scalars["Int"]["output"];
+  /** Ticket category */
+  category: TicketCategory;
+  /** Date when the ticket was closed */
+  closedAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** Actor type that closed the ticket */
+  closedBy?: Maybe<TicketClosedBy>;
+  /** Date when the ticket was created */
+  createdAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** Ticket ID */
+  id: Scalars["ID"]["output"];
+  /** Body of the most recent message */
+  lastMessageBody: Scalars["String"]["output"];
+  /** Number of messages in the ticket */
+  messageCount: Scalars["Int"]["output"];
+  /** Ticket priority */
+  priority: TicketPriority;
+  /** Ticket lifecycle status */
+  status: TicketStatus;
+  /** Ticket title */
+  title: Scalars["String"]["output"];
+  /** Date when the ticket was last updated */
+  updatedAt?: Maybe<Scalars["DateTime"]["output"]>;
 };
 
 export type UserTicketMessageGqlResponse = {
@@ -2501,6 +2930,8 @@ export type UserTicketMessageGqlResponse = {
   body: Scalars["String"]["output"];
   /** Sanitized sender information for the current user */
   senderUser?: Maybe<UserTicketSenderGqlResponse>;
+  /** Date and time when the message was sent */
+  sentAt?: Maybe<Scalars["DateTime"]["output"]>;
 };
 
 export type UserTicketSendGqlInput = {
@@ -2572,6 +3003,8 @@ export type UserUpdateProfileGqlInput = {
 };
 
 export type UserVerifyLoginCodeGqlInput = {
+  /** Client device and browser context captured at login time */
+  clientContext?: InputMaybe<SessionClientContextGqlInput>;
   /** SMS one-time password */
   code: Scalars["String"]["input"];
   /** User identity used when requesting the login code */
@@ -2618,28 +3051,7 @@ export type CouponCreateMutationVariables = Exact<{
 
 export type CouponCreateMutation = {
   __typename?: "Mutation";
-  couponCreate: {
-    __typename?: "CouponListGqlResponse";
-    id: string;
-    code: string;
-    title: string;
-    description?: string | null;
-    discountType: CouponDiscountType;
-    discountValue: number;
-    startsAt?: any | null;
-    expiresAt?: any | null;
-    totalUsageLimit?: number | null;
-    perUserUsageLimit?: number | null;
-    applicableCourseIds: Array<string>;
-    isFirstPurchaseOnly: boolean;
-    isActive: boolean;
-    totalUsageCount: number;
-    remainingTotalUsageCount?: number | null;
-    createdBy?: string | null;
-    updatedBy?: string | null;
-    createdAt?: any | null;
-    updatedAt?: any | null;
-  };
+  couponCreate: { __typename?: "CouponListGqlResponse"; id: string };
 };
 
 export type CouponDeleteMutationVariables = Exact<{
@@ -2654,27 +3066,22 @@ export type CouponUpdateMutationVariables = Exact<{
 
 export type CouponUpdateMutation = {
   __typename?: "Mutation";
-  couponUpdate: {
-    __typename?: "CouponListGqlResponse";
-    id: string;
-    code: string;
-    title: string;
-    description?: string | null;
-    discountType: CouponDiscountType;
-    discountValue: number;
-    startsAt?: any | null;
-    expiresAt?: any | null;
-    totalUsageLimit?: number | null;
-    perUserUsageLimit?: number | null;
-    applicableCourseIds: Array<string>;
-    isFirstPurchaseOnly: boolean;
-    isActive: boolean;
-    totalUsageCount: number;
-    remainingTotalUsageCount?: number | null;
-    createdBy?: string | null;
-    updatedBy?: string | null;
-    createdAt?: any | null;
-    updatedAt?: any | null;
+  couponUpdate: { __typename?: "CouponListGqlResponse"; id: string };
+};
+
+export type CourseChapterCompleteMutationVariables = Exact<{
+  input: CourseChapterCompleteGqlInput;
+}>;
+
+export type CourseChapterCompleteMutation = {
+  __typename?: "Mutation";
+  courseChapterComplete: {
+    __typename?: "CourseChapterCompleteGqlResponse";
+    key: string;
+    titleSnapshot: string;
+    userCompletedAt: any;
+    completedChapterCount: number;
+    accessibleChapterCount: number;
   };
 };
 
@@ -2795,6 +3202,10 @@ export type UserLoginMutation = {
   };
 };
 
+export type UserLogoutMutationVariables = Exact<{ [key: string]: never }>;
+
+export type UserLogoutMutation = { __typename?: "Mutation"; userLogout: boolean };
+
 export type UserNotificationUpdateMutationVariables = Exact<{
   input: NotificationUpdateGqlInput;
 }>;
@@ -2861,19 +3272,6 @@ export type UserResetPasswordMutation = {
   __typename?: "Mutation";
   userResetPassword: {
     __typename?: "UserPasswordResetGqlResponse";
-    success: boolean;
-    message: string;
-  };
-};
-
-export type UserSendSampleEmailMutationVariables = Exact<{
-  to?: InputMaybe<Scalars["String"]["input"]>;
-}>;
-
-export type UserSendSampleEmailMutation = {
-  __typename?: "Mutation";
-  userSendSampleEmail: {
-    __typename?: "UserRequestLoginCodeGqlResponse";
     success: boolean;
     message: string;
   };
@@ -2973,7 +3371,7 @@ export type AppSettingKeyListQuery = {
   appSettingKeyList: {
     __typename?: "AppSettingKeyListPaginatedOffsetGqlResponse";
     items: Array<{
-      __typename?: "AppSettingKeyListGqlResponse";
+      __typename?: "AppSettingKeyListSummaryGqlResponse";
       id: string;
       key: string;
       label: string;
@@ -3020,6 +3418,36 @@ export type BadgeCountQuery = {
   };
 };
 
+export type CouponDetailQueryVariables = Exact<{
+  input: CouponDetailGqlInput;
+}>;
+
+export type CouponDetailQuery = {
+  __typename?: "Query";
+  couponDetail: {
+    __typename?: "CouponListGqlResponse";
+    id: string;
+    code: string;
+    title: string;
+    description?: string | null;
+    discountType: CouponDiscountType;
+    discountValue: number;
+    startsAt?: any | null;
+    expiresAt?: any | null;
+    totalUsageLimit?: number | null;
+    perUserUsageLimit?: number | null;
+    applicableCourseIds: Array<string>;
+    isFirstPurchaseOnly: boolean;
+    isActive: boolean;
+    totalUsageCount: number;
+    remainingTotalUsageCount?: number | null;
+    createdBy?: string | null;
+    updatedBy?: string | null;
+    createdAt?: any | null;
+    updatedAt?: any | null;
+  };
+};
+
 export type CouponListQueryVariables = Exact<{
   input: CouponListGqlInput;
 }>;
@@ -3029,24 +3457,18 @@ export type CouponListQuery = {
   couponList: {
     __typename?: "CouponListPaginatedOffsetGqlResponse";
     items: Array<{
-      __typename?: "CouponListGqlResponse";
+      __typename?: "CouponListSummaryGqlResponse";
       id: string;
       code: string;
       title: string;
-      description?: string | null;
       discountType: CouponDiscountType;
       discountValue: number;
       startsAt?: any | null;
       expiresAt?: any | null;
-      totalUsageLimit?: number | null;
-      perUserUsageLimit?: number | null;
-      applicableCourseIds: Array<string>;
       isFirstPurchaseOnly: boolean;
       isActive: boolean;
       totalUsageCount: number;
       remainingTotalUsageCount?: number | null;
-      createdBy?: string | null;
-      updatedBy?: string | null;
       createdAt?: any | null;
       updatedAt?: any | null;
     }>;
@@ -3080,6 +3502,71 @@ export type CouponValidateQuery = {
     payableAmountBeforeCouponIrt?: number | null;
     couponDiscountAmountIrt?: number | null;
     finalAmountIrt?: number | null;
+  };
+};
+
+export type CoursePaymentListQueryVariables = Exact<{
+  input: CoursePaymentListGqlInput;
+}>;
+
+export type CoursePaymentListQuery = {
+  __typename?: "Query";
+  coursePaymentList: {
+    __typename?: "CoursePaymentListPaginatedOffsetGqlResponse";
+    items: Array<{
+      __typename?: "CoursePaymentListSummaryGqlResponse";
+      id: string;
+      userId: string;
+      courseId: string;
+      status: UserCoursePurchaseStatus;
+      paymentMethod: UserCoursePaymentMethod;
+      currency: UserCoursePurchaseCurrency;
+      paymentProvider?: string | null;
+      paymentReference?: string | null;
+      transactionId?: string | null;
+      amountIrt: number;
+      discountPercentage?: number | null;
+      discountAmountIrt?: number | null;
+      finalAmountIrt: number;
+      receiptUploadedBy?: string | null;
+      isManualStatusChange: boolean;
+      manualStatusChangedBy?: string | null;
+      manualStatusChangedDescription?: string | null;
+      createdAt?: any | null;
+      updatedAt?: any | null;
+      pendingAt?: any | null;
+      paidAt?: any | null;
+      failedAt?: any | null;
+      refundedAt?: any | null;
+      cancelledAt?: any | null;
+      user: {
+        __typename?: "CoursePaymentListUserSummaryGqlResponse";
+        fullName: string;
+        username: string;
+        email: string;
+        phone?: string | null;
+        mobilePhone?: string | null;
+      };
+      course: { __typename?: "CoursePaymentListCourseSummaryGqlResponse"; title: string };
+      coupon?: {
+        __typename?: "CoursePaymentListCouponSummaryGqlResponse";
+        couponId: string;
+        code: string;
+        discountType: CouponDiscountType;
+        discountValue: number;
+      } | null;
+      uploadedReceiptFile?: {
+        __typename?: "CoursePaymentListReceiptFileSummaryGqlResponse";
+        accessUrl?: { __typename?: "FileAccessUrlGqlResponse"; fileId: string } | null;
+      } | null;
+    }>;
+    pagination: {
+      __typename?: "PaginationOffsetResponse";
+      limit: number;
+      skip: number;
+      total: number;
+      count: number;
+    };
   };
 };
 
@@ -3173,6 +3660,69 @@ export type SupportContactConfigQuery = {
   };
 };
 
+export type TicketListQueryVariables = Exact<{
+  input: TicketListGqlInput;
+}>;
+
+export type TicketListQuery = {
+  __typename?: "Query";
+  ticketList: {
+    __typename?: "TicketListPaginatedOffsetGqlResponse";
+    items: Array<{
+      __typename?: "TicketListSummaryGqlResponse";
+      id: string;
+      title: string;
+      category: TicketCategory;
+      priority: TicketPriority;
+      status: TicketStatus;
+      closedBy?: TicketClosedBy | null;
+      closedByUserId?: string | null;
+      closedAt?: any | null;
+      createdByUserId?: string | null;
+      updatedByUserId?: string | null;
+      messageCount: number;
+      lastMessageBody: string;
+      attachmentCount: number;
+      createdAt?: any | null;
+      updatedAt?: any | null;
+      closedByUser?: {
+        __typename?: "TicketListUserSummaryGqlResponse";
+        username?: string | null;
+        profile?: {
+          __typename?: "TicketListUserSummaryProfileGqlResponse";
+          firstName?: string | null;
+          lastName?: string | null;
+        } | null;
+      } | null;
+      createdByUser?: {
+        __typename?: "TicketListUserSummaryGqlResponse";
+        username?: string | null;
+        profile?: {
+          __typename?: "TicketListUserSummaryProfileGqlResponse";
+          firstName?: string | null;
+          lastName?: string | null;
+        } | null;
+      } | null;
+      updatedByUser?: {
+        __typename?: "TicketListUserSummaryGqlResponse";
+        username?: string | null;
+        profile?: {
+          __typename?: "TicketListUserSummaryProfileGqlResponse";
+          firstName?: string | null;
+          lastName?: string | null;
+        } | null;
+      } | null;
+    }>;
+    pagination: {
+      __typename?: "PaginationOffsetResponse";
+      limit: number;
+      skip: number;
+      total: number;
+      count: number;
+    };
+  };
+};
+
 export type UserLoginCaptchaQueryVariables = Exact<{ [key: string]: never }>;
 
 export type UserLoginCaptchaQuery = {
@@ -3219,6 +3769,39 @@ export type UserNotificationListQuery = {
       endCursor?: string | null;
       hasNextPage: boolean;
       hasPreviousPage: boolean;
+    };
+  };
+};
+
+export type UserTicketListQueryVariables = Exact<{
+  input: UserTicketListGqlInput;
+}>;
+
+export type UserTicketListQuery = {
+  __typename?: "Query";
+  userTicketList: {
+    __typename?: "UserTicketListPaginatedOffsetGqlResponse";
+    items: Array<{
+      __typename?: "UserTicketListSummaryGqlResponse";
+      id: string;
+      title: string;
+      category: TicketCategory;
+      priority: TicketPriority;
+      status: TicketStatus;
+      closedBy?: TicketClosedBy | null;
+      closedAt?: any | null;
+      messageCount: number;
+      lastMessageBody: string;
+      attachmentCount: number;
+      createdAt?: any | null;
+      updatedAt?: any | null;
+    }>;
+    pagination: {
+      __typename?: "PaginationOffsetResponse";
+      limit: number;
+      skip: number;
+      total: number;
+      count: number;
     };
   };
 };
@@ -3320,27 +3903,7 @@ export const CouponCreateDocument = {
             ],
             selectionSet: {
               kind: "SelectionSet",
-              selections: [
-                { kind: "Field", name: { kind: "Name", value: "id" } },
-                { kind: "Field", name: { kind: "Name", value: "code" } },
-                { kind: "Field", name: { kind: "Name", value: "title" } },
-                { kind: "Field", name: { kind: "Name", value: "description" } },
-                { kind: "Field", name: { kind: "Name", value: "discountType" } },
-                { kind: "Field", name: { kind: "Name", value: "discountValue" } },
-                { kind: "Field", name: { kind: "Name", value: "startsAt" } },
-                { kind: "Field", name: { kind: "Name", value: "expiresAt" } },
-                { kind: "Field", name: { kind: "Name", value: "totalUsageLimit" } },
-                { kind: "Field", name: { kind: "Name", value: "perUserUsageLimit" } },
-                { kind: "Field", name: { kind: "Name", value: "applicableCourseIds" } },
-                { kind: "Field", name: { kind: "Name", value: "isFirstPurchaseOnly" } },
-                { kind: "Field", name: { kind: "Name", value: "isActive" } },
-                { kind: "Field", name: { kind: "Name", value: "totalUsageCount" } },
-                { kind: "Field", name: { kind: "Name", value: "remainingTotalUsageCount" } },
-                { kind: "Field", name: { kind: "Name", value: "createdBy" } },
-                { kind: "Field", name: { kind: "Name", value: "updatedBy" } },
-                { kind: "Field", name: { kind: "Name", value: "createdAt" } },
-                { kind: "Field", name: { kind: "Name", value: "updatedAt" } },
-              ],
+              selections: [{ kind: "Field", name: { kind: "Name", value: "id" } }],
             },
           },
         ],
@@ -3416,27 +3979,7 @@ export const CouponUpdateDocument = {
             ],
             selectionSet: {
               kind: "SelectionSet",
-              selections: [
-                { kind: "Field", name: { kind: "Name", value: "id" } },
-                { kind: "Field", name: { kind: "Name", value: "code" } },
-                { kind: "Field", name: { kind: "Name", value: "title" } },
-                { kind: "Field", name: { kind: "Name", value: "description" } },
-                { kind: "Field", name: { kind: "Name", value: "discountType" } },
-                { kind: "Field", name: { kind: "Name", value: "discountValue" } },
-                { kind: "Field", name: { kind: "Name", value: "startsAt" } },
-                { kind: "Field", name: { kind: "Name", value: "expiresAt" } },
-                { kind: "Field", name: { kind: "Name", value: "totalUsageLimit" } },
-                { kind: "Field", name: { kind: "Name", value: "perUserUsageLimit" } },
-                { kind: "Field", name: { kind: "Name", value: "applicableCourseIds" } },
-                { kind: "Field", name: { kind: "Name", value: "isFirstPurchaseOnly" } },
-                { kind: "Field", name: { kind: "Name", value: "isActive" } },
-                { kind: "Field", name: { kind: "Name", value: "totalUsageCount" } },
-                { kind: "Field", name: { kind: "Name", value: "remainingTotalUsageCount" } },
-                { kind: "Field", name: { kind: "Name", value: "createdBy" } },
-                { kind: "Field", name: { kind: "Name", value: "updatedBy" } },
-                { kind: "Field", name: { kind: "Name", value: "createdAt" } },
-                { kind: "Field", name: { kind: "Name", value: "updatedAt" } },
-              ],
+              selections: [{ kind: "Field", name: { kind: "Name", value: "id" } }],
             },
           },
         ],
@@ -3444,6 +3987,55 @@ export const CouponUpdateDocument = {
     },
   ],
 } as unknown as DocumentNode<CouponUpdateMutation, CouponUpdateMutationVariables>;
+export const CourseChapterCompleteDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "mutation",
+      name: { kind: "Name", value: "CourseChapterComplete" },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "input" } },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: { kind: "Name", value: "CourseChapterCompleteGqlInput" },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "courseChapterComplete" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "input" },
+                value: { kind: "Variable", name: { kind: "Name", value: "input" } },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                { kind: "Field", name: { kind: "Name", value: "key" } },
+                { kind: "Field", name: { kind: "Name", value: "titleSnapshot" } },
+                { kind: "Field", name: { kind: "Name", value: "userCompletedAt" } },
+                { kind: "Field", name: { kind: "Name", value: "completedChapterCount" } },
+                { kind: "Field", name: { kind: "Name", value: "accessibleChapterCount" } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CourseChapterCompleteMutation, CourseChapterCompleteMutationVariables>;
 export const CourseCreateDocument = {
   kind: "Document",
   definitions: [
@@ -3852,6 +4444,20 @@ export const UserLoginDocument = {
     },
   ],
 } as unknown as DocumentNode<UserLoginMutation, UserLoginMutationVariables>;
+export const UserLogoutDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "mutation",
+      name: { kind: "Name", value: "UserLogout" },
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [{ kind: "Field", name: { kind: "Name", value: "userLogout" } }],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UserLogoutMutation, UserLogoutMutationVariables>;
 export const UserNotificationUpdateDocument = {
   kind: "Document",
   definitions: [
@@ -4061,46 +4667,6 @@ export const UserResetPasswordDocument = {
     },
   ],
 } as unknown as DocumentNode<UserResetPasswordMutation, UserResetPasswordMutationVariables>;
-export const UserSendSampleEmailDocument = {
-  kind: "Document",
-  definitions: [
-    {
-      kind: "OperationDefinition",
-      operation: "mutation",
-      name: { kind: "Name", value: "UserSendSampleEmail" },
-      variableDefinitions: [
-        {
-          kind: "VariableDefinition",
-          variable: { kind: "Variable", name: { kind: "Name", value: "to" } },
-          type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
-        },
-      ],
-      selectionSet: {
-        kind: "SelectionSet",
-        selections: [
-          {
-            kind: "Field",
-            name: { kind: "Name", value: "userSendSampleEmail" },
-            arguments: [
-              {
-                kind: "Argument",
-                name: { kind: "Name", value: "to" },
-                value: { kind: "Variable", name: { kind: "Name", value: "to" } },
-              },
-            ],
-            selectionSet: {
-              kind: "SelectionSet",
-              selections: [
-                { kind: "Field", name: { kind: "Name", value: "success" } },
-                { kind: "Field", name: { kind: "Name", value: "message" } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<UserSendSampleEmailMutation, UserSendSampleEmailMutationVariables>;
 export const UserSignupDocument = {
   kind: "Document",
   definitions: [
@@ -4492,6 +5058,66 @@ export const BadgeCountDocument = {
     },
   ],
 } as unknown as DocumentNode<BadgeCountQuery, BadgeCountQueryVariables>;
+export const CouponDetailDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "query",
+      name: { kind: "Name", value: "CouponDetail" },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "input" } },
+          type: {
+            kind: "NonNullType",
+            type: { kind: "NamedType", name: { kind: "Name", value: "CouponDetailGqlInput" } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "couponDetail" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "input" },
+                value: { kind: "Variable", name: { kind: "Name", value: "input" } },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                { kind: "Field", name: { kind: "Name", value: "id" } },
+                { kind: "Field", name: { kind: "Name", value: "code" } },
+                { kind: "Field", name: { kind: "Name", value: "title" } },
+                { kind: "Field", name: { kind: "Name", value: "description" } },
+                { kind: "Field", name: { kind: "Name", value: "discountType" } },
+                { kind: "Field", name: { kind: "Name", value: "discountValue" } },
+                { kind: "Field", name: { kind: "Name", value: "startsAt" } },
+                { kind: "Field", name: { kind: "Name", value: "expiresAt" } },
+                { kind: "Field", name: { kind: "Name", value: "totalUsageLimit" } },
+                { kind: "Field", name: { kind: "Name", value: "perUserUsageLimit" } },
+                { kind: "Field", name: { kind: "Name", value: "applicableCourseIds" } },
+                { kind: "Field", name: { kind: "Name", value: "isFirstPurchaseOnly" } },
+                { kind: "Field", name: { kind: "Name", value: "isActive" } },
+                { kind: "Field", name: { kind: "Name", value: "totalUsageCount" } },
+                { kind: "Field", name: { kind: "Name", value: "remainingTotalUsageCount" } },
+                { kind: "Field", name: { kind: "Name", value: "createdBy" } },
+                { kind: "Field", name: { kind: "Name", value: "updatedBy" } },
+                { kind: "Field", name: { kind: "Name", value: "createdAt" } },
+                { kind: "Field", name: { kind: "Name", value: "updatedAt" } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CouponDetailQuery, CouponDetailQueryVariables>;
 export const CouponListDocument = {
   kind: "Document",
   definitions: [
@@ -4534,20 +5160,14 @@ export const CouponListDocument = {
                       { kind: "Field", name: { kind: "Name", value: "id" } },
                       { kind: "Field", name: { kind: "Name", value: "code" } },
                       { kind: "Field", name: { kind: "Name", value: "title" } },
-                      { kind: "Field", name: { kind: "Name", value: "description" } },
                       { kind: "Field", name: { kind: "Name", value: "discountType" } },
                       { kind: "Field", name: { kind: "Name", value: "discountValue" } },
                       { kind: "Field", name: { kind: "Name", value: "startsAt" } },
                       { kind: "Field", name: { kind: "Name", value: "expiresAt" } },
-                      { kind: "Field", name: { kind: "Name", value: "totalUsageLimit" } },
-                      { kind: "Field", name: { kind: "Name", value: "perUserUsageLimit" } },
-                      { kind: "Field", name: { kind: "Name", value: "applicableCourseIds" } },
                       { kind: "Field", name: { kind: "Name", value: "isFirstPurchaseOnly" } },
                       { kind: "Field", name: { kind: "Name", value: "isActive" } },
                       { kind: "Field", name: { kind: "Name", value: "totalUsageCount" } },
                       { kind: "Field", name: { kind: "Name", value: "remainingTotalUsageCount" } },
-                      { kind: "Field", name: { kind: "Name", value: "createdBy" } },
-                      { kind: "Field", name: { kind: "Name", value: "updatedBy" } },
                       { kind: "Field", name: { kind: "Name", value: "createdAt" } },
                       { kind: "Field", name: { kind: "Name", value: "updatedAt" } },
                     ],
@@ -4627,6 +5247,150 @@ export const CouponValidateDocument = {
     },
   ],
 } as unknown as DocumentNode<CouponValidateQuery, CouponValidateQueryVariables>;
+export const CoursePaymentListDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "query",
+      name: { kind: "Name", value: "CoursePaymentList" },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "input" } },
+          type: {
+            kind: "NonNullType",
+            type: { kind: "NamedType", name: { kind: "Name", value: "CoursePaymentListGqlInput" } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "coursePaymentList" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "input" },
+                value: { kind: "Variable", name: { kind: "Name", value: "input" } },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "items" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "id" } },
+                      { kind: "Field", name: { kind: "Name", value: "userId" } },
+                      { kind: "Field", name: { kind: "Name", value: "courseId" } },
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "user" },
+                        selectionSet: {
+                          kind: "SelectionSet",
+                          selections: [
+                            { kind: "Field", name: { kind: "Name", value: "fullName" } },
+                            { kind: "Field", name: { kind: "Name", value: "username" } },
+                            { kind: "Field", name: { kind: "Name", value: "email" } },
+                            { kind: "Field", name: { kind: "Name", value: "phone" } },
+                            { kind: "Field", name: { kind: "Name", value: "mobilePhone" } },
+                          ],
+                        },
+                      },
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "course" },
+                        selectionSet: {
+                          kind: "SelectionSet",
+                          selections: [{ kind: "Field", name: { kind: "Name", value: "title" } }],
+                        },
+                      },
+                      { kind: "Field", name: { kind: "Name", value: "status" } },
+                      { kind: "Field", name: { kind: "Name", value: "paymentMethod" } },
+                      { kind: "Field", name: { kind: "Name", value: "currency" } },
+                      { kind: "Field", name: { kind: "Name", value: "paymentProvider" } },
+                      { kind: "Field", name: { kind: "Name", value: "paymentReference" } },
+                      { kind: "Field", name: { kind: "Name", value: "transactionId" } },
+                      { kind: "Field", name: { kind: "Name", value: "amountIrt" } },
+                      { kind: "Field", name: { kind: "Name", value: "discountPercentage" } },
+                      { kind: "Field", name: { kind: "Name", value: "discountAmountIrt" } },
+                      { kind: "Field", name: { kind: "Name", value: "finalAmountIrt" } },
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "coupon" },
+                        selectionSet: {
+                          kind: "SelectionSet",
+                          selections: [
+                            { kind: "Field", name: { kind: "Name", value: "couponId" } },
+                            { kind: "Field", name: { kind: "Name", value: "code" } },
+                            { kind: "Field", name: { kind: "Name", value: "discountType" } },
+                            { kind: "Field", name: { kind: "Name", value: "discountValue" } },
+                          ],
+                        },
+                      },
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "uploadedReceiptFile" },
+                        selectionSet: {
+                          kind: "SelectionSet",
+                          selections: [
+                            {
+                              kind: "Field",
+                              name: { kind: "Name", value: "accessUrl" },
+                              selectionSet: {
+                                kind: "SelectionSet",
+                                selections: [
+                                  { kind: "Field", name: { kind: "Name", value: "fileId" } },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      { kind: "Field", name: { kind: "Name", value: "receiptUploadedBy" } },
+                      { kind: "Field", name: { kind: "Name", value: "isManualStatusChange" } },
+                      { kind: "Field", name: { kind: "Name", value: "manualStatusChangedBy" } },
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "manualStatusChangedDescription" },
+                      },
+                      { kind: "Field", name: { kind: "Name", value: "createdAt" } },
+                      { kind: "Field", name: { kind: "Name", value: "updatedAt" } },
+                      { kind: "Field", name: { kind: "Name", value: "pendingAt" } },
+                      { kind: "Field", name: { kind: "Name", value: "paidAt" } },
+                      { kind: "Field", name: { kind: "Name", value: "failedAt" } },
+                      { kind: "Field", name: { kind: "Name", value: "refundedAt" } },
+                      { kind: "Field", name: { kind: "Name", value: "cancelledAt" } },
+                    ],
+                  },
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "pagination" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "limit" } },
+                      { kind: "Field", name: { kind: "Name", value: "skip" } },
+                      { kind: "Field", name: { kind: "Name", value: "total" } },
+                      { kind: "Field", name: { kind: "Name", value: "count" } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CoursePaymentListQuery, CoursePaymentListQueryVariables>;
 export const PaymentCheckoutConfigDocument = {
   kind: "Document",
   definitions: [
@@ -4795,6 +5559,147 @@ export const SupportContactConfigDocument = {
     },
   ],
 } as unknown as DocumentNode<SupportContactConfigQuery, SupportContactConfigQueryVariables>;
+export const TicketListDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "query",
+      name: { kind: "Name", value: "TicketList" },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "input" } },
+          type: {
+            kind: "NonNullType",
+            type: { kind: "NamedType", name: { kind: "Name", value: "TicketListGqlInput" } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "ticketList" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "input" },
+                value: { kind: "Variable", name: { kind: "Name", value: "input" } },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "items" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "id" } },
+                      { kind: "Field", name: { kind: "Name", value: "title" } },
+                      { kind: "Field", name: { kind: "Name", value: "category" } },
+                      { kind: "Field", name: { kind: "Name", value: "priority" } },
+                      { kind: "Field", name: { kind: "Name", value: "status" } },
+                      { kind: "Field", name: { kind: "Name", value: "closedBy" } },
+                      { kind: "Field", name: { kind: "Name", value: "closedByUserId" } },
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "closedByUser" },
+                        selectionSet: {
+                          kind: "SelectionSet",
+                          selections: [
+                            { kind: "Field", name: { kind: "Name", value: "username" } },
+                            {
+                              kind: "Field",
+                              name: { kind: "Name", value: "profile" },
+                              selectionSet: {
+                                kind: "SelectionSet",
+                                selections: [
+                                  { kind: "Field", name: { kind: "Name", value: "firstName" } },
+                                  { kind: "Field", name: { kind: "Name", value: "lastName" } },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      { kind: "Field", name: { kind: "Name", value: "closedAt" } },
+                      { kind: "Field", name: { kind: "Name", value: "createdByUserId" } },
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "createdByUser" },
+                        selectionSet: {
+                          kind: "SelectionSet",
+                          selections: [
+                            { kind: "Field", name: { kind: "Name", value: "username" } },
+                            {
+                              kind: "Field",
+                              name: { kind: "Name", value: "profile" },
+                              selectionSet: {
+                                kind: "SelectionSet",
+                                selections: [
+                                  { kind: "Field", name: { kind: "Name", value: "firstName" } },
+                                  { kind: "Field", name: { kind: "Name", value: "lastName" } },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      { kind: "Field", name: { kind: "Name", value: "updatedByUserId" } },
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "updatedByUser" },
+                        selectionSet: {
+                          kind: "SelectionSet",
+                          selections: [
+                            { kind: "Field", name: { kind: "Name", value: "username" } },
+                            {
+                              kind: "Field",
+                              name: { kind: "Name", value: "profile" },
+                              selectionSet: {
+                                kind: "SelectionSet",
+                                selections: [
+                                  { kind: "Field", name: { kind: "Name", value: "firstName" } },
+                                  { kind: "Field", name: { kind: "Name", value: "lastName" } },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      { kind: "Field", name: { kind: "Name", value: "messageCount" } },
+                      { kind: "Field", name: { kind: "Name", value: "lastMessageBody" } },
+                      { kind: "Field", name: { kind: "Name", value: "attachmentCount" } },
+                      { kind: "Field", name: { kind: "Name", value: "createdAt" } },
+                      { kind: "Field", name: { kind: "Name", value: "updatedAt" } },
+                    ],
+                  },
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "pagination" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "limit" } },
+                      { kind: "Field", name: { kind: "Name", value: "skip" } },
+                      { kind: "Field", name: { kind: "Name", value: "total" } },
+                      { kind: "Field", name: { kind: "Name", value: "count" } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<TicketListQuery, TicketListQueryVariables>;
 export const UserLoginCaptchaDocument = {
   kind: "Document",
   definitions: [
@@ -4902,6 +5807,81 @@ export const UserNotificationListDocument = {
     },
   ],
 } as unknown as DocumentNode<UserNotificationListQuery, UserNotificationListQueryVariables>;
+export const UserTicketListDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "query",
+      name: { kind: "Name", value: "UserTicketList" },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "input" } },
+          type: {
+            kind: "NonNullType",
+            type: { kind: "NamedType", name: { kind: "Name", value: "UserTicketListGqlInput" } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "userTicketList" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "input" },
+                value: { kind: "Variable", name: { kind: "Name", value: "input" } },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "items" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "id" } },
+                      { kind: "Field", name: { kind: "Name", value: "title" } },
+                      { kind: "Field", name: { kind: "Name", value: "category" } },
+                      { kind: "Field", name: { kind: "Name", value: "priority" } },
+                      { kind: "Field", name: { kind: "Name", value: "status" } },
+                      { kind: "Field", name: { kind: "Name", value: "closedBy" } },
+                      { kind: "Field", name: { kind: "Name", value: "closedAt" } },
+                      { kind: "Field", name: { kind: "Name", value: "messageCount" } },
+                      { kind: "Field", name: { kind: "Name", value: "lastMessageBody" } },
+                      { kind: "Field", name: { kind: "Name", value: "attachmentCount" } },
+                      { kind: "Field", name: { kind: "Name", value: "createdAt" } },
+                      { kind: "Field", name: { kind: "Name", value: "updatedAt" } },
+                    ],
+                  },
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "pagination" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "limit" } },
+                      { kind: "Field", name: { kind: "Name", value: "skip" } },
+                      { kind: "Field", name: { kind: "Name", value: "total" } },
+                      { kind: "Field", name: { kind: "Name", value: "count" } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UserTicketListQuery, UserTicketListQueryVariables>;
 export const GeneralUpdatesDocument = {
   kind: "Document",
   definitions: [

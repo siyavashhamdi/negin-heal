@@ -8,6 +8,11 @@
   @include mixins.mobile-page-stack-tight;
 }
 
+.contentStack {
+  display: grid;
+  gap: 1rem;
+}
+
 .hero {
   display: grid;
   gap: 0.45rem;

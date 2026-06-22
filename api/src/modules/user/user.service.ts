@@ -8,6 +8,7 @@ import {
   BadRequestException,
   Injectable,
   Inject,
+  Logger,
   NotFoundException,
   forwardRef,
 } from "@nestjs/common";
@@ -19,7 +20,7 @@ import {
   UserSignupGqlInput,
   UserVerifyLoginCodeGqlResponse,
 } from "./graphql";
-import { AppSettingValueType, UserRole, UserStatus } from "../../enums";
+import { AppSettingValueType, GeneralSubscriptionUpdateType, UserRole, UserStatus } from "../../enums";
 import { SessionService } from "../auth/session.service";
 import { SessionClientContext } from "../../database/schemas/session-client-context.schema";
 import { EmailService } from "../email";
@@ -47,13 +48,17 @@ import {
   CaptchaInvalidException,
   CaptchaRequiredException,
   InvalidPasswordResetTokenException,
+  InvalidAccountActivationTokenException,
   InvalidSignupVerificationCodeException,
   SignupCredentialRequiredException,
+  EmailSendCooldownException,
 } from "../../exceptions";
 import {
   APP_SETTING_KEY,
   LOGIN_CAPTCHA_FAILED_ATTEMPTS_THRESHOLD,
 } from "../../constants";
+import { EMAIL_SEND_COOLDOWN_MS } from "../../constants/email.constant";
+import { buildVerificationStatusSubscriptionPayload } from "../../constants/verification-status-subscription.constant";
 import { PAGINATION_CONSTANT } from "../../constants/pagination.constant";
 import { SortingOrder } from "../../common/pagination/input";
 import { buildSortOptions } from "../../common/pagination/utils";
@@ -87,6 +92,7 @@ import {
   UserMutationGqlResponse,
   UserPasswordResetGqlResponse,
 } from "./graphql/responses";
+import { UserSubscriptionService } from "./user-subscription.service";
 
 export interface JwtPayload {
   jti: string; // session._id (MongoDB ObjectId) - only field in JWT, everything else from DB
@@ -118,13 +124,15 @@ type UserUpdateOperation = {
 
 @Injectable()
 export class UserService {
+  private readonly logger = new Logger(UserService.name);
   private readonly SALT_ROUNDS = 10;
   private readonly LOGIN_CODE_TTL_MS = 5 * 60 * 1000;
   private readonly SIGNUP_CODE_TTL_MS = 5 * 60 * 1000;
   private readonly MAX_LOGIN_CODE_ATTEMPTS = 5;
   private readonly MAX_SIGNUP_CODE_ATTEMPTS = 5;
-  private readonly LOGIN_CODE_TTL_MINUTES = 5;
+  private readonly MAX_PASSWORD_RESET_OTP_ATTEMPTS = 5;
   private readonly DEFAULT_PASSWORD_RESET_TOKEN_TTL_MINUTES = 30;
+  private readonly ACCOUNT_ACTIVATION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
   private readonly loginCodesByUserId = new Map<string, PendingLoginCode>();
   private readonly signupCodesByMobile = new Map<string, PendingSignupCode>();
 
@@ -140,6 +148,7 @@ export class UserService {
     private readonly appSettingsService: AppSettingsService,
     private readonly userCaptchaService: UserCaptchaService,
     private readonly fileService: FileService,
+    private readonly userSubscriptionService: UserSubscriptionService,
   ) {}
 
   async findActiveStaffUserIds(): Promise<string[]> {
@@ -228,24 +237,13 @@ export class UserService {
     });
 
     const normalizedIdentity = normalizeAuthIdentityForSubmit(identity);
-    const isEmailIdentity = this.looksLikeEmail(normalizedIdentity);
-    const userEmail = user.profile?.email?.trim().toLowerCase();
-    const shouldSendEmail = Boolean(isEmailIdentity && userEmail);
-
-    if (shouldSendEmail) {
-      await this.emailService.sendLoginCodeEmail({
-        to: userEmail,
-        code,
-        expiresInMinutes: this.LOGIN_CODE_TTL_MINUTES,
-      });
-    }
 
     const isProduction = process.env.NODE_ENV === "production";
     const message = isProduction
       ? "Login code sent."
       : `Development login code: ${code}`;
 
-    if (!isProduction && !shouldSendEmail) {
+    if (!isProduction) {
       // TODO: replace this with the SMS provider integration for phone-based login.
       console.log(`[auth] Login code for ${normalizedIdentity}: ${code}`);
     }
@@ -287,48 +285,267 @@ export class UserService {
       return genericResponse;
     }
 
-    const resetToken = randomBytes(32).toString("base64url");
-    const resetTokenHash = this.hashPasswordResetToken(resetToken);
-    const resetTokenTtlMinutes = await this.getPasswordResetTokenTtlMinutes();
+    this.throwIfOutboundEmailCooldownActive(
+      user.authentication.lastPasswordResetEmailSentAt,
+    );
+
+    const resetCode = this.generateLoginCode();
+    const resetCodeHash = this.hashPasswordResetOtp(resetCode);
+    const resetCodeTtlMinutes = await this.getPasswordResetTokenTtlMinutes();
+
+    const sentAt = new Date();
 
     await this.userModel.updateOne(
       { _id: user._id },
       {
         $set: {
-          "authentication.passwordResetToken.hash": resetTokenHash,
-          "authentication.passwordResetToken.createdAt": new Date(),
+          "authentication.passwordResetToken.hash": resetCodeHash,
+          "authentication.passwordResetToken.createdAt": sentAt,
+          "authentication.passwordResetToken.attempts": 0,
+          "authentication.lastPasswordResetEmailSentAt": sentAt,
         },
       },
     );
 
-    await this.emailService.sendPasswordResetEmail({
-      to: recipientEmail,
-      resetLink: this.buildPasswordResetLink(resetToken),
-      expiresInMinutes: resetTokenTtlMinutes,
-    });
+    this.dispatchOutboundEmail(
+      async () => {
+        await this.emailService.sendPasswordResetEmail({
+          to: recipientEmail,
+          resetCode,
+          expiresInMinutes: resetCodeTtlMinutes,
+        });
+      },
+      `password-reset:${recipientEmail}`,
+    );
+
+    if (process.env.NODE_ENV !== "production") {
+      console.log(
+        `[auth] Password reset code for ${recipientEmail}: ${resetCode}`,
+      );
+    }
 
     return genericResponse;
   }
 
+  async activateAccount(token: string): Promise<UserPasswordResetGqlResponse> {
+    const normalizedToken = this.normalizeOptionalText(token);
+    if (!normalizedToken) {
+      throw new InvalidAccountActivationTokenException();
+    }
+
+    const tokenHash = this.hashAccountActivationToken(normalizedToken);
+    const oldestValidCreatedAt = new Date(
+      Date.now() - this.ACCOUNT_ACTIVATION_TTL_MS,
+    );
+
+    const user = await this.userModel
+      .findOne({
+        "authentication.accountActivationToken.hash": tokenHash,
+        $or: [
+          { "audit.deletedAt": null },
+          { "audit.deletedAt": { $exists: false } },
+        ],
+      })
+      .exec();
+
+    if (!user?.authentication.accountActivationToken?.createdAt) {
+      throw new InvalidAccountActivationTokenException();
+    }
+
+    if (this.isEmailVerified(user)) {
+      return {
+        success: true,
+        message: "Email is already verified.",
+      };
+    }
+
+    const tokenCreatedAt = user.authentication.accountActivationToken.createdAt;
+    if (tokenCreatedAt < oldestValidCreatedAt) {
+      await this.clearAccountActivationToken(user._id);
+      throw new InvalidAccountActivationTokenException();
+    }
+
+    const verifiedAt = new Date();
+
+    await this.userModel.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          "verification.emailVerifiedAt": verifiedAt,
+        },
+        $unset: {
+          "authentication.accountActivationToken": "",
+          "authentication.emailActivatedAt": "",
+          "verification.email": "",
+        },
+      },
+    );
+
+    await this.publishVerificationStatusUpdate(user._id, {
+      emailVerifiedAt: verifiedAt,
+      mobileVerifiedAt: this.resolveMobileVerifiedAt(user),
+    });
+
+    return {
+      success: true,
+      message: "Email verified successfully.",
+    };
+  }
+
+  async requestEmailVerification(
+    userId: Types.ObjectId,
+  ): Promise<UserPasswordResetGqlResponse> {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+
+    const recipientEmail = this.normalizeOptionalText(user.profile?.email);
+    if (!recipientEmail || !this.looksLikeEmail(recipientEmail)) {
+      throw new BadRequestException("A valid email address is required");
+    }
+
+    if (this.isEmailVerified(user)) {
+      return {
+        success: true,
+        message: "Email is already verified.",
+      };
+    }
+
+    this.throwIfOutboundEmailCooldownActive(
+      user.verification?.lastEmailVerificationSentAt,
+    );
+
+    const userFirstName =
+      this.normalizeOptionalText(user.profile?.firstName) || "کاربر عزیز";
+
+    const verificationToken =
+      await this.issueAccountActivationToken(userId, {
+        markVerificationEmailSent: true,
+      });
+    const verificationUrl = `${this.resolveAppBaseUrl()}/activate?token=${encodeURIComponent(verificationToken)}`;
+
+    this.dispatchOutboundEmail(
+      async () => {
+        await this.emailService.sendVerifyEmail({
+          to: recipientEmail,
+          userFirstName,
+          verificationUrl,
+        });
+      },
+      `verify-email:${recipientEmail}`,
+    );
+
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`[auth] Verification email requested for ${recipientEmail}`);
+    }
+
+    return {
+      success: true,
+      message: "Verification email sent.",
+    };
+  }
+
+  resolveUserVerification(user: UserDocument): {
+    emailVerifiedAt?: Date;
+    mobileVerifiedAt?: Date;
+  } {
+    const emailVerifiedAt = this.resolveEmailVerifiedAt(user);
+    const mobileVerifiedAt = this.resolveMobileVerifiedAt(user);
+
+    return {
+      ...(emailVerifiedAt ? { emailVerifiedAt } : {}),
+      ...(mobileVerifiedAt ? { mobileVerifiedAt } : {}),
+    };
+  }
+
+  private resolveEmailVerifiedAt(user: UserDocument): Date | undefined {
+    if (user.verification?.emailVerifiedAt) {
+      return user.verification.emailVerifiedAt;
+    }
+
+    const legacyActivatedAt = (
+      user.authentication as { emailActivatedAt?: Date }
+    ).emailActivatedAt;
+    if (legacyActivatedAt) {
+      return legacyActivatedAt;
+    }
+
+    const legacyEmailVerified = (
+      user.verification as { email?: boolean } | undefined
+    )?.email;
+    if (legacyEmailVerified === true) {
+      return user.audit?.updatedAt ?? user.audit?.createdAt;
+    }
+
+    return undefined;
+  }
+
+  private resolveMobileVerifiedAt(user: UserDocument): Date | undefined {
+    if (user.verification?.mobileVerifiedAt) {
+      return user.verification.mobileVerifiedAt;
+    }
+
+    const legacyMobileVerified = (
+      user.verification as { mobile?: boolean } | undefined
+    )?.mobile;
+    if (legacyMobileVerified === true) {
+      return user.audit?.updatedAt ?? user.audit?.createdAt;
+    }
+
+    return undefined;
+  }
+
+  private isEmailVerified(user: UserDocument): boolean {
+    return Boolean(this.resolveEmailVerifiedAt(user));
+  }
+
+  private async publishVerificationStatusUpdate(
+    userId: Types.ObjectId,
+    verification: {
+      emailVerifiedAt?: Date | null;
+      mobileVerifiedAt?: Date | null;
+    },
+  ): Promise<void> {
+    try {
+      await this.userSubscriptionService.publishToUser({
+        userId: userId.toString(),
+        updateType: GeneralSubscriptionUpdateType.VERIFICATION_STATUS,
+        payload: buildVerificationStatusSubscriptionPayload(verification),
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.warn(
+        `Failed to publish verification status update for user ${userId.toString()}: ${message}`,
+      );
+    }
+  }
+
   async resetPassword(
-    resetLink: UserResetPasswordGqlInput["resetLink"],
+    identity: UserResetPasswordGqlInput["identity"],
+    otp: UserResetPasswordGqlInput["otp"],
     newPassword: UserResetPasswordGqlInput["newPassword"],
   ): Promise<UserPasswordResetGqlResponse> {
-    const token = this.extractPasswordResetToken(resetLink);
-    if (!token) {
-      throw new InvalidPasswordResetTokenException();
+    const normalizedIdentity = this.normalizeOptionalText(identity);
+    if (!normalizedIdentity) {
+      throw new IdentityRequiredException();
     }
 
     const password = this.normalizeRequiredText(newPassword, "Password");
     await this.userSecurityService.throwIfPasswordPolicyIsViolated(password);
 
-    const resetTokenTtlMinutes = await this.getPasswordResetTokenTtlMinutes();
+    const resetCode = otp.trim();
+    if (!/^\d{6}$/.test(resetCode)) {
+      throw new InvalidPasswordResetTokenException();
+    }
+
+    const resetCodeTtlMinutes = await this.getPasswordResetTokenTtlMinutes();
     const oldestValidCreatedAt = new Date(
-      Date.now() - resetTokenTtlMinutes * 60 * 1000,
+      Date.now() - resetCodeTtlMinutes * 60 * 1000,
     );
-    const resetTokenHash = this.hashPasswordResetToken(token);
+    const resetCodeHash = this.hashPasswordResetOtp(resetCode);
     const tokenOwner = await this.userModel.findOne({
-      "authentication.passwordResetToken.hash": resetTokenHash,
+      ...this.buildIdentityFilter(normalizedIdentity),
       status: UserStatus.ACTIVE,
       $or: [
         { "audit.deletedAt": null },
@@ -336,22 +553,20 @@ export class UserService {
       ],
     });
 
-    if (!tokenOwner) {
+    if (!tokenOwner?.authentication.passwordResetToken?.hash) {
       throw new InvalidPasswordResetTokenException();
     }
 
     const resetTokenCreatedAt =
       tokenOwner.authentication.passwordResetToken?.createdAt;
     if (!resetTokenCreatedAt || resetTokenCreatedAt < oldestValidCreatedAt) {
-      await this.userModel.updateOne(
-        { _id: tokenOwner._id },
-        {
-          $set: {
-            "authentication.passwordResetToken.hash": null,
-          },
-        },
-      );
+      await this.clearPasswordResetToken(tokenOwner._id);
       throw new ExpiredPasswordResetTokenException();
+    }
+
+    if (tokenOwner.authentication.passwordResetToken.hash !== resetCodeHash) {
+      await this.incrementPasswordResetOtpAttempts(tokenOwner._id);
+      throw new InvalidPasswordResetTokenException();
     }
 
     const passwordSalt = await bcrypt.genSalt(this.SALT_ROUNDS);
@@ -359,7 +574,7 @@ export class UserService {
     const user = await this.userModel.findOneAndUpdate(
       {
         _id: tokenOwner._id,
-        "authentication.passwordResetToken.hash": resetTokenHash,
+        "authentication.passwordResetToken.hash": resetCodeHash,
         status: UserStatus.ACTIVE,
         $or: [
           { "audit.deletedAt": null },
@@ -423,43 +638,6 @@ export class UserService {
     return {
       success: true,
       message,
-    };
-  }
-
-  async sendSampleEmail(
-    userId: Types.ObjectId,
-    to?: string,
-  ): Promise<UserRequestLoginCodeGqlResponse> {
-    const user = await this.findById(userId);
-    if (!user) {
-      throw new NotFoundException("User not found");
-    }
-
-    const recipientEmail = this.normalizeUsernameOrEmail(
-      to?.trim() || user.profile?.email?.trim() || "",
-    );
-
-    if (!recipientEmail || !this.looksLikeEmail(recipientEmail)) {
-      throw new BadRequestException(
-        "A valid recipient email is required to send a sample email",
-      );
-    }
-
-    const requestedBy =
-      user.profile?.firstName?.trim() ||
-      user.profile?.lastName?.trim() ||
-      user.username;
-    const sentAt = new Date().toISOString();
-
-    await this.emailService.sendSampleEmail({
-      to: recipientEmail,
-      requestedBy,
-      sentAtIso: sentAt,
-    });
-
-    return {
-      success: true,
-      message: `Sample email sent to ${recipientEmail}.`,
     };
   }
 
@@ -567,6 +745,8 @@ export class UserService {
     if (mobile) {
       this.signupCodesByMobile.delete(mobile);
     }
+
+    this.dispatchWelcomeEmailIfPossible(createdUser._id, profile);
 
     return this.createLoginSession(
       createdUser,
@@ -703,45 +883,50 @@ export class UserService {
     return {
       success: true,
       message:
-        "If an account matches the provided information, a password reset link will be sent.",
+        "If an account matches the provided information, a password reset code will be sent to the registered email.",
     };
   }
 
-  private buildPasswordResetLink(token: string): string {
-    const configuredResetUrl = `${this.resolveAppUrl()}/reset-password`;
-
-    const resetUrl = new URL(configuredResetUrl);
-    resetUrl.searchParams.set("token", token);
-    return resetUrl.toString();
+  private async clearPasswordResetToken(userId: Types.ObjectId): Promise<void> {
+    await this.userModel.updateOne(
+      { _id: userId },
+      {
+        $set: {
+          "authentication.passwordResetToken.hash": null,
+          "authentication.passwordResetToken.attempts": 0,
+        },
+      },
+    );
   }
 
-  private resolveAppUrl(): string {
-    return (env.APP_URL || `http://localhost:${env.PORT}`).replace(/\/+$/, "");
-  }
-
-  private extractPasswordResetToken(resetLink: string): string {
-    const trimmedResetLink = resetLink.trim();
-    if (!trimmedResetLink) {
-      return "";
+  private async incrementPasswordResetOtpAttempts(
+    userId: Types.ObjectId,
+  ): Promise<void> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user?.authentication.passwordResetToken?.hash) {
+      return;
     }
 
-    try {
-      const resetUrl = new URL(trimmedResetLink);
-      const tokenFromQuery =
-        resetUrl.searchParams.get("token") ||
-        resetUrl.searchParams.get("resetToken");
-      if (tokenFromQuery?.trim()) {
-        return tokenFromQuery.trim();
-      }
-    } catch {
-      // The input can be the raw token rather than a full URL.
+    const nextAttempts =
+      (user.authentication.passwordResetToken.attempts || 0) + 1;
+
+    if (nextAttempts >= this.MAX_PASSWORD_RESET_OTP_ATTEMPTS) {
+      await this.clearPasswordResetToken(userId);
+      return;
     }
 
-    return trimmedResetLink;
+    await this.userModel.updateOne(
+      { _id: userId },
+      {
+        $set: {
+          "authentication.passwordResetToken.attempts": nextAttempts,
+        },
+      },
+    );
   }
 
-  private hashPasswordResetToken(token: string): string {
-    return createHash("sha256").update(token).digest("hex");
+  private hashPasswordResetOtp(code: string): string {
+    return createHash("sha256").update(code.trim()).digest("hex");
   }
 
   private async getPasswordResetTokenTtlMinutes(): Promise<number> {
@@ -911,6 +1096,106 @@ export class UserService {
       return false;
     }
     return isValidEmail(value);
+  }
+
+  private throwIfOutboundEmailCooldownActive(lastSentAt?: Date): void {
+    if (!lastSentAt) {
+      return;
+    }
+
+    const elapsedMs = Date.now() - lastSentAt.getTime();
+    if (elapsedMs < EMAIL_SEND_COOLDOWN_MS) {
+      throw new EmailSendCooldownException();
+    }
+  }
+
+  /**
+   * Dispatches outbound email without blocking the API handler.
+   * Delivery failures are logged only and must not affect the HTTP/GraphQL response.
+   */
+  private dispatchOutboundEmail(
+    task: () => Promise<void>,
+    context: string,
+  ): void {
+    void task().catch((error: unknown) => {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.warn(`Outbound email failed (${context}): ${message}`);
+    });
+  }
+
+  private dispatchWelcomeEmailIfPossible(
+    userId: Types.ObjectId,
+    profile: {
+      email?: string;
+      firstName?: string;
+    },
+  ): void {
+    this.dispatchOutboundEmail(async () => {
+      const recipientEmail = this.normalizeOptionalText(profile.email);
+      if (!recipientEmail || !this.looksLikeEmail(recipientEmail)) {
+        return;
+      }
+
+      const userFirstName =
+        this.normalizeOptionalText(profile.firstName) || "کاربر عزیز";
+
+      const verificationToken = await this.issueAccountActivationToken(userId);
+      const activationUrl = `${this.resolveAppBaseUrl()}/activate?token=${encodeURIComponent(verificationToken)}`;
+
+      await this.emailService.sendWelcomeEmail({
+        to: recipientEmail,
+        userFirstName,
+        activationUrl,
+      });
+    }, `welcome:${profile.email ?? userId.toString()}`);
+  }
+
+  private async issueAccountActivationToken(
+    userId: Types.ObjectId,
+    options?: { markVerificationEmailSent?: boolean },
+  ): Promise<string> {
+    const token = randomBytes(32).toString("base64url");
+    const hash = this.hashAccountActivationToken(token);
+    const sentAt = new Date();
+
+    const $set: Record<string, unknown> = {
+      "authentication.accountActivationToken.hash": hash,
+      "authentication.accountActivationToken.createdAt": sentAt,
+    };
+
+    if (options?.markVerificationEmailSent) {
+      $set["verification.lastEmailVerificationSentAt"] = sentAt;
+    }
+
+    await this.userModel.updateOne({ _id: userId }, { $set });
+
+    return token;
+  }
+
+  private async clearAccountActivationToken(
+    userId: Types.ObjectId,
+  ): Promise<void> {
+    await this.userModel.updateOne(
+      { _id: userId },
+      {
+        $unset: {
+          "authentication.accountActivationToken": "",
+        },
+      },
+    );
+  }
+
+  private hashAccountActivationToken(token: string): string {
+    return createHash("sha256").update(token.trim()).digest("hex");
+  }
+
+  private resolveAppBaseUrl(): string {
+    const configuredUrl = env.APP_URL ?? env.BASE_URL;
+    if (!configuredUrl?.trim()) {
+      return "http://localhost:8080";
+    }
+
+    return configuredUrl.replace(/\/+$/, "");
   }
 
   private normalizePhoneNumber(value: string): string | undefined {
@@ -1118,6 +1403,8 @@ export class UserService {
       this.rethrowIfDuplicateIdentityKey(error);
     }
 
+    this.dispatchWelcomeEmailIfPossible(createdUser._id, createdUser.profile ?? {});
+
     return this.toUserMutationResponse(
       createdUser.toObject() as UserListRecord,
     );
@@ -1140,7 +1427,7 @@ export class UserService {
 
     await this.assertUpdateIdentityFieldsAreUnique(input);
 
-    const { passwordChanged, shouldRevokeSessions, update } =
+    const { passwordChanged, shouldRevokeSessions, update, verificationReset } =
       await this.buildUserUpdate(input, existingUser);
 
     if (!update.$set && !update.$unset) {
@@ -1168,6 +1455,17 @@ export class UserService {
 
     if (passwordChanged || shouldRevokeSessions) {
       await this.sessionService.revokeAllUserSessions(input.id);
+    }
+
+    if (
+      verificationReset.emailVerificationCleared ||
+      verificationReset.mobileVerificationCleared
+    ) {
+      const userDoc = updatedUser as UserDocument;
+      await this.publishVerificationStatusUpdate(input.id, {
+        emailVerifiedAt: this.resolveEmailVerifiedAt(userDoc) ?? null,
+        mobileVerifiedAt: this.resolveMobileVerifiedAt(userDoc) ?? null,
+      });
     }
 
     return this.toUserMutationResponse(updatedUser);
@@ -1467,11 +1765,19 @@ export class UserService {
   ): Promise<{
     passwordChanged: boolean;
     shouldRevokeSessions: boolean;
+    verificationReset: {
+      emailVerificationCleared: boolean;
+      mobileVerificationCleared: boolean;
+    };
     update: UserUpdateOperation;
   }> {
     const set: Record<string, unknown> = {};
     const unset: Record<string, 1> = {};
     let passwordChanged = false;
+    const verificationReset = {
+      emailVerificationCleared: false,
+      mobileVerificationCleared: false,
+    };
 
     if (this.hasOwnInputField(input, "username")) {
       const username = this.normalizeRequiredText(input.username, "Username");
@@ -1489,6 +1795,14 @@ export class UserService {
 
     if (input.profile) {
       await this.applyUserProfileUpdate(input.profile, set, unset);
+      Object.assign(
+        verificationReset,
+        this.applyVerificationResetOnContactChange(
+          input,
+          existingUser,
+          unset,
+        ),
+      );
     }
 
     if (input.preferences) {
@@ -1524,8 +1838,92 @@ export class UserService {
         input.status !== undefined &&
         existingUser.status === UserStatus.ACTIVE &&
         input.status !== UserStatus.ACTIVE,
+      verificationReset,
       update,
     };
+  }
+
+  private applyVerificationResetOnContactChange(
+    input: UserUpdateGqlInput,
+    existingUser: UserDocument,
+    unset: Record<string, 1>,
+  ): {
+    emailVerificationCleared: boolean;
+    mobileVerificationCleared: boolean;
+  } {
+    const result = {
+      emailVerificationCleared: false,
+      mobileVerificationCleared: false,
+    };
+
+    if (!input.profile) {
+      return result;
+    }
+
+    if (this.hasOwnInputField(input.profile, "email")) {
+      const nextEmail = this.resolveProfileEmailValueForComparison(
+        input.profile.email,
+      );
+      const currentEmail = this.normalizeOptionalText(
+        existingUser.profile?.email,
+      );
+
+      if (nextEmail !== currentEmail) {
+        unset["verification.emailVerifiedAt"] = 1;
+        unset["authentication.accountActivationToken"] = 1;
+        result.emailVerificationCleared = Boolean(
+          existingUser.verification?.emailVerifiedAt,
+        );
+      }
+    }
+
+    if (this.hasOwnInputField(input.profile, "phoneNumber")) {
+      const nextPhoneNumber = this.resolveProfilePhoneNumberValueForComparison(
+        input.profile.phoneNumber,
+      );
+      const currentPhoneNumber = this.normalizeOptionalText(
+        existingUser.profile?.phoneNumber,
+      );
+
+      if (nextPhoneNumber !== currentPhoneNumber) {
+        unset["verification.mobileVerifiedAt"] = 1;
+        result.mobileVerificationCleared = Boolean(
+          existingUser.verification?.mobileVerifiedAt,
+        );
+      }
+    }
+
+    return result;
+  }
+
+  private resolveProfileEmailValueForComparison(
+    rawValue: string | null | undefined,
+  ): string | undefined {
+    if (rawValue === null || rawValue === undefined) {
+      return undefined;
+    }
+
+    if (typeof rawValue !== "string") {
+      return undefined;
+    }
+
+    this.throwIfInvalidEmail(rawValue);
+    return this.normalizeUsernameOrEmail(rawValue) || undefined;
+  }
+
+  private resolveProfilePhoneNumberValueForComparison(
+    rawValue: string | null | undefined,
+  ): string | undefined {
+    if (rawValue === null || rawValue === undefined) {
+      return undefined;
+    }
+
+    if (typeof rawValue !== "string") {
+      return undefined;
+    }
+
+    this.throwIfInvalidMobilePhone(rawValue);
+    return this.normalizePhoneNumber(rawValue);
   }
 
   private async applyUserProfileUpdate(

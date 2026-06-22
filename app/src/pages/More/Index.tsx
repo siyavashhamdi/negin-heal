@@ -235,64 +235,69 @@ const More = (): ReactElement => {
         <span>دسترسی سریع به امکانات عمومی پنل</span>
       </div>
 
-      <div className={styles.themeCard} {...opaqueShellProps}>
-        <div className={styles.themeIcon}>
-          {isDarkMode ? <DarkModeRoundedIcon /> : <LightModeRoundedIcon />}
-        </div>
-        <div>
-          <strong>حالت نمایش</strong>
-          <small>{isDarkMode ? "حالت تاریک فعال است" : "حالت روشن فعال است"}</small>
-        </div>
-        <button
-          type="button"
-          className={`${styles.switchButton} ${isDarkMode ? styles.switchButtonActive : ""}`}
-          role="switch"
-          aria-checked={isDarkMode}
-          aria-label="تغییر حالت نمایش"
-          disabled={isUpdatingPreferences}
-          onClick={() => void handleThemeToggle()}
-        >
-          <span className={styles.switchTrack} aria-hidden="true">
-            <span className={styles.switchThumb}>
-              {isDarkMode ? <DarkModeRoundedIcon /> : <LightModeRoundedIcon />}
-            </span>
-          </span>
-        </button>
-      </div>
-
-      {isAuthenticated ? (
-        <section className={styles.notificationsSection} aria-label="تنظیمات اعلان‌ها" {...opaqueShellProps}>
-          <div className={styles.preferenceRow}>
-            <div className={styles.preferenceIcon}>
-              <NotificationsRoundedIcon />
-            </div>
-            <div className={styles.preferenceText}>
-              <strong>اعلان‌ها</strong>
-              <small>{notificationsEnabled ? "فعال" : "غیرفعال"}</small>
-            </div>
-            <button
-              type="button"
-              className={`${styles.switchButton} ${notificationsEnabled ? styles.switchButtonActive : ""}`}
-              role="switch"
-              aria-checked={notificationsEnabled}
-              aria-label={notificationsEnabled ? "غیرفعال کردن اعلان‌ها" : "فعال کردن اعلان‌ها"}
-              disabled={isUpdatingPreferences}
-              onClick={() => void handleNotificationsToggle()}
-            >
-              <span className={styles.switchTrack} aria-hidden="true">
-                <span className={styles.switchThumb}>
-                  <NotificationsRoundedIcon />
-                </span>
-              </span>
-            </button>
+      <div className={styles.pageBody}>
+        <div className={styles.contentStack}>
+          <div className={styles.themeCard} {...opaqueShellProps}>
+          <div className={styles.themeIcon}>
+            {isDarkMode ? <DarkModeRoundedIcon /> : <LightModeRoundedIcon />}
           </div>
-          <NotificationPermissionCallout notificationsEnabled={notificationsEnabled} />
-        </section>
-      ) : null}
+          <div>
+            <strong>حالت نمایش</strong>
+            <small>{isDarkMode ? "حالت تاریک فعال است" : "حالت روشن فعال است"}</small>
+          </div>
+          <button
+            type="button"
+            className={`${styles.switchButton} ${isDarkMode ? styles.switchButtonActive : ""}`}
+            role="switch"
+            aria-checked={isDarkMode}
+            aria-label="تغییر حالت نمایش"
+            disabled={isUpdatingPreferences}
+            onClick={() => void handleThemeToggle()}
+          >
+            <span className={styles.switchTrack} aria-hidden="true">
+              <span className={styles.switchThumb}>
+                {isDarkMode ? <DarkModeRoundedIcon /> : <LightModeRoundedIcon />}
+              </span>
+            </span>
+          </button>
+        </div>
 
-      <IosHomeScreenInstallPrompt />
+        {isAuthenticated ? (
+          <section className={styles.notificationsSection} aria-label="تنظیمات اعلان‌ها" {...opaqueShellProps}>
+            <div className={styles.preferenceRow}>
+              <div className={styles.preferenceIcon}>
+                <NotificationsRoundedIcon />
+              </div>
+              <div className={styles.preferenceText}>
+                <strong>اعلان‌ها</strong>
+                <small>{notificationsEnabled ? "فعال" : "غیرفعال"}</small>
+              </div>
+              <button
+                type="button"
+                className={`${styles.switchButton} ${notificationsEnabled ? styles.switchButtonActive : ""}`}
+                role="switch"
+                aria-checked={notificationsEnabled}
+                aria-label={notificationsEnabled ? "غیرفعال کردن اعلان‌ها" : "فعال کردن اعلان‌ها"}
+                disabled={isUpdatingPreferences}
+                onClick={() => void handleNotificationsToggle()}
+              >
+                <span className={styles.switchTrack} aria-hidden="true">
+                  <span className={styles.switchThumb}>
+                    <NotificationsRoundedIcon />
+                  </span>
+                </span>
+              </button>
+            </div>
+            <NotificationPermissionCallout notificationsEnabled={notificationsEnabled} />
+          </section>
+        ) : null}
+        </div>
 
-      <AndroidAppDownloadLink />
+        <div className={styles.installStack}>
+          <IosHomeScreenInstallPrompt />
+          <AndroidAppDownloadLink />
+        </div>
+      </div>
 
       <div className={styles.linkGrid}>
         {isSuperAdmin ? (

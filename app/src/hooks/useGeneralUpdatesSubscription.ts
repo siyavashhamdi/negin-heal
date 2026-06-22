@@ -30,12 +30,14 @@ interface UseGeneralUpdatesSubscriptionProps {
   readonly updateTypes?: readonly GeneralSubscriptionUpdateType[];
   readonly onNotification?: (event: GeneralUpdateEvent) => void;
   readonly onBadgeCounts?: (event: GeneralUpdateEvent) => void;
+  readonly onVerificationStatus?: (event: GeneralUpdateEvent) => void;
   readonly onAnyUpdate?: (event: GeneralUpdateEvent) => void;
 }
 
 interface SubscriptionCallbacks {
   readonly onNotification?: (event: GeneralUpdateEvent) => void;
   readonly onBadgeCounts?: (event: GeneralUpdateEvent) => void;
+  readonly onVerificationStatus?: (event: GeneralUpdateEvent) => void;
   readonly onAnyUpdate?: (event: GeneralUpdateEvent) => void;
 }
 
@@ -44,6 +46,7 @@ export const useGeneralUpdatesSubscription = ({
   updateTypes,
   onNotification,
   onBadgeCounts,
+  onVerificationStatus,
   onAnyUpdate,
 }: UseGeneralUpdatesSubscriptionProps): void => {
   const enabledRef = useRef(enabled);
@@ -54,13 +57,19 @@ export const useGeneralUpdatesSubscription = ({
   const callbacksRef = useRef<SubscriptionCallbacks>({
     onNotification,
     onBadgeCounts,
+    onVerificationStatus,
     onAnyUpdate,
   });
 
   useEffect(() => {
     enabledRef.current = enabled;
-    callbacksRef.current = { onNotification, onBadgeCounts, onAnyUpdate };
-  }, [enabled, onNotification, onBadgeCounts, onAnyUpdate]);
+    callbacksRef.current = {
+      onNotification,
+      onBadgeCounts,
+      onVerificationStatus,
+      onAnyUpdate,
+    };
+  }, [enabled, onNotification, onBadgeCounts, onVerificationStatus, onAnyUpdate]);
 
   const clearRestartTimer = useCallback(() => {
     if (restartTimerRef.current) {
@@ -121,6 +130,9 @@ export const useGeneralUpdatesSubscription = ({
           break;
         case GENERAL_SUBSCRIPTION_UPDATE_TYPES.BADGE_COUNTS:
           callbacks.onBadgeCounts?.(update);
+          break;
+        case GENERAL_SUBSCRIPTION_UPDATE_TYPES.VERIFICATION_STATUS:
+          callbacks.onVerificationStatus?.(update);
           break;
         default:
           break;

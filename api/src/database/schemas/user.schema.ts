@@ -28,6 +28,24 @@ export const UserPasswordResetTokenSchema = new MongooseSchema(
   {
     hash: { type: String },
     createdAt: { type: Date },
+    attempts: { type: Number, default: 0 },
+  },
+  { _id: false },
+);
+
+export const UserAccountActivationTokenSchema = new MongooseSchema(
+  {
+    hash: { type: String },
+    createdAt: { type: Date },
+  },
+  { _id: false },
+);
+
+export const UserVerificationSchema = new MongooseSchema(
+  {
+    emailVerifiedAt: { type: Date },
+    mobileVerifiedAt: { type: Date },
+    lastEmailVerificationSentAt: { type: Date },
   },
   { _id: false },
 );
@@ -40,6 +58,8 @@ export const UserAuthenticationSchema = new MongooseSchema(
     failedLoginAttempts: { type: Number, default: 0 },
     lockedUntil: { type: Date },
     passwordResetToken: { type: UserPasswordResetTokenSchema },
+    accountActivationToken: { type: UserAccountActivationTokenSchema },
+    lastPasswordResetEmailSentAt: { type: Date },
   },
   { _id: false },
 );
@@ -83,6 +103,12 @@ export const UserPreferencesSchema = new MongooseSchema(
 export type UserPasswordResetToken = {
   hash?: string | null;
   createdAt?: Date;
+  attempts?: number;
+};
+
+export type UserAccountActivationToken = {
+  hash?: string | null;
+  createdAt?: Date;
 };
 
 export type UserAuthentication = {
@@ -92,6 +118,14 @@ export type UserAuthentication = {
   failedLoginAttempts: number;
   lockedUntil?: Date;
   passwordResetToken?: UserPasswordResetToken;
+  accountActivationToken?: UserAccountActivationToken;
+  lastPasswordResetEmailSentAt?: Date;
+};
+
+export type UserVerification = {
+  emailVerifiedAt?: Date;
+  mobileVerifiedAt?: Date;
+  lastEmailVerificationSentAt?: Date;
 };
 
 export type UserProfile = {
@@ -132,6 +166,12 @@ export class User extends BaseIdTimestampableBlameableSchema {
   // Profile Fields (using high-level type)
   @Prop({ type: UserProfileSchema, default: {} })
   profile?: UserProfile;
+
+  @Prop({
+    type: UserVerificationSchema,
+    default: () => ({}),
+  })
+  verification: UserVerification;
 
   // Preferences Fields (using high-level type)
   @Prop({
@@ -200,6 +240,18 @@ UserSchema.index(
     name: "idx_auth_password_reset_token_hash",
     partialFilterExpression: {
       "authentication.passwordResetToken.hash": {
+        $exists: true,
+        $type: "string",
+      },
+    },
+  },
+);
+UserSchema.index(
+  { "authentication.accountActivationToken.hash": 1 },
+  {
+    name: "idx_auth_account_activation_token_hash",
+    partialFilterExpression: {
+      "authentication.accountActivationToken.hash": {
         $exists: true,
         $type: "string",
       },

@@ -1,6 +1,7 @@
 import { type ReactElement } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { ForgotPasswordForm } from "../Login/ForgotPasswordForm";
+import { ResetPasswordForm } from "../Login/ResetPassword";
 import {
   createProfileLoginVerifyState,
   isLoginNavState,
@@ -99,6 +100,26 @@ const ProfileForgotPassword = (): ReactElement => {
       embedded
       initialIdentity={initialIdentity}
       onBackToLogin={() => navigate(APP_SHELL_ROUTES.profileLogin, { replace: true })}
+      onPasswordResetRequested={(identity) =>
+        navigate(APP_SHELL_ROUTES.profileResetPassword, { state: identity })
+      }
+    />
+  );
+};
+
+const ProfileResetPassword = (): ReactElement => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  if (!isLoginNavState(location.state)) {
+    return <Navigate to={APP_SHELL_ROUTES.profileForgotPassword} replace />;
+  }
+
+  return (
+    <ResetPasswordForm
+      embedded
+      identity={location.state}
+      onBackToLogin={() => navigate(APP_SHELL_ROUTES.profileLogin, { replace: true })}
     />
   );
 };
@@ -110,6 +131,7 @@ export const ProfileAuthRoutes = (): ReactElement => (
     <Route path="login/verify" element={<ProfileLoginVerifyRedirect />} />
     <Route path="signup" element={<ProfileSignup />} />
     <Route path="forgot-password" element={<ProfileForgotPassword />} />
+    <Route path="reset-password" element={<ProfileResetPassword />} />
     <Route path="*" element={<Navigate to={APP_SHELL_ROUTES.profileLogin} replace />} />
   </Routes>
 );

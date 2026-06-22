@@ -28,6 +28,10 @@ export const USER_ME_QUERY = gql`
         notificationsEnabled
         theme
       }
+      verification {
+        emailVerifiedAt
+        mobileVerifiedAt
+      }
     }
   }
 `;

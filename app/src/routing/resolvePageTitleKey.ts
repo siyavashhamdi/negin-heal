@@ -14,12 +14,14 @@ const STATIC_ROUTE_TITLE_KEYS: Readonly<Record<string, string>> = {
   "/profile/login": "app.pageTitles.login",
   "/profile/signup": "app.pageTitles.signup",
   "/profile/forgot-password": "app.pageTitles.forgotPassword",
+  "/profile/reset-password": "app.pageTitles.resetPassword",
   "/support": "app.pageTitles.support",
   "/support/faq": "app.pageTitles.supportFaq",
   "/support/tickets": "app.pageTitles.supportTickets",
   "/users": "app.pageTitles.usersManagement",
   "/login": "app.pageTitles.login",
   "/reset-password": "app.pageTitles.resetPassword",
+  "/activate": "app.pageTitles.activateAccount",
   "/payment/zarinpal/callback": "app.pageTitles.paymentCallback",
 };
 

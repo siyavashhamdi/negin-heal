@@ -4,6 +4,8 @@ import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import PasswordRoundedIcon from "@mui/icons-material/PasswordRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import AlternateEmailIcon from "@mui/icons-material/AlternateEmail";
+import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
+import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import PersonIcon from "@mui/icons-material/Person";
 import PhoneIcon from "@mui/icons-material/Phone";
 import LockIcon from "@mui/icons-material/Lock";
@@ -12,6 +14,7 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import {
   Alert,
   Avatar,
+  Box,
   Button,
   CircularProgress,
   IconButton,
@@ -24,6 +27,7 @@ import {
   type ChangeEvent,
   type FormEvent,
   type ReactElement,
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -32,7 +36,14 @@ import { Link as RouterLink, Navigate, useLocation, useNavigate } from "react-ro
 import { useAuth } from "../../contexts/AuthContext";
 import { useMobileAppLayout } from "../../hooks/useMobileAppLayout";
 import { useMe, type UserMeGqlResponse } from "../../hooks/useMe";
-import { resolveMeUserDisplayName, resolveStoredUserDisplayName } from "../../utils/storedUser.util";
+import { subscribeGeneralUpdates } from "../../lib/general-updates-listeners";
+import { GENERAL_SUBSCRIPTION_UPDATE_TYPES } from "../../constants";
+import { isUserEmailVerified } from "../../constants/verification-status-subscription.constants";
+import { parseVerificationStatusSubscriptionPayload } from "../../utilities/verification-status-update.util";
+import {
+  resolveMeUserDisplayName,
+  resolveStoredUserDisplayName,
+} from "../../utils/storedUser.util";
 import { getProfileDisplayRoles, getUserRoleLabel } from "../../utils/userRoleLabels.util";
 import {
   sanitizeMobilePhoneInput,
@@ -49,12 +60,10 @@ import { isValidUsernameLength } from "../../utils/usernamePolicy.util";
 import { LoginRequiredState } from "../../shared/auth/LoginRequiredState";
 import { PasswordPolicyChecklist } from "../../shared/auth/PasswordPolicyChecklist";
 import { USER_PROFILE_UPDATE_MUTATION } from "../../graphql/mutations/userProfileUpdate.mutation";
+import { USER_REQUEST_EMAIL_VERIFICATION_MUTATION } from "../../graphql/mutations/userRequestEmailVerification.mutation";
 import EntityConfirmDialogShell from "../../shared/crud/EntityConfirmDialogShell";
 import EntityModalShell from "../../shared/crud/EntityModalShell";
-import {
-  getFileIdFromAccessUrl,
-  type FileAccessUrl,
-} from "../../utils/fileAccessUrl.util";
+import { getFileIdFromAccessUrl, type FileAccessUrl } from "../../utils/fileAccessUrl.util";
 import { uploadFile } from "../../utils/fileUpload.util";
 import {
   getUploadValidationErrorMessage,
@@ -65,7 +74,10 @@ import {
   FILE_UPLOAD_POLICY_MAX_SIZE_BYTES,
 } from "../../constants/fileUploadPolicies";
 import { hasFormChanges } from "../../utils/formChange.util";
-import { MULTILINE_TEXTAREA_MIN_ROWS, MULTILINE_TEXTAREA_MAX_ROWS } from "../../constants/multilineTextarea.constants";
+import {
+  MULTILINE_TEXTAREA_MIN_ROWS,
+  MULTILINE_TEXTAREA_MAX_ROWS,
+} from "../../constants/multilineTextarea.constants";
 import { arePasswordRulesPassed } from "../../utils/passwordPolicy.util";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { useSnackbar } from "../../hooks/useSnackbar";
@@ -111,6 +123,13 @@ type UserProfileUpdateMutationVariables = {
   };
 };
 
+type UserRequestEmailVerificationMutationResult = {
+  readonly userRequestEmailVerification: {
+    readonly success: boolean;
+    readonly message: string;
+  };
+};
+
 type ProfileEditForm = {
   username: string;
   firstName: string;
@@ -142,15 +161,11 @@ function optionalTextInput(value: string): string | null {
 
 function isProfileEditFormValid(
   form: ProfileEditForm,
-  options: { isEmailLocked: boolean; isPhoneNumberLocked: boolean },
+  options: { isEmailLocked: boolean; isPhoneNumberLocked: boolean }
 ): boolean {
   const username = form.username.trim();
 
-  if (
-    !username ||
-    !isValidUsernameLength(username) ||
-    !isLatinIdentityUsername(username)
-  ) {
+  if (!username || !isValidUsernameLength(username) || !isLatinIdentityUsername(username)) {
     return false;
   }
 
@@ -213,6 +228,10 @@ const AuthenticatedProfile = (): ReactElement => {
     UserProfileUpdateMutationResult,
     UserProfileUpdateMutationVariables
   >(USER_PROFILE_UPDATE_MUTATION);
+  const [requestEmailVerification, requestEmailVerificationResult] =
+    useMutationWithSnackbar<UserRequestEmailVerificationMutationResult>(
+      USER_REQUEST_EMAIL_VERIFICATION_MUTATION
+    );
 
   const displayName =
     isProfileLoading || !profileUser
@@ -220,13 +239,15 @@ const AuthenticatedProfile = (): ReactElement => {
       : resolveMeUserDisplayName(profileUser, "کاربر");
   const userInitial = displayName.trim().slice(0, 1) || "؟";
   const displayRoles = getProfileDisplayRoles(profileUser?.roles);
-  const isAvatarUpdating =
-    isAvatarUploading || isAvatarDeleting || updateProfileResult.loading;
+  const isAvatarUpdating = isAvatarUploading || isAvatarDeleting || updateProfileResult.loading;
   const hasAvatar = Boolean(avatarUrl);
   const isSavingProfile = updateProfileResult.loading;
   const isChangingPassword = updateProfileResult.loading;
   const isEmailLocked = Boolean(editProfileUser?.profile?.email?.trim());
   const isPhoneNumberLocked = Boolean(editProfileUser?.profile?.phoneNumber?.trim());
+  const hasProfileEmail = Boolean(editProfileUser?.profile?.email?.trim());
+  const isEmailVerified = isUserEmailVerified(editProfileUser?.verification);
+  const isRequestingEmailVerification = requestEmailVerificationResult.loading;
   const hasLockedContactField = isEmailLocked || isPhoneNumberLocked;
   const passwordRulesPassed = arePasswordRulesPassed(passwordForm.newPassword);
   const passwordsMatch =
@@ -250,6 +271,48 @@ const AuthenticatedProfile = (): ReactElement => {
   const canSubmitProfileEdit =
     isProfileEditFormValid(editForm, { isEmailLocked, isPhoneNumberLocked }) &&
     hasProfileEditChanges;
+
+  const handleLiveVerificationStatus = useCallback(
+    (verification: {
+      readonly emailVerifiedAt?: string | null;
+      readonly mobileVerifiedAt?: string | null;
+    }) => {
+      setEditProfileUser((previous) => {
+        if (!previous) {
+          return previous;
+        }
+
+        return {
+          ...previous,
+          verification,
+        };
+      });
+
+      if (isUserEmailVerified(verification)) {
+        showSuccess("ایمیل شما با موفقیت تأیید شد.");
+      }
+    },
+    [showSuccess],
+  );
+
+  useEffect(() => {
+    if (!isEditRoute || !editProfileUser) {
+      return undefined;
+    }
+
+    return subscribeGeneralUpdates((update) => {
+      if (update.updateType !== GENERAL_SUBSCRIPTION_UPDATE_TYPES.VERIFICATION_STATUS) {
+        return;
+      }
+
+      const verification = parseVerificationStatusSubscriptionPayload(update.payload);
+      if (!verification) {
+        return;
+      }
+
+      handleLiveVerificationStatus(verification);
+    });
+  }, [editProfileUser, handleLiveVerificationStatus, isEditRoute]);
 
   useEffect(() => {
     if (!isEditRoute) {
@@ -288,9 +351,7 @@ const AuthenticatedProfile = (): ReactElement => {
     return () => window.clearTimeout(timerId);
   }, [logout, logoutCountdown]);
 
-  const buildEditFormFromUser = (
-    meUser: UserMeGqlResponse | null,
-  ): ProfileEditForm => ({
+  const buildEditFormFromUser = (meUser: UserMeGqlResponse | null): ProfileEditForm => ({
     username: meUser?.username ?? "",
     firstName: meUser?.profile?.firstName ?? "",
     lastName: meUser?.profile?.lastName ?? "",
@@ -315,7 +376,7 @@ const AuthenticatedProfile = (): ReactElement => {
 
   const setEditField = <TField extends keyof ProfileEditForm>(
     field: TField,
-    value: ProfileEditForm[TField],
+    value: ProfileEditForm[TField]
   ): void => {
     setEditForm((prev) => ({ ...prev, [field]: value }));
   };
@@ -353,7 +414,7 @@ const AuthenticatedProfile = (): ReactElement => {
 
   const setPasswordField = <TField extends keyof PasswordChangeForm>(
     field: TField,
-    value: PasswordChangeForm[TField],
+    value: PasswordChangeForm[TField]
   ): void => {
     setPasswordForm((prev) => ({ ...prev, [field]: value }));
   };
@@ -444,6 +505,17 @@ const AuthenticatedProfile = (): ReactElement => {
     }
   };
 
+  const handleRequestEmailVerification = async (): Promise<void> => {
+    if (!hasProfileEmail || isEmailVerified || isRequestingEmailVerification) {
+      return;
+    }
+
+    const result = await requestEmailVerification().catch(() => null);
+    if (result?.data?.userRequestEmailVerification?.success) {
+      showSuccess("ایمیل تأیید برای شما ارسال شد. لطفاً صندوق ورودی و پوشه هرزنامه را بررسی کنید.");
+    }
+  };
+
   const handleSubmitEdit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
 
@@ -490,7 +562,7 @@ const AuthenticatedProfile = (): ReactElement => {
         return;
       }
       profileInput.phoneNumber = phoneValue
-        ? normalizeAuthIdentityMobileForSubmit(phoneValue) ?? null
+        ? (normalizeAuthIdentityMobileForSubmit(phoneValue) ?? null)
         : null;
     }
 
@@ -558,98 +630,108 @@ const AuthenticatedProfile = (): ReactElement => {
       <section className={styles.page}>
         <div className={styles.pageStack}>
           <div className={styles.hero} {...opaqueShellProps}>
-        <div className={styles.avatarWrap}>
-          <Avatar className={styles.avatar} src={avatarUrl ?? undefined} alt={displayName}>
-            {userInitial}
-          </Avatar>
-          <input
-            ref={avatarInputRef}
-            className={styles.avatarInput}
-            type="file"
-            accept="image/*"
-            onChange={handleAvatarChange}
-          />
-          {hasAvatar ? (
-            <AppTooltip title="حذف تصویر پروفایل">
-              <span className={styles.avatarActionTooltipAnchor}>
-                <IconButton
-                  className={styles.avatarDeleteButton}
-                  aria-label="حذف تصویر پروفایل"
-                  size="small"
-                  disabled={isAvatarUpdating}
-                  onClick={() => {
-                    void handleAvatarDelete();
-                  }}
-                >
-                  {isAvatarDeleting ? (
-                    <CircularProgress size={12} />
-                  ) : (
-                    <DeleteOutlineRoundedIcon fontSize="small" />
-                  )}
-                </IconButton>
-              </span>
-            </AppTooltip>
-          ) : (
-            <AppTooltip title="افزودن تصویر جدید">
-              <span className={styles.avatarActionTooltipAnchor}>
-                <IconButton
-                  className={styles.avatarAddNewButton}
-                  aria-label="افزودن تصویر جدید"
-                  size="small"
-                  disabled={isAvatarUpdating}
-                  onClick={handleAvatarButtonClick}
-                >
-                  {isAvatarUploading ? (
-                    <CircularProgress size={12} />
-                  ) : (
-                    <AddRoundedIcon fontSize="small" />
-                  )}
-                </IconButton>
-              </span>
-            </AppTooltip>
-          )}
-        </div>
-        <div>
-          <p className={styles.eyebrow}>پروفایل</p>
-          <h2>{displayName}</h2>
-          {displayRoles.length > 0 ? (
-            <div className={styles.roleBadges}>
-              {displayRoles.map((role) => (
-                <span key={role} className={styles.roleBadge}>
-                  {getUserRoleLabel(role)}
-                </span>
-              ))}
+            <div className={styles.avatarWrap}>
+              <Avatar className={styles.avatar} src={avatarUrl ?? undefined} alt={displayName}>
+                {userInitial}
+              </Avatar>
+              <input
+                ref={avatarInputRef}
+                className={styles.avatarInput}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+              />
+              {hasAvatar ? (
+                <AppTooltip title="حذف تصویر پروفایل">
+                  <span className={styles.avatarActionTooltipAnchor}>
+                    <IconButton
+                      className={styles.avatarDeleteButton}
+                      aria-label="حذف تصویر پروفایل"
+                      size="small"
+                      disabled={isAvatarUpdating}
+                      onClick={() => {
+                        void handleAvatarDelete();
+                      }}
+                    >
+                      {isAvatarDeleting ? (
+                        <CircularProgress size={12} />
+                      ) : (
+                        <DeleteOutlineRoundedIcon fontSize="small" />
+                      )}
+                    </IconButton>
+                  </span>
+                </AppTooltip>
+              ) : (
+                <AppTooltip title="افزودن تصویر جدید">
+                  <span className={styles.avatarActionTooltipAnchor}>
+                    <IconButton
+                      className={styles.avatarAddNewButton}
+                      aria-label="افزودن تصویر جدید"
+                      size="small"
+                      disabled={isAvatarUpdating}
+                      onClick={handleAvatarButtonClick}
+                    >
+                      {isAvatarUploading ? (
+                        <CircularProgress size={12} />
+                      ) : (
+                        <AddRoundedIcon fontSize="small" />
+                      )}
+                    </IconButton>
+                  </span>
+                </AppTooltip>
+              )}
             </div>
-          ) : null}
-        </div>
-      </div>
+            <div>
+              <p className={styles.eyebrow}>پروفایل</p>
+              <h2>{displayName}</h2>
+              {displayRoles.length > 0 ? (
+                <div className={styles.roleBadges}>
+                  {displayRoles.map((role) => (
+                    <span key={role} className={styles.roleBadge}>
+                      {getUserRoleLabel(role)}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          </div>
 
-      <div className={styles.cardGrid}>
-        <button type="button" className={styles.actionCard} {...opaqueShellProps} onClick={openEditDialog}>
-          <PersonRoundedIcon />
-          <span>
-            <strong>ویرایش اطلاعات کاربری</strong>
-            <small>نام، اطلاعات تماس و مشخصات پروفایل</small>
-          </span>
-        </button>
-        <button type="button" className={styles.actionCard} {...opaqueShellProps} onClick={openPasswordDialog}>
-          <PasswordRoundedIcon />
-          <span>
-            <strong>تغییر گذرواژه</strong>
-            <small>به‌روزرسانی گذرواژه حساب کاربری</small>
-          </span>
-        </button>
-      </div>
+          <div className={styles.cardGrid}>
+            <button
+              type="button"
+              className={styles.actionCard}
+              {...opaqueShellProps}
+              onClick={openEditDialog}
+            >
+              <PersonRoundedIcon />
+              <span>
+                <strong>ویرایش اطلاعات کاربری</strong>
+                <small>نام، اطلاعات تماس و مشخصات پروفایل</small>
+              </span>
+            </button>
+            <button
+              type="button"
+              className={styles.actionCard}
+              {...opaqueShellProps}
+              onClick={openPasswordDialog}
+            >
+              <PasswordRoundedIcon />
+              <span>
+                <strong>تغییر گذرواژه</strong>
+                <small>به‌روزرسانی گذرواژه حساب کاربری</small>
+              </span>
+            </button>
+          </div>
 
-      <Button
-        variant="outlined"
-        color="error"
-        className={styles.logoutButton}
-        startIcon={<LogoutRoundedIcon />}
-        onClick={logout}
-      >
-        خروج از حساب کاربری
-      </Button>
+          <Button
+            variant="outlined"
+            color="error"
+            className={styles.logoutButton}
+            startIcon={<LogoutRoundedIcon />}
+            onClick={logout}
+          >
+            خروج از حساب کاربری
+          </Button>
         </div>
       </section>
 
@@ -677,7 +759,8 @@ const AuthenticatedProfile = (): ReactElement => {
                 key: "submit",
                 label: isSavingProfile ? "در حال ذخیره..." : "ذخیره تغییرات",
                 type: "submit",
-                disabled: isSavingProfile || isEditMeLoading || !editProfileUser || !canSubmitProfileEdit,
+                disabled:
+                  isSavingProfile || isEditMeLoading || !editProfileUser || !canSubmitProfileEdit,
               },
             ]}
           />
@@ -697,113 +780,196 @@ const AuthenticatedProfile = (): ReactElement => {
             </Typography>
           </Stack>
         ) : editProfileUser ? (
-        <Stack spacing={2} className={styles.editProfileModalBody}>
-              <LoginAdornedTextField
-                label="نام کاربری"
-                value={editForm.username}
-                onChange={(event) =>
-                  setEditField("username", sanitizeAuthIdentityInput(event.target.value))
-                }
+          <Stack spacing={2} className={styles.editProfileModalBody}>
+            <LoginAdornedTextField
+              label="نام کاربری"
+              value={editForm.username}
+              onChange={(event) =>
+                setEditField("username", sanitizeAuthIdentityInput(event.target.value))
+              }
+              required
+              fullWidth
+              size="small"
+              autoComplete="username"
+              inputProps={latinFieldInputProps}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <PersonIcon className={loginFormStyles.inputIcon} />
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+              <TextField
+                label="نام"
+                value={editForm.firstName}
+                onChange={(event) => setEditField("firstName", event.target.value)}
                 required
                 fullWidth
                 size="small"
-                autoComplete="username"
-                inputProps={latinFieldInputProps}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <PersonIcon className={loginFormStyles.inputIcon} />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                <TextField
-                  label="نام"
-                  value={editForm.firstName}
-                  onChange={(event) => setEditField("firstName", event.target.value)}
-                  required
-                  fullWidth
-                  size="small"
-                  autoComplete="given-name"
-                />
-                <TextField
-                  label="نام خانوادگی"
-                  value={editForm.lastName}
-                  onChange={(event) => setEditField("lastName", event.target.value)}
-                  fullWidth
-                  size="small"
-                  autoComplete="family-name"
-                />
-              </Stack>
-              <LoginAdornedTextField
-                label="ایمیل"
-                value={editForm.email}
-                onChange={(event) =>
-                  setEditField("email", sanitizeLatinEmailInput(event.target.value))
-                }
-                fullWidth
-                size="small"
-                type="email"
-                autoComplete="email"
-                disabled={isEmailLocked}
-                inputProps={{ ...latinFieldInputProps, inputMode: "email" }}
-                helperText={isEmailLocked ? "برای تغییر ایمیل با پشتیبانی تماس بگیرید." : undefined}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <AlternateEmailIcon className={loginFormStyles.inputIcon} />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-              <LoginAdornedTextField
-                label="شماره موبایل"
-                value={editForm.phoneNumber}
-                onChange={(event) =>
-                  setEditField("phoneNumber", sanitizeMobilePhoneInput(event.target.value))
-                }
-                fullWidth
-                size="small"
-                autoComplete="tel"
-                disabled={isPhoneNumberLocked}
-                inputProps={{ ...latinFieldInputProps, inputMode: "tel" }}
-                error={phoneNumberInvalid}
-                helperText={
-                  isPhoneNumberLocked
-                    ? "برای تغییر شماره موبایل با پشتیبانی تماس بگیرید."
-                    : phoneNumberInvalid
-                      ? "شماره موبایل وارد شده معتبر نیست."
-                      : undefined
-                }
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <PhoneIcon className={loginFormStyles.inputIcon} />
-                    </InputAdornment>
-                  ),
-                }}
+                autoComplete="given-name"
               />
               <TextField
-                label="بیوگرافی"
-                value={editForm.bio}
-                onChange={(event) => setEditField("bio", event.target.value)}
+                label="نام خانوادگی"
+                value={editForm.lastName}
+                onChange={(event) => setEditField("lastName", event.target.value)}
                 fullWidth
                 size="small"
-                multiline
-                minRows={MULTILINE_TEXTAREA_MIN_ROWS}
-                maxRows={MULTILINE_TEXTAREA_MAX_ROWS}
+                autoComplete="family-name"
               />
-              {hasLockedContactField ? (
-                <Alert severity="info">
-                  برای تغییر ایمیل یا شماره موبایل ثبت‌شده، لطفا از طریق{" "}
-                  <RouterLink to="/support/tickets" className={styles.supportLink}>
-                    تیکت پشتیبانی
-                  </RouterLink>{" "}
-                  درخواست خود را ارسال کنید.
-                </Alert>
-              ) : null}
             </Stack>
+            <LoginAdornedTextField
+              label="ایمیل"
+              value={editForm.email}
+              onChange={(event) =>
+                setEditField("email", sanitizeLatinEmailInput(event.target.value))
+              }
+              fullWidth
+              size="small"
+              type="email"
+              autoComplete="email"
+              disabled={isEmailLocked}
+              inputProps={{ ...latinFieldInputProps, inputMode: "email" }}
+              helperText={
+                hasProfileEmail && isEmailVerified ? (
+                  <Box
+                    component="span"
+                    sx={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 0.5,
+                      color: "success.main",
+                      fontSize: "0.75rem",
+                      lineHeight: 1,
+                    }}
+                  >
+                    <CheckCircleOutlineRoundedIcon
+                      sx={{ fontSize: "1em", flexShrink: 0, display: "block" }}
+                    />
+                    <Box component="span" sx={{ lineHeight: 1 }}>
+                      ایمیل شما تأیید شده است.
+                    </Box>
+                  </Box>
+                ) : hasProfileEmail && !isEmailVerified ? (
+                  <Box
+                    component="span"
+                    sx={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 0.5,
+                      flexWrap: "nowrap",
+                      color: "warning.main",
+                      fontSize: "0.75rem",
+                      lineHeight: 1,
+                    }}
+                  >
+                    <WarningAmberRoundedIcon
+                      sx={{ fontSize: "1em", flexShrink: 0, display: "block" }}
+                    />
+                    <Box component="span" sx={{ lineHeight: 1 }}>
+                      ایمیل تایید نشده است
+                    </Box>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      color="warning"
+                      sx={{
+                        minWidth: 0,
+                        minHeight: 0,
+                        height: "auto",
+                        py: 0.25,
+                        px: 1,
+                        lineHeight: 1.2,
+                        fontSize: "0.75rem",
+                        whiteSpace: "nowrap",
+                        borderRadius: 1.5,
+                        mr: 1,
+                        boxShadow: "none",
+                        "&:hover": {
+                          boxShadow: "none",
+                        },
+                        "&.MuiButton-sizeSmall": {
+                          minHeight: 0,
+                        },
+                      }}
+                      onClick={() => void handleRequestEmailVerification()}
+                      disabled={isRequestingEmailVerification}
+                    >
+                      {isRequestingEmailVerification ? "در حال ارسال..." : "ارسال ایمیل تأیید"}
+                    </Button>
+                  </Box>
+                ) : isEmailLocked ? (
+                  "برای تغییر ایمیل با پشتیبانی تماس بگیرید."
+                ) : undefined
+              }
+              FormHelperTextProps={
+                hasProfileEmail
+                  ? {
+                    sx: {
+                      color: isEmailVerified ? "success.main" : "warning.main",
+                      display: "flex",
+                      alignItems: "center",
+                      lineHeight: 1,
+                    },
+                  }
+                  : undefined
+              }
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <AlternateEmailIcon className={loginFormStyles.inputIcon} />
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <LoginAdornedTextField
+              label="شماره موبایل"
+              value={editForm.phoneNumber}
+              onChange={(event) =>
+                setEditField("phoneNumber", sanitizeMobilePhoneInput(event.target.value))
+              }
+              fullWidth
+              size="small"
+              autoComplete="tel"
+              disabled={isPhoneNumberLocked}
+              inputProps={{ ...latinFieldInputProps, inputMode: "tel" }}
+              error={phoneNumberInvalid}
+              helperText={
+                isPhoneNumberLocked
+                  ? "برای تغییر شماره موبایل با پشتیبانی تماس بگیرید."
+                  : phoneNumberInvalid
+                    ? "شماره موبایل وارد شده معتبر نیست."
+                    : undefined
+              }
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <PhoneIcon className={loginFormStyles.inputIcon} />
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <TextField
+              label="بیوگرافی"
+              value={editForm.bio}
+              onChange={(event) => setEditField("bio", event.target.value)}
+              fullWidth
+              size="small"
+              multiline
+              minRows={MULTILINE_TEXTAREA_MIN_ROWS}
+              maxRows={MULTILINE_TEXTAREA_MAX_ROWS}
+            />
+            {hasLockedContactField ? (
+              <Alert severity="info">
+                برای تغییر ایمیل یا شماره موبایل ثبت‌شده، لطفا از طریق{" "}
+                <RouterLink to="/support/tickets" className={styles.supportLink}>
+                  تیکت پشتیبانی
+                </RouterLink>{" "}
+                درخواست خود را ارسال کنید.
+              </Alert>
+            ) : null}
+          </Stack>
         ) : null}
       </EntityModalShell>
 
@@ -838,89 +1004,89 @@ const AuthenticatedProfile = (): ReactElement => {
         }
       >
         <Stack spacing={2} className={styles.editProfileModalBody}>
-              <LoginAdornedTextField
-                fullWidth
-                label="گذرواژه فعلی"
-                type={showPassword ? "text" : "password"}
-                value={passwordForm.currentPassword}
-                onChange={(event) => setPasswordField("currentPassword", event.target.value)}
-                required
-                autoComplete="current-password"
-                endAdornmentOnlyWhenLabelShrunk
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LockIcon className={loginFormStyles.inputIcon} />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        aria-label="نمایش یا پنهان‌سازی گذرواژه"
-                        onClick={() => setShowPassword((previous) => !previous)}
-                        edge="end"
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-                disabled={isChangingPassword}
-              />
-              <LoginAdornedTextField
-                fullWidth
-                label="گذرواژه جدید"
-                type={showPassword ? "text" : "password"}
-                value={passwordForm.newPassword}
-                onChange={(event) => setPasswordField("newPassword", event.target.value)}
-                required
-                autoComplete="new-password"
-                endAdornmentOnlyWhenLabelShrunk
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LockIcon className={loginFormStyles.inputIcon} />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        aria-label="نمایش یا پنهان‌سازی گذرواژه"
-                        onClick={() => setShowPassword((previous) => !previous)}
-                        edge="end"
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-                disabled={isChangingPassword}
-              />
-              <PasswordPolicyChecklist password={passwordForm.newPassword} />
-              <LoginAdornedTextField
-                fullWidth
-                label="تکرار گذرواژه جدید"
-                type={showPassword ? "text" : "password"}
-                value={passwordForm.confirmPassword}
-                onChange={(event) => setPasswordField("confirmPassword", event.target.value)}
-                required
-                autoComplete="new-password"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LockIcon className={loginFormStyles.inputIcon} />
-                    </InputAdornment>
-                  ),
-                }}
-                disabled={isChangingPassword}
-                error={Boolean(passwordForm.confirmPassword) && !passwordsMatch}
-                helperText={
-                  passwordForm.confirmPassword && !passwordsMatch
-                    ? "گذرواژه جدید و تکرار آن یکسان نیستند."
-                    : undefined
-                }
-              />
-            </Stack>
+          <LoginAdornedTextField
+            fullWidth
+            label="گذرواژه فعلی"
+            type={showPassword ? "text" : "password"}
+            value={passwordForm.currentPassword}
+            onChange={(event) => setPasswordField("currentPassword", event.target.value)}
+            required
+            autoComplete="current-password"
+            endAdornmentOnlyWhenLabelShrunk
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LockIcon className={loginFormStyles.inputIcon} />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="نمایش یا پنهان‌سازی گذرواژه"
+                    onClick={() => setShowPassword((previous) => !previous)}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+            disabled={isChangingPassword}
+          />
+          <LoginAdornedTextField
+            fullWidth
+            label="گذرواژه جدید"
+            type={showPassword ? "text" : "password"}
+            value={passwordForm.newPassword}
+            onChange={(event) => setPasswordField("newPassword", event.target.value)}
+            required
+            autoComplete="new-password"
+            endAdornmentOnlyWhenLabelShrunk
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LockIcon className={loginFormStyles.inputIcon} />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="نمایش یا پنهان‌سازی گذرواژه"
+                    onClick={() => setShowPassword((previous) => !previous)}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+            disabled={isChangingPassword}
+          />
+          <PasswordPolicyChecklist password={passwordForm.newPassword} />
+          <LoginAdornedTextField
+            fullWidth
+            label="تکرار گذرواژه جدید"
+            type={showPassword ? "text" : "password"}
+            value={passwordForm.confirmPassword}
+            onChange={(event) => setPasswordField("confirmPassword", event.target.value)}
+            required
+            autoComplete="new-password"
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LockIcon className={loginFormStyles.inputIcon} />
+                </InputAdornment>
+              ),
+            }}
+            disabled={isChangingPassword}
+            error={Boolean(passwordForm.confirmPassword) && !passwordsMatch}
+            helperText={
+              passwordForm.confirmPassword && !passwordsMatch
+                ? "گذرواژه جدید و تکرار آن یکسان نیستند."
+                : undefined
+            }
+          />
+        </Stack>
       </EntityModalShell>
 
       <EntityConfirmDialogShell
@@ -941,8 +1107,8 @@ const AuthenticatedProfile = (): ReactElement => {
         }
       >
         <Alert severity="success">
-          گذرواژه با موفقیت به‌روزرسانی شد. برای ادامه، باید دوباره وارد حساب شوید.
-          خروج خودکار تا {logoutCountdown ?? 0} ثانیه دیگر انجام می‌شود.
+          گذرواژه با موفقیت به‌روزرسانی شد. برای ادامه، باید دوباره وارد حساب شوید. خروج خودکار تا{" "}
+          {logoutCountdown ?? 0} ثانیه دیگر انجام می‌شود.
         </Alert>
       </EntityConfirmDialogShell>
     </>

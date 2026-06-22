@@ -8,6 +8,7 @@ type EmailTemplateOptions = {
 
 export class EmailTemplate<TInputs extends EmailTemplateInputs> {
   private static readonly PLACEHOLDER_REGEX = /@@@<([A-Z0-9_]+)>@@@/g;
+
   private readonly normalizedInputs: Record<string, string>;
 
   constructor(
@@ -26,15 +27,50 @@ export class EmailTemplate<TInputs extends EmailTemplateInputs> {
     }, {});
   }
 
+  static extractPlaceholders(template: string): string[] {
+    const placeholders = new Set<string>();
+
+    for (const match of template.matchAll(EmailTemplate.PLACEHOLDER_REGEX)) {
+      const key = match[1]?.trim();
+      if (key) {
+        placeholders.add(key);
+      }
+    }
+
+    return [...placeholders];
+  }
+
+  static findUnresolvedPlaceholders(rendered: string): string[] {
+    return EmailTemplate.extractPlaceholders(rendered);
+  }
+
   render(): string {
-    return this.template.replace(
-      EmailTemplate.PLACEHOLDER_REGEX,
-      (placeholder, key: string) => {
-        return Object.prototype.hasOwnProperty.call(this.normalizedInputs, key)
-          ? this.normalizedInputs[key]
-          : placeholder;
-      },
+    const requiredPlaceholders = EmailTemplate.extractPlaceholders(this.template);
+    const missingInputs = requiredPlaceholders.filter(
+      (key) =>
+        !Object.prototype.hasOwnProperty.call(this.normalizedInputs, key),
     );
+
+    if (missingInputs.length > 0) {
+      throw new Error(
+        `Missing email template inputs: ${missingInputs.join(", ")}`,
+      );
+    }
+
+    const rendered = this.template.replace(
+      EmailTemplate.PLACEHOLDER_REGEX,
+      (_placeholder, key: string) => this.normalizedInputs[key],
+    );
+
+    const unresolvedPlaceholders =
+      EmailTemplate.findUnresolvedPlaceholders(rendered);
+    if (unresolvedPlaceholders.length > 0) {
+      throw new Error(
+        `Unresolved email template placeholders: ${unresolvedPlaceholders.join(", ")}`,
+      );
+    }
+
+    return rendered;
   }
 
   private stringify(value: EmailTemplatePrimitive): string {

@@ -6,8 +6,8 @@ export type ScalarNumberFieldConfig = {
 
 export const SCALAR_NUMBER_FIELD_CONFIG: Record<string, ScalarNumberFieldConfig> = {
   PASSWORD_RESET_TOKEN_TTL_MINUTES: {
-    label: "مدت اعتبار لینک بازیابی (دقیقه)",
-    helperText: "پس از این مدت، لینک بازیابی گذرواژه منقضی می‌شود.",
+    label: "مدت اعتبار کد بازیابی (دقیقه)",
+    helperText: "پس از این مدت، کد بازیابی گذرواژه منقضی می‌شود.",
     min: 1,
   },
   TICKET_AUTO_CLOSE_AFTER_ANSWERED_HOURS: {

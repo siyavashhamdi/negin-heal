@@ -1,6 +1,7 @@
 export const APP_SHELL_ROUTES = {
   login: "/login",
   resetPassword: "/reset-password",
+  activateAccount: "/activate",
   dashboard: "/dashboard",
   courses: "/courses",
   courseDetail: "/courses/:courseId",
@@ -18,6 +19,7 @@ export const APP_SHELL_ROUTES = {
   profileLogin: "/profile/login",
   profileSignup: "/profile/signup",
   profileForgotPassword: "/profile/forgot-password",
+  profileResetPassword: "/profile/reset-password",
   support: "/support",
   supportFaq: "/support/faq",
   supportTickets: "/support/tickets",
@@ -28,4 +30,5 @@ export const APP_SHELL_ROUTES = {
 export const isProfileAuthRoute = (pathname: string): boolean =>
   pathname === APP_SHELL_ROUTES.profileLogin ||
   pathname === APP_SHELL_ROUTES.profileSignup ||
-  pathname === APP_SHELL_ROUTES.profileForgotPassword;
+  pathname === APP_SHELL_ROUTES.profileForgotPassword ||
+  pathname === APP_SHELL_ROUTES.profileResetPassword;

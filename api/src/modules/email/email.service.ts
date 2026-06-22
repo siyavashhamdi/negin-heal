@@ -3,8 +3,24 @@ import * as nodemailer from "nodemailer";
 import { Injectable, Logger } from "@nestjs/common";
 
 import { APP_SETTING_KEY } from "../../constants";
+import { env } from "../../config/env";
 import { AppSettingsService } from "../app-settings";
 import { EmailTemplate, EmailTemplateInputs } from "./email-template";
+import {
+  PASSWORD_RESET_EMAIL_HTML,
+  PASSWORD_RESET_EMAIL_SUBJECT,
+  isLegacyPasswordResetEmailTemplate,
+} from "./password-reset-email.template";
+import {
+  WELCOME_EMAIL_HTML,
+  WELCOME_EMAIL_SUBJECT,
+  isLegacyWelcomeEmailTemplate,
+} from "./welcome-email.template";
+import {
+  VERIFY_EMAIL_HTML,
+  VERIFY_EMAIL_SUBJECT,
+  isLegacyVerifyEmailTemplate,
+} from "./verify-email.template";
 
 type StoredEmailSmtpConfig = {
   host?: unknown;
@@ -33,42 +49,42 @@ type SendEmailInput = {
   replyTo?: string;
 };
 
-type SendLoginCodeEmailInput = {
-  to: string;
-  code: string;
-  expiresInMinutes?: number;
-};
-
 type SendPasswordResetEmailInput = {
   to: string;
-  resetLink: string;
+  resetCode: string;
   expiresInMinutes?: number;
 };
 
-type SendSampleEmailInput = {
+type SendWelcomeEmailInput = {
   to: string;
-  requestedBy: string;
-  sentAtIso: string;
+  userFirstName: string;
+  activationUrl: string;
 };
 
-type LoginCodeTemplateInputs = {
+type SendVerifyEmailInput = {
+  to: string;
+  userFirstName: string;
+  verificationUrl: string;
+};
+
+type CommonEmailTemplateInputs = {
   APP_NAME: string;
-  LOGIN_CODE: string;
-  EXPIRES_IN_MINUTES: number;
+  APP_URL: string;
   SECURITY_TEAM_NAME: string;
 };
 
-type PasswordResetTemplateInputs = {
-  APP_NAME: string;
-  RESET_LINK: string;
-  EXPIRES_IN_MINUTES: number;
-  SECURITY_TEAM_NAME: string;
+type PasswordResetTemplateInputs = CommonEmailTemplateInputs & {
+  RESET_CODE: string;
 };
 
-type SampleTemplateInputs = {
-  APP_NAME: string;
-  REQUESTED_BY: string;
-  SENT_AT: string;
+type WelcomeTemplateInputs = CommonEmailTemplateInputs & {
+  USER_FIRST_NAME: string;
+  ACTIVATION_URL: string;
+};
+
+type VerifyEmailTemplateInputs = CommonEmailTemplateInputs & {
+  USER_FIRST_NAME: string;
+  VERIFICATION_URL: string;
 };
 
 type StoredEmailTemplateConfig = {
@@ -83,9 +99,9 @@ type RenderedEmailTemplate = {
 };
 
 const EMAIL_TEMPLATE_NAME = {
-  LOGIN_CODE: "LOGIN_CODE",
   PASSWORD_RESET: "PASSWORD_RESET",
-  SAMPLE: "SAMPLE",
+  WELCOME: "WELCOME",
+  VERIFY_EMAIL: "VERIFY_EMAIL",
 } as const;
 
 @Injectable()
@@ -112,38 +128,14 @@ export class EmailService {
     this.logger.debug(`Email sent to ${input.to}`);
   }
 
-  async sendLoginCodeEmail(input: SendLoginCodeEmailInput): Promise<void> {
-    const expiresInMinutes = input.expiresInMinutes ?? 5;
-
-    const template = await this.renderConfiguredEmailTemplate(
-      EMAIL_TEMPLATE_NAME.LOGIN_CODE,
-      {
-        APP_NAME: this.appName,
-        LOGIN_CODE: input.code,
-        EXPIRES_IN_MINUTES: expiresInMinutes,
-        SECURITY_TEAM_NAME: `${this.appName} Security Team`,
-      } satisfies LoginCodeTemplateInputs,
-    );
-
-    await this.sendEmail({
-      to: input.to,
-      subject: template.subject,
-      html: template.html,
-    });
-  }
-
   async sendPasswordResetEmail(
     input: SendPasswordResetEmailInput,
   ): Promise<void> {
-    const expiresInMinutes = input.expiresInMinutes ?? 30;
-
     const template = await this.renderConfiguredEmailTemplate(
       EMAIL_TEMPLATE_NAME.PASSWORD_RESET,
       {
-        APP_NAME: this.appName,
-        RESET_LINK: input.resetLink,
-        EXPIRES_IN_MINUTES: expiresInMinutes,
-        SECURITY_TEAM_NAME: `${this.appName} Security Team`,
+        ...this.buildCommonTemplateInputs(),
+        RESET_CODE: input.resetCode,
       } satisfies PasswordResetTemplateInputs,
     );
 
@@ -154,14 +146,31 @@ export class EmailService {
     });
   }
 
-  async sendSampleEmail(input: SendSampleEmailInput): Promise<void> {
+  async sendWelcomeEmail(input: SendWelcomeEmailInput): Promise<void> {
     const template = await this.renderConfiguredEmailTemplate(
-      EMAIL_TEMPLATE_NAME.SAMPLE,
+      EMAIL_TEMPLATE_NAME.WELCOME,
       {
-        APP_NAME: this.appName,
-        REQUESTED_BY: input.requestedBy,
-        SENT_AT: input.sentAtIso,
-      } satisfies SampleTemplateInputs,
+        ...this.buildCommonTemplateInputs(),
+        USER_FIRST_NAME: input.userFirstName.trim() || "کاربر عزیز",
+        ACTIVATION_URL: input.activationUrl,
+      } satisfies WelcomeTemplateInputs,
+    );
+
+    await this.sendEmail({
+      to: input.to,
+      subject: template.subject,
+      html: template.html,
+    });
+  }
+
+  async sendVerifyEmail(input: SendVerifyEmailInput): Promise<void> {
+    const template = await this.renderConfiguredEmailTemplate(
+      EMAIL_TEMPLATE_NAME.VERIFY_EMAIL,
+      {
+        ...this.buildCommonTemplateInputs(),
+        USER_FIRST_NAME: input.userFirstName.trim() || "کاربر عزیز",
+        VERIFICATION_URL: input.verificationUrl,
+      } satisfies VerifyEmailTemplateInputs,
     );
 
     await this.sendEmail({
@@ -264,6 +273,23 @@ export class EmailService {
     return `"${escapedName}" <${email}>`;
   }
 
+  private buildCommonTemplateInputs(): CommonEmailTemplateInputs {
+    return {
+      APP_NAME: this.appName,
+      APP_URL: this.resolveAppUrl(),
+      SECURITY_TEAM_NAME: `${this.appName} Security Team`,
+    };
+  }
+
+  private resolveAppUrl(): string {
+    const configuredUrl = env.APP_URL ?? env.BASE_URL;
+    if (!configuredUrl?.trim()) {
+      return `http://localhost:${env.PORT}`;
+    }
+
+    return configuredUrl.replace(/\/+$/, "");
+  }
+
   private buildTransportSignature(config: NormalizedEmailSmtpConfig): string {
     return JSON.stringify({
       host: config.host,
@@ -291,14 +317,86 @@ export class EmailService {
     );
 
     if (!storedTemplate) {
+      const builtInTemplate = this.resolveBuiltInEmailTemplate(templateName);
+      if (builtInTemplate) {
+        this.logger.warn(
+          `Email template ${templateName} is not configured; falling back to the built-in template`,
+        );
+        return this.renderBuiltInEmailTemplate(builtInTemplate, inputs);
+      }
+
       throw new Error(`Email template ${templateName} is not configured`);
     }
 
     const subjectTemplate = this.normalizeString(storedTemplate.subject);
-    const htmlTemplate = this.normalizeString(storedTemplate.html);
+    let htmlTemplate = this.normalizeString(storedTemplate.html);
+
+    if (
+      templateName === EMAIL_TEMPLATE_NAME.PASSWORD_RESET &&
+      isLegacyPasswordResetEmailTemplate(htmlTemplate)
+    ) {
+      this.logger.warn(
+        "Stored PASSWORD_RESET email template uses a legacy layout; falling back to the built-in template",
+      );
+      return this.renderBuiltInEmailTemplate(
+        {
+          subject: PASSWORD_RESET_EMAIL_SUBJECT,
+          html: PASSWORD_RESET_EMAIL_HTML,
+        },
+        inputs,
+      );
+    }
+
+    if (
+      templateName === EMAIL_TEMPLATE_NAME.WELCOME &&
+      isLegacyWelcomeEmailTemplate(htmlTemplate)
+    ) {
+      this.logger.warn(
+        "Stored WELCOME email template uses a legacy layout; falling back to the built-in template",
+      );
+      return this.renderBuiltInEmailTemplate(
+        {
+          subject: WELCOME_EMAIL_SUBJECT,
+          html: WELCOME_EMAIL_HTML,
+        },
+        inputs,
+      );
+    }
+
+    if (
+      templateName === EMAIL_TEMPLATE_NAME.VERIFY_EMAIL &&
+      isLegacyVerifyEmailTemplate(htmlTemplate)
+    ) {
+      this.logger.warn(
+        "Stored VERIFY_EMAIL email template uses a legacy layout; falling back to the built-in template",
+      );
+      return this.renderBuiltInEmailTemplate(
+        {
+          subject: VERIFY_EMAIL_SUBJECT,
+          html: VERIFY_EMAIL_HTML,
+        },
+        inputs,
+      );
+    }
 
     if (!subjectTemplate || !htmlTemplate) {
       throw new Error(`Email template ${templateName} is incomplete`);
+    }
+
+    const combinedTemplate = `${subjectTemplate}\n${htmlTemplate}`;
+    const requiredPlaceholders =
+      EmailTemplate.extractPlaceholders(combinedTemplate);
+    const providedInputKeys = new Set(
+      Object.keys(inputs).map((key) => key.toUpperCase()),
+    );
+    const missingPlaceholders = requiredPlaceholders.filter(
+      (placeholder) => !providedInputKeys.has(placeholder),
+    );
+
+    if (missingPlaceholders.length > 0) {
+      throw new Error(
+        `Email template ${templateName} is missing inputs for placeholders: ${missingPlaceholders.join(", ")}`,
+      );
     }
 
     return {
@@ -306,6 +404,40 @@ export class EmailService {
         escapeHtml: false,
       }).render(),
       html: new EmailTemplate(htmlTemplate, inputs).render(),
+    };
+  }
+
+  private resolveBuiltInEmailTemplate(
+    templateName: string,
+  ): { subject: string; html: string } | null {
+    if (templateName === EMAIL_TEMPLATE_NAME.WELCOME) {
+      return {
+        subject: WELCOME_EMAIL_SUBJECT,
+        html: WELCOME_EMAIL_HTML,
+      };
+    }
+
+    if (templateName === EMAIL_TEMPLATE_NAME.VERIFY_EMAIL) {
+      return {
+        subject: VERIFY_EMAIL_SUBJECT,
+        html: VERIFY_EMAIL_HTML,
+      };
+    }
+
+    return null;
+  }
+
+  private renderBuiltInEmailTemplate<
+    TInputs extends EmailTemplateInputs,
+  >(
+    template: { subject: string; html: string },
+    inputs: TInputs,
+  ): RenderedEmailTemplate {
+    return {
+      subject: new EmailTemplate(template.subject, inputs, {
+        escapeHtml: false,
+      }).render(),
+      html: new EmailTemplate(template.html, inputs).render(),
     };
   }
 }

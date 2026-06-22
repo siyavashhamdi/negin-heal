@@ -25,6 +25,10 @@ export type UserMeGqlResponse = {
     readonly notificationsEnabled: boolean;
     readonly theme?: string | null;
   } | null;
+  readonly verification: {
+    readonly emailVerifiedAt?: string | null;
+    readonly mobileVerifiedAt?: string | null;
+  };
 };
 
 export interface UserMeResponse {

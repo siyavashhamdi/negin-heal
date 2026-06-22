@@ -144,7 +144,14 @@ const NotificationPermissionCallout = ({
       <div className={styles.notificationCalloutContent}>
         {isDenied ? (
           <div className={styles.notificationCalloutTitleRow}>
-            <strong>{t("pages.more.notifications.blockedTitle")}</strong>
+            <div className={styles.notificationCalloutTitleGroup}>
+              <strong>{t("pages.more.notifications.blockedTitle")}</strong>
+              {!isBlockedDetailsExpanded ? (
+                <p className={styles.notificationCalloutHint}>
+                  {t("pages.more.notifications.blockedGuideHint")}
+                </p>
+              ) : null}
+            </div>
             <AppTooltip title={t("pages.more.infoToggleTooltip")} arrow>
               <button
                 type="button"

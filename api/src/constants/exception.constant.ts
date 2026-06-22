@@ -62,12 +62,23 @@ export const EXCEPTION_CONSTANT = {
 
   INVALID_PASSWORD_RESET_TOKEN: {
     code: "INVALID_PASSWORD_RESET_TOKEN",
-    message: "Password reset link is invalid or has already been used!",
+    message: "Password reset code is invalid or has already been used!",
+  },
+
+  INVALID_ACCOUNT_ACTIVATION_TOKEN: {
+    code: "INVALID_ACCOUNT_ACTIVATION_TOKEN",
+    message: "Account activation link is invalid or has expired!",
   },
 
   EXPIRED_PASSWORD_RESET_TOKEN: {
     code: "EXPIRED_PASSWORD_RESET_TOKEN",
-    message: "Password reset link has expired!",
+    message: "Password reset code has expired!",
+  },
+
+  EMAIL_SEND_COOLDOWN: {
+    code: "EMAIL_SEND_COOLDOWN",
+    message:
+      "A password reset or verification email was sent recently. Please try again in a few minutes.",
   },
 
   ACCOUNT_LOCKED: {

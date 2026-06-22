@@ -74,6 +74,7 @@ export class UserMeQuery {
             theme: userObj.preferences.theme,
           }
         : undefined,
+      verification: this.userService.resolveUserVerification(userDoc),
     } as UserMeGqlResponse;
   }
 }

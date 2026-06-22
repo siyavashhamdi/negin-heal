@@ -15,13 +15,18 @@ export class UserResetPasswordMutation {
 
   @Mutation(() => UserPasswordResetGqlResponse, {
     name: "userResetPassword",
-    description: "Reset account password using an emailed reset link",
+    description:
+      "Reset account password using the emailed one-time code and account identity",
   })
   @UseGuards(RateLimitGuard)
   @RateLimit({ ttl: 60, limit: 5 })
   async resetPassword(
     @Args("input") input: UserResetPasswordGqlInput,
   ): Promise<UserPasswordResetGqlResponse> {
-    return this.userService.resetPassword(input.resetLink, input.newPassword);
+    return this.userService.resetPassword(
+      input.identity,
+      input.otp,
+      input.newPassword,
+    );
   }
 }

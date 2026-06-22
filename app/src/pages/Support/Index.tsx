@@ -206,8 +206,9 @@ const Support = (): ReactElement => {
         ) : null}
       </div>
 
-      {hasMainCards ? (
-        <div className={styles.grid}>
+      <div className={styles.contentStack}>
+        {hasMainCards ? (
+          <div className={styles.grid}>
           {hasFaqCard ? (
             <button type="button" className={styles.card} {...opaqueShellProps} onClick={() => navigate("/support/faq")}>
               <span className={styles.cardBody}>
@@ -246,11 +247,11 @@ const Support = (): ReactElement => {
               <OpenInNewRoundedIcon className={styles.cardArrow} />
             </button>
           ) : null}
-        </div>
-      ) : null}
+          </div>
+        ) : null}
 
-      {contactChannels.length > 0 ? (
-        <div className={styles.contactSection} {...opaqueShellProps}>
+        {contactChannels.length > 0 ? (
+          <div className={styles.contactSection} {...opaqueShellProps}>
           {hasContactSectionHeading ? (
             <div className={styles.contactSectionIntro}>
               <div>
@@ -277,11 +278,11 @@ const Support = (): ReactElement => {
               );
             })}
           </div>
-        </div>
-      ) : null}
+          </div>
+        ) : null}
 
-      {quickTips.length > 0 ? (
-        <div className={styles.supportPanel} {...opaqueShellProps}>
+        {quickTips.length > 0 ? (
+          <div className={styles.supportPanel} {...opaqueShellProps}>
           {hasTipsSectionHeading ? (
             <div className={styles.panelIntro}>
               <TipsAndUpdatesRoundedIcon />
@@ -296,8 +297,9 @@ const Support = (): ReactElement => {
               <li key={tip}>{tip}</li>
             ))}
           </ul>
-        </div>
-      ) : null}
+          </div>
+        ) : null}
+      </div>
     </section>
   );
 };

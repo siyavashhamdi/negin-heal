@@ -13,7 +13,8 @@ export interface ForgotPasswordInput {
 }
 
 export interface ResetPasswordInput {
-  resetLink: string;
+  identity: string;
+  otp: string;
   newPassword: string;
 }
 
@@ -31,13 +32,13 @@ interface ResetPasswordResponse {
 }
 
 const PASSWORD_RESET_REQUESTED_MESSAGE =
-  "If an account matches the provided information, a password reset link will be sent.";
+  "If an account matches the provided information, a password reset code will be sent to the registered email.";
 
 export const usePasswordReset = () => {
   const { t } = useTranslation();
   const { showSuccess, showError } = useSnackbar();
 
-  const [forgotPasswordMutation, { loading: requestingResetLink }] = useMutation<
+  const [forgotPasswordMutation, { loading: requestingResetCode }] = useMutation<
     ForgotPasswordResponse,
     { input: ForgotPasswordInput }
   >(USER_FORGOT_PASSWORD_MUTATION);
@@ -47,7 +48,7 @@ export const usePasswordReset = () => {
     { input: ResetPasswordInput }
   >(USER_RESET_PASSWORD_MUTATION);
 
-  const requestResetLink = async (input: ForgotPasswordInput): Promise<boolean> => {
+  const requestResetCode = async (input: ForgotPasswordInput): Promise<boolean> => {
     try {
       const result = await forgotPasswordMutation({
         variables: {
@@ -72,8 +73,8 @@ export const usePasswordReset = () => {
 
       const message =
         payload.message === PASSWORD_RESET_REQUESTED_MESSAGE
-          ? t("auth.login.success.passwordResetLinkSent")
-          : payload.message || t("auth.login.success.passwordResetLinkSent");
+          ? t("auth.login.success.passwordResetCodeSent")
+          : payload.message || t("auth.login.success.passwordResetCodeSent");
       showSuccess(message);
       return true;
     } catch (error) {
@@ -87,7 +88,8 @@ export const usePasswordReset = () => {
       const result = await resetPasswordMutation({
         variables: {
           input: {
-            resetLink: input.resetLink.trim(),
+            identity: normalizeAuthIdentityForSubmit(input.identity),
+            otp: input.otp.trim(),
             newPassword: input.newPassword,
           },
         },
@@ -113,10 +115,10 @@ export const usePasswordReset = () => {
   };
 
   return {
-    requestResetLink,
+    requestResetCode,
     resetPassword,
-    loading: requestingResetLink || resettingPassword,
-    requestingResetLink,
+    loading: requestingResetCode || resettingPassword,
+    requestingResetCode,
     resettingPassword,
   };
 };

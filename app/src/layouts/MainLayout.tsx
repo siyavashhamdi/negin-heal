@@ -32,6 +32,7 @@ import {
   type GeneralNotificationMessageType,
 } from "../constants";
 import { useGeneralUpdatesSubscription, type GeneralUpdateEvent } from "../hooks/useGeneralUpdatesSubscription";
+import { useVerificationStatusSubscription } from "../hooks/useVerificationStatusSubscription";
 import { notifyBadgeCountUpdateListeners } from "../lib/badge-count-update-listeners";
 import { notifyGeneralUpdateListeners } from "../lib/general-updates-listeners";
 import { APP_SHELL_ROUTES } from "../routing/app-shell-routes";
@@ -354,10 +355,15 @@ export function MainLayout({
     updateTypes: [
       GENERAL_SUBSCRIPTION_UPDATE_TYPES.NOTIFICATION,
       GENERAL_SUBSCRIPTION_UPDATE_TYPES.BADGE_COUNTS,
+      GENERAL_SUBSCRIPTION_UPDATE_TYPES.VERIFICATION_STATUS,
     ],
     onAnyUpdate: notifyGeneralUpdateListeners,
     onNotification: handleNotificationUpdate,
     onBadgeCounts: handleBadgeCountsUpdate,
+  });
+
+  useVerificationStatusSubscription({
+    enabled: Boolean(authUser),
   });
 
   const coursesBadgeCount = liveCounts.courses ?? badgeCountData?.badgeCount.courses ?? 0;

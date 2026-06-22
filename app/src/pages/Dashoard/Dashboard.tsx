@@ -3,11 +3,8 @@ import { Button, Card, CardContent, Stack, TextField, Typography } from "@mui/ma
 import {
   CloudUploadRounded as UploadIcon,
   NotificationsActiveRounded as PushIcon,
-  SendRounded as SendIcon,
 } from "@mui/icons-material";
 import { useSearchParams } from "react-router-dom";
-import { USER_SEND_SAMPLE_EMAIL_MUTATION } from "../../graphql/mutations/userSendSampleEmail.mutation";
-import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
 import FileUploadField from "../../shared/forms/FileUploadField";
@@ -24,17 +21,6 @@ import {
 } from "../../constants/fileUploadPolicies";
 import styles from "./styles/dashboard.module.scss";
 
-type UserSendSampleEmailMutationResponse = {
-  userSendSampleEmail: {
-    success: boolean;
-    message: string;
-  };
-};
-
-type UserSendSampleEmailMutationVariables = {
-  to?: string;
-};
-
 const PUSH_RETRY_DELAY_MS = 30_000;
 
 const Dashboard = (): ReactElement => {
@@ -43,7 +29,6 @@ const Dashboard = (): ReactElement => {
     useSnackbar();
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [sampleEmailTo, setSampleEmailTo] = useState<string>("");
   const [pushMessage, setPushMessage] = useState<string>("");
   const [lastUpload, setLastUpload] = useState<FileUploadResult | null>(null);
   const [uploadLoading, setUploadLoading] = useState(false);
@@ -82,15 +67,6 @@ const Dashboard = (): ReactElement => {
     setSearchParams({}, { replace: true });
   }, [searchParams, setSearchParams, showError, showSuccess, showWarning]);
 
-  const [sendSampleEmail, { loading: sampleEmailLoading }] = useMutationWithSnackbar<
-    UserSendSampleEmailMutationResponse,
-    UserSendSampleEmailMutationVariables
-  >(USER_SEND_SAMPLE_EMAIL_MUTATION, {
-    onSuccess: (data) => {
-      showSuccess(data.userSendSampleEmail.message);
-    },
-  });
-
   const handleSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
     if (!selectedFile) {
@@ -116,17 +92,6 @@ const Dashboard = (): ReactElement => {
       setUploadLoading(false);
       hideUploadProgress();
     }
-  };
-
-  const handleSendSampleEmail = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
-    event.preventDefault();
-
-    const normalizedEmail = sampleEmailTo.trim();
-    await sendSampleEmail({
-      variables: {
-        to: normalizedEmail || undefined,
-      },
-    });
   };
 
   const handleSendPushNotification = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
@@ -182,7 +147,6 @@ const Dashboard = (): ReactElement => {
   };
 
   const canSendPushNotification = pushMessage.trim().length > 0 && !pushSending;
-  const canSendSampleEmail = sampleEmailTo.trim().length > 0 && !sampleEmailLoading;
   const canUploadFile = selectedFile != null && !uploadLoading;
 
   return (
@@ -219,46 +183,6 @@ const Dashboard = (): ReactElement => {
                   {pushSending
                     ? t("pages.dashboard.pushTest.sendingButton")
                     : t("pages.dashboard.pushTest.sendButton")}
-                </Button>
-              </Stack>
-            </Stack>
-          </form>
-        </CardContent>
-      </Card>
-
-      <Card className={styles.uploaderCard}>
-        <CardContent>
-          <form onSubmit={handleSendSampleEmail}>
-            <Stack spacing={2} className={styles.mailSection}>
-              <div>
-                <Typography component="h2" variant="h6">
-                  {t("pages.dashboard.mailTest.title")}
-                </Typography>
-                <Typography color="text.secondary" className={styles.uploaderDescription}>
-                  {t("pages.dashboard.mailTest.description")}
-                </Typography>
-              </div>
-
-              <TextField
-                label={t("pages.dashboard.mailTest.emailLabel")}
-                placeholder={t("pages.dashboard.mailTest.emailPlaceholder")}
-                value={sampleEmailTo}
-                onChange={(event) => setSampleEmailTo(event.target.value)}
-                type="email"
-                autoComplete="email"
-                fullWidth
-              />
-
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  startIcon={<SendIcon />}
-                  disabled={!canSendSampleEmail}
-                >
-                  {sampleEmailLoading
-                    ? t("pages.dashboard.mailTest.sendingButton")
-                    : t("pages.dashboard.mailTest.sendButton")}
                 </Button>
               </Stack>
             </Stack>

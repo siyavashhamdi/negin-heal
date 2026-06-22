@@ -19,6 +19,7 @@ import PaymentsIndex from "../pages/Payments/Index";
 import ZarinPalCallback from "../pages/Payments/ZarinPalCallback";
 import Profile from "../pages/Profile/Index";
 import ResetPassword from "../pages/Login/ResetPassword";
+import ActivateAccount from "../pages/Login/ActivateAccount";
 import SupportFaq from "../pages/Support/Faq";
 import Support from "../pages/Support/Index";
 import SupportTicketsIndex from "../pages/Support/TicketsIndex";
@@ -39,6 +40,7 @@ export const DashboardAppRoutes = (): ReactElement => {
     <Routes>
       <Route path={APP_SHELL_ROUTES.login} element={<LoginRoute />} />
       <Route path={APP_SHELL_ROUTES.resetPassword} element={<ResetPassword />} />
+      <Route path={APP_SHELL_ROUTES.activateAccount} element={<ActivateAccount />} />
       <Route path={APP_SHELL_ROUTES.dashboard} element={wrapProtected(<Dashboard />)} />
       <Route path={`${APP_SHELL_ROUTES.courses}/new`} element={<CoursesIndex />} />
       <Route path={`${APP_SHELL_ROUTES.courses}/edit/:courseId`} element={<CoursesIndex />} />

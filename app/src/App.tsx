@@ -29,11 +29,13 @@ const AppShell = (): ReactElement => {
   const location = useLocation();
   const isLoginPage = location.pathname === APP_SHELL_ROUTES.login;
   const isResetPasswordPage = location.pathname === APP_SHELL_ROUTES.resetPassword;
+  const isActivateAccountPage =
+    location.pathname === APP_SHELL_ROUTES.activateAccount;
   const isUnderConstructionHome =
     API_CONFIG.UNDER_CONSTRUCTION && location.pathname === APP_SHELL_ROUTES.home;
   const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
 
-  if (isLoginPage || isResetPasswordPage || isUnderConstructionHome) {
+  if (isLoginPage || isResetPasswordPage || isActivateAccountPage || isUnderConstructionHome) {
     return <DashboardAppRoutes />;
   }
 

@@ -8,6 +8,22 @@
   @include mixins.mobile-page-stack-tight;
 }
 
+.contentStack,
+.installStack {
+  display: grid;
+  gap: 1rem;
+}
+
+.pageBody {
+  display: grid;
+  gap: 1rem;
+  margin-block-end: 1rem;
+}
+
+.installStack:empty {
+  display: none;
+}
+
 .hero {
   padding: 1rem;
   border-radius: 1.15rem;
@@ -235,6 +251,17 @@
 .androidInstallTitleRow strong {
   flex: 1;
   min-width: 0;
+}
+
+.notificationCalloutTitleGroup {
+  display: grid;
+  gap: 0.12rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.notificationCalloutTitleGroup strong {
+  flex: unset;
 }
 
 .calloutInfoToggle {

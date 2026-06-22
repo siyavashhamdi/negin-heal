@@ -1,6 +1,18 @@
 import { BaseMigration, registerMigration } from "./core";
 import { AppSettingValueType, UserCoursePaymentMethod } from "../enums";
 import { APP_SETTING_KEY } from "../constants";
+import {
+  PASSWORD_RESET_EMAIL_HTML,
+  PASSWORD_RESET_EMAIL_SUBJECT,
+} from "../modules/email/password-reset-email.template";
+import {
+  WELCOME_EMAIL_HTML,
+  WELCOME_EMAIL_SUBJECT,
+} from "../modules/email/welcome-email.template";
+import {
+  VERIFY_EMAIL_HTML,
+  VERIFY_EMAIL_SUBJECT,
+} from "../modules/email/verify-email.template";
 
 type DefaultAppSettingSeed = {
   key: string;
@@ -66,50 +78,19 @@ const DEFAULT_EMAIL_SMTP_CONFIG_VALUE = {
 
 const DEFAULT_EMAIL_TEMPLATES_VALUE = [
   {
-    name: "LOGIN_CODE",
-    subject: "Your @@@<APP_NAME>@@@ login code",
-    html: `
-<div style="font-family:Arial,sans-serif;line-height:1.6;color:#111827;max-width:560px;margin:0 auto;">
-  <h2 style="margin-bottom:12px;">@@@<APP_NAME>@@@ Sign-In Verification</h2>
-  <p style="margin:0 0 16px;">Use the one-time code below to complete your login:</p>
-  <div style="display:inline-block;font-size:28px;font-weight:700;letter-spacing:6px;padding:10px 16px;border:1px solid #E5E7EB;border-radius:8px;background:#F9FAFB;">
-    @@@<LOGIN_CODE>@@@
-  </div>
-  <p style="margin:16px 0 0;">This code expires in <strong>@@@<EXPIRES_IN_MINUTES>@@@ minutes</strong>.</p>
-  <p style="margin:16px 0 0;">If you did not request this code, please ignore this email.</p>
-  <p style="margin:20px 0 0;color:#6B7280;">@@@<SECURITY_TEAM_NAME>@@@</p>
-</div>
-`.trim(),
-  },
-  {
     name: "PASSWORD_RESET",
-    subject: "Reset your @@@<APP_NAME>@@@ password",
-    html: `
-<div style="font-family:Arial,sans-serif;line-height:1.6;color:#111827;max-width:560px;margin:0 auto;">
-  <h2 style="margin-bottom:12px;">Reset Your Password</h2>
-  <p style="margin:0 0 16px;">We received a request to reset your @@@<APP_NAME>@@@ password.</p>
-  <p style="margin:0 0 20px;">
-    <a href="@@@<RESET_LINK>@@@" style="display:inline-block;background:#2563EB;color:#FFFFFF;text-decoration:none;padding:10px 16px;border-radius:8px;font-weight:700;">
-      Reset password
-    </a>
-  </p>
-  <p style="margin:0;">This link expires in <strong>@@@<EXPIRES_IN_MINUTES>@@@ minutes</strong>.</p>
-  <p style="margin:16px 0 0;">If you did not request a password reset, please ignore this email.</p>
-  <p style="margin:20px 0 0;color:#6B7280;">@@@<SECURITY_TEAM_NAME>@@@</p>
-</div>
-`.trim(),
+    subject: PASSWORD_RESET_EMAIL_SUBJECT,
+    html: PASSWORD_RESET_EMAIL_HTML,
   },
   {
-    name: "SAMPLE",
-    subject: "@@@<APP_NAME>@@@ - Sample Email",
-    html: `
-<div style="font-family:Arial,sans-serif;line-height:1.6;color:#111827;max-width:560px;margin:0 auto;">
-  <h2 style="margin-bottom:12px;">@@@<APP_NAME>@@@</h2>
-  <p style="margin:0 0 12px;">This is a sample email sent successfully from dashboard.</p>
-  <p style="margin:0;"><strong>Requested by:</strong> @@@<REQUESTED_BY>@@@</p>
-  <p style="margin:0;"><strong>Sent at:</strong> @@@<SENT_AT>@@@</p>
-</div>
-`.trim(),
+    name: "WELCOME",
+    subject: WELCOME_EMAIL_SUBJECT,
+    html: WELCOME_EMAIL_HTML,
+  },
+  {
+    name: "VERIFY_EMAIL",
+    subject: VERIFY_EMAIL_SUBJECT,
+    html: VERIFY_EMAIL_HTML,
   },
 ];
 
@@ -567,10 +548,10 @@ const DEFAULT_APP_SETTINGS: readonly DefaultAppSettingSeed[] = [
   },
   {
     key: APP_SETTING_KEY.PASSWORD_RESET_TOKEN_TTL_MINUTES,
-    label: "مدت اعتبار لینک بازیابی گذرواژه",
+    label: "مدت اعتبار کد بازیابی گذرواژه",
     value: 30,
     valueType: AppSettingValueType.NUMBER,
-    description: "مدت اعتبار لینک بازیابی گذرواژه به دقیقه",
+    description: "مدت اعتبار کد بازیابی گذرواژه به دقیقه",
     isActive: true,
   },
   {
@@ -659,7 +640,31 @@ export class Migration002_SeedDefaultAppSettings extends BaseMigration {
       });
 
       if (existingSetting) {
-        if (setting.valueType === AppSettingValueType.JSON) {
+        if (setting.key === APP_SETTING_KEY.EMAIL_TEMPLATES) {
+          const existingValue =
+            typeof existingSetting.value === "string"
+              ? this.parseJsonSettingValue(existingSetting.value)
+              : existingSetting.value;
+          const upgradedTemplates = this.upgradeEmailTemplates(existingValue);
+
+          if (
+            upgradedTemplates &&
+            JSON.stringify(upgradedTemplates) !== JSON.stringify(existingValue)
+          ) {
+            await appSettingsCollection.updateOne(
+              { _id: existingSetting._id },
+              {
+                $set: {
+                  value: upgradedTemplates,
+                  "audit.updatedAt": new Date(),
+                },
+              },
+            );
+            console.log(
+              `🔁 Upgraded app setting ${setting.key} password reset template`,
+            );
+          }
+        } else if (setting.valueType === AppSettingValueType.JSON) {
           const existingValue =
             typeof existingSetting.value === "string"
               ? this.parseJsonSettingValue(existingSetting.value)
@@ -790,6 +795,113 @@ export class Migration002_SeedDefaultAppSettings extends BaseMigration {
     } catch {
       return null;
     }
+  }
+
+  private upgradeEmailTemplates(value: unknown): unknown[] | null {
+    if (!Array.isArray(value)) {
+      return null;
+    }
+
+    const passwordResetDefault = DEFAULT_EMAIL_TEMPLATES_VALUE.find(
+      (template) => template.name === "PASSWORD_RESET",
+    );
+    const welcomeDefault = DEFAULT_EMAIL_TEMPLATES_VALUE.find(
+      (template) => template.name === "WELCOME",
+    );
+    const verifyEmailDefault = DEFAULT_EMAIL_TEMPLATES_VALUE.find(
+      (template) => template.name === "VERIFY_EMAIL",
+    );
+    if (!passwordResetDefault || !welcomeDefault || !verifyEmailDefault) {
+      return null;
+    }
+
+    let updated = false;
+    const withoutRemovedTemplates = value.filter((entry) => {
+      if (!this.isPlainObject(entry)) {
+        return true;
+      }
+
+      const templateName = typeof entry.name === "string" ? entry.name : "";
+      if (templateName === "LOGIN_CODE" || templateName === "SAMPLE") {
+        updated = true;
+        return false;
+      }
+
+      return true;
+    });
+
+    const nextTemplates = withoutRemovedTemplates.map((entry) => {
+      if (!this.isPlainObject(entry)) {
+        return entry;
+      }
+
+      const html = typeof entry.html === "string" ? entry.html : "";
+
+      if (entry.name === "PASSWORD_RESET") {
+        if (
+          !html.includes("logo.png") &&
+          !html.includes("@@@<EXPIRES_IN_MINUTES>@@@")
+        ) {
+          return entry;
+        }
+
+        updated = true;
+        return {
+          ...entry,
+          subject: passwordResetDefault.subject,
+          html: passwordResetDefault.html,
+        };
+      }
+
+      if (
+        entry.name === "WELCOME" &&
+        (html.includes("@@@<LOGIN_URL>@@@") ||
+          html.includes("فعال‌سازی حساب") ||
+          html.includes("برای تکمیل ثبت‌نام") ||
+          html.includes("ورود به @@@<APP_NAME>@@@") ||
+          !html.includes("@@@<ACTIVATION_URL>@@@"))
+      ) {
+        updated = true;
+        return {
+          ...entry,
+          subject: welcomeDefault.subject,
+          html: welcomeDefault.html,
+        };
+      }
+
+      return entry;
+    });
+
+    if (
+      !nextTemplates.some(
+        (entry) =>
+          this.isPlainObject(entry) && entry.name === "PASSWORD_RESET",
+      )
+    ) {
+      nextTemplates.push({ ...passwordResetDefault });
+      updated = true;
+    }
+
+    if (
+      !nextTemplates.some(
+        (entry) => this.isPlainObject(entry) && entry.name === "WELCOME",
+      )
+    ) {
+      nextTemplates.push({ ...welcomeDefault });
+      updated = true;
+    }
+
+    if (
+      !nextTemplates.some(
+        (entry) =>
+          this.isPlainObject(entry) && entry.name === "VERIFY_EMAIL",
+      )
+    ) {
+      nextTemplates.push({ ...verifyEmailDefault });
+      updated = true;
+    }
+
+    return updated ? nextTemplates : null;
   }
 }
 

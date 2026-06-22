@@ -1,5 +1,5 @@
-import { useMemo, useState, type ReactElement } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Alert,
   Box,
@@ -7,6 +7,7 @@ import {
   CircularProgress,
   IconButton,
   InputAdornment,
+  TextField,
   Typography,
 } from "@mui/material";
 import {
@@ -20,42 +21,162 @@ import { useSnackbar } from "../../hooks/useSnackbar";
 import { usePasswordReset } from "../../hooks/usePasswordReset";
 import { PasswordPolicyChecklist } from "../../shared/auth/PasswordPolicyChecklist";
 import { arePasswordRulesPassed } from "../../utils/passwordPolicy.util";
+import { toWesternDigits } from "../../utilities/persian-digits.util";
+import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
 import LoginShell from "./LoginShell";
 import { LoginAdornedTextField } from "./components/LoginAdornedTextField";
+import { isLoginNavState, type LoginNavState } from "./login-nav-state";
 import formStyles from "./styles/LoginFormShared.module.scss";
+import verifyStyles from "./styles/VerifyLoginCode.module.scss";
 
-const getTokenFromLocation = (searchParams: URLSearchParams): string =>
-  searchParams.get("token")?.trim() || searchParams.get("resetToken")?.trim() || "";
+const RESET_CODE_LENGTH = 6;
+const RESET_CODE_REGEX = /^\d{6}$/;
+const EMPTY_DIGITS: readonly string[] = Array.from(
+  { length: RESET_CODE_LENGTH },
+  () => "",
+);
 
-const ResetPassword = (): ReactElement => {
+interface ResetPasswordFormProps {
+  readonly embedded?: boolean;
+  readonly identity: LoginNavState;
+  readonly onBackToLogin?: () => void;
+}
+
+export const ResetPasswordForm = ({
+  embedded = false,
+  identity,
+  onBackToLogin,
+}: ResetPasswordFormProps): ReactElement => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { showError } = useSnackbar();
-  const [searchParams] = useSearchParams();
   const { resetPassword, resettingPassword } = usePasswordReset();
 
-  const resetToken = useMemo(() => getTokenFromLocation(searchParams), [searchParams]);
+  const [resetDigits, setResetDigits] = useState<string[]>(() => [...EMPTY_DIGITS]);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
+  const resetCode = resetDigits.join("");
   const passwordRulesPassed = arePasswordRulesPassed(newPassword);
   const passwordsMatch =
     confirmPassword.trim().length > 0 && newPassword === confirmPassword;
+  const otpReady = RESET_CODE_REGEX.test(resetCode.trim());
   const canSubmit =
-    Boolean(resetToken) &&
+    otpReady &&
     newPassword.trim().length > 0 &&
     confirmPassword.trim().length > 0 &&
     passwordsMatch &&
     passwordRulesPassed;
 
+  useEffect(() => {
+    queueMicrotask(() => {
+      inputRefs.current[0]?.focus();
+    });
+  }, []);
+
+  const updateDigits = (updater: (digits: string[]) => string[]): void => {
+    setResetDigits((previous) => updater([...previous]));
+  };
+
+  const focusDigit = (index: number): void => {
+    queueMicrotask(() => {
+      inputRefs.current[index]?.focus();
+    });
+  };
+
+  const handleDigitChange = (index: number, rawValue: string): void => {
+    setHasError(false);
+    const sanitized = toWesternDigits(rawValue).replace(/\D/g, "");
+
+    if (!sanitized) {
+      updateDigits((digits) => {
+        digits[index] = "";
+        return digits;
+      });
+      return;
+    }
+
+    updateDigits((digits) => {
+      let cursor = index;
+      for (const digit of sanitized) {
+        if (cursor >= RESET_CODE_LENGTH) {
+          break;
+        }
+        digits[cursor] = digit;
+        cursor += 1;
+      }
+      return digits;
+    });
+
+    const nextIndex = Math.min(index + sanitized.length, RESET_CODE_LENGTH - 1);
+    focusDigit(nextIndex);
+  };
+
+  const handleKeyDown = (index: number, event: React.KeyboardEvent<HTMLInputElement>): void => {
+    if (event.key === "Backspace") {
+      event.preventDefault();
+      let previousIndexToFocus: number | null = null;
+      updateDigits((digits) => {
+        if (digits[index]) {
+          digits[index] = "";
+          return digits;
+        }
+        if (index > 0) {
+          digits[index - 1] = "";
+          previousIndexToFocus = index - 1;
+        }
+        return digits;
+      });
+      if (previousIndexToFocus !== null) {
+        focusDigit(previousIndexToFocus);
+      }
+      return;
+    }
+
+    if (event.key === "ArrowLeft" && index > 0 && !event.shiftKey) {
+      event.preventDefault();
+      inputRefs.current[index - 1]?.focus();
+      return;
+    }
+
+    if (event.key === "ArrowRight" && index < RESET_CODE_LENGTH - 1 && !event.shiftKey) {
+      event.preventDefault();
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handlePaste = (index: number, event: React.ClipboardEvent<HTMLInputElement>): void => {
+    event.preventDefault();
+    handleDigitChange(index, event.clipboardData.getData("text"));
+  };
+
+  const handleBackToLogin = useCallback((): void => {
+    if (onBackToLogin) {
+      onBackToLogin();
+      return;
+    }
+
+    navigate(APP_SHELL_ROUTES.login);
+  }, [navigate, onBackToLogin]);
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
 
-    if (!resetToken) {
+    const trimmedCode = resetCode.trim();
+
+    if (!trimmedCode) {
       setHasError(true);
-      showError(t("auth.login.errors.resetTokenMissing"));
+      showError(t("auth.login.errors.passwordResetCodeRequired"));
+      return;
+    }
+
+    if (!RESET_CODE_REGEX.test(trimmedCode)) {
+      setHasError(true);
+      showError(t("auth.login.errors.invalidPasswordResetCode"));
       return;
     }
 
@@ -79,12 +200,14 @@ const ResetPassword = (): ReactElement => {
 
     setHasError(false);
     const success = await resetPassword({
-      resetLink: window.location.href,
+      identity: identity.identity,
+      otp: trimmedCode,
       newPassword,
     });
 
     if (success) {
       setCompleted(true);
+      setResetDigits([...EMPTY_DIGITS]);
       setNewPassword("");
       setConfirmPassword("");
     }
@@ -93,7 +216,8 @@ const ResetPassword = (): ReactElement => {
   if (completed) {
     return (
       <LoginShell
-        mobileFormOnly
+        embedded={embedded}
+        mobileFormOnly={!embedded}
         subtitle={t("auth.login.resetPasswordCompletedSubtitle")}
       >
         <Box className={formStyles.successPanel}>
@@ -104,13 +228,27 @@ const ResetPassword = (): ReactElement => {
           <Typography component="p" className={formStyles.formLead}>
             {t("auth.login.resetPasswordCompletedLead")}
           </Typography>
+          <Button
+            type="button"
+            fullWidth
+            variant="contained"
+            size="large"
+            className={formStyles.loginButton}
+            onClick={handleBackToLogin}
+          >
+            {t("auth.login.signIn")}
+          </Button>
         </Box>
       </LoginShell>
     );
   }
 
   return (
-    <LoginShell mobileFormOnly subtitle={t("auth.login.resetPasswordSubtitle")}>
+    <LoginShell
+      embedded={embedded}
+      mobileFormOnly={!embedded}
+      subtitle={t("auth.login.resetPasswordSubtitle")}
+    >
       <form onSubmit={handleSubmit} className={formStyles.loginForm}>
         <Box className={formStyles.formIntroPanel}>
           <Typography component="h2" className={formStyles.panelTitle}>
@@ -121,11 +259,61 @@ const ResetPassword = (): ReactElement => {
           </Typography>
         </Box>
 
-        {!resetToken ? (
-          <Alert severity="warning" className={formStyles.formAlert}>
-            {t("auth.login.resetPasswordMissingTokenHint")}
-          </Alert>
-        ) : null}
+        <Box className={verifyStyles.verificationCodeContainer}>
+          <Box className={verifyStyles.verificationCodeHeader}>
+            <Typography
+              id="password-reset-otp-section-title"
+              component="h2"
+              className={verifyStyles.verificationCodeSectionTitle}
+            >
+              {t("auth.login.passwordResetCodeSectionTitle")}
+            </Typography>
+            <Typography className={verifyStyles.verificationCodeSectionHint}>
+              {t("auth.login.passwordResetCodeSectionHint")}
+            </Typography>
+            <Alert severity="info" className={formStyles.formAlert}>
+              {t("auth.login.resetPasswordSpamHint")}
+            </Alert>
+          </Box>
+
+          <Box
+            className={verifyStyles.verificationCodeInputs}
+            role="group"
+            aria-labelledby="password-reset-otp-section-title"
+          >
+            {resetDigits.map((digit, index) => (
+              <TextField
+                key={`reset-digit-${index}`}
+                value={digit}
+                onChange={(event) => handleDigitChange(index, event.target.value)}
+                onKeyDown={(event: React.KeyboardEvent<HTMLInputElement>) =>
+                  handleKeyDown(index, event)
+                }
+                onPaste={(event: React.ClipboardEvent<HTMLInputElement>) =>
+                  handlePaste(index, event)
+                }
+                inputRef={(element) => {
+                  inputRefs.current[index] = element;
+                }}
+                variant="outlined"
+                className={verifyStyles.verificationCodeInput}
+                autoComplete="one-time-code"
+                disabled={resettingPassword}
+                error={hasError}
+                inputProps={{
+                  maxLength: 1,
+                  inputMode: "numeric",
+                  pattern: "[0-9]*",
+                  spellCheck: false,
+                  "aria-label": t("auth.login.passwordResetCodeDigitAria", {
+                    n: index + 1,
+                    total: RESET_CODE_LENGTH,
+                  }),
+                }}
+              />
+            ))}
+          </Box>
+        </Box>
 
         <LoginAdornedTextField
           fullWidth
@@ -156,8 +344,7 @@ const ResetPassword = (): ReactElement => {
             ),
           }}
           autoComplete="new-password"
-          autoFocus
-          disabled={resettingPassword || !resetToken}
+          disabled={resettingPassword}
           error={hasError && !newPassword.trim()}
         />
 
@@ -180,7 +367,7 @@ const ResetPassword = (): ReactElement => {
             ),
           }}
           autoComplete="new-password"
-          disabled={resettingPassword || !resetToken}
+          disabled={resettingPassword}
           error={hasError && Boolean(confirmPassword) && !passwordsMatch}
           helperText={
             confirmPassword && !passwordsMatch
@@ -211,4 +398,41 @@ const ResetPassword = (): ReactElement => {
   );
 };
 
-export default ResetPassword;
+const ResetPasswordPage = (): ReactElement => {
+  const { t } = useTranslation();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const identity = useMemo((): LoginNavState | null => {
+    if (isLoginNavState(location.state)) {
+      return location.state;
+    }
+
+    return null;
+  }, [location.state]);
+
+  if (!identity) {
+    return (
+      <LoginShell mobileFormOnly subtitle={t("auth.login.resetPasswordSubtitle")}>
+        <Box className={formStyles.formIntroPanel}>
+          <Alert severity="warning" className={formStyles.formAlert}>
+            {t("auth.login.resetPasswordMissingIdentityHint")}
+          </Alert>
+          <Button
+            type="button"
+            variant="contained"
+            size="large"
+            className={formStyles.loginButton}
+            onClick={() => navigate(APP_SHELL_ROUTES.login)}
+          >
+            {t("auth.login.backToSignIn")}
+          </Button>
+        </Box>
+      </LoginShell>
+    );
+  }
+
+  return <ResetPasswordForm identity={identity} />;
+};
+
+export default ResetPasswordPage;

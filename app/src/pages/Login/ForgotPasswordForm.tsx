@@ -1,17 +1,14 @@
 import { useCallback, useMemo, useState, type ReactElement } from "react";
 import {
   Button,
-  Box,
   CircularProgress,
   Typography,
 } from "@mui/material";
-import {
-  CheckCircle as CheckCircleIcon,
-  MarkEmailUnread as MarkEmailUnreadIcon,
-} from "@mui/icons-material";
+import { MarkEmailUnread as MarkEmailUnreadIcon } from "@mui/icons-material";
 import { useTranslation } from "../../hooks/useTranslation";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { usePasswordReset } from "../../hooks/usePasswordReset";
+import { detectAuthIdentityKind } from "../../utilities/auth-identity.util";
 import { API_CONFIG } from "../../config/env";
 import LoginShell from "./LoginShell";
 import { LoginCaptchaField } from "./components/LoginCaptchaField";
@@ -30,15 +27,17 @@ interface ForgotPasswordFormProps {
   readonly embedded?: boolean;
   readonly initialIdentity?: LoginNavState | null;
   readonly onBackToLogin: () => void;
+  readonly onPasswordResetRequested: (identity: LoginNavState) => void;
 }
 
 export const ForgotPasswordForm = ({
   embedded = false,
   initialIdentity = null,
+  onPasswordResetRequested,
 }: ForgotPasswordFormProps): ReactElement => {
   const { t } = useTranslation();
   const { showError } = useSnackbar();
-  const { requestResetLink, requestingResetLink } = usePasswordReset();
+  const { requestResetCode, requestingResetCode } = usePasswordReset();
   const initialValues = useMemo(
     () => sanitizeAuthIdentityInput(createForgotPasswordPrefill(initialIdentity)),
     [initialIdentity],
@@ -49,7 +48,6 @@ export const ForgotPasswordForm = ({
   const [captchaValue, setCaptchaValue] = useState("");
   const [captchaValid, setCaptchaValid] = useState(false);
   const [captchaVersion, setCaptchaVersion] = useState(0);
-  const [submitted, setSubmitted] = useState(false);
   const [fieldError, setFieldError] =
     useState<SubmittedAuthIdentityValidationError | null>(null);
   const [captchaError, setCaptchaError] = useState(false);
@@ -83,14 +81,17 @@ export const ForgotPasswordForm = ({
 
     setFieldError(null);
     setCaptchaError(false);
-    const success = await requestResetLink({
+    const success = await requestResetCode({
       identity: validation.normalized,
       captchaId: captchaEnabled ? captchaId : undefined,
       captchaValue: captchaEnabled ? captchaValue : undefined,
     });
 
     if (success) {
-      setSubmitted(true);
+      onPasswordResetRequested({
+        identity: validation.normalized,
+        identityKind: detectAuthIdentityKind(validation.normalized),
+      });
       return;
     }
 
@@ -120,25 +121,6 @@ export const ForgotPasswordForm = ({
     [],
   );
 
-  if (submitted) {
-    return (
-      <LoginShell embedded={embedded} subtitle={t("auth.login.forgotPasswordSubmittedSubtitle")}>
-        <Box className={formStyles.successPanel}>
-          <CheckCircleIcon className={formStyles.successIcon} />
-          <Typography component="h2" className={formStyles.panelTitle}>
-            {t("auth.login.forgotPasswordSubmittedTitle")}
-          </Typography>
-          <Typography component="p" className={formStyles.formLead}>
-            {t("auth.login.forgotPasswordSubmittedLead")}
-          </Typography>
-          <Typography component="p" className={formStyles.formLead}>
-            {t("auth.login.forgotPasswordSubmittedHint")}
-          </Typography>
-        </Box>
-      </LoginShell>
-    );
-  }
-
   return (
     <LoginShell embedded={embedded} subtitle={t("auth.login.forgotPasswordSubtitle")}>
       <form onSubmit={handleSubmit} className={formStyles.loginForm}>
@@ -158,7 +140,7 @@ export const ForgotPasswordForm = ({
             setFieldError(null);
           }}
           autoFocus
-          disabled={requestingResetLink}
+          disabled={requestingResetCode}
           required
           error={fieldError}
           requiredMessageKey="auth.login.errors.passwordResetIdentityRequired"
@@ -168,7 +150,7 @@ export const ForgotPasswordForm = ({
         {captchaEnabled ? (
           <LoginCaptchaField
             key={`forgot-password-captcha-${captchaVersion}`}
-            disabled={requestingResetLink}
+            disabled={requestingResetCode}
             error={captchaError}
             required
             onCaptchaChange={handleCaptchaChange}
@@ -181,18 +163,18 @@ export const ForgotPasswordForm = ({
           variant="contained"
           size="large"
           className={formStyles.loginButton}
-          disabled={!canSubmit || requestingResetLink}
+          disabled={!canSubmit || requestingResetCode}
           startIcon={
-            requestingResetLink ? (
+            requestingResetCode ? (
               <CircularProgress className={formStyles.loginButtonSpinner} color="inherit" />
             ) : (
               <MarkEmailUnreadIcon fontSize="small" />
             )
           }
         >
-          {requestingResetLink
-            ? t("auth.login.sendingResetLink")
-            : t("auth.login.sendResetLink")}
+          {requestingResetCode
+            ? t("auth.login.sendingResetCode")
+            : t("auth.login.sendResetCode")}
         </Button>
       </form>
     </LoginShell>

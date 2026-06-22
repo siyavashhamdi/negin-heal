@@ -5,6 +5,7 @@ import { UserRole, UserStatus } from "../../../../enums";
 import {
   UserProfileMinimalGqlResponse,
   UserMinimalGqlResponse,
+  UserVerificationGqlResponse,
 } from "./common";
 
 @ObjectType()
@@ -47,4 +48,9 @@ export class UserMeGqlResponse {
     description: "User preferences",
   })
   preferences?: UserPreferencesGqlResponse;
+
+  @Field(() => UserVerificationGqlResponse, {
+    description: "Email and mobile verification timestamps",
+  })
+  verification: UserVerificationGqlResponse;
 }
