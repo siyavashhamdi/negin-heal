@@ -127,6 +127,11 @@ const transparentInputChrome = {
 /** Default single-line TextField height (course edit dialog reference). */
 const INPUT_MIN_HEIGHT = "3.4375rem";
 
+/** Entity table filters/search — MUI size="small" before global form height (theme @ 234df52^). */
+const TABLE_SHELL_SCOPE = ".entity-table-shell";
+const TABLE_INPUT_MIN_HEIGHT = "2.5rem";
+const TABLE_INPUT_PADDING_BLOCK = "8.5px";
+
 export const createAppTheme = (mode: PaletteMode): Theme => {
   const isDark = mode === "dark";
   const colors = isDark ? darkColors : lightColors;
@@ -393,6 +398,18 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
               paddingBottom: 0,
               alignItems: "center",
             },
+            [`${TABLE_SHELL_SCOPE} &`]: {
+              "&.MuiInputBase-sizeSmall:not(:has(.MuiAutocomplete-tag))": {
+                minHeight: TABLE_INPUT_MIN_HEIGHT,
+                paddingTop: 0,
+                paddingBottom: 0,
+                alignItems: "center",
+                "& .MuiAutocomplete-input": {
+                  padding: `${TABLE_INPUT_PADDING_BLOCK} 4px`,
+                  lineHeight: 1.4375,
+                },
+              },
+            },
           },
           paper: {
             backgroundColor: "var(--app-popover-bg)",
@@ -459,6 +476,14 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
             "&.MuiInputLabel-outlined:not(.MuiInputLabel-shrink)": {
               transform: "translate(14px, 16px) scale(1)",
             },
+            [`${TABLE_SHELL_SCOPE} &`]: {
+              "&.MuiInputLabel-outlined:not(.MuiInputLabel-shrink)": {
+                transform: "translate(14px, 9px) scale(1)",
+              },
+              'html[dir="rtl"] &.MuiInputLabel-outlined:not(.MuiInputLabel-shrink)': {
+                transform: "translate(-14px, 9px) scale(1)",
+              },
+            },
           },
         },
       },
@@ -470,6 +495,12 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
               minHeight: INPUT_MIN_HEIGHT,
               alignItems: "center",
             },
+            [`${TABLE_SHELL_SCOPE} &`]: {
+              "&.MuiInputBase-sizeSmall:not(.MuiInputBase-multiline):not(:has(.MuiAutocomplete-tag))": {
+                minHeight: TABLE_INPUT_MIN_HEIGHT,
+                alignItems: "center",
+              },
+            },
             "& .MuiInputBase-input": {
               ...transparentInputChrome,
             },
@@ -479,6 +510,14 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
               padding: "0 14px",
               lineHeight: 1.4375,
               height: "auto",
+            },
+            [`${TABLE_SHELL_SCOPE} &`]: {
+              "&:not(.MuiInputBase-inputMultiline)": {
+                paddingTop: TABLE_INPUT_PADDING_BLOCK,
+                paddingBottom: TABLE_INPUT_PADDING_BLOCK,
+                lineHeight: 1.4375,
+                height: "auto",
+              },
             },
           },
         },
@@ -491,6 +530,19 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
             "&:not(.MuiInputBase-multiline)": {
               minHeight: INPUT_MIN_HEIGHT,
               alignItems: "center",
+            },
+            [`${TABLE_SHELL_SCOPE} &`]: {
+              "&.MuiInputBase-sizeSmall:not(.MuiInputBase-multiline):not(:has(.MuiAutocomplete-tag))": {
+                minHeight: TABLE_INPUT_MIN_HEIGHT,
+                alignItems: "center",
+              },
+              "&.MuiInputBase-sizeSmall:not(.MuiInputBase-multiline) .MuiInputBase-input:not(.MuiInputBase-inputMultiline), &.MuiInputBase-sizeSmall:not(.MuiInputBase-multiline) .MuiSelect-select":
+                {
+                  paddingTop: TABLE_INPUT_PADDING_BLOCK,
+                  paddingBottom: TABLE_INPUT_PADDING_BLOCK,
+                  lineHeight: 1.4375,
+                  height: "auto",
+                },
             },
             "&.MuiInputBase-multiline": {
               minHeight: "auto",

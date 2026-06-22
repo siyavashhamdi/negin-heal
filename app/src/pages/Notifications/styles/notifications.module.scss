@@ -8,6 +8,8 @@
   min-width: 0;
   max-width: 52rem;
   margin-inline: auto;
+
+  @include mixins.mobile-page-stack-tight;
 }
 
 .markAllReadButton {

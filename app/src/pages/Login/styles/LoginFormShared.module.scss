@@ -401,3 +401,17 @@
   color: variables.$color-success-main;
   font-weight: variables.$font-weight-semibold;
 }
+
+:global([data-mobile-form-only="true"]) {
+  @include mixins.respond-below(md) {
+    .formIntroPanel {
+      display: none;
+    }
+
+    .successPanel {
+      padding: 0;
+      border: none;
+      background: transparent;
+    }
+  }
+}

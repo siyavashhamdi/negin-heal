@@ -22,6 +22,7 @@ import {
   type Table as TanstackTable,
 } from "@tanstack/react-table";
 import { useTranslation } from "../../hooks/useTranslation";
+import { useElementViewportFillHeight } from "../../hooks/useElementViewportFillHeight";
 import SupplementaryFilterField from "../table/SupplementaryFilterField";
 import SupplementaryFiltersBar from "../table/SupplementaryFiltersBar";
 import TablePaginationFooter from "../table/TablePaginationFooter";
@@ -143,7 +144,11 @@ export interface EntityTableShellProps<TData extends object> {
   pinnedActionColumnId?: string;
   noDataLabel?: string;
   pagination: EntityTableShellPaginationProps;
+  /** On mobile, sizes the shell to the remaining viewport height below the table top. Disabled while column filters are visible. Defaults to true. */
+  fillAvailableHeight?: boolean;
 }
+
+const MOBILE_TABLE_ROWS_MIN_VISIBLE = 10;
 
 function EntityTableShell<TData extends object>({
   table,
@@ -175,6 +180,7 @@ function EntityTableShell<TData extends object>({
   pinnedActionColumnId = "actions",
   noDataLabel,
   pagination,
+  fillAvailableHeight = true,
 }: EntityTableShellProps<TData>): ReactElement {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -191,6 +197,10 @@ function EntityTableShell<TData extends object>({
   const [, setStickyHeaderTopsPx] = useState<number[]>([]);
   const [, setStickyFilterTopPx] = useState<number | null>(null);
   const showColumnFilterRow = resolvedShowColumnFilters && renderFilterCell != null;
+  const useNaturalPageHeight = isMobile && resolvedShowColumnFilters;
+  const shouldFillViewport = fillAvailableHeight && isMobile && !resolvedShowColumnFilters;
+  const { ref: tableShellRef, heightPx: viewportFillHeightPx } =
+    useElementViewportFillHeight(shouldFillViewport);
 
   const toggleShowColumnFilters = (): void => {
     const next = !resolvedShowColumnFilters;
@@ -380,6 +390,8 @@ function EntityTableShell<TData extends object>({
   ]);
 
   const extraShellHeightPx = supplementaryChromeHeightPx + columnFilterRowHeightPx;
+  const bodyRowHeightPx = isMobile ? 48 : 56;
+  const mobileTableRowsMinHeightPx = bodyRowHeightPx * MOBILE_TABLE_ROWS_MIN_VISIBLE;
 
   const headerRowRef = useRef<HTMLTableRowElement>(null);
   const [headerRowHeightPx, setHeaderRowHeightPx] = useState(isMobile ? 40 : 56);
@@ -425,17 +437,31 @@ function EntityTableShell<TData extends object>({
     <Paper
       ref={listPaperRef}
       elevation={0}
-      className={styles.listPaper}
+      className={`${styles.listPaper} entity-table-shell`}
       sx={{
         border: `0.0625rem solid ${theme.palette.divider}`,
       }}
     >
       <Box
-        className={styles.tableShell}
+        ref={tableShellRef}
+        className={`${styles.tableShell}${
+          shouldFillViewport && viewportFillHeightPx != null
+            ? ` ${styles.tableShellViewportFill}`
+            : ""
+        }${useNaturalPageHeight ? ` ${styles.tableShellNaturalHeight}` : ""}`}
         style={
-          {
-            "--entity-table-shell-extra": `${extraShellHeightPx}px`,
-          } as CSSProperties
+          shouldFillViewport && viewportFillHeightPx != null
+            ? {
+                minHeight: viewportFillHeightPx,
+                maxHeight: viewportFillHeightPx,
+              }
+            : useNaturalPageHeight
+              ? ({
+                  "--entity-table-rows-min-height": `${mobileTableRowsMinHeightPx}px`,
+                } as CSSProperties)
+              : ({
+                  "--entity-table-shell-extra": `${extraShellHeightPx}px`,
+                } as CSSProperties)
         }
       >
         <TableToolbar<TData>

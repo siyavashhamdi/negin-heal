@@ -213,3 +213,42 @@ body {
 .MuiAlert-action {
   font-family: variables.$font-family !important;
 }
+
+// Entity tables — restore pre–234df52 size="small" inputs (must beat global rules above).
+.entity-table-shell {
+  --app-input-min-height: #{variables.$table-input-min-height};
+
+  .MuiOutlinedInput-root.MuiInputBase-sizeSmall:not(.MuiInputBase-multiline):not(:has(.MuiAutocomplete-tag)),
+  .MuiInputBase-root.MuiInputBase-sizeSmall:not(.MuiInputBase-multiline):not(:has(.MuiAutocomplete-tag)) {
+    min-height: variables.$table-input-min-height !important;
+    align-items: center;
+  }
+
+  .MuiOutlinedInput-root.MuiInputBase-sizeSmall:not(.MuiInputBase-multiline):not(:has(.MuiAutocomplete-tag))
+    .MuiInputBase-input:not(.MuiInputBase-inputMultiline),
+  .MuiOutlinedInput-root.MuiInputBase-sizeSmall:not(.MuiInputBase-multiline):not(:has(.MuiAutocomplete-tag))
+    .MuiSelect-select {
+    padding-block: variables.$table-input-padding-block !important;
+    line-height: 1.4375 !important;
+    height: auto !important;
+  }
+
+  .MuiAutocomplete-root
+    .MuiOutlinedInput-root.MuiInputBase-sizeSmall:not(:has(.MuiAutocomplete-tag)) {
+    min-height: variables.$table-input-min-height !important;
+
+    .MuiAutocomplete-input {
+      padding-block: variables.$table-input-padding-block !important;
+      padding-inline: 4px !important;
+      line-height: 1.4375 !important;
+    }
+  }
+
+  .MuiInputLabel-root.MuiInputLabel-sizeSmall.MuiInputLabel-outlined:not(.MuiInputLabel-shrink) {
+    transform: translate(14px, variables.$table-input-label-rest-y) scale(1) !important;
+  }
+
+  [dir="rtl"] & .MuiInputLabel-root.MuiInputLabel-sizeSmall.MuiInputLabel-outlined:not(.MuiInputLabel-shrink) {
+    transform: translate(-14px, variables.$table-input-label-rest-y) scale(1) !important;
+  }
+}

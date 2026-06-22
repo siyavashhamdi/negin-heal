@@ -49,6 +49,13 @@
   }
 }
 
+/** Remove vertical grid gap between page header chrome and first content block on mobile. */
+@mixin mobile-page-stack-tight {
+  @include respond-below(sm) {
+    gap: 0;
+  }
+}
+
 // ============================================
 // Hover Effects
 // ============================================

@@ -92,7 +92,10 @@ const ResetPassword = (): ReactElement => {
 
   if (completed) {
     return (
-      <LoginShell subtitle={t("auth.login.resetPasswordCompletedSubtitle")}>
+      <LoginShell
+        mobileFormOnly
+        subtitle={t("auth.login.resetPasswordCompletedSubtitle")}
+      >
         <Box className={formStyles.successPanel}>
           <CheckCircleIcon className={formStyles.successIcon} />
           <Typography component="h2" className={formStyles.panelTitle}>
@@ -107,7 +110,7 @@ const ResetPassword = (): ReactElement => {
   }
 
   return (
-    <LoginShell subtitle={t("auth.login.resetPasswordSubtitle")}>
+    <LoginShell mobileFormOnly subtitle={t("auth.login.resetPasswordSubtitle")}>
       <form onSubmit={handleSubmit} className={formStyles.loginForm}>
         <Box className={formStyles.formIntroPanel}>
           <Typography component="h2" className={formStyles.panelTitle}>

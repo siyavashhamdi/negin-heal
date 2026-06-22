@@ -5,7 +5,7 @@
   margin-bottom: variables.$spacing-3;
 
   @include mixins.respond-below(sm) {
-    margin-bottom: variables.$spacing-1;
+    margin-bottom: 0;
   }
 }
 

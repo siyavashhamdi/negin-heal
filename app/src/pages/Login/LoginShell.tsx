@@ -12,6 +12,8 @@ interface LoginShellProps {
   readonly children: ReactNode;
   /** Form-only chrome for embedding inside app shells (e.g. mobile profile). */
   readonly embedded?: boolean;
+  /** On mobile, hide welcome header/footer and outer form boxes — inputs only. */
+  readonly mobileFormOnly?: boolean;
 }
 
 /**
@@ -19,7 +21,12 @@ interface LoginShellProps {
  * form holder and the marketing image panel. Step-specific markup is rendered
  * inside the form holder via `children`.
  */
-const LoginShell = ({ subtitle, children, embedded = false }: LoginShellProps): ReactElement => {
+const LoginShell = ({
+  subtitle,
+  children,
+  embedded = false,
+  mobileFormOnly = false,
+}: LoginShellProps): ReactElement => {
   const { t } = useTranslation();
   const { mode, toggleTheme } = useThemeMode();
   const [marketingImageVisible, setMarketingImageVisible] = useState(true);
@@ -42,7 +49,15 @@ const LoginShell = ({ subtitle, children, embedded = false }: LoginShellProps): 
     .join(" ");
 
   return (
-    <Box className={styles.loginPageWrapper}>
+    <Box
+      className={[
+        styles.loginPageWrapper,
+        mobileFormOnly ? styles.loginPageWrapperMobileFormOnly : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      {...(mobileFormOnly ? { "data-mobile-form-only": "true" } : {})}
+    >
       <Box className={styles.loginContainer}>
         <Box className={styles.loginWrapper}>
           <Box className={styles.formSection}>

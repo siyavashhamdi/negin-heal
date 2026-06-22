@@ -3,7 +3,20 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import PasswordRoundedIcon from "@mui/icons-material/PasswordRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
-import { Alert, Avatar, Button, CircularProgress, IconButton, Stack, TextField, Typography } from "@mui/material";
+import LockIcon from "@mui/icons-material/Lock";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import {
+  Alert,
+  Avatar,
+  Button,
+  CircularProgress,
+  IconButton,
+  InputAdornment,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
 import {
   type ChangeEvent,
   type FormEvent,
@@ -47,6 +60,8 @@ import ModalFooterActions from "../../shared/crud/ModalFooterActions";
 import { APP_SHELL_ROUTES, isProfileAuthRoute } from "../../routing/app-shell-routes";
 import { opaqueShellProps } from "../../shared/opaqueShell";
 import { ProfileAuthRoutes } from "./ProfileAuthRoutes";
+import { LoginAdornedTextField } from "../Login/components/LoginAdornedTextField";
+import loginFormStyles from "../Login/styles/LoginFormShared.module.scss";
 import styles from "./styles/profile.module.scss";
 import AppTooltip from "../../shared/AppTooltip";
 
@@ -146,6 +161,7 @@ const AuthenticatedProfile = (): ReactElement => {
     newPassword: "",
     confirmPassword: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [logoutCountdown, setLogoutCountdown] = useState<number | null>(null);
   const [isAvatarUploading, setIsAvatarUploading] = useState(false);
   const [isAvatarDeleting, setIsAvatarDeleting] = useState(false);
@@ -264,6 +280,7 @@ const AuthenticatedProfile = (): ReactElement => {
       newPassword: "",
       confirmPassword: "",
     });
+    setShowPassword(false);
     navigate(`${APP_SHELL_ROUTES.profile}/password`);
   };
 
@@ -285,6 +302,7 @@ const AuthenticatedProfile = (): ReactElement => {
       newPassword: "",
       confirmPassword: "",
     });
+    setShowPassword(false);
   }, [isPasswordRoute]);
 
   const setPasswordField = <TField extends keyof PasswordChangeForm>(
@@ -477,6 +495,7 @@ const AuthenticatedProfile = (): ReactElement => {
         newPassword: "",
         confirmPassword: "",
       });
+      setShowPassword(false);
       setLogoutCountdown(PASSWORD_CHANGE_LOGOUT_COUNTDOWN_SECONDS);
     }
   };
@@ -715,37 +734,82 @@ const AuthenticatedProfile = (): ReactElement => {
           />
         }
       >
-        <Stack spacing={2}>
-              <TextField
+        <Stack spacing={2} className={styles.editProfileModalBody}>
+              <LoginAdornedTextField
+                fullWidth
                 label="گذرواژه فعلی"
+                type={showPassword ? "text" : "password"}
                 value={passwordForm.currentPassword}
                 onChange={(event) => setPasswordField("currentPassword", event.target.value)}
                 required
-                fullWidth
-                size="small"
-                type="password"
                 autoComplete="current-password"
+                endAdornmentOnlyWhenLabelShrunk
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <LockIcon className={loginFormStyles.inputIcon} />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="نمایش یا پنهان‌سازی گذرواژه"
+                        onClick={() => setShowPassword((previous) => !previous)}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+                disabled={isChangingPassword}
               />
-              <TextField
+              <LoginAdornedTextField
+                fullWidth
                 label="گذرواژه جدید"
+                type={showPassword ? "text" : "password"}
                 value={passwordForm.newPassword}
                 onChange={(event) => setPasswordField("newPassword", event.target.value)}
                 required
-                fullWidth
-                size="small"
-                type="password"
                 autoComplete="new-password"
+                endAdornmentOnlyWhenLabelShrunk
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <LockIcon className={loginFormStyles.inputIcon} />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="نمایش یا پنهان‌سازی گذرواژه"
+                        onClick={() => setShowPassword((previous) => !previous)}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+                disabled={isChangingPassword}
               />
               <PasswordPolicyChecklist password={passwordForm.newPassword} />
-              <TextField
+              <LoginAdornedTextField
+                fullWidth
                 label="تکرار گذرواژه جدید"
+                type={showPassword ? "text" : "password"}
                 value={passwordForm.confirmPassword}
                 onChange={(event) => setPasswordField("confirmPassword", event.target.value)}
                 required
-                fullWidth
-                size="small"
-                type="password"
                 autoComplete="new-password"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <LockIcon className={loginFormStyles.inputIcon} />
+                    </InputAdornment>
+                  ),
+                }}
+                disabled={isChangingPassword}
                 error={Boolean(passwordForm.confirmPassword) && !passwordsMatch}
                 helperText={
                   passwordForm.confirmPassword && !passwordsMatch

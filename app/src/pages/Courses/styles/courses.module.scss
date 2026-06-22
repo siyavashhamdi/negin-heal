@@ -8,6 +8,8 @@ $layout-sm: variables.$breakpoint-sm;
 .page {
   display: grid;
   gap: 1rem;
+
+  @include mixins.mobile-page-stack-tight;
 }
 
 .hero {
@@ -161,7 +163,6 @@ $layout-sm: variables.$breakpoint-sm;
 @media (max-width: ($layout-sm - 0.0625rem)) {
   .page {
     position: relative;
-    gap: 0.85rem;
   }
 
   .hero {
@@ -206,7 +207,7 @@ $layout-sm: variables.$breakpoint-sm;
     justify-self: start;
     inline-size: fit-content;
     block-size: fit-content;
-    margin-block-end: calc(-2.85rem - 0.85rem);
+    margin-block-end: -2.85rem;
     padding: 0 !important;
     border: none !important;
     border-radius: 0 !important;

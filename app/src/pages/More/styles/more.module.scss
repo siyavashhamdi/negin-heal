@@ -4,6 +4,8 @@
 .page {
   display: grid;
   gap: 0.9rem;
+
+  @include mixins.mobile-page-stack-tight;
 }
 
 .hero {

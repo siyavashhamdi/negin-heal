@@ -16,6 +16,30 @@
   }
 }
 
+.tableShellViewportFill {
+  min-height: 0;
+  max-height: none;
+  height: auto;
+}
+
+.tableShellNaturalHeight {
+  min-height: auto;
+  max-height: none;
+  height: auto;
+
+  .tableScrollFrame {
+    flex: 0 1 auto;
+    min-height: var(--entity-table-rows-min-height, 30rem);
+  }
+
+  .tableContainerFlex {
+    flex: 0 1 auto;
+    min-height: var(--entity-table-rows-min-height, 30rem);
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
 .tableScrollFrame {
   position: relative;
   flex: 1 1 0;

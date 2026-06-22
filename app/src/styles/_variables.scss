@@ -160,6 +160,11 @@ $breakpoint-xl: 120rem;
 // Form controls — matches default MUI TextField in course edit dialog
 $input-min-height: 3.4375rem;
 
+// Table filter/search fields — pre–global-form-height MUI size="small" (theme.ts used 2.5rem)
+$table-input-min-height: 2.5rem;
+$table-input-padding-block: 0.53125rem;
+$table-input-label-rest-y: 9px;
+
 // Multiline textareas — fixed 4 visible rows, scroll beyond
 $multiline-textarea-min-rows: 4;
 $multiline-textarea-max-rows: 4;

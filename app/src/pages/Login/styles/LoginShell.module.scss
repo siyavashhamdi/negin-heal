@@ -300,3 +300,42 @@
   direction: rtl;
   text-align: justify;
 }
+
+.loginPageWrapperMobileFormOnly {
+  @include mixins.respond-below(md) {
+    .themeToggleContainer,
+    .logoSection,
+    .loginFooterSlot {
+      display: none;
+    }
+
+    .loginContainer {
+      padding: variables.$spacing-2;
+      align-items: flex-start;
+    }
+
+    .loginWrapper {
+      border: none;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .formSection {
+      padding: 0;
+      min-height: auto;
+    }
+
+    .formSectionMain {
+      justify-content: flex-start;
+    }
+
+    .loginFormHolder {
+      padding: 0;
+      border: none;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+  }
+}
