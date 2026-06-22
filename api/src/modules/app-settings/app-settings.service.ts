@@ -7,6 +7,7 @@ import {
 } from "@nestjs/common";
 
 import {
+  ADMIN_HIDDEN_APP_SETTING_KEYS,
   APP_SETTING_KEY,
   PAYMENT_CHECKOUT_SETTING_KEYS,
 } from "../../constants/app-setting.constant";
@@ -30,7 +31,6 @@ import {
   AppAboutPageConfig,
   AppPrivacyPolicyPageConfig,
   AppTermsOfUsePageConfig,
-  AppVersionConfig,
   CryptoWalletConfig,
   PaymentCardConfig,
   PaymentCheckoutConfig,
@@ -364,17 +364,6 @@ export class AppSettingsService {
 
     return {
       html: this.normalizeOptionalText(value),
-    };
-  }
-
-  async getAppVersionConfig(): Promise<AppVersionConfig> {
-    const value = await this.getActiveSettingValue(
-      APP_SETTING_KEY.APP_VERSION,
-      AppSettingValueType.STRING,
-    );
-
-    return {
-      value: this.normalizeOptionalText(value),
     };
   }
 
@@ -1054,6 +1043,7 @@ export class AppSettingsService {
             { "audit.deletedAt": { $exists: false } },
           ],
         },
+        { key: { $nin: [...ADMIN_HIDDEN_APP_SETTING_KEYS] } },
       ],
     };
 

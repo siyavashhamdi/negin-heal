@@ -77,10 +77,6 @@ export type AppTermsOfUsePageConfig = {
   html: string;
 };
 
-export type AppVersionConfig = {
-  value: string;
-};
-
 export type PaymentCardConfig = {
   cardNumber: string;
   holderName: string;

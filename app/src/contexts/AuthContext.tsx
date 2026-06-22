@@ -136,9 +136,25 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
     );
   }, [navigate]);
 
+  const forceLogoutToProfile = useCallback((): void => {
+    const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+
+    const finishLogout = (): void => {
+      clearLocalAuthSession();
+      navigate(APP_SHELL_ROUTES.profile, { replace: true });
+    };
+
+    if (!token) {
+      finishLogout();
+      return;
+    }
+
+    void apolloClient.mutate({ mutation: USER_LOGOUT_MUTATION }).finally(finishLogout);
+  }, [clearLocalAuthSession, navigate]);
+
   useEffect(() => {
-    return subscribeAuthSessionExpired(clearLocalAuthSession);
-  }, [clearLocalAuthSession]);
+    return subscribeAuthSessionExpired(forceLogoutToProfile);
+  }, [forceLogoutToProfile]);
 
   /**
    * Logout function

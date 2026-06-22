@@ -81,6 +81,7 @@ import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
 import AppTooltip from "../../shared/AppTooltip";
 
 const COLUMN_WIDTH_BY_ID: Record<string, string> = {
+  avatarAccessUrl: "4.5rem",
   username: "12rem",
   firstName: "10rem",
   lastName: "11rem",
@@ -97,6 +98,7 @@ const COLUMN_WIDTH_BY_ID: Record<string, string> = {
 };
 
 const MOBILE_COLUMN_WIDTH_BY_ID: Record<string, string> = {
+  avatarAccessUrl: "5rem",
   username: "24rem",
   firstName: "20rem",
   lastName: "22rem",
@@ -254,30 +256,22 @@ function buildEditFormState(record: ManagedUserRecord): UserEditFormState {
 
 function UserAvatarCell({
   avatarAccessUrl,
+  displayName,
 }: {
   readonly avatarAccessUrl?: FileAccessUrl | null;
+  readonly displayName: string;
 }): ReactElement {
   const resolvedUrl = resolveFileAccessUrl(avatarAccessUrl);
-
-  if (!resolvedUrl) {
-    return (
-      <Typography variant="body2" color="text.secondary">
-        {EMPTY_DISPLAY}
-      </Typography>
-    );
-  }
+  const initial = displayName.trim().slice(0, 1) || "?";
 
   return (
-    <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
-      <Avatar
-        src={resolvedUrl}
-        alt=""
-        sx={{ width: 32, height: 32, bgcolor: "action.hover" }}
-        variant="rounded"
-      >
-        ?
-      </Avatar>
-    </Stack>
+    <Avatar
+      src={resolvedUrl ?? undefined}
+      alt=""
+      sx={{ width: 32, height: 32, bgcolor: "action.hover", mx: "auto" }}
+    >
+      {initial}
+    </Avatar>
   );
 }
 
@@ -340,13 +334,13 @@ const UsersManagementList = (): ReactElement => {
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
+    avatarAccessUrl: true,
     username: true,
     firstName: false,
     lastName: false,
     fullName: true,
     email: true,
     phoneNumber: true,
-    avatarAccessUrl: false,
     bio: false,
     roles: true,
     status: true,
@@ -466,6 +460,21 @@ const UsersManagementList = (): ReactElement => {
   const columns = useMemo<ColumnDef<ManagedUserRecord>[]>(
     () => [
       {
+        accessorKey: "avatarAccessUrl",
+        header: t("table.pages.usersManagement.columns.avatarFileId"),
+        cell: ({ row }) => (
+          <UserAvatarCell
+            avatarAccessUrl={row.original.avatarAccessUrl}
+            displayName={
+              row.original.fullName !== EMPTY_DISPLAY
+                ? row.original.fullName
+                : row.original.username
+            }
+          />
+        ),
+        enableSorting: false,
+      },
+      {
         accessorKey: "fullName",
         header: t("table.pages.usersManagement.columns.fullName"),
         cell: (info) => (
@@ -552,13 +561,6 @@ const UsersManagementList = (): ReactElement => {
         header: t("table.pages.usersManagement.columns.lastName"),
         cell: (info) => (
           <Typography variant="body2">{orEmpty(info.getValue() as string)}</Typography>
-        ),
-      },
-      {
-        accessorKey: "avatarAccessUrl",
-        header: t("table.pages.usersManagement.columns.avatarFileId"),
-        cell: (info) => (
-          <UserAvatarCell avatarAccessUrl={info.getValue() as FileAccessUrl | null} />
         ),
       },
       {

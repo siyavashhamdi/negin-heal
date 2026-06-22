@@ -1060,11 +1060,24 @@ a.linkCard {
   background: color-mix(in srgb, var(--app-surface-border) 76%, transparent);
 }
 
-.versionBlock p {
+.versionBlock p,
+.versionLabel {
   margin: 0;
   color: var(--text-secondary);
   font-size: 0.8rem;
   text-align: center;
+}
+
+.versionLabel {
+  display: inline-block;
+  cursor: help;
+}
+
+.versionDeployTooltip {
+  font-family: variables.$font-family-latin;
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: start;
 }
 
 body[data-theme="dark"] {

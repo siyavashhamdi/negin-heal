@@ -9,7 +9,6 @@ import {
   AppSettingKeyListQuery,
   AppPrivacyPolicyPageConfigQuery,
   AppTermsOfUsePageConfigQuery,
-  AppVersionConfigQuery,
   PaymentCheckoutConfigQuery,
   SupportContactConfigQuery,
 } from "./graphql/queries";
@@ -24,7 +23,6 @@ import {
     AppSettingUpdateMutation,
     AppPrivacyPolicyPageConfigQuery,
     AppTermsOfUsePageConfigQuery,
-    AppVersionConfigQuery,
     PaymentCheckoutConfigQuery,
     SupportContactConfigQuery,
   ],

@@ -51,6 +51,8 @@ build_api_staging() {
 build_app_staging() {
   rm -rf "app/${STAGING_DIR}"
 
+  bash "${ROOT_DIR}/scripts/write-app-deploy-metadata.sh"
+
   export NODE_OPTIONS="--max-old-space-size=${APP_BUILD_HEAP_MB}"
   npm run build --prefix app -- --outDir "${STAGING_DIR}"
   unset NODE_OPTIONS

@@ -596,14 +596,6 @@ const DEFAULT_APP_SETTINGS: readonly DefaultAppSettingSeed[] = [
     description: "HTML قابل نمایش در صفحه شرایط استفاده",
     isActive: true,
   },
-  {
-    key: APP_SETTING_KEY.APP_VERSION,
-    label: "نسخه سامانه",
-    value: "1.0.0",
-    valueType: AppSettingValueType.STRING,
-    description: "مقدار قابل نمایش نسخه سامانه در صفحه سایر",
-    isActive: true,
-  },
 ] as const;
 
 const DEFAULT_APP_SETTING_KEYS = DEFAULT_APP_SETTINGS.map(

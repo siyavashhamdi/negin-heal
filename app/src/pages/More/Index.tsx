@@ -10,7 +10,6 @@ import NotificationsRoundedIcon from "@mui/icons-material/NotificationsRounded";
 import PeopleAltRoundedIcon from "@mui/icons-material/PeopleAltRounded";
 import PrivacyTipRoundedIcon from "@mui/icons-material/PrivacyTipRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
-import { useApolloClient } from "@apollo/client/react";
 import { useQuery } from "@apollo/client/react";
 import { useEffect, useRef, useState, type ReactElement } from "react";
 import { useNavigate } from "react-router-dom";
@@ -19,7 +18,6 @@ import { useThemeMode } from "../../contexts/ThemeContext";
 import { USER_PROFILE_UPDATE_MUTATION } from "../../graphql/mutations/userProfileUpdate.mutation";
 import { APP_PRIVACY_POLICY_PAGE_QUERY } from "../../graphql/queries/appPrivacyPolicyPageConfig.query";
 import { APP_TERMS_OF_USE_PAGE_QUERY } from "../../graphql/queries/appTermsOfUsePageConfig.query";
-import { APP_VERSION_QUERY } from "../../graphql/queries/appVersionConfig.query";
 import { USER_ME_QUERY } from "../../graphql/queries/userMe.query";
 import { useMobileAppLayout } from "../../hooks/useMobileAppLayout";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
@@ -38,6 +36,7 @@ import {
 } from "./terms-of-use-page.api";
 import NotificationPermissionCallout from "./NotificationPermissionCallout";
 import AndroidAppDownloadLink from "./AndroidAppDownloadLink";
+import AppVersionBlock from "./AppVersionBlock";
 import IosHomeScreenInstallPrompt from "./IosHomeScreenInstallPrompt";
 import {
   applyUserPreferences,
@@ -68,15 +67,8 @@ type UserProfilePreferencesMutationVariables = {
   };
 };
 
-type AppVersionConfigQuery = {
-  readonly appVersionConfig: {
-    readonly value: string;
-  };
-};
-
 const More = (): ReactElement => {
   const navigate = useNavigate();
-  const apolloClient = useApolloClient();
   const { user, isAuthenticated } = useAuth();
   const isMobile = useMobileAppLayout();
   const { mode, setThemeMode } = useThemeMode();
@@ -104,10 +96,6 @@ const More = (): ReactElement => {
       skip: !shouldShowPublicInfoCards,
     }
   );
-  const { data: appVersionData } = useQuery<AppVersionConfigQuery>(APP_VERSION_QUERY, {
-    fetchPolicy: "cache-and-network",
-    skip: !isMobile,
-  });
   const [preferredTheme, setPreferredTheme] = useState<ThemePreference>(initialThemePreference);
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(
     initialNotificationsEnabled
@@ -129,8 +117,6 @@ const More = (): ReactElement => {
   const termsOfUsePage = termsOfUseData?.appTermsOfUsePageConfig ?? EMPTY_APP_TERMS_OF_USE_PAGE;
   const shouldShowPrivacyPolicy = shouldShowPublicInfoCards && hasText(privacyPolicyPage.html);
   const shouldShowTermsOfUse = shouldShowPublicInfoCards && hasText(termsOfUsePage.html);
-  const appVersionValue = appVersionData?.appVersionConfig?.value?.trim() ?? "";
-  const shouldShowVersion = isMobile && hasText(appVersionValue);
 
   useEffect(() => {
     if (mode !== preferredTheme) {
@@ -152,13 +138,6 @@ const More = (): ReactElement => {
       setNotificationsEnabled(serverNotificationsEnabled);
     }
   }, [serverNotificationsEnabled, serverThemePreference]);
-
-  const refreshMe = async (): Promise<void> => {
-    await apolloClient.query<UserMeResponse>({
-      query: USER_ME_QUERY,
-      fetchPolicy: "network-only",
-    });
-  };
 
   const handleThemeToggle = async (): Promise<void> => {
     const previousTheme = preferredTheme;
@@ -182,7 +161,7 @@ const More = (): ReactElement => {
     }).catch(() => null);
 
     if (result?.data?.userProfileUpdate) {
-      await refreshMe();
+      lastSyncedThemePreferenceRef.current = nextTheme;
       return;
     }
 
@@ -219,7 +198,7 @@ const More = (): ReactElement => {
     }).catch(() => null);
 
     if (result?.data?.userProfileUpdate) {
-      await refreshMe();
+      lastSyncedNotificationsEnabledRef.current = nextValue;
       return;
     }
 
@@ -393,12 +372,7 @@ const More = (): ReactElement => {
         </button>
       </div>
 
-      {shouldShowVersion ? (
-        <div className={styles.versionBlock}>
-          <span />
-          <p>نسخه {appVersionValue}</p>
-        </div>
-      ) : null}
+      {isMobile ? <AppVersionBlock /> : null}
 
       {bugReportDialogOpen ? (
         <TicketDialog

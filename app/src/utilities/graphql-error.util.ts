@@ -170,6 +170,24 @@ function extractBackendGraphQLErrorMessage(
   return error?.message ?? "";
 }
 
+type AccessDeniedGraphQLErrorInput = {
+  readonly message: string;
+  readonly code?: string;
+  readonly extensions?: GraphQLErrorExtensions;
+};
+
+export function isAccessDeniedGraphQLError(error: AccessDeniedGraphQLErrorInput): boolean {
+  const errorCode =
+    error.code ?? error.extensions?.code ?? error.extensions?.exception?.code;
+
+  if (errorCode === "UNAUTHENTICATED" || errorCode === "FORBIDDEN") {
+    return true;
+  }
+
+  const backendMessage = extractBackendGraphQLErrorMessage(error);
+  return /access denied/i.test(backendMessage) || /access denied/i.test(error.message);
+}
+
 function resolveGraphQLErrorFieldMessage(
   error?: RawGraphQLErrorItem,
 ): string {
@@ -179,6 +197,16 @@ function resolveGraphQLErrorFieldMessage(
   const payload = (error?.payload ||
     error?.extensions?.payload ||
     error?.extensions?.exception?.payload) as Record<string, unknown> | undefined;
+
+  if (
+    isAccessDeniedGraphQLError({
+      message: error?.message ?? backendMessage,
+      code: exceptionCode,
+      extensions: error?.extensions,
+    })
+  ) {
+    return i18n.t("errors.network.accessDenied");
+  }
 
   if (shouldPreferExceptionTranslation(exceptionCode)) {
     const translatedMessage = getExceptionTranslation(exceptionCode, payload);
@@ -257,7 +285,7 @@ export const extractGraphQLErrorMessage = (error: unknown): string => {
           return i18n.t("errors.network.authenticationFailed");
         }
         if (statusCode === 403) {
-          return i18n.t("errors.network.forbidden");
+          return i18n.t("errors.network.accessDenied");
         }
         if (statusCode === 404) {
           return i18n.t("errors.network.notFound");

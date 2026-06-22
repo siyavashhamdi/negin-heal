@@ -8,7 +8,7 @@ import { LOCAL_STORAGE_KEYS } from "../constants";
 import { paginatedQueryTypePolicies } from "./apollo/paginated-query-cache.policy";
 import { queueApolloError } from "../components/apollo-error-queue";
 import { notifyAuthSessionExpired } from "./auth-session-expired-listeners";
-import { extractGraphQLErrorMessage, type ApolloErrorLike, type GraphQLErrorExtensions } from "../utilities/graphql-error.util";
+import { extractGraphQLErrorMessage, isAccessDeniedGraphQLError, type ApolloErrorLike, type GraphQLErrorExtensions } from "../utilities/graphql-error.util";
 
 const httpLink = new HttpLink({
   uri: "/graphql",
@@ -83,7 +83,13 @@ const errorLink = new ErrorLink(({ error }) => {
       const gql = graphQLError as { code?: string };
       const errorCode =
         gql.code ?? (graphQLError.extensions as { code?: string } | undefined)?.code;
-      if (errorCode === "UNAUTHENTICATED") {
+      if (
+        isAccessDeniedGraphQLError({
+          message: graphQLError.message,
+          code: errorCode,
+          extensions: graphQLError.extensions as GraphQLErrorExtensions | undefined,
+        })
+      ) {
         shouldLogout = true;
       }
     }
@@ -104,7 +110,7 @@ const errorLink = new ErrorLink(({ error }) => {
     });
     queueApolloError(userFriendlyMessage);
 
-    if (error.statusCode === 401) {
+    if (error.statusCode === 401 || error.statusCode === 403) {
       notifyAuthSessionExpired();
     }
     return;
