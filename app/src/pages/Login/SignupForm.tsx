@@ -23,19 +23,23 @@ import {
 } from "@mui/icons-material";
 import { useTranslation } from "../../hooks/useTranslation";
 import { useSnackbar } from "../../hooks/useSnackbar";
-import { toPersianDigits, toWesternDigits } from "../../utilities/persian-digits.util";
+import { toWesternDigits } from "../../utilities/persian-digits.util";
 import { useLogin } from "../../hooks/useLogin";
 import { API_CONFIG } from "../../config/env";
+import { SIGNUP_OTP_ENABLED } from "../../constants/authCredential.constants";
 import LoginShell from "./LoginShell";
 import { LoginCaptchaField } from "./components/LoginCaptchaField";
 import { LoginAdornedTextField } from "./components/LoginAdornedTextField";
+import { LoginCredentialHeader } from "./components/LoginCredentialHeader";
 import { type LoginNavState } from "./login-nav-state";
 import {
-  isValidEmail,
+  isLatinEmailValue,
+  isLatinIdentityUsername,
   isValidMobilePhone,
   sanitizeAuthIdentityInput,
+  sanitizeLatinEmailInput,
 } from "./password-reset-form.util";
-import { sanitizeMobilePhoneInput } from "../../utilities/mobile-phone.util";
+import { sanitizeMobilePhoneInput, normalizeMobilePhoneToLocal } from "../../utilities/mobile-phone.util";
 import { isValidUsernameLength } from "../../utils/usernamePolicy.util";
 import formStyles from "./styles/LoginFormShared.module.scss";
 import verifyStyles from "./styles/VerifyLoginCode.module.scss";
@@ -72,12 +76,13 @@ interface SignupFormProps {
 export const SignupForm = ({
   embedded = false,
   identity,
+  onEditIdentity,
 }: SignupFormProps): ReactElement => {
   const { t } = useTranslation();
   const { showError } = useSnackbar();
   const { signup, requestSignupCode, loading } = useLogin();
 
-  const supportsOtp = identity.identityKind === "mobile";
+  const supportsOtp = SIGNUP_OTP_ENABLED && identity.identityKind === "mobile";
   const [mode, setMode] = useState<SignupCredentialMode>("password");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -194,13 +199,14 @@ export const SignupForm = ({
       return;
     }
 
-    if (!isValidMobilePhone(mobile)) {
+    const normalizedMobile = normalizeMobilePhoneToLocal(mobile);
+    if (!normalizedMobile) {
       setHasError(true);
       showError(t("auth.login.errors.invalidMobile"));
       return;
     }
 
-    const sent = await requestSignupCode(mobile);
+    const sent = await requestSignupCode(normalizedMobile);
     if (sent) {
       setSignupCodeRequested(true);
       setVerificationDigits([...EMPTY_DIGITS]);
@@ -224,7 +230,7 @@ export const SignupForm = ({
       return;
     }
 
-    if (email.trim() && !isValidEmail(email)) {
+    if (email.trim() && !isLatinEmailValue(email)) {
       setHasError(true);
       showError(t("auth.login.errors.invalidEmail"));
       return;
@@ -233,6 +239,12 @@ export const SignupForm = ({
     if (mobile.trim() && !isValidMobilePhone(mobile)) {
       setHasError(true);
       showError(t("auth.login.errors.invalidMobile"));
+      return;
+    }
+
+    if (username.trim() && !isLatinIdentityUsername(username)) {
+      setHasError(true);
+      showError(t("auth.login.errors.identityInvalid"));
       return;
     }
 
@@ -281,10 +293,20 @@ export const SignupForm = ({
     }
 
     setHasError(false);
+    const normalizedMobile = mobile.trim()
+      ? normalizeMobilePhoneToLocal(mobile)
+      : undefined;
+
+    if (mobile.trim() && !normalizedMobile) {
+      setHasError(true);
+      showError(t("auth.login.errors.invalidMobile"));
+      return;
+    }
+
     const success = await signup({
       username: username.trim() || undefined,
       email: email.trim() || undefined,
-      mobile: mobile.trim() || undefined,
+      mobile: normalizedMobile,
       profile: {
         firstName: firstName.trim(),
         ...(lastName.trim() ? { lastName: lastName.trim() } : {}),
@@ -323,11 +345,7 @@ export const SignupForm = ({
 
   return (
     <LoginShell embedded={embedded} subtitle={t("auth.login.signupSubtitle")}>
-      <Box className={verifyStyles.credentialHeader}>
-        <Typography component="p" className={verifyStyles.identityValue}>
-          {identity.identityKind === "mobile" ? toPersianDigits(identity.identity) : identity.identity}
-        </Typography>
-      </Box>
+      <LoginCredentialHeader identity={identity} onEditIdentity={onEditIdentity} />
 
       {supportsOtp ? (
         <ToggleButtonGroup
@@ -401,7 +419,7 @@ export const SignupForm = ({
           fullWidth
           label={t("auth.login.emailOptionalFieldTitle")}
           value={email}
-          onChange={(event) => setEmail(sanitizeAuthIdentityInput(event.target.value))}
+          onChange={(event) => setEmail(sanitizeLatinEmailInput(event.target.value))}
           inputProps={{ ...latinFieldInputProps, inputMode: "email" }}
           InputProps={{
             startAdornment: (

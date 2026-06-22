@@ -1,16 +1,103 @@
 import { toWesternDigits } from "./persian-digits.util";
+import {
+  AUTH_IDENTITY_CHARSET_REGEX,
+  AUTH_IDENTITY_LOCAL_MOBILE_REGEX,
+  detectAuthIdentityKind,
+  EMAIL_REGEX,
+  isAuthIdentityMobile,
+  isLatinEmailValue,
+  isLatinIdentityUsername,
+  isLatinUsername,
+  isValidAuthIdentity,
+  isValidEmail,
+  LATIN_EMAIL_CHARSET_REGEX,
+  LATIN_USERNAME_REGEX,
+  isAuthIdentityMobileMode,
+  normalizeAuthIdentityForSubmit,
+  resolveAuthIdentityIconKind,
+  resolveInvalidAuthIdentityErrorKind,
+  sanitizeAuthIdentityInput,
+  tryNormalizeAuthIdentityMobile,
+  type AuthIdentityKind,
+  type AuthIdentityValidationErrorKind,
+} from "./auth-identity.util";
 
-export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-export const isValidEmail = (value: string): boolean => {
-  const trimmed = value.trim();
-  return trimmed.length > 0 && EMAIL_REGEX.test(trimmed);
+export {
+  AUTH_IDENTITY_CHARSET_REGEX,
+  AUTH_IDENTITY_LOCAL_MOBILE_REGEX,
+  detectAuthIdentityKind,
+  EMAIL_REGEX,
+  isAuthIdentityMobile,
+  isLatinEmailValue,
+  isLatinIdentityUsername,
+  isLatinUsername,
+  isValidAuthIdentity,
+  isValidEmail,
+  LATIN_EMAIL_CHARSET_REGEX,
+  LATIN_USERNAME_REGEX,
+  isAuthIdentityMobileMode,
+  normalizeAuthIdentityForSubmit,
+  resolveAuthIdentityIconKind,
+  resolveInvalidAuthIdentityErrorKind,
+  sanitizeAuthIdentityInput,
+  tryNormalizeAuthIdentityMobile,
+  type AuthIdentityKind,
+  type AuthIdentityValidationErrorKind,
 };
+
+export const latinIdentityFieldInputProps = {
+  lang: "en",
+  dir: "ltr",
+  spellCheck: false,
+  autoCapitalize: "off",
+  autoCorrect: "off",
+} as const;
+
+const NON_ALPHANUMERIC_START = /^[^a-zA-Z0-9]+/;
+const NON_MOBILE_START = /^[^0-9+]+/;
+
+const NON_LATIN_USERNAME = /[^a-zA-Z0-9._-]/g;
+const NON_LATIN_EMAIL = /[^a-zA-Z0-9@._+-]/g;
+const NON_MOBILE_DIGITS = /[^\d+]/g;
+
+function enforceLatinIdentityStart(value: string): string {
+  return value.replace(NON_ALPHANUMERIC_START, "");
+}
+
+function enforceMobileInputStart(value: string): string {
+  return value.replace(NON_MOBILE_START, "");
+}
+
+export const sanitizeLatinUsernameInput = (value: string): string =>
+  enforceLatinIdentityStart(
+    toWesternDigits(value).replace(NON_LATIN_USERNAME, ""),
+  );
+
+export const sanitizeLatinEmailInput = (value: string): string =>
+  enforceLatinIdentityStart(
+    toWesternDigits(value).replace(NON_LATIN_EMAIL, ""),
+  );
 
 export const sanitizeMobilePhoneInput = (value: string): string =>
-  toWesternDigits(value).replace(/\D/g, "");
+  enforceMobileInputStart(
+    toWesternDigits(value).replace(NON_MOBILE_DIGITS, ""),
+  );
 
-export const isValidMobilePhone = (value: string): boolean => {
-  const digits = sanitizeMobilePhoneInput(value);
-  return /^09\d{9}$/.test(digits) || /^9\d{9}$/.test(digits) || /^989\d{9}$/.test(digits);
+/** @deprecated Use tryNormalizeAuthIdentityMobile */
+export const normalizeMobilePhoneToLocal = tryNormalizeAuthIdentityMobile;
+
+export const normalizeOptionalMobilePhoneToLocal = (
+  value: string,
+): string | undefined => {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+  return tryNormalizeAuthIdentityMobile(trimmed);
 };
+
+export const isValidMobilePhone = (value: string): boolean =>
+  tryNormalizeAuthIdentityMobile(value) !== undefined;
+
+/** @deprecated Use AUTH_IDENTITY_LOCAL_MOBILE_REGEX */
+export const AUTH_IDENTITY_MOBILE_REGEX = AUTH_IDENTITY_LOCAL_MOBILE_REGEX;

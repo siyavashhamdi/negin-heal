@@ -15,6 +15,12 @@ import { useSnackbar } from "./useSnackbar";
 import { collectSessionClientContextInput } from "../utils/sessionClientContext.util";
 import { applyUserPreferences } from "../utils/userPreferences.util";
 import { mapMeToUser } from "../utils/storedUser.util";
+import {
+  normalizeAuthIdentityForSubmit,
+  normalizeMobilePhoneToLocal,
+  sanitizeLatinEmailInput,
+  sanitizeLatinUsernameInput,
+} from "../utilities/contact-validation.util";
 import type { UserMeGqlResponse } from "../lib/graphql/generated/graphql";
 
 export interface RequestLoginCodeInput {
@@ -197,10 +203,13 @@ export const useLogin = () => {
 
   const buildClientContext = () => collectSessionClientContextInput();
 
+  const normalizeIdentity = (identity: string): string =>
+    normalizeAuthIdentityForSubmit(identity);
+
   const resolveAuthIdentity = async (input: RequestLoginCodeInput): Promise<boolean | null> => {
     try {
       const result = await resolveAuthIdentityMutation({
-        variables: { input: { identity: input.identity.trim() } },
+        variables: { input: { identity: normalizeIdentity(input.identity) } },
       });
 
       if (result.error) {
@@ -218,7 +227,7 @@ export const useLogin = () => {
   const requestLoginCode = async (input: RequestLoginCodeInput): Promise<boolean> => {
     try {
       const result = await requestLoginCodeMutation({
-        variables: { input: { identity: input.identity.trim() } },
+        variables: { input: { identity: normalizeIdentity(input.identity) } },
       });
 
       if (result.error) {
@@ -245,7 +254,7 @@ export const useLogin = () => {
       const result = await verifyLoginCodeMutation({
         variables: {
           input: {
-            identity: input.identity.trim(),
+            identity: normalizeIdentity(input.identity),
             code: input.code.trim(),
             rememberMe: input.rememberMe === true,
             clientContext: await buildClientContext(),
@@ -284,7 +293,12 @@ export const useLogin = () => {
   const requestSignupCode = async (mobile: string): Promise<boolean> => {
     try {
       const result = await requestSignupCodeMutation({
-        variables: { input: { mobile: mobile.trim() } },
+        variables: {
+          input: {
+            mobile:
+              normalizeMobilePhoneToLocal(mobile.trim()) ?? mobile.trim(),
+          },
+        },
       });
 
       if (result.error) {
@@ -311,7 +325,7 @@ export const useLogin = () => {
       const result = await loginMutation({
         variables: {
           input: {
-            identity: input.identity.trim(),
+            identity: normalizeIdentity(input.identity),
             password: input.password,
             captchaId: input.captchaId,
             captchaValue: input.captchaValue,
@@ -360,9 +374,15 @@ export const useLogin = () => {
       const result = await signupMutation({
         variables: {
           input: {
-            username: input.username?.trim() || undefined,
-            email: input.email?.trim() || undefined,
-            mobile: input.mobile?.trim() || undefined,
+            username: input.username?.trim()
+              ? sanitizeLatinUsernameInput(input.username).toLowerCase()
+              : undefined,
+            email: input.email?.trim()
+              ? sanitizeLatinEmailInput(input.email).toLowerCase()
+              : undefined,
+            mobile: input.mobile?.trim()
+              ? normalizeMobilePhoneToLocal(input.mobile) ?? undefined
+              : undefined,
             profile: {
               firstName: input.profile.firstName.trim(),
               ...(input.profile.lastName?.trim()

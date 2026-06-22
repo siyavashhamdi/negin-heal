@@ -214,6 +214,38 @@ body {
   font-family: variables.$font-family !important;
 }
 
+// Snackbar alerts must keep dark filled tones in light mode (MuiPaper surface bg is excluded from Alert).
+body[data-theme="light"] .MuiSnackbar-root .MuiAlert-root.app-snackbar-alert {
+  background-image: none !important;
+
+  &.MuiAlert-filledSuccess {
+    background-color: #059669 !important;
+    color: #ffffff !important;
+  }
+
+  &.MuiAlert-filledError {
+    background-color: #dc2626 !important;
+    color: #ffffff !important;
+  }
+
+  &.MuiAlert-filledWarning {
+    background-color: #d97706 !important;
+    color: #ffffff !important;
+  }
+
+  &.MuiAlert-filledInfo {
+    background-color: #2563eb !important;
+    color: #ffffff !important;
+  }
+
+  .MuiAlert-message,
+  .MuiAlert-icon,
+  .MuiAlert-action .MuiIconButton-root,
+  .MuiTypography-root {
+    color: #ffffff !important;
+  }
+}
+
 // Entity tables — restore pre–234df52 size="small" inputs (must beat global rules above).
 .entity-table-shell {
   --app-input-min-height: #{variables.$table-input-min-height};

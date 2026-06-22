@@ -2,6 +2,7 @@ import { IsBoolean, IsNotEmpty, IsOptional, IsString, ValidateNested } from "cla
 import { Type } from "class-transformer";
 import { Field, InputType } from "@nestjs/graphql";
 import { SessionClientContextGqlInput } from "./session-client-context.gql.input";
+import { IsLatinAuthIdentity } from "../../../../validators/latin-identity.validators";
 
 @InputType()
 export class UserLoginGqlInput {
@@ -10,6 +11,7 @@ export class UserLoginGqlInput {
   })
   @IsString({ message: "Identity must be a string" })
   @IsNotEmpty({ message: "Identity is required" })
+  @IsLatinAuthIdentity()
   identity: string;
 
   @Field({ description: "User password" })

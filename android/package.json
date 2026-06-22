@@ -11,7 +11,8 @@
     "doctor": "bubblewrap doctor",
     "assetlinks": "bubblewrap fingerprint generateAssetLinks",
     "fingerprint": "bash scripts/print-fingerprint.sh",
-    "sync:assetlinks": "bash scripts/sync-assetlinks.sh"
+    "sync:assetlinks": "bash scripts/sync-assetlinks.sh",
+    "verify:release": "bash scripts/verify-release.sh"
   },
   "devDependencies": {
     "@bubblewrap/cli": "^1.23.0"

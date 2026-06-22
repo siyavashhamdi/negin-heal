@@ -237,10 +237,10 @@ function parseOptionalNumber(value: string): number | undefined {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
-function parseVisibleAfterMinutes(value: string, unit: VisibleAfterUnit): number | undefined {
+function parseVisibleAfterMinutes(value: string, unit: VisibleAfterUnit): number | null {
   const parsedValue = parseOptionalNumber(value);
   if (parsedValue == null) {
-    return undefined;
+    return null;
   }
   if (unit === "DAYS") {
     return parsedValue * 24 * 60;
@@ -249,6 +249,84 @@ function parseVisibleAfterMinutes(value: string, unit: VisibleAfterUnit): number
     return parsedValue * 60;
   }
   return parsedValue;
+}
+
+function trimToNull(value: string): string | null {
+  const trimmed = value.trim();
+  return trimmed === "" ? null : trimmed;
+}
+
+function resolveStoredFileId(
+  uploadedFileId: string | undefined,
+  existingAccessUrl: FileAccessUrl | null,
+): string | null {
+  return uploadedFileId ?? getFileIdFromAccessUrl(existingAccessUrl) ?? null;
+}
+
+function buildCourseItemInput(
+  item: DraftItem,
+  itemIndex: number,
+  uploadedFiles: UploadedCourseFiles,
+): Record<string, unknown> {
+  if (item.contentType === "FILE") {
+    return {
+      title: item.title.trim(),
+      sortOrder: itemIndex + 1,
+      fileId: resolveStoredFileId(
+        uploadedFiles.itemFileIdsByItemId[item.id],
+        item.fileAccessUrl,
+      ),
+      article: null,
+    };
+  }
+
+  return {
+    title: item.title.trim(),
+    sortOrder: itemIndex + 1,
+    fileId: null,
+    article: trimToNull(item.article),
+  };
+}
+
+function buildCourseWriteMutationInput(input: {
+  readonly isEditMode: boolean;
+  readonly courseId?: string | null;
+  readonly title: string;
+  readonly description: string;
+  readonly coverImageFileId: string | null;
+  readonly priceIrt: number;
+  readonly isActive: boolean;
+  readonly tags: string[];
+  readonly discountEnabled: boolean;
+  readonly hasPositivePrice: boolean;
+  readonly discountKind: DiscountKind;
+  readonly parsedDiscountValue: number | undefined;
+  readonly chapters: Record<string, unknown>[];
+}): Record<string, unknown> {
+  const mutationInput: Record<string, unknown> = {
+    title: input.title.trim(),
+    description: trimToNull(input.description),
+    coverImageFileId: input.coverImageFileId,
+    priceIrt: input.priceIrt,
+    isActive: input.isActive === true,
+    tags: input.tags,
+    chapters: input.chapters,
+  };
+
+  if (input.discountEnabled && input.hasPositivePrice && input.parsedDiscountValue != null) {
+    mutationInput.discount = {
+      type: input.discountKind,
+      value: input.parsedDiscountValue,
+    };
+  } else if (input.isEditMode) {
+    mutationInput.discount = null;
+  }
+
+  if (input.isEditMode && input.courseId) {
+    mutationInput.id = input.courseId;
+  }
+
+  return mutationInput;
 }
 
 type CourseFormSnapshot = {
@@ -811,31 +889,19 @@ const CourseFormDialog = ({
   };
 
   const buildChapterInputs = (uploadedFiles: UploadedCourseFiles): Record<string, unknown>[] =>
-    chapters.map((chapter, chapterIndex) => {
-      const itemInputs = chapter.items.map((item, itemIndex) => ({
-        title: item.title.trim(),
-        sortOrder: itemIndex + 1,
-        fileId:
-          item.contentType === "FILE"
-            ? uploadedFiles.itemFileIdsByItemId[item.id] ||
-              getFileIdFromAccessUrl(item.fileAccessUrl) ||
-              undefined
-            : undefined,
-        article: item.contentType === "ARTICLE" ? item.article.trim() || undefined : undefined,
-      }));
-
-      return {
-        title: chapter.title.trim(),
-        description: chapter.description.trim() || undefined,
-        visibleAfterMinutes: parseVisibleAfterMinutes(
-          chapter.visibleAfterMinutes,
-          chapter.visibleAfterUnit,
-        ),
-        isFree: hasPositivePrice ? chapter.isFree === true : false,
-        sortOrder: chapterIndex + 1,
-        items: itemInputs,
-      };
-    });
+    chapters.map((chapter, chapterIndex) => ({
+      title: chapter.title.trim(),
+      description: trimToNull(chapter.description),
+      visibleAfterMinutes: parseVisibleAfterMinutes(
+        chapter.visibleAfterMinutes,
+        chapter.visibleAfterUnit,
+      ),
+      isFree: hasPositivePrice ? chapter.isFree === true : false,
+      sortOrder: chapterIndex + 1,
+      items: chapter.items.map((item, itemIndex) =>
+        buildCourseItemInput(item, itemIndex, uploadedFiles),
+      ),
+    }));
 
   const handleSubmit = async (skipFreeConfirmation = false): Promise<void> => {
     if (!validateBeforeSubmit()) {
@@ -862,28 +928,24 @@ const CourseFormDialog = ({
       return;
     }
     const chapterInputs = buildChapterInputs(uploadedFiles);
-
-    const input: Record<string, unknown> = {
-      title: title.trim(),
-      description: description.trim() || undefined,
-      coverImageFileId:
-        uploadedFiles.coverImageFileId || getFileIdFromAccessUrl(coverImageAccessUrl) || undefined,
+    const mutationInput = buildCourseWriteMutationInput({
+      isEditMode,
+      courseId,
+      title,
+      description,
+      coverImageFileId: resolveStoredFileId(
+        uploadedFiles.coverImageFileId,
+        coverImageAccessUrl,
+      ),
       priceIrt: parsedPriceIrt ?? 0,
-      isActive: isActive === true,
+      isActive,
       tags,
+      discountEnabled,
+      hasPositivePrice,
+      discountKind,
+      parsedDiscountValue,
       chapters: chapterInputs,
-    };
-
-    if (discountEnabled && hasPositivePrice && parsedDiscountValue != null) {
-      input.discount = {
-        type: discountKind,
-        value: parsedDiscountValue,
-      };
-    } else if (isEditMode) {
-      input.discount = null;
-    }
-
-    const mutationInput = isEditMode && courseId ? { ...input, id: courseId } : input;
+    });
     const mutateCourse = isEditMode ? updateCourse : createCourse;
 
     void mutateCourse({

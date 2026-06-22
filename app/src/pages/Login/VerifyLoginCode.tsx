@@ -22,11 +22,13 @@ import { useTranslation } from "../../hooks/useTranslation";
 import { useLogin } from "../../hooks/useLogin";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { API_CONFIG } from "../../config/env";
+import { LOGIN_OTP_ENABLED } from "../../constants/authCredential.constants";
 import { LOGIN_CAPTCHA_FAILED_ATTEMPTS_THRESHOLD } from "../../constants";
-import { toPersianDigits, toWesternDigits } from "../../utilities/persian-digits.util";
+import { toWesternDigits } from "../../utilities/persian-digits.util";
 import LoginShell from "./LoginShell";
 import { LoginAdornedTextField } from "./components/LoginAdornedTextField";
 import { LoginCaptchaField } from "./components/LoginCaptchaField";
+import { LoginCredentialHeader } from "./components/LoginCredentialHeader";
 import { type LoginNavState } from "./login-nav-state";
 import formStyles from "./styles/LoginFormShared.module.scss";
 import verifyStyles from "./styles/VerifyLoginCode.module.scss";
@@ -52,13 +54,14 @@ interface VerifyLoginCodeFormProps {
 export const VerifyLoginCodeForm = ({
   embedded = false,
   identity,
+  onEditIdentity,
   onForgotPassword,
 }: VerifyLoginCodeFormProps): ReactElement => {
   const { t } = useTranslation();
   const { requestLoginCode, verifyLoginCode, loginWithPassword, loading } = useLogin();
   const { showError } = useSnackbar();
 
-  const supportsOtp = identity.identityKind === "mobile";
+  const supportsOtp = LOGIN_OTP_ENABLED && identity.identityKind === "mobile";
   const [mode, setMode] = useState<CredentialMode>("password");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -285,11 +288,7 @@ export const VerifyLoginCodeForm = ({
 
   return (
     <LoginShell embedded={embedded} subtitle={t("auth.login.credentialSubtitle")}>
-      <Box className={verifyStyles.credentialHeader}>
-        <Typography component="p" className={verifyStyles.identityValue}>
-          {identity.identityKind === "mobile" ? toPersianDigits(identity.identity) : identity.identity}
-        </Typography>
-      </Box>
+      <LoginCredentialHeader identity={identity} onEditIdentity={onEditIdentity} />
 
       {supportsOtp ? (
         <ToggleButtonGroup
@@ -414,7 +413,7 @@ export const VerifyLoginCodeForm = ({
               <Typography className={verifyStyles.verificationCodeSectionHint}>
                 {t("auth.login.verificationCodeSectionHintPrefix")}{" "}
                 <span className={verifyStyles.verificationHintPhone}>
-                  {toPersianDigits(identity.identity)}
+                  {identity.identity}
                 </span>{" "}
                 {t("auth.login.verificationCodeSectionHintSuffix")}
               </Typography>

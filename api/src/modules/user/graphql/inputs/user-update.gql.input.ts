@@ -7,6 +7,7 @@ import {
   IsOptional,
   IsString,
   MinLength,
+  ValidateIf,
   ValidateNested,
 } from "class-validator";
 import { Field, ID, InputType } from "@nestjs/graphql";
@@ -19,6 +20,11 @@ import {
   toObjectIdOptional,
 } from "../../../../transforms/object-id.transform";
 import { IsObjectId } from "../../../../validators/is-object-id.validator";
+import {
+  IsAuthIdentityMobile,
+  IsLatinEmail,
+  IsLatinUsername,
+} from "../../../../validators/latin-identity.validators";
 
 function toNullableObjectId({
   value,
@@ -47,11 +53,15 @@ export class UserUpdateProfileGqlInput {
   @Field({ nullable: true, description: "User email address" })
   @IsOptional()
   @IsString({ message: "Email must be a string" })
+  @ValidateIf((_, value) => typeof value === "string" && value.trim().length > 0)
+  @IsLatinEmail()
   email?: string | null;
 
   @Field({ nullable: true, description: "User mobile phone number" })
   @IsOptional()
   @IsString({ message: "Phone number must be a string" })
+  @ValidateIf((_, value) => typeof value === "string" && value.trim().length > 0)
+  @IsAuthIdentityMobile()
   phoneNumber?: string | null;
 
   @Field(() => ID, {
@@ -106,6 +116,8 @@ export class UserUpdateGqlInput {
   @MinLength(MIN_USERNAME_LENGTH, {
     message: `Username must be at least ${MIN_USERNAME_LENGTH} characters long`,
   })
+  @ValidateIf((_, value) => typeof value === "string" && value.trim().length > 0)
+  @IsLatinUsername()
   username?: string;
 
   @Field(() => UserUpdateProfileGqlInput, {

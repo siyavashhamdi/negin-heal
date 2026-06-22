@@ -53,6 +53,7 @@ npm run setup:keystore
 | `npm run update:project` | Regenerate Android files after editing `twa-manifest.json` |
 | `npm run fingerprint` | Print SHA-256 certificate fingerprint |
 | `npm run assetlinks` | Generate Digital Asset Links JSON via Bubblewrap |
+| `npm run verify:release` | Verify APK/AAB targetSdk, versionCode, and structure before upload |
 | `npm run install:apk` | Install the signed APK on a connected device |
 | `npm run doctor` | Check JDK and Android SDK configuration |
 
@@ -61,8 +62,22 @@ npm run setup:keystore
 If `npm run build` fails after running `npm run update:project`, the update script re-applies local fixes for:
 
 - Aliyun Maven mirrors when `dl.google.com` is unreachable
-- `compileSdkVersion 35` and `buildToolsVersion 35.0.1` to match installed SDK packages
+- `compileSdkVersion 35`, `targetSdkVersion 35`, and `buildToolsVersion 35.0.1` (Cafe Bazaar and Google Play require `targetSdkVersion` >= 34)
 - Stable `androidbrowserhelper:2.5.0` (compatible with compileSdk 35; 2.6.2 requires androidx.browser 1.9.0+)
+
+`npm run build` verifies the signed APK reports `targetSdkVersion >= 34` before copying it to `app/public/app/`.
+
+Before uploading to Cafe Bazaar, also run:
+
+```bash
+npm run verify:release
+```
+
+Upload **`app-release-signed.apk`** or **`app-release-bundle.aab`** with **versionCode 3** (not version 2). Investigators can confirm `targetSdkVersion: 35` with:
+
+```bash
+$ANDROID_HOME/build-tools/*/aapt2 dump badging app-release-signed.apk | grep targetSdk
+```
 
 Ensure your Android SDK has `platforms;android-35` and `build-tools;35.0.1` installed. The build script writes `local.properties` automatically from `ANDROID_SDK_ROOT`, `ANDROID_HOME`, or `~/Library/Android/sdk`.
 

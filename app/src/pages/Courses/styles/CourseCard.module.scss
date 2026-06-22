@@ -6,6 +6,7 @@ $ease-flip: cubic-bezier(0.32, 0.72, 0, 1);
 
 .flipCard {
   perspective: 93.75rem;
+  border-radius: 1.15rem;
   block-size: 100%;
   min-block-size: 27.5rem;
   cursor: pointer;
@@ -34,6 +35,7 @@ $ease-flip: cubic-bezier(0.32, 0.72, 0, 1);
 
 .flipInner {
   position: relative;
+  border-radius: 1.15rem;
   inline-size: 100%;
   block-size: 100%;
   min-block-size: 27.5rem;
@@ -51,13 +53,6 @@ $ease-flip: cubic-bezier(0.32, 0.72, 0, 1);
   backface-visibility: hidden;
   border-radius: 1.15rem;
   border: $hairline color-mix(in srgb, var(--app-surface-border) 75%, transparent);
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, #ffffff 96%, var(--app-layout-glow) 4%) 0%,
-      color-mix(in srgb, var(--app-surface-bg) 96%, #f8fafc) 58%,
-      color-mix(in srgb, #eef4ff 58%, var(--app-surface-bg)) 100%
-    );
   box-shadow:
     0 0.85rem 1.8rem rgba(15, 23, 42, 0.1),
     0 0.1rem 0.28rem rgba(15, 23, 42, 0.08),
@@ -71,15 +66,17 @@ $ease-flip: cubic-bezier(0.32, 0.72, 0, 1);
 .flipFaceFront {
   position: relative;
   block-size: 100%;
+  background: transparent;
+  box-shadow: none;
 }
 
 .coverWrap {
   position: absolute;
-  inset: 0;
+  inset: -0.0625rem;
   display: flex;
   flex-direction: column;
-  inline-size: 100%;
-  block-size: 100%;
+  inline-size: calc(100% + 0.125rem);
+  block-size: calc(100% + 0.125rem);
   border-radius: 1.15rem;
   overflow: hidden;
   isolation: isolate;
@@ -543,6 +540,13 @@ $ease-flip: cubic-bezier(0.32, 0.72, 0, 1);
   display: flex;
   align-items: center;
   padding: 0.9rem;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, #ffffff 96%, var(--app-layout-glow) 4%) 0%,
+      color-mix(in srgb, var(--app-surface-bg) 96%, #f8fafc) 58%,
+      color-mix(in srgb, #eef4ff 58%, var(--app-surface-bg)) 100%
+    );
 }
 
 .backActions {
@@ -591,13 +595,6 @@ $ease-flip: cubic-bezier(0.32, 0.72, 0, 1);
 body[data-theme="dark"] {
   .flipFace {
     border-color: color-mix(in srgb, #94a3b8 18%, transparent);
-    background:
-      linear-gradient(
-        180deg,
-        color-mix(in srgb, #22314d 82%, var(--app-layout-glow) 8%) 0%,
-        color-mix(in srgb, var(--app-surface-bg) 86%, #1e2b45) 54%,
-        color-mix(in srgb, #121b2d 76%, var(--app-surface-bg)) 100%
-      );
     box-shadow:
       0 0.1rem 0.18rem rgba(0, 0, 0, 0.28),
       inset 0 0.0625rem 0 rgba(255, 255, 255, 0.08);
@@ -609,6 +606,16 @@ body[data-theme="dark"] {
       0 0 0 0.0625rem color-mix(in srgb, #60a5fa 16%, transparent),
       0 1rem 2rem rgba(0, 0, 0, 0.22),
       inset 0 0.0625rem 0 rgba(255, 255, 255, 0.1);
+  }
+
+  .flipFaceBack {
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, #22314d 82%, var(--app-layout-glow) 8%) 0%,
+        color-mix(in srgb, var(--app-surface-bg) 86%, #1e2b45) 54%,
+        color-mix(in srgb, #121b2d 76%, var(--app-surface-bg)) 100%
+      );
   }
 
   .coverWrap {

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { USER_FORGOT_PASSWORD_MUTATION } from "../graphql/mutations/userForgotPassword.mutation";
 import { USER_RESET_PASSWORD_MUTATION } from "../graphql/mutations/userResetPassword.mutation";
 import { showErrorIfNotQueued } from "../utilities/graphql-error.util";
+import { normalizeAuthIdentityForSubmit } from "../utilities/contact-validation.util";
 import { useSnackbar } from "./useSnackbar";
 
 export interface ForgotPasswordInput {
@@ -51,7 +52,7 @@ export const usePasswordReset = () => {
       const result = await forgotPasswordMutation({
         variables: {
           input: {
-            identity: input.identity.trim(),
+            identity: normalizeAuthIdentityForSubmit(input.identity),
             captchaId: input.captchaId,
             captchaValue: input.captchaValue,
           },

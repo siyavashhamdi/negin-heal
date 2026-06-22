@@ -47,7 +47,7 @@ import {
 } from "../../hooks/useServerPaginatedQuery";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
-import { sanitizeMobilePhoneInput } from "../../utilities/mobile-phone.util";
+import { sanitizeMobilePhoneInput, normalizeOptionalMobilePhoneToLocal, sanitizeLatinEmailInput, sanitizeLatinUsernameInput, latinIdentityFieldInputProps } from "../../utilities/mobile-phone.util";
 import { isValidEmail, isValidMobilePhone } from "../../utilities/contact-validation.util";
 import { isValidUsernameLength } from "../../utils/usernamePolicy.util";
 import CrudRowActions from "../../shared/crud/CrudRowActions";
@@ -656,7 +656,13 @@ const UsersManagementList = (): ReactElement => {
             [key]: nextValue,
           }));
         }}
-        inputProps={key === "phoneNumber" ? { inputMode: "numeric", dir: "ltr" } : undefined}
+        inputProps={
+          key === "phoneNumber"
+            ? { ...latinIdentityFieldInputProps, inputMode: "tel", className: undefined }
+            : key === "username" || key === "email"
+              ? { ...latinIdentityFieldInputProps, inputMode: key === "email" ? "email" : "text" }
+              : undefined
+        }
         InputProps={{
           endAdornment:
             textFilterValue.trim() !== "" ? (
@@ -733,7 +739,11 @@ const UsersManagementList = (): ReactElement => {
 
   const renderFilterCell = (column: Column<ManagedUserRecord, unknown>) => {
     if (column.id === "username") {
-      return renderTextFilter("username", t("table.pages.usersManagement.columns.username"));
+      return renderTextFilter(
+        "username",
+        t("table.pages.usersManagement.columns.username"),
+        sanitizeLatinUsernameInput,
+      );
     }
     if (column.id === "firstName") {
       return renderTextFilter("firstName", t("table.pages.usersManagement.columns.firstName"));
@@ -745,7 +755,11 @@ const UsersManagementList = (): ReactElement => {
       return renderTextFilter("fullName", t("table.pages.usersManagement.columns.fullName"));
     }
     if (column.id === "email") {
-      return renderTextFilter("email", t("table.pages.usersManagement.columns.email"));
+      return renderTextFilter(
+        "email",
+        t("table.pages.usersManagement.columns.email"),
+        sanitizeLatinEmailInput,
+      );
     }
     if (column.id === "phoneNumber") {
       return renderTextFilter(
@@ -905,7 +919,8 @@ const UsersManagementList = (): ReactElement => {
     }
 
     const phoneValue = editForm.phoneNumber.trim();
-    if (phoneValue && !isValidMobilePhone(phoneValue)) {
+    const normalizedPhone = normalizeOptionalMobilePhoneToLocal(phoneValue);
+    if (phoneValue && !normalizedPhone) {
       showError(t("pages.usersManagement.validation.invalidPhoneNumber"));
       return;
     }
@@ -934,7 +949,7 @@ const UsersManagementList = (): ReactElement => {
               firstName: optionalInput(editForm.firstName),
               lastName: optionalInput(editForm.lastName),
               email: optionalInput(editForm.email),
-              phoneNumber: optionalInput(editForm.phoneNumber),
+              phoneNumber: normalizedPhone,
               avatarFileId,
               bio: optionalInput(editForm.bio),
             },
@@ -959,7 +974,7 @@ const UsersManagementList = (): ReactElement => {
             firstName: optionalInput(editForm.firstName),
             lastName: optionalInput(editForm.lastName),
             email: optionalInput(editForm.email),
-            phoneNumber: optionalInput(editForm.phoneNumber),
+            phoneNumber: normalizedPhone,
             avatarFileId,
             bio: optionalInput(editForm.bio),
           },
@@ -1058,7 +1073,9 @@ const UsersManagementList = (): ReactElement => {
                   <TextField
                     label={t("table.pages.usersManagement.columns.username")}
                     value={editForm.username}
-                    onChange={(event) => setEditField("username", event.target.value)}
+                    onChange={(event) =>
+                      setEditField("username", sanitizeLatinUsernameInput(event.target.value))
+                    }
                     required
                     fullWidth
                     size="small"
@@ -1066,7 +1083,9 @@ const UsersManagementList = (): ReactElement => {
                   <TextField
                     label={t("table.pages.usersManagement.columns.email")}
                     value={editForm.email}
-                    onChange={(event) => setEditField("email", event.target.value)}
+                    onChange={(event) =>
+                      setEditField("email", sanitizeLatinEmailInput(event.target.value))
+                    }
                     fullWidth
                     size="small"
                     type="email"
@@ -1079,7 +1098,7 @@ const UsersManagementList = (): ReactElement => {
                     }
                     fullWidth
                     size="small"
-                    inputProps={{ inputMode: "numeric", dir: "ltr" }}
+                    inputProps={{ ...latinIdentityFieldInputProps, inputMode: "tel", dir: "ltr" }}
                   />
                 </Stack>
 

@@ -55,6 +55,22 @@ export function toObjectIdOptional({
 }
 
 /**
+ * Like toObjectIdOptional, but preserves explicit null for nullable fields that
+ * should clear a stored reference on update.
+ */
+export function toNullableObjectId({
+  value,
+}: {
+  value: unknown;
+}): Types.ObjectId | null | undefined | unknown {
+  if (value === null) {
+    return null;
+  }
+
+  return toObjectIdOptional({ value });
+}
+
+/**
  * Transform function to convert array of GraphQL ID scalars (strings) to MongoDB ObjectIds
  *
  * @example

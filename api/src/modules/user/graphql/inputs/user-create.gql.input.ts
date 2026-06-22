@@ -13,6 +13,7 @@ import { Field, InputType } from "@nestjs/graphql";
 import { UserRole, UserStatus } from "../../../../enums";
 import { MIN_USERNAME_LENGTH } from "../../../../utils/username-policy.util";
 import { UserUpdateProfileGqlInput } from "./user-update.gql.input";
+import { IsLatinUsername } from "../../../../validators/latin-identity.validators";
 
 @InputType()
 export class UserCreateGqlInput {
@@ -21,6 +22,7 @@ export class UserCreateGqlInput {
   @MinLength(MIN_USERNAME_LENGTH, {
     message: `Username must be at least ${MIN_USERNAME_LENGTH} characters long`,
   })
+  @IsLatinUsername()
   username: string;
 
   @Field({ description: "Initial account password" })

@@ -31,7 +31,7 @@ import { useMobileAppLayout } from "../../hooks/useMobileAppLayout";
 import { useMe, type UserMeGqlResponse } from "../../hooks/useMe";
 import { resolveMeUserDisplayName, resolveStoredUserDisplayName } from "../../utils/storedUser.util";
 import { getProfileDisplayRoles, getUserRoleLabel } from "../../utils/userRoleLabels.util";
-import { sanitizeMobilePhoneInput } from "../../utilities/mobile-phone.util";
+import { sanitizeMobilePhoneInput, normalizeOptionalMobilePhoneToLocal } from "../../utilities/mobile-phone.util";
 import { isValidEmail, isValidMobilePhone } from "../../utilities/contact-validation.util";
 import { isValidUsernameLength } from "../../utils/usernamePolicy.util";
 import { LoginRequiredState } from "../../shared/auth/LoginRequiredState";
@@ -433,11 +433,12 @@ const AuthenticatedProfile = (): ReactElement => {
     }
     if (!isPhoneNumberLocked) {
       const phoneValue = editForm.phoneNumber.trim();
-      if (phoneValue && !isValidMobilePhone(phoneValue)) {
+      const normalizedPhone = normalizeOptionalMobilePhoneToLocal(phoneValue);
+      if (phoneValue && !normalizedPhone) {
         showError("شماره موبایل وارد شده معتبر نیست.");
         return;
       }
-      profileInput.phoneNumber = optionalTextInput(editForm.phoneNumber);
+      profileInput.phoneNumber = normalizedPhone;
     }
 
     const result = await updateProfile({

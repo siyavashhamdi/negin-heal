@@ -3,15 +3,11 @@ import {
   Button,
   Box,
   CircularProgress,
-  InputAdornment,
   Typography,
 } from "@mui/material";
 import {
-  AlternateEmail as AlternateEmailIcon,
   CheckCircle as CheckCircleIcon,
   MarkEmailUnread as MarkEmailUnreadIcon,
-  Person as PersonIcon,
-  Phone as PhoneIcon,
 } from "@mui/icons-material";
 import { useTranslation } from "../../hooks/useTranslation";
 import { useSnackbar } from "../../hooks/useSnackbar";
@@ -24,10 +20,13 @@ import { type LoginNavState } from "./login-nav-state";
 import {
   createForgotPasswordPrefill,
   detectPasswordResetIdentityKind,
-  EMAIL_REGEX,
-  isValidMobilePhone,
+  isValidAuthIdentity,
+  latinIdentityFieldInputProps,
+  normalizeAuthIdentityForSubmit,
+  resolveInvalidAuthIdentityErrorKind,
   sanitizeAuthIdentityInput,
 } from "./password-reset-form.util";
+import { AuthIdentityInputAdornment } from "./components/AuthIdentityInputAdornment";
 import formStyles from "./styles/LoginFormShared.module.scss";
 
 interface ForgotPasswordFormProps {
@@ -54,10 +53,11 @@ export const ForgotPasswordForm = ({
   const [captchaValid, setCaptchaValid] = useState(false);
   const [captchaVersion, setCaptchaVersion] = useState(0);
   const [submitted, setSubmitted] = useState(false);
-  const [fieldError, setFieldError] = useState<"identity" | "email" | null>(null);
+  const [fieldError, setFieldError] = useState<"identity" | "email" | "mobile" | null>(null);
 
   const trimmedIdentity = identity.trim();
-  const identityKind = detectPasswordResetIdentityKind(identity);
+  const normalizedIdentity = normalizeAuthIdentityForSubmit(trimmedIdentity);
+  const identityKind = detectPasswordResetIdentityKind(normalizedIdentity);
   const captchaEnabled = API_CONFIG.CAPTCHA_ENABLED;
   const canSubmit = trimmedIdentity.length > 0 && (!captchaEnabled || captchaValid);
 
@@ -70,15 +70,18 @@ export const ForgotPasswordForm = ({
       return;
     }
 
-    if (trimmedIdentity.includes("@") && !EMAIL_REGEX.test(trimmedIdentity)) {
-      setFieldError("email");
-      showError(t("auth.login.errors.invalidEmail"));
-      return;
-    }
-
-    if (identityKind === "mobile" && !isValidMobilePhone(trimmedIdentity)) {
-      setFieldError("identity");
-      showError(t("auth.login.errors.invalidMobile"));
+    if (!isValidAuthIdentity(trimmedIdentity)) {
+      const errorKind = resolveInvalidAuthIdentityErrorKind(trimmedIdentity);
+      setFieldError(errorKind === "email" ? "email" : errorKind === "mobile" ? "mobile" : "identity");
+      showError(
+        t(
+          errorKind === "email"
+            ? "auth.login.errors.invalidEmail"
+            : errorKind === "mobile"
+              ? "auth.login.errors.invalidMobile"
+              : "auth.login.errors.identityInvalid",
+        ),
+      );
       return;
     }
 
@@ -89,7 +92,7 @@ export const ForgotPasswordForm = ({
 
     setFieldError(null);
     const success = await requestResetLink({
-      identity: trimmedIdentity,
+      identity: normalizedIdentity,
       captchaId: captchaEnabled ? captchaId : undefined,
       captchaValue: captchaEnabled ? captchaValue : undefined,
     });
@@ -165,32 +168,25 @@ export const ForgotPasswordForm = ({
             setFieldError(null);
           }}
           inputProps={{
-            lang: "en",
-            spellCheck: "false",
-            autoCapitalize: "off",
-            autoCorrect: "off",
+            ...latinIdentityFieldInputProps,
+            inputMode: "text",
+            className: formStyles.latinInput,
           }}
           InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                {identityKind === "mobile" ? (
-                  <PhoneIcon className={formStyles.inputIcon} />
-                ) : identityKind === "email" ? (
-                  <AlternateEmailIcon className={formStyles.inputIcon} />
-                ) : (
-                  <PersonIcon className={formStyles.inputIcon} />
-                )}
-              </InputAdornment>
-            ),
+            startAdornment: <AuthIdentityInputAdornment identity={identity} />,
           }}
           autoComplete="username"
           autoFocus
           disabled={requestingResetLink}
-          error={fieldError === "email" || fieldError === "identity"}
+          error={fieldError !== null}
           helperText={
             fieldError === "email"
               ? t("auth.login.errors.invalidEmail")
-              : t("auth.login.forgotPasswordHelper")
+              : fieldError === "mobile"
+                ? t("auth.login.errors.invalidMobile")
+              : fieldError === "identity"
+                ? t("auth.login.errors.identityInvalid")
+                : t("auth.login.forgotPasswordHelper")
           }
         />
 

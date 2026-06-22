@@ -1,16 +1,30 @@
-import { EMAIL_REGEX, isValidMobilePhone } from "../../utilities/contact-validation.util";
-import { toWesternDigits } from "../../utilities/persian-digits.util";
+import { detectAuthIdentityKind } from "../../utilities/auth-identity.util";
 import { type LoginNavState } from "./login-nav-state";
 
-export { EMAIL_REGEX, isValidEmail, isValidMobilePhone } from "../../utilities/contact-validation.util";
+export {
+  detectAuthIdentityKind,
+  EMAIL_REGEX,
+  isAuthIdentityMobile,
+  isLatinEmailValue,
+  isLatinUsername,
+  isLatinIdentityUsername,
+  isValidAuthIdentity,
+  isValidEmail,
+  isAuthIdentityMobileMode,
+  normalizeAuthIdentityForSubmit,
+  resolveAuthIdentityIconKind,
+  resolveInvalidAuthIdentityErrorKind,
+  sanitizeAuthIdentityInput,
+  tryNormalizeAuthIdentityMobile,
+} from "../../utilities/auth-identity.util";
 
-export const MOBILE_REGEX = /^(?:\+?98|0)?9\d{9}$/;
-
-/** Username, email, and mobile — Latin digits/letters and common email/mobile symbols only. */
-const AUTH_IDENTITY_ALLOWED_CHARS = /[^a-zA-Z0-9@._+-]/g;
-
-export const sanitizeAuthIdentityInput = (value: string): string =>
-  toWesternDigits(value).replace(AUTH_IDENTITY_ALLOWED_CHARS, "");
+export {
+  isValidMobilePhone,
+  latinIdentityFieldInputProps,
+  normalizeMobilePhoneToLocal,
+  sanitizeLatinEmailInput,
+  sanitizeLatinUsernameInput,
+} from "../../utilities/contact-validation.util";
 
 export const createForgotPasswordPrefill = (
   identity?: LoginNavState | null,
@@ -18,16 +32,4 @@ export const createForgotPasswordPrefill = (
 
 export const detectPasswordResetIdentityKind = (
   identity: string,
-): LoginNavState["identityKind"] => {
-  const trimmedIdentity = identity.trim();
-
-  if (EMAIL_REGEX.test(trimmedIdentity)) {
-    return "email";
-  }
-
-  if (isValidMobilePhone(trimmedIdentity) || MOBILE_REGEX.test(trimmedIdentity)) {
-    return "mobile";
-  }
-
-  return "username";
-};
+): LoginNavState["identityKind"] => detectAuthIdentityKind(identity);

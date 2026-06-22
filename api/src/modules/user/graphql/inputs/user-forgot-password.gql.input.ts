@@ -1,6 +1,8 @@
 import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 import { Field, InputType } from "@nestjs/graphql";
 
+import { IsLatinAuthIdentity } from "../../../../validators/latin-identity.validators";
+
 @InputType()
 export class UserForgotPasswordGqlInput {
   @Field({
@@ -8,6 +10,7 @@ export class UserForgotPasswordGqlInput {
   })
   @IsString({ message: "Identity must be a string" })
   @IsNotEmpty({ message: "Identity is required" })
+  @IsLatinAuthIdentity()
   identity: string;
 
   @Field({

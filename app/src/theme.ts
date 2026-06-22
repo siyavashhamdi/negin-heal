@@ -1,4 +1,5 @@
-import { createTheme, type Theme } from "@mui/material/styles";
+import type { AlertColor } from "@mui/material/Alert";
+import { createTheme, type SxProps, type Theme } from "@mui/material/styles";
 
 type PaletteMode = "light" | "dark";
 
@@ -334,7 +335,9 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
         styleOverrides: {
           root: {
             borderRadius: cardRadius,
-            ...contentSurfaceBg,
+            "&:not(.MuiAlert-root)": {
+              ...contentSurfaceBg,
+            },
           },
           outlined: {
             ...contentSurfaceBg,
@@ -620,6 +623,39 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
       },
       MuiAlert: {
         styleOverrides: {
+          root: {
+            "&.app-snackbar-alert": {
+              backgroundImage: "none",
+              "&.MuiAlert-filledSuccess": {
+                backgroundColor: darkColors.success.dark,
+                color: "#ffffff",
+                "& .MuiAlert-message, & .MuiTypography-root": { color: "#ffffff" },
+                "& .MuiAlert-icon": { color: "#ffffff", opacity: 1 },
+                "& .MuiAlert-action .MuiIconButton-root": { color: "#ffffff" },
+              },
+              "&.MuiAlert-filledError": {
+                backgroundColor: darkColors.error.dark,
+                color: "#ffffff",
+                "& .MuiAlert-message, & .MuiTypography-root": { color: "#ffffff" },
+                "& .MuiAlert-icon": { color: "#ffffff", opacity: 1 },
+                "& .MuiAlert-action .MuiIconButton-root": { color: "#ffffff" },
+              },
+              "&.MuiAlert-filledWarning": {
+                backgroundColor: darkColors.warning.dark,
+                color: "#ffffff",
+                "& .MuiAlert-message, & .MuiTypography-root": { color: "#ffffff" },
+                "& .MuiAlert-icon": { color: "#ffffff", opacity: 1 },
+                "& .MuiAlert-action .MuiIconButton-root": { color: "#ffffff" },
+              },
+              "&.MuiAlert-filledInfo": {
+                backgroundColor: darkColors.info.dark,
+                color: "#ffffff",
+                "& .MuiAlert-message, & .MuiTypography-root": { color: "#ffffff" },
+                "& .MuiAlert-icon": { color: "#ffffff", opacity: 1 },
+                "& .MuiAlert-action .MuiIconButton-root": { color: "#ffffff" },
+              },
+            },
+          },
           ...(isDark
             ? {}
             : {
@@ -681,3 +717,42 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
     },
   });
 };
+
+/** Class applied to snackbar `Alert` roots — uses dark filled tones in every theme mode. */
+export const SNACKBAR_ALERT_CLASS = "app-snackbar-alert";
+
+/** Solid filled snackbar tones — matches MUI `filled` Alert in dark mode. */
+const SNACKBAR_FILLED_ALERT_TONES: Record<AlertColor, { backgroundColor: string; color: string }> = {
+  success: { backgroundColor: darkColors.success.dark, color: "#ffffff" },
+  error: { backgroundColor: darkColors.error.dark, color: "#ffffff" },
+  warning: { backgroundColor: darkColors.warning.dark, color: "#ffffff" },
+  info: { backgroundColor: darkColors.info.dark, color: "#ffffff" },
+};
+
+export function getSnackbarFilledAlertTone(
+  severity: AlertColor,
+): { backgroundColor: string; color: string } {
+  return SNACKBAR_FILLED_ALERT_TONES[severity];
+}
+
+/** Snackbars always use dark-mode filled Alert colors (light theme pastel Alert overrides do not apply). */
+export function getSnackbarFilledAlertSx(severity: AlertColor): SxProps<Theme> {
+  const tone = SNACKBAR_FILLED_ALERT_TONES[severity];
+  return {
+    "&&": {
+      backgroundColor: `${tone.backgroundColor} !important`,
+      backgroundImage: "none !important",
+      color: `${tone.color} !important`,
+    },
+    "& .MuiAlert-message, & .MuiTypography-root": {
+      color: `${tone.color} !important`,
+    },
+    "& .MuiAlert-icon": {
+      color: `${tone.color} !important`,
+      opacity: 1,
+    },
+    "& .MuiAlert-action .MuiIconButton-root": {
+      color: `${tone.color} !important`,
+    },
+  };
+}

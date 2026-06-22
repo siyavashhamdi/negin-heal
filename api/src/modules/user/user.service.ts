@@ -60,8 +60,12 @@ import { env } from "../../config";
 import {
   isValidEmail,
   isValidMobilePhone,
-  normalizeMobilePhone,
+  tryNormalizeAuthIdentityMobile,
 } from "../../utils/contact-validation.util";
+import {
+  sanitizeLatinEmail,
+  sanitizeLatinUsername,
+} from "../../utils/latin-identity.util";
 import {
   UserCreateGqlInput,
   UserForgotPasswordGqlInput,
@@ -464,13 +468,13 @@ export class UserService {
     }
 
     const username = input.username?.trim()
-      ? this.normalizeUsernameOrEmail(input.username)
+      ? sanitizeLatinUsername(input.username).toLowerCase()
       : undefined;
     const email = input.email?.trim()
-      ? this.normalizeUsernameOrEmail(input.email)
+      ? sanitizeLatinEmail(input.email).toLowerCase()
       : undefined;
     const mobile = input.mobile?.trim()
-      ? this.normalizePhoneNumber(input.mobile)
+      ? tryNormalizeAuthIdentityMobile(input.mobile)
       : undefined;
 
     if (!username && !email && !mobile) {
@@ -666,23 +670,23 @@ export class UserService {
 
   private buildIdentityFilter(identity: string): FilterQuery<User> {
     const trimmedIdentity = identity.trim();
-    const normalizedIdentity = this.normalizeUsernameOrEmail(trimmedIdentity);
-    const phoneCandidates = this.createPhoneCandidates(trimmedIdentity);
 
-    const conditions: FilterQuery<User>[] = [
-      { username: normalizedIdentity },
-      { "profile.email": normalizedIdentity },
-    ];
-
-    if (phoneCandidates.length > 0) {
-      conditions.push({
-        "profile.phoneNumber": {
-          $in: phoneCandidates,
-        },
-      });
+    if (this.looksLikeEmail(trimmedIdentity)) {
+      return {
+        "profile.email": this.normalizeUsernameOrEmail(trimmedIdentity),
+      };
     }
 
-    return { $and: [{ $or: conditions }] };
+    const localMobile = tryNormalizeAuthIdentityMobile(trimmedIdentity);
+    if (localMobile) {
+      return {
+        "profile.phoneNumber": localMobile,
+      };
+    }
+
+    return {
+      username: this.normalizeUsernameOrEmail(trimmedIdentity),
+    };
   }
 
   private buildPasswordResetIdentityFilter(
@@ -774,9 +778,7 @@ export class UserService {
 
     if (identity.mobile) {
       conditions.push({
-        "profile.phoneNumber": {
-          $in: this.createPhoneCandidates(identity.mobile),
-        },
+        "profile.phoneNumber": identity.mobile,
       });
     }
 
@@ -790,35 +792,12 @@ export class UserService {
     }
   }
 
-  private createPhoneCandidates(identity: string): string[] {
-    const digits = identity.replace(/\D/g, "");
-
-    if (!digits) {
-      return [];
-    }
-
-    const candidates = new Set<string>([identity.trim(), digits]);
-    let localMobile: string | null = null;
-
-    if (/^09\d{9}$/.test(digits)) {
-      localMobile = digits;
-    } else if (/^9\d{9}$/.test(digits)) {
-      localMobile = `0${digits}`;
-    } else if (/^989\d{9}$/.test(digits)) {
-      localMobile = `0${digits.slice(2)}`;
-    }
-
-    if (localMobile) {
-      candidates.add(localMobile);
-      candidates.add(`98${localMobile.slice(1)}`);
-      candidates.add(`+98${localMobile.slice(1)}`);
-    }
-
-    return [...candidates];
-  }
-
   private normalizeUsernameOrEmail(value: string): string {
-    return value.trim().toLowerCase();
+    const trimmed = value.trim();
+    if (trimmed.includes("@")) {
+      return sanitizeLatinEmail(trimmed).toLowerCase();
+    }
+    return sanitizeLatinUsername(trimmed).toLowerCase();
   }
 
   private looksLikeEmail(value?: string): boolean {
@@ -829,7 +808,7 @@ export class UserService {
   }
 
   private normalizePhoneNumber(value: string): string | undefined {
-    return normalizeMobilePhone(value);
+    return tryNormalizeAuthIdentityMobile(value);
   }
 
   private throwIfInvalidEmail(value: string | undefined): void {
@@ -1573,9 +1552,7 @@ export class UserService {
         : undefined;
       if (phoneNumber) {
         conditions.push({
-          "profile.phoneNumber": {
-            $in: this.createPhoneCandidates(phoneNumber),
-          },
+          "profile.phoneNumber": phoneNumber,
         });
       }
     }

@@ -127,6 +127,7 @@ $layout-sm: variables.$breakpoint-sm;
 .courseCardShell {
   min-width: 0;
   border-radius: 1.15rem;
+  overflow: hidden;
   transition:
     opacity 0.18s ease,
     outline-color 0.18s ease,

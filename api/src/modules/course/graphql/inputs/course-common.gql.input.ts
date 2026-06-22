@@ -13,7 +13,7 @@ import { Field, Float, ID, InputType, Int } from "@nestjs/graphql";
 import { Types } from "mongoose";
 
 import { CourseDiscountType } from "../../../../enums";
-import { toObjectIdOptional } from "../../../../transforms/object-id.transform";
+import { toNullableObjectId } from "../../../../transforms/object-id.transform";
 import { IsObjectId } from "../../../../validators/is-object-id.validator";
 
 @InputType()
@@ -37,8 +37,8 @@ export class CourseItemGqlInput {
   })
   @IsOptional()
   @IsObjectId({ message: "Item file ID must be a valid MongoDB ObjectId" })
-  @Transform(toObjectIdOptional)
-  fileId?: Types.ObjectId;
+  @Transform(toNullableObjectId)
+  fileId?: Types.ObjectId | null;
 
   @Field({
     nullable: true,
@@ -58,7 +58,7 @@ export class CourseChapterGqlInput {
   @Field({ nullable: true, description: "Chapter description" })
   @IsOptional()
   @IsString({ message: "Chapter description must be a string" })
-  description?: string;
+  description?: string | null;
 
   @Field(() => Int, {
     nullable: true,
@@ -68,7 +68,7 @@ export class CourseChapterGqlInput {
   @Type(() => Number)
   @IsNumber({}, { message: "visibleAfterMinutes must be a number" })
   @Min(0)
-  visibleAfterMinutes?: number;
+  visibleAfterMinutes?: number | null;
 
   @Field({ description: "Whether the chapter is free to access" })
   @IsBoolean({ message: "Chapter isFree must be a boolean" })
@@ -121,7 +121,7 @@ export class CourseWriteGqlInput {
   @Field({ nullable: true, description: "Course description" })
   @IsOptional()
   @IsString({ message: "Course description must be a string" })
-  description?: string;
+  description?: string | null;
 
   @Field(() => ID, {
     nullable: true,
@@ -131,8 +131,8 @@ export class CourseWriteGqlInput {
   @IsObjectId({
     message: "Cover image file ID must be a valid MongoDB ObjectId",
   })
-  @Transform(toObjectIdOptional)
-  coverImageFileId?: Types.ObjectId;
+  @Transform(toNullableObjectId)
+  coverImageFileId?: Types.ObjectId | null;
 
   @Field(() => Float, {
     nullable: true,
@@ -151,7 +151,7 @@ export class CourseWriteGqlInput {
   @IsOptional()
   @ValidateNested()
   @Type(() => CourseDiscountGqlInput)
-  discount?: CourseDiscountGqlInput;
+  discount?: CourseDiscountGqlInput | null;
 
   @Field(() => Boolean, {
     nullable: true,

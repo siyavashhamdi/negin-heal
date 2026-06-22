@@ -5,6 +5,8 @@ import {
   IsMongoId,
   IsOptional,
   IsString,
+  Matches,
+  ValidateIf,
   ValidateNested,
 } from "class-validator";
 import { Field, ID, InputType } from "@nestjs/graphql";
@@ -15,6 +17,10 @@ import {
   PaginationOffsetInput,
 } from "../../../../common/pagination/input";
 import { UserListSortOptionInput } from "./user-list-sort-option.gql.input";
+import {
+  LATIN_EMAIL_CHARSET_REGEX,
+  LATIN_USERNAME_REGEX,
+} from "../../../../utils/latin-identity.util";
 
 @InputType()
 export class UserListFilterInput {
@@ -41,6 +47,11 @@ export class UserListFilterInput {
   })
   @IsOptional()
   @IsString({ message: "Username filter must be a string" })
+  @ValidateIf((_, value) => typeof value === "string" && value.trim().length > 0)
+  @Matches(LATIN_USERNAME_REGEX, {
+    message:
+      "Username filter may only contain English letters, numbers, dots, underscores, and hyphens",
+  })
   username?: string;
 
   @Field({
@@ -73,6 +84,11 @@ export class UserListFilterInput {
   })
   @IsOptional()
   @IsString({ message: "Email filter must be a string" })
+  @ValidateIf((_, value) => typeof value === "string" && value.trim().length > 0)
+  @Matches(LATIN_EMAIL_CHARSET_REGEX, {
+    message:
+      "Email filter may only contain English letters, numbers, and email symbols",
+  })
   email?: string;
 
   @Field({
@@ -81,6 +97,10 @@ export class UserListFilterInput {
   })
   @IsOptional()
   @IsString({ message: "Phone number filter must be a string" })
+  @ValidateIf((_, value) => typeof value === "string" && value.trim().length > 0)
+  @Matches(/^[0-9+]+$/, {
+    message: "Phone number filter may only contain digits and +",
+  })
   phoneNumber?: string;
 
   @Field({
@@ -89,6 +109,10 @@ export class UserListFilterInput {
   })
   @IsOptional()
   @IsString({ message: "Mobile phone filter must be a string" })
+  @ValidateIf((_, value) => typeof value === "string" && value.trim().length > 0)
+  @Matches(/^[0-9+]+$/, {
+    message: "Mobile phone filter may only contain digits and +",
+  })
   mobilePhone?: string;
 
   @Field(() => UserRole, {

@@ -11,6 +11,11 @@ import { Type } from "class-transformer";
 import { Field, InputType } from "@nestjs/graphql";
 import { MIN_USERNAME_LENGTH } from "../../../../utils/username-policy.util";
 import { SessionClientContextGqlInput } from "./session-client-context.gql.input";
+import {
+  IsAuthIdentityMobile,
+  IsLatinEmail,
+  IsLatinUsername,
+} from "../../../../validators/latin-identity.validators";
 
 @InputType()
 class UserSignupProfileGqlInput {
@@ -35,6 +40,7 @@ export class UserSignupGqlInput {
   @MinLength(MIN_USERNAME_LENGTH, {
     message: `Username must be at least ${MIN_USERNAME_LENGTH} characters long`,
   })
+  @IsLatinUsername()
   @IsOptional()
   username?: string;
 
@@ -42,6 +48,8 @@ export class UserSignupGqlInput {
   @ValidateIf((value: UserSignupGqlInput) => !value.username && !value.mobile)
   @IsString({ message: "Email must be a string" })
   @IsNotEmpty({ message: "At least one identity is required" })
+  @ValidateIf((_, value) => typeof value === "string" && value.trim().length > 0)
+  @IsLatinEmail()
   @IsOptional()
   email?: string;
 
@@ -49,6 +57,8 @@ export class UserSignupGqlInput {
   @ValidateIf((value: UserSignupGqlInput) => !value.username && !value.email)
   @IsString({ message: "Mobile number must be a string" })
   @IsNotEmpty({ message: "At least one identity is required" })
+  @ValidateIf((_, value) => typeof value === "string" && value.trim().length > 0)
+  @IsAuthIdentityMobile()
   @IsOptional()
   mobile?: string;
 

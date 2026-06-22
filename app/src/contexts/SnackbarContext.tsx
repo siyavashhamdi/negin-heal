@@ -11,6 +11,7 @@ import {
 import { Snackbar, Alert, Box, LinearProgress, Slide, Typography, useMediaQuery, useTheme } from "@mui/material";
 import type { SlideProps } from "@mui/material/Slide";
 import { SNACKBAR_AUTO_HIDE_DURATION_MS } from "../constants/snackbar.constants";
+import { getSnackbarFilledAlertSx, getSnackbarFilledAlertTone, SNACKBAR_ALERT_CLASS } from "../theme";
 import {
   SnackbarContext,
   type SnackbarSeverity,
@@ -58,6 +59,10 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
     severity: "info",
     duration: SNACKBAR_AUTO_HIDE_DURATION_MS,
   });
+  const snackbarAlertSx = getSnackbarFilledAlertSx(snackbarData.severity);
+  const uploadProgressAlertSx = getSnackbarFilledAlertSx("info");
+  const snackbarTone = getSnackbarFilledAlertTone(snackbarData.severity);
+  const uploadProgressTone = getSnackbarFilledAlertTone("info");
   const dragStateRef = useRef({
     pointerId: -1,
     startX: 0,
@@ -296,9 +301,15 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
           onClose={isMobile ? undefined : handleClose}
           severity={snackbarData.severity}
           variant="filled"
-          className={[styles.alert, isMobile ? styles.alertMobile : ""].filter(Boolean).join(" ")}
+          className={[styles.alert, SNACKBAR_ALERT_CLASS, isMobile ? styles.alertMobile : ""]
+            .filter(Boolean)
+            .join(" ")}
+          sx={snackbarAlertSx}
           onPointerDown={handlePointerDown}
           style={{
+            backgroundColor: snackbarTone.backgroundColor,
+            backgroundImage: "none",
+            color: snackbarTone.color,
             transform: dragTransform,
             opacity: dragOpacity,
           }}
@@ -315,7 +326,17 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
           zIndex: (muiTheme) => muiTheme.zIndex.snackbar + 1,
         }}
       >
-        <Alert severity="info" variant="filled" className={styles.uploadProgressAlert}>
+        <Alert
+          severity="info"
+          variant="filled"
+          className={[styles.uploadProgressAlert, SNACKBAR_ALERT_CLASS].join(" ")}
+          sx={uploadProgressAlertSx}
+          style={{
+            backgroundColor: uploadProgressTone.backgroundColor,
+            backgroundImage: "none",
+            color: uploadProgressTone.color,
+          }}
+        >
           <Box className={styles.uploadProgressContent}>
             <Typography variant="body2" className={styles.uploadProgressLabel}>
               در حال آپلود... {uploadProgressPercent?.toLocaleString("fa-IR")}٪

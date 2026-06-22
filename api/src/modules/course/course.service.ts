@@ -1304,7 +1304,7 @@ export class CourseService {
   ): CourseCreateGqlInput {
     return {
       title: input.title.trim(),
-      description: this.normalizeOptionalText(input.description),
+      description: this.normalizeNullableText(input.description),
       coverImageFileId: input.coverImageFileId,
       priceIrt: input.priceIrt,
       discount: this.normalizeDiscountInput(input.discount),
@@ -1333,7 +1333,7 @@ export class CourseService {
   ): CourseChapterGqlInput {
     return {
       title: chapter.title.trim(),
-      description: this.normalizeOptionalText(chapter.description),
+      description: this.normalizeNullableText(chapter.description),
       visibleAfterMinutes: chapter.visibleAfterMinutes,
       isFree: chapter.isFree === true,
       sortOrder: chapter.sortOrder,
@@ -1347,7 +1347,7 @@ export class CourseService {
     return {
       title: item.title.trim(),
       sortOrder: item.sortOrder,
-      fileId: item.fileId,
+      fileId: item.fileId === null ? null : item.fileId,
       article: this.normalizeNullableText(item.article),
     };
   }

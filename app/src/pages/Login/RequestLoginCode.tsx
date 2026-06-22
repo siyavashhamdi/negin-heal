@@ -2,37 +2,25 @@ import { useState, type ReactElement } from "react";
 import {
   Button,
   CircularProgress,
-  InputAdornment,
   Typography,
 } from "@mui/material";
-import {
-  AlternateEmail as AlternateEmailIcon,
-  ArrowBack as ArrowBackIcon,
-  Person as PersonIcon,
-  Phone as PhoneIcon,
-} from "@mui/icons-material";
+import { ArrowBack as ArrowBackIcon } from "@mui/icons-material";
 import { useTranslation } from "../../hooks/useTranslation";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { useLogin } from "../../hooks/useLogin";
 import LoginShell from "./LoginShell";
 import { type LoginNavState } from "./login-nav-state";
-import { EMAIL_REGEX, isValidMobilePhone, sanitizeAuthIdentityInput } from "./password-reset-form.util";
+import {
+  detectAuthIdentityKind,
+  isValidAuthIdentity,
+  latinIdentityFieldInputProps,
+  normalizeAuthIdentityForSubmit,
+  resolveInvalidAuthIdentityErrorKind,
+  sanitizeAuthIdentityInput,
+} from "./password-reset-form.util";
+import { AuthIdentityInputAdornment } from "./components/AuthIdentityInputAdornment";
 import { LoginAdornedTextField } from "./components/LoginAdornedTextField";
 import formStyles from "./styles/LoginFormShared.module.scss";
-
-const detectIdentityKind = (identity: string): LoginNavState["identityKind"] => {
-  const trimmedIdentity = identity.trim();
-
-  if (EMAIL_REGEX.test(trimmedIdentity)) {
-    return "email";
-  }
-
-  if (isValidMobilePhone(trimmedIdentity)) {
-    return "mobile";
-  }
-
-  return "username";
-};
 
 export interface RequestLoginCodeProps {
   readonly embedded?: boolean;
@@ -67,9 +55,10 @@ const RequestLoginCode = ({
       return;
     }
 
+    const normalizedIdentity = normalizeAuthIdentityForSubmit(trimmedIdentity);
     onForgotPassword({
-      identity: trimmedIdentity,
-      identityKind: detectIdentityKind(trimmedIdentity),
+      identity: normalizedIdentity,
+      identityKind: detectAuthIdentityKind(normalizedIdentity),
     });
   };
 
@@ -77,6 +66,7 @@ const RequestLoginCode = ({
     event.preventDefault();
 
     const trimmedIdentity = identity.trim();
+    const normalizedIdentity = normalizeAuthIdentityForSubmit(trimmedIdentity);
 
     if (!trimmedIdentity) {
       setFieldError(true);
@@ -84,25 +74,29 @@ const RequestLoginCode = ({
       return;
     }
 
-    if (trimmedIdentity.includes("@") && !EMAIL_REGEX.test(trimmedIdentity)) {
+    if (!isValidAuthIdentity(trimmedIdentity)) {
       setFieldError(true);
-      showError(t("auth.login.errors.invalidEmail"));
+      const errorKind = resolveInvalidAuthIdentityErrorKind(trimmedIdentity);
+      showError(
+        t(
+          errorKind === "email"
+            ? "auth.login.errors.invalidEmail"
+            : errorKind === "mobile"
+              ? "auth.login.errors.invalidMobile"
+              : "auth.login.errors.identityInvalid",
+        ),
+      );
       return;
     }
 
-    const identityKind = detectIdentityKind(trimmedIdentity);
-    if (identityKind === "mobile" && !isValidMobilePhone(trimmedIdentity)) {
-      setFieldError(true);
-      showError(t("auth.login.errors.invalidMobile"));
-      return;
-    }
+    const identityKind = detectAuthIdentityKind(normalizedIdentity);
 
     setFieldError(false);
     const navState: LoginNavState = {
-      identity: trimmedIdentity,
+      identity: normalizedIdentity,
       identityKind,
     };
-    const exists = await resolveAuthIdentity({ identity: trimmedIdentity });
+    const exists = await resolveAuthIdentity({ identity: normalizedIdentity });
     if (exists === null) {
       return;
     }
@@ -132,23 +126,12 @@ const RequestLoginCode = ({
             setFieldError(false);
           }}
           inputProps={{
-            lang: "en",
-            spellCheck: "false",
-            autoCapitalize: "off",
-            autoCorrect: "off",
+            ...latinIdentityFieldInputProps,
+            inputMode: "text",
+            className: formStyles.latinInput,
           }}
           InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                {detectIdentityKind(identity) === "mobile" ? (
-                  <PhoneIcon className={formStyles.inputIcon} />
-                ) : detectIdentityKind(identity) === "email" ? (
-                  <AlternateEmailIcon className={formStyles.inputIcon} />
-                ) : (
-                  <PersonIcon className={formStyles.inputIcon} />
-                )}
-              </InputAdornment>
-            ),
+            startAdornment: <AuthIdentityInputAdornment identity={identity} />,
           }}
           autoComplete="username"
           autoFocus
