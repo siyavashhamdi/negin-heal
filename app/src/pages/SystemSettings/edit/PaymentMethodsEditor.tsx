@@ -17,7 +17,7 @@ import type {
   PaymentMethodForm,
   UpdateJsonFormState,
 } from "./types";
-import { TECHNICAL_VALUE_INPUT_SX, removeAt, replaceAt } from "./shared";
+import { removeAt, replaceAt } from "./shared";
 import SectionPaper from "./SectionPaper";
 import {
   PAYMENT_METHOD_LABEL,
@@ -78,7 +78,6 @@ const PaymentMethodsEditor = ({
               return { ...current, methods: replaceAt(current.methods, index, nextMethod) };
             })
           }
-          sx={TECHNICAL_VALUE_INPUT_SX}
         >
           {PAYMENT_METHOD_OPTIONS.map((option) => (
             <MenuItem key={option} value={option}>

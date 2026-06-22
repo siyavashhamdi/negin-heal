@@ -18,16 +18,6 @@ export const HTML_TEXTAREA_ROWS = MULTILINE_TEXTAREA_MIN_ROWS;
 
 export { MULTILINE_TEXTAREA_MIN_ROWS, MULTILINE_TEXTAREA_MAX_ROWS };
 
-export const TECHNICAL_VALUE_INPUT_SX = {
-  "& .MuiInputBase-input": {
-    direction: "ltr",
-    fontFamily:
-      'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-    textAlign: "left",
-    unicodeBidi: "plaintext",
-  },
-} as const;
-
 export function replaceAt<T>(items: T[], index: number, value: T): T[] {
   return items.map((item, itemIndex) => (itemIndex === index ? value : item));
 }

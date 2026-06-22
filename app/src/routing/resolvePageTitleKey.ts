@@ -80,6 +80,10 @@ const ROUTE_TITLE_RULES: readonly RouteTitleRule[] = [
   },
   { match: (p) => p === "/users/new", key: "pages.usersManagement.create.title" },
   {
+    match: (p) => /^\/users\/edit\/[^/]+\/confirm$/.test(p),
+    key: "pages.usersManagement.edit.confirm.title",
+  },
+  {
     match: (p) => /^\/users\/edit\/[^/]+$/.test(p),
     key: "pages.usersManagement.edit.title",
   },

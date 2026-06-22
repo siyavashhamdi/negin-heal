@@ -202,7 +202,7 @@ export function MainLayout({
   const { showSnackbar } = useSnackbar();
   const { t } = useTranslation();
   const { mode, toggleTheme } = useThemeMode();
-  const { logout, user: authUser } = useAuth();
+  const { logout, user: authUser, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const { user, avatarUrl, loading: userLoading } = useMe();
 
   const [notificationAnchorEl, setNotificationAnchorEl] = useState<HTMLButtonElement | null>(null);
@@ -299,7 +299,7 @@ export function MainLayout({
     const messageType =
       typeof payload?.messageType === "string"
         ? payload.messageType.toUpperCase()
-        : undefined;
+        : GENERAL_NOTIFICATION_MESSAGE_TYPES.SNACKBAR;
 
     setLiveNotifications((previous) => [
       {
@@ -310,16 +310,9 @@ export function MainLayout({
       },
       ...previous.slice(0, 19),
     ]);
-    setLiveCounts((previous) => {
-      if (typeof previous.notifications !== "number") {
-        return previous;
-      }
-
-      return {
-        ...previous,
-        notifications: previous.notifications + 1,
-      };
-    });
+    setLiveCounts({});
+    void refetchBadgeCount();
+    notifyBadgeCountUpdateListeners();
 
     if (payload?.isPushNotification) {
       void showBrowserNotification({
@@ -327,10 +320,6 @@ export function MainLayout({
         body: incomingDescription,
         tag: popupId,
       });
-    }
-
-    if (!messageType) {
-      return;
     }
 
     if (messageType === GENERAL_NOTIFICATION_MESSAGE_TYPES.SNACKBAR) {
@@ -348,10 +337,10 @@ export function MainLayout({
       mode: popupMode,
       action,
     });
-  }, [showSnackbar]);
+  }, [refetchBadgeCount, showSnackbar]);
 
   useGeneralUpdatesSubscription({
-    enabled: Boolean(authUser),
+    enabled: isAuthenticated && !isAuthLoading,
     updateTypes: [
       GENERAL_SUBSCRIPTION_UPDATE_TYPES.NOTIFICATION,
       GENERAL_SUBSCRIPTION_UPDATE_TYPES.BADGE_COUNTS,
@@ -363,7 +352,7 @@ export function MainLayout({
   });
 
   useVerificationStatusSubscription({
-    enabled: Boolean(authUser),
+    enabled: isAuthenticated && !isAuthLoading,
   });
 
   const coursesBadgeCount = liveCounts.courses ?? badgeCountData?.badgeCount.courses ?? 0;

@@ -11,8 +11,6 @@ import {
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { AddRounded as AddRoundedIcon } from "@mui/icons-material";
 import {
-  Autocomplete,
-  Box,
   Checkbox,
   Chip,
   CircularProgress,
@@ -40,7 +38,6 @@ import { COUPON_DELETE_MUTATION } from "../../graphql/mutations/couponDelete.mut
 import { COUPON_UPDATE_MUTATION } from "../../graphql/mutations/couponUpdate.mutation";
 import { COUPON_LIST_QUERY } from "../../graphql/queries/couponList.query";
 import { COUPON_DETAIL_QUERY } from "../../graphql/queries/couponDetail.query";
-import { COURSE_LIST_QUERY } from "../../graphql/queries/courseList.query";
 import { useAuth } from "../../contexts/AuthContext";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
@@ -63,6 +60,7 @@ import DateTimeValue from "../../shared/display/DateTimeValue";
 import JalaliDateFilterField from "../../shared/table/JalaliDateFilterField";
 import JalaliDateTimeField from "../../shared/table/JalaliDateTimeField";
 import DashboardMenuHeader from "../../shared/DashboardMenuHeader";
+import CoursePickerField from "../../shared/forms/CoursePickerField";
 import {
   EMPTY_COUPON_LIST_FILTERS,
   buildInitialCouponForm,
@@ -91,13 +89,24 @@ import {
   type CouponUpdateMutationVariables,
   type SortingOrder,
 } from "./coupons-list.api";
-import type {
-  CourseListItemRow,
-  CourseListQuery,
-  CourseListQueryVariables,
-} from "../Courses/courses-list.api";
 
 const EMPTY_DISPLAY = "—";
+
+const COUPON_CODE_INPUT_PROPS = {
+  dir: "ltr",
+  lang: "en",
+  spellCheck: "false",
+  autoCapitalize: "off",
+  autoCorrect: "off",
+} as const;
+
+const COUPON_CODE_INPUT_SX = {
+  "& .MuiInputBase-input": {
+    direction: "ltr",
+    textAlign: "left",
+    fontFamily: '"Segoe UI", "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif',
+  },
+} as const;
 
 const TABLE_TOOLBAR_OPTIONS = {
   showSearch: true,
@@ -143,12 +152,6 @@ const BOOLEAN_FILTER_OPTIONS = [
   { value: "false", label: "خیر" },
 ] as const;
 
-type CourseSelectOption = {
-  readonly value: string;
-  readonly label: string;
-  readonly isActive: boolean;
-};
-
 const SORTABLE_FIELDS = new Set<CouponListSortField>([
   "createdAt",
   "updatedAt",
@@ -179,15 +182,6 @@ function textCell(value: unknown, monospace = false): ReactElement {
       {String(value || EMPTY_DISPLAY)}
     </Typography>
   );
-}
-
-function buildCourseOption(course: CourseListItemRow): CourseSelectOption {
-  const title = course.title?.trim() || course.id;
-  return {
-    value: course.id,
-    label: title,
-    isActive: course.isActive ?? true,
-  };
 }
 
 function selectCouponListPage(
@@ -313,21 +307,6 @@ const CouponsIndex = (): ReactElement => {
       ),
     [appliedFilters, debouncedSearchQuery, serverSort]
   );
-  const courseListVariables = useMemo<CourseListQueryVariables>(
-    () => ({
-      input: {
-        filters: {},
-        options: {
-          limit: 500,
-          sort: {
-            title: "ASC",
-          },
-        },
-      },
-    }),
-    []
-  );
-
   const {
     items: rows,
     loading,
@@ -347,34 +326,6 @@ const CouponsIndex = (): ReactElement => {
     resetPageDeps: [debouncedSearchQuery, appliedFilters, serverSort],
     skip: !isSuperAdmin,
   });
-  const {
-    data: courseListData,
-    loading: isCourseListLoading,
-    error: courseListError,
-  } = useQuery<CourseListQuery, CourseListQueryVariables>(COURSE_LIST_QUERY, {
-    variables: courseListVariables,
-    skip: !isSuperAdmin,
-    fetchPolicy: "cache-and-network",
-  });
-
-  const courseOptions = useMemo<CourseSelectOption[]>(
-    () => (courseListData?.courseList.items ?? []).map(buildCourseOption),
-    [courseListData?.courseList.items]
-  );
-  const selectedCourseOptions = useMemo<CourseSelectOption[]>(() => {
-    const selectedCourseIds = form?.applicableCourseIds ?? [];
-    const optionsById = new Map(courseOptions.map((option) => [option.value, option]));
-
-    return selectedCourseIds.map(
-      (courseId) =>
-        optionsById.get(courseId) ?? {
-          value: courseId,
-          label: courseId,
-          isActive: true,
-        }
-    );
-  }, [courseOptions, form?.applicableCourseIds]);
-
   const closeDialog = (): void => {
     setForm(null);
     setInitialForm(null);
@@ -927,6 +878,7 @@ const CouponsIndex = (): ReactElement => {
         disableClose={isSaving}
         hasUnsavedChanges={Boolean(form && canSubmitCouponForm)}
         maxWidth="lg"
+        relaxedHeaderSpacing
         resetKey={editCouponId != null ? `${editCouponId}-${Boolean(editCouponRecord)}` : undefined}
         title={
           dialogMode === "create"
@@ -976,24 +928,24 @@ const CouponsIndex = (): ReactElement => {
           </Stack>
         ) : form ? (
               <Stack spacing={2.5}>
-                <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-                  <TextField
-                    label={t("table.pages.coupons.columns.code")}
-                    value={form.code}
-                    onChange={(event) => setFormField("code", event.target.value)}
-                    required
-                    fullWidth
-                    size="small"
-                  />
-                  <TextField
-                    label={t("table.pages.coupons.columns.title")}
-                    value={form.title}
-                    onChange={(event) => setFormField("title", event.target.value)}
-                    required
-                    fullWidth
-                    size="small"
-                  />
-                </Stack>
+                <TextField
+                  label={t("table.pages.coupons.columns.title")}
+                  value={form.title}
+                  onChange={(event) => setFormField("title", event.target.value)}
+                  required
+                  fullWidth
+                  size="small"
+                />
+                <TextField
+                  label={t("table.pages.coupons.columns.code")}
+                  value={form.code}
+                  onChange={(event) => setFormField("code", event.target.value)}
+                  required
+                  fullWidth
+                  size="small"
+                  sx={COUPON_CODE_INPUT_SX}
+                  inputProps={COUPON_CODE_INPUT_PROPS}
+                />
 
                 <TextField
                   label={t("table.pages.coupons.columns.description")}
@@ -1074,74 +1026,19 @@ const CouponsIndex = (): ReactElement => {
                   />
                 </Stack>
 
-                <Autocomplete
+                <CoursePickerField
                   multiple
-                  fullWidth
-                  size="small"
-                  disableCloseOnSelect
-                  filterSelectedOptions
-                  loading={isCourseListLoading}
-                  options={courseOptions}
-                  value={selectedCourseOptions}
-                  getOptionLabel={(option) => option.label}
-                  isOptionEqualToValue={(option, value) => option.value === value.value}
-                  onChange={(_event, nextOptions) =>
-                    setFormField(
-                      "applicableCourseIds",
-                      nextOptions.map((option) => option.value)
-                    )
+                  enabled={couponDialogOpen}
+                  limit={500}
+                  label={t("table.pages.coupons.columns.applicableCourseIds")}
+                  placeholder={t("pages.coupons.form.applicableCourseIdsPlaceholder")}
+                  helperText={t("pages.coupons.form.applicableCourseIdsHelp")}
+                  noOptionsText={t("table.filters.noOptions")}
+                  loadErrorText={t("pages.coupons.form.applicableCourseIdsLoadError")}
+                  value={form.applicableCourseIds}
+                  onChange={(nextCourseIds) =>
+                    setFormField("applicableCourseIds", [...nextCourseIds])
                   }
-                  noOptionsText={
-                    courseListError
-                      ? t("pages.coupons.form.applicableCourseIdsLoadError")
-                      : t("table.filters.noOptions")
-                  }
-                  loadingText={t("pages.coupons.form.applicableCourseIdsLoading")}
-                  renderOption={(props, option, { selected }) => (
-                    <li {...props} key={option.value}>
-                      <Checkbox size="small" checked={selected} sx={{ mr: 1, p: 0.5 }} />
-                      <Box sx={{ minWidth: 0 }}>
-                        <Typography variant="body2" fontWeight={700} noWrap>
-                          {option.label}
-                        </Typography>
-                        {!option.isActive ? (
-                          <Typography variant="caption" color="text.secondary">
-                            {t("pages.coupons.form.inactiveCourse")}
-                          </Typography>
-                        ) : null}
-                      </Box>
-                    </li>
-                  )}
-                  renderTags={(selectedOptions, getTagProps) =>
-                    selectedOptions.map((option, index) => (
-                      <Chip
-                        {...getTagProps({ index })}
-                        key={option.value}
-                        size="small"
-                        label={option.label}
-                        color={option.isActive ? "primary" : "default"}
-                        variant={option.isActive ? "filled" : "outlined"}
-                      />
-                    ))
-                  }
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label={t("table.pages.coupons.columns.applicableCourseIds")}
-                      helperText={t("pages.coupons.form.applicableCourseIdsHelp")}
-                      InputProps={{
-                        ...params.InputProps,
-                        endAdornment: (
-                          <>
-                            {isCourseListLoading ? (
-                              <CircularProgress color="inherit" size={18} />
-                            ) : null}
-                            {params.InputProps.endAdornment}
-                          </>
-                        ),
-                      }}
-                    />
-                  )}
                 />
 
                 <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>

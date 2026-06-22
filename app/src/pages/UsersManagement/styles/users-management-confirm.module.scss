@@ -1,0 +1,55 @@
+@use "../../../styles/variables" as variables;
+
+.confirmDialogBody {
+  align-items: stretch !important;
+  max-width: none !important;
+  text-align: right !important;
+  direction: rtl;
+}
+
+.confirmDialogContent {
+  text-align: right !important;
+}
+
+.confirmContent {
+  display: flex;
+  flex-direction: column;
+  gap: variables.$spacing-2;
+  width: 100%;
+  direction: rtl;
+  text-align: right;
+}
+
+.confirmIntro {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: variables.$font-size-sm;
+  line-height: 1.8;
+  text-align: right;
+}
+
+.confirmImpactList {
+  margin: 0;
+  padding: 0 1.35rem 0 0;
+  width: 100%;
+  direction: rtl;
+  text-align: right;
+  list-style: disc outside;
+
+  li {
+    margin-block-end: 0.35rem;
+    font-size: variables.$font-size-sm;
+    line-height: 1.7;
+    text-align: right;
+
+    &:last-child {
+      margin-block-end: 0;
+    }
+  }
+}
+
+.confirmRoleAlert {
+  width: 100%;
+  direction: rtl;
+  text-align: right;
+}

@@ -1,4 +1,4 @@
-import { copyFile, mkdir } from "node:fs/promises";
+import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
@@ -10,7 +10,6 @@ const publicDir = path.join(appDir, "public");
 const logoPath = path.join(publicDir, "logo.png");
 const iconsDir = path.join(publicDir, "icons");
 const androidResDir = path.join(repoRoot, "android/app/src/main/res");
-const androidStoreIconsDir = path.join(repoRoot, "android/store/icons");
 
 const THEME_COLOR = { r: 202, g: 184, b: 222, alpha: 1 };
 
@@ -77,27 +76,23 @@ async function writeAndroidIcons() {
     ...Object.entries(ANDROID_LAUNCHER_SIZES).flatMap(([folder, size]) => {
       const maskableSize = Math.round(size * (512 / 300));
       return [
-        writeSquareIcon(path.join(androidResDir, folder, "ic_launcher.png"), size),
+        mkdir(path.join(androidResDir, folder), { recursive: true }).then(() =>
+          writeSquareIcon(path.join(androidResDir, folder, "ic_launcher.png"), size),
+        ),
         writeSquareIcon(path.join(androidResDir, folder, "ic_maskable.png"), maskableSize),
       ];
     }),
     ...Object.entries(ANDROID_NOTIFICATION_SIZES).map(([folder, size]) =>
-      writeSquareIcon(path.join(androidResDir, folder, "ic_notification_icon.png"), size),
+      mkdir(path.join(androidResDir, folder), { recursive: true }).then(() =>
+        writeSquareIcon(path.join(androidResDir, folder, "ic_notification_icon.png"), size),
+      ),
     ),
     ...Object.entries(ANDROID_SPLASH_SIZES).map(([folder, size]) =>
-      writeSquareIcon(path.join(androidResDir, folder, "splash.png"), size),
+      mkdir(path.join(androidResDir, folder), { recursive: true }).then(() =>
+        writeSquareIcon(path.join(androidResDir, folder, "splash.png"), size),
+      ),
     ),
     writeSquareIcon(path.join(repoRoot, "android/store_icon.png"), 512),
-  ]);
-
-  await mkdir(androidStoreIconsDir, { recursive: true });
-  await Promise.all([
-    copyFile(path.join(iconsDir, "icon-192.png"), path.join(androidStoreIconsDir, "icon-192.png")),
-    copyFile(path.join(iconsDir, "icon-512.png"), path.join(androidStoreIconsDir, "icon-512.png")),
-    copyFile(
-      path.join(iconsDir, "icon-512-maskable.png"),
-      path.join(androidStoreIconsDir, "icon-512-maskable.png"),
-    ),
   ]);
 }
 

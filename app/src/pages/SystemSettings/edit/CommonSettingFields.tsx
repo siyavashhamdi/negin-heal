@@ -6,7 +6,8 @@ import type {
   AppSettingEditFormState,
   UpdateEditFormState,
 } from "./types";
-import { TECHNICAL_VALUE_INPUT_SX, MULTILINE_TEXTAREA_MIN_ROWS, MULTILINE_TEXTAREA_MAX_ROWS } from "./shared";
+import { MULTILINE_TEXTAREA_MIN_ROWS, MULTILINE_TEXTAREA_MAX_ROWS } from "./shared";
+import systemSettingsStyles from "../styles/system-settings.module.scss";
 import SectionPaper from "./SectionPaper";
 
 interface CommonSettingFieldsProps {
@@ -25,6 +26,7 @@ const CommonSettingFields = ({
       <TextField
         fullWidth
         required
+        className={systemSettingsStyles.persianValueField}
         label="عنوان"
         value={form.label}
         onChange={(event) => updateForm({ label: event.target.value })}
@@ -34,14 +36,12 @@ const CommonSettingFields = ({
         label="کلید"
         value={detail.key}
         disabled
-        sx={TECHNICAL_VALUE_INPUT_SX}
       />
       <TextField
         fullWidth
         label="نوع مقدار"
         value={form.valueType}
         disabled
-        sx={TECHNICAL_VALUE_INPUT_SX}
       />
     </Stack>
     <TextField

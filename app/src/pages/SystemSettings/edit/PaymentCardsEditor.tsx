@@ -4,12 +4,7 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import { Button, IconButton, Stack, TextField, Typography } from "@mui/material";
 
 import type { JsonFormState, PaymentCardForm, UpdateJsonFormState } from "./types";
-import {
-  TECHNICAL_VALUE_INPUT_SX,
-  removeAt,
-  replaceAt,
-  type TextFieldConfig,
-} from "./shared";
+import { removeAt, replaceAt, type TextFieldConfig } from "./shared";
 import SectionPaper from "./SectionPaper";
 import { createEmptyPaymentCard } from "./utils";
 
@@ -62,7 +57,6 @@ const PaymentCardsEditor = ({ jsonValue, updateJson }: PaymentCardsEditorProps):
                   return { ...current, cards: replaceAt(current.cards, index, nextCard) };
                 })
               }
-              sx={field.key === "cardNumber" ? TECHNICAL_VALUE_INPUT_SX : undefined}
             />
           ))}
         </Stack>

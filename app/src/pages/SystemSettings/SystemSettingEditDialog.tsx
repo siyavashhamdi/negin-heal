@@ -25,6 +25,7 @@ import {
   type AppSettingUpdateMutationVariables,
   type JsonFormState,
 } from "./edit";
+import systemSettingsStyles from "./styles/system-settings.module.scss";
 
 interface SystemSettingEditDialogProps {
   readonly settingId: string | null;
@@ -158,7 +159,7 @@ const SystemSettingEditDialog = ({
           </Typography>
         </Stack>
       ) : (
-        <Stack spacing={2.5}>
+        <Stack spacing={2.5} className={systemSettingsStyles.latinValueForm}>
           <CommonSettingFields detail={detail} form={form} updateForm={updateForm} />
           {form.valueType === "JSON" && form.jsonValue ? (
             <JsonValueEditor jsonValue={form.jsonValue} updateJson={updateJson} />

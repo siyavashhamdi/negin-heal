@@ -25,17 +25,12 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { GLOBAL_ANOUNCEMENT_SEND_MUTATION } from "../../graphql/mutations/globalAnouncementSend.mutation";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
-import { useSnackbar } from "../../hooks/useSnackbar";
 import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
-import { MULTILINE_TEXTAREA_MIN_ROWS, MULTILINE_TEXTAREA_MAX_ROWS } from "../../constants/multilineTextarea.constants";
+import {
+  MULTILINE_TEXTAREA_MIN_ROWS,
+  MULTILINE_TEXTAREA_MAX_ROWS,
+} from "../../constants/multilineTextarea.constants";
 import DashboardMenuHeader from "../../shared/DashboardMenuHeader";
-import NotificationActionFields, {
-  EMPTY_NOTIFICATION_ACTION_FORM,
-  buildNotificationActionPayloadFromForm,
-  hasNotificationActionFormValue,
-  isNotificationActionFormValid,
-  type NotificationActionFormState,
-} from "./NotificationActionFields";
 import styles from "./styles/more.module.scss";
 import { opaqueShellProps } from "../../shared/opaqueShell";
 
@@ -53,12 +48,6 @@ type GlobalAnouncementSendMutationVariables = {
     readonly mode: NotificationMode;
     readonly messageType: GlobalAnouncementMessageType;
     readonly isPushNotification: boolean;
-    readonly payload?: {
-      readonly action?: {
-        readonly label: string;
-        readonly href: string;
-      };
-    };
   };
 };
 
@@ -81,24 +70,21 @@ const ANOUNCEMENT_MESSAGE_TYPE_OPTIONS: readonly {
   readonly value: GlobalAnouncementMessageType;
   readonly label: string;
 }[] = [
-  { value: "POPUP", label: "پاپ‌آپ" },
   { value: "SNACKBAR", label: "اسنک‌بار" },
+  { value: "POPUP", label: "پاپ‌آپ" },
 ];
 
 const GlobalAnouncement = (): ReactElement => {
   const { user } = useAuth();
-  const { showError } = useSnackbar();
   const isSuperAdmin = user?.roles?.includes("SUPER_ADMIN") === true;
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [mode, setMode] = useState<NotificationMode>("INFO");
-  const [messageType, setMessageType] = useState<GlobalAnouncementMessageType>("POPUP");
+  const [messageType, setMessageType] = useState<GlobalAnouncementMessageType>("SNACKBAR");
   const [isPushNotification, setIsPushNotification] = useState(false);
-  const [actionForm, setActionForm] = useState<NotificationActionFormState>(
-    EMPTY_NOTIFICATION_ACTION_FORM,
-  );
-  const [lastDelivery, setLastDelivery] =
-    useState<GlobalAnouncementSendMutationResult["globalAnouncementSend"] | null>(null);
+  const [lastDelivery, setLastDelivery] = useState<
+    GlobalAnouncementSendMutationResult["globalAnouncementSend"] | null
+  >(null);
   const [sendGlobalAnouncement, sendResult] = useMutationWithSnackbar<
     GlobalAnouncementSendMutationResult,
     GlobalAnouncementSendMutationVariables
@@ -110,9 +96,8 @@ const GlobalAnouncement = (): ReactElement => {
       setTitle("");
       setDescription("");
       setMode("INFO");
-      setMessageType("POPUP");
+      setMessageType("SNACKBAR");
       setIsPushNotification(false);
-      setActionForm(EMPTY_NOTIFICATION_ACTION_FORM);
     },
   });
 
@@ -125,25 +110,17 @@ const GlobalAnouncement = (): ReactElement => {
   const isTitleRequired = messageType === "POPUP";
   const previewTitle = messageType === "POPUP" ? trimmedTitle : "";
   const previewDescription = trimmedDescription;
-  const previewAction = buildNotificationActionPayloadFromForm(actionForm);
-  const hasPartialAction = hasNotificationActionFormValue(actionForm);
   const canSubmit =
     (!isTitleRequired || trimmedTitle.length > 0) &&
     trimmedDescription.length > 0 &&
     (!isTitleRequired || title.length <= MAX_TITLE_LENGTH) &&
     description.length <= MAX_DESCRIPTION_LENGTH &&
-    isNotificationActionFormValid(actionForm) &&
     !sendResult.loading;
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
 
     if (!canSubmit) {
-      return;
-    }
-
-    if (hasPartialAction && !previewAction) {
-      showError("برای فعال شدن دکمه اقدام، هم عنوان و هم آدرس لینک را وارد کنید.");
       return;
     }
 
@@ -155,7 +132,6 @@ const GlobalAnouncement = (): ReactElement => {
           mode,
           messageType,
           isPushNotification,
-          ...(previewAction ? { payload: { action: previewAction } } : {}),
         },
       },
     });
@@ -174,18 +150,19 @@ const GlobalAnouncement = (): ReactElement => {
         onSubmit={handleSubmit}
         {...opaqueShellProps}
       >
-        <Box className={styles.globalAnouncementIcon}>
-          <CampaignRoundedIcon />
-        </Box>
-
         <Stack spacing={2}>
-          <Box>
-            <Typography variant="h6" fontWeight={800}>
-              متن اعلان مدیر
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              این پیام فقط به کاربران دارای اتصال فعال ارسال می‌شود.
-            </Typography>
+          <Box className={styles.globalAnouncementHeader}>
+            <Box className={styles.globalAnouncementIcon}>
+              <CampaignRoundedIcon />
+            </Box>
+            <Box>
+              <Typography variant="h6" fontWeight={800}>
+                متن اعلان مدیر
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                این پیام فقط به کاربران دارای اتصال فعال ارسال می‌شود.
+              </Typography>
+            </Box>
           </Box>
 
           <TextField
@@ -196,6 +173,20 @@ const GlobalAnouncement = (): ReactElement => {
             fullWidth
           >
             {ANOUNCEMENT_MESSAGE_TYPE_OPTIONS.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </TextField>
+
+          <TextField
+            select
+            label="حالت نمایش"
+            value={mode}
+            onChange={(event) => setMode(event.target.value as NotificationMode)}
+            fullWidth
+          >
+            {ANOUNCEMENT_MODE_OPTIONS.map((option) => (
               <MenuItem key={option.value} value={option.value}>
                 {option.label}
               </MenuItem>
@@ -227,20 +218,6 @@ const GlobalAnouncement = (): ReactElement => {
             maxRows={MULTILINE_TEXTAREA_MAX_ROWS}
           />
 
-          <TextField
-            select
-            label="حالت نمایش"
-            value={mode}
-            onChange={(event) => setMode(event.target.value as NotificationMode)}
-            fullWidth
-          >
-            {ANOUNCEMENT_MODE_OPTIONS.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </TextField>
-
           <FormControlLabel
             control={
               <Switch
@@ -250,8 +227,6 @@ const GlobalAnouncement = (): ReactElement => {
             }
             label="ارسال همزمان به عنوان پوش نوتیفیکیشن"
           />
-
-          <NotificationActionFields value={actionForm} onChange={setActionForm} />
 
           <Box className={styles.globalAnouncementPreviewBlock}>
             <Typography variant="subtitle2" fontWeight={800}>
@@ -291,16 +266,6 @@ const GlobalAnouncement = (): ReactElement => {
                 <div className="main-layout__general-update-popup-content">
                   {previewTitle ? <h3>{previewTitle}</h3> : null}
                   {previewDescription ? <p>{previewDescription}</p> : null}
-                  {previewAction ? (
-                    <Button
-                      size="small"
-                      variant="contained"
-                      className="main-layout__general-update-popup-action"
-                      disabled
-                    >
-                      {previewAction.label}
-                    </Button>
-                  ) : null}
                 </div>
                 <IconButton
                   className="main-layout__general-update-popup-close"
@@ -336,12 +301,12 @@ const GlobalAnouncement = (): ReactElement => {
 
           {lastDelivery ? (
             <Alert severity="success">
-              اعلان به {lastDelivery.deliveredUsers} کاربر فعال ارسال شد. کاربران فعال مشترک در لحظه
+              اعلان به {lastDelivery.deliveredUsers} کاربر فعال ارسال شد. کاربران فعال در لحظه
               ارسال: {lastDelivery.activeSubscribedUsers}
             </Alert>
           ) : (
             <Alert severity="info">
-              کاربران بسته یا آفلاین پیام زنده دریافت نمی‌کنند؛ فقط نشست‌های فعال مشترک هدف قرار
+              کاربران بسته یا آفلاین پیام زنده دریافت نمی‌کنند؛ فقط نشست‌های فعال، هدف قرار
               می‌گیرند.
             </Alert>
           )}

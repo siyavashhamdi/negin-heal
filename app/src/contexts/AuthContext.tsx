@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { LOCAL_STORAGE_KEYS } from "../constants";
 import { isMobileAppLayoutViewport } from "../hooks/useMobileAppLayout";
 import { apolloClient } from "../lib/apollo-client";
+import { resetGraphqlWsClient } from "../lib/graphql-ws-client";
 import { APP_SHELL_ROUTES } from "../routing/app-shell-routes";
 import { consumePostLoginRedirect } from "../routing/post-login-redirect";
 import { USER_LOGOUT_MUTATION } from "../graphql/mutations/userLogout.mutation";
@@ -88,6 +89,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
    * Stores token and user data, then navigates based on viewport.
    */
   const login = (token: string, userData: User): void => {
+    void resetGraphqlWsClient();
     setAccessToken(token);
     setUser(userData);
     localStorage.setItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN, token);
@@ -124,6 +126,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
   }, []);
 
   const clearLocalAuthSession = useCallback((): void => {
+    void resetGraphqlWsClient();
     setAccessToken(null);
     setUser(null);
     localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);

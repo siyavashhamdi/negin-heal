@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 import { Checkbox, FormControlLabel, Stack, TextField } from "@mui/material";
 
 import type { JsonFormState, UpdateJsonFormState } from "./types";
-import { HTML_TEXTAREA_ROWS, TECHNICAL_VALUE_INPUT_SX } from "./shared";
+import { HTML_TEXTAREA_ROWS } from "./shared";
 import SectionPaper from "./SectionPaper";
 import EmailTemplatesEditor from "./EmailTemplatesEditor";
 import ObjectFieldsEditor from "./ObjectFieldsEditor";
@@ -120,7 +120,6 @@ const JsonValueEditor = ({ jsonValue, updateJson }: JsonValueEditorProps): React
                 current.kind === "rawJson" ? { ...current, value: event.target.value } : current,
               )
             }
-            sx={TECHNICAL_VALUE_INPUT_SX}
           />
         </SectionPaper>
       );

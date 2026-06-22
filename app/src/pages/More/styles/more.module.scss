@@ -846,6 +846,13 @@ a.linkCard {
   border-radius: 1rem;
   background: color-mix(in srgb, #7c3aed 12%, transparent);
   color: #7c3aed;
+  flex-shrink: 0;
+}
+
+.globalAnouncementHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
 }
 
 .globalAnouncementPreviewBlock {

@@ -4,11 +4,14 @@ import {
   Autocomplete,
   Avatar,
   Box,
+  Chip,
   CircularProgress,
   Stack,
   TextField,
   Typography,
+  createFilterOptions,
 } from "@mui/material";
+import type { AutocompleteRenderInputParams } from "@mui/material/Autocomplete";
 import type { TextFieldProps } from "@mui/material/TextField";
 
 import styles from "./EntityAutocompleteField.module.scss";
@@ -22,10 +25,8 @@ export type EntityAutocompleteOption = {
 
 type EntityAutocompleteImageVariant = "circular" | "rounded";
 
-type EntityAutocompleteFieldProps<TOption extends EntityAutocompleteOption> = {
+type EntityAutocompleteFieldBaseProps<TOption extends EntityAutocompleteOption> = {
   readonly options: readonly TOption[];
-  readonly value: TOption | null;
-  readonly onChange: (value: TOption | null) => void;
   readonly label: string;
   readonly placeholder?: string;
   readonly helperText?: ReactNode;
@@ -41,6 +42,18 @@ type EntityAutocompleteFieldProps<TOption extends EntityAutocompleteOption> = {
   readonly latinSubtitle?: boolean;
 };
 
+export type EntityAutocompleteFieldProps<TOption extends EntityAutocompleteOption> =
+  | (EntityAutocompleteFieldBaseProps<TOption> & {
+      readonly multiple?: false;
+      readonly value: TOption | null;
+      readonly onChange: (value: TOption | null) => void;
+    })
+  | (EntityAutocompleteFieldBaseProps<TOption> & {
+      readonly multiple: true;
+      readonly value: readonly TOption[];
+      readonly onChange: (value: TOption[]) => void;
+    });
+
 function EntityOptionThumbnail({
   imageUrl,
   label,
@@ -52,7 +65,7 @@ function EntityOptionThumbnail({
   readonly label: string;
   readonly variant: EntityAutocompleteImageVariant;
   readonly size?: TextFieldProps["size"];
-  readonly context?: "input" | "option";
+  readonly context?: "input" | "option" | "chip";
 }): ReactElement {
   const avatarVariant = variant === "circular" ? "circular" : "rounded";
   const avatarSize =
@@ -60,9 +73,11 @@ function EntityOptionThumbnail({
       ? size === "small"
         ? 44
         : 52
-      : size === "small"
-        ? 24
-        : 32;
+      : context === "chip"
+        ? 20
+        : size === "small"
+          ? 24
+          : 32;
   const avatarSx = {
     width: avatarSize,
     height: avatarSize,
@@ -70,19 +85,28 @@ function EntityOptionThumbnail({
     flexShrink: 0,
   } as const;
   const placeholderIconSize =
-    context === "option" ? (size === "small" ? 22 : 26) : size === "small" ? 14 : 18;
+    context === "option"
+      ? size === "small"
+        ? 22
+        : 26
+      : context === "chip"
+        ? 12
+        : size === "small"
+          ? 14
+          : 18;
   const initialFontSize =
-    context === "option" ? (size === "small" ? "1.125rem" : "1.25rem") : size === "small" ? "0.875rem" : "1rem";
+    context === "option"
+      ? size === "small"
+        ? "1.125rem"
+        : "1.25rem"
+      : context === "chip"
+        ? "0.75rem"
+        : size === "small"
+          ? "0.875rem"
+          : "1rem";
 
   if (imageUrl) {
-    return (
-      <Avatar
-        src={imageUrl}
-        alt=""
-        variant={avatarVariant}
-        sx={avatarSx}
-      />
-    );
+    return <Avatar src={imageUrl} alt="" variant={avatarVariant} sx={avatarSx} />;
   }
 
   if (variant === "rounded") {
@@ -133,35 +157,166 @@ function EntityOptionThumbnail({
   );
 }
 
-export default function EntityAutocompleteField<TOption extends EntityAutocompleteOption>({
-  options,
-  value,
-  onChange,
-  label,
-  placeholder,
-  helperText,
-  noOptionsText,
-  loading = false,
-  required = false,
-  fullWidth = true,
-  size = "small",
-  inputValue,
-  onInputChange,
-  imageVariant = "rounded",
-  disabled = false,
-  latinSubtitle = false,
-}: EntityAutocompleteFieldProps<TOption>): ReactElement {
+function renderEntityOption<TOption extends EntityAutocompleteOption>(
+  props: React.HTMLAttributes<HTMLLIElement>,
+  option: TOption,
+  imageVariant: EntityAutocompleteImageVariant,
+  size: TextFieldProps["size"],
+  latinSubtitle: boolean
+): ReactElement {
+  return (
+    <Box component="li" {...props} key={option.id}>
+      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ width: "100%", minWidth: 0 }}>
+        <EntityOptionThumbnail
+          imageUrl={option.imageUrl}
+          label={option.label}
+          variant={imageVariant}
+          size={size}
+          context="option"
+        />
+        <Stack spacing={0.25} sx={{ minWidth: 0 }}>
+          <Typography variant="body2" fontWeight={700} noWrap>
+            {option.label}
+          </Typography>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            noWrap
+            className={latinSubtitle ? styles.latinSubtitle : undefined}
+          >
+            {option.subtitle || option.id}
+          </Typography>
+        </Stack>
+      </Stack>
+    </Box>
+  );
+}
+
+function EntityAutocompleteField<TOption extends EntityAutocompleteOption>(
+  props: EntityAutocompleteFieldProps<TOption>
+): ReactElement {
+  const {
+    options,
+    label,
+    placeholder,
+    helperText,
+    noOptionsText,
+    loading = false,
+    required = false,
+    fullWidth = true,
+    size = "small",
+    inputValue,
+    onInputChange,
+    imageVariant = "rounded",
+    disabled = false,
+    latinSubtitle = false,
+    multiple = false,
+  } = props;
+
+  const usesServerSideSearch = onInputChange != null;
+  const filterOptions = usesServerSideSearch
+    ? (autocompleteOptions: TOption[]) => autocompleteOptions
+    : createFilterOptions<TOption>({
+        stringify: (option) => `${option.label} ${option.subtitle ?? ""} ${option.id}`,
+      });
+  const sortOptions = usesServerSideSearch
+    ? (optionList: TOption[]) => optionList
+    : undefined;
+
+  const renderLoadingEndAdornment = (
+    endAdornment: AutocompleteRenderInputParams["InputProps"]["endAdornment"]
+  ): ReactElement => (
+    <>
+      {loading ? <CircularProgress color="inherit" size={18} /> : null}
+      {endAdornment}
+    </>
+  );
+
+  if (multiple) {
+    return (
+      <Autocomplete<TOption, true, false, false>
+        fullWidth={fullWidth}
+        size={size}
+        disabled={disabled}
+        multiple
+        disableCloseOnSelect
+        filterSelectedOptions
+        options={[...options]}
+        value={[...props.value]}
+        inputValue={inputValue}
+        loading={loading}
+        filterOptions={filterOptions}
+        {...(sortOptions ? { sortOptions } : {})}
+        isOptionEqualToValue={(option, selectedValue) => option.id === selectedValue.id}
+        getOptionLabel={(option) => option.label}
+        onInputChange={(_, nextInputValue, reason) => {
+          if (reason === "input" || reason === "clear") {
+            onInputChange?.(nextInputValue);
+          }
+        }}
+        onChange={(_, nextValue) => props.onChange(nextValue)}
+        noOptionsText={noOptionsText}
+        renderOption={(optionProps, option) =>
+          renderEntityOption(optionProps, option, imageVariant, size, latinSubtitle)
+        }
+        renderTags={(selectedOptions, getTagProps) =>
+          selectedOptions.map((option, index) => {
+            const { key, ...tagProps } = getTagProps({ index });
+
+            return (
+              <Chip
+                key={key}
+                {...tagProps}
+                size="small"
+                label={option.label}
+                avatar={
+                  option.imageUrl ? (
+                    <Avatar src={option.imageUrl} alt="" variant="rounded" />
+                  ) : (
+                    <Avatar variant="rounded" sx={{ color: "text.secondary" }}>
+                      <ImageNotSupportedRoundedIcon sx={{ fontSize: 14 }} />
+                    </Avatar>
+                  )
+                }
+              />
+            );
+          })
+        }
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            size={size}
+            required={required}
+            label={label}
+            placeholder={placeholder}
+            helperText={helperText}
+            InputProps={{
+              ...params.InputProps,
+              classes: {
+                ...params.InputProps.classes,
+                root: [params.InputProps.classes?.root, styles.multipleInputRoot]
+                  .filter(Boolean)
+                  .join(" "),
+              },
+              endAdornment: renderLoadingEndAdornment(params.InputProps.endAdornment),
+            }}
+          />
+        )}
+      />
+    );
+  }
+
   return (
     <Autocomplete<TOption, false, false, false>
       fullWidth={fullWidth}
       size={size}
       disabled={disabled}
       options={[...options]}
-      value={value}
+      value={props.value}
       inputValue={inputValue}
       loading={loading}
-      filterOptions={(autocompleteOptions) => autocompleteOptions}
-      sortOptions={(optionList) => optionList}
+      filterOptions={filterOptions}
+      {...(sortOptions ? { sortOptions } : {})}
       isOptionEqualToValue={(option, selectedValue) => option.id === selectedValue.id}
       getOptionLabel={(option) => option.label}
       onInputChange={(_, nextInputValue, reason) => {
@@ -169,34 +324,11 @@ export default function EntityAutocompleteField<TOption extends EntityAutocomple
           onInputChange?.(nextInputValue);
         }
       }}
-      onChange={(_, nextValue) => onChange(nextValue)}
+      onChange={(_, nextValue) => props.onChange(nextValue)}
       noOptionsText={noOptionsText}
-      renderOption={(props, option) => (
-        <Box component="li" {...props} key={option.id}>
-          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ width: "100%", minWidth: 0 }}>
-            <EntityOptionThumbnail
-              imageUrl={option.imageUrl}
-              label={option.label}
-              variant={imageVariant}
-              size={size}
-              context="option"
-            />
-            <Stack spacing={0.25} sx={{ minWidth: 0 }}>
-              <Typography variant="body2" fontWeight={700} noWrap>
-                {option.label}
-              </Typography>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                noWrap
-                className={latinSubtitle ? styles.latinSubtitle : undefined}
-              >
-                {option.subtitle || option.id}
-              </Typography>
-            </Stack>
-          </Stack>
-        </Box>
-      )}
+      renderOption={(optionProps, option) =>
+        renderEntityOption(optionProps, option, imageVariant, size, latinSubtitle)
+      }
       renderInput={(params) => (
         <TextField
           {...params}
@@ -207,12 +339,12 @@ export default function EntityAutocompleteField<TOption extends EntityAutocomple
           helperText={helperText}
           InputProps={{
             ...params.InputProps,
-            startAdornment: value ? (
+            startAdornment: props.value ? (
               <>
                 <Box sx={{ display: "flex", alignItems: "center", alignSelf: "center", mr: 0.5 }}>
                   <EntityOptionThumbnail
-                    imageUrl={value.imageUrl}
-                    label={value.label}
+                    imageUrl={props.value.imageUrl}
+                    label={props.value.label}
                     variant={imageVariant}
                     size={size}
                     context="input"
@@ -223,15 +355,12 @@ export default function EntityAutocompleteField<TOption extends EntityAutocomple
             ) : (
               params.InputProps.startAdornment
             ),
-            endAdornment: (
-              <>
-                {loading ? <CircularProgress color="inherit" size={18} /> : null}
-                {params.InputProps.endAdornment}
-              </>
-            ),
+            endAdornment: renderLoadingEndAdornment(params.InputProps.endAdornment),
           }}
         />
       )}
     />
   );
 }
+
+export default EntityAutocompleteField;

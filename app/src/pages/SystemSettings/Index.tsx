@@ -40,7 +40,7 @@ import SystemSettingEditDialog from "./SystemSettingEditDialog";
 import { useTranslation } from "../../hooks/useTranslation";
 import CrudRowActions from "../../shared/crud/CrudRowActions";
 import EntityTableShell from "../../shared/crud/EntityTableShell";
-import crudPrimitives from "../../shared/crud/styles/crudPrimitives.module.scss";
+import systemSettingsStyles from "./styles/system-settings.module.scss";
 import DateTimeValue from "../../shared/display/DateTimeValue";
 import DashboardMenuHeader from "../../shared/DashboardMenuHeader";
 import JalaliDateFilterField from "../../shared/table/JalaliDateFilterField";
@@ -98,11 +98,11 @@ const SORTABLE_FIELDS = new Set<AppSettingListSortField>([
   "isActive",
 ]);
 
-function textCell(value: unknown, monospace = false): ReactElement {
+function textCell(value: unknown, latin = false): ReactElement {
   return (
     <Typography
       variant="body2"
-      className={monospace ? crudPrimitives.tabularNums : undefined}
+      className={latin ? systemSettingsStyles.latinText : undefined}
       sx={{ overflowWrap: "anywhere" }}
     >
       {String(value || EMPTY_DISPLAY)}
@@ -491,7 +491,7 @@ const SystemSettingsIndex = (): ReactElement => {
   };
 
   return (
-    <Container maxWidth="xl" disableGutters>
+    <Container maxWidth="xl" disableGutters className={systemSettingsStyles.latinValueForm}>
       <DashboardMenuHeader
         title={t("pages.appSettings.title")}
         description={t("pages.appSettings.subtitle")}

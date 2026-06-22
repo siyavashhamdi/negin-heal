@@ -10,7 +10,30 @@ import {
   type ReactElement,
 } from "react";
 import { AddRounded as AddRoundedIcon, Clear as ClearIcon } from "@mui/icons-material";
-import { Avatar, Box, Checkbox, Chip, CircularProgress, IconButton, InputAdornment, ListItemText, MenuItem, Stack, TextField, Typography, useMediaQuery } from "@mui/material";
+import {
+  AlternateEmail as AlternateEmailIcon,
+  Lock as LockIcon,
+  Person as PersonIcon,
+  Phone as PhoneIcon,
+  Visibility,
+  VisibilityOff,
+} from "@mui/icons-material";
+import {
+  Alert,
+  Avatar,
+  Box,
+  Checkbox,
+  Chip,
+  CircularProgress,
+  IconButton,
+  InputAdornment,
+  ListItemText,
+  MenuItem,
+  Stack,
+  TextField,
+  Typography,
+  useMediaQuery,
+} from "@mui/material";
 import {
   getCoreRowModel,
   getSortedRowModel,
@@ -50,7 +73,19 @@ import { useTranslation } from "../../hooks/useTranslation";
 import { sanitizeMobilePhoneInput, normalizeOptionalMobilePhoneToLocal, sanitizeLatinEmailInput, sanitizeLatinUsernameInput, latinIdentityFieldInputProps } from "../../utilities/mobile-phone.util";
 import { isValidEmail, isValidMobilePhone } from "../../utilities/contact-validation.util";
 import { isValidUsernameLength } from "../../utils/usernamePolicy.util";
+import { arePasswordRulesPassed } from "../../utils/passwordPolicy.util";
+import { LoginAdornedTextField } from "../Login/components/LoginAdornedTextField";
+import { RequiredFieldLabel } from "../Login/components/RequiredFieldLabel";
+import { PasswordPolicyChecklist } from "../../shared/auth/PasswordPolicyChecklist";
+import loginFormStyles from "../Login/styles/LoginFormShared.module.scss";
+import {
+  buildUserEditConfirmPath,
+  collectUserEditSensitiveChanges,
+  type UserEditFormSnapshot,
+  type UserEditSensitiveChangeKind,
+} from "./user-edit-sensitive-changes.util";
 import CrudRowActions from "../../shared/crud/CrudRowActions";
+import EntityConfirmDialogShell from "../../shared/crud/EntityConfirmDialogShell";
 import EntityTableShell from "../../shared/crud/EntityTableShell";
 import FileUploadField from "../../shared/forms/FileUploadField";
 import JalaliDateFilterField from "../../shared/table/JalaliDateFilterField";
@@ -78,6 +113,7 @@ import {
   type UserStatus,
 } from "./users-management-list.api";
 import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
+import confirmDialogStyles from "./styles/users-management-confirm.module.scss";
 import AppTooltip from "../../shared/AppTooltip";
 
 const COLUMN_WIDTH_BY_ID: Record<string, string> = {
@@ -88,7 +124,6 @@ const COLUMN_WIDTH_BY_ID: Record<string, string> = {
   fullName: "13rem",
   email: "15rem",
   phoneNumber: "11rem",
-  avatarAccessUrl: "14rem",
   bio: "16rem",
   roles: "14rem",
   createdAt: "10rem",
@@ -105,7 +140,6 @@ const MOBILE_COLUMN_WIDTH_BY_ID: Record<string, string> = {
   fullName: "26rem",
   email: "30rem",
   phoneNumber: "22rem",
-  avatarAccessUrl: "28rem",
   bio: "32rem",
   roles: "28rem",
   createdAt: "20rem",
@@ -122,6 +156,20 @@ const TABLE_TOOLBAR_OPTIONS = {
 } as const;
 
 const EMPTY_DISPLAY = "—";
+
+const latinFieldInputProps = {
+  className: loginFormStyles.latinInput,
+  dir: "ltr",
+  lang: "en",
+  spellCheck: "false",
+  autoCapitalize: "off",
+  autoCorrect: "off",
+} as const;
+
+const persianFieldInputProps = {
+  className: loginFormStyles.persianInput,
+  dir: "rtl",
+} as const;
 
 const ROLE_OPTIONS: readonly UserRole[] = ["SUPER_ADMIN", "ADMIN", "END_USER"];
 const STATUS_OPTIONS: readonly UserStatus[] = ["ACTIVE", "DEACTIVE", "SUSPENDED", "BANNED"];
@@ -254,6 +302,17 @@ function buildEditFormState(record: ManagedUserRecord): UserEditFormState {
   };
 }
 
+function toUserEditSnapshot(form: UserEditFormState): UserEditFormSnapshot {
+  return {
+    username: form.username,
+    email: form.email,
+    phoneNumber: form.phoneNumber,
+    password: form.password,
+    roles: form.roles,
+    status: form.status,
+  };
+}
+
 function UserAvatarCell({
   avatarAccessUrl,
   displayName,
@@ -304,15 +363,30 @@ const UsersManagementList = (): ReactElement => {
   const { showError } = useSnackbar();
   const hasShownLoadErrorRef = useRef(false);
   const isCreateRoute = location.pathname === `${APP_SHELL_ROUTES.users}/new`;
-  const editUserId = useMemo(() => {
+  const editUserRoute = useMemo(() => {
     const editRoutePrefix = `${APP_SHELL_ROUTES.users}/edit/`;
     if (!location.pathname.startsWith(editRoutePrefix)) {
-      return null;
+      return { userId: null, isConfirmRoute: false };
     }
 
-    const routeId = location.pathname.slice(editRoutePrefix.length);
-    return routeId || null;
+    const remainder = location.pathname.slice(editRoutePrefix.length);
+    if (!remainder) {
+      return { userId: null, isConfirmRoute: false };
+    }
+
+    if (remainder.endsWith("/confirm")) {
+      const userId = remainder.slice(0, -"/confirm".length);
+      return { userId: userId || null, isConfirmRoute: Boolean(userId) };
+    }
+
+    if (remainder.includes("/")) {
+      return { userId: null, isConfirmRoute: false };
+    }
+
+    return { userId: remainder, isConfirmRoute: false };
   }, [location.pathname]);
+  const editUserId = editUserRoute.userId;
+  const isEditConfirmRoute = editUserRoute.isConfirmRoute;
   const userDialogOpen = isCreateRoute || editUserId != null;
 
   const { data: userDetailData, loading: userDetailLoading } = useQuery<
@@ -363,6 +437,7 @@ const UsersManagementList = (): ReactElement => {
   const [editForm, setEditForm] = useState<UserEditFormState | null>(null);
   const [initialEditForm, setInitialEditForm] = useState<UserEditFormState | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const appliedDialogKeyRef = useRef<string | null>(null);
 
   const hasAppliedFilters = useMemo(
@@ -395,6 +470,14 @@ const UsersManagementList = (): ReactElement => {
     resetPageDeps: [debouncedSearchQuery, appliedFilters],
   });
 
+  const returnToEditUserDialog = useCallback((): void => {
+    if (!editUserId) {
+      return;
+    }
+
+    navigate(`${APP_SHELL_ROUTES.users}/edit/${editUserId}`);
+  }, [editUserId, navigate]);
+
   const [createUser, createUserResult] = useMutationWithSnackbar<
     UserCreateMutation,
     UserCreateMutationVariables
@@ -403,9 +486,13 @@ const UsersManagementList = (): ReactElement => {
     onSuccess: () => {
       setEditTarget(null);
       setEditForm(null);
+      setInitialEditForm(null);
       setAvatarFile(null);
+      setShowPassword(false);
       setDialogMode("edit");
+      appliedDialogKeyRef.current = null;
       onRefresh();
+      navigate(APP_SHELL_ROUTES.users);
     },
   });
 
@@ -417,9 +504,18 @@ const UsersManagementList = (): ReactElement => {
     onSuccess: () => {
       setEditTarget(null);
       setEditForm(null);
+      setInitialEditForm(null);
       setAvatarFile(null);
+      setShowPassword(false);
       setDialogMode("edit");
+      appliedDialogKeyRef.current = null;
       onRefresh();
+      navigate(APP_SHELL_ROUTES.users);
+    },
+    onError: () => {
+      if (isEditConfirmRoute) {
+        returnToEditUserDialog();
+      }
     },
   });
 
@@ -433,9 +529,18 @@ const UsersManagementList = (): ReactElement => {
 
   const isCreateFormReady =
     editForm != null &&
-    isValidUsernameLength(editForm.username) &&
+    editForm.firstName.trim().length > 0 &&
     editForm.roles.length > 0 &&
-    editForm.password.trim().length > 0;
+    editForm.password.trim().length > 0 &&
+    arePasswordRulesPassed(editForm.password) &&
+    (!editForm.username.trim() || isValidUsernameLength(editForm.username));
+
+  const isEditFormValid =
+    editForm != null &&
+    editForm.firstName.trim().length > 0 &&
+    editForm.roles.length > 0 &&
+    (!editForm.username.trim() || isValidUsernameLength(editForm.username)) &&
+    (editForm.password.trim().length === 0 || arePasswordRulesPassed(editForm.password));
 
   const hasEditFormChanges =
     initialEditForm != null &&
@@ -443,7 +548,27 @@ const UsersManagementList = (): ReactElement => {
     (hasFormChanges(initialEditForm, editForm) || avatarFile != null);
 
   const canSubmitUserForm =
-    dialogMode === "create" ? isCreateFormReady : hasEditFormChanges;
+    dialogMode === "create"
+      ? isCreateFormReady
+      : hasEditFormChanges && isEditFormValid;
+
+  const editSensitiveChanges = useMemo((): readonly UserEditSensitiveChangeKind[] => {
+    if (dialogMode !== "edit" || !initialEditForm || !editForm) {
+      return [];
+    }
+
+    return collectUserEditSensitiveChanges(
+      toUserEditSnapshot(initialEditForm),
+      toUserEditSnapshot(editForm),
+    );
+  }, [dialogMode, editForm, initialEditForm]);
+
+  const loginImpactChanges = useMemo(
+    () => editSensitiveChanges.filter((kind) => kind !== "role"),
+    [editSensitiveChanges],
+  );
+
+  const hasRoleSensitiveChange = editSensitiveChanges.includes("role");
 
   useEffect(() => {
     if (!error) {
@@ -820,6 +945,7 @@ const UsersManagementList = (): ReactElement => {
     setEditForm(null);
     setInitialEditForm(null);
     setAvatarFile(null);
+    setShowPassword(false);
     setDialogMode("edit");
     navigate(APP_SHELL_ROUTES.users);
   };
@@ -891,6 +1017,66 @@ const UsersManagementList = (): ReactElement => {
     }
   };
 
+  const performUserUpdate = async (): Promise<void> => {
+    if (!editForm || !editTarget) {
+      return;
+    }
+
+    const username = editForm.username.trim();
+    const emailValue = editForm.email.trim();
+    const phoneValue = editForm.phoneNumber.trim();
+    const normalizedPhone = normalizeOptionalMobilePhoneToLocal(phoneValue);
+
+    let avatarFileId = getFileIdFromAccessUrl(editForm.avatarAccessUrl);
+    if (avatarFile) {
+      avatarFileId = await uploadSelectedAvatar(avatarFile);
+      if (!avatarFileId) {
+        if (isEditConfirmRoute) {
+          returnToEditUserDialog();
+        }
+        return;
+      }
+    }
+
+    void updateUser({
+      variables: {
+        input: {
+          id: editTarget.id,
+          username,
+          profile: {
+            firstName: editForm.firstName.trim(),
+            lastName: optionalInput(editForm.lastName),
+            email: optionalInput(editForm.email),
+            phoneNumber: normalizedPhone,
+            avatarFileId,
+            bio: optionalInput(editForm.bio),
+          },
+          roles: editForm.roles,
+          status: editForm.status,
+          password: optionalInput(editForm.password) ?? undefined,
+        },
+      },
+    });
+  };
+
+  const handleCloseSensitiveConfirm = (): void => {
+    returnToEditUserDialog();
+  };
+
+  const handleConfirmSensitiveChanges = (): void => {
+    void performUserUpdate();
+  };
+
+  useEffect(() => {
+    if (!isEditConfirmRoute || !editUserId || !initialEditForm || !editForm) {
+      return;
+    }
+
+    if (editSensitiveChanges.length === 0) {
+      navigate(`${APP_SHELL_ROUTES.users}/edit/${editUserId}`, { replace: true });
+    }
+  }, [editForm, editSensitiveChanges.length, editUserId, initialEditForm, isEditConfirmRoute, navigate]);
+
   const handleSubmitEdit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
 
@@ -899,13 +1085,13 @@ const UsersManagementList = (): ReactElement => {
     }
 
     const username = editForm.username.trim();
-    if (!username) {
-      showError(t("pages.usersManagement.edit.usernameRequired"));
+    if (username && !isValidUsernameLength(username)) {
+      showError(t("pages.usersManagement.validation.usernameMinLength"));
       return;
     }
 
-    if (!isValidUsernameLength(username)) {
-      showError(t("pages.usersManagement.validation.usernameMinLength"));
+    if (!editForm.firstName.trim()) {
+      showError(t("pages.usersManagement.validation.firstNameRequired"));
       return;
     }
 
@@ -927,28 +1113,33 @@ const UsersManagementList = (): ReactElement => {
       return;
     }
 
-    let avatarFileId = getFileIdFromAccessUrl(editForm.avatarAccessUrl);
-    if (avatarFile) {
-      avatarFileId = await uploadSelectedAvatar(avatarFile);
-      if (!avatarFileId) {
-        return;
-      }
+    const passwordValue = editForm.password.trim();
+    if (passwordValue && !arePasswordRulesPassed(passwordValue)) {
+      showError(t("auth.login.errors.passwordPolicy"));
+      return;
+    }
+
+    if (dialogMode === "create" && !passwordValue) {
+      showError(t("pages.usersManagement.create.passwordRequired"));
+      return;
     }
 
     if (dialogMode === "create") {
-      const password = editForm.password.trim();
-      if (!password) {
-        showError(t("pages.usersManagement.create.passwordRequired"));
-        return;
+      let avatarFileId = getFileIdFromAccessUrl(editForm.avatarAccessUrl);
+      if (avatarFile) {
+        avatarFileId = await uploadSelectedAvatar(avatarFile);
+        if (!avatarFileId) {
+          return;
+        }
       }
 
       void createUser({
         variables: {
           input: {
             username,
-            password,
+            password: passwordValue,
             profile: {
-              firstName: optionalInput(editForm.firstName),
+              firstName: editForm.firstName.trim(),
               lastName: optionalInput(editForm.lastName),
               email: optionalInput(editForm.email),
               phoneNumber: normalizedPhone,
@@ -963,29 +1154,16 @@ const UsersManagementList = (): ReactElement => {
       return;
     }
 
-    if (!editTarget) {
+    if (!editTarget || !initialEditForm) {
       return;
     }
 
-    void updateUser({
-      variables: {
-        input: {
-          id: editTarget.id,
-          username,
-          profile: {
-            firstName: optionalInput(editForm.firstName),
-            lastName: optionalInput(editForm.lastName),
-            email: optionalInput(editForm.email),
-            phoneNumber: normalizedPhone,
-            avatarFileId,
-            bio: optionalInput(editForm.bio),
-          },
-          roles: editForm.roles,
-          status: editForm.status,
-          password: optionalInput(editForm.password) ?? undefined,
-        },
-      },
-    });
+    if (editSensitiveChanges.length > 0 && !isEditConfirmRoute) {
+      navigate(buildUserEditConfirmPath(editTarget.id));
+      return;
+    }
+
+    await performUserUpdate();
   };
 
   return (
@@ -1070,161 +1248,278 @@ const UsersManagementList = (): ReactElement => {
             </Typography>
           </Stack>
         ) : editForm ? (
-          <Stack spacing={3}>
-                <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-                  <TextField
-                    label={t("table.pages.usersManagement.columns.username")}
-                    value={editForm.username}
-                    onChange={(event) =>
-                      setEditField("username", sanitizeLatinUsernameInput(event.target.value))
-                    }
-                    required
-                    fullWidth
-                    size="small"
-                  />
-                  <TextField
-                    label={t("table.pages.usersManagement.columns.email")}
-                    value={editForm.email}
-                    onChange={(event) =>
-                      setEditField("email", sanitizeLatinEmailInput(event.target.value))
-                    }
-                    fullWidth
-                    size="small"
-                    type="email"
-                  />
-                  <TextField
-                    label={t("table.pages.usersManagement.columns.phoneNumber")}
-                    value={editForm.phoneNumber}
-                    onChange={(event) =>
-                      setEditField("phoneNumber", sanitizeMobilePhoneInput(event.target.value))
-                    }
-                    fullWidth
-                    size="small"
-                    inputProps={{ ...latinIdentityFieldInputProps, inputMode: "tel", dir: "ltr" }}
-                  />
-                </Stack>
+          <Stack spacing={3} sx={{ pt: 1 }}>
+            <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+              <LoginAdornedTextField
+                fullWidth
+                size="small"
+                label={t("table.pages.usersManagement.columns.username")}
+                value={editForm.username}
+                onChange={(event) =>
+                  setEditField("username", sanitizeLatinUsernameInput(event.target.value))
+                }
+                inputProps={latinFieldInputProps}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PersonIcon className={loginFormStyles.inputIcon} />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <LoginAdornedTextField
+                fullWidth
+                size="small"
+                label={t("table.pages.usersManagement.columns.email")}
+                value={editForm.email}
+                onChange={(event) =>
+                  setEditField("email", sanitizeLatinEmailInput(event.target.value))
+                }
+                inputProps={{ ...latinFieldInputProps, inputMode: "email" }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <AlternateEmailIcon className={loginFormStyles.inputIcon} />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <LoginAdornedTextField
+                fullWidth
+                size="small"
+                label={t("table.pages.usersManagement.columns.phoneNumber")}
+                value={editForm.phoneNumber}
+                onChange={(event) =>
+                  setEditField("phoneNumber", sanitizeMobilePhoneInput(event.target.value))
+                }
+                inputProps={{ ...latinFieldInputProps, inputMode: "tel" }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PhoneIcon className={loginFormStyles.inputIcon} />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Stack>
 
-                <Stack direction={{ xs: "column", md: "row" }} spacing={2} alignItems="stretch">
-                  <TextField
-                    label={t("table.pages.usersManagement.columns.firstName")}
-                    value={editForm.firstName}
-                    onChange={(event) => setEditField("firstName", event.target.value)}
-                    fullWidth
-                    size="small"
-                  />
-                  <TextField
-                    label={t("table.pages.usersManagement.columns.lastName")}
-                    value={editForm.lastName}
-                    onChange={(event) => setEditField("lastName", event.target.value)}
-                    fullWidth
-                    size="small"
-                  />
-                  <TextField
-                    label={t("table.pages.usersManagement.columns.bio")}
-                    value={editForm.bio}
-                    onChange={(event) => setEditField("bio", event.target.value)}
-                    fullWidth
-                    size="small"
-                    multiline
-                    minRows={MULTILINE_TEXTAREA_MIN_ROWS}
-                    maxRows={MULTILINE_TEXTAREA_MAX_ROWS}
-                  />
-                </Stack>
+            <Stack direction={{ xs: "column", md: "row" }} spacing={2} alignItems="stretch">
+              <TextField
+                label={
+                  <RequiredFieldLabel required>
+                    {t("table.pages.usersManagement.columns.firstName")}
+                  </RequiredFieldLabel>
+                }
+                value={editForm.firstName}
+                onChange={(event) => setEditField("firstName", event.target.value)}
+                fullWidth
+                size="small"
+                inputProps={{ ...persianFieldInputProps, "aria-required": true }}
+                InputLabelProps={{ required: false, shrink: true }}
+              />
+              <TextField
+                label={t("table.pages.usersManagement.columns.lastName")}
+                value={editForm.lastName}
+                onChange={(event) => setEditField("lastName", event.target.value)}
+                fullWidth
+                size="small"
+                inputProps={persianFieldInputProps}
+              />
+              <TextField
+                label={t("table.pages.usersManagement.columns.bio")}
+                value={editForm.bio}
+                onChange={(event) => setEditField("bio", event.target.value)}
+                fullWidth
+                size="small"
+                multiline
+                minRows={MULTILINE_TEXTAREA_MIN_ROWS}
+                maxRows={MULTILINE_TEXTAREA_MAX_ROWS}
+                inputProps={persianFieldInputProps}
+              />
+            </Stack>
 
-                <FileUploadField
-                  label={t("pages.usersManagement.avatarUpload.label")}
-                  file={avatarFile}
-                  onChange={setAvatarFile}
-                  existingFile={buildExistingFilePreview(
-                    editForm.avatarAccessUrl,
-                    editForm.username.trim() || "آواتار",
-                  )}
-                  onExistingFileClear={() => {
-                    setAvatarFile(null);
-                    setEditField("avatarAccessUrl", null);
-                  }}
-                  accept="image/*"
-                  allowedFormatsLabel={t("pages.usersManagement.avatarUpload.allowedFormats")}
-                  maxSizeLabel={t("pages.usersManagement.avatarUpload.maxSize")}
-                  maxSizeBytes={FILE_UPLOAD_POLICY_MAX_SIZE_BYTES.AVATAR}
-                  dropTitle={t("pages.usersManagement.avatarUpload.dropTitle")}
-                  mobileDropTitle={t("pages.usersManagement.avatarUpload.mobileDropTitle")}
-                  dropHint={t("pages.usersManagement.avatarUpload.dropHint")}
-                  mobileDropHint={t("pages.usersManagement.avatarUpload.mobileDropHint")}
-                  removeLabel={t("pages.usersManagement.avatarUpload.removeLabel")}
-                  invalidLabel={t("pages.usersManagement.avatarUpload.invalidLabel")}
-                  fullWidth
-                />
+            <FileUploadField
+              label={t("pages.usersManagement.avatarUpload.label")}
+              file={avatarFile}
+              onChange={setAvatarFile}
+              existingFile={buildExistingFilePreview(
+                editForm.avatarAccessUrl,
+                editForm.username.trim() || "آواتار",
+              )}
+              onExistingFileClear={() => {
+                setAvatarFile(null);
+                setEditField("avatarAccessUrl", null);
+              }}
+              accept="image/*"
+              allowedFormatsLabel={t("pages.usersManagement.avatarUpload.allowedFormats")}
+              maxSizeLabel={t("pages.usersManagement.avatarUpload.maxSize")}
+              maxSizeBytes={FILE_UPLOAD_POLICY_MAX_SIZE_BYTES.AVATAR}
+              dropTitle={t("pages.usersManagement.avatarUpload.dropTitle")}
+              mobileDropTitle={t("pages.usersManagement.avatarUpload.mobileDropTitle")}
+              dropHint={t("pages.usersManagement.avatarUpload.dropHint")}
+              mobileDropHint={t("pages.usersManagement.avatarUpload.mobileDropHint")}
+              removeLabel={t("pages.usersManagement.avatarUpload.removeLabel")}
+              invalidLabel={t("pages.usersManagement.avatarUpload.invalidLabel")}
+              fullWidth
+            />
 
-                <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-                  <TextField
-                    label={
-                      dialogMode === "create"
-                        ? t("pages.usersManagement.create.password")
-                        : t("pages.usersManagement.edit.password")
-                    }
-                    value={editForm.password}
-                    onChange={(event) => setEditField("password", event.target.value)}
-                    fullWidth
-                    size="small"
-                    type="password"
-                    required={dialogMode === "create"}
-                    helperText={
-                      dialogMode === "create"
-                        ? t("pages.usersManagement.create.passwordHelp")
-                        : t("pages.usersManagement.edit.passwordHelp")
-                    }
-                    autoComplete="new-password"
-                  />
-                  <TextField
-                    select
-                    label={t("table.pages.usersManagement.columns.status")}
-                    value={editForm.status}
-                    onChange={(event) => setEditField("status", event.target.value as UserStatus)}
-                    fullWidth
-                    size="small"
-                  >
-                    {STATUS_OPTIONS.map((status) => (
-                      <MenuItem key={status} value={status}>
-                        {STATUS_LABEL[status]}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                </Stack>
-
-                <TextField
-                  select
-                  label={t("table.pages.usersManagement.columns.roles")}
-                  value={editForm.roles}
-                  onChange={(event) => {
-                    const value = event.target.value;
-                    setEditField(
-                      "roles",
-                      typeof value === "string"
-                        ? (value.split(",") as UserRole[])
-                        : (value as UserRole[])
-                    );
-                  }}
-                  SelectProps={{
-                    multiple: true,
-                    renderValue: (selected) =>
-                      (selected as UserRole[]).map((role) => ROLE_LABEL[role] ?? role).join("، "),
-                  }}
+            <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+              <Stack spacing={1} sx={{ flex: 1 }}>
+                <LoginAdornedTextField
                   fullWidth
                   size="small"
-                  required
-                >
-                  {ROLE_OPTIONS.map((role) => (
-                    <MenuItem key={role} value={role}>
-                      <Checkbox checked={editForm.roles.includes(role)} size="small" />
-                      <ListItemText primary={ROLE_LABEL[role]} />
-                    </MenuItem>
-                  ))}
-                </TextField>
-
+                  label={
+                    dialogMode === "create"
+                      ? t("pages.usersManagement.create.password")
+                      : t("pages.usersManagement.edit.password")
+                  }
+                  type={showPassword ? "text" : "password"}
+                  value={editForm.password}
+                  onChange={(event) => setEditField("password", event.target.value)}
+                  endAdornmentOnlyWhenLabelShrunk
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <LockIcon className={loginFormStyles.inputIcon} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          aria-label={t("auth.login.togglePasswordVisibility")}
+                          onClick={() => setShowPassword((previous) => !previous)}
+                          edge="end"
+                          size="small"
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                  helperText={
+                    dialogMode === "create"
+                      ? t("pages.usersManagement.create.passwordHelp")
+                      : t("pages.usersManagement.edit.passwordHelp")
+                  }
+                  autoComplete="new-password"
+                  required={dialogMode === "create"}
+                />
+                {editForm.password.trim() ? (
+                  <PasswordPolicyChecklist password={editForm.password} />
+                ) : null}
               </Stack>
-            ) : null}
+              <TextField
+                select
+                label={
+                  <RequiredFieldLabel required>
+                    {t("table.pages.usersManagement.columns.status")}
+                  </RequiredFieldLabel>
+                }
+                value={editForm.status}
+                onChange={(event) => setEditField("status", event.target.value as UserStatus)}
+                fullWidth
+                size="small"
+                InputLabelProps={{ required: false, shrink: true }}
+                inputProps={{ "aria-required": true }}
+              >
+                {STATUS_OPTIONS.map((status) => (
+                  <MenuItem key={status} value={status}>
+                    {STATUS_LABEL[status]}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Stack>
+
+            <TextField
+              select
+              label={
+                <RequiredFieldLabel required>
+                  {t("table.pages.usersManagement.columns.roles")}
+                </RequiredFieldLabel>
+              }
+              value={editForm.roles}
+              onChange={(event) => {
+                const value = event.target.value;
+                setEditField(
+                  "roles",
+                  typeof value === "string"
+                    ? (value.split(",") as UserRole[])
+                    : (value as UserRole[]),
+                );
+              }}
+              SelectProps={{
+                multiple: true,
+                renderValue: (selected) =>
+                  (selected as UserRole[]).map((role) => ROLE_LABEL[role] ?? role).join("، "),
+              }}
+              fullWidth
+              size="small"
+              InputLabelProps={{ required: false, shrink: true }}
+              inputProps={{ "aria-required": true }}
+            >
+              {ROLE_OPTIONS.map((role) => (
+                <MenuItem key={role} value={role}>
+                  <Checkbox checked={editForm.roles.includes(role)} size="small" />
+                  <ListItemText primary={ROLE_LABEL[role]} />
+                </MenuItem>
+              ))}
+            </TextField>
+          </Stack>
+        ) : null}
       </EntityModalShell>
+
+      <EntityConfirmDialogShell
+        open={isEditConfirmRoute && editSensitiveChanges.length > 0}
+        onClose={handleCloseSensitiveConfirm}
+        title={t("pages.usersManagement.edit.confirm.title")}
+        resetKey={editSensitiveChanges.join(",")}
+        bodyClassName={confirmDialogStyles.confirmDialogBody}
+        contentClassName={confirmDialogStyles.confirmDialogContent}
+        footer={
+          <ModalFooterActions
+            actions={[
+              {
+                key: "cancel",
+                label: t("pages.usersManagement.edit.confirm.cancelAction"),
+                onClick: handleCloseSensitiveConfirm,
+                variant: "outlined",
+                color: "inherit",
+                disabled: isSavingUser,
+              },
+              {
+                key: "confirm",
+                label: t("pages.usersManagement.edit.confirm.confirmAction"),
+                onClick: handleConfirmSensitiveChanges,
+                variant: "contained",
+                color: "warning",
+                disabled: isSavingUser || !canSubmitUserForm,
+              },
+            ]}
+          />
+        }
+      >
+        <div dir="rtl" className={confirmDialogStyles.confirmContent}>
+          {loginImpactChanges.length > 0 ? (
+            <>
+              <p className={confirmDialogStyles.confirmIntro}>
+                {t("pages.usersManagement.edit.confirm.loginImpactIntro")}
+              </p>
+              <ul className={confirmDialogStyles.confirmImpactList}>
+                {loginImpactChanges.map((kind) => (
+                  <li key={kind}>
+                    {t(`pages.usersManagement.edit.confirm.loginImpactFields.${kind}`)}
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
+          {hasRoleSensitiveChange ? (
+            <Alert severity="warning" className={confirmDialogStyles.confirmRoleAlert}>
+              {t("pages.usersManagement.edit.confirm.roleImpact")}
+            </Alert>
+          ) : null}
+        </div>
+      </EntityConfirmDialogShell>
     </>
   );
 };

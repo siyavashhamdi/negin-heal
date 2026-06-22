@@ -48,7 +48,6 @@ import { COURSE_PAYMENT_MANUAL_CREATE_MUTATION } from "../../graphql/mutations/c
 import { COURSE_PAYMENT_STATUS_UPDATE_MUTATION } from "../../graphql/mutations/coursePaymentStatusUpdate.mutation";
 import { COURSE_PAYMENT_DETAIL_QUERY } from "../../graphql/queries/coursePaymentDetail.query";
 import { COURSE_PAYMENT_LIST_QUERY } from "../../graphql/queries/coursePaymentList.query";
-import { COURSE_LIST_QUERY } from "../../graphql/queries/courseList.query";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import {
@@ -68,7 +67,8 @@ import crudPrimitives from "../../shared/crud/styles/crudPrimitives.module.scss"
 import ActiveEndUserPickerField, {
   type ActiveEndUserOption,
 } from "../../shared/forms/ActiveEndUserPickerField";
-import EntityAutocompleteField from "../../shared/forms/EntityAutocompleteField";
+import CoursePickerField from "../../shared/forms/CoursePickerField";
+import type { CoursePickerOption } from "../../shared/forms/course-picker.util";
 import FileUploadField from "../../shared/forms/FileUploadField";
 import AppTooltip from "../../shared/AppTooltip";
 import { getFileIdFromAccessUrl, resolveFileAccessUrl } from "../../utils/fileAccessUrl.util";
@@ -80,11 +80,6 @@ import {
   FILE_UPLOAD_POLICY_MAX_SIZE_BYTES,
 } from "../../constants/fileUploadPolicies";
 import JalaliDateFilterField from "../../shared/table/JalaliDateFilterField";
-import {
-  type CourseListQuery,
-  type CourseListQueryVariables,
-  type CourseListItemRow,
-} from "../Courses/courses-list.api";
 import {
   EMPTY_COURSE_PAYMENT_LIST_FILTERS,
   buildCoursePaymentListQueryVariables,
@@ -144,13 +139,6 @@ type CoursePaymentManualCreateMutationVariables = {
   };
 };
 
-type ManualPaymentCourseOption = {
-  readonly id: string;
-  readonly label: string;
-  readonly subtitle: string;
-  readonly row: CourseListItemRow;
-};
-
 const LATIN_TEXT_FILTER_KEYS = new Set<keyof CoursePaymentListFilters>([
   "username",
   "userEmail",
@@ -201,7 +189,6 @@ const TABLE_TOOLBAR_OPTIONS = {
 } as const;
 
 const EMPTY_DISPLAY = "—";
-const MANUAL_PAYMENT_COURSE_OPTIONS_LIMIT = 200;
 
 const STATUS_COLOR: Record<
   UserCoursePurchaseStatus,
@@ -266,31 +253,6 @@ function formatNumber(value: number | null | undefined): string {
     return EMPTY_DISPLAY;
   }
   return value.toLocaleString("fa-IR").replace(/\u066c/g, ",");
-}
-
-function calculateDiscountedCoursePrice(course: CourseListItemRow): number {
-  const price = Math.max(0, course.priceIrt ?? 0);
-  const discount = course.discount;
-  if (!discount || discount.value <= 0 || price <= 0) {
-    return price;
-  }
-
-  if (discount.type === "PERCENTAGE") {
-    return Math.max(0, price - Math.round(price * (Math.min(discount.value, 100) / 100)));
-  }
-
-  return Math.max(0, price - Math.min(price, discount.value));
-}
-
-function courseToManualPaymentOption(row: CourseListItemRow): ManualPaymentCourseOption {
-  const finalPrice = calculateDiscountedCoursePrice(row);
-  return {
-    id: row.id,
-    label: row.title,
-    subtitle: formatAmount(finalPrice),
-    imageUrl: resolveFileAccessUrl(row.coverImageAccessUrl),
-    row,
-  };
 }
 
 function formatFileSize(value: number | null | undefined): string {
@@ -640,9 +602,7 @@ const PaymentsList = (): ReactElement => {
   const reviewPaymentId = reviewPaymentRoute?.paymentId ?? null;
   const isPaidStatusChangeConfirmOpen = reviewPaymentRoute?.isConfirmRoute ?? false;
   const [manualPaymentUser, setManualPaymentUser] = useState<ActiveEndUserOption | null>(null);
-  const [manualPaymentCourse, setManualPaymentCourse] = useState<ManualPaymentCourseOption | null>(
-    null
-  );
+  const [manualPaymentCourse, setManualPaymentCourse] = useState<CoursePickerOption | null>(null);
   const [manualPaymentMethod, setManualPaymentMethod] =
     useState<UserCoursePaymentMethod>("CARD_TO_CARD");
   const [manualPaymentStatus, setManualPaymentStatus] = useState<UserCoursePurchaseStatus>("PAID");
@@ -653,19 +613,11 @@ const PaymentsList = (): ReactElement => {
   const hasAppliedFilters =
     debouncedSearchQuery.trim() !== "" || hasCoursePaymentFiltersApplied(debouncedFilters);
 
-  const manualPaymentCoursesVariables = useMemo<CourseListQueryVariables>(
+  const manualPaymentCourseFilters = useMemo(
     () => ({
-      input: {
-        filters: {
-          isActive: true,
-          hasPrice: true,
-          includeUserId: manualPaymentUser?.id ?? null,
-        },
-        options: {
-          limit: MANUAL_PAYMENT_COURSE_OPTIONS_LIMIT,
-          sort: { createdAt: "DESC" },
-        },
-      },
+      isActive: true,
+      hasPrice: true,
+      includeUserId: manualPaymentUser?.id ?? null,
     }),
     [manualPaymentUser?.id]
   );
@@ -723,15 +675,6 @@ const PaymentsList = (): ReactElement => {
     return mapCoursePaymentDetailRowToRecord(paymentDetailData.coursePaymentDetail);
   }, [paymentDetailData, reviewPaymentId]);
 
-  const { data: manualPaymentCoursesData, loading: manualPaymentCoursesLoading } = useQuery<
-    CourseListQuery,
-    CourseListQueryVariables
-  >(COURSE_LIST_QUERY, {
-    variables: manualPaymentCoursesVariables,
-    fetchPolicy: "network-only",
-    skip: !manualPaymentRouteOpen || !manualPaymentUser,
-  });
-
   const [updatePaymentStatus, updatePaymentStatusResult] = useMutationWithSnackbar<
     CoursePaymentStatusUpdateMutation,
     CoursePaymentStatusUpdateMutationVariables
@@ -765,15 +708,6 @@ const PaymentsList = (): ReactElement => {
 
   const [isManualPaymentFileUploading, setIsManualPaymentFileUploading] = useState(false);
 
-  const manualPaymentCourseOptions = useMemo(
-    () =>
-      (manualPaymentCoursesData?.courseList.items ?? [])
-        .filter((course) => course.isActive !== false)
-        .filter((course) => calculateDiscountedCoursePrice(course) > 0)
-        .map(courseToManualPaymentOption),
-    [manualPaymentCoursesData]
-  );
-
   useEffect(() => {
     if (!error) {
       hasShownLoadErrorRef.current = false;
@@ -789,18 +723,6 @@ const PaymentsList = (): ReactElement => {
   useEffect(() => {
     setManualPaymentCourse(null);
   }, [manualPaymentUser?.id]);
-
-  useEffect(() => {
-    if (!manualPaymentCourse) {
-      return;
-    }
-    const isStillAvailable = manualPaymentCourseOptions.some(
-      (course) => course.id === manualPaymentCourse.id
-    );
-    if (!isStillAvailable) {
-      setManualPaymentCourse(null);
-    }
-  }, [manualPaymentCourse, manualPaymentCourseOptions]);
 
   useEffect(() => {
     if (!reviewPayment) {
@@ -1398,7 +1320,6 @@ const PaymentsList = (): ReactElement => {
       label={STATUS_LABEL[reviewPayment.status]}
     />
   ) : null;
-  const isManualPaymentOptionsLoading = manualPaymentCoursesLoading;
   const canSubmitManualPayment =
     manualPaymentUser != null &&
     manualPaymentCourse != null &&
@@ -1473,10 +1394,13 @@ const PaymentsList = (): ReactElement => {
               required
             />
 
-            <EntityAutocompleteField
-              options={manualPaymentCourseOptions}
+            <CoursePickerField
+              enabled={manualPaymentRouteOpen && manualPaymentUser != null}
+              filters={manualPaymentCourseFilters}
+              limit={200}
+              sort={{ createdAt: "DESC" }}
+              onlyPurchasable
               value={manualPaymentCourse}
-              loading={manualPaymentCoursesLoading}
               onChange={setManualPaymentCourse}
               disabled={!manualPaymentUser}
               noOptionsText={
@@ -1491,7 +1415,6 @@ const PaymentsList = (): ReactElement => {
                   ? "فقط دوره‌های فعال پولی که این کاربر هنوز پرداخت نکرده نمایش داده می‌شوند."
                   : "ابتدا کاربر را انتخاب کنید تا دوره‌های قابل ثبت نمایش داده شوند."
               }
-              imageVariant="rounded"
               required
             />
           </Stack>
@@ -1592,12 +1515,6 @@ const PaymentsList = (): ReactElement => {
             onChange={(event) => setManualPaymentDescription(event.target.value)}
             placeholder="مثلاً پرداخت توسط پشتیبانی تایید و ثبت شد."
           />
-
-          {isManualPaymentOptionsLoading ? (
-            <Typography variant="body2" color="text.secondary">
-              در حال آماده‌سازی گزینه‌های قابل انتخاب...
-            </Typography>
-          ) : null}
         </Stack>
       </EntityModalShell>
 

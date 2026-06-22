@@ -1,0 +1,42 @@
+@use "../../../styles/variables" as variables;
+
+.latinValueForm {
+  :global(.MuiInputBase-input),
+  :global(.MuiInputBase-input.Mui-disabled),
+  :global(.MuiSelect-select) {
+    direction: ltr !important;
+    font-family: variables.$font-family-latin !important;
+    text-align: left !important;
+
+    &::placeholder {
+      direction: rtl !important;
+      font-family: variables.$font-family !important;
+      text-align: right !important;
+    }
+  }
+
+  :global(.MuiInputBase-input.Mui-disabled) {
+    -webkit-text-fill-color: currentColor;
+  }
+}
+
+.latinText {
+  direction: ltr;
+  display: inline-block;
+  font-family: variables.$font-family-latin !important;
+  text-align: left;
+}
+
+.persianValueField {
+  :global(.MuiInputBase-input) {
+    direction: rtl !important;
+    font-family: variables.$font-family !important;
+    text-align: right !important;
+
+    &::placeholder {
+      direction: rtl !important;
+      font-family: variables.$font-family !important;
+      text-align: right !important;
+    }
+  }
+}

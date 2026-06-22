@@ -4,12 +4,7 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import { Button, IconButton, MenuItem, Stack, TextField, Typography } from "@mui/material";
 
 import type { JsonFormState, UpdateJsonFormState, UsdtWalletForm } from "./types";
-import {
-  TECHNICAL_VALUE_INPUT_SX,
-  removeAt,
-  replaceAt,
-  type TextFieldConfig,
-} from "./shared";
+import { removeAt, replaceAt, type TextFieldConfig } from "./shared";
 import SectionPaper from "./SectionPaper";
 import { WALLET_NETWORK_OPTIONS, createEmptyUsdtWallet } from "./utils";
 
@@ -62,7 +57,6 @@ const UsdtWalletsEditor = ({ jsonValue, updateJson }: UsdtWalletsEditorProps): R
                 return { ...current, wallets: replaceAt(current.wallets, index, nextWallet) };
               })
             }
-            sx={TECHNICAL_VALUE_INPUT_SX}
           >
             {WALLET_NETWORK_OPTIONS.map((network) => (
               <MenuItem key={network} value={network}>
@@ -85,7 +79,6 @@ const UsdtWalletsEditor = ({ jsonValue, updateJson }: UsdtWalletsEditorProps): R
                   return { ...current, wallets: replaceAt(current.wallets, index, nextWallet) };
                 })
               }
-              sx={TECHNICAL_VALUE_INPUT_SX}
             />
           ))}
         </Stack>

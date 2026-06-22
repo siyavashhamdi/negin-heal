@@ -3,8 +3,10 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./index.scss";
 import "./i18n/config";
+import { bootstrapCapacitorNativeShell } from "./native/capacitorBootstrap";
 import { registerPwaServiceWorker } from "./utils/pwaRegistration.util";
 
+void bootstrapCapacitorNativeShell();
 registerPwaServiceWorker();
 
 const rootElement = document.getElementById("root");

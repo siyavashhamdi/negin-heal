@@ -83,8 +83,7 @@ export class GlobalAnouncementSendMutation {
     });
 
     const deliveredUsers =
-      await this.userSubscriptionService.publishToActiveUsers({
-        updateType: GeneralSubscriptionUpdateType.NOTIFICATION,
+      await this.userSubscriptionService.publishNotificationToActiveUsers({
         targetId: notification._id.toString(),
         payload: subscriptionPayload,
       });

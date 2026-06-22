@@ -3,3 +3,32 @@
 .latinSubtitle {
   font-family: variables.$font-family-latin !important;
 }
+
+.multipleInputRoot {
+  min-height: variables.$input-min-height !important;
+  align-items: center;
+  flex-wrap: wrap;
+  box-sizing: border-box;
+  padding-block: variables.$spacing-1 !important;
+  padding-inline: 0.875rem 0.5rem !important;
+  gap: variables.$spacing-0-5;
+
+  :global(.MuiAutocomplete-input) {
+    padding-block: 0 !important;
+    padding-inline: 0.25rem 0 !important;
+    line-height: 1.4375;
+    min-width: 0 !important;
+  }
+
+  &:has(:global(.MuiAutocomplete-tag)) {
+    align-items: flex-start;
+
+    :global(.MuiAutocomplete-input) {
+      flex: 1 0 100%;
+      width: 100%;
+      max-width: 100%;
+      padding-inline: 0 !important;
+      margin-block-start: variables.$spacing-0-5;
+    }
+  }
+}

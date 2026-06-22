@@ -23,7 +23,7 @@ import type {
 import {
   COMMON_TEXTAREA_ROWS,
   MULTILINE_TEXTAREA_MIN_ROWS,
-  TECHNICAL_VALUE_INPUT_SX,
+  MULTILINE_TEXTAREA_MAX_ROWS,
   removeAt,
   replaceAt,
   type TextFieldConfig,
@@ -111,12 +111,7 @@ const SupportTextFields = ({
             };
           })
         }
-        sx={{
-          flexBasis: { md: field.multiline ? "100%" : "calc(50% - 8px)" },
-          ...(field.type === "email" || field.type === "url" || field.key === "phone"
-            ? TECHNICAL_VALUE_INPUT_SX
-            : {}),
-        }}
+        sx={{ flexBasis: { md: field.multiline ? "100%" : "calc(50% - 8px)" } }}
       />
     ))}
   </Stack>
@@ -340,7 +335,6 @@ const SupportContactEditor = ({
                             };
                           })
                         }
-                        sx={field === "id" ? TECHNICAL_VALUE_INPUT_SX : undefined}
                       />
                     ))}
 
@@ -421,7 +415,6 @@ const SupportContactEditor = ({
                                 };
                               })
                             }
-                            sx={field === "id" ? TECHNICAL_VALUE_INPUT_SX : undefined}
                           />
                         ))}
                       </SectionPaper>

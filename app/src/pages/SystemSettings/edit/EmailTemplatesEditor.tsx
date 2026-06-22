@@ -14,12 +14,7 @@ import {
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 
 import type { JsonFormState, UpdateJsonFormState } from "./types";
-import {
-  HTML_TEXTAREA_ROWS,
-  TECHNICAL_VALUE_INPUT_SX,
-  removeAt,
-  replaceAt,
-} from "./shared";
+import { HTML_TEXTAREA_ROWS, removeAt, replaceAt } from "./shared";
 import { createEmptyEmailTemplate } from "./utils";
 
 interface EmailTemplatesEditorProps {
@@ -76,7 +71,6 @@ const EmailTemplatesEditor = ({
                   };
                 })
               }
-              sx={TECHNICAL_VALUE_INPUT_SX}
             />
             <TextField
               fullWidth
@@ -114,7 +108,6 @@ const EmailTemplatesEditor = ({
                   };
                 })
               }
-              sx={TECHNICAL_VALUE_INPUT_SX}
             />
           </Stack>
         </AccordionDetails>
