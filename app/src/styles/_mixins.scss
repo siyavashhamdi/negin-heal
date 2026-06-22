@@ -358,7 +358,7 @@
 }
 
 @mixin content-surface-bg {
-  background-color: var(--app-content-surface-bg, var(--app-surface-bg, #fff7fb));
+  background-color: var(--app-content-surface-bg, var(--app-surface-bg, #fff9fb));
   background-image: var(--app-content-surface-gradient, none);
 
   body[data-theme="dark"] & {
@@ -367,7 +367,7 @@
 }
 
 @mixin content-surface-card {
-  background-color: var(--app-content-surface-bg, #fff7fb);
+  background-color: var(--app-content-surface-bg, #fff9fb);
   background-image:
     radial-gradient(
       ellipse 100% 90% at 100% 0%,
@@ -396,7 +396,7 @@
 }
 
 @mixin light-girlish-panel-bg {
-  background-color: var(--app-surface-bg, #fff3f8);
+  background-color: var(--app-surface-bg, #fff5f9);
   background-image:
     radial-gradient(
       ellipse 95% 120% at 100% 0%,

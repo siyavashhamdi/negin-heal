@@ -2,10 +2,13 @@
 @use "../../../styles/mixins" as mixins;
 
 .page {
-  display: grid;
-  gap: 1rem;
-
   @include mixins.mobile-page-stack-tight;
+}
+
+.pageStack {
+  display: flex;
+  flex-direction: column;
+  gap: variables.$spacing-3;
 }
 
 .hero {
@@ -96,6 +99,26 @@
   color: var(--text-secondary);
 }
 
+.roleBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}
+
+.roleBadge {
+  display: inline-flex;
+  align-items: center;
+  border: 0.0625rem solid variables.$color-accent-soft-border;
+  background: variables.$color-accent-soft-bg;
+  color: variables.$color-accent-soft-fg;
+  border-radius: 50em;
+  padding: 0.12rem 0.55rem;
+  font-size: 0.75rem;
+  font-weight: variables.$font-weight-semibold;
+  line-height: 1.4;
+}
+
 .eyebrow {
   color: variables.$color-primary-main;
   font-size: 0.78rem;
@@ -184,5 +207,11 @@ body[data-theme="dark"] {
   .hero,
   .actionCard {
     @include mixins.surface-panel-dark;
+  }
+
+  .roleBadge {
+    border-color: variables.$color-accent-soft-fg-dark;
+    background: variables.$color-accent-soft-bg-dark;
+    color: variables.$color-accent-soft-fg-dark;
   }
 }

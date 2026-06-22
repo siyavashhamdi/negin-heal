@@ -34,20 +34,20 @@ body {
   --app-layout-glow-2: #b794c7;
   --app-layout-bg: linear-gradient(
     165deg,
-    #fae0ec 0%,
-    #f8d4e6 38%,
-    #f5daf2 72%,
-    #f2d0e6 100%
+    #fdf5f8 0%,
+    #f9eef3 38%,
+    #faf2f7 72%,
+    #fdf8fa 100%
   );
-  --app-surface-bg: #fff7fb;
-  --app-content-surface-bg: #fff7fb;
+  --app-surface-bg: #fff9fb;
+  --app-content-surface-bg: #fff9fb;
   --app-content-surface-gradient: linear-gradient(
     160deg,
-    #fffafc 0%,
-    #fff5fa 52%,
-    #fff0f7 100%
+    #fffcfd 0%,
+    #fff8fb 52%,
+    #fff3f8 100%
   );
-  --app-panel-gradient: linear-gradient(148deg, #fff3f8 0%, #fce6f2 46%, #f8e2f6 100%);
+  --app-panel-gradient: linear-gradient(148deg, #fffbfc 0%, #fff5f9 46%, #fef0f6 100%);
   --app-surface-border: rgba(61, 44, 53, 0.1);
   --app-popover-bg: color-mix(in srgb, var(--app-content-surface-bg) 82%, var(--app-layout-glow) 18%);
   --app-accent-soft-bg: #fce7f3;

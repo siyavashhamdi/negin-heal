@@ -1308,7 +1308,7 @@ export class CourseService {
       coverImageFileId: input.coverImageFileId,
       priceIrt: input.priceIrt,
       discount: this.normalizeDiscountInput(input.discount),
-      isActive: input.isActive ?? true,
+      isActive: typeof input.isActive === "boolean" ? input.isActive : true,
       sortOrder: input.sortOrder,
       tags: this.normalizeTags(input.tags),
       chapters: input.chapters.map((chapter) =>
@@ -1335,7 +1335,7 @@ export class CourseService {
       title: chapter.title.trim(),
       description: this.normalizeOptionalText(chapter.description),
       visibleAfterMinutes: chapter.visibleAfterMinutes,
-      isFree: chapter.isFree,
+      isFree: chapter.isFree === true,
       sortOrder: chapter.sortOrder,
       items: chapter.items.map((item) => this.normalizeCreateItemInput(item)),
     };
@@ -1353,9 +1353,12 @@ export class CourseService {
   }
 
   private normalizeDiscountInput(
-    discount?: CourseDiscountGqlInput,
-  ): CourseDiscountGqlInput | undefined {
-    if (!discount) {
+    discount?: CourseDiscountGqlInput | null,
+  ): CourseDiscountGqlInput | null | undefined {
+    if (discount === null) {
+      return null;
+    }
+    if (discount === undefined) {
       return undefined;
     }
 

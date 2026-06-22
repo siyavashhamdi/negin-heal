@@ -36,8 +36,8 @@ const lightColors = {
     dark: "#7d6290",
   },
   grey: {
-    50: "#fdf8f9",
-    100: "#f7eef2",
+    50: "#fdf8fa",
+    100: "#f8f0f3",
     200: "#eadde3",
     300: "#d4c4cc",
     400: "#a8949e",
@@ -161,8 +161,8 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
       error: colors.error,
       info: colors.info,
       background: {
-        default: isDark ? "#121212" : "#fae0ec",
-        paper: isDark ? "#1e1e1e" : "#fff7fb",
+        default: isDark ? "#121212" : "#faf2f6",
+        paper: isDark ? "#1e1e1e" : "#fff9fb",
       },
       text: {
         primary: isDark ? "#ffffff" : "#3d2c35",
@@ -448,7 +448,7 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
             boxShadow: shadows.md,
             backgroundImage: isDark ? "none" : "var(--app-panel-gradient)",
             borderRadius: 0,
-            backgroundColor: isDark ? "#1e1e1e" : "#fff7fb",
+            backgroundColor: isDark ? "#1e1e1e" : "#fff9fb",
             color: isDark ? "#ffffff" : "#3d2c35",
             "& .MuiIconButton-root": {
               color: isDark ? "#ffffff" : "#3d2c35",
@@ -616,6 +616,66 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
             fontSize: "0.75rem",
             padding: "0.5rem 0.75rem",
           },
+        },
+      },
+      MuiAlert: {
+        styleOverrides: {
+          ...(isDark
+            ? {}
+            : {
+                filledInfo: {
+                  backgroundColor: "#e8edf5",
+                  color: "#3d4f6a",
+                  "& .MuiAlert-message, & .MuiTypography-root": {
+                    color: "#3d4f6a",
+                  },
+                  "& .MuiAlert-icon": {
+                    color: "#4a5d7a",
+                  },
+                  "& .MuiAlert-action .MuiIconButton-root": {
+                    color: "#4a5d7a",
+                  },
+                },
+                filledSuccess: {
+                  backgroundColor: "#e3f2eb",
+                  color: colors.success.dark,
+                  "& .MuiAlert-message, & .MuiTypography-root": {
+                    color: colors.success.dark,
+                  },
+                  "& .MuiAlert-icon": {
+                    color: colors.success.dark,
+                  },
+                  "& .MuiAlert-action .MuiIconButton-root": {
+                    color: colors.success.dark,
+                  },
+                },
+                filledWarning: {
+                  backgroundColor: "#fdf3e3",
+                  color: colors.warning.dark,
+                  "& .MuiAlert-message, & .MuiTypography-root": {
+                    color: colors.warning.dark,
+                  },
+                  "& .MuiAlert-icon": {
+                    color: colors.warning.dark,
+                  },
+                  "& .MuiAlert-action .MuiIconButton-root": {
+                    color: colors.warning.dark,
+                  },
+                },
+                filledError: {
+                  backgroundColor: "#fce8e8",
+                  color: colors.error.dark,
+                  "& .MuiAlert-message, & .MuiTypography-root": {
+                    color: colors.error.dark,
+                  },
+                  "& .MuiAlert-icon": {
+                    color: colors.error.dark,
+                  },
+                  "& .MuiAlert-action .MuiIconButton-root": {
+                    color: colors.error.dark,
+                  },
+                },
+              }),
         },
       },
     },

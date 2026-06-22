@@ -1,0 +1,25 @@
+export type UserRoleKey = "SUPER_ADMIN" | "ADMIN" | "END_USER";
+
+export const USER_ROLE_LABELS: Record<UserRoleKey, string> = {
+  SUPER_ADMIN: "سوپر ادمین",
+  ADMIN: "ادمین",
+  END_USER: "کاربر",
+};
+
+export function getUserRoleLabel(role: string): string {
+  return USER_ROLE_LABELS[role as UserRoleKey] ?? role;
+}
+
+/** Admin roles are shown without the generic end-user role. */
+export function getProfileDisplayRoles(roles: readonly string[] | undefined | null): readonly string[] {
+  if (!roles?.length) {
+    return [];
+  }
+
+  const hasElevatedRole = roles.some((role) => role === "SUPER_ADMIN" || role === "ADMIN");
+  if (hasElevatedRole) {
+    return roles.filter((role) => role !== "END_USER");
+  }
+
+  return roles.filter((role) => role === "END_USER");
+}

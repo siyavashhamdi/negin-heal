@@ -831,7 +831,7 @@ const CourseFormDialog = ({
           chapter.visibleAfterMinutes,
           chapter.visibleAfterUnit,
         ),
-        isFree: hasPositivePrice ? chapter.isFree : false,
+        isFree: hasPositivePrice ? chapter.isFree === true : false,
         sortOrder: chapterIndex + 1,
         items: itemInputs,
       };
@@ -869,7 +869,7 @@ const CourseFormDialog = ({
       coverImageFileId:
         uploadedFiles.coverImageFileId || getFileIdFromAccessUrl(coverImageAccessUrl) || undefined,
       priceIrt: parsedPriceIrt ?? 0,
-      isActive,
+      isActive: isActive === true,
       tags,
       chapters: chapterInputs,
     };
@@ -879,6 +879,8 @@ const CourseFormDialog = ({
         type: discountKind,
         value: parsedDiscountValue,
       };
+    } else if (isEditMode) {
+      input.discount = null;
     }
 
     const mutationInput = isEditMode && courseId ? { ...input, id: courseId } : input;

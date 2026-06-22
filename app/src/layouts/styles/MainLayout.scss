@@ -78,7 +78,7 @@ $hairline: 0.0625rem solid;
   box-shadow: var(--main-layout-panel-shadow);
   padding-inline: var(--main-layout-panel-padding);
   padding-block: 0;
-  margin-bottom: variables.$spacing-1;
+  margin-bottom: variables.$spacing-0;
   display: grid;
   gap: 0.9rem;
   inline-size: 100%;
@@ -121,7 +121,7 @@ $hairline: 0.0625rem solid;
 .main-layout__badge {
   display: inline-flex;
   position: relative;
-  top: -0.32rem;
+  top: -0.15rem;
   align-items: center;
   justify-content: center;
   border-radius: 50em;
@@ -869,17 +869,17 @@ $hairline: 0.0625rem solid;
     transform: translate3d(0, 0, 0);
     background: linear-gradient(
       to bottom,
-      rgba(250, 224, 236, 0.82),
-      rgba(250, 224, 236, 0.98)
+      rgba(253, 245, 248, 0.88),
+      rgba(253, 245, 248, 0.98)
     );
     backdrop-filter: blur(0.08rem);
     -webkit-backdrop-filter: blur(0.08rem);
 
-    @supports (background: color-mix(in srgb, #fae0ec 68%, transparent)) {
+    @supports (background: color-mix(in srgb, #fdf5f8 68%, transparent)) {
       background: linear-gradient(
         to bottom,
-        color-mix(in srgb, #fae0ec 82%, transparent),
-        color-mix(in srgb, #fae0ec 98%, transparent)
+        color-mix(in srgb, #fdf5f8 82%, transparent),
+        color-mix(in srgb, #fdf5f8 98%, transparent)
       );
     }
   }
@@ -967,6 +967,41 @@ $hairline: 0.0625rem solid;
     height: 1.05rem;
     font-size: 0.6rem;
     font-weight: variables.$font-weight-bold;
+  }
+}
+
+body[data-theme="light"] {
+  .main-layout__general-update-popup {
+    color: var(--text-primary);
+    background:
+      radial-gradient(circle at top left, var(--general-update-popup-accent-soft), transparent 58%),
+      #ffffff;
+    border-color: color-mix(in srgb, var(--general-update-popup-accent) 34%, var(--app-surface-border));
+    box-shadow:
+      0 0.9rem 2.2rem color-mix(in srgb, var(--general-update-popup-accent) 14%, #3d2c35 10%),
+      inset 0 0.0625rem 0 rgba(255, 255, 255, 0.95);
+  }
+
+  .main-layout__general-update-popup h3 {
+    color: var(--text-primary);
+  }
+
+  .main-layout__general-update-popup p {
+    color: var(--text-secondary);
+  }
+
+  .main-layout__general-update-popup-icon {
+    background: color-mix(in srgb, var(--general-update-popup-accent) 16%, #ffffff);
+    color: var(--general-update-popup-fg);
+  }
+
+  .main-layout__general-update-popup-close.MuiIconButton-root {
+    color: var(--text-secondary);
+    background: color-mix(in srgb, #ffffff 90%, var(--general-update-popup-accent) 10%);
+  }
+
+  .main-layout__general-update-popup-close.MuiIconButton-root:hover {
+    color: var(--text-primary);
   }
 }
 

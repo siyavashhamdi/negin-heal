@@ -50,6 +50,7 @@
     max-height: min(40vh, 11rem);
     overflow-y: auto;
     padding-inline-end: variables.$spacing-0-5;
+    color: inherit;
 
     @include mixins.respond-below(sm) {
       max-height: none;
@@ -113,6 +114,11 @@
     width: 100%;
     overflow: visible;
     max-height: none;
+    color: inherit;
+  }
+
+  :global(.MuiTypography-root) {
+    color: inherit;
   }
 }
 
@@ -130,9 +136,15 @@
 .uploadProgressBar {
   inline-size: 100%;
   border-radius: variables.$border-radius-full;
-  background-color: rgba(255, 255, 255, 0.28);
+  background-color: color-mix(in srgb, #4a5d7a 22%, transparent);
 
   :global(.MuiLinearProgress-bar) {
     border-radius: variables.$border-radius-full;
+  }
+}
+
+:global(html[data-theme="dark"]) {
+  .uploadProgressBar {
+    background-color: rgba(255, 255, 255, 0.28);
   }
 }

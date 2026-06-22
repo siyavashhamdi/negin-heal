@@ -30,6 +30,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useMobileAppLayout } from "../../hooks/useMobileAppLayout";
 import { useMe, type UserMeGqlResponse } from "../../hooks/useMe";
 import { resolveMeUserDisplayName, resolveStoredUserDisplayName } from "../../utils/storedUser.util";
+import { getProfileDisplayRoles, getUserRoleLabel } from "../../utils/userRoleLabels.util";
 import { sanitizeMobilePhoneInput } from "../../utilities/mobile-phone.util";
 import { isValidEmail, isValidMobilePhone } from "../../utilities/contact-validation.util";
 import { isValidUsernameLength } from "../../utils/usernamePolicy.util";
@@ -177,9 +178,7 @@ const AuthenticatedProfile = (): ReactElement => {
       ? resolveStoredUserDisplayName(authUser, "کاربر")
       : resolveMeUserDisplayName(profileUser, "کاربر");
   const userInitial = displayName.trim().slice(0, 1) || "؟";
-  const displayRoles =
-    profileUser?.roles?.filter((role) => role !== "END_USER") ?? [];
-  const roleLabel = displayRoles.join("، ");
+  const displayRoles = getProfileDisplayRoles(profileUser?.roles);
   const isAvatarUpdating =
     isAvatarUploading || isAvatarDeleting || updateProfileResult.loading;
   const hasAvatar = Boolean(avatarUrl);
@@ -501,8 +500,10 @@ const AuthenticatedProfile = (): ReactElement => {
   };
 
   return (
-    <section className={styles.page}>
-      <div className={styles.hero} {...opaqueShellProps}>
+    <>
+      <section className={styles.page}>
+        <div className={styles.pageStack}>
+          <div className={styles.hero} {...opaqueShellProps}>
         <div className={styles.avatarWrap}>
           <Avatar className={styles.avatar} src={avatarUrl ?? undefined} alt={displayName}>
             {userInitial}
@@ -557,7 +558,15 @@ const AuthenticatedProfile = (): ReactElement => {
         <div>
           <p className={styles.eyebrow}>پروفایل</p>
           <h2>{displayName}</h2>
-          {roleLabel ? <p>{roleLabel}</p> : null}
+          {displayRoles.length > 0 ? (
+            <div className={styles.roleBadges}>
+              {displayRoles.map((role) => (
+                <span key={role} className={styles.roleBadge}>
+                  {getUserRoleLabel(role)}
+                </span>
+              ))}
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -577,6 +586,18 @@ const AuthenticatedProfile = (): ReactElement => {
           </span>
         </button>
       </div>
+
+      <Button
+        variant="outlined"
+        color="error"
+        className={styles.logoutButton}
+        startIcon={<LogoutRoundedIcon />}
+        onClick={logout}
+      >
+        خروج از حساب کاربری
+      </Button>
+        </div>
+      </section>
 
       <EntityModalShell
         open={isEditRoute}
@@ -842,17 +863,7 @@ const AuthenticatedProfile = (): ReactElement => {
           خروج خودکار تا {logoutCountdown ?? 0} ثانیه دیگر انجام می‌شود.
         </Alert>
       </EntityConfirmDialogShell>
-
-      <Button
-        variant="outlined"
-        color="error"
-        className={styles.logoutButton}
-        startIcon={<LogoutRoundedIcon />}
-        onClick={logout}
-      >
-        خروج از حساب کاربری
-      </Button>
-    </section>
+    </>
   );
 };
 

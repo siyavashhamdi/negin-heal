@@ -155,7 +155,6 @@ export class CourseWriteGqlInput {
 
   @Field(() => Boolean, {
     nullable: true,
-    defaultValue: true,
     description: "Whether the course is active",
   })
   @IsOptional()
