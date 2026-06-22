@@ -117,6 +117,30 @@ function isValidAuthIdentityMobileValue(value: string): boolean {
   return tryNormalizeAuthIdentityMobile(normalized) !== undefined;
 }
 
+/** Validates a dedicated mobile field using the same rules as login identity mobile mode. */
+export function isValidAuthIdentityMobileInput(value: string): boolean {
+  const trimmed = value.trim();
+  return trimmed.length > 0 && isValidAuthIdentityMobileValue(trimmed);
+}
+
+/** Normalizes a valid mobile for submit (local 09… or unchanged + numbers). */
+export function normalizeAuthIdentityMobileForSubmit(
+  value: string,
+): string | undefined {
+  const normalized = normalizeIdentityValue(value);
+
+  if (!normalized || !isValidAuthIdentityMobileValue(normalized)) {
+    return undefined;
+  }
+
+  const localMobile = tryNormalizeAuthIdentityMobile(normalized);
+  if (localMobile) {
+    return localMobile;
+  }
+
+  return normalized;
+}
+
 /** True when the UI should show mobile mode (phone icon / mobile validation path). */
 export function isAuthIdentityMobileMode(value: string): boolean {
   const normalized = normalizeIdentityValue(value);

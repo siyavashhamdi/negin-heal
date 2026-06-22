@@ -10,7 +10,7 @@ export function getUserRoleLabel(role: string): string {
   return USER_ROLE_LABELS[role as UserRoleKey] ?? role;
 }
 
-/** Admin roles are shown without the generic end-user role. */
+/** Elevated roles are shown on profile; end-users see no role badge. */
 export function getProfileDisplayRoles(roles: readonly string[] | undefined | null): readonly string[] {
   if (!roles?.length) {
     return [];
@@ -21,5 +21,5 @@ export function getProfileDisplayRoles(roles: readonly string[] | undefined | nu
     return roles.filter((role) => role !== "END_USER");
   }
 
-  return roles.filter((role) => role === "END_USER");
+  return [];
 }

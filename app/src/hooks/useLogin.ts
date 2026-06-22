@@ -17,7 +17,7 @@ import { applyUserPreferences } from "../utils/userPreferences.util";
 import { mapMeToUser } from "../utils/storedUser.util";
 import {
   normalizeAuthIdentityForSubmit,
-  normalizeMobilePhoneToLocal,
+  normalizeAuthIdentityMobileForSubmit,
   sanitizeLatinEmailInput,
   sanitizeLatinUsernameInput,
 } from "../utilities/contact-validation.util";
@@ -296,7 +296,7 @@ export const useLogin = () => {
         variables: {
           input: {
             mobile:
-              normalizeMobilePhoneToLocal(mobile.trim()) ?? mobile.trim(),
+              normalizeAuthIdentityMobileForSubmit(mobile.trim()) ?? mobile.trim(),
           },
         },
       });
@@ -381,7 +381,7 @@ export const useLogin = () => {
               ? sanitizeLatinEmailInput(input.email).toLowerCase()
               : undefined,
             mobile: input.mobile?.trim()
-              ? normalizeMobilePhoneToLocal(input.mobile) ?? undefined
+              ? normalizeAuthIdentityMobileForSubmit(input.mobile) ?? undefined
               : undefined,
             profile: {
               firstName: input.profile.firstName.trim(),

@@ -60,6 +60,7 @@ import { env } from "../../config";
 import {
   isValidEmail,
   isValidMobilePhone,
+  normalizeAuthIdentityMobileForSubmit,
   tryNormalizeAuthIdentityMobile,
 } from "../../utils/contact-validation.util";
 import {
@@ -474,7 +475,7 @@ export class UserService {
       ? sanitizeLatinEmail(input.email).toLowerCase()
       : undefined;
     const mobile = input.mobile?.trim()
-      ? tryNormalizeAuthIdentityMobile(input.mobile)
+      ? normalizeAuthIdentityMobileForSubmit(input.mobile)
       : undefined;
 
     if (!username && !email && !mobile) {
@@ -808,7 +809,7 @@ export class UserService {
   }
 
   private normalizePhoneNumber(value: string): string | undefined {
-    return tryNormalizeAuthIdentityMobile(value);
+    return normalizeAuthIdentityMobileForSubmit(value);
   }
 
   private throwIfInvalidEmail(value: string | undefined): void {

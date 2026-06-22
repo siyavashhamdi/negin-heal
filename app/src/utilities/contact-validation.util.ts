@@ -13,7 +13,9 @@ import {
   LATIN_EMAIL_CHARSET_REGEX,
   LATIN_USERNAME_REGEX,
   isAuthIdentityMobileMode,
+  isValidAuthIdentityMobileInput,
   normalizeAuthIdentityForSubmit,
+  normalizeAuthIdentityMobileForSubmit,
   resolveAuthIdentityIconKind,
   resolveInvalidAuthIdentityErrorKind,
   sanitizeAuthIdentityInput,
@@ -36,7 +38,9 @@ export {
   LATIN_EMAIL_CHARSET_REGEX,
   LATIN_USERNAME_REGEX,
   isAuthIdentityMobileMode,
+  isValidAuthIdentityMobileInput,
   normalizeAuthIdentityForSubmit,
+  normalizeAuthIdentityMobileForSubmit,
   resolveAuthIdentityIconKind,
   resolveInvalidAuthIdentityErrorKind,
   sanitizeAuthIdentityInput,
@@ -83,8 +87,8 @@ export const sanitizeMobilePhoneInput = (value: string): string =>
     toWesternDigits(value).replace(NON_MOBILE_DIGITS, ""),
   );
 
-/** @deprecated Use tryNormalizeAuthIdentityMobile */
-export const normalizeMobilePhoneToLocal = tryNormalizeAuthIdentityMobile;
+/** @deprecated Use normalizeAuthIdentityMobileForSubmit */
+export const normalizeMobilePhoneToLocal = normalizeAuthIdentityMobileForSubmit;
 
 export const normalizeOptionalMobilePhoneToLocal = (
   value: string,
@@ -93,11 +97,10 @@ export const normalizeOptionalMobilePhoneToLocal = (
   if (!trimmed) {
     return undefined;
   }
-  return tryNormalizeAuthIdentityMobile(trimmed);
+  return normalizeAuthIdentityMobileForSubmit(trimmed);
 };
 
-export const isValidMobilePhone = (value: string): boolean =>
-  tryNormalizeAuthIdentityMobile(value) !== undefined;
+export const isValidMobilePhone = isValidAuthIdentityMobileInput;
 
 /** @deprecated Use AUTH_IDENTITY_LOCAL_MOBILE_REGEX */
 export const AUTH_IDENTITY_MOBILE_REGEX = AUTH_IDENTITY_LOCAL_MOBILE_REGEX;

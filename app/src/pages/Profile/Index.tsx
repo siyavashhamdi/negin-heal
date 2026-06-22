@@ -3,6 +3,9 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import PasswordRoundedIcon from "@mui/icons-material/PasswordRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
+import AlternateEmailIcon from "@mui/icons-material/AlternateEmail";
+import PersonIcon from "@mui/icons-material/Person";
+import PhoneIcon from "@mui/icons-material/Phone";
 import LockIcon from "@mui/icons-material/Lock";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
@@ -31,8 +34,17 @@ import { useMobileAppLayout } from "../../hooks/useMobileAppLayout";
 import { useMe, type UserMeGqlResponse } from "../../hooks/useMe";
 import { resolveMeUserDisplayName, resolveStoredUserDisplayName } from "../../utils/storedUser.util";
 import { getProfileDisplayRoles, getUserRoleLabel } from "../../utils/userRoleLabels.util";
-import { sanitizeMobilePhoneInput, normalizeOptionalMobilePhoneToLocal } from "../../utilities/mobile-phone.util";
-import { isValidEmail, isValidMobilePhone } from "../../utilities/contact-validation.util";
+import {
+  sanitizeMobilePhoneInput,
+  normalizeAuthIdentityMobileForSubmit,
+} from "../../utilities/mobile-phone.util";
+import {
+  isLatinEmailValue,
+  isLatinIdentityUsername,
+  isValidMobilePhone,
+  sanitizeAuthIdentityInput,
+  sanitizeLatinEmailInput,
+} from "../../utilities/contact-validation.util";
 import { isValidUsernameLength } from "../../utils/usernamePolicy.util";
 import { LoginRequiredState } from "../../shared/auth/LoginRequiredState";
 import { PasswordPolicyChecklist } from "../../shared/auth/PasswordPolicyChecklist";
@@ -128,13 +140,44 @@ function optionalTextInput(value: string): string | null {
   return trimmed ? trimmed : null;
 }
 
-function isProfileEditFormValid(form: ProfileEditForm): boolean {
-  return isValidUsernameLength(form.username) && form.firstName.trim().length > 0;
+function isProfileEditFormValid(
+  form: ProfileEditForm,
+  options: { isEmailLocked: boolean; isPhoneNumberLocked: boolean },
+): boolean {
+  const username = form.username.trim();
+
+  if (
+    !username ||
+    !isValidUsernameLength(username) ||
+    !isLatinIdentityUsername(username)
+  ) {
+    return false;
+  }
+
+  if (!form.firstName.trim()) {
+    return false;
+  }
+
+  const email = form.email.trim();
+  if (!options.isEmailLocked && email && !isLatinEmailValue(email)) {
+    return false;
+  }
+
+  const phone = form.phoneNumber.trim();
+  if (!options.isPhoneNumberLocked && phone && !isValidMobilePhone(phone)) {
+    return false;
+  }
+
+  return true;
 }
 
 const latinFieldInputProps = {
   className: styles.latinInput,
   dir: "ltr",
+  lang: "en",
+  spellCheck: false,
+  autoCapitalize: "off",
+  autoCorrect: "off",
 } as const;
 
 const AuthenticatedProfile = (): ReactElement => {
@@ -201,8 +244,14 @@ const AuthenticatedProfile = (): ReactElement => {
   const hasProfileEditChanges =
     initialEditForm != null && hasFormChanges(initialEditForm, editForm);
 
+  const phoneNumberInvalid =
+    !isPhoneNumberLocked &&
+    Boolean(editForm.phoneNumber.trim()) &&
+    !isValidMobilePhone(editForm.phoneNumber);
+
   const canSubmitProfileEdit =
-    isProfileEditFormValid(editForm) && hasProfileEditChanges;
+    isProfileEditFormValid(editForm, { isEmailLocked, isPhoneNumberLocked }) &&
+    hasProfileEditChanges;
 
   useEffect(() => {
     if (!isEditRoute) {
@@ -408,6 +457,11 @@ const AuthenticatedProfile = (): ReactElement => {
       return;
     }
 
+    if (!isLatinIdentityUsername(username)) {
+      showError("نام کاربری وارد شده معتبر نیست.");
+      return;
+    }
+
     if (!isValidUsernameLength(username)) {
       showError("نام کاربری باید حداقل ۵ کاراکتر باشد.");
       return;
@@ -425,7 +479,7 @@ const AuthenticatedProfile = (): ReactElement => {
     };
     if (!isEmailLocked) {
       const emailValue = editForm.email.trim();
-      if (emailValue && !isValidEmail(emailValue)) {
+      if (emailValue && !isLatinEmailValue(emailValue)) {
         showError("ایمیل وارد شده معتبر نیست.");
         return;
       }
@@ -433,12 +487,13 @@ const AuthenticatedProfile = (): ReactElement => {
     }
     if (!isPhoneNumberLocked) {
       const phoneValue = editForm.phoneNumber.trim();
-      const normalizedPhone = normalizeOptionalMobilePhoneToLocal(phoneValue);
-      if (phoneValue && !normalizedPhone) {
+      if (phoneValue && !isValidMobilePhone(phoneValue)) {
         showError("شماره موبایل وارد شده معتبر نیست.");
         return;
       }
-      profileInput.phoneNumber = normalizedPhone;
+      profileInput.phoneNumber = phoneValue
+        ? normalizeAuthIdentityMobileForSubmit(phoneValue) ?? null
+        : null;
     }
 
     const result = await updateProfile({
@@ -645,15 +700,24 @@ const AuthenticatedProfile = (): ReactElement => {
           </Stack>
         ) : editProfileUser ? (
         <Stack spacing={2} className={styles.editProfileModalBody}>
-              <TextField
+              <LoginAdornedTextField
                 label="نام کاربری"
                 value={editForm.username}
-                onChange={(event) => setEditField("username", event.target.value)}
+                onChange={(event) =>
+                  setEditField("username", sanitizeAuthIdentityInput(event.target.value))
+                }
                 required
                 fullWidth
                 size="small"
                 autoComplete="username"
                 inputProps={latinFieldInputProps}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PersonIcon className={loginFormStyles.inputIcon} />
+                    </InputAdornment>
+                  ),
+                }}
               />
               <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
                 <TextField
@@ -674,10 +738,12 @@ const AuthenticatedProfile = (): ReactElement => {
                   autoComplete="family-name"
                 />
               </Stack>
-              <TextField
+              <LoginAdornedTextField
                 label="ایمیل"
                 value={editForm.email}
-                onChange={(event) => setEditField("email", event.target.value)}
+                onChange={(event) =>
+                  setEditField("email", sanitizeLatinEmailInput(event.target.value))
+                }
                 fullWidth
                 size="small"
                 type="email"
@@ -685,8 +751,15 @@ const AuthenticatedProfile = (): ReactElement => {
                 disabled={isEmailLocked}
                 inputProps={{ ...latinFieldInputProps, inputMode: "email" }}
                 helperText={isEmailLocked ? "برای تغییر ایمیل با پشتیبانی تماس بگیرید." : undefined}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <AlternateEmailIcon className={loginFormStyles.inputIcon} />
+                    </InputAdornment>
+                  ),
+                }}
               />
-              <TextField
+              <LoginAdornedTextField
                 label="شماره موبایل"
                 value={editForm.phoneNumber}
                 onChange={(event) =>
@@ -696,12 +769,22 @@ const AuthenticatedProfile = (): ReactElement => {
                 size="small"
                 autoComplete="tel"
                 disabled={isPhoneNumberLocked}
-                inputProps={{ ...latinFieldInputProps, inputMode: "numeric" }}
+                inputProps={{ ...latinFieldInputProps, inputMode: "tel" }}
+                error={phoneNumberInvalid}
                 helperText={
                   isPhoneNumberLocked
                     ? "برای تغییر شماره موبایل با پشتیبانی تماس بگیرید."
-                    : undefined
+                    : phoneNumberInvalid
+                      ? "شماره موبایل وارد شده معتبر نیست."
+                      : undefined
                 }
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PhoneIcon className={loginFormStyles.inputIcon} />
+                    </InputAdornment>
+                  ),
+                }}
               />
               <TextField
                 label="بیوگرافی"

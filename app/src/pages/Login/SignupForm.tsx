@@ -39,8 +39,9 @@ import {
   sanitizeAuthIdentityInput,
   sanitizeLatinEmailInput,
 } from "./password-reset-form.util";
-import { sanitizeMobilePhoneInput, normalizeMobilePhoneToLocal } from "../../utilities/mobile-phone.util";
+import { sanitizeMobilePhoneInput, normalizeAuthIdentityMobileForSubmit } from "../../utilities/mobile-phone.util";
 import { isValidUsernameLength } from "../../utils/usernamePolicy.util";
+import { arePasswordRulesPassed } from "../../utils/passwordPolicy.util";
 import formStyles from "./styles/LoginFormShared.module.scss";
 import verifyStyles from "./styles/VerifyLoginCode.module.scss";
 
@@ -108,7 +109,15 @@ export const SignupForm = ({
     () => Boolean(username.trim() || email.trim() || mobile.trim()),
     [email, mobile, username],
   );
-  const passwordReady = password.trim().length > 0 && confirmPassword.trim().length > 0;
+  const passwordRulesPassed = arePasswordRulesPassed(password);
+  const passwordsMatch =
+    confirmPassword.trim().length > 0 && password === confirmPassword;
+  const passwordReady =
+    password.trim().length > 0 &&
+    confirmPassword.trim().length > 0 &&
+    passwordsMatch &&
+    passwordRulesPassed;
+  const mobileInvalid = Boolean(mobile.trim()) && !isValidMobilePhone(mobile);
   const otpReady = signupCodeRequested && VERIFICATION_CODE_REGEX.test(verificationCode.trim());
   const formReady =
     firstName.trim().length > 0 &&
@@ -199,7 +208,7 @@ export const SignupForm = ({
       return;
     }
 
-    const normalizedMobile = normalizeMobilePhoneToLocal(mobile);
+    const normalizedMobile = normalizeAuthIdentityMobileForSubmit(mobile);
     if (!normalizedMobile) {
       setHasError(true);
       showError(t("auth.login.errors.invalidMobile"));
@@ -261,6 +270,12 @@ export const SignupForm = ({
         return;
       }
 
+      if (!passwordRulesPassed) {
+        setHasError(true);
+        showError(t("auth.login.errors.passwordPolicy"));
+        return;
+      }
+
       if (password !== confirmPassword) {
         setHasError(true);
         showError(t("auth.login.errors.passwordMismatch"));
@@ -294,7 +309,7 @@ export const SignupForm = ({
 
     setHasError(false);
     const normalizedMobile = mobile.trim()
-      ? normalizeMobilePhoneToLocal(mobile)
+      ? normalizeAuthIdentityMobileForSubmit(mobile)
       : undefined;
 
     if (mobile.trim() && !normalizedMobile) {
@@ -435,8 +450,11 @@ export const SignupForm = ({
           fullWidth
           label={t("auth.login.mobileOptionalFieldTitle")}
           value={mobile}
-          onChange={(event) => setMobile(sanitizeMobilePhoneInput(event.target.value))}
-          inputProps={{ ...latinFieldInputProps, inputMode: "numeric" }}
+          onChange={(event) => {
+            setMobile(sanitizeMobilePhoneInput(event.target.value));
+            setHasError(false);
+          }}
+          inputProps={{ ...latinFieldInputProps, inputMode: "tel" }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -445,6 +463,10 @@ export const SignupForm = ({
             ),
           }}
           disabled={loading}
+          error={hasError && mobileInvalid}
+          helperText={
+            hasError && mobileInvalid ? t("auth.login.errors.invalidMobile") : undefined
+          }
         />
 
         {mode === "password" ? (
@@ -454,7 +476,10 @@ export const SignupForm = ({
               label={t("auth.login.passwordFieldTitle")}
               type={showPassword ? "text" : "password"}
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              onChange={(event) => {
+                setPassword(event.target.value);
+                setHasError(false);
+              }}
               endAdornmentOnlyWhenLabelShrunk
               InputProps={{
                 startAdornment: (
@@ -476,7 +501,7 @@ export const SignupForm = ({
               }}
               autoComplete="new-password"
               disabled={loading}
-              error={hasError && !password.trim()}
+              error={hasError && !passwordRulesPassed}
             />
 
             <LoginAdornedTextField
@@ -484,7 +509,10 @@ export const SignupForm = ({
               label={t("auth.login.confirmPasswordFieldTitle")}
               type={showPassword ? "text" : "password"}
               value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
+              onChange={(event) => {
+                setConfirmPassword(event.target.value);
+                setHasError(false);
+              }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -494,7 +522,7 @@ export const SignupForm = ({
               }}
               autoComplete="new-password"
               disabled={loading}
-              error={hasError && Boolean(confirmPassword) && password !== confirmPassword}
+              error={hasError && Boolean(confirmPassword) && !passwordsMatch}
             />
           </>
         ) : (

@@ -8,7 +8,7 @@ import {
 
 import {
   resolveInvalidAuthIdentityErrorKind,
-  tryNormalizeAuthIdentityMobile,
+  isValidAuthIdentityMobileInput,
 } from "../utils/auth-identity.util";
 import {
   isLatinEmailValue,
@@ -66,14 +66,11 @@ export class IsLatinAuthIdentityConstraint implements ValidatorConstraintInterfa
 @ValidatorConstraint({ name: "isAuthIdentityMobile", async: false })
 export class IsAuthIdentityMobileConstraint implements ValidatorConstraintInterface {
   validate(value: unknown): boolean {
-    return (
-      typeof value === "string" &&
-      tryNormalizeAuthIdentityMobile(value) !== undefined
-    );
+    return typeof value === "string" && isValidAuthIdentityMobileInput(value);
   }
 
   defaultMessage(): string {
-    return "Mobile number must be exactly 09xxxxxxxxx, 9xxxxxxxxx, +989xxxxxxxxx, or 989xxxxxxxxx";
+    return "Mobile number must be 09xxxxxxxxx, 9xxxxxxxxx, 989xxxxxxxxx, exactly +989xxxxxxxxx, or + followed by at least 8 digits";
   }
 }
 
