@@ -57,7 +57,7 @@ export function SideMenuNav({
 }: SideMenuNavProps): ReactElement {
   const { user } = useAuth();
   const roles = user?.roles ?? [];
-  const shouldOpenSupportTickets = roles.includes("SUPER_ADMIN") || roles.includes("ADMIN");
+  const shouldOpenSupportTickets = roles.includes("SUPER_ADMIN");
   const visibleItems = SIDE_MENU_ITEMS.filter((item) => {
     if (item.id === "notifications" && !user) {
       return false;

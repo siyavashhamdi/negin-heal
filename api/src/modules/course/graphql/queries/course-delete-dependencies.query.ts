@@ -9,7 +9,7 @@ import { CourseDeleteDependenciesGqlResponse } from "../responses";
 
 @Resolver(() => CourseDeleteDependenciesGqlResponse)
 @UseGuards(GqlAuthGuard, RolesGuard)
-@Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+@Roles(UserRole.SUPER_ADMIN)
 export class CourseDeleteDependenciesQuery {
   constructor(private readonly courseService: CourseService) {}
 

@@ -7,6 +7,7 @@ import faSuccess from "../locales/fa/success.json";
 import faLayout from "../locales/fa/layout.json";
 import faPages from "../locales/fa/pages.json";
 import faTable from "../locales/fa/table.json";
+import faSeo from "../locales/fa/seo.json";
 
 const DEFAULT_LOCALE = "fa" as const;
 
@@ -20,6 +21,7 @@ const resources = {
       ...faAuth,
       ...faErrors,
       ...faSuccess,
+      ...faSeo,
     },
   },
 };

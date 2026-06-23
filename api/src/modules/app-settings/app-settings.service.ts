@@ -7,7 +7,7 @@ import {
 } from "@nestjs/common";
 
 import {
-  ADMIN_HIDDEN_APP_SETTING_KEYS,
+  HIDDEN_APP_SETTING_KEYS,
   APP_SETTING_KEY,
   PAYMENT_CHECKOUT_SETTING_KEYS,
 } from "../../constants/app-setting.constant";
@@ -1043,7 +1043,7 @@ export class AppSettingsService {
             { "audit.deletedAt": { $exists: false } },
           ],
         },
-        { key: { $nin: [...ADMIN_HIDDEN_APP_SETTING_KEYS] } },
+        { key: { $nin: [...HIDDEN_APP_SETTING_KEYS] } },
       ],
     };
 

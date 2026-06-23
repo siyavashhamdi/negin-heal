@@ -9,14 +9,14 @@ import { AppSettingMutationGqlResponse } from "../responses";
 
 @Resolver(() => AppSettingMutationGqlResponse)
 @UseGuards(GqlAuthGuard, RolesGuard)
-@Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+@Roles(UserRole.SUPER_ADMIN)
 export class AppSettingDetailQuery {
   constructor(private readonly appSettingsService: AppSettingsService) {}
 
   @Query(() => AppSettingMutationGqlResponse, {
     name: "appSettingDetail",
     description:
-      "Get full app setting data for SUPER_ADMIN and ADMIN, including the editable value",
+      "Get full app setting data for SUPER_ADMIN, including the editable value",
   })
   async getAppSettingDetail(
     @Args("input") input: AppSettingDetailGqlInput,

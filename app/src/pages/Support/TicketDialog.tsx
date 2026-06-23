@@ -530,7 +530,7 @@ const TicketDialog = ({
     [meUser, user?.username]
   );
   const roles = user?.roles ?? [];
-  const isEndUserView = !roles.includes("SUPER_ADMIN") && !roles.includes("ADMIN");
+  const isEndUserView = !roles.includes("SUPER_ADMIN");
   const defaultCategory = initialCategory ?? "OTHER";
 
   const [title, setTitle] = useState("");

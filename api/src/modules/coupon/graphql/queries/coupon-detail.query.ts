@@ -9,14 +9,14 @@ import { CouponListGqlResponse } from "../responses";
 
 @Resolver(() => CouponListGqlResponse)
 @UseGuards(GqlAuthGuard, RolesGuard)
-@Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+@Roles(UserRole.SUPER_ADMIN)
 export class CouponDetailQuery {
   constructor(private readonly couponService: CouponService) {}
 
   @Query(() => CouponListGqlResponse, {
     name: "couponDetail",
     description:
-      "Get full coupon data for SUPER_ADMIN and ADMIN, including applicable courses for editing",
+      "Get full coupon data for SUPER_ADMIN, including applicable courses for editing",
   })
   async findCouponDetail(
     @Args("input") input: CouponDetailGqlInput,

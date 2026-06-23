@@ -9,14 +9,14 @@ import { CourseListGqlResponse } from "../responses";
 
 @Resolver(() => CourseListGqlResponse)
 @UseGuards(GqlAuthGuard, RolesGuard)
-@Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+@Roles(UserRole.SUPER_ADMIN)
 export class CourseDetailQuery {
   constructor(private readonly courseService: CourseService) {}
 
   @Query(() => CourseListGqlResponse, {
     name: "courseDetail",
     description:
-      "Get full course data for SUPER_ADMIN and ADMIN, including chapters and items for editing",
+      "Get full course data for SUPER_ADMIN, including chapters and items for editing",
   })
   async findCourseDetail(
     @Args("input") input: CourseDetailGqlInput,

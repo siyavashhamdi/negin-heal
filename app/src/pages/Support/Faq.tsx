@@ -11,7 +11,19 @@ import SecurityRoundedIcon from "@mui/icons-material/SecurityRounded";
 import { useQuery } from "@apollo/client/react";
 import { useMemo, useState, type ComponentType, type ReactElement } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_CONFIG } from "../../config";
 import { SUPPORT_CONTACT_QUERY } from "../../graphql/queries/supportContactConfig.query";
+import { usePageSeoOverride } from "../../hooks/usePageSeoOverride";
+import { useTranslation } from "../../hooks/useTranslation";
+import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
+import {
+  buildBreadcrumbStructuredData,
+  buildDefaultStructuredData,
+  buildFaqStructuredData,
+  buildStructuredDataLogoUrl,
+} from "../../seo/build-structured-data";
+import { resolveAppBaseUrl } from "../../seo/build-page-seo";
+import { buildSeoDescription, htmlToPlainText, resolveAbsoluteUrl } from "../../seo/seo-text.util";
 import {
   EMPTY_SUPPORT_CONTACT,
   type SupportContactConfigQuery,
@@ -58,6 +70,7 @@ const getItemButtonId = (itemId: string): string => `faq-button-${itemId}`;
 
 const SupportFaq = (): ReactElement => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { data, loading } = useQuery<SupportContactConfigQuery>(SUPPORT_CONTACT_QUERY, {
     fetchPolicy: "cache-and-network",
   });
@@ -81,6 +94,63 @@ const SupportFaq = (): ReactElement => {
         .filter((section) => section.items.length > 0),
     [renderableSections, searchTerm],
   );
+
+  const faqStructuredItems = useMemo(
+    () =>
+      renderableSections.flatMap((section) =>
+        section.items.map((item) => ({
+          question: item.question,
+          answer: htmlToPlainText(item.answer),
+        })),
+      ),
+    [renderableSections],
+  );
+
+  const pageSeoOverride = useMemo(() => {
+    const appUrl = resolveAppBaseUrl(API_CONFIG.APP_URL);
+    const canonicalPath = APP_SHELL_ROUTES.supportFaq;
+    const canonicalUrl = resolveAbsoluteUrl(appUrl, canonicalPath);
+    const siteName = t("seo.brand.name");
+    const description = hasText(faqPage.subtitle)
+      ? buildSeoDescription(faqPage.subtitle)
+      : buildSeoDescription(t("seo.pages.supportFaq.description"));
+    const logoUrl = buildStructuredDataLogoUrl(appUrl, "/icons/icon-512.png");
+
+    return {
+      ...(hasText(faqPage.heading) ? { title: faqPage.heading } : {}),
+      description,
+      canonicalPath,
+      jsonLd: [
+        ...buildDefaultStructuredData({
+          t,
+          appUrl,
+          canonicalUrl,
+          siteName,
+          description,
+          logoUrl,
+        }),
+        ...buildBreadcrumbStructuredData({
+          appUrl,
+          items: [
+            {
+              name: t("app.pageTitles.support"),
+              url: resolveAbsoluteUrl(appUrl, APP_SHELL_ROUTES.support),
+            },
+            {
+              name: t("app.pageTitles.supportFaq"),
+              url: canonicalUrl,
+            },
+          ],
+        }),
+        ...buildFaqStructuredData({
+          canonicalUrl,
+          items: faqStructuredItems,
+        }),
+      ],
+    };
+  }, [faqPage.heading, faqPage.subtitle, faqStructuredItems, t]);
+
+  usePageSeoOverride(pageSeoOverride);
 
   const visibleItemCount = useMemo(
     () => filteredSections.reduce((total, section) => total + section.items.length, 0),

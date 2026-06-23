@@ -12,7 +12,7 @@ import {
 
 @Resolver(() => CourseListSummaryGqlResponse)
 @UseGuards(GqlAuthGuard, RolesGuard)
-@Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+@Roles(UserRole.SUPER_ADMIN)
 export class CourseListQuery {
   constructor(private readonly courseService: CourseService) {}
 

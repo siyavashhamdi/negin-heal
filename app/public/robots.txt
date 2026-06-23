@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /courses
+Allow: /support
+Allow: /support/faq
+Allow: /more/about
+Allow: /more/privacy-policy
+Allow: /more/terms-of-use
+Disallow: /dashboard
+Disallow: /users
+Disallow: /payments
+Disallow: /notifications
+Disallow: /more/system-settings
+Disallow: /more/coupons
+Disallow: /more/global-anouncement
+Disallow: /profile
+Disallow: /login
+Disallow: /reset-password
+Disallow: /activate
+Disallow: /payment/
+
+Sitemap: https://neginheal.ir/sitemap.xml

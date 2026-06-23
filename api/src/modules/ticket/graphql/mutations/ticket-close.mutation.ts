@@ -25,7 +25,7 @@ export class TicketCloseMutation {
     name: "ticketClose",
     description: "Close a support ticket as support staff",
   })
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Roles(UserRole.SUPER_ADMIN)
   async closeByStaff(
     @Args("id", { type: () => ID }) id: string,
     @Context() context: GraphQLContext,

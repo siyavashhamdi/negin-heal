@@ -13,9 +13,20 @@ import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import { useQuery } from "@apollo/client/react";
 import { useMemo, type ComponentType, type ReactElement } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_CONFIG } from "../../config";
+import { SUPPORT_CONTACT_QUERY } from "../../graphql/queries/supportContactConfig.query";
+import { usePageSeoOverride } from "../../hooks/usePageSeoOverride";
+import { useTranslation } from "../../hooks/useTranslation";
+import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
+import {
+  buildBreadcrumbStructuredData,
+  buildDefaultStructuredData,
+  buildStructuredDataLogoUrl,
+} from "../../seo/build-structured-data";
+import { resolveAppBaseUrl } from "../../seo/build-page-seo";
+import { buildSeoDescription, resolveAbsoluteUrl } from "../../seo/seo-text.util";
 import AppTooltip from "../../shared/AppTooltip";
 import { useAuth } from "../../contexts/AuthContext";
-import { SUPPORT_CONTACT_QUERY } from "../../graphql/queries/supportContactConfig.query";
 import {
   EMPTY_SUPPORT_CONTACT,
   isInternalSupportHref,
@@ -133,11 +144,51 @@ const ContactIconLink = ({ channel, Icon, onOpen }: ContactIconLinkProps): React
 
 const Support = (): ReactElement => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
   const { data, loading } = useQuery<SupportContactConfigQuery>(SUPPORT_CONTACT_QUERY, {
     fetchPolicy: "cache-and-network",
   });
   const supportConfig = data?.supportContactConfig ?? EMPTY_SUPPORT_CONTACT;
+
+  const pageSeoOverride = useMemo(() => {
+    const appUrl = resolveAppBaseUrl(API_CONFIG.APP_URL);
+    const canonicalPath = APP_SHELL_ROUTES.support;
+    const canonicalUrl = resolveAbsoluteUrl(appUrl, canonicalPath);
+    const siteName = t("seo.brand.name");
+    const description = hasText(supportConfig.subtitle)
+      ? buildSeoDescription(supportConfig.subtitle)
+      : buildSeoDescription(t("seo.pages.support.description"));
+    const logoUrl = buildStructuredDataLogoUrl(appUrl, "/icons/icon-512.png");
+
+    return {
+      ...(hasText(supportConfig.heading) ? { title: supportConfig.heading } : {}),
+      description,
+      canonicalPath,
+      jsonLd: [
+        ...buildDefaultStructuredData({
+          t,
+          appUrl,
+          canonicalUrl,
+          siteName,
+          description,
+          logoUrl,
+        }),
+        ...buildBreadcrumbStructuredData({
+          appUrl,
+          items: [
+            {
+              name: t("app.pageTitles.support"),
+              url: canonicalUrl,
+            },
+          ],
+        }),
+      ],
+    };
+  }, [supportConfig.heading, supportConfig.subtitle, t]);
+
+  usePageSeoOverride(pageSeoOverride);
+
   const visibleChannels = useMemo(() => getVisibleChannels(supportConfig), [supportConfig]);
   const ticketChannel = isAuthenticated
     ? visibleChannels.find((channel) => channel.type === "TICKET")

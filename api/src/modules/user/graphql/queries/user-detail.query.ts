@@ -9,14 +9,14 @@ import { UserListGqlResponse } from "../responses";
 
 @Resolver(() => UserListGqlResponse)
 @UseGuards(GqlAuthGuard, RolesGuard)
-@Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+@Roles(UserRole.SUPER_ADMIN)
 export class UserDetailQuery {
   constructor(private readonly userService: UserService) {}
 
   @Query(() => UserListGqlResponse, {
     name: "userDetail",
     description:
-      "Get full user data for SUPER_ADMIN and ADMIN, including profile fields for editing",
+      "Get full user data for SUPER_ADMIN, including profile fields for editing",
   })
   async findUserDetail(
     @Args("input") input: UserDetailGqlInput,

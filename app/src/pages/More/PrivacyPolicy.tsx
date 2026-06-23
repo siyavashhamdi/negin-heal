@@ -2,6 +2,9 @@ import PrivacyTipRoundedIcon from "@mui/icons-material/PrivacyTipRounded";
 import { useQuery } from "@apollo/client/react";
 import { type ReactElement } from "react";
 import { APP_PRIVACY_POLICY_PAGE_QUERY } from "../../graphql/queries/appPrivacyPolicyPageConfig.query";
+import { useHtmlContentSeoOverride } from "../../hooks/useHtmlContentSeoOverride";
+import { useTranslation } from "../../hooks/useTranslation";
+import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
 import {
   EMPTY_APP_PRIVACY_POLICY_PAGE,
   type AppPrivacyPolicyPageConfigQuery,
@@ -12,6 +15,7 @@ import { opaqueShellProps } from "../../shared/opaqueShell";
 const hasText = (value: string): boolean => value.trim().length > 0;
 
 const PrivacyPolicyPage = (): ReactElement => {
+  const { t } = useTranslation();
   const { data, loading } = useQuery<AppPrivacyPolicyPageConfigQuery>(
     APP_PRIVACY_POLICY_PAGE_QUERY,
     {
@@ -19,6 +23,19 @@ const PrivacyPolicyPage = (): ReactElement => {
     },
   );
   const privacyPolicyPage = data?.appPrivacyPolicyPageConfig ?? EMPTY_APP_PRIVACY_POLICY_PAGE;
+
+  useHtmlContentSeoOverride({
+    html: privacyPolicyPage.html,
+    fallbackDescriptionKey: "seo.pages.morePrivacyPolicy.description",
+    canonicalPath: APP_SHELL_ROUTES.morePrivacyPolicy,
+    breadcrumbs: [
+      { name: t("app.pageTitles.more"), path: APP_SHELL_ROUTES.more },
+      {
+        name: t("app.pageTitles.morePrivacyPolicy"),
+        path: APP_SHELL_ROUTES.morePrivacyPolicy,
+      },
+    ],
+  });
 
   return (
     <section className={styles.page} aria-busy={loading}>

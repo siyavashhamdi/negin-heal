@@ -16,8 +16,8 @@ export const APP_SETTING_KEY = {
     "TICKET_AUTO_CLOSE_AFTER_ANSWERED_HOURS",
 } as const;
 
-/** Settings managed outside the admin settings UI. */
-export const ADMIN_HIDDEN_APP_SETTING_KEYS = [
+/** Settings managed outside the system settings UI. */
+export const HIDDEN_APP_SETTING_KEYS = [
   APP_SETTING_KEY.APP_VERSION,
 ] as const;
 

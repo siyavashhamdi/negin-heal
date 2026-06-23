@@ -171,12 +171,11 @@ const persianFieldInputProps = {
   dir: "rtl",
 } as const;
 
-const ROLE_OPTIONS: readonly UserRole[] = ["SUPER_ADMIN", "ADMIN", "END_USER"];
+const ROLE_OPTIONS: readonly UserRole[] = ["SUPER_ADMIN", "END_USER"];
 const STATUS_OPTIONS: readonly UserStatus[] = ["ACTIVE", "DEACTIVE", "SUSPENDED", "BANNED"];
 
 const ROLE_LABEL: Record<UserRole, string> = {
   SUPER_ADMIN: "سوپر ادمین",
-  ADMIN: "ادمین",
   END_USER: "کاربر",
 };
 

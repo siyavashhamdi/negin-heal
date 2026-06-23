@@ -12,7 +12,7 @@ import {
 
 @Resolver(() => TicketListSummaryGqlResponse)
 @UseGuards(GqlAuthGuard, RolesGuard)
-@Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+@Roles(UserRole.SUPER_ADMIN)
 export class TicketListQuery {
   constructor(private readonly ticketService: TicketService) {}
 

@@ -1,7 +1,7 @@
 import { type ReactElement } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "../components/ProtectedRoute";
-import { usePageTitle } from "../hooks/usePageTitle";
+import { PageSeoProvider } from "../contexts/PageSeoProvider";
 import { useScrollToTop } from "../hooks/useScrollToTop";
 import Dashboard from "../pages/Dashoard/Dashboard";
 import CourseDetail from "../pages/Courses/CourseDetail";
@@ -32,8 +32,7 @@ const wrapProtected = (element: ReactElement): ReactElement => (
   <ProtectedRoute>{element}</ProtectedRoute>
 );
 
-export const DashboardAppRoutes = (): ReactElement => {
-  usePageTitle();
+const DashboardAppRoutesContent = (): ReactElement => {
   useScrollToTop();
 
   return (
@@ -98,3 +97,9 @@ export const DashboardAppRoutes = (): ReactElement => {
     </Routes>
   );
 };
+
+export const DashboardAppRoutes = (): ReactElement => (
+  <PageSeoProvider>
+    <DashboardAppRoutesContent />
+  </PageSeoProvider>
+);

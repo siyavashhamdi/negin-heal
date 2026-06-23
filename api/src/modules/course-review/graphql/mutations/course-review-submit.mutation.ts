@@ -10,7 +10,7 @@ import { CourseReviewSubmitGqlResponse } from "../responses";
 
 @Resolver(() => CourseReviewSubmitGqlResponse)
 @UseGuards(GqlAuthGuard, RolesGuard)
-@Roles(UserRole.END_USER, UserRole.SUPER_ADMIN, UserRole.ADMIN)
+@Roles(UserRole.END_USER, UserRole.SUPER_ADMIN)
 export class CourseReviewSubmitMutation {
   constructor(private readonly courseReviewService: CourseReviewService) {}
 

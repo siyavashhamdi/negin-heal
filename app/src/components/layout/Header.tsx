@@ -17,10 +17,7 @@ import AppTooltip from "../../shared/AppTooltip";
 
 const POPOVER_ANCHOR_ORIGIN = { vertical: "bottom", horizontal: "left" } as const;
 const POPOVER_TRANSFORM_ORIGIN = { vertical: "top", horizontal: "left" } as const;
-const ADMIN_ROLE_BADGE_LABELS = {
-  SUPER_ADMIN: "سوپرادمین",
-  ADMIN: "ادمین",
-} as const;
+const SUPER_ADMIN_ROLE_BADGE_LABEL = "سوپرادمین" as const;
 
 function HeaderPopover(props: {
   readonly open: boolean;
@@ -73,10 +70,8 @@ const Header = (): ReactElement => {
     ? t("layout.header.brand.publicTagline")
     : t("layout.header.brand.tagline");
   const adminRoleBadgeLabel = authUser?.roles?.includes("SUPER_ADMIN")
-    ? ADMIN_ROLE_BADGE_LABELS.SUPER_ADMIN
-    : authUser?.roles?.includes("ADMIN")
-      ? ADMIN_ROLE_BADGE_LABELS.ADMIN
-      : null;
+    ? SUPER_ADMIN_ROLE_BADGE_LABEL
+    : null;
 
   return (
     <Box component="header" className={styles.header}>

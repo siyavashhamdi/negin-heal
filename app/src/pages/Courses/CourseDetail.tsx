@@ -44,6 +44,16 @@ import { applyBlankTargetToRichTextLinks } from "../../utils/richTextHtml.util";
 import { USER_COURSE_DETAIL_QUERY } from "../../graphql/queries/userCourseDetail.query";
 import { COURSE_CHAPTER_COMPLETE_MUTATION } from "../../graphql/mutations/courseChapterComplete.mutation";
 import { useSnackbar } from "../../hooks/useSnackbar";
+import { usePageSeoOverride } from "../../hooks/usePageSeoOverride";
+import { useTranslation } from "../../hooks/useTranslation";
+import { API_CONFIG } from "../../config";
+import {
+  buildBreadcrumbStructuredData,
+  buildCourseStructuredData,
+} from "../../seo/build-structured-data";
+import { resolveAppBaseUrl } from "../../seo/build-page-seo";
+import type { PageSeoOverride } from "../../seo/seo.types";
+import { buildSeoDescription, htmlToPlainText, resolveAbsoluteUrl } from "../../seo/seo-text.util";
 import {
   resolveErrorMessageFromCode,
   showErrorIfNotQueued,
@@ -286,6 +296,7 @@ const CourseDetail = (): ReactElement => {
   const focusChapterKey = searchParams.get("chapter")?.trim() || null;
   const { isAuthenticated, user } = useAuth();
   const { showError, showSuccess, showWarning } = useSnackbar();
+  const { t } = useTranslation();
   const purchaseCardRef = useRef<HTMLElement | null>(null);
   const { data, loading, error, refetch } = useQuery<
     UserCourseDetailQuery,
@@ -362,6 +373,66 @@ const CourseDetail = (): ReactElement => {
   const [completingChapterKey, setCompletingChapterKey] = useState<string | null>(null);
   const isPurchaseDialogOpen = location.pathname.endsWith("/purchase");
   const isMaxRouteOpen = isMaxRoutePathname(location.pathname);
+
+  const pageSeoOverride = useMemo((): PageSeoOverride | null => {
+    if (!course) {
+      return null;
+    }
+
+    const plainDescription = course.description?.trim()
+      ? htmlToPlainText(course.description)
+      : t("seo.pages.courseDetail.description", { title: course.title });
+    const seoDescription = buildSeoDescription(plainDescription);
+    const appUrl = resolveAppBaseUrl(API_CONFIG.APP_URL);
+    const canonicalPath = `${APP_SHELL_ROUTES.courses}/${course.id}`;
+
+    return {
+      title: isPurchaseDialogOpen ? `${course.title} — تکمیل خرید` : course.title,
+      description: seoDescription,
+      keywords: [course.title, ...course.tags, "Negin Heal", "دوره آموزشی"].join(", "),
+      image: coverImageUrl ?? undefined,
+      imageAlt: course.title,
+      canonicalPath,
+      ogType: "product",
+      noIndex: isPurchaseDialogOpen || isMaxRouteOpen,
+      jsonLd: [
+        ...buildCourseStructuredData({
+          appUrl,
+          canonicalUrl: resolveAbsoluteUrl(appUrl, canonicalPath),
+          courseId: course.id,
+          title: course.title,
+          description: seoDescription,
+          imageUrl: coverImageUrl ?? undefined,
+          keywords: course.tags.join(", "),
+          isFree: course.isFree,
+          priceIrt: displayPrice,
+        }),
+        ...buildBreadcrumbStructuredData({
+          appUrl,
+          items: [
+            {
+              name: t("app.pageTitles.courses"),
+              url: resolveAbsoluteUrl(appUrl, APP_SHELL_ROUTES.courses),
+            },
+            {
+              name: course.title,
+              url: resolveAbsoluteUrl(appUrl, `${APP_SHELL_ROUTES.courses}/${course.id}`),
+            },
+          ],
+        }),
+      ],
+    };
+  }, [
+    course,
+    coverImageUrl,
+    displayPrice,
+    isMaxRouteOpen,
+    isPurchaseDialogOpen,
+    t,
+  ]);
+
+  usePageSeoOverride(pageSeoOverride);
+
   const isUnlockRefetchingRef = useRef(false);
   const purchaseIntentHandledRef = useRef(false);
   const pendingSectionTabRef = useRef<CourseDetailSectionTab | null>(null);

@@ -246,7 +246,7 @@ export function canUseCourseReviewExperience(
 
 export function isStaffCourseReviewer(roles: readonly string[] | undefined): boolean {
   return (
-    roles?.includes("ADMIN") === true || roles?.includes("SUPER_ADMIN") === true
+    roles?.includes("SUPER_ADMIN") === true
   );
 }
 

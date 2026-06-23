@@ -180,14 +180,11 @@ export class TicketService {
   async sendBySuperAdmin(
     input: SuperAdminTicketSendGqlInput,
     adminUserId: Types.ObjectId,
-    roles: UserRole[] = [UserRole.SUPER_ADMIN],
   ): Promise<TicketListGqlResponse> {
     const ticket = await this.sendTicket({
       input,
       actorUserId: adminUserId,
-      actorRole: roles.includes(UserRole.SUPER_ADMIN)
-        ? UserRole.SUPER_ADMIN
-        : UserRole.ADMIN,
+      actorRole: UserRole.SUPER_ADMIN,
     });
     const relatedLookups = await this.buildTicketRelatedLookups([ticket]);
 
@@ -225,7 +222,7 @@ export class TicketService {
   private async sendTicket(params: {
     input: UserTicketSendGqlInput | SuperAdminTicketSendGqlInput;
     actorUserId: Types.ObjectId;
-    actorRole: UserRole.END_USER | UserRole.SUPER_ADMIN | UserRole.ADMIN;
+    actorRole: UserRole.END_USER | UserRole.SUPER_ADMIN;
   }): Promise<TicketListRecord> {
     const normalizedMessageBody = this.normalizeRequiredText(
       params.input.message.body,
@@ -335,7 +332,7 @@ export class TicketService {
   private async closeTicket(params: {
     ticketId: Types.ObjectId;
     actorUserId: Types.ObjectId;
-    actorRole: UserRole.END_USER | UserRole.SUPER_ADMIN | UserRole.ADMIN;
+    actorRole: UserRole.END_USER | UserRole.SUPER_ADMIN;
   }): Promise<TicketListRecord> {
     const ticket = await this.ticketModel.findById(params.ticketId).exec();
     if (!ticket) {
@@ -1095,7 +1092,7 @@ export class TicketService {
 
   private reopenTicketOnNewMessage(
     ticket: TicketDocument,
-    actorRole: UserRole.END_USER | UserRole.SUPER_ADMIN | UserRole.ADMIN,
+    actorRole: UserRole.END_USER | UserRole.SUPER_ADMIN,
   ): void {
     ticket.status =
       actorRole === UserRole.END_USER

@@ -60,10 +60,7 @@ const BRAND_LOGO_SX = {
   display: "block",
   objectFit: "contain",
 } as const;
-const ADMIN_ROLE_BADGE_LABELS = {
-  SUPER_ADMIN: "سوپرادمین",
-  ADMIN: "ادمین",
-} as const;
+const SUPER_ADMIN_ROLE_BADGE_LABEL = "سوپرادمین" as const;
 
 type TitleDescItem = { readonly id: string; readonly title: string; readonly description: string };
 type NotificationSample = TitleDescItem & { readonly timeLabel: string };
@@ -227,7 +224,7 @@ export function MainLayout({
   const roles = authUser?.roles ?? [];
   const isEndUser = roles.includes("END_USER");
   const isSuperAdmin = roles.includes("SUPER_ADMIN");
-  const shouldOpenSupportTickets = isSuperAdmin || roles.includes("ADMIN");
+  const shouldOpenSupportTickets = isSuperAdmin;
   const supportNavPath = shouldOpenSupportTickets
     ? APP_SHELL_ROUTES.supportTickets
     : APP_SHELL_ROUTES.support;
@@ -403,10 +400,8 @@ export function MainLayout({
       ?.filter((role) => role !== "END_USER")
       .join("، ") ?? "";
   const adminRoleBadgeLabel = authUser?.roles?.includes("SUPER_ADMIN")
-    ? ADMIN_ROLE_BADGE_LABELS.SUPER_ADMIN
-    : authUser?.roles?.includes("ADMIN")
-      ? ADMIN_ROLE_BADGE_LABELS.ADMIN
-      : null;
+    ? SUPER_ADMIN_ROLE_BADGE_LABEL
+    : null;
 
   const { userDisplayName, userInitial } = useMemo(() => {
     const name =

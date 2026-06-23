@@ -1,8 +1,7 @@
-export type UserRoleKey = "SUPER_ADMIN" | "ADMIN" | "END_USER";
+export type UserRoleKey = "SUPER_ADMIN" | "END_USER";
 
 export const USER_ROLE_LABELS: Record<UserRoleKey, string> = {
   SUPER_ADMIN: "سوپر ادمین",
-  ADMIN: "ادمین",
   END_USER: "کاربر",
 };
 
@@ -16,7 +15,7 @@ export function getProfileDisplayRoles(roles: readonly string[] | undefined | nu
     return [];
   }
 
-  const hasElevatedRole = roles.some((role) => role === "SUPER_ADMIN" || role === "ADMIN");
+  const hasElevatedRole = roles.some((role) => role === "SUPER_ADMIN");
   if (hasElevatedRole) {
     return roles.filter((role) => role !== "END_USER");
   }

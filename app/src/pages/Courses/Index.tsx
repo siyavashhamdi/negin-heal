@@ -20,8 +20,10 @@ import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { useDebounce } from "../../hooks/useDebounce";
+import { usePageSeoOverride } from "../../hooks/usePageSeoOverride";
 import { useBadgeCountFirstPageReload } from "../../hooks/useBadgeCountFirstPageReload";
 import { useAuth } from "../../contexts/AuthContext";
+import { API_CONFIG } from "../../config";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
 import { COURSE_LIST_QUERY } from "../../graphql/queries/courseList.query";
@@ -53,6 +55,13 @@ import type {
 } from "./course-delete-dependencies.api";
 import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
 import { stripOverlayRoutePathname } from "../../routing/max-route.util";
+import {
+  buildCourseListStructuredData,
+  buildDefaultStructuredData,
+  buildStructuredDataLogoUrl,
+} from "../../seo/build-structured-data";
+import { resolveAppBaseUrl } from "../../seo/build-page-seo";
+import { buildSeoDescription, resolveAbsoluteUrl } from "../../seo/seo-text.util";
 import styles from "./styles/courses.module.scss";
 import AppTooltip from "../../shared/AppTooltip";
 
@@ -148,6 +157,49 @@ const CoursesIndex = (): ReactElement => {
   const editTargetId =
     /^\/courses\/edit\/([^/]+)$/.exec(courseFormPath)?.[1] ?? null;
   const isCourseFormDialogOpen = isCreateDialogOpen || editTargetId != null;
+
+  const pageSeoOverride = useMemo(() => {
+    if (!isPublicCourseView || courseFormPath !== APP_SHELL_ROUTES.courses || items.length === 0) {
+      return null;
+    }
+
+    const appUrl = resolveAppBaseUrl(API_CONFIG.APP_URL);
+    const canonicalPath = APP_SHELL_ROUTES.courses;
+    const canonicalUrl = resolveAbsoluteUrl(appUrl, canonicalPath);
+    const siteName = t("seo.brand.name");
+    const description = buildSeoDescription(t("seo.pages.courses.description"));
+    const logoUrl = buildStructuredDataLogoUrl(appUrl, "/icons/icon-512.png");
+
+    return {
+      description,
+      canonicalPath,
+      jsonLd: [
+        ...buildDefaultStructuredData({
+          t,
+          appUrl,
+          canonicalUrl,
+          siteName,
+          description,
+          logoUrl,
+        }),
+        ...buildCourseListStructuredData({
+          appUrl,
+          canonicalUrl,
+          siteName,
+          description,
+          courses: items.map((item) => ({
+            id: item.id,
+            title: item.title,
+            description: item.description,
+            url: resolveAbsoluteUrl(appUrl, `${APP_SHELL_ROUTES.courses}/${item.id}`),
+            imageUrl: resolveFileAccessUrl(item.coverImageAccessUrl) ?? undefined,
+          })),
+        }),
+      ],
+    };
+  }, [courseFormPath, isPublicCourseView, items, t]);
+
+  usePageSeoOverride(pageSeoOverride);
 
   const closeCourseFormDialog = (): void => {
     navigate(APP_SHELL_ROUTES.courses);

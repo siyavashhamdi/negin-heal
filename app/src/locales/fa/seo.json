@@ -1,0 +1,248 @@
+{
+    "seo": {
+        "brand": {
+            "name": "Negin Heal",
+            "tagline": "سامانه مدیریت محتوا",
+            "publicTagline": "مسیر یادگیری و مراقبت سلامت",
+            "author": "Siya",
+            "locale": "fa_IR",
+            "language": "fa",
+            "country": "IR",
+            "themeColor": "#0f766e"
+        },
+        "defaults": {
+            "description": "Negin Heal — پلتفرم آموزشی تخصصی سلامت و مراقبت. دوره‌های آموزشی، مسیر یادگیری شخصی‌سازی‌شده و پشتیبانی حرفه‌ای برای ارتقای آگاهی و سبک زندگی سالم.",
+            "keywords": "نگین هیل, Negin Heal, آموزش سلامت, مراقبت سلامت, دوره آموزشی, یادگیری آنلاین, سلامت روان, سبک زندگی سالم, پلتفرم آموزشی",
+            "ogImageAlt": "لوگوی Negin Heal — پلتفرم آموزش و مراقبت سلامت",
+            "twitterCard": "summary_large_image",
+            "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+            "ogType": "website"
+        },
+        "pages": {
+            "dashboard": {
+                "description": "داشبورد مدیریتی Negin Heal — نمای کلی فعالیت‌ها، اعلان‌ها و میانبرهای پرکاربرد پنل.",
+                "keywords": "داشبورد, پنل مدیریت, Negin Heal",
+                "robots": "noindex, nofollow"
+            },
+            "courses": {
+                "description": "فهرست دوره‌های آموزشی Negin Heal — مسیرهای یادگیری تخصصی در حوزه سلامت، مراقبت و سبک زندگی.",
+                "keywords": "دوره آموزشی, دوره سلامت, یادگیری آنلاین, Negin Heal, فهرست دوره‌ها",
+                "robots": "index, follow"
+            },
+            "more": {
+                "description": "سایر امکانات Negin Heal — دسترسی به اطلاعات سامانه، نسخه اپلیکیشن و تنظیمات تکمیلی.",
+                "keywords": "تنظیمات, درباره سامانه, Negin Heal",
+                "robots": "noindex, nofollow"
+            },
+            "moreAbout": {
+                "description": "درباره Negin Heal — آشنایی با مأموریت، چشم‌انداز و ارزش‌های پلتفرم آموزش و مراقبت سلامت.",
+                "keywords": "درباره نگین هیل, درباره Negin Heal, مأموریت, چشم‌انداز",
+                "robots": "index, follow"
+            },
+            "morePrivacyPolicy": {
+                "description": "سیاست حریم خصوصی Negin Heal — نحوه جمع‌آوری، استفاده و حفاظت از اطلاعات شخصی کاربران.",
+                "keywords": "حریم خصوصی, سیاست حفظ حریم خصوصی, امنیت داده, Negin Heal",
+                "robots": "index, follow"
+            },
+            "moreTermsOfUse": {
+                "description": "شرایط استفاده از Negin Heal — قوانین، تعهدات کاربران و شرایط بهره‌برداری از خدمات سامانه.",
+                "keywords": "شرایط استفاده, قوانین, مقررات, Negin Heal",
+                "robots": "index, follow"
+            },
+            "notifications": {
+                "description": "مرکز اعلان‌های Negin Heal — پیام‌ها و به‌روزرسانی‌های مهم مربوط به حساب و فعالیت‌های شما.",
+                "keywords": "اعلان‌ها, پیام‌ها, Negin Heal",
+                "robots": "noindex, nofollow"
+            },
+            "payments": {
+                "description": "مدیریت پرداخت‌های Negin Heal — پیگیری تراکنش‌ها، وضعیت خرید دوره‌ها و سوابق مالی.",
+                "keywords": "پرداخت, تراکنش, خرید دوره, Negin Heal",
+                "robots": "noindex, nofollow"
+            },
+            "profile": {
+                "description": "پروفایل کاربری Negin Heal — مدیریت اطلاعات شخصی، امنیت حساب و تنظیمات کاربری.",
+                "keywords": "پروفایل, حساب کاربری, Negin Heal",
+                "robots": "noindex, nofollow"
+            },
+            "support": {
+                "description": "پشتیبانی Negin Heal — راه‌های ارتباطی، راهنمای سریع و ثبت درخواست کمک برای کاربران.",
+                "keywords": "پشتیبانی, تماس با ما, راهنما, Negin Heal",
+                "robots": "index, follow"
+            },
+            "supportFaq": {
+                "description": "سوالات پرتکرار Negin Heal — پاسخ به رایج‌ترین پرسش‌های کاربران درباره ثبت‌نام، دوره‌ها و پرداخت.",
+                "keywords": "سوالات پرتکرار, FAQ, راهنما, Negin Heal",
+                "robots": "index, follow"
+            },
+            "supportTickets": {
+                "description": "تیکت‌های پشتیبانی Negin Heal — پیگیری درخواست‌ها و گفتگو با تیم پشتیبانی.",
+                "keywords": "تیکت پشتیبانی, درخواست پشتیبانی, Negin Heal",
+                "robots": "noindex, nofollow"
+            },
+            "usersManagement": {
+                "description": "مدیریت کاربران Negin Heal — کنترل دسترسی، نقش‌ها و حساب‌های کاربری سامانه.",
+                "keywords": "مدیریت کاربران, دسترسی, نقش کاربری",
+                "robots": "noindex, nofollow"
+            },
+            "login": {
+                "description": "ورود به Negin Heal — دسترسی امن به حساب کاربری، دوره‌های آموزشی و امکانات شخصی‌سازی‌شده.",
+                "keywords": "ورود, لاگین, حساب کاربری, Negin Heal",
+                "robots": "noindex, nofollow"
+            },
+            "signup": {
+                "description": "ثبت‌نام در Negin Heal — ایجاد حساب کاربری جدید و شروع مسیر یادگیری سلامت.",
+                "keywords": "ثبت‌نام, عضویت, حساب جدید, Negin Heal",
+                "robots": "noindex, nofollow"
+            },
+            "forgotPassword": {
+                "description": "بازیابی گذرواژه Negin Heal — بازیابی امن دسترسی به حساب کاربری.",
+                "keywords": "بازیابی گذرواژه, فراموشی رمز, Negin Heal",
+                "robots": "noindex, nofollow"
+            },
+            "genericPage": {
+                "description": "Negin Heal — پلتفرم آموزشی تخصصی سلامت و مراقبت.",
+                "keywords": "Negin Heal, سلامت, آموزش",
+                "robots": "noindex, nofollow"
+            },
+            "moreSystemSettings": {
+                "description": "تنظیمات سامانه Negin Heal — پیکربندی پیشرفته و مدیریت کلیدهای تنظیمات.",
+                "keywords": "تنظیمات سامانه, پیکربندی",
+                "robots": "noindex, nofollow"
+            },
+            "moreCoupons": {
+                "description": "مدیریت کدهای تخفیف Negin Heal — ایجاد، ویرایش و پیگیری کوپن‌های تخفیف دوره‌ها.",
+                "keywords": "کد تخفیف, کوپن, تخفیف دوره",
+                "robots": "noindex, nofollow"
+            },
+            "moreGlobalAnouncement": {
+                "description": "ارسال اعلان عمومی Negin Heal — اطلاع‌رسانی سراسری به کاربران سامانه.",
+                "keywords": "اعلان عمومی, اطلاع‌رسانی",
+                "robots": "noindex, nofollow"
+            },
+            "resetPassword": {
+                "description": "تغییر گذرواژه Negin Heal — تنظیم گذرواژه جدید برای حساب کاربری.",
+                "keywords": "تغییر گذرواژه, رمز عبور جدید, Negin Heal",
+                "robots": "noindex, nofollow"
+            },
+            "activateAccount": {
+                "description": "فعال‌سازی حساب Negin Heal — تکمیل فرآیند ثبت‌نام و فعال‌سازی دسترسی.",
+                "keywords": "فعال‌سازی حساب, تأیید حساب, Negin Heal",
+                "robots": "noindex, nofollow"
+            },
+            "paymentCallback": {
+                "description": "نتیجه پرداخت Negin Heal — وضعیت تراکنش درگاه پرداخت.",
+                "keywords": "نتیجه پرداخت, درگاه پرداخت, Negin Heal",
+                "robots": "noindex, nofollow"
+            },
+            "courseCreate": {
+                "description": "ایجاد دوره جدید در Negin Heal — تعریف محتوا، فصل‌ها و تنظیمات انتشار.",
+                "keywords": "ایجاد دوره, مدیریت محتوا",
+                "robots": "noindex, nofollow"
+            },
+            "courseEdit": {
+                "description": "ویرایش دوره در Negin Heal — به‌روزرسانی محتوا، قیمت و ساختار آموزشی.",
+                "keywords": "ویرایش دوره, مدیریت دوره",
+                "robots": "noindex, nofollow"
+            },
+            "courseDetail": {
+                "description": "جزئیات دوره {{title}} در Negin Heal — محتوای آموزشی تخصصی سلامت و مراقبت.",
+                "keywords": "جزئیات دوره, {{title}}, آموزش سلامت, Negin Heal",
+                "robots": "index, follow"
+            },
+            "coursePurchase": {
+                "description": "تکمیل خرید دوره در Negin Heal — انتخاب روش پرداخت و دسترسی به محتوای آموزشی.",
+                "keywords": "خرید دوره, پرداخت دوره, Negin Heal",
+                "robots": "noindex, nofollow"
+            },
+            "contentViewer": {
+                "description": "نمایش محتوای آموزشی Negin Heal — مشاهده درس، ویدیو و مطالب دوره.",
+                "keywords": "نمایش محتوا, درس, Negin Heal",
+                "robots": "noindex, nofollow"
+            },
+            "paymentManualCreate": {
+                "description": "ثبت دستی پرداخت در Negin Heal — ثبت تراکنش‌های خارج از درگاه.",
+                "keywords": "ثبت پرداخت, تراکنش دستی",
+                "robots": "noindex, nofollow"
+            },
+            "paymentReview": {
+                "description": "بررسی پرداخت در Negin Heal — تأیید و پیگیری وضعیت تراکنش‌ها.",
+                "keywords": "بررسی پرداخت, تأیید تراکنش",
+                "robots": "noindex, nofollow"
+            },
+            "paymentStatusChange": {
+                "description": "تغییر وضعیت پرداخت در Negin Heal — مدیریت وضعیت تراکنش‌های ثبت‌شده.",
+                "keywords": "وضعیت پرداخت, مدیریت تراکنش",
+                "robots": "noindex, nofollow"
+            },
+            "systemSettingEdit": {
+                "description": "ویرایش تنظیمات سامانه Negin Heal — به‌روزرسانی پیکربندی و مقادیر کلیدی.",
+                "keywords": "ویرایش تنظیمات, پیکربندی سامانه",
+                "robots": "noindex, nofollow"
+            },
+            "profileEdit": {
+                "description": "ویرایش اطلاعات کاربری Negin Heal — به‌روزرسانی پروفایل و اطلاعات تماس.",
+                "keywords": "ویرایش پروفایل, اطلاعات کاربری",
+                "robots": "noindex, nofollow"
+            },
+            "profilePassword": {
+                "description": "تغییر گذرواژه حساب Negin Heal — به‌روزرسانی امن رمز عبور.",
+                "keywords": "تغییر گذرواژه, امنیت حساب",
+                "robots": "noindex, nofollow"
+            },
+            "supportCreate": {
+                "description": "ثبت تیکت پشتیبانی جدید در Negin Heal — ارسال درخواست کمک به تیم پشتیبانی.",
+                "keywords": "تیکت جدید, درخواست پشتیبانی",
+                "robots": "noindex, nofollow"
+            },
+            "supportView": {
+                "description": "مشاهده تیکت پشتیبانی Negin Heal — پیگیری گفتگو و وضعیت درخواست.",
+                "keywords": "مشاهده تیکت, پیگیری پشتیبانی",
+                "robots": "noindex, nofollow"
+            },
+            "couponCreate": {
+                "description": "ایجاد کد تخفیف جدید در Negin Heal.",
+                "keywords": "کد تخفیف جدید, کوپن",
+                "robots": "noindex, nofollow"
+            },
+            "couponEdit": {
+                "description": "ویرایش کد تخفیف در Negin Heal.",
+                "keywords": "ویرایش کوپن, تخفیف",
+                "robots": "noindex, nofollow"
+            },
+            "couponDelete": {
+                "description": "حذف کد تخفیف در Negin Heal.",
+                "keywords": "حذف کوپن",
+                "robots": "noindex, nofollow"
+            },
+            "courseDelete": {
+                "description": "حذف دوره در Negin Heal.",
+                "keywords": "حذف دوره",
+                "robots": "noindex, nofollow"
+            },
+            "usersCreate": {
+                "description": "ایجاد کاربر جدید در Negin Heal.",
+                "keywords": "کاربر جدید, مدیریت کاربران",
+                "robots": "noindex, nofollow"
+            },
+            "usersEdit": {
+                "description": "ویرایش کاربر در Negin Heal.",
+                "keywords": "ویرایش کاربر",
+                "robots": "noindex, nofollow"
+            },
+            "usersEditConfirm": {
+                "description": "تأیید ویرایش کاربر در Negin Heal.",
+                "keywords": "تأیید ویرایش کاربر",
+                "robots": "noindex, nofollow"
+            },
+            "underConstruction": {
+                "description": "Negin Heal به‌زودی در دسترس خواهد بود — پلتفرم آموزشی تخصصی سلامت در حال آماده‌سازی.",
+                "keywords": "به‌زودی, Negin Heal, آموزش سلامت",
+                "robots": "noindex, nofollow"
+            }
+        },
+        "structuredData": {
+            "organizationDescription": "پلتفرم آموزشی Negin Heal برای ارتقای آگاهی سلامت، مراقبت و سبک زندگی سالم.",
+            "websiteDescription": "دسترسی به دوره‌های آموزشی تخصصی سلامت، پشتیبانی و مسیر یادگیری شخصی‌سازی‌شده."
+        }
+    }
+}

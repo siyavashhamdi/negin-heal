@@ -9,14 +9,14 @@ import { CoursePaymentListGqlResponse } from "../responses";
 
 @Resolver(() => CoursePaymentListGqlResponse)
 @UseGuards(GqlAuthGuard, RolesGuard)
-@Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+@Roles(UserRole.SUPER_ADMIN)
 export class CoursePaymentDetailQuery {
   constructor(private readonly courseService: CourseService) {}
 
   @Query(() => CoursePaymentListGqlResponse, {
     name: "coursePaymentDetail",
     description:
-      "Get full course payment data for SUPER_ADMIN and ADMIN, including receipt and audit fields for review",
+      "Get full course payment data for SUPER_ADMIN, including receipt and audit fields for review",
   })
   async findCoursePaymentDetail(
     @Args("input") input: CoursePaymentDetailGqlInput,

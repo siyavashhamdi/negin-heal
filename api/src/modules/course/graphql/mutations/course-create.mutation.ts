@@ -9,7 +9,7 @@ import { CourseListGqlResponse } from "../responses";
 
 @Resolver(() => CourseListGqlResponse)
 @UseGuards(GqlAuthGuard, RolesGuard)
-@Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+@Roles(UserRole.SUPER_ADMIN)
 export class CourseCreateMutation {
   constructor(private readonly courseService: CourseService) {}
 

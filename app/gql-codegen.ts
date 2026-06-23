@@ -16,7 +16,6 @@ const config: CodegenConfig = {
   ignoreNoDocuments: true,
   config: {
     // Create const-enum-like objects:
-    // export const UserRole = { ADMIN: "ADMIN", ... } as const;
     enumsAsConst: true,
 
     // IMPORTANT: keep enum member names exactly as in the schema

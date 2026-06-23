@@ -976,8 +976,7 @@ const SupportList = (): ReactElement => {
   const { user } = useAuth();
   const roles = user?.roles ?? [];
   const isSuperAdmin = roles.includes("SUPER_ADMIN");
-  const isAdmin = roles.includes("ADMIN");
-  const isStaff = isSuperAdmin || isAdmin;
+  const isStaff = isSuperAdmin;
 
   if (isStaff) {
     return (

@@ -15,8 +15,9 @@
     "scripts": {
         "dev": "vite",
         "build": "vite build",
-        "prebuild": "npm run generate:pwa-icons",
+        "prebuild": "npm run generate:pwa-icons && npm run generate:sitemap",
         "generate:pwa-icons": "node scripts/generate-pwa-icons.mjs",
+        "generate:sitemap": "node scripts/generate-sitemap.mjs",
         "typecheck": "tsc --noEmit",
         "preview": "serve dist --no-clipboard --single --listen tcp://0.0.0.0:${PORT:-5700}",
         "start": "serve dist --no-clipboard --single --listen tcp://0.0.0.0:${PORT:-5700}",

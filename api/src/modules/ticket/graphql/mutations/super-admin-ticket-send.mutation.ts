@@ -10,7 +10,7 @@ import { TicketListGqlResponse } from "../responses";
 
 @Resolver(() => TicketListGqlResponse)
 @UseGuards(GqlAuthGuard, RolesGuard)
-@Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+@Roles(UserRole.SUPER_ADMIN)
 export class SuperAdminTicketSendMutation {
   constructor(private readonly ticketService: TicketService) {}
 
@@ -26,7 +26,6 @@ export class SuperAdminTicketSendMutation {
     return this.ticketService.sendBySuperAdmin(
       input,
       context.req.user!.userId,
-      context.req.user!.roles,
     );
   }
 }

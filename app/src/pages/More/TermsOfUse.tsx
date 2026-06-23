@@ -2,6 +2,9 @@ import GavelRoundedIcon from "@mui/icons-material/GavelRounded";
 import { useQuery } from "@apollo/client/react";
 import { type ReactElement } from "react";
 import { APP_TERMS_OF_USE_PAGE_QUERY } from "../../graphql/queries/appTermsOfUsePageConfig.query";
+import { useHtmlContentSeoOverride } from "../../hooks/useHtmlContentSeoOverride";
+import { useTranslation } from "../../hooks/useTranslation";
+import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
 import {
   EMPTY_APP_TERMS_OF_USE_PAGE,
   type AppTermsOfUsePageConfigQuery,
@@ -12,6 +15,7 @@ import { opaqueShellProps } from "../../shared/opaqueShell";
 const hasText = (value: string): boolean => value.trim().length > 0;
 
 const TermsOfUsePage = (): ReactElement => {
+  const { t } = useTranslation();
   const { data, loading } = useQuery<AppTermsOfUsePageConfigQuery>(
     APP_TERMS_OF_USE_PAGE_QUERY,
     {
@@ -19,6 +23,19 @@ const TermsOfUsePage = (): ReactElement => {
     },
   );
   const termsOfUsePage = data?.appTermsOfUsePageConfig ?? EMPTY_APP_TERMS_OF_USE_PAGE;
+
+  useHtmlContentSeoOverride({
+    html: termsOfUsePage.html,
+    fallbackDescriptionKey: "seo.pages.moreTermsOfUse.description",
+    canonicalPath: APP_SHELL_ROUTES.moreTermsOfUse,
+    breadcrumbs: [
+      { name: t("app.pageTitles.more"), path: APP_SHELL_ROUTES.more },
+      {
+        name: t("app.pageTitles.moreTermsOfUse"),
+        path: APP_SHELL_ROUTES.moreTermsOfUse,
+      },
+    ],
+  });
 
   return (
     <section className={styles.page} aria-busy={loading}>

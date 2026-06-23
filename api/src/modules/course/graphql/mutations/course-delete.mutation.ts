@@ -8,7 +8,7 @@ import { CourseDeleteGqlInput } from "../inputs";
 
 @Resolver()
 @UseGuards(GqlAuthGuard, RolesGuard)
-@Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+@Roles(UserRole.SUPER_ADMIN)
 export class CourseDeleteMutation {
   constructor(private readonly courseService: CourseService) {}
 

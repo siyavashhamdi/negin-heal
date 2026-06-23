@@ -1,4 +1,4 @@
-import { useEffect, type ReactElement } from "react";
+import { type ReactElement } from "react";
 import { Box, IconButton, LinearProgress, Typography } from "@mui/material";
 import { DarkMode, Engineering, LightMode } from "@mui/icons-material";
 import { useThemeMode } from "../../contexts/ThemeContext";
@@ -9,12 +9,6 @@ import AppTooltip from "../../shared/AppTooltip";
 const UnderConstruction = (): ReactElement => {
   const { t } = useTranslation();
   const { mode, toggleTheme } = useThemeMode();
-
-  useEffect(() => {
-    const brand = t("layout.header.brand.title");
-    const pageTitle = t("pages.underConstruction.pageTitle");
-    document.title = `${brand} - ${pageTitle}`;
-  }, [t]);
 
   return (
     <Box className={styles.page} aria-labelledby="under-construction-title">

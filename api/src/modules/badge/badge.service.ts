@@ -168,9 +168,6 @@ export class BadgeService {
   }
 
   private isStaff(user: AuthenticatedUser): boolean {
-    return (
-      user.roles?.includes(UserRole.SUPER_ADMIN) ||
-      user.roles?.includes(UserRole.ADMIN)
-    );
+    return user.roles?.includes(UserRole.SUPER_ADMIN) ?? false;
   }
 }

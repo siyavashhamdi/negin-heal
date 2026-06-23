@@ -75,8 +75,7 @@ const More = (): ReactElement => {
   const { mode, setThemeMode } = useThemeMode();
   const roles = user?.roles ?? [];
   const isSuperAdmin = roles.includes("SUPER_ADMIN");
-  const isAdmin = roles.includes("ADMIN");
-  const shouldShowPublicInfoCards = !isSuperAdmin && !isAdmin;
+  const shouldShowPublicInfoCards = !isSuperAdmin;
   const { data: meData } = useQuery<UserMeResponse>(USER_ME_QUERY, {
     fetchPolicy: "cache-only",
     returnPartialData: true,

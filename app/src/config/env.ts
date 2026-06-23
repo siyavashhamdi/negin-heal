@@ -7,6 +7,9 @@ export const API_CONFIG = {
   // Application Configuration
   API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
 
+  /** Public site origin for canonical URLs and social previews (e.g. https://neginheal.ir). */
+  APP_URL: import.meta.env.VITE_APP_URL ?? "",
+
   // Build Metadata
   DEPLOY_HASH: import.meta.env.VITE_DEPLOY_HASH,
   DEPLOY_DATE_TIME: import.meta.env.VITE_DEPLOY_DATE_TIME,

@@ -9,14 +9,14 @@ import { TicketListGqlResponse } from "../responses";
 
 @Resolver(() => TicketListGqlResponse)
 @UseGuards(GqlAuthGuard, RolesGuard)
-@Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+@Roles(UserRole.SUPER_ADMIN)
 export class TicketDetailQuery {
   constructor(private readonly ticketService: TicketService) {}
 
   @Query(() => TicketListGqlResponse, {
     name: "ticketDetail",
     description:
-      "Get full support ticket data for SUPER_ADMIN and ADMIN, including messages and attachments for review",
+      "Get full support ticket data for SUPER_ADMIN, including messages and attachments for review",
   })
   async findTicketDetail(
     @Args("input") input: TicketDetailGqlInput,

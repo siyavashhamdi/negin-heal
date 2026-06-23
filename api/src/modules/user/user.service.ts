@@ -155,7 +155,7 @@ export class UserService {
   async findActiveStaffUserIds(): Promise<string[]> {
     const staffUsers = await this.userModel
       .find({
-        roles: { $in: [UserRole.SUPER_ADMIN, UserRole.ADMIN] },
+        roles: { $in: [UserRole.SUPER_ADMIN] },
         status: UserStatus.ACTIVE,
       })
       .select({ _id: 1 })

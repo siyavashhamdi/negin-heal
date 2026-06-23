@@ -1323,9 +1323,7 @@ export class CourseReviewService {
   }
 
   private isStaffRole(roles: UserRole[]): boolean {
-    return (
-      roles.includes(UserRole.SUPER_ADMIN) || roles.includes(UserRole.ADMIN)
-    );
+    return roles.includes(UserRole.SUPER_ADMIN);
   }
 
   private isStaffUser(user?: CourseReviewUserLookupRecord | null): boolean {

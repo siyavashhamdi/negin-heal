@@ -1722,7 +1722,7 @@ export type Query = {
   appAboutPageConfig: AppAboutPageConfigGqlResponse;
   /** Get configured privacy policy HTML content */
   appPrivacyPolicyPageConfig: AppPrivacyPolicyPageConfigGqlResponse;
-  /** Get full app setting data for SUPER_ADMIN and ADMIN, including the editable value */
+  /** Get full app setting data for SUPER_ADMIN, including the editable value */
   appSettingDetail: AppSettingMutationGqlResponse;
   /** Get a paginated, filterable, sortable SUPER_ADMIN list of app setting keys using offset-based pagination */
   appSettingKeyList: AppSettingKeyListPaginatedOffsetGqlResponse;
@@ -1732,17 +1732,17 @@ export type Query = {
   appVersionConfig: AppVersionConfigGqlResponse;
   /** Get role-aware sidebar badge counts. Anonymous users receive active course count only. */
   badgeCount: BadgeCountGqlResponse;
-  /** Get full coupon data for SUPER_ADMIN and ADMIN, including applicable courses for editing */
+  /** Get full coupon data for SUPER_ADMIN, including applicable courses for editing */
   couponDetail: CouponListGqlResponse;
   /** Get a paginated, filterable, sortable SUPER_ADMIN list of coupons using offset-based pagination */
   couponList: CouponListPaginatedOffsetGqlResponse;
   /** Validate a coupon for the current user's course purchase */
   couponValidate: CouponValidateGqlResponse;
-  /** Get full course data for SUPER_ADMIN and ADMIN, including chapters and items for editing */
+  /** Get full course data for SUPER_ADMIN, including chapters and items for editing */
   courseDetail: CourseListGqlResponse;
   /** Get a paginated, filterable, sortable admin list of courses with calculated release and item types */
   courseList: CourseListPaginatedCursorGqlResponse;
-  /** Get full course payment data for SUPER_ADMIN and ADMIN, including receipt and audit fields for review */
+  /** Get full course payment data for SUPER_ADMIN, including receipt and audit fields for review */
   coursePaymentDetail: CoursePaymentListGqlResponse;
   /** Get paginated list of all course payments from user-course purchase records */
   coursePaymentList: CoursePaymentListPaginatedOffsetGqlResponse;
@@ -1752,7 +1752,7 @@ export type Query = {
   paymentCheckoutConfig: PaymentCheckoutConfigGqlResponse;
   /** Get configured support contact channels */
   supportContactConfig: SupportContactConfigGqlResponse;
-  /** Get full support ticket data for SUPER_ADMIN and ADMIN, including messages and attachments for review */
+  /** Get full support ticket data for SUPER_ADMIN, including messages and attachments for review */
   ticketDetail: TicketListGqlResponse;
   /** Get a paginated, filterable, sortable super-admin list of support tickets using offset-based pagination */
   ticketList: TicketListPaginatedOffsetGqlResponse;
@@ -1760,7 +1760,7 @@ export type Query = {
   userCourseDetail: UserCourseDetailGqlResponse;
   /** Get active courses for anonymous users and END_USER views with purchase state */
   userCourseList: UserCourseListPaginatedCursorGqlResponse;
-  /** Get full user data for SUPER_ADMIN and ADMIN, including profile fields for editing */
+  /** Get full user data for SUPER_ADMIN, including profile fields for editing */
   userDetail: UserListGqlResponse;
   /** Get a paginated, filterable, sortable super-admin list of users using offset-based pagination */
   userList: UserListPaginatedOffsetGqlResponse;
@@ -2764,7 +2764,6 @@ export type UserResolveAuthIdentityGqlResponse = {
 
 /** Role of the user in the system */
 export const UserRole = {
-  ADMIN: "ADMIN",
   END_USER: "END_USER",
   SUPER_ADMIN: "SUPER_ADMIN",
 } as const;
