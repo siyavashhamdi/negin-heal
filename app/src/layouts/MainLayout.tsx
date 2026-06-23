@@ -42,6 +42,14 @@ import {
   type AppShellNavBadgeCounts,
 } from "./app-shell-nav-items";
 import { SideMenuNav } from "./SideMenuNav";
+import {
+  filterHeaderPanelNavItems,
+  HEADER_HELP_ITEMS,
+  HEADER_SETTINGS_ITEMS,
+  HEADER_USER_ITEMS,
+  resolveHeaderSettingsDestination,
+} from "./header-panel-items";
+import { useHeaderNotificationPreview } from "./useHeaderNotificationPreview";
 import "./styles/MainLayout.scss";
 import AppTooltip from "../shared/AppTooltip";
 
@@ -65,7 +73,6 @@ const BRAND_LOGO_SX = {
 const SUPER_ADMIN_ROLE_BADGE_LABEL = "سوپرادمین" as const;
 
 type TitleDescItem = { readonly id: string; readonly title: string; readonly description: string };
-type NotificationSample = TitleDescItem & { readonly timeLabel: string };
 type NotificationPayload = Partial<TitleDescItem> & {
   readonly messageType?: GeneralNotificationMessageType;
   readonly isPushNotification?: boolean;
@@ -98,10 +105,6 @@ type MainLayoutProps = {
   readonly showHeader?: boolean;
   readonly showFooter?: boolean;
 };
-
-function asRecordArray<T>(value: unknown): readonly T[] {
-  return Array.isArray(value) ? (value as T[]) : [];
-}
 
 function asNotificationPayload(value: unknown): NotificationPayload | null {
   if (!value || typeof value !== "object") {
@@ -224,6 +227,7 @@ export function MainLayout({
   const helpPopoverId = isHelpOpen ? "main-layout-help-popover" : undefined;
   const userPopoverId = isUserOpen ? "main-layout-user-popover" : undefined;
   const roles = authUser?.roles ?? [];
+  const isAuthenticated = Boolean(authUser);
   const isEndUser = roles.includes("END_USER");
   const usesPublicCourseList = !authUser || isEndUser;
   const appShellNavContext = useMemo(
@@ -254,19 +258,13 @@ export function MainLayout({
     readonly others?: number;
   }>({});
 
-  const sampleNotifications = useMemo(
-    () =>
-      asRecordArray<NotificationSample>(
-        t("layout.header.panels.notifications.___samples", { returnObjects: true })
-      ),
-    [t]
-  );
-  const [liveNotifications, setLiveNotifications] =
-    useState<readonly NotificationSample[]>(sampleNotifications);
-
-  useEffect(() => {
-    setLiveNotifications(sampleNotifications);
-  }, [sampleNotifications]);
+  const {
+    items: headerNotifications,
+    upsertLiveHeaderNotification,
+    markAllAsRead: markAllHeaderNotificationsAsRead,
+    canMarkAllAsRead: canMarkAllHeaderNotificationsAsRead,
+    isMarkingAllAsRead: isMarkingAllHeaderNotificationsAsRead,
+  } = useHeaderNotificationPreview(isAuthenticated);
 
   useEffect(() => {
     const currentAuthUserId = authUser?.id ?? null;
@@ -306,15 +304,12 @@ export function MainLayout({
         ? payload.messageType.toUpperCase()
         : undefined;
 
-    setLiveNotifications((previous) => [
-      {
-        id: popupId,
-        title: incomingTitle ?? "اعلان جدید",
-        description: incomingDescription,
-        timeLabel: incomingTimeLabel,
-      },
-      ...previous.slice(0, 19),
-    ]);
+    upsertLiveHeaderNotification({
+      id: popupId,
+      title: incomingTitle ?? "اعلان جدید",
+      description: incomingDescription,
+      timeLabel: incomingTimeLabel,
+    });
     setLiveCounts((previous) => {
       if (typeof previous.notifications !== "number") {
         return previous;
@@ -353,7 +348,7 @@ export function MainLayout({
       mode: popupMode,
       action,
     });
-  }, [showSnackbar]);
+  }, [showSnackbar, upsertLiveHeaderNotification]);
 
   useGeneralUpdatesSubscription({
     enabled: Boolean(authUser),
@@ -386,28 +381,24 @@ export function MainLayout({
     [coursesBadgeCount, notificationBadgeCount, paymentBadgeCount, supportBadgeCount],
   );
 
-  const sampleSettings = useMemo(
-    () =>
-      asRecordArray<TitleDescItem>(
-        t("layout.header.panels.settings.___sampleItems", { returnObjects: true })
-      ),
-    [t]
+  const headerSettingsItems = useMemo(
+    () => filterHeaderPanelNavItems(HEADER_SETTINGS_ITEMS, roles, isAuthenticated),
+    [isAuthenticated, roles],
   );
 
-  const sampleHelpItems = useMemo(
-    () =>
-      asRecordArray<TitleDescItem>(
-        t("layout.header.panels.help.___sampleItems", { returnObjects: true })
-      ),
-    [t]
+  const headerHelpItems = useMemo(
+    () => filterHeaderPanelNavItems(HEADER_HELP_ITEMS, roles, isAuthenticated),
+    [isAuthenticated, roles],
   );
 
-  const userQuickActions = useMemo(
-    () =>
-      asRecordArray<TitleDescItem>(
-        t("layout.header.panels.user.___sampleItems", { returnObjects: true })
-      ),
-    [t]
+  const headerUserItems = useMemo(
+    () => filterHeaderPanelNavItems(HEADER_USER_ITEMS, roles, isAuthenticated),
+    [isAuthenticated, roles],
+  );
+
+  const headerSettingsDestination = useMemo(
+    () => resolveHeaderSettingsDestination(roles),
+    [roles],
   );
 
   const fallbackUser = t("layout.mainLayout.fallbackUser");
@@ -622,16 +613,22 @@ export function MainLayout({
                           </div>
                           <Divider />
                           <div className="main-layout__notifications-list">
-                            {liveNotifications.map((notification) => (
-                              <article key={notification.id} className="main-layout__notification-item">
-                                <div className="main-layout__notification-dot" />
-                                <div>
-                                  <h4>{notification.title}</h4>
-                                  <p>{notification.description}</p>
-                                  <time>{notification.timeLabel}</time>
-                                </div>
-                              </article>
-                            ))}
+                            {headerNotifications.length > 0 ? (
+                              headerNotifications.map((notification) => (
+                                <article key={notification.id} className="main-layout__notification-item">
+                                  <div className="main-layout__notification-dot" />
+                                  <div>
+                                    <h4>{notification.title}</h4>
+                                    <p>{notification.description}</p>
+                                    <time>{notification.timeLabel}</time>
+                                  </div>
+                                </article>
+                              ))
+                            ) : (
+                              <p className="main-layout__panel-empty">
+                                {t("layout.header.panels.notifications.empty")}
+                              </p>
+                            )}
                           </div>
                           <Divider />
                           <div className="main-layout__panel-actions">
@@ -644,7 +641,15 @@ export function MainLayout({
                             >
                               {t("layout.header.panels.notifications.viewAll")}
                             </Button>
-                            <Button size="small" variant="text">
+                            <Button
+                              size="small"
+                              variant="text"
+                              disabled={
+                                !canMarkAllHeaderNotificationsAsRead ||
+                                isMarkingAllHeaderNotificationsAsRead
+                              }
+                              onClick={() => void markAllHeaderNotificationsAsRead()}
+                            >
                               {t("layout.header.panels.notifications.markAllRead")}
                             </Button>
                           </div>
@@ -681,23 +686,36 @@ export function MainLayout({
                       </div>
                       <Divider />
                       <div className="main-layout__settings-list">
-                        {sampleSettings.map((setting) => (
-                          <button
+                        {headerSettingsItems.map((setting) => (
+                          <RouterLink
                             key={setting.id}
-                            type="button"
+                            to={setting.to}
                             className="main-layout__settings-item"
+                            onClick={() => setSettingsAnchorEl(null)}
                           >
-                            <h4>{setting.title}</h4>
-                            <p>{setting.description}</p>
-                          </button>
+                            <h4>{t(setting.titleKey)}</h4>
+                            <p>{t(setting.descriptionKey)}</p>
+                          </RouterLink>
                         ))}
                       </div>
                       <Divider />
                       <div className="main-layout__panel-actions">
-                        <Button size="small" variant="contained">
+                        <Button
+                          size="small"
+                          variant="contained"
+                          component={RouterLink}
+                          to={headerSettingsDestination}
+                          onClick={() => setSettingsAnchorEl(null)}
+                        >
                           {t("layout.header.panels.settings.enterSettings")}
                         </Button>
-                        <Button size="small" variant="text">
+                        <Button
+                          size="small"
+                          variant="text"
+                          component={RouterLink}
+                          to={APP_SHELL_ROUTES.more}
+                          onClick={() => setSettingsAnchorEl(null)}
+                        >
                           {t("layout.header.panels.settings.customizePanel")}
                         </Button>
                       </div>
@@ -732,25 +750,40 @@ export function MainLayout({
                       </div>
                       <Divider />
                       <div className="main-layout__help-list">
-                        {sampleHelpItems.map((helpItem) => (
-                          <button
+                        {headerHelpItems.map((helpItem) => (
+                          <RouterLink
                             key={helpItem.id}
-                            type="button"
+                            to={helpItem.to}
                             className="main-layout__help-item"
+                            onClick={() => setHelpAnchorEl(null)}
                           >
-                            <h4>{helpItem.title}</h4>
-                            <p>{helpItem.description}</p>
-                          </button>
+                            <h4>{t(helpItem.titleKey)}</h4>
+                            <p>{t(helpItem.descriptionKey)}</p>
+                          </RouterLink>
                         ))}
                       </div>
                       <Divider />
                       <div className="main-layout__panel-actions">
-                        <Button size="small" variant="contained">
+                        <Button
+                          size="small"
+                          variant="contained"
+                          component={RouterLink}
+                          to={APP_SHELL_ROUTES.supportFaq}
+                          onClick={() => setHelpAnchorEl(null)}
+                        >
                           {t("layout.header.panels.help.viewGuide")}
                         </Button>
-                        <Button size="small" variant="text">
-                          {t("layout.header.panels.help.supportTicket")}
-                        </Button>
+                        {isAuthenticated ? (
+                          <Button
+                            size="small"
+                            variant="text"
+                            component={RouterLink}
+                            to={APP_SHELL_ROUTES.supportTickets}
+                            onClick={() => setHelpAnchorEl(null)}
+                          >
+                            {t("layout.header.panels.help.supportTicket")}
+                          </Button>
+                        ) : null}
                       </div>
                     </div>
                   </LayoutPopover>
@@ -808,23 +841,36 @@ export function MainLayout({
                     </div>
                     <Divider />
                     <div className="main-layout__user-actions-list">
-                      {userQuickActions.map((actionItem) => (
-                        <button
+                      {headerUserItems.map((actionItem) => (
+                        <RouterLink
                           key={actionItem.id}
-                          type="button"
+                          to={actionItem.to}
                           className="main-layout__user-action-item"
+                          onClick={() => setUserAnchorEl(null)}
                         >
-                          <h4>{actionItem.title}</h4>
-                          <p>{actionItem.description}</p>
-                        </button>
+                          <h4>{t(actionItem.titleKey)}</h4>
+                          <p>{t(actionItem.descriptionKey)}</p>
+                        </RouterLink>
                       ))}
                     </div>
                     <Divider />
                     <div className="main-layout__panel-actions">
-                      <Button size="small" variant="contained">
+                      <Button
+                        size="small"
+                        variant="contained"
+                        component={RouterLink}
+                        to={APP_SHELL_ROUTES.profile}
+                        onClick={() => setUserAnchorEl(null)}
+                      >
                         {t("layout.header.panels.user.openProfile")}
                       </Button>
-                      <Button size="small" variant="text">
+                      <Button
+                        size="small"
+                        variant="text"
+                        component={RouterLink}
+                        to={`${APP_SHELL_ROUTES.profile}/password`}
+                        onClick={() => setUserAnchorEl(null)}
+                      >
                         {t("layout.header.panels.user.changePassword")}
                       </Button>
                     </div>

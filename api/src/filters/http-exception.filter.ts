@@ -106,11 +106,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
           process.env.NODE_ENV === NodeEnv.PRODUCTION
             ? "An internal server error occurred"
             : exceptionObj?.message || "Internal server error";
-
-        this.logger.error(
-          `Unhandled exception: ${exceptionObj?.message || String(exception)}`,
-          exceptionObj?.stack,
-        );
       }
     }
 
@@ -125,7 +120,16 @@ export class HttpExceptionFilter implements ExceptionFilter {
       this.logger,
       originalMessage,
       resolved,
-      (exception as { stack?: string })?.stack,
+      {
+        stack: (exception as { stack?: string })?.stack,
+        statusCode: status,
+        errorName,
+        request: {
+          method: request?.method,
+          url: request?.url || request?.path,
+        },
+        exception,
+      },
     );
 
     const errorResponse = {

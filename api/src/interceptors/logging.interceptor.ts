@@ -10,6 +10,19 @@ import {
   Logger,
   NestInterceptor,
 } from "@nestjs/common";
+import { AuthenticatedRequest } from "../types/graphql-context.types";
+
+function resolveGraphQLLoggedUserId(
+  gqlContext: GqlExecutionContext,
+): string | undefined {
+  const ctx = gqlContext.getContext<{
+    req?: AuthenticatedRequest;
+    user?: AuthenticatedRequest["user"];
+  }>();
+  const userId = (ctx?.user || ctx?.req?.user)?.userId;
+  return userId?.toString();
+}
+
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
   private readonly logger = new Logger(LoggingInterceptor.name);
@@ -20,18 +33,17 @@ export class LoggingInterceptor implements NestInterceptor {
     const info = gqlContext.getInfo();
 
     if (info) {
-      // GraphQL request
-      // const ctx = gqlContext.getContext();
-      // const request = ctx?.req as Request;
       const operationName = info.fieldName || "GraphQL";
+      const userId = resolveGraphQLLoggedUserId(gqlContext);
+      const userSuffix = userId ? ` userId=${userId}` : "";
 
       const now = Date.now();
-      this.logger.log(`Incoming GraphQL: ${operationName}`);
+      this.logger.log(`Incoming GraphQL: ${operationName}${userSuffix}`);
 
       return next.handle().pipe(
         tap(() => {
           this.logger.log(
-            `Outgoing GraphQL: ${operationName} - ${Date.now() - now}ms`,
+            `Outgoing GraphQL: ${operationName}${userSuffix} - ${Date.now() - now}ms`,
           );
         }),
       );

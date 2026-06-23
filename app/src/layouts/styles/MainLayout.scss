@@ -20,12 +20,14 @@ $hairline: 0.0625rem solid;
 }
 
 @mixin card-button {
+  display: block;
   border: $hairline color-mix(in srgb, var(--app-surface-border) 74%, transparent);
   border-radius: 0.7rem;
   padding: 0.45rem 0.5rem;
   @include mixins.surface-bg(color-mix(in srgb, var(--app-surface-bg) 92%, var(--text-secondary) 6%));
   color: var(--text-primary);
   text-align: start;
+  text-decoration: none;
   inline-size: 100%;
   cursor: pointer;
   font: inherit;
@@ -431,6 +433,15 @@ $hairline: 0.0625rem solid;
 .main-layout__notifications-list {
   display: grid;
   gap: 0.45rem;
+}
+
+.main-layout__panel-empty {
+  margin: 0;
+  padding: 0.35rem 0.15rem;
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  line-height: 1.55;
+  text-align: center;
 }
 
 .main-layout__notification-item {

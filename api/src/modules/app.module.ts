@@ -28,7 +28,6 @@ import { NotificationModule } from "./notification";
 import { EmailModule } from "./email";
 import { TicketModule } from "./ticket";
 import { BadgeModule } from "./badge";
-import { NodeEnv } from "../enums";
 import { AuthenticatedRequest } from "../types/graphql-context.types";
 import {
   AuditInterceptor,
@@ -123,11 +122,10 @@ const graphQLErrorLogger = new Logger("GraphQLError");
             },
           },
           formatError: (error: GraphQLError) => {
-            const isDevelopment = env.NODE_ENV === NodeEnv.DEVELOPMENT;
             const formatted = formatUserFacingGraphQLError(
               error,
               graphQLErrorLogger,
-              isDevelopment,
+              false,
             );
 
             return {

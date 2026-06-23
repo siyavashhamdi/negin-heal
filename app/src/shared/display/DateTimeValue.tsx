@@ -1,6 +1,7 @@
 import { Box, Typography } from "@mui/material";
 import { type ReactElement } from "react";
 
+import { useRelativeTimeNow } from "../../hooks/useRelativeTimeNow";
 import {
   formatAbsoluteDateTimeCaption,
   parseDisplayDateTime,
@@ -26,6 +27,9 @@ export function DateTimeValue({
   emptyDisplay = EMPTY_DISPLAY,
 }: DateTimeValueProps): ReactElement {
   const parsed = parseDisplayDateTime(value);
+  const relativeDateMs =
+    parsed && shouldUseRelativeTimeLabel(parsed.date) ? parsed.date.getTime() : null;
+  const now = useRelativeTimeNow(relativeDateMs);
 
   if (!parsed) {
     return (
@@ -39,8 +43,8 @@ export function DateTimeValue({
     );
   }
 
-  const useRelative = shouldUseRelativeTimeLabel(parsed.date);
-  const primaryLabel = useRelative ? formatRelativeTimeLabel(parsed.date) : parsed.dateLabel;
+  const useRelative = shouldUseRelativeTimeLabel(parsed.date, now);
+  const primaryLabel = useRelative ? formatRelativeTimeLabel(parsed.date, now) : parsed.dateLabel;
   const absoluteLabel = formatAbsoluteDateTimeCaption(parsed);
 
   if (useRelative) {

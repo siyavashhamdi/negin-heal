@@ -509,12 +509,24 @@ export class CourseService {
       throw error;
     }
 
-    await this.publishPaymentBadgeCountSignal({
-      userCourseId: userCourse._id,
-      courseId: course._id,
-      action: BadgeCountTriggerAction.CREATED,
-      includeStaffUsers: true,
-    });
+    const previousStatus = existingUserCourse?.purchase.status;
+    const nextStatus = userCourse.purchase.status;
+
+    if (existingUserCourse && previousStatus !== nextStatus) {
+      await this.publishPaymentStatusChangeBadgeCountSignal({
+        userCourseId: userCourse._id,
+        courseId: userCourse.courseId,
+        previousStatus,
+        nextStatus,
+      });
+    } else if (!existingUserCourse) {
+      await this.publishPaymentBadgeCountSignal({
+        userCourseId: userCourse._id,
+        courseId: course._id,
+        action: BadgeCountTriggerAction.CREATED,
+        includeStaffUsersWhenPendingPaymentsExist: true,
+      });
+    }
 
     return this.toCoursePurchaseSubmitResponse(
       userCourse,
@@ -546,9 +558,16 @@ export class CourseService {
     const courseId = userCourse.courseId.toString();
 
     if (status !== "OK") {
+      const previousStatus = userCourse.purchase.status;
       userCourse.purchase.status = UserCoursePurchaseStatus.CANCELLED;
       userCourse.purchase.cancelledAt = new Date();
       await userCourse.save();
+      await this.publishPaymentStatusChangeBadgeCountSignal({
+        userCourseId: userCourse._id,
+        courseId: userCourse.courseId,
+        previousStatus,
+        nextStatus: UserCoursePurchaseStatus.CANCELLED,
+      });
       return { status: "cancelled", courseId };
     }
 
@@ -574,9 +593,16 @@ export class CourseService {
 
       const verification = data.data;
       if (!verification || ![100, 101].includes(verification.code ?? 0)) {
+        const previousStatus = userCourse.purchase.status;
         userCourse.purchase.status = UserCoursePurchaseStatus.FAILED;
         userCourse.purchase.failedAt = new Date();
         await userCourse.save();
+        await this.publishPaymentStatusChangeBadgeCountSignal({
+          userCourseId: userCourse._id,
+          courseId: userCourse.courseId,
+          previousStatus,
+          nextStatus: UserCoursePurchaseStatus.FAILED,
+        });
         this.logger.warn(
           `ZarinPal verification failed for authority=${normalizedAuthority}: ${verification?.message ?? "unknown"}`,
         );
@@ -592,6 +618,12 @@ export class CourseService {
       userCourse.purchase.paidAt = new Date();
       userCourse.purchase.transactionId = verification.ref_id?.toString();
       await userCourse.save();
+      await this.publishPaymentStatusChangeBadgeCountSignal({
+        userCourseId: userCourse._id,
+        courseId: userCourse.courseId,
+        previousStatus,
+        nextStatus: UserCoursePurchaseStatus.PAID,
+      });
       await this.notifyCoursePurchasePaid(userCourse, previousStatus);
 
       return {
@@ -690,6 +722,12 @@ export class CourseService {
     this.setPurchaseStatusTimestamp(userCourse, input.status, now);
 
     await userCourse.save();
+    await this.publishPaymentStatusChangeBadgeCountSignal({
+      userCourseId: userCourse._id,
+      courseId: userCourse.courseId,
+      previousStatus,
+      nextStatus: input.status,
+    });
     await this.notifyCoursePurchasePaid(userCourse, previousStatus, {
       approvedByInvestigationTeam: true,
     });
@@ -814,6 +852,13 @@ export class CourseService {
 
     this.setPurchaseStatusTimestamp(userCourse, input.status, now);
     await userCourse.save();
+
+    await this.publishPaymentBadgeCountSignal({
+      userCourseId: userCourse._id,
+      courseId: course._id,
+      action: BadgeCountTriggerAction.CREATED,
+      includeStaffUsersWhenPendingPaymentsExist: true,
+    });
 
     const relatedLookups = await this.buildCoursePaymentRelatedLookups([
       userCourse.toObject() as CoursePaymentListRecord,
@@ -1381,9 +1426,23 @@ export class CourseService {
     courseId: Types.ObjectId;
     action: BadgeCountTriggerAction;
     includeStaffUsers?: boolean;
+    includeStaffUsersWhenPendingPaymentsExist?: boolean;
+    previousStatus?: UserCoursePurchaseStatus;
   }): Promise<void> {
+    let includeStaffUsers = params.includeStaffUsers ?? false;
+
+    if (params.includeStaffUsersWhenPendingPaymentsExist) {
+      includeStaffUsers = await this.shouldPublishStaffPaymentBadgeCountSignal(
+        params.previousStatus,
+      );
+    }
+
+    if (!includeStaffUsers) {
+      return;
+    }
+
     await this.badgeService.publishCountSignal({
-      includeStaffUsers: params.includeStaffUsers,
+      includeStaffUsers,
       payload: {
         source: BadgeCountTriggerSource.PAYMENT,
         action: params.action,
@@ -1391,6 +1450,45 @@ export class CourseService {
         userCourseId: params.userCourseId.toString(),
       },
     });
+  }
+
+  private async publishPaymentStatusChangeBadgeCountSignal(params: {
+    userCourseId: Types.ObjectId;
+    courseId: Types.ObjectId;
+    previousStatus: UserCoursePurchaseStatus;
+    nextStatus: UserCoursePurchaseStatus;
+  }): Promise<void> {
+    if (params.previousStatus === params.nextStatus) {
+      return;
+    }
+
+    await this.publishPaymentBadgeCountSignal({
+      userCourseId: params.userCourseId,
+      courseId: params.courseId,
+      action: BadgeCountTriggerAction.UPDATED,
+      includeStaffUsersWhenPendingPaymentsExist: true,
+      previousStatus: params.previousStatus,
+    });
+  }
+
+  private async shouldPublishStaffPaymentBadgeCountSignal(
+    previousStatus?: UserCoursePurchaseStatus,
+  ): Promise<boolean> {
+    if (await this.hasAnyPendingPayments()) {
+      return true;
+    }
+
+    return previousStatus === UserCoursePurchaseStatus.PENDING;
+  }
+
+  private async hasAnyPendingPayments(): Promise<boolean> {
+    const pendingPurchase = await this.userCourseModel
+      .findOne({ "purchase.status": UserCoursePurchaseStatus.PENDING })
+      .select({ _id: 1 })
+      .lean<{ _id: Types.ObjectId }>()
+      .exec();
+
+    return pendingPurchase != null;
   }
 
   private failCourseValidation(message: string): never {

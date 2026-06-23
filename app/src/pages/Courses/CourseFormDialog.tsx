@@ -643,8 +643,9 @@ const CourseFormDialog = ({
   >(COURSE_UPDATE_MUTATION, {
     successMessage: "دوره با موفقیت ویرایش شد.",
     onSuccess: () => {
-      closeDialog();
       onSaved?.();
+      appliedFormKeyRef.current = null;
+      void refetchCourseDetail();
     },
   });
 

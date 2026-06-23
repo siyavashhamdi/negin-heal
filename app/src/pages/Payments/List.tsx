@@ -49,6 +49,7 @@ import { COURSE_PAYMENT_STATUS_UPDATE_MUTATION } from "../../graphql/mutations/c
 import { COURSE_PAYMENT_DETAIL_QUERY } from "../../graphql/queries/coursePaymentDetail.query";
 import { COURSE_PAYMENT_LIST_QUERY } from "../../graphql/queries/coursePaymentList.query";
 import { useDebounce } from "../../hooks/useDebounce";
+import { useBadgeCountFirstPageReload } from "../../hooks/useBadgeCountFirstPageReload";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import {
   useServerPaginatedQuery,
@@ -640,6 +641,7 @@ const PaymentsList = (): ReactElement => {
     loading,
     error,
     onRefresh,
+    page,
     pagination,
   } = useServerPaginatedQuery<
     CoursePaymentListQuery,
@@ -654,11 +656,12 @@ const PaymentsList = (): ReactElement => {
     resetPageDeps: [debouncedSearchQuery, debouncedFilters],
   });
 
-  const {
-    data: paymentDetailData,
-    loading: paymentDetailLoading,
-    refetch: refetchPaymentDetail,
-  } = useQuery<CoursePaymentDetailQuery, CoursePaymentDetailQueryVariables>(
+  useBadgeCountFirstPageReload({
+    isOnFirstPage: page === 1,
+    reload: onRefresh,
+  });
+
+  const { data: paymentDetailData, loading: paymentDetailLoading } = useQuery<CoursePaymentDetailQuery, CoursePaymentDetailQueryVariables>(
     COURSE_PAYMENT_DETAIL_QUERY,
     {
       variables: { input: { id: reviewPaymentId ?? "" } },
@@ -682,7 +685,9 @@ const PaymentsList = (): ReactElement => {
     successMessage: "وضعیت پرداخت با موفقیت ثبت شد.",
     errorMessage: "ثبت وضعیت پرداخت انجام نشد.",
     onSuccess: () => {
-      void refetchPaymentDetail();
+      setIsReceiptPreviewExpanded(false);
+      setPendingPaidStatusChange(null);
+      navigate(APP_SHELL_ROUTES.payments);
       onRefresh();
     },
   });
