@@ -83,6 +83,52 @@
   color: currentColor;
 }
 
+.side-menu-nav__item-avatar.MuiAvatar-root {
+  flex: 0 0 auto;
+  width: 1.35rem;
+  height: 1.35rem;
+  font-size: 0.72rem;
+}
+
+.side-menu-nav__item-icon-wrap {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+.side-menu-nav__item-icon-wrap--attention::after {
+  content: "";
+  position: absolute;
+  top: -0.08rem;
+  left: -0.14rem;
+  inline-size: 0.52rem;
+  block-size: 0.52rem;
+  border-radius: 999rem;
+  background: #d32f2f;
+  box-shadow: 0 0 0 0.18rem color-mix(in srgb, #d32f2f 18%, transparent);
+  animation: sideMenuNavAttentionBlink 6s ease-in-out infinite;
+}
+
+.side-menu-nav__item-badge .MuiBadge-badge {
+  min-width: 1rem;
+  height: 1rem;
+  padding-inline: 0.25rem;
+  font-size: 0.62rem;
+  transform: translate(-50%, -22%);
+}
+
+@keyframes sideMenuNavAttentionBlink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.35;
+  }
+}
+
 .side-menu-nav__item-label {
   overflow: hidden;
   text-overflow: ellipsis;

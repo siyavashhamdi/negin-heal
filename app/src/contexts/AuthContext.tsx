@@ -109,7 +109,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
       return;
     }
 
-    navigate(APP_SHELL_ROUTES.dashboard);
+    navigate(APP_SHELL_ROUTES.courses);
   };
 
   const syncUser = useCallback((userData: User): void => {

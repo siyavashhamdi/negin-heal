@@ -1,5 +1,4 @@
 const STATIC_ROUTE_TITLE_KEYS: Readonly<Record<string, string>> = {
-  "/dashboard": "app.pageTitles.dashboard",
   "/courses": "app.pageTitles.courses",
   "/more": "app.pageTitles.more",
   "/more/about": "app.pageTitles.moreAbout",

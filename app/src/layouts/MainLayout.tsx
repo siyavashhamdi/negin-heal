@@ -1,17 +1,12 @@
-import AccountBalanceWalletRoundedIcon from "@mui/icons-material/AccountBalanceWalletRounded";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
 import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
-import ConfirmationNumberRoundedIcon from "@mui/icons-material/ConfirmationNumberRounded";
 import HelpOutlineRoundedIcon from "@mui/icons-material/HelpOutlineRounded";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
-import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
-import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneRounded";
-import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import { Avatar, Badge, Box, Button, Container, Divider, IconButton, Popover } from "@mui/material";
@@ -39,6 +34,13 @@ import { APP_SHELL_ROUTES } from "../routing/app-shell-routes";
 import { resolveNotificationActionPayload } from "../utilities/notification-action.util";
 import { showBrowserNotification } from "../utils/browserNotification.util";
 import { scrollToTopOnMobile } from "../utils/scrollToTopOnMobile.util";
+import { AppShellNavItemIcon } from "./AppShellNavItemIcon";
+import {
+  APP_SHELL_NAV_ITEMS,
+  filterAppShellNavItems,
+  resolveAppShellNavPath,
+  type AppShellNavBadgeCounts,
+} from "./app-shell-nav-items";
 import { SideMenuNav } from "./SideMenuNav";
 import "./styles/MainLayout.scss";
 import AppTooltip from "../shared/AppTooltip";
@@ -223,12 +225,18 @@ export function MainLayout({
   const userPopoverId = isUserOpen ? "main-layout-user-popover" : undefined;
   const roles = authUser?.roles ?? [];
   const isEndUser = roles.includes("END_USER");
-  const isSuperAdmin = roles.includes("SUPER_ADMIN");
-  const shouldOpenSupportTickets = isSuperAdmin;
-  const supportNavPath = shouldOpenSupportTickets
-    ? APP_SHELL_ROUTES.supportTickets
-    : APP_SHELL_ROUTES.support;
   const usesPublicCourseList = !authUser || isEndUser;
+  const appShellNavContext = useMemo(
+    () => ({
+      roles,
+      isAuthenticated: Boolean(authUser),
+    }),
+    [authUser, roles],
+  );
+  const visibleAppShellNavItems = useMemo(
+    () => filterAppShellNavItems(APP_SHELL_NAV_ITEMS, appShellNavContext),
+    [appShellNavContext],
+  );
   const brandTagline = usesPublicCourseList
     ? t("layout.header.brand.publicTagline")
     : t("layout.header.brand.tagline");
@@ -368,6 +376,15 @@ export function MainLayout({
   const notificationBadgeCount =
     liveCounts.notifications ?? badgeCountData?.badgeCount.notifications ?? 0;
   const supportBadgeCount = liveCounts.tickets ?? badgeCountData?.badgeCount.tickets ?? 0;
+  const appShellNavBadgeCounts = useMemo<AppShellNavBadgeCounts>(
+    () => ({
+      courses: coursesBadgeCount,
+      payments: paymentBadgeCount,
+      notifications: notificationBadgeCount,
+      support: supportBadgeCount,
+    }),
+    [coursesBadgeCount, notificationBadgeCount, paymentBadgeCount, supportBadgeCount],
+  );
 
   const sampleSettings = useMemo(
     () =>
@@ -414,6 +431,9 @@ export function MainLayout({
       userInitial: trimmed.slice(0, 1) || "?",
     };
   }, [authUser, fallbackUser, user, userLoading]);
+
+  const profileAvatar =
+    authUser && avatarUrl ? { src: avatarUrl, alt: userDisplayName } : null;
 
   const themeToggleLabel =
     mode === "light"
@@ -843,6 +863,8 @@ export function MainLayout({
                 {...sideMenuNavProps}
                 showCollapseToggle
                 onToggleCollapsed={() => setIsSideMenuCollapsed((previous) => !previous)}
+                badgeCounts={appShellNavBadgeCounts}
+                profileAvatar={profileAvatar}
               />
             </div>
           </aside>
@@ -859,28 +881,10 @@ export function MainLayout({
           data-opaque-shell
           aria-label="منوی موبایل"
         >
-          <NavLink
-            to="/courses"
-            onClick={scrollToTopOnMobile}
-            className={({ isActive }) =>
-              `main-layout__mobile-bottom-item${
-                isActive ? " main-layout__mobile-bottom-item--active" : ""
-              }`
-            }
-          >
-            <Badge
-              badgeContent={coursesBadgeCount}
-              color="primary"
-              max={999}
-              className="main-layout__mobile-bottom-badge"
-            >
-              <MenuBookRoundedIcon />
-            </Badge>
-            <span>دوره‌ها</span>
-          </NavLink>
-          {isSuperAdmin ? (
+          {visibleAppShellNavItems.map((item) => (
             <NavLink
-              to="/payments"
+              key={item.id}
+              to={resolveAppShellNavPath(item, appShellNavContext)}
               onClick={scrollToTopOnMobile}
               className={({ isActive }) =>
                 `main-layout__mobile-bottom-item${
@@ -888,92 +892,15 @@ export function MainLayout({
                 }`
               }
             >
-              <Badge
-                badgeContent={paymentBadgeCount}
-                color="warning"
-                max={999}
-                className="main-layout__mobile-bottom-badge main-layout__mobile-bottom-badge--payments"
-              >
-                <AccountBalanceWalletRoundedIcon />
-              </Badge>
-              <span>پرداخت‌ها</span>
-            </NavLink>
-          ) : null}
-          {authUser ? (
-            <NavLink
-              to="/notifications"
-              onClick={scrollToTopOnMobile}
-              className={({ isActive }) =>
-                `main-layout__mobile-bottom-item${
-                  isActive ? " main-layout__mobile-bottom-item--active" : ""
-                }`
-              }
-            >
-              <Badge
-                badgeContent={notificationBadgeCount}
-                color="error"
-                className="main-layout__mobile-bottom-badge"
-              >
-                <NotificationsNoneRoundedIcon />
-              </Badge>
-              <span>اعلان‌ها</span>
-            </NavLink>
-          ) : null}
-          <NavLink
-            to={supportNavPath}
-            onClick={scrollToTopOnMobile}
-            className={({ isActive }) =>
-              `main-layout__mobile-bottom-item${
-                isActive ? " main-layout__mobile-bottom-item--active" : ""
-              }`
-            }
-          >
-            <span
-              className={[
-                "main-layout__mobile-bottom-icon-wrap",
-                supportBadgeCount > 0
-                  ? "main-layout__mobile-bottom-icon-wrap--attention"
-                  : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-            >
-              <ConfirmationNumberRoundedIcon />
-            </span>
-            <span>پشتیبانی</span>
-          </NavLink>
-          <NavLink
-            to="/profile"
-            onClick={scrollToTopOnMobile}
-            className={({ isActive }) =>
-              `main-layout__mobile-bottom-item${
-                isActive ? " main-layout__mobile-bottom-item--active" : ""
-              }`
-            }
-          >
-            {authUser && avatarUrl ? (
-              <Avatar
-                className="main-layout__mobile-bottom-avatar"
-                src={avatarUrl}
-                alt={userDisplayName}
+              <AppShellNavItemIcon
+                item={item}
+                variant="bottom"
+                badgeCounts={appShellNavBadgeCounts}
+                profileAvatar={profileAvatar}
               />
-            ) : (
-              <PersonRoundedIcon />
-            )}
-            <span>پروفایل</span>
-          </NavLink>
-          <NavLink
-            to="/more"
-            onClick={scrollToTopOnMobile}
-            className={({ isActive }) =>
-              `main-layout__mobile-bottom-item${
-                isActive ? " main-layout__mobile-bottom-item--active" : ""
-              }`
-            }
-          >
-            <MoreHorizRoundedIcon />
-            <span>سایر</span>
-          </NavLink>
+              <span>{item.title}</span>
+            </NavLink>
+          ))}
         </nav>
       ) : null}
     </Box>

@@ -2,7 +2,6 @@ export const APP_SHELL_ROUTES = {
   login: "/login",
   resetPassword: "/reset-password",
   activateAccount: "/activate",
-  dashboard: "/dashboard",
   courses: "/courses",
   courseDetail: "/courses/:courseId",
   more: "/more",

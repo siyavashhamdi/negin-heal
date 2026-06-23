@@ -1,5 +1,4 @@
 const STATIC_ROUTE_SEO_KEYS: Readonly<Record<string, string>> = {
-  "/dashboard": "dashboard",
   "/courses": "courses",
   "/more": "more",
   "/more/about": "moreAbout",

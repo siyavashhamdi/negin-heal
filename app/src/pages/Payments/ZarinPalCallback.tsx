@@ -32,7 +32,7 @@ function buildPaymentResultUrl(
     return `/courses/${courseId}?${resultParams.toString()}`;
   }
 
-  return `/dashboard?${resultParams.toString()}`;
+  return `/courses?${resultParams.toString()}`;
 }
 
 const ZarinPalCallback = (): ReactElement => {
@@ -62,7 +62,7 @@ const ZarinPalCallback = (): ReactElement => {
 
         navigate(buildPaymentResultUrl(result, callbackCourseId), { replace: true });
       } catch {
-        const fallbackPath = callbackCourseId ? `/courses/${callbackCourseId}` : "/dashboard";
+        const fallbackPath = callbackCourseId ? `/courses/${callbackCourseId}` : "/courses";
         navigate(`${fallbackPath}?payment=failed&reason=ZARINPAL_VERIFICATION_ERROR`, {
           replace: true,
         });

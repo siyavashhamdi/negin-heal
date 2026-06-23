@@ -1,48 +1,5 @@
 {
     "pages": {
-        "dashboard": {
-            "comingSoonSnackbar": "بخش «{{label}}» به زودی فعال می‌شود.",
-            "uploader": {
-                "title": "آپلود نمونه فایل",
-                "description": "این بخش نمونه، فایل را به MinIO می‌فرستد و اطلاعات آن را در کالکشن files ذخیره می‌کند.",
-                "fieldLabel": "فایل",
-                "allowedFormats": "همه فرمت‌ها",
-                "maxSize": "برای نمونه فایل‌های کوچک انتخاب کنید",
-                "dropTitle": "فایل را اینجا رها کنید یا برای انتخاب کلیک کنید",
-                "dropHint": "فایل انتخاب‌شده به MinIO ارسال می‌شود.",
-                "removeLabel": "حذف فایل",
-                "invalidLabel": "فایل انتخاب‌شده معتبر نیست.",
-                "uploadButton": "آپلود فایل",
-                "uploadingButton": "در حال آپلود...",
-                "success": "فایل با موفقیت آپلود شد.",
-                "missingFile": "ابتدا یک فایل انتخاب کنید.",
-                "lastUpload": "آخرین فایل ذخیره‌شده",
-                "path": "مسیر",
-                "mimeType": "نوع فایل",
-                "size": "حجم"
-            },
-            "pushTest": {
-                "title": "تست پوش نوتیفیکیشن",
-                "description": "یک اعلان سیستمی روی همین دستگاه (کاربر فعلی) نمایش می‌دهد.",
-                "messageLabel": "متن اعلان",
-                "messagePlaceholder": "سلام! این یک تست است.",
-                "sendButton": "ارسال پوش",
-                "sendingButton": "در حال ارسال...",
-                "missingMessage": "متن اعلان را وارد کنید.",
-                "unsupported": "مرورگر از اعلان پشتیبانی نمی‌کند.",
-                "permissionDenied": "اجازه اعلان داده نشد.",
-                "showFailed": "اعلان نمایش داده نشد. روی موبایل از Chrome/Android استفاده کنید و اگر iOS دارید اپ را به صفحه اصلی اضافه کنید.",
-                "success": "اعلان ارسال شد.",
-                "successScheduled": "اعلان ارسال شد و ۳۰ ثانیه دیگر دوباره نمایش داده می‌شود.",
-                "notificationTitle": "نگین هیل"
-            },
-            "menuCard": {
-                "submenuTooltipAria": "نمایش توضیحات",
-                "sectionIconAlt": "آیکون بخش {{title}}",
-                "submenuIconAlt": "آیکون زیرمنوی {{label}}",
-                "enterSection": "ورود به {{title}}"
-            }
-        },
         "courses": {
             "heroTitle": "دوره‌ها",
             "heroDescription": "مدیریت کامل دوره‌ها با نمای کارت، فیلترهای پیشرفته، مرتب‌سازی و صفحه‌بندی.",

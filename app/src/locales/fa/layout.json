@@ -137,7 +137,6 @@
         "mainLayout": {
             "fallbackUser": "کاربر",
             "navigation": {
-                "backToDashboard": "بازگشت به داشبورد",
                 "brandHomeLink": "صفحه اصلی — {{title}}"
             }
         },

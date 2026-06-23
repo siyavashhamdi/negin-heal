@@ -19,11 +19,6 @@
             "ogType": "website"
         },
         "pages": {
-            "dashboard": {
-                "description": "داشبورد مدیریتی Negin Heal — نمای کلی فعالیت‌ها، اعلان‌ها و میانبرهای پرکاربرد پنل.",
-                "keywords": "داشبورد, پنل مدیریت, Negin Heal",
-                "robots": "noindex, nofollow"
-            },
             "courses": {
                 "description": "فهرست دوره‌های آموزشی Negin Heal — مسیرهای یادگیری تخصصی در حوزه سلامت، مراقبت و سبک زندگی.",
                 "keywords": "دوره آموزشی, دوره سلامت, یادگیری آنلاین, Negin Heal, فهرست دوره‌ها",

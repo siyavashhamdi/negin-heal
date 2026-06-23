@@ -3,7 +3,6 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "../components/ProtectedRoute";
 import { PageSeoProvider } from "../contexts/PageSeoProvider";
 import { useScrollToTop } from "../hooks/useScrollToTop";
-import Dashboard from "../pages/Dashoard/Dashboard";
 import CourseDetail from "../pages/Courses/CourseDetail";
 import CoursesIndex from "../pages/Courses/Index";
 import LoginRoute from "../pages/Login/LoginRoute";
@@ -40,7 +39,6 @@ const DashboardAppRoutesContent = (): ReactElement => {
       <Route path={APP_SHELL_ROUTES.login} element={<LoginRoute />} />
       <Route path={APP_SHELL_ROUTES.resetPassword} element={<ResetPassword />} />
       <Route path={APP_SHELL_ROUTES.activateAccount} element={<ActivateAccount />} />
-      <Route path={APP_SHELL_ROUTES.dashboard} element={wrapProtected(<Dashboard />)} />
       <Route path={`${APP_SHELL_ROUTES.courses}/new`} element={<CoursesIndex />} />
       <Route path={`${APP_SHELL_ROUTES.courses}/edit/:courseId`} element={<CoursesIndex />} />
       <Route path={`${APP_SHELL_ROUTES.courses}/delete/:courseId`} element={<CoursesIndex />} />

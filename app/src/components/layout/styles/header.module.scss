@@ -142,11 +142,6 @@ $hairline: 0.0625rem solid;
   font-size: variables.$font-size-sm;
 }
 
-.popoverDashboardButton {
-  justify-self: start;
-  margin-top: 0.15rem;
-}
-
 @media (min-width: $layout-break) {
   .header {
     grid-template-columns: minmax(0, 1fr) auto;
