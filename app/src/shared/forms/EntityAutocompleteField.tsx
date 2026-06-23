@@ -12,7 +12,7 @@ import {
   createFilterOptions,
 } from "@mui/material";
 import type { AutocompleteRenderInputParams } from "@mui/material/Autocomplete";
-import type { TextFieldProps } from "@mui/material/TextField";
+import { resolveAvatarInitial } from "../../utils/storedUser.util";
 
 import styles from "./EntityAutocompleteField.module.scss";
 
@@ -125,7 +125,7 @@ function EntityOptionThumbnail({
     );
   }
 
-  const initial = label.trim().charAt(0) || "?";
+  const initial = resolveAvatarInitial(label);
 
   return (
     <Box

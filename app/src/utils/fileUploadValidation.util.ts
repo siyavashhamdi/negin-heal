@@ -19,22 +19,22 @@ export type FileUploadValidationOptions = {
 
 export function formatUploadFileSize(bytes: number): string {
   if (bytes < 1024) {
-    return `${bytes.toLocaleString("fa-IR")} B`;
+    return `${bytes.toLocaleString("fa-IR")} بایت`;
   }
   if (bytes < 1024 * 1024) {
     return `${(bytes / 1024).toLocaleString("fa-IR", {
       maximumFractionDigits: 1,
-    })} KB`;
+    })} کیلوبایت`;
   }
   if (bytes < 1024 * 1024 * 1024) {
     return `${(bytes / (1024 * 1024)).toLocaleString("fa-IR", {
       maximumFractionDigits: 1,
-    })} MB`;
+    })} مگابایت`;
   }
 
   return `${(bytes / (1024 * 1024 * 1024)).toLocaleString("fa-IR", {
     maximumFractionDigits: 2,
-  })} GB`;
+  })} گیگابایت`;
 }
 
 function describeAcceptToken(token: string): string {

@@ -10,10 +10,12 @@ import {
   InternalServerErrorException,
   Logger,
   NotFoundException,
+  OnModuleInit,
 } from "@nestjs/common";
 
 import { SecurityConfig } from "../../config/security.config";
 import { env } from "../../config";
+import { formatInfrastructureConnectionError } from "../../utils/infrastructure-connection-error.util";
 import { StoredFile, StoredFileDocument } from "../../database/schemas";
 import {
   createFileAccessUrlDescriptor,
@@ -59,7 +61,7 @@ type StoredFileStorageLocation = {
 };
 
 @Injectable()
-export class FileService {
+export class FileService implements OnModuleInit {
   static readonly FILE_ACCESS_URL_TTL_SECONDS = 60 * 60;
 
   private readonly logger = new Logger(FileService.name);
@@ -77,6 +79,10 @@ export class FileService {
       accessKey: env.MINIO_ACCESS_KEY,
       secretKey: env.MINIO_SECRET_KEY,
     });
+  }
+
+  async onModuleInit(): Promise<void> {
+    await this.verifyMinioConnectivity();
   }
 
   async uploadFromStream(params: {
@@ -912,6 +918,16 @@ export class FileService {
     }
 
     return Buffer.concat(chunks, totalLength);
+  }
+
+  private async verifyMinioConnectivity(): Promise<void> {
+    try {
+      await this.minioClient.listBuckets();
+      await this.ensureBucket();
+    } catch (error) {
+      const message = formatInfrastructureConnectionError("minio", error);
+      this.logger.error(message);
+    }
   }
 
   private async ensureBucket(): Promise<void> {

@@ -6,6 +6,7 @@ import { InjectConnection, InjectModel } from "@nestjs/mongoose";
 import { MigrationStatus } from "../../enums";
 import { MigrationClass } from "../../migrations/core";
 import { Migration, MigrationDocument } from "../../database/schemas";
+import { formatInfrastructureConnectionError, resolveInfrastructureConnectionFailure } from "../../utils/infrastructure-connection-error.util";
 
 /**
  * Service responsible for discovering and executing database migrations.
@@ -50,6 +51,14 @@ export class MigrationService implements OnModuleInit {
     this.logger.log("🔄 Starting database migration process...");
 
     try {
+      const isMongoAvailable = await this.verifyMongoConnection();
+      if (!isMongoAvailable) {
+        this.logger.warn(
+          "⚠️ Skipping database migrations until MongoDB is available.",
+        );
+        return;
+      }
+
       // Check and handle running/stale migrations
       await this.handleRunningMigrations();
 
@@ -162,12 +171,37 @@ export class MigrationService implements OnModuleInit {
         `✅ Migration process completed successfully! Database updated from version ${currentDbVersion} to ${finalVersion} (${executedCount} migration(s) executed)`,
       );
     } catch (error) {
+      const infrastructureMessage = resolveInfrastructureConnectionFailure(error);
+
+      if (infrastructureMessage) {
+        this.logger.error(infrastructureMessage);
+        this.logger.warn(
+          "⚠️ Skipping database migrations until MongoDB is available.",
+        );
+        return;
+      }
+
       // Log error and re-throw to stop application startup
       this.logger.error("❌ Migration process failed and stopped:", error);
       this.logger.error(
         "🛑 Application startup blocked. Fix migration issues and restart.",
       );
       throw error;
+    }
+  }
+
+  private async verifyMongoConnection(): Promise<boolean> {
+    try {
+      if (!this.connection.db) {
+        throw new Error("MongoDB connection is not established");
+      }
+
+      await this.connection.db.admin().ping();
+      return true;
+    } catch (error) {
+      const message = formatInfrastructureConnectionError("mongodb", error);
+      this.logger.error(message);
+      return false;
     }
   }
 

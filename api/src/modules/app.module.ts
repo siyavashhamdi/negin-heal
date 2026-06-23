@@ -53,6 +53,8 @@ const graphQLErrorLogger = new Logger("GraphQLError");
       useFactory: async () => ({
         uri: env.MONGODB_URI,
         dbName: env.MONGODB_DATABASE,
+        serverSelectionTimeoutMS: 5_000,
+        connectTimeoutMS: 5_000,
       }),
       inject: [],
     }),

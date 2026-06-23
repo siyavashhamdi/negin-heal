@@ -13,10 +13,50 @@
   flex-wrap: wrap;
 }
 
+.sectionTitleRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
 .sectionTitle {
   margin: 0;
   font-size: 1.02rem !important;
   font-weight: 900 !important;
+}
+
+.warningIconButton {
+  padding: 0.2rem !important;
+}
+
+.warningPopoverPaper {
+  max-width: min(22rem, calc(100vw - 2rem));
+  padding: 0.75rem 0.85rem !important;
+  border-radius: 0.75rem !important;
+}
+
+.warningPopoverContent {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.warningPopoverTitle {
+  font-weight: 800 !important;
+  line-height: 1.6 !important;
+}
+
+.warningPopoverList {
+  margin: 0;
+  padding-inline-start: 1.1rem;
+  display: grid;
+  gap: 0.35rem;
+
+  li {
+    font-size: 0.84rem;
+    line-height: 1.65;
+    color: var(--text-secondary);
+  }
 }
 
 .chapterStepsRail {

@@ -18,6 +18,7 @@ const STATIC_ROUTE_SEO_KEYS: Readonly<Record<string, string>> = {
   "/support/faq": "supportFaq",
   "/support/tickets": "supportTickets",
   "/users": "usersManagement",
+  "/landing": "landing",
   "/login": "login",
   "/reset-password": "resetPassword",
   "/activate": "activateAccount",

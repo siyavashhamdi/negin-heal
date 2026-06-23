@@ -2,6 +2,48 @@ import { getFileIdFromAccessUrl } from "../../utils/fileAccessUrl.util";
 import { hasRichTextContent } from "../../utils/richTextHtml.util";
 import type { DiscountKind, DraftChapter } from "./course-form-dialog/types";
 
+function normalizeDigits(value: string): string {
+  return value
+    .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
+    .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)));
+}
+
+function parseDraftNumber(value: string): number | undefined {
+  const trimmed = normalizeDigits(value).replace(/[,٬\s]/g, "").trim();
+  if (!trimmed) {
+    return undefined;
+  }
+  const parsed = Number(trimmed);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function resolveVisibleAfterMinutes(chapter: DraftChapter): number {
+  const parsedValue = parseDraftNumber(chapter.visibleAfterMinutes);
+  if (parsedValue == null) {
+    return 0;
+  }
+  if (chapter.visibleAfterUnit === "DAYS") {
+    return parsedValue * 24 * 60;
+  }
+  if (chapter.visibleAfterUnit === "HOURS") {
+    return parsedValue * 60;
+  }
+  return parsedValue;
+}
+
+function formatVisibleAfterDelay(minutes: number): string {
+  if (minutes <= 0) {
+    return "بلافاصله";
+  }
+  if (minutes % (24 * 60) === 0) {
+    return `${(minutes / (24 * 60)).toLocaleString("fa-IR")} روز`;
+  }
+  if (minutes % 60 === 0) {
+    return `${(minutes / 60).toLocaleString("fa-IR")} ساعت`;
+  }
+  return `${minutes.toLocaleString("fa-IR")} دقیقه`;
+}
+
 export type CourseFormValidationSection = "intro" | "content";
 
 export type CourseFormValidationResult =
@@ -135,4 +177,30 @@ export function validateCourseForm(input: ValidateCourseFormInput): CourseFormVa
   }
 
   return { valid: true };
+}
+
+export function getChapterVisibleAfterOrderWarnings(
+  chapters: readonly DraftChapter[],
+): readonly string[] {
+  const warnings: string[] = [];
+
+  for (let chapterIndex = 0; chapterIndex < chapters.length - 1; chapterIndex += 1) {
+    const currentChapter = chapters[chapterIndex];
+    const nextChapter = chapters[chapterIndex + 1];
+    const currentMinutes = resolveVisibleAfterMinutes(currentChapter);
+    const nextMinutes = resolveVisibleAfterMinutes(nextChapter);
+
+    if (nextMinutes >= currentMinutes) {
+      continue;
+    }
+
+    const currentChapterLabel = formatChapterLabel(chapterIndex, currentChapter.title);
+    const nextChapterLabel = formatChapterLabel(chapterIndex + 1, nextChapter.title);
+
+    warnings.push(
+      `${nextChapterLabel} (${formatVisibleAfterDelay(nextMinutes)}) قبل از ${currentChapterLabel} (${formatVisibleAfterDelay(currentMinutes)}) در دسترس قرار می‌گیرد، در حالی که در ترتیب فصل‌ها بعد از آن قرار دارد.`,
+    );
+  }
+
+  return warnings;
 }

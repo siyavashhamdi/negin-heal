@@ -16,7 +16,7 @@ import {
 import { useQuery } from "@apollo/client/react";
 import { alpha, type Theme, useTheme } from "@mui/material/styles";
 
-import { resolveMeUserDisplayName } from "../../utils/storedUser.util";
+import { resolveAvatarInitial, resolveMeUserDisplayName } from "../../utils/storedUser.util";
 import { useAuth } from "../../contexts/AuthContext";
 import { SUPER_ADMIN_TICKET_SEND_MUTATION } from "../../graphql/mutations/superAdminTicketSend.mutation";
 import { TICKET_CLOSE_MUTATION } from "../../graphql/mutations/ticketClose.mutation";
@@ -270,11 +270,6 @@ function sortMessagesBySentAt(messages: readonly SupportTicketMessage[]): Suppor
   });
 }
 
-function getProfileStyleInitial(displayName: string): string {
-  const trimmed = displayName.trim();
-  return trimmed.slice(0, 1) || "?";
-}
-
 function resolveMessageAvatarUrl(
   message: SupportTicketMessage,
   tone: "own" | "support" | "user",
@@ -309,7 +304,7 @@ function MessageSenderAvatar({
   readonly avatarUrl: string | null;
 }): ReactElement {
   const theme = useTheme();
-  const initials = getProfileStyleInitial(displayName);
+  const initials = resolveAvatarInitial(displayName);
   const showSupportIcon = tone === "support" && !avatarUrl;
 
   return (

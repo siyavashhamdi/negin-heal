@@ -146,6 +146,8 @@ export interface EntityTableShellProps<TData extends object> {
   pagination: EntityTableShellPaginationProps;
   /** On mobile, sizes the shell to the remaining viewport height below the table top. Disabled while column filters are visible. Defaults to true. */
   fillAvailableHeight?: boolean;
+  /** Opens the row's primary action when the user clicks anywhere on the row (except the actions column). */
+  onRowClick?: (row: TData) => void;
 }
 
 const MOBILE_TABLE_ROWS_MIN_VISIBLE = 10;
@@ -181,6 +183,7 @@ function EntityTableShell<TData extends object>({
   noDataLabel,
   pagination,
   fillAvailableHeight = true,
+  onRowClick,
 }: EntityTableShellProps<TData>): ReactElement {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -698,7 +701,12 @@ function EntityTableShell<TData extends object>({
                 pagedRows.map((row) => {
                   const visibleCells = row.getVisibleCells();
                   return (
-                    <TableRow key={row.id} hover>
+                    <TableRow
+                      key={row.id}
+                      hover
+                      onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+                      className={onRowClick ? styles.clickableRow : undefined}
+                    >
                       {shellVisibleLeafColumns.map((column) => {
                         const cell = visibleCells.find((c) => c.column.id === column.id);
                         if (!cell) {
@@ -715,6 +723,7 @@ function EntityTableShell<TData extends object>({
                             key={cell.id}
                             align="center"
                             className={isActionsColumn ? styles.actionsColumnCell : undefined}
+                            onClick={isActionsColumn ? (event) => event.stopPropagation() : undefined}
                             sx={{
                               minWidth: 0,
                               overflow: "hidden",

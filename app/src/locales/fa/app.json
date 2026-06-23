@@ -33,7 +33,8 @@
             "paymentStatusChange": "تغییر وضعیت پرداخت‌شده",
             "systemSettingEdit": "ویرایش تنظیمات سامانه",
             "profileEdit": "ویرایش اطلاعات کاربری",
-            "profilePassword": "تغییر گذرواژه"
+            "profilePassword": "تغییر گذرواژه",
+            "landing": "نگین هیل"
         }
     }
 }

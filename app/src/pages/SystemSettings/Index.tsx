@@ -515,6 +515,9 @@ const SystemSettingsIndex = (): ReactElement => {
         noDataLabel={error ? t("errors.general.loadData") : undefined}
         hasActiveFilters={hasAppliedFilters}
         pagination={pagination}
+        onRowClick={(row) =>
+          navigate(`${APP_SHELL_ROUTES.moreSystemSettings}/edit/${row.id}`)
+        }
       />
       <SystemSettingEditDialog
         open={editDialogOpen}

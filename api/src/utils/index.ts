@@ -1,3 +1,4 @@
+export * from "./infrastructure-connection-error.util";
 export * from "./mongodb-error.util";
 export * from "./common.util";
 export * from "./graphql-context.util";

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactElement } from "re
 
 import StarRating from "../../shared/rating/StarRating";
 import { resolveFileAccessUrl } from "../../utils/fileAccessUrl.util";
+import { resolveAvatarInitial } from "../../utils/storedUser.util";
 import { formatRelativeTimeLabel } from "../../utilities/relative-time.util";
 import {
   COURSE_REVIEW_COMMENT_PREVIEW_LIMIT,
@@ -144,7 +145,7 @@ const CourseReviewAdminCard = ({
         <div className={styles.reviewCardTitleBlock}>
           <div className={styles.reviewAdminAvatarColumn}>
             <Avatar src={avatarUrl ?? undefined} className={styles.reviewAdminAvatar}>
-              {authorLabel.charAt(0)}
+              {resolveAvatarInitial(authorLabel)}
             </Avatar>
             <CourseReviewModerationSelect
               value={review.moderation.visibility}

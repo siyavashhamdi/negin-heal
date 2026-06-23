@@ -24,6 +24,7 @@ import Support from "../pages/Support/Index";
 import SupportTicketsIndex from "../pages/Support/TicketsIndex";
 import UsersManagementIndex from "../pages/UsersManagement/Index";
 import UnderConstruction from "../pages/UnderConstruction/UnderConstruction";
+import Landing from "../pages/Landing/Landing";
 import { APP_SHELL_ROUTES } from "./app-shell-routes";
 import { API_CONFIG } from "../config";
 
@@ -81,6 +82,7 @@ const DashboardAppRoutesContent = (): ReactElement => {
       <Route path={`${APP_SHELL_ROUTES.courses}/edit/:courseId/max`} element={<CoursesIndex />} />
       <Route path={`${APP_SHELL_ROUTES.courses}/:courseId/max`} element={<CourseDetail />} />
       <Route path={`${APP_SHELL_ROUTES.users}/*`} element={wrapProtected(<UsersManagementIndex />)} />
+      <Route path={APP_SHELL_ROUTES.landing} element={<Landing />} />
       <Route
         path={APP_SHELL_ROUTES.home}
         element={

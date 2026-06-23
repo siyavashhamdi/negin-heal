@@ -1,5 +1,13 @@
-import { useEffect, useRef, type DragEvent, type ReactElement } from "react";
 import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type DragEvent,
+  type ReactElement,
+} from "react";
+import {
+  Box,
   Button,
   Divider,
   FormControl,
@@ -9,6 +17,7 @@ import {
   InputLabel,
   MenuItem,
   Paper,
+  Popover,
   Select,
   Switch,
   TextField,
@@ -18,7 +27,10 @@ import { OverflowTooltip } from "../../../shared/OverflowTooltip";
 import { MULTILINE_TEXTAREA_MIN_ROWS, MULTILINE_TEXTAREA_MAX_ROWS } from "../../../constants/multilineTextarea.constants";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
+import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
+import { useMobileAppLayout } from "../../../hooks/useMobileAppLayout";
 import ItemsSection from "./ItemsSection";
+import { getChapterVisibleAfterOrderWarnings } from "../course-form-validation.util";
 import { setDragTransferData } from "./reorder-drag.util";
 import type {
   DraftChapter,
@@ -58,6 +70,75 @@ type ChaptersSectionProps = {
   readonly uploadProgressByFieldId?: Readonly<Record<string, UploadProgressEntry>>;
 };
 
+type VisibleAfterOrderWarningHintProps = {
+  readonly warnings: readonly string[];
+};
+
+function VisibleAfterOrderWarningHint({
+  warnings,
+}: VisibleAfterOrderWarningHintProps): ReactElement {
+  const isMobile = useMobileAppLayout();
+  const [open, setOpen] = useState(false);
+  const anchorRef = useRef<HTMLButtonElement>(null);
+
+  const handleOpen = (): void => {
+    setOpen(true);
+  };
+
+  const handleClose = (): void => {
+    setOpen(false);
+  };
+
+  const handleToggle = (): void => {
+    setOpen((previousOpen) => !previousOpen);
+  };
+
+  return (
+    <>
+      <IconButton
+        ref={anchorRef}
+        size="small"
+        color="warning"
+        aria-label="هشدار ترتیب نمایش فصل‌ها"
+        className={styles.warningIconButton}
+        onClick={isMobile ? handleToggle : undefined}
+        onMouseEnter={isMobile ? undefined : handleOpen}
+        onMouseLeave={isMobile ? undefined : handleClose}
+      >
+        <WarningAmberRoundedIcon fontSize="small" />
+      </IconButton>
+      <Popover
+        open={open}
+        anchorEl={anchorRef.current}
+        onClose={handleClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        transformOrigin={{ vertical: "top", horizontal: "center" }}
+        disableRestoreFocus
+        slotProps={{
+          paper: {
+            className: styles.warningPopoverPaper,
+            onMouseEnter: isMobile ? undefined : handleOpen,
+            onMouseLeave: isMobile ? undefined : handleClose,
+          },
+        }}
+      >
+        <Box className={styles.warningPopoverContent}>
+          <Typography variant="body2" className={styles.warningPopoverTitle}>
+            ترتیب «نمایش بعد از» با ترتیب فصل‌ها همخوانی ندارد:
+          </Typography>
+          <Box component="ul" className={styles.warningPopoverList}>
+            {warnings.map((warning, index) => (
+              <Box component="li" key={`${index}-${warning}`}>
+                {warning}
+              </Box>
+            ))}
+          </Box>
+        </Box>
+      </Popover>
+    </>
+  );
+}
+
 const ChaptersSection = ({
   chapters,
   activeChapter,
@@ -80,6 +161,10 @@ const ChaptersSection = ({
   uploadProgressByFieldId = {},
 }: ChaptersSectionProps): ReactElement => {
   const chapterStepsRailRef = useRef<HTMLDivElement>(null);
+  const visibleAfterOrderWarnings = useMemo(
+    () => getChapterVisibleAfterOrderWarnings(chapters),
+    [chapters],
+  );
 
   useEffect(() => {
     const scrollActiveChapterStepIntoView = (): void => {
@@ -142,7 +227,12 @@ const ChaptersSection = ({
   return (
     <section className={styles.section}>
       <div className={styles.sectionHead}>
-        <Typography className={styles.sectionTitle}>فصل‌ها</Typography>
+        <div className={styles.sectionTitleRow}>
+          <Typography className={styles.sectionTitle}>فصل‌ها</Typography>
+          {visibleAfterOrderWarnings.length > 0 ? (
+            <VisibleAfterOrderWarningHint warnings={visibleAfterOrderWarnings} />
+          ) : null}
+        </div>
         <Button
           variant="outlined"
           size="small"

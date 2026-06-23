@@ -1,3 +1,11 @@
+@use "../../../styles/variables" as variables;
+
 .tabularNums {
   font-variant-numeric: tabular-nums;
+}
+
+.latinText {
+  direction: ltr;
+  font-family: variables.$font-family-latin !important;
+  text-align: center;
 }

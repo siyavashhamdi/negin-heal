@@ -53,6 +53,7 @@ import {
   resolveFileAccessUrl,
   type FileAccessUrl,
 } from "../../utils/fileAccessUrl.util";
+import { resolveAvatarInitial } from "../../utils/storedUser.util";
 import { hasFormChanges } from "../../utils/formChange.util";
 import { MULTILINE_TEXTAREA_MIN_ROWS, MULTILINE_TEXTAREA_MAX_ROWS } from "../../constants/multilineTextarea.constants";
 import { uploadFile } from "../../utils/fileUpload.util";
@@ -320,7 +321,7 @@ function UserAvatarCell({
   readonly displayName: string;
 }): ReactElement {
   const resolvedUrl = resolveFileAccessUrl(avatarAccessUrl);
-  const initial = displayName.trim().slice(0, 1) || "?";
+  const initial = resolveAvatarInitial(displayName);
 
   return (
     <Avatar
@@ -609,7 +610,7 @@ const UsersManagementList = (): ReactElement => {
         accessorKey: "username",
         header: t("table.pages.usersManagement.columns.username"),
         cell: (info) => (
-          <Typography variant="body2" fontWeight={600}>
+          <Typography variant="body2" fontWeight={600} className={crudPrimitives.latinText}>
             {orEmpty(info.getValue() as string)}
           </Typography>
         ),
@@ -618,7 +619,7 @@ const UsersManagementList = (): ReactElement => {
         accessorKey: "email",
         header: t("table.pages.usersManagement.columns.email"),
         cell: (info) => (
-          <Typography variant="body2" className={crudPrimitives.tabularNums}>
+          <Typography variant="body2" className={crudPrimitives.latinText}>
             {orEmpty(info.getValue() as string)}
           </Typography>
         ),
@@ -786,7 +787,11 @@ const UsersManagementList = (): ReactElement => {
           key === "phoneNumber"
             ? { ...latinIdentityFieldInputProps, inputMode: "tel", className: undefined }
             : key === "username" || key === "email"
-              ? { ...latinIdentityFieldInputProps, inputMode: key === "email" ? "email" : "text" }
+              ? {
+                  ...latinIdentityFieldInputProps,
+                  className: crudPrimitives.latinText,
+                  inputMode: key === "email" ? "email" : "text",
+                }
               : undefined
         }
         InputProps={{
@@ -1191,6 +1196,7 @@ const UsersManagementList = (): ReactElement => {
         noDataLabel={error ? t("errors.general.loadData") : undefined}
         hasActiveFilters={hasAppliedFilters}
         pagination={pagination}
+        onRowClick={(row) => navigate(`${APP_SHELL_ROUTES.users}/edit/${row.id}`)}
       />
 
       <EntityModalShell

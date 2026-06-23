@@ -1368,6 +1368,7 @@ const PaymentsList = (): ReactElement => {
         noDataLabel={error ? t("errors.general.loadData") : undefined}
         hasActiveFilters={hasAppliedFilters}
         pagination={pagination}
+        onRowClick={(row) => navigate(`${APP_SHELL_ROUTES.payments}/${row.id}`)}
       />
 
       <EntityModalShell

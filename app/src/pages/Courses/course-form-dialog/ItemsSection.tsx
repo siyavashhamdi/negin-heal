@@ -201,7 +201,7 @@ const ItemsSection = ({
                             }
                             accept="*/*"
                             allowedFormatsLabel="فرمت مجاز: همه"
-                            maxSizeLabel="حداکثر: ۵۰MB"
+                            maxSizeLabel="حداکثر: ۵۰ مگابایت"
                             maxSizeBytes={FILE_UPLOAD_POLICY_MAX_SIZE_BYTES.COURSE_ITEM}
                             dropTitle="انتخاب فایل آیتم"
                             mobileDropTitle="انتخاب فایل آیتم"

@@ -45,6 +45,11 @@ export function resolveStoredUserDisplayName(
   return user.username || fallback;
 }
 
+export function resolveAvatarInitial(displayName: string, fallback = "?"): string {
+  const initial = displayName.trim().slice(0, 1);
+  return initial ? initial.toLocaleUpperCase() : fallback;
+}
+
 export function resolveMeUserDisplayName(
   meUser: MeDisplayNameLike | null | undefined,
   fallback = "",

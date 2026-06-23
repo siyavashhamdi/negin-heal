@@ -23,6 +23,7 @@ export const APP_SHELL_ROUTES = {
   supportFaq: "/support/faq",
   supportTickets: "/support/tickets",
   users: "/users",
+  landing: "/landing",
   home: "/",
 } as const;
 

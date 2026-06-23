@@ -1,0 +1,1265 @@
+@use "../../../styles/variables" as variables;
+@use "../../../styles/mixins" as mixins;
+
+// ============================================
+// Landing page — feminine wellness marketing
+// ============================================
+
+.page {
+  position: relative;
+  min-height: 100dvh;
+  direction: rtl;
+  overflow-x: clip;
+  background:
+    radial-gradient(
+      ellipse 80% 50% at 15% 0%,
+      color-mix(in srgb, var(--app-layout-glow-2) 16%, transparent) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 70% 45% at 90% 10%,
+      color-mix(in srgb, variables.$color-primary-light 14%, transparent) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse 60% 40% at 50% 100%,
+      color-mix(in srgb, variables.$color-success-light 10%, transparent) 0%,
+      transparent 45%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--app-surface-bg) 96%, #fdf2f8) 0%,
+      var(--app-surface-bg) 40%,
+      color-mix(in srgb, var(--app-surface-bg) 94%, #f5f3ff) 100%
+    );
+}
+
+// --- Ambient decorations ---
+
+.ambientGlow,
+.orbOne,
+.orbTwo,
+.orbThree {
+  position: fixed;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ambientGlow {
+  inset: -30%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, variables.$color-primary-main 10%, transparent),
+    transparent 65%
+  );
+  animation: ambientPulse 10s ease-in-out infinite;
+}
+
+.orbOne {
+  width: 28rem;
+  height: 28rem;
+  top: -5%;
+  right: -8%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, variables.$color-secondary-main 20%, transparent),
+    transparent 70%
+  );
+  filter: blur(2rem);
+  animation: floatOrb 14s ease-in-out infinite;
+}
+
+.orbTwo {
+  width: 22rem;
+  height: 22rem;
+  bottom: 15%;
+  left: -6%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, variables.$color-primary-main 18%, transparent),
+    transparent 68%
+  );
+  filter: blur(1.75rem);
+  animation: floatOrb 11s ease-in-out infinite reverse;
+}
+
+.orbThree {
+  width: 16rem;
+  height: 16rem;
+  top: 45%;
+  left: 55%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, variables.$color-success-main 14%, transparent),
+    transparent 72%
+  );
+  filter: blur(1.5rem);
+  animation: floatOrb 9s ease-in-out infinite 1s;
+}
+
+.sparkleField,
+.petalField {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.sparkle {
+  position: absolute;
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, variables.$color-primary-light 80%, white);
+  box-shadow: 0 0 0.5rem color-mix(in srgb, variables.$color-primary-light 60%, transparent);
+  opacity: 0;
+  animation: sparkleDrift 8s ease-in-out infinite;
+  animation-delay: calc(var(--i) * 0.65s);
+
+  @for $i from 0 through 11 {
+    &:nth-child(#{$i + 1}) {
+      top: calc(8% + #{$i * 7.5%});
+      right: calc(5% + #{($i % 4) * 22%});
+    }
+  }
+}
+
+.petal {
+  position: absolute;
+  width: 0.75rem;
+  height: 1.1rem;
+  border-radius: 50% 50% 50% 0;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, variables.$color-primary-light 55%, transparent),
+    color-mix(in srgb, variables.$color-secondary-light 40%, transparent)
+  );
+  opacity: 0;
+  animation: petalFall 16s linear infinite;
+  animation-delay: calc(var(--i) * 2.5s);
+
+  @for $i from 0 through 5 {
+    &:nth-child(#{$i + 1}) {
+      right: calc(10% + #{$i * 15%});
+    }
+  }
+}
+
+// --- Header ---
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: variables.$spacing-1 variables.$spacing-2;
+  transition:
+    background-color 0.35s ease,
+    box-shadow 0.35s ease,
+    backdrop-filter 0.35s ease;
+}
+
+.headerScrolled {
+  background: color-mix(in srgb, var(--app-surface-bg) 82%, transparent);
+  backdrop-filter: blur(1rem);
+  box-shadow: 0 0.25rem 1.5rem color-mix(in srgb, variables.$color-primary-main 8%, transparent);
+}
+
+.headerInner {
+  max-width: 75rem;
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: variables.$spacing-2;
+}
+
+.brandLink {
+  display: flex;
+  align-items: center;
+  gap: variables.$spacing-1;
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+}
+
+.brandLogo {
+  width: 2.75rem;
+  height: 2.75rem;
+  object-fit: contain;
+  border-radius: variables.$brand-logo-radius;
+  filter: drop-shadow(0 0.35rem 0.75rem color-mix(in srgb, variables.$color-primary-main 20%, transparent));
+  transition: transform 0.3s ease;
+
+  .brandLink:hover & {
+    transform: scale(1.05) rotate(-3deg);
+  }
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.brandName {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.brandTagline {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.desktopNav {
+  display: none;
+  align-items: center;
+  gap: 0.25rem;
+
+  @include mixins.respond-to(md) {
+    display: flex;
+  }
+}
+
+.navLink {
+  appearance: none;
+  border: none;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  padding: 0.5rem 0.85rem;
+  border-radius: 999px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
+
+  &:hover {
+    color: variables.$color-primary-main;
+    background: color-mix(in srgb, variables.$color-primary-main 8%, transparent);
+  }
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.iconButton {
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 70%, transparent) !important;
+  background: color-mix(in srgb, var(--app-surface-bg) 70%, transparent) !important;
+  backdrop-filter: blur(0.5rem);
+}
+
+.navGhostButton {
+  display: none !important;
+  text-transform: none !important;
+  font-weight: 500 !important;
+  color: var(--text-primary) !important;
+
+  @include mixins.respond-to(sm) {
+    display: inline-flex !important;
+  }
+}
+
+.navPrimaryButton {
+  display: none !important;
+  text-transform: none !important;
+  font-weight: 600 !important;
+  border-radius: 999px !important;
+  padding-inline: 1.25rem !important;
+  background: linear-gradient(
+    135deg,
+    variables.$color-gradient-start,
+    variables.$color-gradient-mid
+  ) !important;
+  box-shadow: 0 0.5rem 1.25rem color-mix(in srgb, variables.$color-primary-main 28%, transparent) !important;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease !important;
+
+  &:hover {
+    transform: translateY(-0.125rem);
+    box-shadow: 0 0.75rem 1.5rem color-mix(in srgb, variables.$color-primary-main 35%, transparent) !important;
+  }
+
+  @include mixins.respond-to(sm) {
+    display: inline-flex !important;
+  }
+}
+
+.mobileMenuButton {
+  display: inline-flex !important;
+
+  @include mixins.respond-to(md) {
+    display: none !important;
+  }
+}
+
+.mobileDrawer {
+  background: var(--app-surface-bg) !important;
+  border-inline-end: 0.0625rem solid var(--app-surface-border) !important;
+}
+
+.mobileNavList {
+  padding-top: variables.$spacing-2;
+  min-width: 16rem;
+}
+
+// --- Main content ---
+
+.main {
+  position: relative;
+  z-index: 1;
+}
+
+// --- Hero ---
+
+.hero {
+  max-width: 75rem;
+  margin-inline: auto;
+  padding: clamp(2rem, 6vw, 4.5rem) variables.$spacing-2 clamp(3rem, 8vw, 5rem);
+  display: grid;
+  gap: variables.$spacing-4;
+  align-items: center;
+
+  @include mixins.respond-to(lg) {
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: variables.$spacing-3;
+  }
+}
+
+.heroContent {
+  display: flex;
+  flex-direction: column;
+  gap: variables.$spacing-2;
+}
+
+.heroEyebrow {
+  font-size: 0.8rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: variables.$color-primary-main;
+  font-weight: 600;
+}
+
+.heroTitle {
+  font-weight: 800 !important;
+  font-size: clamp(2rem, 5vw, 3.25rem) !important;
+  line-height: 1.25 !important;
+  background: linear-gradient(
+    135deg,
+    var(--text-primary) 0%,
+    variables.$color-primary-main 45%,
+    variables.$color-secondary-main 85%
+  );
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% auto;
+  animation: gradientShift 6s ease-in-out infinite;
+}
+
+.heroSubtitle {
+  max-width: 36rem;
+  color: var(--text-secondary) !important;
+  line-height: 1.9 !important;
+  font-size: 1.05rem !important;
+}
+
+.heroCtas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: variables.$spacing-1;
+  margin-top: variables.$spacing-1;
+}
+
+.heroPrimaryButton {
+  text-transform: none !important;
+  font-weight: 600 !important;
+  border-radius: 999px !important;
+  padding: 0.75rem 1.75rem !important;
+  background: linear-gradient(
+    135deg,
+    variables.$color-gradient-start,
+    variables.$color-gradient-mid,
+    variables.$color-gradient-end
+  ) !important;
+  background-size: 200% auto !important;
+  animation: gradientShift 5s ease infinite !important;
+  box-shadow: 0 0.75rem 2rem color-mix(in srgb, variables.$color-primary-main 30%, transparent) !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+
+  &:hover {
+    transform: translateY(-0.15rem) scale(1.02);
+    box-shadow: 0 1rem 2.5rem color-mix(in srgb, variables.$color-primary-main 38%, transparent) !important;
+  }
+}
+
+.heroSecondaryButton {
+  text-transform: none !important;
+  font-weight: 500 !important;
+  border-radius: 999px !important;
+  padding: 0.75rem 1.75rem !important;
+  border-color: color-mix(in srgb, variables.$color-primary-main 40%, transparent) !important;
+  color: variables.$color-primary-main !important;
+  transition:
+    background-color 0.25s ease,
+    transform 0.25s ease !important;
+
+  &:hover {
+    background: color-mix(in srgb, variables.$color-primary-main 8%, transparent) !important;
+    transform: translateY(-0.1rem);
+  }
+}
+
+.heroStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: variables.$spacing-1 variables.$spacing-2;
+  margin-top: variables.$spacing-1;
+}
+
+.heroStat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--app-surface-bg) 75%, transparent);
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 60%, transparent);
+  backdrop-filter: blur(0.5rem);
+}
+
+.heroStatDot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, variables.$color-primary-main, variables.$color-secondary-main);
+  animation: dotPulse 2.5s ease-in-out infinite;
+}
+
+.heroVisual {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.heroCard {
+  position: relative;
+  width: min(100%, 22rem);
+  aspect-ratio: 1;
+  border-radius: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: variables.$spacing-2;
+  padding: variables.$spacing-3;
+  border: 0.0625rem solid color-mix(in srgb, variables.$color-primary-light 35%, transparent);
+  background:
+    radial-gradient(circle at 30% 20%, color-mix(in srgb, variables.$color-primary-light 18%, transparent), transparent 55%),
+    radial-gradient(circle at 70% 80%, color-mix(in srgb, variables.$color-secondary-light 14%, transparent), transparent 50%),
+    color-mix(in srgb, var(--app-surface-bg) 80%, transparent);
+  box-shadow:
+    0 2rem 4rem color-mix(in srgb, variables.$color-primary-main 16%, transparent),
+    inset 0 0.0625rem 0 color-mix(in srgb, #ffffff 25%, transparent);
+  backdrop-filter: blur(1.25rem);
+  animation: heroCardFloat 5s ease-in-out infinite;
+}
+
+.heroCardGlow {
+  position: absolute;
+  inset: -15%;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, variables.$color-primary-main 12%, transparent), transparent 65%);
+  animation: ambientPulse 6s ease-in-out infinite;
+  z-index: -1;
+}
+
+.heroCardLogo {
+  width: 5.5rem;
+  height: 5.5rem;
+  object-fit: contain;
+  border-radius: variables.$brand-logo-radius;
+  filter: drop-shadow(0 1rem 2rem color-mix(in srgb, variables.$color-primary-main 25%, transparent));
+  animation: logoGlow 4s ease-in-out infinite;
+}
+
+.heroCardBadge {
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: variables.$color-primary-dark;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, variables.$color-accent-soft-bg 70%, transparent);
+  border: 0.0625rem solid color-mix(in srgb, variables.$color-accent-soft-border 50%, transparent);
+}
+
+.heroCardRings {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.heroRing {
+  position: absolute;
+  border-radius: 50%;
+  border: 0.0625rem solid color-mix(in srgb, variables.$color-primary-light 25%, transparent);
+
+  &:nth-child(1) {
+    width: 85%;
+    height: 85%;
+    animation: ringPulse 4s ease-in-out infinite;
+  }
+
+  &:nth-child(2) {
+    width: 105%;
+    height: 105%;
+    animation: ringPulse 4s ease-in-out infinite 0.6s;
+  }
+
+  &:nth-child(3) {
+    width: 125%;
+    height: 125%;
+    animation: ringPulse 4s ease-in-out infinite 1.2s;
+  }
+}
+
+// --- Section shared ---
+
+.sectionHeader {
+  margin-bottom: variables.$spacing-3;
+}
+
+.sectionHeaderCentered {
+  text-align: center;
+  max-width: 40rem;
+  margin-inline: auto;
+}
+
+.sectionEyebrow {
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: variables.$color-secondary-main;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.sectionTitle {
+  font-weight: 800 !important;
+  line-height: 1.35 !important;
+  color: var(--text-primary) !important;
+  margin-bottom: 0.75rem !important;
+}
+
+.sectionSubtitle {
+  color: var(--text-secondary) !important;
+  line-height: 1.85 !important;
+}
+
+// --- Scroll reveal ---
+
+.reveal {
+  opacity: 0;
+  transform: translateY(2rem);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.revealVisible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+// --- Hero entrance ---
+
+.fadeInUp {
+  opacity: 0;
+  animation: fadeInUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.fadeInUpDelay1 {
+  animation-delay: 0.12s;
+}
+
+.fadeInUpDelay2 {
+  animation-delay: 0.24s;
+}
+
+.fadeInUpDelay3 {
+  animation-delay: 0.36s;
+}
+
+.fadeInUpDelay4 {
+  animation-delay: 0.48s;
+}
+
+// --- Features ---
+
+.featuresSection,
+.stepsSection,
+.coursesSection,
+.trustSection,
+.ctaSection {
+  max-width: 75rem;
+  margin-inline: auto;
+  padding: clamp(2.5rem, 6vw, 4rem) variables.$spacing-2;
+}
+
+.featureGrid {
+  display: grid;
+  gap: variables.$spacing-2;
+  grid-template-columns: 1fr;
+
+  @include mixins.respond-to(sm) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @include mixins.respond-to(lg) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.featureCard {
+  padding: variables.$spacing-2;
+  border-radius: variables.$border-radius-lg;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 65%, transparent);
+  background: color-mix(in srgb, var(--app-surface-bg) 78%, transparent);
+  backdrop-filter: blur(0.75rem);
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s ease,
+    border-color 0.35s ease;
+  animation: cardStagger 0.6s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: calc(var(--card-index, 0) * 0.1s + 0.2s);
+
+  &:hover {
+    transform: translateY(-0.35rem);
+    border-color: color-mix(in srgb, variables.$color-primary-light 45%, transparent);
+    box-shadow: 0 1.25rem 2.5rem color-mix(in srgb, variables.$color-primary-main 12%, transparent);
+  }
+}
+
+.featureIcon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 1rem;
+  display: grid;
+  place-items: center;
+  margin-bottom: variables.$spacing-1;
+  color: variables.$color-primary-main;
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, variables.$color-primary-main 14%, transparent),
+    color-mix(in srgb, variables.$color-secondary-main 10%, transparent)
+  );
+  transition: transform 0.3s ease;
+
+  .featureCard:hover & {
+    transform: scale(1.08) rotate(-4deg);
+  }
+
+  :global(.MuiSvgIcon-root) {
+    font-size: 1.5rem;
+  }
+}
+
+.featureTitle {
+  font-weight: 700 !important;
+  margin-bottom: 0.5rem !important;
+  color: var(--text-primary) !important;
+}
+
+.featureDescription {
+  color: var(--text-secondary) !important;
+  line-height: 1.75 !important;
+}
+
+// --- Steps ---
+
+.stepsTrack {
+  display: grid;
+  gap: variables.$spacing-2;
+  position: relative;
+
+  @include mixins.respond-to(md) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  &::before {
+    content: "";
+    display: none;
+    position: absolute;
+    top: 3.5rem;
+    right: 16%;
+    left: 16%;
+    height: 0.125rem;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, variables.$color-primary-light 50%, transparent),
+      color-mix(in srgb, variables.$color-secondary-light 50%, transparent),
+      transparent
+    );
+
+    @include mixins.respond-to(md) {
+      display: block;
+    }
+  }
+}
+
+.stepCard {
+  position: relative;
+  text-align: center;
+  padding: variables.$spacing-2 variables.$spacing-1;
+  border-radius: variables.$border-radius-lg;
+  background: color-mix(in srgb, var(--app-surface-bg) 70%, transparent);
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 55%, transparent);
+  transition: transform 0.3s ease;
+  animation: cardStagger 0.6s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: calc(var(--card-index, 0) * 0.15s + 0.15s);
+
+  &:hover {
+    transform: translateY(-0.25rem);
+  }
+}
+
+.stepNumber {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: variables.$color-primary-main;
+  margin-bottom: 0.5rem;
+}
+
+.stepIcon {
+  width: 3.5rem;
+  height: 3.5rem;
+  margin-inline: auto;
+  margin-bottom: variables.$spacing-1;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(135deg, variables.$color-primary-main, variables.$color-secondary-main);
+  box-shadow: 0 0.5rem 1.5rem color-mix(in srgb, variables.$color-primary-main 25%, transparent);
+  animation: iconPulse 3s ease-in-out infinite;
+  animation-delay: calc(var(--card-index, 0) * 0.3s);
+
+  :global(.MuiSvgIcon-root) {
+    font-size: 1.5rem;
+  }
+}
+
+.stepTitle {
+  font-weight: 700 !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.stepDescription {
+  color: var(--text-secondary) !important;
+  line-height: 1.75 !important;
+  max-width: 16rem;
+  margin-inline: auto;
+}
+
+// --- Courses ---
+
+.courseGrid {
+  display: grid;
+  gap: variables.$spacing-2;
+  grid-template-columns: 1fr;
+
+  @include mixins.respond-to(sm) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @include mixins.respond-to(lg) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.courseSkeleton {
+  aspect-ratio: 0.72;
+  border-radius: 1.15rem !important;
+  background: color-mix(in srgb, var(--app-surface-border) 40%, transparent) !important;
+}
+
+.coursesEmpty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--text-secondary);
+  padding: variables.$spacing-3;
+}
+
+.coursesCta {
+  display: flex;
+  justify-content: center;
+  margin-top: variables.$spacing-3;
+}
+
+.viewAllButton {
+  text-transform: none !important;
+  font-weight: 500 !important;
+  border-radius: 999px !important;
+  padding-inline: 2rem !important;
+  border-color: color-mix(in srgb, variables.$color-primary-main 35%, transparent) !important;
+  color: variables.$color-primary-main !important;
+  transition: all 0.25s ease !important;
+
+  &:hover {
+    background: color-mix(in srgb, variables.$color-primary-main 8%, transparent) !important;
+    transform: translateY(-0.1rem);
+  }
+}
+
+// --- Trust ---
+
+.trustGrid {
+  display: grid;
+  gap: variables.$spacing-2;
+  grid-template-columns: 1fr;
+
+  @include mixins.respond-to(md) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.trustCard {
+  padding: variables.$spacing-2;
+  border-radius: variables.$border-radius-lg;
+  text-align: center;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 60%, transparent);
+  background: color-mix(in srgb, var(--app-surface-bg) 75%, transparent);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: cardStagger 0.6s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: calc(var(--card-index, 0) * 0.12s + 0.1s);
+
+  &:hover {
+    transform: translateY(-0.2rem);
+    box-shadow: 0 1rem 2rem color-mix(in srgb, variables.$color-secondary-main 10%, transparent);
+  }
+
+  h3 {
+    font-weight: 700;
+    margin: 0.75rem 0 0.5rem;
+    color: var(--text-primary);
+  }
+
+  p {
+    color: var(--text-secondary);
+    line-height: 1.75;
+    margin: 0;
+  }
+}
+
+.trustIcon {
+  width: 3rem;
+  height: 3rem;
+  margin-inline: auto;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: variables.$color-secondary-main;
+  background: color-mix(in srgb, variables.$color-secondary-main 12%, transparent);
+
+  :global(.MuiSvgIcon-root) {
+    font-size: 1.4rem;
+  }
+}
+
+.enamadWrap {
+  display: flex;
+  justify-content: center;
+  margin-top: variables.$spacing-3;
+  padding-top: variables.$spacing-2;
+}
+
+// --- CTA banner ---
+
+.ctaSection {
+  padding-bottom: clamp(3rem, 8vw, 5rem);
+}
+
+.ctaCard {
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  padding: clamp(2rem, 5vw, 3.5rem) variables.$spacing-2;
+  border-radius: 1.5rem;
+  border: 0.0625rem solid color-mix(in srgb, variables.$color-primary-light 30%, transparent);
+  background:
+    radial-gradient(ellipse at 20% 50%, color-mix(in srgb, variables.$color-primary-light 20%, transparent), transparent 55%),
+    radial-gradient(ellipse at 80% 50%, color-mix(in srgb, variables.$color-secondary-light 16%, transparent), transparent 50%),
+    color-mix(in srgb, var(--app-surface-bg) 85%, transparent);
+  box-shadow: 0 2rem 4rem color-mix(in srgb, variables.$color-primary-main 14%, transparent);
+}
+
+.ctaGlow {
+  position: absolute;
+  inset: -50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent,
+    color-mix(in srgb, variables.$color-primary-light 8%, transparent),
+    transparent,
+    color-mix(in srgb, variables.$color-secondary-light 8%, transparent),
+    transparent
+  );
+  animation: ctaRotate 12s linear infinite;
+  pointer-events: none;
+}
+
+.ctaTitle {
+  position: relative;
+  font-weight: 800 !important;
+  margin-bottom: 0.75rem !important;
+  background: linear-gradient(135deg, var(--text-primary), variables.$color-primary-main);
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.ctaSubtitle {
+  position: relative;
+  max-width: 32rem;
+  margin-inline: auto !important;
+  margin-bottom: variables.$spacing-2 !important;
+  color: var(--text-secondary) !important;
+  line-height: 1.85 !important;
+}
+
+.ctaButtons {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: variables.$spacing-1;
+}
+
+.ctaPrimaryButton {
+  text-transform: none !important;
+  font-weight: 600 !important;
+  border-radius: 999px !important;
+  padding: 0.75rem 2rem !important;
+  background: linear-gradient(135deg, variables.$color-gradient-start, variables.$color-gradient-mid) !important;
+  box-shadow: 0 0.75rem 2rem color-mix(in srgb, variables.$color-primary-main 28%, transparent) !important;
+  transition: transform 0.3s ease !important;
+
+  &:hover {
+    transform: translateY(-0.15rem) scale(1.02);
+  }
+}
+
+.ctaSecondaryButton {
+  text-transform: none !important;
+  font-weight: 500 !important;
+  border-radius: 999px !important;
+  padding: 0.75rem 2rem !important;
+  border-color: color-mix(in srgb, variables.$color-primary-main 40%, transparent) !important;
+  color: variables.$color-primary-main !important;
+  background: color-mix(in srgb, var(--app-surface-bg) 60%, transparent) !important;
+}
+
+// --- Footer ---
+
+.footer {
+  position: relative;
+  z-index: 1;
+  border-top: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 70%, transparent);
+  background: color-mix(in srgb, var(--app-surface-bg) 88%, transparent);
+  backdrop-filter: blur(0.75rem);
+  padding: variables.$spacing-3 variables.$spacing-2 variables.$spacing-2;
+}
+
+.footerInner {
+  max-width: 75rem;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: variables.$spacing-2;
+  text-align: center;
+}
+
+.footerBrand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.footerLogo {
+  width: 3rem;
+  height: 3rem;
+  object-fit: contain;
+  border-radius: variables.$brand-logo-radius;
+}
+
+.footerBrandName {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.footerTagline {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.footerLinks {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1.25rem;
+}
+
+.footerLink {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: variables.$color-primary-main;
+  }
+}
+
+.footerCopyright {
+  font-size: 0.8rem;
+  color: color-mix(in srgb, var(--text-secondary) 80%, transparent);
+}
+
+// --- Keyframes ---
+
+@keyframes ambientPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+@keyframes floatOrb {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(0, -1.5rem, 0);
+  }
+}
+
+@keyframes sparkleDrift {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+
+  20%,
+  80% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.2) translateY(-0.5rem);
+  }
+}
+
+@keyframes petalFall {
+  0% {
+    opacity: 0;
+    transform: translateY(-5vh) rotate(0deg);
+  }
+
+  10% {
+    opacity: 0.6;
+  }
+
+  90% {
+    opacity: 0.4;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(105vh) rotate(360deg);
+  }
+}
+
+@keyframes gradientShift {
+  0%,
+  100% {
+    background-position: 0% center;
+  }
+
+  50% {
+    background-position: 100% center;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(1.5rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes heroCardFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-0.75rem);
+  }
+}
+
+@keyframes logoGlow {
+  0%,
+  100% {
+    filter: drop-shadow(0 1rem 2rem color-mix(in srgb, variables.$color-primary-main 20%, transparent));
+  }
+
+  50% {
+    filter: drop-shadow(0 1.25rem 2.5rem color-mix(in srgb, variables.$color-primary-main 35%, transparent));
+  }
+}
+
+@keyframes ringPulse {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.6;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes dotPulse {
+  0%,
+  100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+}
+
+@keyframes iconPulse {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-0.3rem);
+  }
+}
+
+@keyframes cardStagger {
+  from {
+    opacity: 0;
+    transform: translateY(1.25rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ctaRotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// --- Reduced motion ---
+
+@media (prefers-reduced-motion: reduce) {
+  .ambientGlow,
+  .orbOne,
+  .orbTwo,
+  .orbThree,
+  .sparkle,
+  .petal,
+  .heroCard,
+  .heroCardLogo,
+  .heroRing,
+  .heroStatDot,
+  .stepIcon,
+  .ctaGlow,
+  .heroTitle,
+  .heroPrimaryButton {
+    animation: none !important;
+  }
+
+  .fadeInUp,
+  .reveal {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+
+  .featureCard,
+  .stepCard,
+  .trustCard {
+    animation: none;
+  }
+}
+
+@include mixins.respond-below(sm) {
+  .brandTagline {
+    display: none;
+  }
+
+  .heroVisual {
+    order: -1;
+  }
+
+  .heroCard {
+    width: min(100%, 16rem);
+  }
+}

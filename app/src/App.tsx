@@ -31,11 +31,12 @@ const AppShell = (): ReactElement => {
   const isLoginPage = location.pathname === APP_SHELL_ROUTES.login;
   const isResetPasswordPage = location.pathname === APP_SHELL_ROUTES.resetPassword;
   const isActivateAccountPage = location.pathname === APP_SHELL_ROUTES.activateAccount;
+  const isLandingPage = location.pathname === APP_SHELL_ROUTES.landing;
   const isUnderConstructionHome =
     API_CONFIG.UNDER_CONSTRUCTION && location.pathname === APP_SHELL_ROUTES.home;
   const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
 
-  if (isLoginPage || isResetPasswordPage || isActivateAccountPage || isUnderConstructionHome) {
+  if (isLoginPage || isResetPasswordPage || isActivateAccountPage || isLandingPage || isUnderConstructionHome) {
     return <DashboardAppRoutes />;
   }
 

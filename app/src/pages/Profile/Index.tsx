@@ -41,6 +41,7 @@ import { GENERAL_SUBSCRIPTION_UPDATE_TYPES } from "../../constants";
 import { isUserEmailVerified } from "../../constants/verification-status-subscription.constants";
 import { parseVerificationStatusSubscriptionPayload } from "../../utilities/verification-status-update.util";
 import {
+  resolveAvatarInitial,
   resolveMeUserDisplayName,
   resolveStoredUserDisplayName,
 } from "../../utils/storedUser.util";
@@ -238,7 +239,7 @@ const AuthenticatedProfile = (): ReactElement => {
     isProfileLoading || !profileUser
       ? resolveStoredUserDisplayName(authUser, "کاربر")
       : resolveMeUserDisplayName(profileUser, "کاربر");
-  const userInitial = displayName.trim().slice(0, 1) || "؟";
+  const userInitial = resolveAvatarInitial(displayName, "؟");
   const displayRoles = getProfileDisplayRoles(profileUser?.roles);
   const isAvatarUpdating = isAvatarUploading || isAvatarDeleting || updateProfileResult.loading;
   const hasAvatar = Boolean(avatarUrl);

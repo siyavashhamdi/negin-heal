@@ -9,7 +9,7 @@ import {
   type ReactElement,
 } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
-import { AddRounded as AddRoundedIcon } from "@mui/icons-material";
+import { AddRounded as AddRoundedIcon, DeleteRounded as DeleteRoundedIcon } from "@mui/icons-material";
 import {
   Checkbox,
   Chip,
@@ -364,6 +364,7 @@ const CouponsIndex = (): ReactElement => {
     errorMessage: t("pages.coupons.delete.error"),
     onSuccess: () => {
       setDeleteTarget(null);
+      closeDialog();
       navigate(APP_SHELL_ROUTES.moreCoupons);
       onRefresh();
     },
@@ -417,6 +418,12 @@ const CouponsIndex = (): ReactElement => {
 
   const openEditDialog = (record: CouponListRecord): void => {
     navigate(`${APP_SHELL_ROUTES.moreCoupons}/edit/${record.id}`);
+  };
+
+  const openDeleteFromEditDialog = (): void => {
+    if (editTarget) {
+      setDeleteTarget(editTarget);
+    }
   };
 
   const setFormField = <TKey extends keyof CouponFormState>(
@@ -491,23 +498,6 @@ const CouponsIndex = (): ReactElement => {
       },
     });
   };
-
-  useEffect(() => {
-    const couponRoutePrefix = `${APP_SHELL_ROUTES.moreCoupons}/`;
-    if (!location.pathname.startsWith(couponRoutePrefix)) {
-      return;
-    }
-
-    const routeSuffix = location.pathname.slice(couponRoutePrefix.length);
-    if (routeSuffix.startsWith("delete/")) {
-      const deleteId = routeSuffix.replace("delete/", "");
-      if (!deleteId) {
-        return;
-      }
-      const target = rows.find((row) => row.id === deleteId) ?? null;
-      setDeleteTarget(target);
-    }
-  }, [location.pathname, rows]);
 
   useEffect(() => {
     if (isCreateRoute) {
@@ -806,13 +796,7 @@ const CouponsIndex = (): ReactElement => {
         id: "actions",
         header: t("table.columns.actions"),
         cell: ({ row }) => (
-          <CrudRowActions
-            onEdit={() => openEditDialog(row.original)}
-            onDelete={() => {
-              setDeleteTarget(row.original);
-              navigate(`${APP_SHELL_ROUTES.moreCoupons}/delete/${row.original.id}`);
-            }}
-          />
+          <CrudRowActions onEdit={() => openEditDialog(row.original)} />
         ),
         enableSorting: false,
         enableHiding: false,
@@ -870,6 +854,7 @@ const CouponsIndex = (): ReactElement => {
         noDataLabel={error ? t("errors.general.loadData") : undefined}
         hasActiveFilters={hasAppliedFilters}
         pagination={pagination}
+        onRowClick={openEditDialog}
       />
 
       <EntityModalShell
@@ -904,6 +889,18 @@ const CouponsIndex = (): ReactElement => {
                 onClick: closeDialog,
                 disabled: isSaving,
               },
+              ...(dialogMode === "edit"
+                ? [
+                    {
+                      key: "delete",
+                      label: t("table.dataGrid.rowActions.delete"),
+                      onClick: openDeleteFromEditDialog,
+                      isDestructive: true,
+                      disabled: isSaving || deleteCouponResult.loading,
+                      icon: <DeleteRoundedIcon />,
+                    },
+                  ]
+                : []),
               {
                 key: "submit",
                 label: isSaving
@@ -1070,10 +1067,7 @@ const CouponsIndex = (): ReactElement => {
       <EntityDeleteDialog
         open={deleteTarget != null}
         entityTitle={deleteTarget?.title ?? t("pages.coupons.createEntityTitle")}
-        onCancel={() => {
-          setDeleteTarget(null);
-          navigate(APP_SHELL_ROUTES.moreCoupons);
-        }}
+        onCancel={() => setDeleteTarget(null)}
         onConfirm={handleConfirmDelete}
         loading={deleteCouponResult.loading}
       />

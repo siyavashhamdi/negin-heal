@@ -18,7 +18,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useThemeMode } from "../contexts/ThemeContext";
 import { BADGE_COUNT_QUERY } from "../graphql/queries/badgeCount.query";
 import { useMe } from "../hooks/useMe";
-import { resolveMeUserDisplayName, resolveStoredUserDisplayName } from "../utils/storedUser.util";
+import { resolveAvatarInitial, resolveMeUserDisplayName, resolveStoredUserDisplayName } from "../utils/storedUser.util";
 import { useSnackbar } from "../hooks/useSnackbar";
 import { useTranslation } from "../hooks/useTranslation";
 import {
@@ -419,7 +419,7 @@ export function MainLayout({
     const trimmed = name.trim();
     return {
       userDisplayName: name,
-      userInitial: trimmed.slice(0, 1) || "?",
+      userInitial: resolveAvatarInitial(trimmed),
     };
   }, [authUser, fallbackUser, user, userLoading]);
 

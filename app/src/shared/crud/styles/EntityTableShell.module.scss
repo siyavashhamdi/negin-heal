@@ -106,6 +106,10 @@
   user-select: none;
 }
 
+.clickableRow {
+  cursor: pointer;
+}
+
 .tableFilterCell {
   padding: variables.$spacing-1;
 

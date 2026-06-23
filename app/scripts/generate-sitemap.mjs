@@ -11,7 +11,8 @@ const DEFAULT_SITE_URL = "https://neginheal.ir";
 const COURSE_PAGE_SIZE = 100;
 
 const STATIC_ROUTES = [
-  { path: "/courses", changefreq: "daily", priority: "1.0" },
+  { path: "/landing", changefreq: "weekly", priority: "1.0" },
+  { path: "/courses", changefreq: "daily", priority: "0.9" },
   { path: "/support", changefreq: "weekly", priority: "0.8" },
   { path: "/support/faq", changefreq: "weekly", priority: "0.8" },
   { path: "/more/about", changefreq: "monthly", priority: "0.6" },

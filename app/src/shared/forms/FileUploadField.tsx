@@ -34,7 +34,10 @@ import {
   buildPdfEmbedUrl,
   type ExistingFilePreview,
 } from "../../utils/fileAccessUrl.util";
-import { validateSelectedUploadFile } from "../../utils/fileUploadValidation.util";
+import {
+  formatUploadFileSize,
+  validateSelectedUploadFile,
+} from "../../utils/fileUploadValidation.util";
 import { isEndUserRole } from "../../utils/authRole.util";
 import { useAuth } from "../../contexts/AuthContext";
 import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
@@ -96,16 +99,6 @@ interface FileUploadFieldProps {
   uploading?: boolean;
   uploadProgress?: number | null;
   uploadingLabel?: string;
-}
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  }
-  if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(1)} KB`;
-  }
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function isImageMimeType(mimeType: string): boolean {
@@ -774,7 +767,7 @@ const FileUploadField = ({
                         {previewSource.name}
                       </Typography>
                       <Typography variant="caption" className={styles.meta}>
-                        {formatFileSize(previewSource.sizeBytes)}
+                        {formatUploadFileSize(previewSource.sizeBytes)}
                       </Typography>
                     </Box>
                   ) : null}
