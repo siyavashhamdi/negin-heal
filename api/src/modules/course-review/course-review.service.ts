@@ -40,6 +40,7 @@ import { SortingOrder } from "../../common/pagination/input";
 import { buildSortOptions } from "../../common/pagination/utils";
 import { FileService, FileAccessUrlDescriptor } from "../file";
 import { resolveAvatarAccessUrl } from "../file/file-access-url.util";
+import { isCourseFree } from "../course/course-pricing.util";
 import {
   CourseReviewListGqlInput,
   CourseReviewModerationUpdateGqlInput,
@@ -171,11 +172,13 @@ export class CourseReviewService {
       throw new BadRequestException("User not found");
     }
 
-    const requiresPaidEnrollment = !isStaff || isStaffSupportSubmit;
+    const courseIsFree = isCourseFree(course);
+    const requiresPaidEnrollment =
+      (!isStaff || isStaffSupportSubmit) && !courseIsFree;
 
     if (!userCourse && requiresPaidEnrollment) {
       throw new BadRequestException(
-        "A paid course enrollment is required before submitting a review",
+        "برای ثبت نظر، ابتدا باید در این دورهٔ پولی ثبت‌نام کرده باشید.",
       );
     }
 

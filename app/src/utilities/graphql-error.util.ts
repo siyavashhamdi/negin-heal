@@ -154,6 +154,40 @@ function shouldPreferExceptionTranslation(code: string | undefined): boolean {
   return Boolean(code && !GENERIC_EXCEPTION_CODES.has(code));
 }
 
+function inferExceptionCodeFromMessage(message: string): string | undefined {
+  const normalized = message.trim().toLowerCase();
+  if (!normalized) {
+    return undefined;
+  }
+
+  if (normalized.includes("captcha has expired")) {
+    return "CAPTCHA_EXPIRED";
+  }
+
+  if (normalized.includes("captcha value is incorrect")) {
+    return "CAPTCHA_INVALID";
+  }
+
+  if (normalized.includes("captcha is required")) {
+    return "CAPTCHA_REQUIRED";
+  }
+
+  return undefined;
+}
+
+function resolveExceptionCode(
+  error?: RawGraphQLErrorItem,
+  backendMessage = "",
+): string | undefined {
+  const explicitCode =
+    error?.code || error?.extensions?.code || error?.extensions?.exception?.code;
+  if (explicitCode) {
+    return explicitCode;
+  }
+
+  return inferExceptionCodeFromMessage(backendMessage || error?.message || "");
+}
+
 function extractBackendGraphQLErrorMessage(
   error?: RawGraphQLErrorItem,
 ): string {
@@ -192,8 +226,7 @@ function resolveGraphQLErrorFieldMessage(
   error?: RawGraphQLErrorItem,
 ): string {
   const backendMessage = extractBackendGraphQLErrorMessage(error);
-  const exceptionCode =
-    error?.code || error?.extensions?.code || error?.extensions?.exception?.code;
+  const exceptionCode = resolveExceptionCode(error, backendMessage);
   const payload = (error?.payload ||
     error?.extensions?.payload ||
     error?.extensions?.exception?.payload) as Record<string, unknown> | undefined;
@@ -231,11 +264,13 @@ function resolveGraphQLErrorFieldMessage(
 
 function getGraphQLErrorCodeFromItem(
   error?: {
+    readonly message?: string;
     readonly code?: string;
     readonly extensions?: GraphQLErrorExtensions;
   },
 ): string | undefined {
-  return error?.code || error?.extensions?.code || error?.extensions?.exception?.code;
+  const backendMessage = extractBackendGraphQLErrorMessage(error);
+  return resolveExceptionCode(error, backendMessage);
 }
 
 export function extractGraphQLErrorCode(error: unknown): string | undefined {

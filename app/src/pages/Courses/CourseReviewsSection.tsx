@@ -23,6 +23,7 @@ type CourseReviewsSectionProps = {
   readonly canSubmitReview: boolean;
   readonly isReviewsSectionVisible: boolean;
   readonly isReviewSubmissionEnabled: boolean;
+  readonly isFree?: boolean;
 };
 
 function isOtherUserReview(
@@ -45,6 +46,7 @@ const CourseReviewsSection = ({
   canSubmitReview,
   isReviewsSectionVisible,
   isReviewSubmissionEnabled,
+  isFree = false,
 }: CourseReviewsSectionProps): ReactElement => {
   const { user, isAuthenticated } = useAuth();
   const isStaff = isStaffCourseReviewer(user?.roles);
@@ -134,7 +136,7 @@ const CourseReviewsSection = ({
           <Alert severity="info" className={styles.roleNotice}>
             امکان ثبت امتیاز و نظر جدید برای این دوره غیرفعال است.
           </Alert>
-        ) : !canSubmitReview && !isStaff ? (
+        ) : !canSubmitReview && !isStaff && !isFree ? (
           <Alert severity="info" className={styles.roleNotice}>
             پس از خرید و فعال شدن دسترسی دوره می‌توانید امتیاز و نظر خود را ثبت کنید.
           </Alert>

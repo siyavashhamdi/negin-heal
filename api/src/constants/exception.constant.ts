@@ -16,7 +16,7 @@ export const EXCEPTION_CONSTANT = {
 
   CAPTCHA_EXPIRED: {
     code: "CAPTCHA_EXPIRED",
-    message: "Captcha has expired. Please request a new captcha!",
+    message: "Captcha has expired!",
   },
 
   CAPTCHA_INVALID: {

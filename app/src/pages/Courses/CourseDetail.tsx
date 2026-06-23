@@ -1127,6 +1127,7 @@ const CourseDetail = (): ReactElement => {
         {courseId ? (
           <CourseReviewsSection
             courseId={courseId}
+            isFree={course.isFree}
             isReviewsSectionVisible={course.isReviewsSectionVisible !== false}
             isReviewSubmissionEnabled={course.isReviewSubmissionEnabled !== false}
             canSubmitReview={resolveCanSubmitCourseReview({

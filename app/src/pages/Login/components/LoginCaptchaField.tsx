@@ -88,19 +88,25 @@ export const LoginCaptchaField = ({
     }
 
     const delayMs = expiresAtMs - Date.now();
-    if (delayMs <= 0) {
-      return undefined;
-    }
-
     let isActive = true;
-    const timeoutId = window.setTimeout(() => {
+
+    const refreshExpiredCaptcha = (): void => {
       setAutoRefreshCount((previous) => previous + 1);
       void refetch().finally(() => {
         if (isActive) {
           setCaptchaValue("");
         }
       });
-    }, delayMs);
+    };
+
+    if (delayMs <= 0) {
+      refreshExpiredCaptcha();
+      return () => {
+        isActive = false;
+      };
+    }
+
+    const timeoutId = window.setTimeout(refreshExpiredCaptcha, delayMs);
 
     return () => {
       isActive = false;
