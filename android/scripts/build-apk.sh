@@ -9,7 +9,10 @@ AAB_SOURCE="${ROOT_DIR}/app/build/outputs/bundle/release/app-release.aab"
 PUBLIC_APP_DIR="${APP_DIR}/public/app"
 PUBLIC_APK_NAME="negin-heal.apk"
 PUBLIC_APK_PATH="${PUBLIC_APP_DIR}/${PUBLIC_APK_NAME}"
+LEGACY_PUBLIC_APK_PATH="${PUBLIC_APP_DIR}/negin-heal-no-chrome.apk"
 MIN_TARGET_SDK=34
+PACKAGE_ID="neginheal.app"
+MAIN_ACTIVITY="${PACKAGE_ID}.MainActivity"
 
 printf 'sdk.dir=%s\n' "${SDK_DIR}" > "${ROOT_DIR}/local.properties"
 
@@ -17,6 +20,8 @@ export ANDROID_KEYSTORE_PASSWORD="${ANDROID_KEYSTORE_PASSWORD:-${BUBBLEWRAP_KEYS
 export ANDROID_KEY_PASSWORD="${ANDROID_KEY_PASSWORD:-${BUBBLEWRAP_KEY_PASSWORD:-neginheal}}"
 
 "${ROOT_DIR}/scripts/setup-keystore.sh"
+
+bash "${ROOT_DIR}/scripts/sync-assetlinks.sh"
 
 if [[ "${SKIP_KEYSTORE_VERIFY:-0}" != "1" ]]; then
   echo "Verifying production keystore..."
@@ -50,12 +55,33 @@ else
     exit 1
   fi
   echo "Verified targetSdkVersion ${TARGET_SDK} (required >= ${MIN_TARGET_SDK})"
+
+  LAUNCHABLE_ACTIVITY="$("${AAPT2}" dump badging "${APK_SOURCE}" | sed -n "s/^launchable-activity: name='\\([^']*\\)'.*/\\1/p")"
+  if [[ -z "${LAUNCHABLE_ACTIVITY}" ]]; then
+    echo "error: Could not read launchable activity from ${APK_SOURCE}" >&2
+    exit 1
+  fi
+  if [[ "${LAUNCHABLE_ACTIVITY}" != "${MAIN_ACTIVITY}" ]]; then
+    echo "error: ${APK_SOURCE} is not the Capacitor shell (expected ${MAIN_ACTIVITY}, got ${LAUNCHABLE_ACTIVITY})" >&2
+    exit 1
+  fi
+  echo "Verified Capacitor MainActivity launcher"
+fi
+
+if [[ "${SKIP_KEYSTORE_VERIFY:-0}" != "1" ]]; then
+  echo "Verifying APK production signature..."
+  bash "${ROOT_DIR}/scripts/verify-apk-signature.sh" "${APK_SOURCE}"
+else
+  echo "warning: SKIP_KEYSTORE_VERIFY=1 — skipping APK signature verification" >&2
 fi
 
 mkdir -p "${PUBLIC_APP_DIR}"
-cp "${APK_SOURCE}" "${PUBLIC_APK_PATH}"
-cp "${APK_SOURCE}" "${ROOT_DIR}/app-release-signed.apk"
-cp "${AAB_SOURCE}" "${ROOT_DIR}/app-release-bundle.aab"
+rm -f "${LEGACY_PUBLIC_APK_PATH}"
+cp -f "${APK_SOURCE}" "${PUBLIC_APK_PATH}"
+cp -f "${APK_SOURCE}" "${ROOT_DIR}/app-release-signed.apk"
+cp -f "${AAB_SOURCE}" "${ROOT_DIR}/app-release-bundle.aab"
+
+echo "Published web download APK (overwritten): ${PUBLIC_APK_PATH}"
 
 echo ""
 echo "Build complete:"

@@ -2,9 +2,10 @@
 
 Capacitor WebView shell for [https://neginheal.ir/](https://neginheal.ir/). The native APK provides a launcher icon, splash screen, and Android System WebView — **no Chrome dependency** and no “Running in Chrome?” disclosure. App content loads from the live website and updates automatically when you deploy the web app.
 
-- **Package ID:** `ir.neginheal.app`
+- **Package ID:** `neginheal.app` (new Cafe Bazaar listing; legacy `ir.neginheal.app` is retired)
 - **Config:** `app/capacitor.config.ts`
 - **Version:** `android/app-version.json`
+- **Signing fingerprint:** `android/.signing-fingerprint` (committed; public certificate hash)
 
 ## Prerequisites
 
@@ -32,6 +33,8 @@ Output:
 - `app-release-signed.apk` — copy at repo root for convenience
 - `../app/public/app/negin-heal.apk` — copy for web download (`https://neginheal.ir/app/negin-heal.apk`)
 
+The web app exposes a single APK download. Legacy `negin-heal-no-chrome.apk` is removed on each release build.
+
 Default keystore passwords are in `.env.example`. Override for builds:
 
 ```bash
@@ -40,21 +43,14 @@ export ANDROID_KEY_PASSWORD='your-password'
 npm run build
 ```
 
-Create a signing keystore (first time only):
+Create or rotate the signing keystore:
 
 ```bash
-npm run setup:keystore
-```
-
-**Updating an existing Cafe Bazaar listing:** you must sign with the **same keystore** as previous releases. Restore your backed-up `android.keystore` to `android/android.keystore` before building. Verify:
-
-```bash
+npm run setup:new-keystore   # backs up to ~/secure-backups/negin-heal/
 npm run verify:keystore
 ```
 
-Expected production fingerprint (from the original TWA release):
-
-`C7:61:73:0B:0E:0F:63:9C:33:71:16:ED:F1:E1:EC:06:E6:94:D7:80:43:E4:A0:4E:BE:AD:CE:09:87:07:26:DF`
+**Updating an existing Cafe Bazaar listing:** keep the same package ID and keystore. For a lost keystore, publish a new listing with `neginheal.app` (current setup).
 
 Local test builds with a different key: `SKIP_KEYSTORE_VERIFY=1 npm run build`
 
@@ -64,6 +60,8 @@ Local test builds with a different key: `SKIP_KEYSTORE_VERIFY=1 npm run build`
 |---------|---------|
 | `npm run sync` | Sync web assets and plugins after `app/` changes |
 | `npm run verify:release` | Verify APK/AAB targetSdk, versionCode, and structure before upload |
+| `npm run setup:new-keystore` | Create a fresh keystore and record `.signing-fingerprint` |
+| `npm run verify:apk-signature` | Verify a signed APK matches `.signing-fingerprint` |
 | `npm run fingerprint` | Print SHA-256 certificate fingerprint |
 
 From `app/`:
@@ -88,7 +86,7 @@ From `app/`:
 | `minSdkVersion` | **23** |
 | `compileSdkVersion` | **35** |
 | Permissions | `INTERNET` only |
-| Launcher activity | `ir.neginheal.app.MainActivity` |
+| Launcher activity | `neginheal.app.MainActivity` |
 
 Before upload:
 

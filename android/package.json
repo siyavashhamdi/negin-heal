@@ -4,11 +4,14 @@
   "description": "Capacitor Android shell for https://neginheal.ir/",
   "scripts": {
     "setup:keystore": "bash scripts/setup-keystore.sh",
+    "setup:new-keystore": "FORCE_NEW_KEYSTORE=1 bash scripts/setup-keystore.sh",
     "build:apk": "bash scripts/build-apk.sh",
     "build": "npm run build:apk",
     "sync": "cd ../app && npx cap sync android",
     "verify:release": "bash scripts/verify-release.sh",
     "verify:keystore": "bash scripts/verify-keystore.sh",
+    "verify:apk-signature": "bash scripts/verify-apk-signature.sh",
+    "sync:assetlinks": "bash scripts/sync-assetlinks.sh",
     "fingerprint": "bash scripts/print-fingerprint.sh"
   }
 }

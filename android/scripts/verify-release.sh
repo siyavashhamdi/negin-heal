@@ -41,8 +41,10 @@ check_apk() {
   [ "${target_sdk}" -eq "${EXPECTED_TARGET_SDK}" ] || fail "targetSdkVersion ${target_sdk} != expected ${EXPECTED_TARGET_SDK}"
   [ "${compile_sdk}" -ge "${MIN_TARGET_SDK}" ] || fail "compileSdkVersion ${compile_sdk} < required ${MIN_TARGET_SDK}"
 
-  if ! printf '%s\n' "${badging}" | grep -q "launchable-activity: name='ir.neginheal.app.MainActivity'"; then
-    fail "Launcher activity missing from ${file}"
+  local launchable_activity
+  launchable_activity="$(printf '%s\n' "${badging}" | sed -n "s/^launchable-activity: name='\\([^']*\\)'.*/\\1/p")"
+  if [[ "${launchable_activity}" != "neginheal.app.MainActivity" ]]; then
+    fail "Launcher activity is '${launchable_activity:-unknown}'; expected neginheal.app.MainActivity in ${file}"
   fi
 
   echo "  status: PASS"
@@ -96,6 +98,8 @@ echo ""
 check_gradle
 echo ""
 check_apk "${APK}"
+echo ""
+bash "${ROOT_DIR}/scripts/verify-apk-signature.sh" "${APK}"
 echo ""
 check_aab "${AAB}"
 echo ""

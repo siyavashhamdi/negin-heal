@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">Negin Heal</string>
     <string name="title_activity_main">Negin Heal</string>
-    <string name="package_name">ir.neginheal.app</string>
-    <string name="custom_url_scheme">ir.neginheal.app</string>
+    <string name="package_name">neginheal.app</string>
+    <string name="custom_url_scheme">neginheal.app</string>
 </resources>

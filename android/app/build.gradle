@@ -4,10 +4,10 @@ def appVersionFile = file("${rootDir}/app-version.json")
 def appVersion = new groovy.json.JsonSlurper().parse(appVersionFile)
 
 android {
-    namespace "ir.neginheal.app"
+    namespace "neginheal.app"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "ir.neginheal.app"
+        applicationId "neginheal.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode appVersion.versionCode as Integer
