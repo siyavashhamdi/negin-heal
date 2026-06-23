@@ -35,6 +35,7 @@ export interface PublishBadgeCountSignalInput {
   targetUserIds?: BadgeCountSignalTargetUserIds;
   includeStaffUsers?: boolean;
   includeActiveSubscribedUsers?: boolean;
+  excludeStaffUsers?: boolean;
   payload: BadgeCountSignalPayload;
 }
 
@@ -88,9 +89,10 @@ export class BadgeService {
     const targetUserIds = new Set(
       this.normalizeTargetUserIds(input.targetUserIds),
     );
+    let staffUserIds: string[] = [];
 
     if (input.includeStaffUsers) {
-      const staffUserIds = await this.userService.findActiveStaffUserIds();
+      staffUserIds = await this.userService.findActiveStaffUserIds();
       staffUserIds.forEach((userId) => targetUserIds.add(userId));
     }
 
@@ -100,6 +102,13 @@ export class BadgeService {
           GeneralSubscriptionUpdateType.BADGE_COUNTS,
         );
       activeUserIds.forEach((userId) => targetUserIds.add(userId));
+    }
+
+    if (input.excludeStaffUsers) {
+      if (staffUserIds.length === 0) {
+        staffUserIds = await this.userService.findActiveStaffUserIds();
+      }
+      staffUserIds.forEach((userId) => targetUserIds.delete(userId));
     }
 
     return this.userSubscriptionService.publishToUsers([...targetUserIds], {

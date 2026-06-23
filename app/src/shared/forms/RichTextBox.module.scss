@@ -57,7 +57,7 @@ $field-label-float-scale: 0.75;
 }
 
 .requiredMark {
-  color: #d32f2f;
+  color: variables.$color-error-main;
 }
 
 .actions {

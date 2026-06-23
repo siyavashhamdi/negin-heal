@@ -27,6 +27,12 @@
   direction: ltr;
   font-family: variables.$font-family-latin !important;
   text-align: left;
+
+  &::placeholder {
+    direction: rtl;
+    font-family: variables.$font-family !important;
+    text-align: right;
+  }
 }
 
 .dialogHeader {

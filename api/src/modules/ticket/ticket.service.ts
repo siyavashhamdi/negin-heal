@@ -284,6 +284,8 @@ export class TicketService {
         action: BadgeCountTriggerAction.UPDATED,
         targetEndUserId: savedTicket.audit?.createdBy,
         includeStaffUsers: params.actorRole === UserRole.END_USER,
+        includeStaffUsersWhenNoOpenTicketsRemain:
+          params.actorRole === UserRole.SUPER_ADMIN,
       });
 
       return savedTicket.toObject() as TicketListRecord;
@@ -372,16 +374,33 @@ export class TicketService {
     action: BadgeCountTriggerAction;
     targetEndUserId?: Types.ObjectId;
     includeStaffUsers?: boolean;
+    includeStaffUsersWhenNoOpenTicketsRemain?: boolean;
   }): Promise<void> {
+    let includeStaffUsers = params.includeStaffUsers ?? false;
+
+    if (params.includeStaffUsersWhenNoOpenTicketsRemain) {
+      includeStaffUsers = !(await this.hasAnyOpenTickets());
+    }
+
     await this.badgeService.publishCountSignal({
       targetUserIds: params.targetEndUserId,
-      includeStaffUsers: params.includeStaffUsers,
+      includeStaffUsers,
       payload: {
         source: BadgeCountTriggerSource.TICKET,
         action: params.action,
         ticketId: params.ticketId.toString(),
       },
     });
+  }
+
+  private async hasAnyOpenTickets(): Promise<boolean> {
+    const openTicket = await this.ticketModel
+      .findOne({ status: TicketStatus.OPEN })
+      .select({ _id: 1 })
+      .lean<{ _id: Types.ObjectId }>()
+      .exec();
+
+    return openTicket != null;
   }
 
   private async resolveAssignedEndUserId(

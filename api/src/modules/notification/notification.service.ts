@@ -7,9 +7,16 @@ import {
   Notification,
   NotificationDocument,
 } from "../../database/schemas";
-import { NotificationUpdateAction } from "../../enums";
+import {
+  BadgeCountTriggerAction,
+  BadgeCountTriggerSource,
+  NotificationMode,
+  NotificationSource,
+  NotificationUpdateAction,
+} from "../../enums";
 import { SortingOrder } from "../../common/pagination/input";
 import { buildSortOptions } from "../../common/pagination/utils";
+import { BadgeService } from "../badge";
 import {
   NotificationListGqlInput,
   NotificationListSortOptionInput,
@@ -20,6 +27,16 @@ import {
   NotificationListPaginatedCursorGqlResponse,
   NotificationUpdateGqlResponse,
 } from "./graphql/responses";
+
+export type CreateEndUserNotificationInput = {
+  userId: Types.ObjectId;
+  source: NotificationSource;
+  mode: NotificationMode;
+  title?: string;
+  message: string;
+  payload?: Record<string, unknown>;
+  visibleUntil?: Date;
+};
 
 type NotificationListSortField = Extract<
   keyof NotificationListSortOptionInput,
@@ -51,7 +68,51 @@ export class NotificationService {
   constructor(
     @InjectModel(Notification.name)
     private readonly notificationModel: Model<NotificationDocument>,
+    private readonly badgeService: BadgeService,
   ) {}
+
+  async createForEndUser(
+    input: CreateEndUserNotificationInput,
+  ): Promise<NotificationDocument> {
+    const notification = await this.notificationModel.create({
+      userId: input.userId,
+      isGlobalAnnouncement: false,
+      source: input.source,
+      mode: input.mode,
+      title: input.title,
+      message: input.message,
+      payload: input.payload ?? {},
+      visibleUntil: input.visibleUntil,
+    });
+
+    await this.badgeService.publishCountSignal({
+      targetUserIds: input.userId,
+      payload: {
+        source: BadgeCountTriggerSource.NOTIFICATION,
+        action: BadgeCountTriggerAction.CREATED,
+        notificationId: notification._id.toString(),
+      },
+    });
+
+    return notification;
+  }
+
+  private async publishEndUserNotificationBadgeCountSignal(
+    userId: Types.ObjectId,
+    action: BadgeCountTriggerAction,
+    notificationIds: string[],
+  ): Promise<void> {
+    await this.badgeService.publishCountSignal({
+      targetUserIds: userId,
+      payload: {
+        source: BadgeCountTriggerSource.NOTIFICATION,
+        action,
+        ...(notificationIds.length === 1
+          ? { notificationId: notificationIds[0] }
+          : { notificationIds }),
+      },
+    });
+  }
 
   async list(
     input: NotificationListGqlInput,
@@ -134,6 +195,18 @@ export class NotificationService {
         notification,
       ]),
     );
+
+    if (
+      (input.action === NotificationUpdateAction.SET_AS_READ ||
+        input.action === NotificationUpdateAction.SET_AS_UNREAD) &&
+      updateResult.modifiedCount > 0
+    ) {
+      await this.publishEndUserNotificationBadgeCountSignal(
+        userId,
+        BadgeCountTriggerAction.UPDATED,
+        notificationIds,
+      );
+    }
 
     return {
       action: input.action,

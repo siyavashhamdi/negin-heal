@@ -6,7 +6,6 @@ import {
   Course,
   CourseChapter,
   CourseDocument,
-  Notification,
   NotificationDocument,
   UserCourse,
   UserCourseDocument,
@@ -19,6 +18,7 @@ import {
   UserCoursePurchaseStatus,
 } from "../../enums";
 import { UserSubscriptionService } from "../user";
+import { NotificationService } from "../notification";
 import { coercePaidAt } from "./chapter-access.util";
 import {
   buildChapterReleasePushClaimFilter,
@@ -57,8 +57,7 @@ export class ChapterReleaseNotificationService {
     private readonly courseModel: Model<CourseDocument>,
     @InjectModel(UserCourse.name)
     private readonly userCourseModel: Model<UserCourseDocument>,
-    @InjectModel(Notification.name)
-    private readonly notificationModel: Model<NotificationDocument>,
+    private readonly notificationService: NotificationService,
     private readonly userSubscriptionService: UserSubscriptionService,
   ) {}
 
@@ -270,9 +269,8 @@ export class ChapterReleaseNotificationService {
     let notification: NotificationDocument;
 
     try {
-      notification = await this.notificationModel.create({
+      notification = await this.notificationService.createForEndUser({
         userId: userCourse.userId,
-        isGlobalAnnouncement: false,
         source: NotificationSource.COURSE_CHAPTER,
         mode: NotificationMode.SUCCESS,
         title,

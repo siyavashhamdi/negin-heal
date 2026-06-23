@@ -18,6 +18,7 @@ build
 .eslintrc.*
 *.mjs
 !scripts/generate-pwa-icons.mjs
+!scripts/generate-sitemap.mjs
 
 # Logs
 logs

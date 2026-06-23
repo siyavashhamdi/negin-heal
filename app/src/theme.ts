@@ -473,6 +473,13 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
           },
         },
       },
+      MuiFormLabel: {
+        styleOverrides: {
+          asterisk: {
+            color: colors.error.main,
+          },
+        },
+      },
       MuiInputLabel: {
         styleOverrides: {
           sizeSmall: {

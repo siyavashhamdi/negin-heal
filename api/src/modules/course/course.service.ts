@@ -103,6 +103,7 @@ import {
 import { AppSettingsService } from "../app-settings";
 import { BadgeService } from "../badge";
 import { CouponService } from "../coupon";
+import { NotificationService } from "../notification";
 import { UserSubscriptionService } from "../user";
 import {
   canAccessChapter,
@@ -247,6 +248,7 @@ export class CourseService {
     private readonly appSettingsService: AppSettingsService,
     private readonly badgeService: BadgeService,
     private readonly couponService: CouponService,
+    private readonly notificationService: NotificationService,
     private readonly userSubscriptionService: UserSubscriptionService,
   ) {}
 
@@ -311,6 +313,10 @@ export class CourseService {
       await this.publishCourseBadgeCountSignal(
         BadgeCountTriggerAction.UPDATED,
         updatedCourse._id,
+        {
+          includeActiveSubscribedUsers: true,
+          excludeStaffUsers: true,
+        },
       );
     }
 
@@ -502,6 +508,13 @@ export class CourseService {
 
       throw error;
     }
+
+    await this.publishPaymentBadgeCountSignal({
+      userCourseId: userCourse._id,
+      courseId: course._id,
+      action: BadgeCountTriggerAction.CREATED,
+      includeStaffUsers: true,
+    });
 
     return this.toCoursePurchaseSubmitResponse(
       userCourse,
@@ -1348,15 +1361,34 @@ export class CourseService {
     options: {
       includeStaffUsers?: boolean;
       includeActiveSubscribedUsers?: boolean;
+      excludeStaffUsers?: boolean;
     } = { includeActiveSubscribedUsers: true },
   ): Promise<void> {
     await this.badgeService.publishCountSignal({
       includeStaffUsers: options.includeStaffUsers,
       includeActiveSubscribedUsers: options.includeActiveSubscribedUsers,
+      excludeStaffUsers: options.excludeStaffUsers,
       payload: {
         source: BadgeCountTriggerSource.COURSE,
         action,
         courseId: courseId.toString(),
+      },
+    });
+  }
+
+  private async publishPaymentBadgeCountSignal(params: {
+    userCourseId: Types.ObjectId;
+    courseId: Types.ObjectId;
+    action: BadgeCountTriggerAction;
+    includeStaffUsers?: boolean;
+  }): Promise<void> {
+    await this.badgeService.publishCountSignal({
+      includeStaffUsers: params.includeStaffUsers,
+      payload: {
+        source: BadgeCountTriggerSource.PAYMENT,
+        action: params.action,
+        courseId: params.courseId.toString(),
+        userCourseId: params.userCourseId.toString(),
       },
     });
   }
@@ -3617,9 +3649,8 @@ export class CourseService {
       isPushNotification: true,
     };
 
-    const notification = await this.notificationModel.create({
+    const notification = await this.notificationService.createForEndUser({
       userId: userCourse.userId,
-      isGlobalAnnouncement: false,
       source: NotificationSource.PAYMENT,
       mode: NotificationMode.SUCCESS,
       title,

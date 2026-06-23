@@ -461,7 +461,7 @@ export function CoursePurchaseDialog({
         return;
       }
       if (!cryptoTransactionHash.trim()) {
-        showError("شناسه تراکنش (TxID) را وارد کنید.");
+        showError("شناسه تراکنش را وارد کنید.");
         return;
       }
     }
@@ -856,10 +856,10 @@ export function CoursePurchaseDialog({
                       <TextField
                         fullWidth
                         size="small"
-                        label="شناسه تراکنش (TxID)"
+                        label="شناسه تراکنش"
                         value={cryptoTransactionHash}
                         onChange={(event) => setCryptoTransactionHash(event.target.value)}
-                        placeholder="پس از ارسال رمزارز، شناسه را وارد کنید"
+                        placeholder="پس از ارسال رمزارز، شناسه تراکنش را وارد کنید"
                         InputProps={{
                           startAdornment: getClearAdornment(cryptoTransactionHash, () =>
                             setCryptoTransactionHash(""),
