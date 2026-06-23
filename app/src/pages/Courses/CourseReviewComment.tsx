@@ -1,9 +1,7 @@
-import { Button, Typography } from "@mui/material";
+import { Typography } from "@mui/material";
 import { useState, type ReactElement } from "react";
 
-import { formatRelativeTimeLabel } from "../../utilities/relative-time.util";
 import {
-  resolveReviewRatingDate,
   shouldTruncateReviewComment,
   truncateReviewComment,
 } from "./course-reviews.api";
@@ -26,32 +24,17 @@ export function CourseReviewComment({ comment }: CourseReviewCommentProps): Reac
     needsTruncate && !expanded ? truncateReviewComment(normalized) : normalized;
 
   return (
-    <div className={styles.reviewCommentBlock}>
-      <Typography component="p" className={styles.reviewComment}>
-        {displayText}
-      </Typography>
+    <Typography component="p" className={styles.reviewComment}>
+      <span className={styles.reviewCommentText}>{displayText}</span>
       {needsTruncate ? (
-        <Button
+        <button
           type="button"
-          size="small"
-          variant="text"
-          className={styles.reviewCommentToggle}
+          className={styles.reviewCommentContinueBadge}
           onClick={() => setExpanded((previous) => !previous)}
         >
           {expanded ? "نمایش کمتر" : "ادامه نظر"}
-        </Button>
+        </button>
       ) : null}
-    </div>
+    </Typography>
   );
-}
-
-export function formatReviewDateLabel(
-  rating?: { readonly ratedAt: string; readonly updatedAt?: string | null } | null,
-): string | null {
-  const dateValue = resolveReviewRatingDate(rating);
-  if (!dateValue) {
-    return null;
-  }
-
-  return formatRelativeTimeLabel(dateValue);
 }

@@ -28,6 +28,7 @@ const CourseReviewModerationSelect = ({
       size="small"
       className={styles.reviewModerationSelect}
       disabled={disabled}
+      dir="rtl"
     >
       <Select
         value={value}

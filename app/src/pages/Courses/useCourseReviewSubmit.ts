@@ -23,7 +23,7 @@ type UseCourseReviewSubmitOptions = {
   readonly persistedStars: number;
   readonly hasExistingRating: boolean;
   readonly hasExistingReview: boolean;
-  readonly onSubmitted: () => void;
+  readonly onSubmitted: () => void | Promise<void>;
 };
 
 type PendingReviewSubmit = {
@@ -62,11 +62,22 @@ export function useCourseReviewSubmit({
     setCaptchaVersion((previous) => previous + 1);
   }, []);
 
-  const closeCaptchaDialog = useCallback((): void => {
-    setCaptchaDialogOpen(false);
-    setPendingSubmit(null);
-    resetCaptcha();
-  }, [resetCaptcha]);
+  const closeCaptchaDialog = useCallback(
+    (options?: { readonly resetCaptcha?: boolean }): void => {
+      setCaptchaDialogOpen(false);
+      setPendingSubmit(null);
+
+      if (options?.resetCaptcha === false) {
+        setCaptchaId("");
+        setCaptchaValue("");
+        setCaptchaValid(false);
+        return;
+      }
+
+      resetCaptcha();
+    },
+    [resetCaptcha],
+  );
 
   const clearStarAutoSubmitBlock = useCallback((): void => {
     blockStarAutoSubmitRef.current = false;
@@ -76,7 +87,7 @@ export function useCourseReviewSubmit({
     CourseReviewSubmitMutation,
     CourseReviewSubmitMutationVariables
   >(COURSE_REVIEW_SUBMIT_MUTATION, {
-    onSuccess: () => {
+    onSuccess: async () => {
       const pending = pendingSubmitRef.current;
       const wasStarOnlySubmit = Boolean(
         pending && !pending.comment && typeof pending.stars === "number",
@@ -86,8 +97,8 @@ export function useCourseReviewSubmit({
         blockStarAutoSubmitRef.current = true;
       }
 
-      closeCaptchaDialog();
-      onSubmitted();
+      closeCaptchaDialog({ resetCaptcha: false });
+      await onSubmitted();
     },
     onError: (error) => {
       const errorCode = extractGraphQLErrorCode(error);

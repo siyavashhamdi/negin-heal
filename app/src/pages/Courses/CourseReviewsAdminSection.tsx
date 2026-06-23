@@ -9,7 +9,6 @@ import CourseReviewSummary from "./CourseReviewSummary";
 import CourseReviewUserBox from "./CourseReviewUserBox";
 import {
   canUseAdminCourseReviewList,
-  computeCourseReviewSummaryStats,
   findOwnAdminCourseReview,
   mapAdminCourseReviewToEndUserRecord,
   resolveCanSubmitCourseReview,
@@ -68,10 +67,7 @@ const CourseReviewsAdminSection = ({
   );
   const showOwnStaffBox = canSubmitOwnReview || Boolean(ownReview);
 
-  const summaryStats = useMemo(
-    () => computeCourseReviewSummaryStats(reviewList.items, reviewList.totalCount),
-    [reviewList.items, reviewList.totalCount],
-  );
+  const summaryStats = reviewList.ratingSummary;
 
   const hasLoadedItems = otherAdminReviews.length > 0;
   const showEmptyState = !reviewList.loading && !reviewList.error && !hasLoadedItems && !showOwnStaffBox;
@@ -96,7 +92,7 @@ const CourseReviewsAdminSection = ({
       <div className={styles.listFixed}>
         <CourseReviewSummary
           stats={summaryStats}
-          isPartialSample={reviewList.items.length < reviewList.totalCount}
+          isPartialSample={false}
         />
 
         <CourseReviewStarFilters
@@ -134,14 +130,14 @@ const CourseReviewsAdminSection = ({
       </div>
 
       {showReviewsScroll ? (
-        <div className={styles.adminListFlow}>
+        <div className={`${styles.adminListFlow} ${styles.adminReviewListDivided}`}>
           {reviewList.loading
             ? Array.from({ length: 2 }).map((_, index) => (
                 <Skeleton
                   key={`course-review-admin-skeleton-${index}`}
                   variant="rounded"
-                  height={132}
-                  className={styles.reviewCard}
+                  height={180}
+                  className={styles.reviewUserBox}
                 />
               ))
             : null}

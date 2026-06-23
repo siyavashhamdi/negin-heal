@@ -22,7 +22,6 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material";
-import { useQuery } from "@apollo/client/react";
 import { type Theme } from "@mui/material/styles";
 import {
   getCoreRowModel,
@@ -68,14 +67,11 @@ import {
   buildCouponListQueryVariables,
   buildCouponUpdateVariables,
   hasCouponFiltersApplied,
-  mapCouponDetailRowToRecord,
   mapCouponListRowToRecord,
   type CouponCreateMutation,
   type CouponCreateMutationVariables,
   type CouponDeleteMutation,
   type CouponDeleteMutationVariables,
-  type CouponDetailQuery,
-  type CouponDetailQueryVariables,
   type CouponDiscountType,
   type CouponFormState,
   type CouponListFilters,
@@ -89,6 +85,7 @@ import {
   type CouponUpdateMutationVariables,
   type SortingOrder,
 } from "./coupons-list.api";
+import { useCouponEditRecord } from "./useCouponEditRecord";
 
 const EMPTY_DISPLAY = "—";
 
@@ -239,27 +236,13 @@ const CouponsIndex = (): ReactElement => {
   }, [location.pathname]);
   const couponDialogOpen = isCreateRoute || editCouponId != null;
 
-  const { data: couponDetailData, loading: couponDetailLoading } = useQuery<
-    CouponDetailQuery,
-    CouponDetailQueryVariables
-  >(COUPON_DETAIL_QUERY, {
-    variables: { input: { id: editCouponId ?? "" } },
-    skip: !editCouponId,
-    fetchPolicy: "network-only",
-  });
-
-  const editCouponRecord = useMemo(() => {
-    if (!editCouponId || couponDetailData?.couponDetail?.id !== editCouponId) {
-      return null;
-    }
-
-    return mapCouponDetailRowToRecord(couponDetailData.couponDetail);
-  }, [couponDetailData, editCouponId]);
+  const { record: editCouponRecord, isInitialLoading: couponDetailLoading } =
+    useCouponEditRecord(editCouponId);
 
   const [sorting, setSorting] = useState<SortingState>([{ id: "createdAt", desc: true }]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
     code: true,
-    title: false,
+    title: true,
     discountType: false,
     discountValue: true,
     startsAt: false,
@@ -287,6 +270,7 @@ const CouponsIndex = (): ReactElement => {
   const [initialForm, setInitialForm] = useState<CouponFormState | null>(null);
   const [editTarget, setEditTarget] = useState<CouponRecord | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<CouponListRecord | null>(null);
+  const hydratedEditCouponIdRef = useRef<string | null>(null);
   const serverSort = useMemo(() => sortingToServerSort(sorting), [sorting]);
 
   const hasAppliedFilters = useMemo(
@@ -325,6 +309,7 @@ const CouponsIndex = (): ReactElement => {
     skip: !isSuperAdmin,
   });
   const closeDialog = (): void => {
+    hydratedEditCouponIdRef.current = null;
     setForm(null);
     setInitialForm(null);
     setEditTarget(null);
@@ -348,6 +333,19 @@ const CouponsIndex = (): ReactElement => {
     CouponUpdateMutationVariables
   >(COUPON_UPDATE_MUTATION, {
     successMessage: t("pages.coupons.edit.success"),
+    refetchQueries: ({ data }) => {
+      const couponId = data?.couponUpdate?.id;
+      if (!couponId) {
+        return [];
+      }
+
+      return [
+        {
+          query: COUPON_DETAIL_QUERY,
+          variables: { input: { id: couponId } },
+        },
+      ];
+    },
     onSuccess: () => {
       closeDialog();
       onRefresh();
@@ -498,7 +496,14 @@ const CouponsIndex = (): ReactElement => {
   };
 
   useEffect(() => {
+    if (!editCouponId) {
+      hydratedEditCouponIdRef.current = null;
+    }
+  }, [editCouponId]);
+
+  useEffect(() => {
     if (isCreateRoute) {
+      hydratedEditCouponIdRef.current = null;
       const nextForm = buildInitialCouponForm();
       setDialogMode("create");
       setEditTarget(null);
@@ -507,14 +512,21 @@ const CouponsIndex = (): ReactElement => {
       return;
     }
 
-    if (editCouponRecord) {
-      const nextForm = buildInitialCouponForm(editCouponRecord);
-      setDialogMode("edit");
-      setEditTarget(editCouponRecord);
-      setInitialForm(nextForm);
-      setForm(nextForm);
+    if (!editCouponId || !editCouponRecord) {
+      return;
     }
-  }, [editCouponRecord, isCreateRoute]);
+
+    if (hydratedEditCouponIdRef.current === editCouponId) {
+      return;
+    }
+
+    hydratedEditCouponIdRef.current = editCouponId;
+    const nextForm = buildInitialCouponForm(editCouponRecord);
+    setDialogMode("edit");
+    setEditTarget(editCouponRecord);
+    setInitialForm(nextForm);
+    setForm(nextForm);
+  }, [editCouponId, editCouponRecord, isCreateRoute]);
 
   const renderTextFilter = (
     key: keyof Pick<
@@ -689,6 +701,11 @@ const CouponsIndex = (): ReactElement => {
   const columns = useMemo<ColumnDef<CouponListRecord>[]>(
     () => [
       {
+        accessorKey: "title",
+        header: t("table.pages.coupons.columns.title"),
+        cell: (info) => textCell(info.getValue()),
+      },
+      {
         accessorKey: "code",
         header: t("table.pages.coupons.columns.code"),
         cell: (info) => (
@@ -696,11 +713,6 @@ const CouponsIndex = (): ReactElement => {
             {String(info.getValue() || EMPTY_DISPLAY)}
           </Typography>
         ),
-      },
-      {
-        accessorKey: "title",
-        header: t("table.pages.coupons.columns.title"),
-        cell: (info) => textCell(info.getValue()),
       },
       {
         accessorKey: "discountType",

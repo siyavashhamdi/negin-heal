@@ -7,7 +7,7 @@ export { COURSE_DETAIL_SECTION_TARGETS };
 
 const MOBILE_PINNED_TABS_OFFSET_QUERY = "(max-width: 37.4375rem)";
 
-function getPinnedTabsScrollOffset(): number {
+export function getCourseDetailPinnedTabsScrollOffset(): number {
   if (!window.matchMedia(MOBILE_PINNED_TABS_OFFSET_QUERY).matches) {
     return 12;
   }
@@ -29,7 +29,7 @@ export function scrollToCourseDetailSection(section: CourseDetailSectionTab): vo
     return;
   }
 
-  const offset = getPinnedTabsScrollOffset();
+  const offset = getCourseDetailPinnedTabsScrollOffset();
   const top = Math.max(0, target.getBoundingClientRect().top + window.scrollY - offset);
 
   window.scrollTo({
@@ -42,7 +42,7 @@ export function scrollToCourseDetailSection(section: CourseDetailSectionTab): vo
 export function resolveCourseDetailSectionFromScroll(
   visibleTabs: readonly CourseDetailSectionTab[],
 ): CourseDetailSectionTab {
-  const offset = getPinnedTabsScrollOffset() + 8;
+  const offset = getCourseDetailPinnedTabsScrollOffset() + 8;
   let activeTab: CourseDetailSectionTab = visibleTabs[0] ?? "intro";
 
   for (const tab of visibleTabs) {

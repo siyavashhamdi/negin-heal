@@ -6,7 +6,7 @@ import {
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { randomUUID } from "crypto";
-import { FilterQuery, Model, Types } from "mongoose";
+import { FilterQuery, Model, PipelineStage, Types } from "mongoose";
 
 import { PAGINATION_CONSTANT } from "../../constants";
 import { env } from "../../config";
@@ -36,8 +36,6 @@ import {
   UserRole,
   UserStatus,
 } from "../../enums";
-import { SortingOrder } from "../../common/pagination/input";
-import { buildSortOptions } from "../../common/pagination/utils";
 import { FileService, FileAccessUrlDescriptor } from "../file";
 import { resolveAvatarAccessUrl } from "../file/file-access-url.util";
 import { isCourseFree } from "../course/course-pricing.util";
@@ -47,11 +45,11 @@ import {
   CourseReviewSubmitGqlInput,
   UserCourseReviewListGqlInput,
 } from "./graphql/inputs";
-import { UserCourseReviewListSortOptionInput } from "./graphql/inputs/user-course-review-list-sort-option.gql.input";
 import {
   CourseReviewListGqlResponse,
   CourseReviewListPaginatedCursorGqlResponse,
   CourseReviewModerationGqlResponse,
+  CourseReviewRatingSummaryGqlResponse,
   CourseReviewSubmitGqlResponse,
   UserCourseReviewListGqlResponse,
   UserCourseReviewListPaginatedCursorGqlResponse,
@@ -61,11 +59,6 @@ import {
   CaptchaVerificationStatus,
   UserCaptchaService,
 } from "../user/user-captcha.service";
-
-type CourseReviewListSortField = Extract<
-  keyof UserCourseReviewListSortOptionInput,
-  string
->;
 
 type CourseReviewEndUserListRecord = Pick<
   CourseReview,
@@ -86,7 +79,10 @@ type CourseReviewAdminListRecord = Pick<
   | "audit"
 >;
 
-type CourseReviewUserLookupRecord = Pick<User, "profile" | "status" | "audit" | "roles"> & {
+type CourseReviewUserLookupRecord = Pick<
+  User,
+  "profile" | "status" | "audit" | "roles"
+> & {
   _id: Types.ObjectId;
 };
 
@@ -152,7 +148,8 @@ export class CourseReviewService {
     }
 
     const needsStaffActor =
-      isStaffSupportSubmit && Boolean(this.normalizeOptionalText(input.comment));
+      isStaffSupportSubmit &&
+      Boolean(this.normalizeOptionalText(input.comment));
 
     const [targetUser, userCourse, actorUser] = await Promise.all([
       this.userModel.findById(targetUserId).exec(),
@@ -186,10 +183,7 @@ export class CourseReviewService {
       throw new BadRequestException("Staff user not found");
     }
 
-    if (
-      userCourse &&
-      !this.isSameObjectId(userCourse.userId, targetUserId)
-    ) {
+    if (userCourse && !this.isSameObjectId(userCourse.userId, targetUserId)) {
       throw new BadRequestException(
         "Course enrollment does not belong to this user",
       );
@@ -221,17 +215,12 @@ export class CourseReviewService {
       input.courseId,
     );
 
-    if (
-      (this.resolveReviewModeration(review?.moderation).visibility ===
-        CourseReviewVisibility.HIDDEN ||
-        review?.rating?.moderation.visibility ===
-          CourseReviewVisibility.HIDDEN) &&
-      !isStaffSupportSubmit
-    ) {
-      throw new ForbiddenException(
-        "You cannot update a review that has been hidden by moderation",
-      );
-    }
+    this.assertEndUserSubmitAllowed(
+      review,
+      hasStarInput,
+      hasCommentInput,
+      isStaffSupportSubmit,
+    );
 
     const userSnapshot = this.toCourseReviewUserSnapshot(targetUser);
     const staffSnapshot = actorUser
@@ -309,11 +298,7 @@ export class CourseReviewService {
           targetReview.rating.stars = input.stars!;
           targetReview.rating.updatedAt = now;
 
-          if (
-            !isStaffSupportSubmit &&
-            hasCommentInput &&
-            !hadRatingComment
-          ) {
+          if (!isStaffSupportSubmit && hasCommentInput && !hadRatingComment) {
             targetReview.rating.comment = normalizedComment;
           }
         }
@@ -409,6 +394,13 @@ export class CourseReviewService {
           throw error;
         }
 
+        this.assertEndUserSubmitAllowed(
+          review,
+          hasStarInput,
+          hasCommentInput,
+          isStaffSupportSubmit,
+        );
+
         isNewRating = !review.rating;
         if (userCourse) {
           await this.assertUserCourseIdIsAvailable(userCourse._id, review._id);
@@ -420,6 +412,13 @@ export class CourseReviewService {
       if (userCourse) {
         await this.assertUserCourseIdIsAvailable(userCourse._id, review._id);
       }
+
+      this.assertEndUserSubmitAllowed(
+        review,
+        hasStarInput,
+        hasCommentInput,
+        isStaffSupportSubmit,
+      );
 
       isNewRating = !review.rating && hasStarInput;
       applySubmitChanges(review);
@@ -445,27 +444,18 @@ export class CourseReviewService {
     }
 
     const now = new Date();
-    const normalizedHiddenReason = this.normalizeOptionalText(input.hiddenReason);
-
-    const applyVisibility = (moderation: CourseReviewModeration): void => {
-      moderation.visibility = input.visibility;
-
-      if (input.visibility === CourseReviewVisibility.HIDDEN) {
-        moderation.hiddenAt = now;
-        moderation.hiddenBy = actorUserId;
-        moderation.hiddenReason = normalizedHiddenReason;
-        return;
-      }
-
-      delete moderation.hiddenAt;
-      delete moderation.hiddenBy;
-      delete moderation.hiddenReason;
-    };
+    const normalizedHiddenReason = this.normalizeOptionalText(
+      input.hiddenReason,
+    );
 
     switch (input.target) {
       case CourseReviewModerationTarget.REVIEW: {
-        review.moderation = this.resolveReviewModeration(review.moderation);
-        applyVisibility(review.moderation);
+        review.moderation = this.buildModerationVisibility(
+          input.visibility,
+          actorUserId,
+          now,
+          normalizedHiddenReason,
+        );
         break;
       }
       case CourseReviewModerationTarget.RATING: {
@@ -473,7 +463,13 @@ export class CourseReviewService {
           throw new BadRequestException("This review does not have a rating");
         }
 
-        applyVisibility(review.rating.moderation);
+        review.rating.moderation = this.buildModerationVisibility(
+          input.visibility,
+          actorUserId,
+          now,
+          normalizedHiddenReason,
+        );
+        review.markModified("rating");
         break;
       }
       case CourseReviewModerationTarget.MESSAGE: {
@@ -491,7 +487,13 @@ export class CourseReviewService {
           throw new NotFoundException("Review message not found");
         }
 
-        applyVisibility(message.moderation);
+        message.moderation = this.buildModerationVisibility(
+          input.visibility,
+          actorUserId,
+          now,
+          normalizedHiddenReason,
+        );
+        review.markModified("messages");
         break;
       }
       default:
@@ -500,8 +502,8 @@ export class CourseReviewService {
 
     await review.save();
 
-    const ownerUsersById = await this.buildReviewOwnerUsersById([
-      { userId: review.userId },
+    const ownerUsersById = await this.buildReviewParticipantUsersById([
+      { userId: review.userId, messages: review.messages ?? [] },
     ]);
     const relatedLookups = await this.buildRelatedLookups([
       {
@@ -563,31 +565,55 @@ export class CourseReviewService {
       return {
         items: [],
         pagination: {
-          limit: input.options?.limit ?? PAGINATION_CONSTANT.CURSOR_BASED.DEFAULT_LIMIT,
+          limit:
+            input.options?.limit ??
+            PAGINATION_CONSTANT.CURSOR_BASED.DEFAULT_LIMIT,
           total: 0,
           count: 0,
           hasNextPage: false,
           hasPreviousPage: Boolean(input.options?.startCursor),
         },
+        summary: this.createEmptyCourseRatingSummary(),
       };
     }
 
+    const courseObjectId = new Types.ObjectId(courseId);
     const baseFilterQuery = this.buildEndUserListFilterQuery(
-      new Types.ObjectId(courseId),
+      courseObjectId,
       currentUserId,
       input.filters?.stars,
     );
-    const { reviews, total, limit, hasNextPage } =
-      await this.findCursorPaginatedReviews(baseFilterQuery, input.options);
-    const ownerUsersById = await this.buildReviewOwnerUsersById(reviews);
+    const [{ reviews, total, limit, hasNextPage }, summary] = await Promise.all(
+      [
+        this.findThreadSortedCursorPaginatedReviews(
+          baseFilterQuery,
+          input.options,
+        ),
+        this.computeCourseRatingSummary(courseObjectId, true),
+      ],
+    );
+    const endUserReviews = reviews as CourseReviewEndUserListRecord[];
+    const ownerUsersById =
+      await this.buildReviewParticipantUsersById(endUserReviews);
 
-    const items = reviews
+    let items = endUserReviews
       .map((review) =>
         this.toEndUserListResponse(review, currentUserId, ownerUsersById),
       )
       .filter(
         (review): review is UserCourseReviewListGqlResponse => review !== null,
       );
+
+    if (currentUserId && !input.options?.startCursor) {
+      items = await this.prependCurrentUserReviewIfNeeded(
+        items,
+        new Types.ObjectId(courseId),
+        currentUserId,
+        ownerUsersById,
+        limit,
+      );
+    }
+
     const firstReview = items[0];
     const lastReview = items[items.length - 1];
 
@@ -602,6 +628,7 @@ export class CourseReviewService {
         hasNextPage,
         hasPreviousPage: Boolean(input.options?.startCursor),
       },
+      summary,
     };
   }
 
@@ -609,8 +636,18 @@ export class CourseReviewService {
     input: CourseReviewListGqlInput,
   ): Promise<CourseReviewListPaginatedCursorGqlResponse> {
     const baseFilterQuery = this.buildSuperAdminListFilterQuery(input.filters);
-    const { reviews, total, limit, hasNextPage } =
-      await this.findCursorPaginatedReviews(baseFilterQuery, input.options);
+    const courseId = input.filters?.courseId?.trim();
+    const [{ reviews, total, limit, hasNextPage }, summary] = await Promise.all(
+      [
+        this.findThreadSortedCursorPaginatedReviews(
+          baseFilterQuery,
+          input.options,
+        ),
+        courseId
+          ? this.computeCourseRatingSummary(new Types.ObjectId(courseId), false)
+          : Promise.resolve(this.createEmptyCourseRatingSummary()),
+      ],
+    );
     const relatedLookups = await this.buildRelatedLookups(
       reviews as CourseReviewAdminListRecord[],
     );
@@ -619,10 +656,7 @@ export class CourseReviewService {
       this.toSuperAdminListResponse(
         review,
         relatedLookups,
-        this.isReviewOwnerListable(
-          review.userId,
-          relatedLookups.usersById,
-        ),
+        this.isReviewOwnerListable(review.userId, relatedLookups.usersById),
       ),
     );
     const firstReview = items[0];
@@ -639,57 +673,160 @@ export class CourseReviewService {
         hasNextPage,
         hasPreviousPage: Boolean(input.options?.startCursor),
       },
+      summary,
     };
   }
 
-  private async findCursorPaginatedReviews(
+  private createEmptyCourseRatingSummary(): CourseReviewRatingSummaryGqlResponse {
+    return {
+      averageRating: null,
+      ratedCount: 0,
+      distribution: [5, 4, 3, 2, 1].map((stars) => ({
+        stars,
+        count: 0,
+        percentage: 0,
+      })),
+    };
+  }
+
+  private buildCourseRatingSummaryFilterQuery(
+    courseId: Types.ObjectId,
+    forEndUser: boolean,
+  ): FilterQuery<CourseReview> {
+    return {
+      courseId,
+      ...this.buildNotDeletedFilter(),
+      "moderation.visibility": forEndUser
+        ? CourseReviewVisibility.PUBLIC
+        : { $ne: CourseReviewVisibility.HIDDEN },
+      rating: { $exists: true, $ne: null },
+      "rating.moderation.visibility": forEndUser
+        ? CourseReviewVisibility.PUBLIC
+        : { $ne: CourseReviewVisibility.HIDDEN },
+    };
+  }
+
+  private async computeCourseRatingSummary(
+    courseId: Types.ObjectId,
+    forEndUser: boolean,
+  ): Promise<CourseReviewRatingSummaryGqlResponse> {
+    const rows = await this.courseReviewModel
+      .aggregate<{ _id: number; count: number }>([
+        {
+          $match: this.buildCourseRatingSummaryFilterQuery(
+            courseId,
+            forEndUser,
+          ),
+        },
+        {
+          $group: {
+            _id: "$rating.stars",
+            count: { $sum: 1 },
+          },
+        },
+      ])
+      .exec();
+
+    const distributionCounts = [5, 4, 3, 2, 1].map((stars) => ({
+      stars,
+      count: rows.find((row) => row._id === stars)?.count ?? 0,
+    }));
+    const ratedCount = distributionCounts.reduce(
+      (total, entry) => total + entry.count,
+      0,
+    );
+    const averageRating =
+      ratedCount > 0
+        ? distributionCounts.reduce(
+            (total, entry) => total + entry.stars * entry.count,
+            0,
+          ) / ratedCount
+        : null;
+    const distributionBase = ratedCount || 1;
+
+    return {
+      averageRating,
+      ratedCount,
+      distribution: distributionCounts.map(({ stars, count }) => ({
+        stars,
+        count,
+        percentage: Math.round((count / distributionBase) * 100),
+      })),
+    };
+  }
+
+  private async findThreadSortedCursorPaginatedReviews(
     baseFilterQuery: FilterQuery<CourseReview>,
     options: CourseReviewCursorListOptions | undefined,
   ): Promise<{
-    reviews: CourseReviewEndUserListRecord[];
+    reviews: CourseReviewEndUserListRecord[] | CourseReviewAdminListRecord[];
     total: number;
     limit: number;
     hasNextPage: boolean;
   }> {
     const limit =
       options?.limit ?? PAGINATION_CONSTANT.CURSOR_BASED.DEFAULT_LIMIT;
-    const requestedSort = options?.sort;
-    const sortFieldMap = this.getSortFieldMap();
-    const cursorSort = this.resolveCursorSort(requestedSort);
-    const sortOptions = {
-      ...buildSortOptions<CourseReviewListSortField>(
-        requestedSort ?? {},
-        sortFieldMap,
-        { updatedAt: SortingOrder.DESC },
-      ),
-      _id: cursorSort.direction,
-    };
-    const cursorFilterQuery = await this.buildCursorFilterQuery(
-      options?.startCursor,
+    const cursorMatch = await this.buildThreadActivityCursorMatch(
       baseFilterQuery,
-      cursorSort.path,
-      cursorSort.direction,
+      options?.startCursor,
     );
-    const filterQuery =
-      cursorFilterQuery == null
-        ? baseFilterQuery
-        : { $and: [baseFilterQuery, cursorFilterQuery] };
+    const pipeline: PipelineStage[] = [
+      { $match: baseFilterQuery },
+      ...this.buildThreadSortComputedStages(),
+      ...(cursorMatch ? [{ $match: cursorMatch }] : []),
+      {
+        $sort: {
+          lastThreadActivityAt: -1,
+          _id: -1,
+        },
+      },
+      { $limit: limit + 1 },
+      { $project: { _id: 1 } },
+    ];
 
-    const [reviewsWithExtra, total] = await Promise.all([
+    const [reviewIdRows, total] = await Promise.all([
       this.courseReviewModel
-        .find(filterQuery)
-        .sort(sortOptions)
-        .limit(limit + 1)
-        .lean<CourseReviewEndUserListRecord[]>()
+        .aggregate<{ _id: Types.ObjectId }>(pipeline)
         .exec(),
       this.courseReviewModel.countDocuments(baseFilterQuery).exec(),
     ]);
+    const reviewIds = reviewIdRows.map((row) => row._id);
+    const pageIds = reviewIds.slice(0, limit);
+
+    if (pageIds.length === 0) {
+      return {
+        reviews: [],
+        total,
+        limit,
+        hasNextPage: false,
+      };
+    }
+
+    const reviewsById = new Map(
+      (
+        await this.courseReviewModel
+          .find({ _id: { $in: pageIds } })
+          .lean<
+            (CourseReviewEndUserListRecord | CourseReviewAdminListRecord)[]
+          >()
+          .exec()
+      ).map((review) => [review._id.toString(), review]),
+    );
+    const reviews = pageIds
+      .map((reviewId) => reviewsById.get(reviewId.toString()))
+      .filter(
+        (
+          review,
+        ): review is
+          | CourseReviewEndUserListRecord
+          | CourseReviewAdminListRecord => review != null,
+      );
 
     return {
-      reviews: reviewsWithExtra.slice(0, limit),
+      reviews,
       total,
       limit,
-      hasNextPage: reviewsWithExtra.length > limit,
+      hasNextPage: reviewIds.length > limit,
     };
   }
 
@@ -714,7 +851,6 @@ export class CourseReviewService {
         },
       ],
     };
-
     const query: FilterQuery<CourseReview> = {
       courseId,
       $and: [
@@ -728,7 +864,23 @@ export class CourseReviewService {
     };
 
     if (typeof stars === "number") {
-      query["rating.stars"] = stars;
+      if (currentUserId) {
+        this.addAndCondition(query, {
+          $or: [
+            {
+              userId: currentUserId,
+              "rating.stars": stars,
+            },
+            {
+              "rating.stars": stars,
+              "rating.moderation.visibility": CourseReviewVisibility.PUBLIC,
+            },
+          ],
+        });
+      } else {
+        query["rating.stars"] = stars;
+        query["rating.moderation.visibility"] = CourseReviewVisibility.PUBLIC;
+      }
     }
 
     return query;
@@ -858,26 +1010,41 @@ export class CourseReviewService {
     };
   }
 
-  private async buildReviewOwnerUsersById(
-    reviews: Pick<CourseReviewEndUserListRecord, "userId">[],
+  private async buildReviewParticipantUsersById(
+    reviews: Pick<CourseReviewEndUserListRecord, "userId" | "messages">[],
   ): Promise<Map<string, CourseReviewUserLookupRecord>> {
-    const userIds = [
-      ...new Set(reviews.map((review) => review.userId.toString())),
-    ]
+    const userIds = new Set<string>();
+
+    reviews.forEach((review) => {
+      this.collectUserId(userIds, review.userId);
+      (review.messages ?? []).forEach((message) => {
+        this.collectUserId(userIds, message.senderUserId);
+      });
+    });
+
+    const lookupIds = [...userIds]
       .filter((id) => Types.ObjectId.isValid(id))
       .map((id) => new Types.ObjectId(id));
 
-    if (userIds.length === 0) {
+    if (lookupIds.length === 0) {
       return new Map();
     }
 
     const users = await this.userModel
-      .find({ _id: { $in: userIds } })
-      .select({ _id: 1, status: 1, audit: 1, roles: 1 })
+      .find({ _id: { $in: lookupIds } })
+      .select({ _id: 1, profile: 1, status: 1, audit: 1, roles: 1 })
       .lean<CourseReviewUserLookupRecord[]>()
       .exec();
 
     return new Map(users.map((user) => [user._id.toString(), user]));
+  }
+
+  private buildReviewOwnerUsersById(
+    reviews: Pick<CourseReviewEndUserListRecord, "userId">[],
+  ): Promise<Map<string, CourseReviewUserLookupRecord>> {
+    return this.buildReviewParticipantUsersById(
+      reviews.map((review) => ({ userId: review.userId, messages: [] })),
+    );
   }
 
   private isReviewOwnerListable(
@@ -932,9 +1099,13 @@ export class CourseReviewService {
           )
         : undefined,
       messages: ownerListable
-        ? (review.messages ?? []).map((message) =>
-            this.toAdminMessageResponse(message, relatedLookups),
-          )
+        ? [...(review.messages ?? [])]
+            .sort(
+              (left, right) => right.sentAt.getTime() - left.sentAt.getTime(),
+            )
+            .map((message) =>
+              this.toAdminMessageResponse(message, relatedLookups),
+            )
         : [],
       createdAt: review.audit?.createdAt,
       updatedAt: review.audit?.updatedAt,
@@ -1064,34 +1235,36 @@ export class CourseReviewService {
 
     const moderation = this.resolveReviewModeration(review.moderation);
 
-    if (
-      !isMine &&
-      (moderation.visibility === CourseReviewVisibility.HIDDEN ||
-        moderation.visibility === CourseReviewVisibility.PRIVATE)
-    ) {
+    if (!isMine && moderation.visibility !== CourseReviewVisibility.PUBLIC) {
       return null;
     }
 
-    const rating = this.mapVisibleRating(
-      review.rating,
-      isMine,
-      ownerListable,
-    );
+    const isSubmissionBlocked =
+      isMine && moderation.visibility === CourseReviewVisibility.HIDDEN;
+    const isRatingHidden =
+      isMine &&
+      !isSubmissionBlocked &&
+      Boolean(review.rating) &&
+      review.rating!.moderation.visibility === CourseReviewVisibility.HIDDEN;
+    const rating = isSubmissionBlocked
+      ? undefined
+      : this.mapVisibleRating(review.rating, isMine, ownerListable);
     const reviewOwner = ownerUsersById.get(review.userId.toString());
-    const ownerIsStaff = this.isStaffUser(reviewOwner);
-    const messages = this.mapVisibleMessages(
-      review.messages ?? [],
-      review.userId,
-      isMine,
-      ownerListable,
-      ownerIsStaff,
-    );
+    const messages = isSubmissionBlocked
+      ? []
+      : this.mapVisibleMessages(
+          review.messages ?? [],
+          review.userId,
+          isMine,
+          ownerListable,
+          ownerUsersById,
+        );
 
     if (!isMine && !rating && messages.length === 0) {
       return null;
     }
 
-    if (isMine && !rating && messages.length === 0) {
+    if (isMine && !rating && messages.length === 0 && !isSubmissionBlocked) {
       return null;
     }
 
@@ -1099,13 +1272,74 @@ export class CourseReviewService {
       id: review._id,
       isMine,
       author: {
-        firstName: ownerIsStaff
-          ? "پشتیبانی"
-          : this.extractFirstName(review.userSnapshot.fullName),
+        firstName: this.resolveUserPublicFirstName(reviewOwner),
       },
       rating,
       messages,
+      isSubmissionBlocked,
+      isRatingHidden,
     };
+  }
+
+  private async prependCurrentUserReviewIfNeeded(
+    items: UserCourseReviewListGqlResponse[],
+    courseId: Types.ObjectId,
+    currentUserId: Types.ObjectId,
+    ownerUsersById: Map<string, CourseReviewUserLookupRecord>,
+    pageLimit: number,
+  ): Promise<UserCourseReviewListGqlResponse[]> {
+    const existingOwnIndex = items.findIndex((item) => item.isMine);
+    if (existingOwnIndex === 0) {
+      return items;
+    }
+
+    if (existingOwnIndex > 0) {
+      const ownReview = items[existingOwnIndex];
+      return [
+        ownReview,
+        ...items.slice(0, existingOwnIndex),
+        ...items.slice(existingOwnIndex + 1),
+      ];
+    }
+
+    const ownReview = await this.courseReviewModel
+      .findOne({
+        courseId,
+        userId: currentUserId,
+        ...this.buildNotDeletedFilter(),
+      })
+      .lean<CourseReviewEndUserListRecord>()
+      .exec();
+
+    if (!ownReview) {
+      return items;
+    }
+
+    const ownersById = ownerUsersById.has(currentUserId.toString())
+      ? ownerUsersById
+      : new Map([
+          ...ownerUsersById,
+          ...(await this.buildReviewParticipantUsersById([
+            { userId: currentUserId, messages: ownReview.messages ?? [] },
+          ])),
+        ]);
+
+    const ownItem = this.toEndUserListResponse(
+      ownReview,
+      currentUserId,
+      ownersById,
+    );
+
+    if (!ownItem) {
+      return items;
+    }
+
+    const merged = [ownItem, ...items];
+    if (pageLimit > 0 && merged.length > pageLimit) {
+      return merged.slice(0, pageLimit);
+    }
+
+    return merged;
   }
 
   private mapVisibleRating(
@@ -1122,8 +1356,8 @@ export class CourseReviewService {
     }
 
     if (
-      rating.moderation.visibility === CourseReviewVisibility.PRIVATE &&
-      !isMine
+      !isMine &&
+      rating.moderation.visibility !== CourseReviewVisibility.PUBLIC
     ) {
       return undefined;
     }
@@ -1139,39 +1373,40 @@ export class CourseReviewService {
   private mapVisibleMessages(
     messages: CourseReviewMessage[],
     threadUserId: Types.ObjectId,
-    includeSupportMessages: boolean,
+    isMine: boolean,
     ownerListable = true,
-    ownerIsStaff = false,
+    usersById: Map<string, CourseReviewUserLookupRecord>,
   ): UserCourseReviewListGqlResponse["messages"] {
-    if (!ownerListable && !includeSupportMessages) {
-      return [];
-    }
-
     return messages
       .filter((message) => {
         if (message.moderation.visibility === CourseReviewVisibility.HIDDEN) {
           return false;
         }
 
-        const isOwnerMessage = this.isSameObjectId(
-          message.senderUserId,
-          threadUserId,
-        );
+        if (!isMine) {
+          if (message.moderation.visibility !== CourseReviewVisibility.PUBLIC) {
+            return false;
+          }
 
-        if (
-          isOwnerMessage &&
-          message.moderation.visibility === CourseReviewVisibility.PUBLIC
-        ) {
-          return true;
+          const isOwnerMessage = this.isSameObjectId(
+            message.senderUserId,
+            threadUserId,
+          );
+
+          return !isOwnerMessage || ownerListable;
         }
 
-        return includeSupportMessages && !isOwnerMessage;
+        return (
+          message.moderation.visibility === CourseReviewVisibility.PUBLIC ||
+          message.moderation.visibility === CourseReviewVisibility.PRIVATE
+        );
       })
       .map((message) => {
         const isOwnerMessage = this.isSameObjectId(
           message.senderUserId,
           threadUserId,
         );
+        const senderUser = usersById.get(message.senderUserId.toString());
 
         return {
           key: message.key,
@@ -1179,9 +1414,7 @@ export class CourseReviewService {
           sentAt: message.sentAt,
           sender: {
             firstName: isOwnerMessage
-              ? ownerIsStaff
-                ? "پشتیبانی"
-                : this.extractFirstName(message.senderSnapshot.fullName)
+              ? this.resolveUserPublicFirstName(senderUser)
               : "پشتیبانی",
             isSupport: !isOwnerMessage,
           },
@@ -1290,6 +1523,59 @@ export class CourseReviewService {
       username: user.username,
       avatarFileId: user.profile?.avatarFileId,
     };
+  }
+
+  private assertEndUserSubmitAllowed(
+    review: CourseReviewDocument | null | undefined,
+    hasStarInput: boolean,
+    hasCommentInput: boolean,
+    isStaffSupportSubmit: boolean,
+  ): void {
+    if (isStaffSupportSubmit || !review) {
+      return;
+    }
+
+    const reviewVisibility = this.resolveReviewModeration(
+      review.moderation,
+    ).visibility;
+
+    if (reviewVisibility === CourseReviewVisibility.HIDDEN) {
+      throw new ForbiddenException("امکان ثبت نظر برای شما وجود ندارد.");
+    }
+
+    if (
+      review.rating?.moderation.visibility !== CourseReviewVisibility.HIDDEN
+    ) {
+      return;
+    }
+
+    if (hasStarInput) {
+      throw new ForbiddenException(
+        "امکان ثبت یا ویرایش امتیاز برای شما وجود ندارد.",
+      );
+    }
+
+    if (hasCommentInput) {
+      throw new ForbiddenException("امکان ثبت نظر برای شما وجود ندارد.");
+    }
+  }
+
+  private buildModerationVisibility(
+    visibility: CourseReviewVisibility,
+    actorUserId: Types.ObjectId,
+    now: Date,
+    hiddenReason?: string,
+  ): CourseReviewModeration {
+    if (visibility === CourseReviewVisibility.HIDDEN) {
+      return {
+        visibility,
+        hiddenAt: now,
+        hiddenBy: actorUserId,
+        ...(hiddenReason ? { hiddenReason } : {}),
+      };
+    }
+
+    return { visibility };
   }
 
   private resolveReviewModeration(
@@ -1468,49 +1754,127 @@ export class CourseReviewService {
     }
   }
 
-  private extractFirstName(fullName: string | undefined): string {
-    const trimmed = fullName?.trim();
-    if (!trimmed) {
-      return "کاربر";
+  private resolveUserPublicFirstName(
+    user?: CourseReviewUserLookupRecord | null,
+  ): string {
+    const firstName = user?.profile?.firstName?.trim();
+    if (firstName) {
+      return firstName;
     }
 
-    return trimmed.split(/\s+/)[0] || "کاربر";
+    return "کاربر";
   }
 
-  private getSortFieldMap(): Record<CourseReviewListSortField, string> {
-    return {
-      ratedAt: "rating.ratedAt",
-      stars: "rating.stars",
-      createdAt: "audit.createdAt",
-      updatedAt: "audit.updatedAt",
-    };
+  private buildThreadSortComputedStages(): PipelineStage[] {
+    return [
+      {
+        $addFields: {
+          _threadEntries: {
+            $concatArrays: [
+              {
+                $cond: [
+                  {
+                    $and: [
+                      { $ne: [{ $ifNull: ["$rating", null] }, null] },
+                      {
+                        $gt: [
+                          {
+                            $strLenCP: {
+                              $trim: {
+                                input: {
+                                  $ifNull: ["$rating.comment", ""],
+                                },
+                              },
+                            },
+                          },
+                          0,
+                        ],
+                      },
+                    ],
+                  },
+                  [
+                    {
+                      sentAt: {
+                        $ifNull: ["$rating.updatedAt", "$rating.ratedAt"],
+                      },
+                      senderUserId: "$userId",
+                    },
+                  ],
+                  {
+                    $cond: [
+                      { $ne: [{ $ifNull: ["$rating", null] }, null] },
+                      [
+                        {
+                          sentAt: {
+                            $ifNull: ["$rating.updatedAt", "$rating.ratedAt"],
+                          },
+                          senderUserId: "$userId",
+                        },
+                      ],
+                      [],
+                    ],
+                  },
+                ],
+              },
+              {
+                $map: {
+                  input: { $ifNull: ["$messages", []] },
+                  as: "message",
+                  in: {
+                    sentAt: "$$message.sentAt",
+                    senderUserId: "$$message.senderUserId",
+                  },
+                },
+              },
+            ],
+          },
+        },
+      },
+      {
+        $addFields: {
+          _latestThreadEntry: {
+            $reduce: {
+              input: "$_threadEntries",
+              initialValue: null,
+              in: {
+                $cond: [
+                  {
+                    $or: [
+                      { $eq: ["$$value", null] },
+                      { $gt: ["$$this.sentAt", "$$value.sentAt"] },
+                    ],
+                  },
+                  "$$this",
+                  "$$value",
+                ],
+              },
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          lastThreadActivityAt: {
+            $ifNull: [
+              "$_latestThreadEntry.sentAt",
+              { $ifNull: ["$audit.updatedAt", "$audit.createdAt"] },
+            ],
+          },
+        },
+      },
+    ];
   }
 
-  private resolveCursorSort(
-    requestedSort: UserCourseReviewListSortOptionInput | undefined,
-  ): { path: string; direction: 1 | -1 } {
-    const sortFieldMap = this.getSortFieldMap();
-    const sortEntries = Object.entries(requestedSort ?? {}) as Array<
-      [CourseReviewListSortField, SortingOrder | undefined]
-    >;
-    const [field, order] =
-      sortEntries.find(([, sortOrder]) => sortOrder != null) ??
-      (["updatedAt", SortingOrder.DESC] as const);
-
-    return {
-      path: sortFieldMap[field],
-      direction: order === SortingOrder.ASC ? 1 : -1,
-    };
-  }
-
-  private async buildCursorFilterQuery(
-    startCursor: string | undefined,
+  private async buildThreadActivityCursorMatch(
     baseFilterQuery: FilterQuery<CourseReview>,
-    sortPath: string,
-    direction: 1 | -1,
+    startCursor: string | undefined,
   ): Promise<FilterQuery<CourseReview> | null> {
-    if (!startCursor || !Types.ObjectId.isValid(startCursor)) {
+    if (!startCursor) {
       return null;
+    }
+
+    if (!Types.ObjectId.isValid(startCursor)) {
+      return { _id: { $exists: false } };
     }
 
     const cursorId = new Types.ObjectId(startCursor);
@@ -1519,44 +1883,75 @@ export class CourseReviewService {
         ...baseFilterQuery,
         _id: cursorId,
       })
-      .lean<Record<string, unknown>>()
+      .lean<CourseReviewAdminListRecord>()
       .exec();
 
     if (!cursorReview) {
-      return null;
+      return { _id: { $exists: false } };
     }
 
-    const operator = direction === 1 ? "$gt" : "$lt";
-    const cursorValue = this.getValueByPath(cursorReview, sortPath);
-
-    if (cursorValue == null) {
-      return {
-        _id: { [operator]: cursorId },
-      };
-    }
+    const cursorMeta = this.getReviewThreadSortMeta(cursorReview);
 
     return {
       $or: [
-        { [sortPath]: { [operator]: cursorValue } },
+        { lastThreadActivityAt: { $lt: cursorMeta.lastThreadActivityAt } },
         {
-          [sortPath]: cursorValue,
-          _id: { [operator]: cursorId },
+          lastThreadActivityAt: cursorMeta.lastThreadActivityAt,
+          _id: { $lt: cursorId },
         },
       ],
     };
   }
 
-  private getValueByPath(
-    source: Record<string, unknown>,
-    path: string,
-  ): unknown {
-    return path.split(".").reduce<unknown>((current, segment) => {
-      if (current == null || typeof current !== "object") {
-        return undefined;
-      }
+  private getReviewThreadSortMeta(review: {
+    userId: Types.ObjectId;
+    rating?: CourseReviewRating | null;
+    messages?: CourseReviewMessage[];
+    audit?: { updatedAt?: Date; createdAt?: Date };
+  }): { lastThreadActivityAt: Date } {
+    type ThreadEntry = {
+      sentAt: Date;
+      senderUserId: Types.ObjectId;
+    };
 
-      return (current as Record<string, unknown>)[segment];
-    }, source);
+    const entries: ThreadEntry[] = [];
+    const ratingComment = review.rating?.comment?.trim();
+
+    if (ratingComment) {
+      entries.push({
+        sentAt: review.rating!.updatedAt ?? review.rating!.ratedAt,
+        senderUserId: review.userId,
+      });
+    } else if (review.rating) {
+      entries.push({
+        sentAt: review.rating.updatedAt ?? review.rating.ratedAt,
+        senderUserId: review.userId,
+      });
+    }
+
+    for (const message of review.messages ?? []) {
+      entries.push({
+        sentAt: message.sentAt,
+        senderUserId: message.senderUserId,
+      });
+    }
+
+    const fallbackActivityAt =
+      review.audit?.updatedAt ?? review.audit?.createdAt ?? new Date(0);
+
+    if (entries.length === 0) {
+      return {
+        lastThreadActivityAt: fallbackActivityAt,
+      };
+    }
+
+    const latestEntry = entries.reduce((latest, entry) =>
+      entry.sentAt > latest.sentAt ? entry : latest,
+    );
+
+    return {
+      lastThreadActivityAt: latestEntry.sentAt,
+    };
   }
 
   private isSameObjectId(

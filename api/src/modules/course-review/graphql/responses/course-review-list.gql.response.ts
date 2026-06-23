@@ -1,4 +1,11 @@
-import { Field, GraphQLISODateTime, ID, Int, ObjectType } from "@nestjs/graphql";
+import {
+  Field,
+  Float,
+  GraphQLISODateTime,
+  ID,
+  Int,
+  ObjectType,
+} from "@nestjs/graphql";
 import { Types } from "mongoose";
 
 import { CourseReviewVisibility, UserRole } from "../../../../enums";
@@ -79,7 +86,9 @@ export class CourseReviewMessageGqlResponse {
   })
   senderUser?: UserMinimalGqlResponse;
 
-  @Field(() => GraphQLISODateTime, { description: "Date when the message was sent" })
+  @Field(() => GraphQLISODateTime, {
+    description: "Date when the message was sent",
+  })
   sentAt: Date;
 
   @Field(() => CourseReviewModerationGqlResponse, {
@@ -128,7 +137,8 @@ export class CourseReviewListGqlResponse {
 
   @Field(() => ID, {
     nullable: true,
-    description: "Linked user course enrollment ID, when the reviewer purchased the course",
+    description:
+      "Linked user course enrollment ID, when the reviewer purchased the course",
   })
   userCourseId?: Types.ObjectId;
 
@@ -214,6 +224,39 @@ export class CourseReviewListGqlResponse {
 }
 
 @ObjectType()
+export class CourseReviewRatingDistributionGqlResponse {
+  @Field(() => Int, { description: "Star value from 1 to 5" })
+  stars: number;
+
+  @Field(() => Int, { description: "Number of ratings with this star value" })
+  count: number;
+
+  @Field(() => Int, {
+    description: "Share of eligible ratings, rounded to a percent",
+  })
+  percentage: number;
+}
+
+@ObjectType()
+export class CourseReviewRatingSummaryGqlResponse {
+  @Field(() => Float, {
+    nullable: true,
+    description: "Average star rating across eligible reviews",
+  })
+  averageRating: number | null;
+
+  @Field(() => Int, {
+    description: "Number of eligible ratings included in the summary",
+  })
+  ratedCount: number;
+
+  @Field(() => [CourseReviewRatingDistributionGqlResponse], {
+    description: "Distribution of eligible ratings by star value",
+  })
+  distribution: CourseReviewRatingDistributionGqlResponse[];
+}
+
+@ObjectType()
 export class CourseReviewListPaginatedCursorGqlResponse {
   @Field(() => [CourseReviewListGqlResponse], {
     description: "Full course review list for SUPER_ADMIN",
@@ -224,4 +267,10 @@ export class CourseReviewListPaginatedCursorGqlResponse {
     description: "Pagination metadata",
   })
   pagination: PaginationCursorResponse;
+
+  @Field(() => CourseReviewRatingSummaryGqlResponse, {
+    description:
+      "Aggregated rating summary excluding hidden reviews and hidden ratings",
+  })
+  summary: CourseReviewRatingSummaryGqlResponse;
 }

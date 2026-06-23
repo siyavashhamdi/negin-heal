@@ -6,6 +6,8 @@ export const USER_COURSE_REVIEW_LIST_QUERY = gql`
       items {
         id
         isMine
+        isSubmissionBlocked
+        isRatingHidden
         author {
           firstName
         }
@@ -33,6 +35,15 @@ export const USER_COURSE_REVIEW_LIST_QUERY = gql`
         endCursor
         hasNextPage
         hasPreviousPage
+      }
+      summary {
+        averageRating
+        ratedCount
+        distribution {
+          stars
+          count
+          percentage
+        }
       }
     }
   }

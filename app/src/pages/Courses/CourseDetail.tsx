@@ -43,6 +43,7 @@ import PageBackNavigation from "../../shared/PageBackNavigation";
 import { applyBlankTargetToRichTextLinks } from "../../utils/richTextHtml.util";
 import { USER_COURSE_DETAIL_QUERY } from "../../graphql/queries/userCourseDetail.query";
 import { COURSE_CHAPTER_COMPLETE_MUTATION } from "../../graphql/mutations/courseChapterComplete.mutation";
+import { useCoursePaymentPaidNotificationRefetch } from "../../hooks/useCoursePaymentPaidNotificationRefetch";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { usePageSeoOverride } from "../../hooks/usePageSeoOverride";
 import { useTranslation } from "../../hooks/useTranslation";
@@ -67,13 +68,19 @@ import CourseDetailSectionTabs, {
 } from "./CourseDetailSectionTabs";
 import CourseReviewsSection from "./CourseReviewsSection";
 import {
+  canUseAdminCourseReviewList,
   isStaffCourseReviewer,
   resolveCanSubmitCourseReview,
 } from "./course-reviews.api";
+import { useCourseReviewList } from "./useCourseReviewList";
 import {
   resolveCourseDetailSectionFromScroll,
   scrollToCourseDetailSection,
 } from "./course-detail-section-scroll.util";
+import {
+  resolveActiveChapterKeyFromScroll,
+  scrollToCourseChapter,
+} from "./course-chapter-path.util";
 import { COURSE_SECTION_TABS } from "./course-section-tabs.shared";
 import {
   formatChapterUnlockCountdown,
@@ -298,19 +305,51 @@ const CourseDetail = (): ReactElement => {
   const { showError, showSuccess, showWarning } = useSnackbar();
   const { t } = useTranslation();
   const purchaseCardRef = useRef<HTMLElement | null>(null);
-  const { data, loading, error, refetch } = useQuery<
+  const courseDetailVariables = useMemo(
+    (): UserCourseDetailQueryVariables => ({ input: { id: courseId || "" } }),
+    [courseId],
+  );
+
+  const { data, previousData, loading, error, refetch } = useQuery<
     UserCourseDetailQuery,
     UserCourseDetailQueryVariables
   >(USER_COURSE_DETAIL_QUERY, {
-    variables: { input: { id: courseId || "" } },
+    variables: courseDetailVariables,
     skip: !courseId,
-    fetchPolicy: "network-only",
+    fetchPolicy: "cache-and-network",
+    nextFetchPolicy: "cache-first",
+    notifyOnNetworkStatusChange: true,
   });
 
-  const course = data?.course;
+  const refetchCourseDetail = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
+
+  useCoursePaymentPaidNotificationRefetch({
+    enabled: Boolean(courseId),
+    courseId,
+    refetch: () => {
+      void refetchCourseDetail();
+    },
+  });
+
+  const course = data?.course ?? previousData?.course;
   const isStaffViewer = isStaffCourseReviewer(user?.roles);
   const isReviewsSectionHiddenForEndUser =
     !isStaffViewer && course?.isReviewsSectionVisible === false;
+
+  const reviewList = useCourseReviewList({
+    courseId: courseId || "",
+    mode: isStaffViewer ? "admin" : "endUser",
+    enabled:
+      Boolean(courseId) &&
+      !isReviewsSectionHiddenForEndUser &&
+      (isStaffViewer
+        ? isAuthenticated && canUseAdminCourseReviewList(user?.roles)
+        : true),
+    starsFilter: null,
+    scrollRoot: "parent",
+  });
 
   const coverImageUrl = resolveFileAccessUrl(course?.coverImageAccessUrl);
   const discountedPrice = course
@@ -331,6 +370,10 @@ const CourseDetail = (): ReactElement => {
   const totalItems =
     course?.chapters.reduce((sum, chapter) => sum + (chapter.items?.length ?? 0), 0) ?? 0;
   const isSingleChapter = (course?.chapters.length ?? 0) === 1;
+  const chapterKeys = useMemo(
+    () => course?.chapters.map((chapter) => chapter.key) ?? [],
+    [course?.chapters],
+  );
   const isGradualRelease = course?.releaseType === "GRADUAL";
   const hasLockedChapters = course?.chapters.some((chapter) => chapter.isLocked) ?? false;
   const courseDetailCopyContext = useMemo(
@@ -366,6 +409,7 @@ const CourseDetail = (): ReactElement => {
   const [expandedChapterKeys, setExpandedChapterKeys] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
+  const [activeChapterKey, setActiveChapterKey] = useState<string | null>(null);
   const [activeSectionTab, setActiveSectionTab] = useState<CourseDetailSectionTab>("intro");
 
   const [isMobilePriceBarVisible, setIsMobilePriceBarVisible] = useState(false);
@@ -437,6 +481,8 @@ const CourseDetail = (): ReactElement => {
   const purchaseIntentHandledRef = useRef(false);
   const pendingSectionTabRef = useRef<CourseDetailSectionTab | null>(null);
   const pendingSectionTabClearTimerRef = useRef<number | null>(null);
+  const pendingChapterNavigationRef = useRef<string | null>(null);
+  const pendingChapterNavigationClearTimerRef = useRef<number | null>(null);
 
   const clearPendingSectionTab = useCallback((): void => {
     const tab = pendingSectionTabRef.current;
@@ -449,6 +495,20 @@ const CourseDetail = (): ReactElement => {
 
     if (tab) {
       setActiveSectionTab(tab);
+    }
+  }, []);
+
+  const clearPendingChapterNavigation = useCallback((): void => {
+    const chapterKey = pendingChapterNavigationRef.current;
+    pendingChapterNavigationRef.current = null;
+
+    if (pendingChapterNavigationClearTimerRef.current != null) {
+      window.clearTimeout(pendingChapterNavigationClearTimerRef.current);
+      pendingChapterNavigationClearTimerRef.current = null;
+    }
+
+    if (chapterKey) {
+      setActiveChapterKey(chapterKey);
     }
   }, []);
 
@@ -467,10 +527,10 @@ const CourseDetail = (): ReactElement => {
     }
 
     isUnlockRefetchingRef.current = true;
-    void refetch().finally(() => {
+    void refetchCourseDetail().finally(() => {
       isUnlockRefetchingRef.current = false;
     });
-  }, [refetch]);
+  }, [refetchCourseDetail]);
 
   useEffect(() => {
     if (purchaseIntentHandledRef.current) {
@@ -512,6 +572,7 @@ const CourseDetail = (): ReactElement => {
 
       if (chapterExists) {
         setExpandedChapterKeys(new Set([focusChapterKey]));
+        setActiveChapterKey(focusChapterKey);
         return;
       }
     }
@@ -519,6 +580,7 @@ const CourseDetail = (): ReactElement => {
     setExpandedChapterKeys(
       defaultExpandedChapterKey ? new Set([defaultExpandedChapterKey]) : new Set(),
     );
+    setActiveChapterKey(defaultExpandedChapterKey);
   }, [course, defaultExpandedChapterKey, focusChapterKey]);
 
   useEffect(() => {
@@ -526,17 +588,22 @@ const CourseDetail = (): ReactElement => {
       return;
     }
 
+    pendingChapterNavigationRef.current = focusChapterKey;
+    setActiveChapterKey(focusChapterKey);
+
     const frameId = window.requestAnimationFrame(() => {
-      document.getElementById(`course-chapter-${focusChapterKey}`)?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+      scrollToCourseChapter(focusChapterKey);
     });
+
+    const clearTimerId = window.setTimeout(() => {
+      clearPendingChapterNavigation();
+    }, 900);
 
     return () => {
       window.cancelAnimationFrame(frameId);
+      window.clearTimeout(clearTimerId);
     };
-  }, [course, focusChapterKey, expandedChapterKeys]);
+  }, [clearPendingChapterNavigation, course, focusChapterKey, expandedChapterKeys]);
 
   useEffect(() => {
     const paymentStatus = searchParams.get("payment");
@@ -553,7 +620,7 @@ const CourseDetail = (): ReactElement => {
           ? `پرداخت با موفقیت انجام شد. کد پیگیری: ${refId}`
           : "پرداخت با موفقیت انجام شد و دسترسی دوره فعال شد.",
       );
-      void refetch();
+      void refetchCourseDetail();
     } else if (paymentStatus === "cancelled") {
       showWarning("پرداخت لغو شد.");
     } else {
@@ -563,7 +630,7 @@ const CourseDetail = (): ReactElement => {
     }
 
     setSearchParams({}, { replace: true });
-  }, [refetch, searchParams, setSearchParams, showError, showSuccess, showWarning]);
+  }, [refetchCourseDetail, searchParams, setSearchParams, showError, showSuccess, showWarning]);
 
   useEffect(() => {
     setIsMobilePriceBarVisible(false);
@@ -621,6 +688,10 @@ const CourseDetail = (): ReactElement => {
       if (pendingSectionTabRef.current) {
         clearPendingSectionTab();
       }
+
+      if (pendingChapterNavigationRef.current) {
+        clearPendingChapterNavigation();
+      }
     };
 
     window.addEventListener("scrollend", handleScrollEnd, { passive: true });
@@ -628,7 +699,7 @@ const CourseDetail = (): ReactElement => {
     return () => {
       window.removeEventListener("scrollend", handleScrollEnd);
     };
-  }, [clearPendingSectionTab]);
+  }, [clearPendingChapterNavigation, clearPendingSectionTab]);
 
   useEffect(() => {
     if (!course) {
@@ -654,6 +725,29 @@ const CourseDetail = (): ReactElement => {
       window.removeEventListener("resize", syncActiveTabFromScroll);
     };
   }, [course]);
+
+  useEffect(() => {
+    if (!course || isSingleChapter || chapterKeys.length === 0) {
+      return undefined;
+    }
+
+    const syncActiveChapterFromScroll = (): void => {
+      if (pendingChapterNavigationRef.current) {
+        return;
+      }
+
+      setActiveChapterKey(resolveActiveChapterKeyFromScroll(chapterKeys));
+    };
+
+    syncActiveChapterFromScroll();
+    window.addEventListener("scroll", syncActiveChapterFromScroll, { passive: true });
+    window.addEventListener("resize", syncActiveChapterFromScroll);
+
+    return () => {
+      window.removeEventListener("scroll", syncActiveChapterFromScroll);
+      window.removeEventListener("resize", syncActiveChapterFromScroll);
+    };
+  }, [chapterKeys, course, isSingleChapter]);
 
   const handlePrimaryCourseAction = (): void => {
     if (canAccessCourse) {
@@ -690,6 +784,28 @@ const CourseDetail = (): ReactElement => {
     });
   };
 
+  const handleChapterNavigate = useCallback((chapterKey: string): void => {
+    pendingChapterNavigationRef.current = chapterKey;
+    setActiveChapterKey(chapterKey);
+    setExpandedChapterKeys((current) => {
+      if (current.has(chapterKey)) {
+        return current;
+      }
+
+      return new Set([...current, chapterKey]);
+    });
+
+    if (pendingChapterNavigationClearTimerRef.current != null) {
+      window.clearTimeout(pendingChapterNavigationClearTimerRef.current);
+    }
+
+    scrollToCourseChapter(chapterKey);
+
+    pendingChapterNavigationClearTimerRef.current = window.setTimeout(() => {
+      clearPendingChapterNavigation();
+    }, 900);
+  }, [clearPendingChapterNavigation]);
+
   const closeItemViewer = (): void => {
     if (selectedItemViewer) {
       clearMaxRouteOwner(selectedItemViewer.previewId);
@@ -719,7 +835,7 @@ const CourseDetail = (): ReactElement => {
 
   const handlePurchaseSuccess = (): void => {
     closePurchaseDialog();
-    void refetch();
+    void refetchCourseDetail();
   };
 
   const canTrackChapterProgress = canAccessCourse && isAuthenticated && isPaidPurchase;
@@ -752,7 +868,7 @@ const CourseDetail = (): ReactElement => {
             : `فصل «${chapterTitle}» تکمیل شد. همه فصل‌های در دسترس را به پایان رساندید!`
           : `فصل «${chapterTitle}» با موفقیت تکمیل شد.`,
       );
-      await refetch();
+      await refetchCourseDetail();
     } catch (error) {
       showErrorIfNotQueued(showError, error);
     } finally {
@@ -761,13 +877,7 @@ const CourseDetail = (): ReactElement => {
   };
 
   const handleGoToNextChapter = (nextChapterKey: string): void => {
-    setExpandedChapterKeys(new Set([nextChapterKey]));
-    window.requestAnimationFrame(() => {
-      document.getElementById(`course-chapter-${nextChapterKey}`)?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    });
+    handleChapterNavigate(nextChapterKey);
   };
 
   if (!courseId) {
@@ -795,7 +905,7 @@ const CourseDetail = (): ReactElement => {
           severity="error"
           className={styles.alert}
           action={
-            <Button color="inherit" size="small" onClick={() => void refetch()}>
+            <Button color="inherit" size="small" onClick={() => void refetchCourseDetail()}>
               تلاش دوباره
             </Button>
           }
@@ -964,6 +1074,11 @@ const CourseDetail = (): ReactElement => {
             const isExpanded = isSingleChapter || expandedChapterKeys.has(chapter.key);
             const isGradualLock = isGradualChapterLock(chapter);
             const chapterItems = chapter.items ?? [];
+            const isActiveChapter = !isSingleChapter && activeChapterKey === chapter.key;
+            const isReachedChapter =
+              !isSingleChapter &&
+              activeChapterKey != null &&
+              chapterKeys.indexOf(activeChapterKey) >= chapterIndex;
             const nextUnlockedChapter = course.chapters
               .slice(chapterIndex + 1)
               .find((entry) => !entry.isLocked);
@@ -978,6 +1093,8 @@ const CourseDetail = (): ReactElement => {
                   isSingleChapter ? styles.chapterCardSingle : "",
                   chapter.isLocked ? styles.chapterLocked : "",
                   chapter.isCompleted ? styles.chapterCompleted : "",
+                  isActiveChapter ? styles.chapterCardActive : "",
+                  isReachedChapter ? styles.chapterCardReached : "",
                 ]
                   .filter(Boolean)
                   .join(" ")}
@@ -986,13 +1103,18 @@ const CourseDetail = (): ReactElement => {
                 {!isSingleChapter ? (
                   <button
                     type="button"
-                    className={styles.chapterPathButton}
+                    className={[
+                      styles.chapterPathButton,
+                      isReachedChapter ? styles.chapterPathButtonReached : "",
+                      isActiveChapter ? styles.chapterPathButtonActive : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
                     aria-label={`رفتن به ابتدای فصل ${chapter.title}`}
+                    aria-current={isActiveChapter ? "step" : undefined}
                     onClick={(event) => {
                       event.stopPropagation();
-                      event.currentTarget
-                        .closest(`.${styles.chapterCard}`)
-                        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                      handleChapterNavigate(chapter.key);
                     }}
                   />
                 ) : null}
@@ -1036,68 +1158,80 @@ const CourseDetail = (): ReactElement => {
                     ) : null}
                   </div>
                 ) : (
-                  <button
-                    type="button"
-                    className={styles.chapterHeader}
-                    onClick={() => toggleChapter(chapter.key)}
-                    aria-expanded={isExpanded}
-                    aria-controls={`chapter-panel-${chapter.key}`}
-                  >
+                  <div className={styles.chapterHeader}>
                     <span
                       className={[
                         styles.chapterStep,
                         chapter.isCompleted ? styles.chapterStepCompleted : "",
+                        isActiveChapter ? styles.chapterStepActive : "",
+                        isReachedChapter ? styles.chapterStepReached : "",
                       ]
                         .filter(Boolean)
                         .join(" ")}
                     >
-                      <span className={styles.chapterNumber}>
-                        {(chapterIndex + 1).toLocaleString("fa-IR")}
-                      </span>
+                      <button
+                        type="button"
+                        className={styles.chapterStepButton}
+                        aria-label={`رفتن به ابتدای فصل ${chapter.title}`}
+                        aria-current={isActiveChapter ? "step" : undefined}
+                        onClick={() => handleChapterNavigate(chapter.key)}
+                      >
+                        <span className={styles.chapterNumber}>
+                          {(chapterIndex + 1).toLocaleString("fa-IR")}
+                        </span>
+                      </button>
                       {chapter.isCompleted ? (
                         <span className={styles.chapterStepTick} aria-label="تکمیل شده">
                           <CheckRoundedIcon />
                         </span>
                       ) : null}
                     </span>
-                    <span className={styles.chapterTitleBlock}>
-                      <span className={styles.chapterTitle}>{chapter.title}</span>
-                    </span>
-                    <span className={styles.chapterMeta}>
-                      {chapter.isLocked ? (
-                        <Chip
-                          size="small"
-                          icon={<LockRoundedIcon />}
-                          label={isGradualLock ? "زمان‌بندی‌شده" : "قفل"}
-                          variant="outlined"
-                          className={styles.chapterLockChip}
+                    <button
+                      type="button"
+                      className={styles.chapterHeaderToggle}
+                      onClick={() => toggleChapter(chapter.key)}
+                      aria-expanded={isExpanded}
+                      aria-controls={`chapter-panel-${chapter.key}`}
+                    >
+                      <span className={styles.chapterTitleBlock}>
+                        <span className={styles.chapterTitle}>{chapter.title}</span>
+                      </span>
+                      <span className={styles.chapterMeta}>
+                        {chapter.isLocked ? (
+                          <Chip
+                            size="small"
+                            icon={<LockRoundedIcon />}
+                            label={isGradualLock ? "زمان‌بندی‌شده" : "قفل"}
+                            variant="outlined"
+                            className={styles.chapterLockChip}
+                          />
+                        ) : chapter.isCompleted ? (
+                          <Chip
+                            size="small"
+                            icon={<CheckCircleRoundedIcon />}
+                            label="تکمیل‌شده"
+                            color="success"
+                            variant="filled"
+                            className={styles.chapterCompletedChip}
+                          />
+                        ) : chapter.isFree ? (
+                          <Chip
+                            size="small"
+                            icon={<CardGiftcardRoundedIcon />}
+                            label="رایگان"
+                            color="success"
+                            variant="filled"
+                          />
+                        ) : null}
+                        <ExpandMoreRoundedIcon
+                          className={`${styles.expandIcon}${isExpanded ? ` ${styles.expandIconOpen}` : ""}`}
                         />
-                      ) : chapter.isCompleted ? (
-                        <Chip
-                          size="small"
-                          icon={<CheckCircleRoundedIcon />}
-                          label="تکمیل‌شده"
-                          color="success"
-                          variant="filled"
-                          className={styles.chapterCompletedChip}
-                        />
-                      ) : chapter.isFree ? (
-                        <Chip
-                          size="small"
-                          icon={<CardGiftcardRoundedIcon />}
-                          label="رایگان"
-                          color="success"
-                          variant="filled"
-                        />
+                      </span>
+                      {chapter.description?.trim() ? (
+                        <span className={styles.chapterDescription}>{chapter.description.trim()}</span>
                       ) : null}
-                      <ExpandMoreRoundedIcon
-                        className={`${styles.expandIcon}${isExpanded ? ` ${styles.expandIconOpen}` : ""}`}
-                      />
-                    </span>
-                    {chapter.description?.trim() ? (
-                      <span className={styles.chapterDescription}>{chapter.description.trim()}</span>
-                    ) : null}
-                  </button>
+                    </button>
+                  </div>
                 )}
 
                 <Collapse in={isExpanded} timeout="auto" unmountOnExit={!isSingleChapter}>
@@ -1206,6 +1340,7 @@ const CourseDetail = (): ReactElement => {
         {courseId ? (
           <CourseReviewsSection
             courseId={courseId}
+            reviewList={reviewList}
             isFree={course.isFree}
             isReviewsSectionVisible={course.isReviewsSectionVisible !== false}
             isReviewSubmissionEnabled={course.isReviewSubmissionEnabled !== false}

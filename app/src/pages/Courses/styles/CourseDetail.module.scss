@@ -20,17 +20,13 @@
 .sectionContentSeparator {
   inline-size: 100%;
   block-size: 0.0625rem;
-  margin-block: 0.15rem 0;
+  margin-block: 0.85rem 0;
   background: color-mix(in srgb, var(--app-surface-border) 78%, transparent);
 }
 
 .reviewsSection {
   display: grid;
   gap: 1rem;
-  padding: 1rem;
-  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 70%, transparent);
-  border-radius: 1.15rem;
-  background: color-mix(in srgb, var(--app-surface-bg) 96%, #ffffff);
 }
 
 .reviewsHeader {
@@ -51,8 +47,6 @@
 
 .reviewsSectionDisabled {
   opacity: 0.72;
-  border-style: dashed;
-  background: color-mix(in srgb, var(--app-surface-bg) 88%, var(--text-secondary));
 }
 
 .alert {
@@ -394,11 +388,41 @@
       rgba(255, 255, 255, 0.92) 0 0.32rem,
       transparent 0.32rem 0.74rem
     );
+  background-size:
+    100% 100%,
+    100% 1.48rem;
   background-blend-mode: screen;
   box-shadow: 0 0 0.8rem color-mix(in srgb, variables.$color-primary-light 26%, transparent);
   animation: chapter-path-flow 3.6s linear infinite;
   cursor: pointer;
   z-index: 1;
+  opacity: 0.72;
+  transition:
+    opacity 0.24s ease,
+    box-shadow 0.24s ease;
+}
+
+.chapterPathButtonReached {
+  opacity: 1;
+}
+
+.chapterPathButtonActive {
+  opacity: 1;
+  inline-size: 0.26rem;
+  inset-inline-start: -1.97rem;
+  box-shadow:
+    0 0 1rem color-mix(in srgb, variables.$color-primary-main 34%, transparent),
+    0 0 1.6rem color-mix(in srgb, variables.$color-secondary-light 24%, transparent);
+}
+
+.chapterCardReached::before {
+  filter: drop-shadow(
+    0 0.45rem 0.8rem color-mix(in srgb, variables.$color-secondary-light 34%, transparent)
+  );
+}
+
+.chapterCardActive {
+  border-color: color-mix(in srgb, variables.$color-primary-light 42%, var(--app-surface-border));
 }
 
 .chapterPathButton::before {
@@ -488,6 +512,14 @@
 
 .chapterHeader {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  row-gap: 0.35rem;
+  inline-size: 100%;
+}
+
+.chapterHeaderToggle {
+  display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   column-gap: 0.75rem;
@@ -500,6 +532,12 @@
   font: inherit;
   text-align: start;
   cursor: pointer;
+}
+
+.chapterHeaderToggle:focus-visible {
+  outline: 0.15rem solid color-mix(in srgb, variables.$color-primary-main 72%, #ffffff);
+  outline-offset: 0.2rem;
+  border-radius: 0.65rem;
 }
 
 .chapterStep {
@@ -519,6 +557,57 @@
   box-shadow:
     0 0 0 0.28rem color-mix(in srgb, #fbcfe8 30%, var(--app-surface-bg)),
     0 0.7rem 1.2rem color-mix(in srgb, variables.$color-secondary-light 18%, transparent);
+  transition:
+    box-shadow 0.24s ease,
+    transform 0.24s ease;
+}
+
+.chapterStepButton {
+  display: grid;
+  place-items: center;
+  inline-size: 100%;
+  block-size: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 999rem;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  appearance: none;
+  outline: none;
+}
+
+.chapterStepButton:focus {
+  outline: none;
+}
+
+.chapterStepButton:focus-visible {
+  box-shadow: inset 0 0 0 0.12rem color-mix(in srgb, variables.$color-primary-main 72%, #ffffff);
+}
+
+.chapterStepButton:active {
+  background: transparent;
+}
+
+.chapterStepReached {
+  background:
+    linear-gradient(var(--app-surface-bg), var(--app-surface-bg)) padding-box,
+    conic-gradient(from 120deg, #f9a8d4, #c4b5fd, #7dd3fc, #f472b6) border-box;
+}
+
+.chapterStepActive {
+  transform: scale(1.04);
+  background:
+    linear-gradient(var(--app-surface-bg), var(--app-surface-bg)) padding-box,
+    conic-gradient(from 120deg, #ec4899, #a855f7, #38bdf8, #ec4899) border-box;
+  box-shadow:
+    0 0 0 0.34rem color-mix(in srgb, #f472b6 34%, var(--app-surface-bg)),
+    0 0.85rem 1.35rem color-mix(in srgb, variables.$color-primary-main 24%, transparent);
+
+  .chapterNumber {
+    animation: chapter-step-bloom 2.6s ease-in-out infinite;
+  }
 }
 
 .chapterStepCompleted {
@@ -563,12 +652,22 @@
     variables.$color-secondary-light
   );
   color: #ffffff;
+  font-family: variables.$font-family;
   font-size: 0.84rem;
   font-weight: 950;
+  font-variant-numeric: tabular-nums;
   box-shadow:
     inset 0 0.0625rem 0 rgba(255, 255, 255, 0.62),
     0 0.45rem 1rem color-mix(in srgb, variables.$color-primary-main 24%, transparent);
-  animation: chapter-step-bloom 2.6s ease-in-out infinite;
+}
+
+.chapterStepReached .chapterNumber {
+  background: linear-gradient(
+    135deg,
+    variables.$color-primary-main,
+    variables.$color-secondary-main 58%,
+    variables.$color-secondary-light
+  );
 }
 
 .chapterTitleBlock {
@@ -930,11 +1029,6 @@ body[data-theme="dark"] {
     color: #bbf7d0;
   }
 
-  .reviewsSection {
-    border-color: color-mix(in srgb, #94a3b8 18%, transparent);
-    background: color-mix(in srgb, var(--app-surface-bg) 90%, #1e293b);
-  }
-
   @media (max-width: (variables.$breakpoint-sm - 0.0625rem)) {
     .mobilePinnedPriceBar {
       @include mixins.dark-floating-shell-gradient;
@@ -963,6 +1057,15 @@ body[data-theme="dark"] {
       0 0.7rem 1.2rem color-mix(in srgb, #a78bfa 18%, transparent);
   }
 
+  .chapterStepActive {
+    background:
+      linear-gradient(#0f172a, #0f172a) padding-box,
+      conic-gradient(from 120deg, #f472b6, #c084fc, #38bdf8, #f472b6) border-box;
+    box-shadow:
+      0 0 0 0.34rem color-mix(in srgb, #f472b6 24%, #0f172a),
+      0 0.85rem 1.35rem color-mix(in srgb, #c084fc 24%, transparent);
+  }
+
   .chapterStepCompleted {
     background:
       linear-gradient(#0f172a, #0f172a) padding-box,
@@ -981,12 +1084,14 @@ body[data-theme="dark"] {
   .chapterCard,
   .chapterCard::before,
   .chapterPathButton,
-  .chapterNumber {
+  .chapterNumber,
+  .chapterStepActive .chapterNumber {
     animation: none;
   }
 
   .chapterCard,
-  .chapterCard:hover {
+  .chapterCard:hover,
+  .chapterStepActive {
     transform: none;
   }
 }
@@ -1082,6 +1187,11 @@ body[data-theme="dark"] {
   }
 
   .chapterHeader {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: flex-start;
+  }
+
+  .chapterHeaderToggle {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: flex-start;
   }
@@ -1123,15 +1233,13 @@ body[data-theme="dark"] {
     flex: 0 0 auto;
   }
 
-  .chapterCard,
-  .chapterCard::before,
-  .chapterPathButton,
-  .chapterNumber {
+  .chapterCard {
     animation: none;
   }
 
   .chapterCard,
-  .chapterCard:hover {
+  .chapterCard:hover,
+  .chapterStepActive {
     transform: none;
   }
 }

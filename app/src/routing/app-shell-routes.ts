@@ -51,3 +51,8 @@ export const isStandaloneShellRoute = (pathname: string): boolean => {
 
 export const isLandingRoute = (pathname: string): boolean =>
   normalizeShellPathname(pathname) === APP_SHELL_ROUTES.landing;
+
+export const isCourseDetailRoute = (pathname: string): boolean => {
+  const normalized = normalizeShellPathname(pathname);
+  return /^\/courses\/[^/]+(?:\/(?:purchase|max))?$/.test(normalized);
+};

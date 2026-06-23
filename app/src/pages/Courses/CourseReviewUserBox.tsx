@@ -1,20 +1,20 @@
-import { Button, CircularProgress, TextField, Typography } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
-import { useEffect, useMemo, useState, type CSSProperties, type ReactElement } from "react";
+import SendRoundedIcon from "@mui/icons-material/SendRounded";
+import { Button, CircularProgress, IconButton, TextField, Typography } from "@mui/material";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 
 import { useSnackbar } from "../../hooks/useSnackbar";
+import AppTooltip from "../../shared/AppTooltip";
 import StarRating from "../../shared/rating/StarRating";
-import { formatRelativeTimeLabel } from "../../utilities/relative-time.util";
-import {
-  getCourseReviewMessageBubbleClassName,
-  getCourseReviewMessageBubbleCssVars,
-  resolveCourseReviewMessageBubbleTone,
-} from "./course-review-message-bubble.util";
-import { CourseReviewComment } from "./CourseReviewComment";
 import CourseReviewCaptchaDialog from "./CourseReviewCaptchaDialog";
+import CourseReviewThreadBubble from "./CourseReviewThreadBubble";
+import {
+  buildCourseReviewDisplayThreadEntries,
+  buildCourseReviewThreadSegments,
+  resolveCourseReviewThreadPreviewEntries,
+} from "./course-review-thread.util";
+import { scrollToCourseReviewBoxEnd } from "./course-review-box-scroll.util";
 import {
   COURSE_REVIEW_COMMENT_PREVIEW_LIMIT,
-  resolveCourseReviewThreadEntryAuthorLabel,
   type EndUserCourseReviewRecord,
 } from "./course-reviews.api";
 import { useCourseReviewSubmit } from "./useCourseReviewSubmit";
@@ -26,100 +26,22 @@ type CourseReviewUserBoxProps = {
   readonly review: EndUserCourseReviewRecord | null;
   readonly authorLabel: string;
   readonly canEdit: boolean;
+  readonly isOwnViewerBox?: boolean;
+  readonly isRatingHidden?: boolean;
+  readonly isSubmissionBlocked?: boolean;
   readonly limitCommentsPreview?: boolean;
   readonly courseId: string;
-  readonly onSubmitted: () => void;
+  readonly onSubmitted: () => void | Promise<void>;
 };
-
-type ThreadEntry = {
-  readonly key: string;
-  readonly body: string;
-  readonly sentAt: string;
-  readonly authorLabel: string;
-  readonly isOwnMessage: boolean;
-  readonly isSupport: boolean;
-};
-
-function buildThreadEntries(review: EndUserCourseReviewRecord | null): ThreadEntry[] {
-  if (!review) {
-    return [];
-  }
-
-  const isReviewOwnedByViewer = review.isMine;
-  const ownerFirstName = review.author.firstName?.trim() || "کاربر";
-  const entries: ThreadEntry[] = [];
-
-  if (review.rating?.comment?.trim()) {
-    entries.push({
-      key: "initial",
-      body: review.rating.comment.trim(),
-      sentAt: review.rating.updatedAt ?? review.rating.ratedAt,
-      authorLabel: resolveCourseReviewThreadEntryAuthorLabel({
-        senderFirstName: ownerFirstName,
-        isSupport: false,
-        isReviewOwnedByViewer,
-      }),
-      isOwnMessage: isReviewOwnedByViewer,
-      isSupport: false,
-    });
-  }
-
-  for (const message of review.messages) {
-    entries.push({
-      key: message.key,
-      body: message.body,
-      sentAt: message.sentAt,
-      authorLabel: resolveCourseReviewThreadEntryAuthorLabel({
-        senderFirstName: message.sender.firstName,
-        isSupport: message.sender.isSupport,
-        isReviewOwnedByViewer,
-      }),
-      isOwnMessage: isReviewOwnedByViewer && !message.sender.isSupport,
-      isSupport: message.sender.isSupport,
-    });
-  }
-
-  return entries.sort(
-    (left, right) => new Date(left.sentAt).getTime() - new Date(right.sentAt).getTime(),
-  );
-}
-
-function ReviewCommentBubble({ entry }: { readonly entry: ThreadEntry }): ReactElement {
-  const theme = useTheme();
-  const tone = resolveCourseReviewMessageBubbleTone(entry.isOwnMessage, entry.isSupport);
-  const bubbleClassName = getCourseReviewMessageBubbleClassName(styles, tone);
-
-  return (
-    <div className={styles.reviewCommentBubbleRow}>
-      <div
-        className={`${styles.reviewCommentBubble} ${bubbleClassName}`}
-        style={
-          getCourseReviewMessageBubbleCssVars(tone, theme.palette.mode === "dark") as CSSProperties
-        }
-      >
-        <div className={styles.reviewCommentBubbleHeader}>
-          <Typography component="p" className={styles.reviewCommentBubbleName}>
-            {entry.authorLabel}
-          </Typography>
-          <Typography
-            component="time"
-            variant="caption"
-            className={styles.reviewCommentBubbleDate}
-          >
-            {formatRelativeTimeLabel(entry.sentAt)}
-          </Typography>
-        </div>
-        <CourseReviewComment comment={entry.body} />
-      </div>
-    </div>
-  );
-}
 
 const CourseReviewUserBox = ({
   review,
   authorLabel,
   canEdit,
-  limitCommentsPreview = false,
+  isOwnViewerBox = false,
+  isRatingHidden = false,
+  isSubmissionBlocked = false,
+  limitCommentsPreview = true,
   courseId,
   onSubmitted,
 }: CourseReviewUserBoxProps): ReactElement => {
@@ -128,15 +50,32 @@ const CourseReviewUserBox = ({
   const hasExistingRating = Boolean(review?.rating);
   const hasExistingReview = Boolean(review);
   const hasPersistedStars = persistedStars >= 1;
-  const isMine = canEdit || Boolean(review?.isMine);
   const [stars, setStars] = useState(persistedStars);
   const [comment, setComment] = useState("");
   const [commentsExpanded, setCommentsExpanded] = useState(false);
   const showNoStarsYet = !hasPersistedStars && stars < 1;
+  const commentFormRef = useRef<HTMLDivElement | null>(null);
+  const commentInputRef = useRef<HTMLTextAreaElement | null>(null);
+  const boxEndRef = useRef<HTMLDivElement | null>(null);
+  const pendingScrollToEndRef = useRef(false);
+
+  const scrollToBoxEnd = useCallback((focusCommentInput = false): void => {
+    if (focusCommentInput) {
+      window.requestAnimationFrame(() => {
+        window.setTimeout(() => {
+          commentFormRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+          commentInputRef.current?.focus();
+        }, 120);
+      });
+      return;
+    }
+
+    scrollToCourseReviewBoxEnd(boxEndRef.current);
+  }, []);
 
   useEffect(() => {
     setCommentsExpanded(false);
-  }, [review?.id]);
+  }, [courseId]);
 
   const {
     captchaDialogOpen,
@@ -158,10 +97,10 @@ const CourseReviewUserBox = ({
     persistedStars,
     hasExistingRating,
     hasExistingReview,
-    onSubmitted: () => {
+    onSubmitted: async () => {
       showSuccess(successMessageRef.current);
       setComment("");
-      onSubmitted();
+      await onSubmitted();
     },
   });
 
@@ -170,29 +109,52 @@ const CourseReviewUserBox = ({
     clearStarAutoSubmitBlock();
   }, [clearStarAutoSubmitBlock, review?.id, persistedStars]);
 
-  const threadEntries = useMemo(() => buildThreadEntries(review), [review]);
+  const threadEntries = useMemo(() => buildCourseReviewDisplayThreadEntries(review), [review]);
   const hiddenCommentCount = Math.max(
     0,
     threadEntries.length - COURSE_REVIEW_COMMENT_PREVIEW_LIMIT,
   );
   const shouldCollapseComments =
     limitCommentsPreview && hiddenCommentCount > 0 && !commentsExpanded;
-  const visibleThreadEntries = shouldCollapseComments
-    ? threadEntries.slice(0, COURSE_REVIEW_COMMENT_PREVIEW_LIMIT)
-    : threadEntries;
-  const hasRating = (review?.rating?.stars ?? 0) >= 1;
-  const hasComments = threadEntries.length > 0;
-  const hasRatingOrComments = hasRating || hasComments;
-  const trimmedComment = comment.trim();
-  const canSubmitComment = trimmedComment.length > 0 && canEdit && !isSubmitting;
+  const canEditReview = canEdit && !isSubmissionBlocked && !isRatingHidden;
+  const visibleThreadEntries = useMemo(
+    () =>
+      resolveCourseReviewThreadPreviewEntries(
+        threadEntries,
+        COURSE_REVIEW_COMMENT_PREVIEW_LIMIT,
+        shouldCollapseComments,
+        isOwnViewerBox ? "newest" : "oldest",
+      ),
+    [isOwnViewerBox, shouldCollapseComments, threadEntries],
+  );
+  const visibleThreadSegments = useMemo(() => {
+    const segments = buildCourseReviewThreadSegments(visibleThreadEntries);
+
+    if (!isOwnViewerBox || !canEditReview) {
+      return segments;
+    }
+
+    return segments.filter((segment) => segment.body.trim().length > 0);
+  }, [canEditReview, isOwnViewerBox, visibleThreadEntries]);
 
   useEffect(() => {
-    if (!canEdit || isSubmitting || captchaDialogOpen || stars < 1 || stars === persistedStars) {
+    if (!pendingScrollToEndRef.current) {
+      return;
+    }
+
+    pendingScrollToEndRef.current = false;
+    scrollToCourseReviewBoxEnd(boxEndRef.current, { delayMs: 200 });
+  }, [threadEntries.length]);
+  const trimmedComment = comment.trim();
+  const canSubmitComment = trimmedComment.length > 0 && canEditReview && !isSubmitting;
+
+  useEffect(() => {
+    if (!canEditReview || isSubmitting || captchaDialogOpen || stars < 1 || stars === persistedStars) {
       return;
     }
 
     submitStars(stars);
-  }, [canEdit, captchaDialogOpen, isSubmitting, persistedStars, stars, submitStars]);
+  }, [canEditReview, captchaDialogOpen, isSubmitting, persistedStars, stars, submitStars]);
 
   const handleStarChange = (nextStars: number): void => {
     setStars(nextStars);
@@ -203,6 +165,7 @@ const CourseReviewUserBox = ({
       return;
     }
 
+    pendingScrollToEndRef.current = true;
     submitComment(stars, trimmedComment);
   };
 
@@ -214,31 +177,79 @@ const CourseReviewUserBox = ({
     closeCaptchaDialog();
   };
 
+  const handleScrollToCommentForm = (): void => {
+    scrollToBoxEnd(true);
+  };
+
+  const renderCommentForm = (): ReactElement => (
+    <div ref={commentFormRef} className={styles.reviewCommentForm}>
+      <div className={styles.reviewCommentInputShell}>
+        <div className={styles.reviewCommentInputArea}>
+          <TextField
+            fullWidth
+            multiline
+            minRows={3}
+            maxRows={6}
+            placeholder="نظر خود را بنویسید…"
+            value={comment}
+            disabled={isSubmitting}
+            inputRef={commentInputRef}
+            onChange={(event) => setComment(event.target.value.slice(0, MAX_COMMENT_LENGTH))}
+            className={styles.reviewCommentInput}
+          />
+          <div className={styles.reviewCommentSendOverlay}>
+            <AppTooltip title="ثبت نظر" arrow>
+              <span className={styles.reviewCommentSendTooltipAnchor}>
+                <IconButton
+                  type="button"
+                  color="primary"
+                  disabled={!canSubmitComment}
+                  onClick={handleCommentSubmit}
+                  aria-label="ثبت نظر"
+                  className={styles.reviewCommentSendButton}
+                >
+                  {isSubmitting ? (
+                    <CircularProgress size={20} color="inherit" />
+                  ) : (
+                    <SendRoundedIcon fontSize="small" />
+                  )}
+                </IconButton>
+              </span>
+            </AppTooltip>
+          </div>
+        </div>
+        <Typography
+          component="p"
+          variant="caption"
+          color="text.secondary"
+          className={styles.reviewCommentHelper}
+        >
+          {`${comment.length.toLocaleString("fa-IR")} / ${MAX_COMMENT_LENGTH.toLocaleString("fa-IR")}`}
+        </Typography>
+      </div>
+    </div>
+  );
+
   return (
     <>
-      <article
-        className={`${styles.reviewUserBox}${isMine ? ` ${styles.reviewUserBoxMine}` : ""}`}
-        aria-label={`نظر ${authorLabel}`}
-      >
-        <header
-          className={`${styles.reviewUserHeader}${
-            canEdit ? ` ${styles.reviewUserHeaderStars}` : ` ${styles.reviewUserHeaderOther}`
-          }${hasRatingOrComments ? ` ${styles.reviewUserHeaderNoDivider}` : ""}`}
-        >
-          {canEdit ? (
+      <article className={styles.reviewUserBoxPlain} aria-label={`نظر ${authorLabel}`}>
+        {canEditReview ? (
+          <div className={styles.reviewUserStarsPanel}>
             <div className={styles.reviewUserStarsRow}>
-              <Typography component="h3" className={styles.reviewUserAuthor}>
-                نظر شما:
-              </Typography>
-              {showNoStarsYet ? (
-                <Typography
-                  component="span"
-                  variant="body2"
-                  className={styles.reviewUserStarsEmpty}
-                >
-                  هنوز امتیازی ثبت نکرده‌اید.
+              <div className={styles.reviewUserStarsRowLead}>
+                <Typography component="h3" className={styles.reviewUserAuthor}>
+                  نظر شما:
                 </Typography>
-              ) : null}
+                {showNoStarsYet ? (
+                  <Typography
+                    component="span"
+                    variant="body2"
+                    className={styles.reviewUserStarsEmpty}
+                  >
+                    هنوز امتیازی ثبت نکرده‌اید.
+                  </Typography>
+                ) : null}
+              </div>
               <StarRating
                 mode="input"
                 value={stars}
@@ -247,77 +258,41 @@ const CourseReviewUserBox = ({
                 onChange={handleStarChange}
               />
             </div>
-          ) : (
-            <>
-              <Typography component="h3" className={styles.reviewUserAuthor}>
-                {authorLabel}
-              </Typography>
-              {review?.rating ? (
-                <StarRating
-                  value={review.rating.stars}
-                  size="medium"
-                  ariaLabel={`امتیاز ${review.rating.stars}`}
-                />
-              ) : null}
-            </>
-          )}
-          {isSubmitting ? <CircularProgress size={16} aria-label="در حال ذخیره" /> : null}
-        </header>
-
-        <div className={styles.reviewCommentsList}>
-          {visibleThreadEntries.length > 0 ? (
-            visibleThreadEntries.map((entry) => (
-              <ReviewCommentBubble key={entry.key} entry={entry} />
-            ))
-          ) : canEdit ? (
-            <div className={styles.reviewCommentBoxEmpty}>
-              <Typography variant="body2" color="text.secondary">
-                هنوز نظری ثبت نکرده‌اید.
-              </Typography>
-            </div>
-          ) : null}
-
-          {limitCommentsPreview && hiddenCommentCount > 0 ? (
             <Button
               type="button"
-              size="small"
-              variant="text"
-              className={styles.reviewCommentsExpandButton}
-              onClick={() => setCommentsExpanded((previous) => !previous)}
-            >
-              {commentsExpanded
-                ? "نمایش کمتر"
-                : `نمایش ${hiddenCommentCount.toLocaleString("fa-IR")} نظر دیگر`}
-            </Button>
-          ) : null}
-        </div>
-
-        {canEdit ? (
-          <div className={styles.reviewCommentForm}>
-            <TextField
+              variant="outlined"
               fullWidth
-              multiline
-              minRows={3}
-              maxRows={6}
-              placeholder="نظر خود را بنویسید…"
-              value={comment}
-              disabled={isSubmitting}
-              onChange={(event) => setComment(event.target.value.slice(0, MAX_COMMENT_LENGTH))}
-              helperText={`${comment.length.toLocaleString("fa-IR")} / ${MAX_COMMENT_LENGTH.toLocaleString("fa-IR")}`}
-            />
-
-            <Button
-              fullWidth
-              variant="contained"
-              size="large"
-              disabled={!canSubmitComment}
-              onClick={handleCommentSubmit}
-              className={styles.submitButton}
+              className={styles.reviewScrollToCommentButton}
+              onClick={handleScrollToCommentForm}
             >
               ثبت نظر
             </Button>
+            {isSubmitting ? <CircularProgress size={16} aria-label="در حال ذخیره" /> : null}
           </div>
         ) : null}
+
+        {visibleThreadSegments.length > 0 ? (
+          <div className={styles.reviewCommentsList}>
+            <CourseReviewThreadBubble
+              segments={visibleThreadSegments}
+              isReviewMine={canEdit || Boolean(review?.isMine)}
+              hideSegmentStars={isOwnViewerBox && canEditReview}
+              expandControlPlacement={isOwnViewerBox ? "top" : "bottom"}
+              expandControl={
+                limitCommentsPreview && hiddenCommentCount > 0
+                  ? {
+                      expanded: commentsExpanded,
+                      hiddenCount: hiddenCommentCount,
+                      onToggle: () => setCommentsExpanded((previous) => !previous),
+                    }
+                  : undefined
+              }
+            />
+          </div>
+        ) : null}
+
+        {canEditReview ? renderCommentForm() : null}
+        <div ref={boxEndRef} className={styles.reviewUserBoxEndAnchor} aria-hidden="true" />
       </article>
 
       {captchaEnabled ? (

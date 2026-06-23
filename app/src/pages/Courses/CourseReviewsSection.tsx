@@ -6,20 +6,20 @@ import { useAuth } from "../../contexts/AuthContext";
 import CourseReviewSummary from "./CourseReviewSummary";
 import CourseReviewUserBox from "./CourseReviewUserBox";
 import {
-  canUseAdminCourseReviewList,
-  computeCourseReviewSummaryStats,
   findOwnAdminCourseReview,
   findOwnCourseReview,
   isStaffCourseReviewer,
   mapAdminCourseReviewToEndUserRecord,
   resolveEndUserReviewAuthorLabel,
+  type AdminCourseReviewRecord,
   type EndUserCourseReviewRecord,
 } from "./course-reviews.api";
-import { useCourseReviewList } from "./useCourseReviewList";
+import { type CourseReviewListController } from "./useCourseReviewList";
 import styles from "./styles/CourseReviewsSection.module.scss";
 
 type CourseReviewsSectionProps = {
   readonly courseId: string;
+  readonly reviewList: CourseReviewListController;
   readonly canSubmitReview: boolean;
   readonly isReviewsSectionVisible: boolean;
   readonly isReviewSubmissionEnabled: boolean;
@@ -43,32 +43,23 @@ function isOtherUserReview(
 
 const CourseReviewsSection = ({
   courseId,
+  reviewList,
   canSubmitReview,
   isReviewsSectionVisible,
   isReviewSubmissionEnabled,
   isFree = false,
 }: CourseReviewsSectionProps): ReactElement => {
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const isStaff = isStaffCourseReviewer(user?.roles);
   const isSectionDisabledForViewer = !isStaff && !isReviewsSectionVisible;
   const isSubmissionDisabledForViewer = !isStaff && !isReviewSubmissionEnabled;
-  const listMode = isStaff ? "admin" : "endUser";
-
-  const reviewList = useCourseReviewList({
-    courseId,
-    mode: listMode,
-    enabled:
-      Boolean(courseId) &&
-      !isSectionDisabledForViewer &&
-      (listMode === "admin"
-        ? isAuthenticated && canUseAdminCourseReviewList(user?.roles)
-        : true),
-    starsFilter: null,
-  });
 
   const ownReview = useMemo((): EndUserCourseReviewRecord | null => {
     if (isStaff) {
-      const ownAdminReview = findOwnAdminCourseReview(reviewList.items, user?.id);
+      const ownAdminReview = findOwnAdminCourseReview(
+        reviewList.items as AdminCourseReviewRecord[],
+        user?.id,
+      );
       if (!ownAdminReview || !user?.id) {
         return null;
       }
@@ -76,7 +67,7 @@ const CourseReviewsSection = ({
       return mapAdminCourseReviewToEndUserRecord(ownAdminReview, user.id);
     }
 
-    return findOwnCourseReview(reviewList.items);
+    return findOwnCourseReview(reviewList.items as EndUserCourseReviewRecord[]);
   }, [isStaff, reviewList.items, user?.id]);
 
   const otherReviews = useMemo((): EndUserCourseReviewRecord[] => {
@@ -85,21 +76,25 @@ const CourseReviewsSection = ({
         return [];
       }
 
-      return reviewList.items
+      return (reviewList.items as AdminCourseReviewRecord[])
         .filter((review) => review.userId !== user.id)
         .map((review) => mapAdminCourseReviewToEndUserRecord(review, user.id));
     }
 
     const ownReviewId = ownReview?.id;
-    return reviewList.items.filter((review) => isOtherUserReview(review, ownReviewId));
+    return (reviewList.items as EndUserCourseReviewRecord[]).filter((review) =>
+      isOtherUserReview(review, ownReviewId),
+    );
   }, [isStaff, ownReview?.id, reviewList.items, user?.id]);
 
-  const summaryStats = useMemo(
-    () => computeCourseReviewSummaryStats(reviewList.items, reviewList.totalCount),
-    [reviewList.items, reviewList.totalCount],
-  );
+  const summaryStats = reviewList.ratingSummary;
 
-  const showOwnBox = canSubmitReview || Boolean(ownReview);
+  const isOwnReviewSubmissionBlocked = Boolean(ownReview?.isSubmissionBlocked);
+  const showOwnBox = (canSubmitReview && !isOwnReviewSubmissionBlocked) || Boolean(ownReview);
+  const showEditableOwnBox = canSubmitReview && !isOwnReviewSubmissionBlocked;
+  const showReadOnlyOwnBox =
+    !canSubmitReview && Boolean(ownReview) && !isOwnReviewSubmissionBlocked;
+  const showOwnReviewBlockedNotice = canSubmitReview && isOwnReviewSubmissionBlocked;
   const showOthersScroll =
     reviewList.loading ||
     otherReviews.length > 0 ||
@@ -122,17 +117,13 @@ const CourseReviewsSection = ({
       <div className={styles.listFixed}>
         <CourseReviewSummary
           stats={summaryStats}
-          isPartialSample={reviewList.items.length < reviewList.totalCount}
+          isPartialSample={false}
           showDistribution={false}
           showAverageNumber={false}
           showReviewCount={false}
         />
 
-        {!isAuthenticated ? (
-          <Alert severity="info" className={styles.roleNotice}>
-            برای ثبت امتیاز و نظر وارد حساب کاربری شوید.
-          </Alert>
-        ) : isSubmissionDisabledForViewer ? (
+        {isSubmissionDisabledForViewer ? (
           <Alert severity="info" className={styles.roleNotice}>
             امکان ثبت امتیاز و نظر جدید برای این دوره غیرفعال است.
           </Alert>
@@ -155,15 +146,39 @@ const CourseReviewsSection = ({
           </Alert>
         ) : null}
 
-        {reviewList.loading && showOwnBox ? (
+        {showOwnReviewBlockedNotice ? (
+          <Alert severity="warning" className={styles.roleNotice}>
+            امکان ثبت نظر برای شما وجود ندارد.
+          </Alert>
+        ) : null}
+
+        {reviewList.loading && showReadOnlyOwnBox ? (
           <Skeleton variant="rounded" height={180} className={styles.reviewUserBox} />
         ) : null}
 
-        {!reviewList.loading && showOwnBox ? (
+        {showEditableOwnBox ? (
           <CourseReviewUserBox
             review={ownReview}
             authorLabel="شما"
-            canEdit={canSubmitReview}
+            canEdit
+            isOwnViewerBox
+            isRatingHidden={ownReview?.isRatingHidden}
+            isSubmissionBlocked={ownReview?.isSubmissionBlocked}
+            limitCommentsPreview
+            courseId={courseId}
+            onSubmitted={reviewList.refetch}
+          />
+        ) : null}
+
+        {!reviewList.loading && showReadOnlyOwnBox ? (
+          <CourseReviewUserBox
+            review={ownReview}
+            authorLabel="شما"
+            canEdit={false}
+            isOwnViewerBox
+            isRatingHidden={ownReview?.isRatingHidden}
+            isSubmissionBlocked={ownReview?.isSubmissionBlocked}
+            limitCommentsPreview
             courseId={courseId}
             onSubmitted={reviewList.refetch}
           />
@@ -171,7 +186,7 @@ const CourseReviewsSection = ({
       </div>
 
       {showOthersScroll ? (
-        <div ref={reviewList.scrollContainerRef} className={styles.othersListScroll}>
+        <div className={styles.adminListFlow}>
           {reviewList.loading
             ? Array.from({ length: 2 }).map((_, index) => (
                 <Skeleton

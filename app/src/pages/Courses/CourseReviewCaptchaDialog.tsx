@@ -92,12 +92,14 @@ const CourseReviewCaptchaDialog = ({
           برای ثبت امتیاز یا نظر، کد امنیتی زیر را وارد کنید.
         </Typography>
 
-        <LoginCaptchaField
-          key={`course-review-captcha-dialog-${captchaVersion}`}
-          required
-          disabled={submitting}
-          onCaptchaChange={onCaptchaChange}
-        />
+        {open ? (
+          <LoginCaptchaField
+            key={`course-review-captcha-dialog-${captchaVersion}`}
+            required
+            disabled={submitting}
+            onCaptchaChange={onCaptchaChange}
+          />
+        ) : null}
       </DialogContent>
 
       <DialogActions className={styles.captchaDialogActions}>

@@ -1,11 +1,18 @@
-import { Field, GraphQLISODateTime, ID, Int, ObjectType } from "@nestjs/graphql";
+import {
+  Field,
+  GraphQLISODateTime,
+  ID,
+  Int,
+  ObjectType,
+} from "@nestjs/graphql";
 import { Types } from "mongoose";
 
 import { PaginationCursorResponse } from "../../../../common/pagination/response";
+import { CourseReviewRatingSummaryGqlResponse } from "./course-review-list.gql.response";
 
 @ObjectType()
 export class UserCourseReviewAuthorGqlResponse {
-  @Field({ description: "Review author's first name only" })
+  @Field({ description: "Review author's first name from the user profile" })
   firstName: string;
 }
 
@@ -31,7 +38,7 @@ export class UserCourseReviewRatingGqlResponse {
 
 @ObjectType()
 export class UserCourseReviewMessageSenderGqlResponse {
-  @Field({ description: "Message sender first name or support label" })
+  @Field({ description: "Message sender first name from the user profile" })
   firstName: string;
 
   @Field({
@@ -49,7 +56,9 @@ export class UserCourseReviewMessageGqlResponse {
   @Field({ description: "Message body" })
   body: string;
 
-  @Field(() => GraphQLISODateTime, { description: "Date when the message was sent" })
+  @Field(() => GraphQLISODateTime, {
+    description: "Date when the message was sent",
+  })
   sentAt: Date;
 
   @Field(() => UserCourseReviewMessageSenderGqlResponse, {
@@ -75,15 +84,29 @@ export class UserCourseReviewListGqlResponse {
 
   @Field(() => UserCourseReviewRatingGqlResponse, {
     nullable: true,
-    description: "Visible rating for this review, if any",
+    description: "Rating visible when its moderation visibility is PUBLIC",
   })
   rating?: UserCourseReviewRatingGqlResponse;
 
   @Field(() => [UserCourseReviewMessageGqlResponse], {
     description:
-      "Public follow-up comments from the review author plus support messages visible only on the current user's own review",
+      "Public follow-up comments and support messages with PUBLIC moderation",
   })
   messages: UserCourseReviewMessageGqlResponse[];
+
+  @Field({
+    description:
+      "Whether the current user is blocked from submitting updates because the review thread is hidden",
+    defaultValue: false,
+  })
+  isSubmissionBlocked: boolean;
+
+  @Field({
+    description:
+      "Whether the current user's rating exists but is hidden from their view",
+    defaultValue: false,
+  })
+  isRatingHidden: boolean;
 }
 
 @ObjectType()
@@ -97,4 +120,10 @@ export class UserCourseReviewListPaginatedCursorGqlResponse {
     description: "Pagination metadata",
   })
   pagination: PaginationCursorResponse;
+
+  @Field(() => CourseReviewRatingSummaryGqlResponse, {
+    description:
+      "Aggregated public rating summary excluding hidden reviews and hidden ratings",
+  })
+  summary: CourseReviewRatingSummaryGqlResponse;
 }

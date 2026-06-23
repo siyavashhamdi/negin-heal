@@ -50,8 +50,13 @@ $ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   isolation: isolate;
   container-type: size;
   background:
-    radial-gradient(circle at 18% 18%, color-mix(in srgb, #ffffff 34%, transparent), transparent 28%),
-    linear-gradient(135deg, variables.$color-accent-soft-bg, color-mix(in srgb, variables.$color-secondary-light 35%, #ffffff) 48%, color-mix(in srgb, variables.$color-success-light 30%, #ffffff));
+    radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.58), transparent 31%),
+    linear-gradient(
+      135deg,
+      variables.$color-gradient-start 0%,
+      variables.$color-gradient-mid 52%,
+      #10b981 100%
+    );
 
   .coverImage,
   .defaultCoverIcon {
@@ -68,18 +73,30 @@ $ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   z-index: 0;
 }
 
+.defaultCoverGlow {
+  position: absolute;
+  inset: 16%;
+  z-index: 0;
+  border-radius: 999rem;
+  background: rgba(255, 255, 255, 0.24);
+  filter: blur(1.8rem);
+  transform: translateY(-4.75rem);
+}
+
 .defaultCoverIcon {
   position: absolute;
   inset: 0;
-  z-index: 0;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: color-mix(in srgb, variables.$color-info-dark 78%, white);
+  color: #ffffff;
+  transform: translateY(-4.75rem);
 }
 
 .defaultCoverIcon svg {
   font-size: 3.1rem;
+  filter: drop-shadow(0 1rem 1.8rem rgba(15, 23, 42, 0.24));
 }
 
 .coverContent {
@@ -385,8 +402,13 @@ $ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   inline-size: 100%;
   block-size: 100cqh;
   background:
-    radial-gradient(circle at 18% 18%, color-mix(in srgb, #ffffff 34%, transparent), transparent 28%),
-    linear-gradient(135deg, variables.$color-accent-soft-bg, color-mix(in srgb, variables.$color-secondary-light 35%, #ffffff) 48%, color-mix(in srgb, variables.$color-success-light 30%, #ffffff));
+    radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.58), transparent 31%),
+    linear-gradient(
+      135deg,
+      variables.$color-gradient-start 0%,
+      variables.$color-gradient-mid 52%,
+      #10b981 100%
+    );
   transform: scale(1.04);
   filter: blur(0.55rem) saturate(118%);
   -webkit-filter: blur(0.55rem) saturate(118%);

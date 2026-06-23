@@ -31,7 +31,6 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material";
-import { useQuery } from "@apollo/client/react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   getCoreRowModel,
@@ -46,7 +45,6 @@ import type { Theme } from "@mui/material/styles";
 
 import { COURSE_PAYMENT_MANUAL_CREATE_MUTATION } from "../../graphql/mutations/coursePaymentManualCreate.mutation";
 import { COURSE_PAYMENT_STATUS_UPDATE_MUTATION } from "../../graphql/mutations/coursePaymentStatusUpdate.mutation";
-import { COURSE_PAYMENT_DETAIL_QUERY } from "../../graphql/queries/coursePaymentDetail.query";
 import { COURSE_PAYMENT_LIST_QUERY } from "../../graphql/queries/coursePaymentList.query";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useBadgeCountFirstPageReload } from "../../hooks/useBadgeCountFirstPageReload";
@@ -86,9 +84,6 @@ import {
   buildCoursePaymentListQueryVariables,
   hasCoursePaymentFiltersApplied,
   mapCoursePaymentListRowToRecord,
-  mapCoursePaymentDetailRowToRecord,
-  type CoursePaymentDetailQuery,
-  type CoursePaymentDetailQueryVariables,
   type CoursePaymentListFilters,
   type CoursePaymentListItemRow,
   type CoursePaymentListQuery,
@@ -104,6 +99,7 @@ import {
   PaymentRowActions,
   ReviewPaymentDialogActions,
 } from "./PaymentActions";
+import { useCoursePaymentReviewRecord } from "./useCoursePaymentReviewRecord";
 import styles from "./styles/payments-list.module.scss";
 import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
 
@@ -661,22 +657,8 @@ const PaymentsList = (): ReactElement => {
     reload: onRefresh,
   });
 
-  const { data: paymentDetailData, loading: paymentDetailLoading } = useQuery<CoursePaymentDetailQuery, CoursePaymentDetailQueryVariables>(
-    COURSE_PAYMENT_DETAIL_QUERY,
-    {
-      variables: { input: { id: reviewPaymentId ?? "" } },
-      skip: !reviewPaymentId,
-      fetchPolicy: "network-only",
-    }
-  );
-
-  const reviewPayment = useMemo(() => {
-    if (!reviewPaymentId || paymentDetailData?.coursePaymentDetail?.id !== reviewPaymentId) {
-      return null;
-    }
-
-    return mapCoursePaymentDetailRowToRecord(paymentDetailData.coursePaymentDetail);
-  }, [paymentDetailData, reviewPaymentId]);
+  const { record: reviewPayment, isInitialLoading: paymentDetailLoading } =
+    useCoursePaymentReviewRecord(reviewPaymentId);
 
   const [updatePaymentStatus, updatePaymentStatusResult] = useMutationWithSnackbar<
     CoursePaymentStatusUpdateMutation,

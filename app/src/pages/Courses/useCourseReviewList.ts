@@ -19,12 +19,26 @@ import {
   type CourseReviewListMode,
   type CourseReviewListQuery,
   type CourseReviewListQueryVariables,
+  type CourseReviewSummaryStats,
   type EndUserCourseReviewRecord,
+  mapCourseReviewRatingSummaryToStats,
   type UserCourseReviewListQuery,
   type UserCourseReviewListQueryVariables,
 } from "./course-reviews.api";
 
 type CourseReviewListScrollRoot = "list" | "parent";
+
+type ReviewListItem = EndUserCourseReviewRecord | AdminCourseReviewRecord;
+
+type ReviewListPage = {
+  readonly items: ReviewListItem[];
+  readonly pagination: {
+    readonly total: number;
+    readonly hasNextPage: boolean;
+    readonly endCursor?: string | null;
+  };
+  readonly summary?: CourseReviewSummaryStats | null;
+};
 
 type UseCourseReviewListOptions = {
   readonly courseId: string;
@@ -32,6 +46,19 @@ type UseCourseReviewListOptions = {
   readonly enabled: boolean;
   readonly starsFilter: number | null;
   readonly scrollRoot?: CourseReviewListScrollRoot;
+};
+
+export type CourseReviewListController = {
+  readonly items: ReadonlyArray<EndUserCourseReviewRecord | AdminCourseReviewRecord>;
+  readonly totalCount: number;
+  readonly ratingSummary: CourseReviewSummaryStats;
+  readonly loading: boolean;
+  readonly isFetchingMore: boolean;
+  readonly error: unknown;
+  readonly refetch: () => Promise<void>;
+  readonly hasNextPage: boolean;
+  readonly loadMoreRef: RefObject<HTMLDivElement>;
+  readonly scrollContainerRef: RefObject<HTMLDivElement>;
 };
 
 function findScrollableAncestor(element: HTMLElement | null): HTMLElement | null {
@@ -49,25 +76,19 @@ function findScrollableAncestor(element: HTMLElement | null): HTMLElement | null
   return null;
 }
 
-type UseCourseReviewListResult<TItem> = {
-  readonly items: TItem[];
-  readonly totalCount: number;
-  readonly loading: boolean;
-  readonly isFetchingMore: boolean;
-  readonly error: unknown;
-  readonly refetch: () => void;
-  readonly hasNextPage: boolean;
-  readonly loadMoreRef: RefObject<HTMLDivElement>;
-  readonly scrollContainerRef: RefObject<HTMLDivElement>;
-};
+function appendUniqueReviewItems(
+  previousItems: ReadonlyArray<ReviewListItem>,
+  incomingItems: ReadonlyArray<ReviewListItem>,
+): ReviewListItem[] {
+  const existingIds = new Set(previousItems.map((item) => item.id));
+  const newItems = incomingItems.filter((item) => !existingIds.has(item.id));
 
-export function useCourseReviewList(
-  options: UseCourseReviewListOptions & { readonly mode: "endUser" },
-): UseCourseReviewListResult<EndUserCourseReviewRecord>;
+  if (newItems.length === 0) {
+    return [...previousItems];
+  }
 
-export function useCourseReviewList(
-  options: UseCourseReviewListOptions & { readonly mode: "admin" },
-): UseCourseReviewListResult<AdminCourseReviewRecord>;
+  return [...previousItems, ...newItems];
+}
 
 export function useCourseReviewList({
   courseId,
@@ -75,23 +96,21 @@ export function useCourseReviewList({
   enabled,
   starsFilter,
   scrollRoot = "list",
-}: UseCourseReviewListOptions):
-  | UseCourseReviewListResult<EndUserCourseReviewRecord>
-  | UseCourseReviewListResult<AdminCourseReviewRecord> {
+}: UseCourseReviewListOptions): CourseReviewListController {
   const isAdminMode = mode === "admin";
-
-  const [items, setItems] = useState<
-    EndUserCourseReviewRecord[] | AdminCourseReviewRecord[]
-  >([]);
-  const [pagination, setPagination] = useState({
-    total: 0,
-    hasNextPage: false,
-    endCursor: null as string | null,
-  });
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const fetchingMoreRef = useRef(false);
+  const hasPaginatedRef = useRef(false);
+
+  const [items, setItems] = useState<ReviewListItem[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [endCursor, setEndCursor] = useState<string | null>(null);
+  const [ratingSummary, setRatingSummary] = useState<CourseReviewSummaryStats>(() =>
+    mapCourseReviewRatingSummaryToStats(null),
+  );
 
   const listVariables = useMemo(
     () =>
@@ -111,63 +130,74 @@ export function useCourseReviewList({
     [courseId, isAdminMode, starsFilter],
   );
 
-  useEffect(() => {
-    setItems([]);
-    setPagination({
-      total: 0,
-      hasNextPage: false,
-      endCursor: null,
-    });
-  }, [courseId, mode, starsFilter]);
+  const queryDocument = isAdminMode ? COURSE_REVIEW_LIST_QUERY : USER_COURSE_REVIEW_LIST_QUERY;
 
   const { data, loading, error, fetchMore, refetch, networkStatus } = useQuery<
     CourseReviewListQuery | UserCourseReviewListQuery,
     CourseReviewListQueryVariables | UserCourseReviewListQueryVariables
-  >(isAdminMode ? COURSE_REVIEW_LIST_QUERY : USER_COURSE_REVIEW_LIST_QUERY, {
+  >(queryDocument, {
     variables: listVariables,
     skip: !enabled || !courseId,
-    fetchPolicy: "cache-first",
-    nextFetchPolicy: "cache-first",
+    fetchPolicy: "network-only",
     notifyOnNetworkStatusChange: true,
   });
 
-  const isFetchingMore = networkStatus === NetworkStatus.fetchMore;
-  const isInitialLoading =
-    (loading || networkStatus === NetworkStatus.loading) && items.length === 0;
+  const queryField = isAdminMode ? "courseReviewList" : "userCourseReviewList";
+
+  const page = useMemo((): ReviewListPage | undefined => {
+    if (isAdminMode) {
+      return (data as CourseReviewListQuery | undefined)?.courseReviewList;
+    }
+
+    return (data as UserCourseReviewListQuery | undefined)?.userCourseReviewList;
+  }, [data, isAdminMode]);
 
   useEffect(() => {
-    const page = isAdminMode
-      ? (data as CourseReviewListQuery | undefined)?.courseReviewList
-      : (data as UserCourseReviewListQuery | undefined)?.userCourseReviewList;
+    hasPaginatedRef.current = false;
+    setItems([]);
+    setTotalCount(0);
+    setHasNextPage(false);
+    setEndCursor(null);
+    setRatingSummary(mapCourseReviewRatingSummaryToStats(null));
+  }, [courseId, listVariables]);
 
+  useEffect(() => {
     if (!page) {
       return;
     }
 
     if (
       networkStatus === NetworkStatus.loading ||
-      networkStatus === NetworkStatus.setVariables
+      networkStatus === NetworkStatus.setVariables ||
+      networkStatus === NetworkStatus.fetchMore
     ) {
       return;
     }
 
-    setItems(page.items);
-    setPagination({
-      total: page.pagination.total,
-      hasNextPage: page.pagination.hasNextPage,
-      endCursor: page.pagination.endCursor ?? null,
-    });
-  }, [data, isAdminMode, networkStatus]);
+    if (!hasPaginatedRef.current) {
+      setItems(page.items);
+      setTotalCount(page.pagination.total);
+      setHasNextPage(page.pagination.hasNextPage);
+      setEndCursor(page.pagination.endCursor ?? null);
+      setRatingSummary(mapCourseReviewRatingSummaryToStats(page.summary));
+    }
+  }, [networkStatus, page]);
 
-  const queryField = isAdminMode ? "courseReviewList" : "userCourseReviewList";
+  const isFetchingMore = networkStatus === NetworkStatus.fetchMore;
+  const isInitialLoading =
+    enabled &&
+    items.length === 0 &&
+    (loading ||
+      networkStatus === NetworkStatus.loading ||
+      networkStatus === NetworkStatus.setVariables);
 
   const loadNextPage = useCallback(async (): Promise<void> => {
-    const nextCursor = pagination.endCursor ?? items[items.length - 1]?.id ?? null;
+    const nextCursor = endCursor ?? items[items.length - 1]?.id ?? null;
     if (
       fetchingMoreRef.current ||
       loading ||
       isFetchingMore ||
-      !pagination.hasNextPage ||
+      !hasNextPage ||
       !nextCursor
     ) {
       return;
@@ -175,7 +205,7 @@ export function useCourseReviewList({
 
     fetchingMoreRef.current = true;
     try {
-      await fetchMore({
+      const result = await fetchMore({
         variables: {
           input: {
             ...listVariables.input,
@@ -187,46 +217,57 @@ export function useCourseReviewList({
         },
         updateQuery: (previous, { fetchMoreResult }) => {
           const previousPage = previous[queryField as keyof typeof previous] as
-            | UserCourseReviewListQuery["userCourseReviewList"]
-            | CourseReviewListQuery["courseReviewList"]
+            | ReviewListPage
             | undefined;
           const nextPage = fetchMoreResult?.[queryField as keyof typeof fetchMoreResult] as
-            | UserCourseReviewListQuery["userCourseReviewList"]
-            | CourseReviewListQuery["courseReviewList"]
+            | ReviewListPage
             | undefined;
 
           if (!previousPage || !nextPage) {
             return previous;
           }
 
-          const existingIds = new Set(previousPage.items.map((item) => item.id));
-          const newItems = nextPage.items.filter((item) => !existingIds.has(item.id));
-
           return {
+            ...previous,
             [queryField]: {
-              items: [...previousPage.items, ...newItems],
+              ...previousPage,
+              items: appendUniqueReviewItems(previousPage.items, nextPage.items),
               pagination: nextPage.pagination,
             },
           };
         },
       });
+
+      const nextPage = result.data?.[queryField as keyof typeof result.data] as
+        | ReviewListPage
+        | undefined;
+
+      if (!nextPage) {
+        return;
+      }
+
+      hasPaginatedRef.current = true;
+      setItems((previousItems) => appendUniqueReviewItems(previousItems, nextPage.items));
+      setTotalCount(nextPage.pagination.total);
+      setHasNextPage(nextPage.pagination.hasNextPage);
+      setEndCursor(nextPage.pagination.endCursor ?? null);
     } finally {
       fetchingMoreRef.current = false;
     }
   }, [
+    endCursor,
     fetchMore,
+    hasNextPage,
     isFetchingMore,
     items,
     listVariables,
     loading,
-    pagination.endCursor,
-    pagination.hasNextPage,
     queryField,
   ]);
 
   useEffect(() => {
     const sentinel = loadMoreRef.current;
-    if (!sentinel || !pagination.hasNextPage) {
+    if (!sentinel || !hasNextPage || isInitialLoading) {
       return undefined;
     }
 
@@ -241,7 +282,7 @@ export function useCourseReviewList({
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry?.isIntersecting) {
+        if (entry?.isIntersecting && !fetchingMoreRef.current) {
           void loadNextPage();
         }
       },
@@ -256,20 +297,22 @@ export function useCourseReviewList({
     return () => {
       observer.disconnect();
     };
-  }, [items.length, loadNextPage, pagination.hasNextPage, scrollRoot]);
+  }, [hasNextPage, isInitialLoading, items.length, loadNextPage, scrollRoot]);
 
-  const refetchList = useCallback((): void => {
-    void refetch({ fetchPolicy: "network-only" });
+  const refetchList = useCallback(async (): Promise<void> => {
+    hasPaginatedRef.current = false;
+    await refetch();
   }, [refetch]);
 
   return {
     items,
-    totalCount: pagination.total,
+    totalCount,
+    ratingSummary,
     loading: isInitialLoading,
     isFetchingMore,
     error,
     refetch: refetchList,
-    hasNextPage: pagination.hasNextPage,
+    hasNextPage,
     loadMoreRef,
     scrollContainerRef,
   };

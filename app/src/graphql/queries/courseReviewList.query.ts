@@ -74,6 +74,15 @@ export const COURSE_REVIEW_LIST_QUERY = gql`
         hasNextPage
         hasPreviousPage
       }
+      summary {
+        averageRating
+        ratedCount
+        distribution {
+          stars
+          count
+          percentage
+        }
+      }
     }
   }
 `;

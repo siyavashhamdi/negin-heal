@@ -2,13 +2,14 @@ import SupportAgentRoundedIcon from "@mui/icons-material/SupportAgentRounded";
 import { Typography } from "@mui/material";
 import { type ReactElement } from "react";
 
+import DateTimeValue from "../../shared/display/DateTimeValue";
 import StarRating from "../../shared/rating/StarRating";
-import { formatRelativeTimeLabel } from "../../utilities/relative-time.util";
 import {
   type EndUserCourseReviewRecord,
   resolveEndUserReviewAuthorLabel,
+  resolveReviewRatingDate,
 } from "./course-reviews.api";
-import { CourseReviewComment, formatReviewDateLabel } from "./CourseReviewComment";
+import { CourseReviewComment } from "./CourseReviewComment";
 import styles from "./styles/CourseReviewsSection.module.scss";
 
 type CourseReviewCardProps = {
@@ -21,7 +22,7 @@ const CourseReviewCard = ({ review }: CourseReviewCardProps): ReactElement | nul
   }
 
   const authorLabel = resolveEndUserReviewAuthorLabel(review);
-  const dateLabel = formatReviewDateLabel(review.rating);
+  const ratingDate = resolveReviewRatingDate(review.rating);
   const followUpComments = review.messages.filter((message) => !message.sender.isSupport);
   const supportMessages = review.isMine
     ? review.messages.filter((message) => message.sender.isSupport)
@@ -41,10 +42,10 @@ const CourseReviewCard = ({ review }: CourseReviewCardProps): ReactElement | nul
         <StarRating value={review.rating.stars} size="small" ariaLabel={`امتیاز ${review.rating.stars}`} />
       </div>
 
-      {dateLabel ? (
-        <Typography variant="caption" color="text.secondary" className={styles.reviewCardDate}>
-          {dateLabel}
-        </Typography>
+      {ratingDate ? (
+        <div className={styles.reviewCardDate}>
+          <DateTimeValue value={ratingDate} />
+        </div>
       ) : null}
 
       <CourseReviewComment comment={review.rating.comment} />
@@ -67,7 +68,7 @@ const CourseReviewCard = ({ review }: CourseReviewCardProps): ReactElement | nul
                 <div className={styles.reviewThreadMessageHeader}>
                   <SupportAgentRoundedIcon fontSize="small" />
                   <strong>{message.sender.firstName}</strong>
-                  <span>{formatRelativeTimeLabel(message.sentAt)}</span>
+                  <DateTimeValue value={message.sentAt} />
                 </div>
                 <Typography component="p">{message.body}</Typography>
               </div>

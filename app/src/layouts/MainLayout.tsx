@@ -11,15 +11,27 @@ import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import { Avatar, Badge, Box, Button, Container, Divider, IconButton, Popover } from "@mui/material";
 import { useQuery } from "@apollo/client/react";
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from "react";
-import { Link as RouterLink, NavLink } from "react-router-dom";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactElement,
+  type ReactNode,
+} from "react";
+import { Link as RouterLink, NavLink, useLocation } from "react-router-dom";
 import Footer from "../components/layout/Footer";
 import { AvatarInitial } from "../shared/display/AvatarInitial";
 import { useAuth } from "../contexts/AuthContext";
 import { useThemeMode } from "../contexts/ThemeContext";
 import { BADGE_COUNT_QUERY } from "../graphql/queries/badgeCount.query";
 import { useMe } from "../hooks/useMe";
-import { resolveAvatarInitial, resolveMeUserDisplayName, resolveStoredUserDisplayName } from "../utils/storedUser.util";
+import {
+  resolveAvatarInitial,
+  resolveMeUserDisplayName,
+  resolveStoredUserDisplayName,
+} from "../utils/storedUser.util";
 import { useSnackbar } from "../hooks/useSnackbar";
 import { useTranslation } from "../hooks/useTranslation";
 import {
@@ -27,11 +39,14 @@ import {
   GENERAL_SUBSCRIPTION_UPDATE_TYPES,
   type GeneralNotificationMessageType,
 } from "../constants";
-import { useGeneralUpdatesSubscription, type GeneralUpdateEvent } from "../hooks/useGeneralUpdatesSubscription";
+import {
+  useGeneralUpdatesSubscription,
+  type GeneralUpdateEvent,
+} from "../hooks/useGeneralUpdatesSubscription";
 import { useVerificationStatusSubscription } from "../hooks/useVerificationStatusSubscription";
 import { notifyBadgeCountUpdateListeners } from "../lib/badge-count-update-listeners";
 import { notifyGeneralUpdateListeners } from "../lib/general-updates-listeners";
-import { APP_SHELL_ROUTES } from "../routing/app-shell-routes";
+import { APP_SHELL_ROUTES, isCourseDetailRoute } from "../routing/app-shell-routes";
 import { resolveNotificationActionPayload } from "../utilities/notification-action.util";
 import { showBrowserNotification } from "../utils/browserNotification.util";
 import { scrollToTopOnMobile } from "../utils/scrollToTopOnMobile.util";
@@ -202,6 +217,7 @@ export function MainLayout({
   showHeader = true,
   showFooter = true,
 }: MainLayoutProps): ReactElement {
+  const location = useLocation();
   const { showSnackbar } = useSnackbar();
   const { t } = useTranslation();
   const { mode, toggleTheme } = useThemeMode();
@@ -213,8 +229,7 @@ export function MainLayout({
   const [helpAnchorEl, setHelpAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [userAnchorEl, setUserAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [isSideMenuCollapsed, setIsSideMenuCollapsed] = useState(false);
-  const [generalUpdatePopup, setGeneralUpdatePopup] =
-    useState<GeneralUpdatePopup | null>(null);
+  const [generalUpdatePopup, setGeneralUpdatePopup] = useState<GeneralUpdatePopup | null>(null);
 
   const isNotificationOpen = Boolean(notificationAnchorEl);
   const isSettingsOpen = Boolean(settingsAnchorEl);
@@ -236,20 +251,22 @@ export function MainLayout({
       roles,
       isAuthenticated: Boolean(authUser),
     }),
-    [authUser, roles],
+    [authUser, roles]
   );
   const visibleAppShellNavItems = useMemo(
     () => filterAppShellNavItems(APP_SHELL_NAV_ITEMS, appShellNavContext),
-    [appShellNavContext],
+    [appShellNavContext]
   );
   const brandTagline = usesPublicCourseList
     ? t("layout.header.brand.publicTagline")
     : t("layout.header.brand.tagline");
 
-  const { data: badgeCountData, refetch: refetchBadgeCount } =
-    useQuery<BadgeCountQuery>(BADGE_COUNT_QUERY, {
+  const { data: badgeCountData, refetch: refetchBadgeCount } = useQuery<BadgeCountQuery>(
+    BADGE_COUNT_QUERY,
+    {
       fetchPolicy: "cache-and-network",
-    });
+    }
+  );
   const previousAuthUserIdRef = useRef<string | null>(authUser?.id ?? null);
   const [liveCounts, setLiveCounts] = useState<{
     readonly courses?: number;
@@ -259,13 +276,16 @@ export function MainLayout({
     readonly others?: number;
   }>({});
 
+  const shouldLoadHeaderNotificationPreview =
+    isAuthenticated && !isCourseDetailRoute(location.pathname);
+
   const {
     items: headerNotifications,
     upsertLiveHeaderNotification,
     markAllAsRead: markAllHeaderNotificationsAsRead,
     canMarkAllAsRead: canMarkAllHeaderNotificationsAsRead,
     isMarkingAllAsRead: isMarkingAllHeaderNotificationsAsRead,
-  } = useHeaderNotificationPreview(isAuthenticated);
+  } = useHeaderNotificationPreview(shouldLoadHeaderNotificationPreview);
 
   useEffect(() => {
     const currentAuthUserId = authUser?.id ?? null;
@@ -286,70 +306,71 @@ export function MainLayout({
     notifyBadgeCountUpdateListeners();
   }, [refetchBadgeCount]);
 
-  const handleNotificationUpdate = useCallback((event: GeneralUpdateEvent): void => {
-    const payload = asNotificationPayload(event.payload);
-    const incomingTitle =
-      typeof payload?.title === "string" && payload.title.trim().length > 0
-        ? payload.title
-        : undefined;
-    const incomingDescription =
-      typeof payload?.description === "string" && payload.description.trim().length > 0
-        ? payload.description
-        : "رویداد جدیدی برای حساب شما ثبت شد.";
-    const incomingTimeLabel = formatGeneralUpdateTimeLabel(event.createdAt);
-    const popupId = event.targetId || `${event.updateType}-${event.createdAt}`;
-    const popupMode = resolvePopupMode(payload?.mode);
-    const action = resolveNotificationActionPayload(payload) ?? undefined;
-    const messageType =
-      typeof payload?.messageType === "string"
-        ? payload.messageType.toUpperCase()
-        : undefined;
+  const handleNotificationUpdate = useCallback(
+    (event: GeneralUpdateEvent): void => {
+      const payload = asNotificationPayload(event.payload);
+      const incomingTitle =
+        typeof payload?.title === "string" && payload.title.trim().length > 0
+          ? payload.title
+          : undefined;
+      const incomingDescription =
+        typeof payload?.description === "string" && payload.description.trim().length > 0
+          ? payload.description
+          : "رویداد جدیدی برای حساب شما ثبت شد.";
+      const incomingTimeLabel = formatGeneralUpdateTimeLabel(event.createdAt);
+      const popupId = event.targetId || `${event.updateType}-${event.createdAt}`;
+      const popupMode = resolvePopupMode(payload?.mode);
+      const action = resolveNotificationActionPayload(payload) ?? undefined;
+      const messageType =
+        typeof payload?.messageType === "string" ? payload.messageType.toUpperCase() : undefined;
 
-    upsertLiveHeaderNotification({
-      id: popupId,
-      title: incomingTitle ?? "اعلان جدید",
-      description: incomingDescription,
-      timeLabel: incomingTimeLabel,
-    });
-    setLiveCounts((previous) => {
-      if (typeof previous.notifications !== "number") {
-        return previous;
+      upsertLiveHeaderNotification({
+        id: popupId,
+        title: incomingTitle ?? "اعلان جدید",
+        description: incomingDescription,
+        timeLabel: incomingTimeLabel,
+      });
+      setLiveCounts((previous) => {
+        if (typeof previous.notifications !== "number") {
+          return previous;
+        }
+
+        return {
+          ...previous,
+          notifications: previous.notifications + 1,
+        };
+      });
+
+      if (payload?.isPushNotification) {
+        void showBrowserNotification({
+          title: incomingTitle ?? "اعلان جدید",
+          body: incomingDescription,
+          tag: popupId,
+        });
       }
 
-      return {
-        ...previous,
-        notifications: previous.notifications + 1,
-      };
-    });
+      if (!messageType) {
+        return;
+      }
 
-    if (payload?.isPushNotification) {
-      void showBrowserNotification({
-        title: incomingTitle ?? "اعلان جدید",
-        body: incomingDescription,
-        tag: popupId,
+      if (messageType === GENERAL_NOTIFICATION_MESSAGE_TYPES.SNACKBAR) {
+        showSnackbar(
+          incomingTitle ? `${incomingTitle}: ${incomingDescription}` : incomingDescription,
+          resolveSnackbarSeverity(payload?.mode)
+        );
+        return;
+      }
+
+      setGeneralUpdatePopup({
+        id: popupId,
+        title: incomingTitle,
+        description: incomingDescription,
+        mode: popupMode,
+        action,
       });
-    }
-
-    if (!messageType) {
-      return;
-    }
-
-    if (messageType === GENERAL_NOTIFICATION_MESSAGE_TYPES.SNACKBAR) {
-      showSnackbar(
-        incomingTitle ? `${incomingTitle}: ${incomingDescription}` : incomingDescription,
-        resolveSnackbarSeverity(payload?.mode)
-      );
-      return;
-    }
-
-    setGeneralUpdatePopup({
-      id: popupId,
-      title: incomingTitle,
-      description: incomingDescription,
-      mode: popupMode,
-      action,
-    });
-  }, [showSnackbar, upsertLiveHeaderNotification]);
+    },
+    [showSnackbar, upsertLiveHeaderNotification]
+  );
 
   useGeneralUpdatesSubscription({
     enabled: Boolean(authUser),
@@ -379,35 +400,29 @@ export function MainLayout({
       notifications: notificationBadgeCount,
       support: supportBadgeCount,
     }),
-    [coursesBadgeCount, notificationBadgeCount, paymentBadgeCount, supportBadgeCount],
+    [coursesBadgeCount, notificationBadgeCount, paymentBadgeCount, supportBadgeCount]
   );
 
   const headerSettingsItems = useMemo(
     () => filterHeaderPanelNavItems(HEADER_SETTINGS_ITEMS, roles, isAuthenticated),
-    [isAuthenticated, roles],
+    [isAuthenticated, roles]
   );
 
   const headerHelpItems = useMemo(
     () => filterHeaderPanelNavItems(HEADER_HELP_ITEMS, roles, isAuthenticated),
-    [isAuthenticated, roles],
+    [isAuthenticated, roles]
   );
 
   const headerUserItems = useMemo(
     () => filterHeaderPanelNavItems(HEADER_USER_ITEMS, roles, isAuthenticated),
-    [isAuthenticated, roles],
+    [isAuthenticated, roles]
   );
 
-  const headerSettingsDestination = useMemo(
-    () => resolveHeaderSettingsDestination(roles),
-    [roles],
-  );
+  const headerSettingsDestination = useMemo(() => resolveHeaderSettingsDestination(roles), [roles]);
 
   const fallbackUser = t("layout.mainLayout.fallbackUser");
 
-  const userRoleTitle =
-    user?.roles
-      ?.filter((role) => role !== "END_USER")
-      .join("، ") ?? "";
+  const userRoleTitle = user?.roles?.filter((role) => role !== "END_USER").join("، ") ?? "";
   const adminRoleBadgeLabel = authUser?.roles?.includes("SUPER_ADMIN")
     ? SUPER_ADMIN_ROLE_BADGE_LABEL
     : null;
@@ -424,8 +439,7 @@ export function MainLayout({
     };
   }, [authUser, fallbackUser, user, userLoading]);
 
-  const profileAvatar =
-    authUser && avatarUrl ? { src: avatarUrl, alt: userDisplayName } : null;
+  const profileAvatar = authUser && avatarUrl ? { src: avatarUrl, alt: userDisplayName } : null;
 
   const themeToggleLabel =
     mode === "light"
@@ -447,10 +461,7 @@ export function MainLayout({
   return (
     <Box
       component="main"
-      className={[
-        "main-layout",
-        isSideMenuCollapsed ? "main-layout--side-menu-collapsed" : "",
-      ]
+      className={["main-layout", isSideMenuCollapsed ? "main-layout--side-menu-collapsed" : ""]
         .filter(Boolean)
         .join(" ")}
     >
@@ -616,7 +627,10 @@ export function MainLayout({
                           <div className="main-layout__notifications-list">
                             {headerNotifications.length > 0 ? (
                               headerNotifications.map((notification) => (
-                                <article key={notification.id} className="main-layout__notification-item">
+                                <article
+                                  key={notification.id}
+                                  className="main-layout__notification-item"
+                                >
                                   <div className="main-layout__notification-dot" />
                                   <div>
                                     <h4>{notification.title}</h4>
@@ -923,11 +937,7 @@ export function MainLayout({
       </Container>
 
       {showHeader ? (
-        <nav
-          className="main-layout__mobile-bottom-nav"
-          data-opaque-shell
-          aria-label="منوی موبایل"
-        >
+        <nav className="main-layout__mobile-bottom-nav" data-opaque-shell aria-label="منوی موبایل">
           {visibleAppShellNavItems.map((item) => (
             <NavLink
               key={item.id}

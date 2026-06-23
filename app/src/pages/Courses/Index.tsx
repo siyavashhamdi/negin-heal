@@ -22,6 +22,7 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { useDebounce } from "../../hooks/useDebounce";
 import { usePageSeoOverride } from "../../hooks/usePageSeoOverride";
 import { useBadgeCountFirstPageReload } from "../../hooks/useBadgeCountFirstPageReload";
+import { useCoursePaymentPaidNotificationRefetch } from "../../hooks/useCoursePaymentPaidNotificationRefetch";
 import { useAuth } from "../../contexts/AuthContext";
 import { API_CONFIG } from "../../config";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
@@ -444,6 +445,10 @@ const CoursesIndex = (): ReactElement => {
   useBadgeCountFirstPageReload({
     isOnFirstPage,
     reload: onRefresh,
+  });
+
+  useCoursePaymentPaidNotificationRefetch({
+    refetch: onRefresh,
   });
 
   const loadNextPage = useCallback(async (): Promise<void> => {

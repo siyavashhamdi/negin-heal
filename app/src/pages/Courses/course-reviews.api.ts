@@ -37,6 +37,8 @@ export type EndUserCourseReviewRecord = {
       readonly isSupport: boolean;
     };
   }>;
+  readonly isSubmissionBlocked?: boolean;
+  readonly isRatingHidden?: boolean;
 };
 
 export type AdminCourseReviewRecord = {
@@ -110,6 +112,7 @@ export type UserCourseReviewListQuery = {
   userCourseReviewList: {
     items: EndUserCourseReviewRecord[];
     pagination: CourseReviewPagination;
+    summary: CourseReviewSummaryStats;
   };
 };
 
@@ -117,6 +120,7 @@ export type CourseReviewListQuery = {
   courseReviewList: {
     items: AdminCourseReviewRecord[];
     pagination: CourseReviewPagination;
+    summary: CourseReviewSummaryStats;
   };
 };
 
@@ -311,24 +315,16 @@ export function findOwnAdminCourseReview(
   return items.find((item) => item.userId === userId) ?? null;
 }
 
-function extractReviewAuthorFirstName(fullName: string | undefined): string {
-  const normalized = fullName?.trim();
-  if (!normalized) {
-    return "کاربر";
-  }
-
-  return normalized.split(/\s+/)[0] ?? normalized;
-}
-
 export function mapAdminCourseReviewToEndUserRecord(
   review: AdminCourseReviewRecord,
   currentUserId: string,
 ): EndUserCourseReviewRecord {
   const isMine = review.userId === currentUserId;
-  const staffOwner = isStaffReviewOwner(review);
-  const authorFirstName = staffOwner
-    ? "پشتیبانی"
-    : extractReviewAuthorFirstName(review.userSnapshot.fullName);
+  const authorFirstName =
+    review.user?.profile?.firstName?.trim() ||
+    review.userSnapshot.fullName?.trim().split(/\s+/)[0] ||
+    review.userSnapshot.username?.trim() ||
+    "کاربر";
 
   return {
     id: review.id,
@@ -352,12 +348,20 @@ export function mapAdminCourseReviewToEndUserRecord(
         body: message.body,
         sentAt: message.sentAt,
         sender: {
-          firstName: isSupport || staffOwner ? "پشتیبانی" : authorFirstName,
+          firstName: isSupport
+            ? "پشتیبانی"
+            : message.senderUser?.profile?.firstName?.trim() || authorFirstName,
           isSupport,
         },
       };
     }),
   };
+}
+
+export function mapAdminCourseReviewToViewerRecord(
+  review: AdminCourseReviewRecord,
+): EndUserCourseReviewRecord {
+  return mapAdminCourseReviewToEndUserRecord(review, "__viewer_not_owner__");
 }
 
 export function findOwnCourseReview(
@@ -420,8 +424,7 @@ export function buildEndUserCourseReviewListVariables(
       },
       options: {
         limit,
-        startCursor,
-        sort: { ratedAt: "DESC" },
+        ...(startCursor ? { startCursor } : {}),
       },
     },
   };
@@ -441,8 +444,7 @@ export function buildAdminCourseReviewListVariables(
       },
       options: {
         limit,
-        startCursor,
-        sort: { ratedAt: "DESC" },
+        ...(startCursor ? { startCursor } : {}),
       },
     },
   };
@@ -519,6 +521,28 @@ export function resolveAdminReviewAuthorLabel(review: AdminCourseReviewRecord): 
   return review.userSnapshot.username?.trim() || "کاربر";
 }
 
+export function resolveAdminCourseReviewSenderUserLabel(
+  senderUser?: AdminCourseReviewRecord["messages"][number]["senderUser"],
+): string {
+  const profileName = [senderUser?.profile?.firstName, senderUser?.profile?.lastName]
+    .filter((part) => part?.trim())
+    .join(" ")
+    .trim();
+
+  return profileName || "کاربر";
+}
+
+export function resolveAdminCourseReviewMessageSenderLabel(
+  review: AdminCourseReviewRecord,
+  message: AdminCourseReviewRecord["messages"][number],
+): string {
+  if (message.senderUserId === review.userId) {
+    return resolveAdminReviewAuthorLabel(review);
+  }
+
+  return resolveAdminCourseReviewSenderUserLabel(message.senderUser);
+}
+
 export function resolveReviewRatingDate(
   rating?: { readonly ratedAt: string; readonly updatedAt?: string | null } | null,
 ): string | null {
@@ -539,21 +563,70 @@ export type CourseReviewSummaryStats = {
   }>;
 };
 
-export function computeCourseReviewSummaryStats(
-  items: ReadonlyArray<{ readonly rating?: { readonly stars: number } | null }>,
-  totalCount: number,
+type CourseReviewSummarySourceItem = {
+  readonly rating?: {
+    readonly stars?: number;
+    readonly moderation?: { readonly visibility: CourseReviewVisibility };
+  } | null;
+  readonly moderation?: { readonly visibility: CourseReviewVisibility };
+  readonly isSubmissionBlocked?: boolean;
+  readonly isRatingHidden?: boolean;
+};
+
+export function isCourseReviewRatingEligibleForSummary(
+  item: CourseReviewSummarySourceItem,
+): boolean {
+  if (item.isSubmissionBlocked || item.moderation?.visibility === "HIDDEN") {
+    return false;
+  }
+
+  if (item.isRatingHidden) {
+    return false;
+  }
+
+  const stars = item.rating?.stars;
+  if (stars == null || stars < 1) {
+    return false;
+  }
+
+  if (item.rating?.moderation?.visibility === "HIDDEN") {
+    return false;
+  }
+
+  return true;
+}
+
+export function mapCourseReviewRatingSummaryToStats(
+  summary?: CourseReviewSummaryStats | null,
 ): CourseReviewSummaryStats {
-  const ratedItems = items.filter((item) => item.rating?.stars != null);
-  const ratedCount = totalCount;
+  return (
+    summary ?? {
+      averageRating: null,
+      ratedCount: 0,
+      distribution: [5, 4, 3, 2, 1].map((stars) => ({
+        stars,
+        count: 0,
+        percentage: 0,
+      })),
+    }
+  );
+}
+
+export function computeCourseReviewSummaryStats(
+  items: ReadonlyArray<CourseReviewSummarySourceItem>,
+): CourseReviewSummaryStats {
+  const eligibleRatedItems = items.filter(isCourseReviewRatingEligibleForSummary);
   const distributionCounts = [5, 4, 3, 2, 1].map((stars) => ({
     stars,
-    count: ratedItems.filter((item) => item.rating?.stars === stars).length,
+    count: eligibleRatedItems.filter((item) => item.rating?.stars === stars).length,
   }));
-  const distributionBase = ratedItems.length || 1;
+  const ratedCount = eligibleRatedItems.length;
+  const distributionBase = ratedCount || 1;
 
   const averageRating =
-    ratedItems.length > 0
-      ? ratedItems.reduce((sum, item) => sum + (item.rating?.stars ?? 0), 0) / ratedItems.length
+    ratedCount > 0
+      ? eligibleRatedItems.reduce((sum, item) => sum + (item.rating?.stars ?? 0), 0) /
+        ratedCount
       : null;
 
   return {

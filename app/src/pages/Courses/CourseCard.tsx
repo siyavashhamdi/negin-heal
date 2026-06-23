@@ -4,7 +4,6 @@ import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import DoNotDisturbOnRoundedIcon from "@mui/icons-material/DoNotDisturbOnRounded";
 import EventRepeatRoundedIcon from "@mui/icons-material/EventRepeatRounded";
-import ImageNotSupportedRoundedIcon from "@mui/icons-material/ImageNotSupportedRounded";
 import OndemandVideoRoundedIcon from "@mui/icons-material/OndemandVideoRounded";
 import PhotoRoundedIcon from "@mui/icons-material/PhotoRounded";
 import VolumeUpRoundedIcon from "@mui/icons-material/VolumeUpRounded";
@@ -208,9 +207,12 @@ const CourseCard = ({
         {coverImageUrl ? (
           <img src={coverImageUrl} alt={item.title} className={styles.coverImage} loading="lazy" />
         ) : (
-          <span className={styles.defaultCoverIcon}>
-            <ImageNotSupportedRoundedIcon />
-          </span>
+          <>
+            <div className={styles.defaultCoverGlow} aria-hidden="true" />
+            <span className={styles.defaultCoverIcon}>
+              <AutoStoriesRoundedIcon />
+            </span>
+          </>
         )}
 
         <div className={styles.topChipsRow} onClick={(event) => event.stopPropagation()}>

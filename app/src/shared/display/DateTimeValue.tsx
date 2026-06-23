@@ -18,13 +18,18 @@ const EMPTY_DISPLAY = "—";
 export interface DateTimeValueProps {
   readonly value?: string | Date | null;
   readonly emphasizeDate?: boolean;
+  /** When set, absolute date/time renders on one line as «time - date» instead of stacked lines. */
+  readonly inlineDateTime?: boolean;
   readonly emptyDisplay?: string;
+  readonly className?: string;
 }
 
 export function DateTimeValue({
   value,
   emphasizeDate = false,
+  inlineDateTime = false,
   emptyDisplay = EMPTY_DISPLAY,
+  className,
 }: DateTimeValueProps): ReactElement {
   const parsed = parseDisplayDateTime(value);
   const relativeDateMs =
@@ -54,6 +59,7 @@ export function DateTimeValue({
           component="time"
           dateTime={parsed.date.toISOString()}
           aria-label={absoluteLabel}
+          className={className}
           sx={{ display: "inline-block", cursor: "help" }}
         >
           <Typography
@@ -69,18 +75,30 @@ export function DateTimeValue({
     );
   }
 
+  const absoluteInlineLabel = `${parsed.timeLabel} - ${parsed.dateLabel}`;
+
   return (
-    <Box component="time" dateTime={parsed.date.toISOString()} sx={{ display: "inline-block" }}>
+    <Box
+      component="time"
+      dateTime={parsed.date.toISOString()}
+      className={className}
+      sx={{ display: "inline-block" }}
+    >
       <Typography
-        variant="body2"
+        variant={inlineDateTime ? "caption" : "body2"}
+        color={inlineDateTime ? "text.secondary" : undefined}
         fontWeight={emphasizeDate ? 600 : undefined}
         className={crudPrimitives.tabularNums}
+        component="span"
+        sx={inlineDateTime ? { whiteSpace: "nowrap" } : undefined}
       >
-        {primaryLabel}
+        {inlineDateTime ? absoluteInlineLabel : primaryLabel}
       </Typography>
-      <Typography variant="caption" color="text.secondary" className={crudPrimitives.tabularNums}>
-        {parsed.timeLabel}
-      </Typography>
+      {inlineDateTime ? null : (
+        <Typography variant="caption" color="text.secondary" className={crudPrimitives.tabularNums}>
+          {parsed.timeLabel}
+        </Typography>
+      )}
     </Box>
   );
 }
