@@ -737,12 +737,6 @@ const CourseDetail = (): ReactElement => {
 
   return (
     <section className={`${styles.page} ${styles.pageWithSectionTabs}`}>
-      <PageBackNavigation
-        label="بازگشت به دوره‌ها"
-        fallbackTo="/courses"
-        mobileOverlay
-      />
-
       <CourseDetailSectionTabs
         activeTab={activeSectionTab}
         onChange={handleSectionTabChange}
@@ -750,6 +744,14 @@ const CourseDetail = (): ReactElement => {
       />
 
       <Paper id="course-intro" className={`${styles.hero} ${styles.sectionScrollTarget}`} elevation={0}>
+        <div className={styles.heroBackNav}>
+          <PageBackNavigation
+            label="بازگشت به دوره‌ها"
+            fallbackTo="/courses"
+            mobileOverlay
+          />
+        </div>
+
         <div className={styles.heroMedia}>
           {coverImageUrl ? (
             <img src={coverImageUrl} alt={course.title} className={styles.heroCoverImage} />

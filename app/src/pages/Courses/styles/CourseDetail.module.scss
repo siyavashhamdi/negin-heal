@@ -59,6 +59,12 @@
   border-radius: 1rem !important;
 }
 
+.heroBackNav {
+  grid-column: 1 / -1;
+  position: relative;
+  z-index: 2;
+}
+
 .hero {
   position: relative;
   display: grid;
@@ -1069,6 +1075,10 @@ body[data-theme="dark"] {
   .chapterCard {
     padding: 0.8rem;
     border-radius: 1rem !important;
+  }
+
+  .heroBackNav {
+    display: contents;
   }
 
   .chapterHeader {
