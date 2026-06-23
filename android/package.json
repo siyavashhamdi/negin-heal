@@ -1,20 +1,14 @@
 {
   "name": "negin-heal-android",
   "private": true,
-  "description": "Trusted Web Activity wrapper for https://neginheal.ir/",
+  "description": "Capacitor Android shell for https://neginheal.ir/",
   "scripts": {
     "setup:keystore": "bash scripts/setup-keystore.sh",
-    "update:project": "bash scripts/update-project.sh",
     "build:apk": "bash scripts/build-apk.sh",
     "build": "npm run build:apk",
-    "install:apk": "bubblewrap install",
-    "doctor": "bubblewrap doctor",
-    "assetlinks": "bubblewrap fingerprint generateAssetLinks",
-    "fingerprint": "bash scripts/print-fingerprint.sh",
-    "sync:assetlinks": "bash scripts/sync-assetlinks.sh",
-    "verify:release": "bash scripts/verify-release.sh"
-  },
-  "devDependencies": {
-    "@bubblewrap/cli": "^1.23.0"
+    "sync": "cd ../app && npx cap sync android",
+    "verify:release": "bash scripts/verify-release.sh",
+    "verify:keystore": "bash scripts/verify-keystore.sh",
+    "fingerprint": "bash scripts/print-fingerprint.sh"
   }
 }

@@ -19,6 +19,7 @@ import { AuthModule } from "./auth";
 import { UserModule, UserSubscriptionService } from "./user";
 import { FileModule } from "./file";
 import { CourseModule } from "./course";
+import { CourseReviewModule } from "./course-review";
 import { HealthModule } from "./health";
 import { DatabaseModule } from "./database";
 import { AppSettingsModule } from "./app-settings";
@@ -250,6 +251,7 @@ import { GraphQLError } from "graphql";
     TicketModule,
     BadgeModule,
     CourseModule,
+    CourseReviewModule,
     UserModule,
   ],
   providers: [

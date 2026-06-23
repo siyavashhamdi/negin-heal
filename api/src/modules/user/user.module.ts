@@ -73,6 +73,6 @@ import * as UserSubscriptions from "./graphql/subscriptions";
     UserQueries.UserLoginCaptchaQuery,
     UserSubscriptions.GeneralUpdatesSubscription,
   ],
-  exports: [UserService, UserSubscriptionService],
+  exports: [UserService, UserSubscriptionService, UserCaptchaService],
 })
 export class UserModule {}

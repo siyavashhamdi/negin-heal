@@ -229,6 +229,34 @@ function resolveGraphQLErrorFieldMessage(
   return backendMessage;
 }
 
+function getGraphQLErrorCodeFromItem(
+  error?: {
+    readonly code?: string;
+    readonly extensions?: GraphQLErrorExtensions;
+  },
+): string | undefined {
+  return error?.code || error?.extensions?.code || error?.extensions?.exception?.code;
+}
+
+export function extractGraphQLErrorCode(error: unknown): string | undefined {
+  if (CombinedGraphQLErrors.is(error)) {
+    return getGraphQLErrorCodeFromItem(
+      error.errors[0] as { code?: string; extensions?: GraphQLErrorExtensions },
+    );
+  }
+
+  if (typeof error !== "object" || error === null) {
+    return undefined;
+  }
+
+  const graphQLErrors =
+    (error as { errors?: Array<{ code?: string; extensions?: GraphQLErrorExtensions }> }).errors ??
+    (error as { graphQLErrors?: Array<{ code?: string; extensions?: GraphQLErrorExtensions }> })
+      .graphQLErrors;
+
+  return getGraphQLErrorCodeFromItem(graphQLErrors?.[0]);
+}
+
 export const extractGraphQLErrorMessage = (error: unknown): string => {
   if (!error) {
     return i18n.t("errors.unknown");

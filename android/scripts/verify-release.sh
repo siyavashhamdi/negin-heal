@@ -41,7 +41,7 @@ check_apk() {
   [ "${target_sdk}" -eq "${EXPECTED_TARGET_SDK}" ] || fail "targetSdkVersion ${target_sdk} != expected ${EXPECTED_TARGET_SDK}"
   [ "${compile_sdk}" -ge "${MIN_TARGET_SDK}" ] || fail "compileSdkVersion ${compile_sdk} < required ${MIN_TARGET_SDK}"
 
-  if ! printf '%s\n' "${badging}" | grep -q "launchable-activity: name='ir.neginheal.app.LauncherActivity'"; then
+  if ! printf '%s\n' "${badging}" | grep -q "launchable-activity: name='ir.neginheal.app.MainActivity'"; then
     fail "Launcher activity missing from ${file}"
   fi
 
@@ -77,14 +77,12 @@ check_aab() {
 }
 
 check_gradle() {
-  local file="${ROOT_DIR}/app/build.gradle"
-  local target compile version_code
-  target="$(sed -n 's/.*targetSdkVersion \([0-9][0-9]*\).*/\1/p' "${file}" | head -1)"
-  compile="$(sed -n 's/.*compileSdkVersion \([0-9][0-9]*\).*/\1/p' "${file}" | head -1)"
-  version_code="$(sed -n 's/.*versionCode \([0-9][0-9]*\).*/\1/p' "${file}" | head -1)"
+  local file="${ROOT_DIR}/variables.gradle"
+  local target compile
+  target="$(sed -n 's/.*targetSdkVersion = \([0-9][0-9]*\).*/\1/p' "${file}" | head -1)"
+  compile="$(sed -n 's/.*compileSdkVersion = \([0-9][0-9]*\).*/\1/p' "${file}" | head -1)"
 
   echo "Gradle: ${file}"
-  echo "  versionCode: ${version_code}"
   echo "  compileSdkVersion: ${compile}"
   echo "  targetSdkVersion: ${target}"
 

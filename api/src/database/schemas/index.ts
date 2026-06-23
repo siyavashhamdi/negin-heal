@@ -1,5 +1,6 @@
 export * from "./app-setting.schema";
 export * from "./course.schema";
+export * from "./course-review.schema";
 export * from "./migration.schema";
 export * from "./notification.schema";
 export * from "./coupon.schema";

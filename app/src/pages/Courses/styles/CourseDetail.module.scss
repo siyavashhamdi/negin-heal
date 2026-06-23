@@ -5,6 +5,48 @@
   display: grid;
   gap: 1rem;
   position: relative;
+
+  @include mixins.mobile-page-stack-tight;
+}
+
+.pageWithSectionTabs {
+  --course-detail-sticky-tabs-height: 0rem;
+}
+
+.sectionScrollTarget {
+  scroll-margin-top: calc(env(safe-area-inset-top, 0rem) + 1rem);
+}
+
+.sectionContentSeparator {
+  inline-size: 100%;
+  block-size: 0.0625rem;
+  margin-block: 0.15rem 0;
+  background: color-mix(in srgb, var(--app-surface-border) 78%, transparent);
+}
+
+.reviewsSection {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 70%, transparent);
+  border-radius: 1.15rem;
+  background: color-mix(in srgb, var(--app-surface-bg) 96%, #ffffff);
+}
+
+.reviewsHeader {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.reviewsHeader h2 {
+  margin: 0;
+  font-size: clamp(1.2rem, 2.4vw, 1.65rem);
+}
+
+.reviewsHeader p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.8;
 }
 
 .alert {
@@ -21,8 +63,16 @@
   border-radius: 1.35rem !important;
   overflow: hidden;
   background:
-    radial-gradient(circle at 8% 10%, color-mix(in srgb, variables.$color-info-dark 16%, transparent), transparent 34%),
-    linear-gradient(135deg, color-mix(in srgb, var(--app-surface-bg) 96%, #ffffff), color-mix(in srgb, #eef6ff 72%, var(--app-surface-bg)));
+    radial-gradient(
+      circle at 8% 10%,
+      color-mix(in srgb, variables.$color-info-dark 16%, transparent),
+      transparent 34%
+    ),
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--app-surface-bg) 96%, #ffffff),
+      color-mix(in srgb, #eef6ff 72%, var(--app-surface-bg))
+    );
 }
 
 .heroMedia {
@@ -34,7 +84,12 @@
   overflow: hidden;
   background:
     radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.58), transparent 31%),
-    linear-gradient(135deg, variables.$color-gradient-start 0%, variables.$color-gradient-mid 52%, #10b981 100%);
+    linear-gradient(
+      135deg,
+      variables.$color-gradient-start 0%,
+      variables.$color-gradient-mid 52%,
+      #10b981 100%
+    );
 }
 
 .heroGlow {
@@ -113,10 +168,14 @@
   align-content: center;
   gap: 0.65rem;
   padding: 1rem;
-  border: 0.0625rem solid color-mix(in srgb, variables.$color-info-dark 18%, var(--app-surface-border));
+  border: 0.0625rem solid
+    color-mix(in srgb, variables.$color-info-dark 18%, var(--app-surface-border));
   border-radius: 1.1rem;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, #ffffff 82%, var(--app-surface-bg)), color-mix(in srgb, #e0f2fe 42%, var(--app-surface-bg)));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #ffffff 82%, var(--app-surface-bg)),
+    color-mix(in srgb, #e0f2fe 42%, var(--app-surface-bg))
+  );
   box-shadow: inset 0 0.0625rem 0 rgba(255, 255, 255, 0.72);
 }
 
@@ -164,9 +223,9 @@
 
 .mobilePinnedPriceInfo {
   display: grid;
-  gap: 0.08rem;
+  gap: 0.12rem;
   min-inline-size: 0;
-  padding-inline-start: 0.35rem;
+  padding-inline-start: 0.55rem;
   flex: 1 1 auto;
 }
 
@@ -183,6 +242,7 @@
   gap: 0.35rem;
   min-inline-size: 0;
   overflow: hidden;
+  padding-inline-start: 0.15rem;
 }
 
 .mobilePinnedPriceLine strong {
@@ -252,8 +312,16 @@
   border: 0.0625rem solid color-mix(in srgb, #f9a8d4 28%, var(--app-surface-border));
   border-radius: 1.15rem !important;
   background:
-    radial-gradient(circle at 100% 0%, color-mix(in srgb, #fbcfe8 28%, transparent), transparent 34%),
-    radial-gradient(circle at 0% 100%, color-mix(in srgb, #bae6fd 22%, transparent), transparent 32%),
+    radial-gradient(
+      circle at 100% 0%,
+      color-mix(in srgb, #fbcfe8 28%, transparent),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 0% 100%,
+      color-mix(in srgb, #bae6fd 22%, transparent),
+      transparent 32%
+    ),
     color-mix(in srgb, var(--app-surface-bg) 96%, #ffffff);
   box-shadow:
     0 0.7rem 1.8rem color-mix(in srgb, #be185d 8%, transparent),
@@ -278,8 +346,16 @@
   border-start-start-radius: 999rem;
   background:
     linear-gradient(var(--app-surface-bg), var(--app-surface-bg)) padding-box,
-    linear-gradient(100deg, variables.$color-primary-light, variables.$color-secondary-light 52%, variables.$color-secondary-light) border-box;
-  filter: drop-shadow(0 0.35rem 0.6rem color-mix(in srgb, variables.$color-primary-light 22%, transparent));
+    linear-gradient(
+        100deg,
+        variables.$color-primary-light,
+        variables.$color-secondary-light 52%,
+        variables.$color-secondary-light
+      )
+      border-box;
+  filter: drop-shadow(
+    0 0.35rem 0.6rem color-mix(in srgb, variables.$color-primary-light 22%, transparent)
+  );
   animation: chapter-connector-glow 2.8s ease-in-out infinite;
 }
 
@@ -294,8 +370,18 @@
   border: 0;
   border-radius: 999rem;
   background:
-    linear-gradient(180deg, variables.$color-primary-light, variables.$color-secondary-light 44%, variables.$color-secondary-light 82%, color-mix(in srgb, variables.$color-secondary-light 0%, transparent)),
-    repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0 0.32rem, transparent 0.32rem 0.74rem);
+    linear-gradient(
+      180deg,
+      variables.$color-primary-light,
+      variables.$color-secondary-light 44%,
+      variables.$color-secondary-light 82%,
+      color-mix(in srgb, variables.$color-secondary-light 0%, transparent)
+    ),
+    repeating-linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.92) 0 0.32rem,
+      transparent 0.32rem 0.74rem
+    );
   background-blend-mode: screen;
   box-shadow: 0 0 0.8rem color-mix(in srgb, variables.$color-primary-light 26%, transparent);
   animation: chapter-path-flow 3.6s linear infinite;
@@ -333,7 +419,11 @@
 
 .chapterLocked {
   background:
-    radial-gradient(circle at 100% 0%, color-mix(in srgb, #fbcfe8 18%, transparent), transparent 34%),
+    radial-gradient(
+      circle at 100% 0%,
+      color-mix(in srgb, #fbcfe8 18%, transparent),
+      transparent 34%
+    ),
     repeating-linear-gradient(
       -45deg,
       color-mix(in srgb, var(--app-surface-bg) 96%, #ffffff),
@@ -454,7 +544,12 @@
   inline-size: 1.82rem;
   block-size: 1.82rem;
   border-radius: 999rem;
-  background: linear-gradient(135deg, variables.$color-primary-main, variables.$color-secondary-main 52%, variables.$color-secondary-light);
+  background: linear-gradient(
+    135deg,
+    variables.$color-primary-main,
+    variables.$color-secondary-main 52%,
+    variables.$color-secondary-light
+  );
   color: #ffffff;
   font-size: 0.84rem;
   font-weight: 950;
@@ -655,8 +750,16 @@
 
 .mediaDialogPaper {
   background:
-    radial-gradient(circle at 10% 8%, color-mix(in srgb, variables.$color-primary-light 20%, transparent), transparent 30%),
-    radial-gradient(circle at 92% 88%, color-mix(in srgb, variables.$color-secondary-light 18%, transparent), transparent 34%),
+    radial-gradient(
+      circle at 10% 8%,
+      color-mix(in srgb, variables.$color-primary-light 20%, transparent),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 92% 88%,
+      color-mix(in srgb, variables.$color-secondary-light 18%, transparent),
+      transparent 34%
+    ),
     color-mix(in srgb, #020617 94%, #111827) !important;
   color: #ffffff !important;
 }
@@ -664,7 +767,8 @@
 .mediaDialogHeader {
   position: absolute;
   inset-block-start: max(0.75rem, env(safe-area-inset-top, 0rem));
-  inset-inline: max(0.75rem, env(safe-area-inset-right, 0rem)) max(0.75rem, env(safe-area-inset-left, 0rem));
+  inset-inline: max(0.75rem, env(safe-area-inset-right, 0rem))
+    max(0.75rem, env(safe-area-inset-left, 0rem));
   z-index: 1;
   display: flex;
   align-items: center;
@@ -698,7 +802,8 @@
   display: grid;
   place-items: center;
   min-block-size: 100dvh;
-  padding: calc(env(safe-area-inset-top, 0rem) + 5rem) 1rem calc(env(safe-area-inset-bottom, 0rem) + 1rem);
+  padding: calc(env(safe-area-inset-top, 0rem) + 5rem) 1rem
+    calc(env(safe-area-inset-bottom, 0rem) + 1rem);
 }
 
 .mediaDialogImage,
@@ -740,21 +845,29 @@
 @keyframes chapter-connector-glow {
   0%,
   100% {
-    filter: drop-shadow(0 0.25rem 0.45rem color-mix(in srgb, variables.$color-primary-light 16%, transparent));
+    filter: drop-shadow(
+      0 0.25rem 0.45rem color-mix(in srgb, variables.$color-primary-light 16%, transparent)
+    );
   }
 
   50% {
-    filter: drop-shadow(0 0.45rem 0.8rem color-mix(in srgb, variables.$color-secondary-light 34%, transparent));
+    filter: drop-shadow(
+      0 0.45rem 0.8rem color-mix(in srgb, variables.$color-secondary-light 34%, transparent)
+    );
   }
 }
 
 @keyframes chapter-path-flow {
   from {
-    background-position: 0 0, 0 0;
+    background-position:
+      0 0,
+      0 0;
   }
 
   to {
-    background-position: 0 0, 0 1.48rem;
+    background-position:
+      0 0,
+      0 1.48rem;
   }
 }
 
@@ -774,14 +887,26 @@ body[data-theme="dark"] {
   .chapterCard {
     border-color: color-mix(in srgb, #94a3b8 18%, transparent);
     background:
-      radial-gradient(circle at 100% 0%, color-mix(in srgb, #831843 34%, transparent), transparent 34%),
-      radial-gradient(circle at 0% 100%, color-mix(in srgb, #0e7490 22%, transparent), transparent 32%),
+      radial-gradient(
+        circle at 100% 0%,
+        color-mix(in srgb, #831843 34%, transparent),
+        transparent 34%
+      ),
+      radial-gradient(
+        circle at 0% 100%,
+        color-mix(in srgb, #0e7490 22%, transparent),
+        transparent 32%
+      ),
       color-mix(in srgb, var(--app-surface-bg) 90%, #1e293b);
   }
 
   .purchaseCard {
     border-color: color-mix(in srgb, #60a5fa 26%, #334155);
-    background: linear-gradient(180deg, color-mix(in srgb, #1e293b 86%, #0f172a), color-mix(in srgb, #0f172a 88%, #0369a1));
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, #1e293b 86%, #0f172a),
+      color-mix(in srgb, #0f172a 88%, #0369a1)
+    );
   }
 
   .currentPrice {
@@ -793,10 +918,15 @@ body[data-theme="dark"] {
     color: #bbf7d0;
   }
 
-  .mobilePinnedPriceBar {
-    border-color: color-mix(in srgb, #60a5fa 22%, #334155);
-    background: color-mix(in srgb, #0f172a 86%, #1e293b);
-    box-shadow: 0 1rem 2rem color-mix(in srgb, #000000 30%, transparent);
+  .reviewsSection {
+    border-color: color-mix(in srgb, #94a3b8 18%, transparent);
+    background: color-mix(in srgb, var(--app-surface-bg) 90%, #1e293b);
+  }
+
+  @media (max-width: (variables.$breakpoint-sm - 0.0625rem)) {
+    .mobilePinnedPriceBar {
+      @include mixins.dark-floating-shell-gradient;
+    }
   }
 
   .mobilePinnedPriceLine strong {
@@ -857,7 +987,12 @@ body[data-theme="dark"] {
   .heroMedia {
     min-block-size: 15rem;
   }
+}
 
+@media (max-width: 720px) {
+  .page {
+    position: relative;
+  }
 }
 
 @media (max-width: variables.$breakpoint-sm) {
@@ -865,22 +1000,37 @@ body[data-theme="dark"] {
     gap: 0.8rem;
   }
 
+  .pageWithSectionTabs {
+    --course-detail-sticky-tabs-height: 3.1rem;
+  }
+
+  .sectionScrollTarget {
+    scroll-margin-top: calc(
+      env(safe-area-inset-top, 0rem) + 0.65rem + var(--course-detail-sticky-tabs-height) + 0.35rem
+    );
+  }
+
   .mobilePinnedPriceBar {
     position: fixed;
     inset-block-start: calc(env(safe-area-inset-top, 0rem) + 0.55rem);
-    inset-inline: 0.75rem;
+    inset-inline-start: max(
+      calc((100vw - min(96vw, 82.5rem)) / 2 + 0.5rem),
+      env(safe-area-inset-left)
+    );
+    inset-inline-end: max(
+      calc((100vw - min(96vw, 82.5rem)) / 2 + 0.5rem),
+      env(safe-area-inset-right)
+    );
     z-index: variables.$z-index-app-bar;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
     min-block-size: 3.25rem;
-    padding: 0.45rem 0.55rem 0.45rem 0.85rem;
-    border: 0.0625rem solid color-mix(in srgb, variables.$color-info-dark 16%, var(--app-surface-border));
-    border-radius: 999rem;
-    @include mixins.surface-bg(color-mix(in srgb, var(--app-surface-bg) 97%, #ffffff));
-    box-shadow: 0 0.5rem 1.2rem rgba(15, 23, 42, 0.12);
-    box-shadow: 0 0.5rem 1.2rem color-mix(in srgb, #0f172a 12%, transparent);
+    padding: 0.42rem 0.55rem 0.42rem 0.85rem;
+    border: 0.0625rem solid rgba(61, 44, 53, 0.1);
+    border-radius: 1.35rem;
+    @include mixins.mobile-floating-shell;
     opacity: 0;
     pointer-events: none;
     transform: translateY(calc(-100% - 1rem));
@@ -893,6 +1043,12 @@ body[data-theme="dark"] {
     opacity: 1;
     pointer-events: auto;
     transform: translateY(0);
+  }
+
+  .pageWithSectionTabs .mobilePinnedPriceBar {
+    inset-block-start: calc(
+      env(safe-area-inset-top, 0rem) + 0.65rem + var(--course-detail-sticky-tabs-height) - 0.15rem
+    );
   }
 
   .mobilePinnedPriceBar :global(.MuiButton-root) {

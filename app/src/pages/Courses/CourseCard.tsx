@@ -3,14 +3,12 @@ import AutoStoriesRoundedIcon from "@mui/icons-material/AutoStoriesRounded";
 import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import DoNotDisturbOnRoundedIcon from "@mui/icons-material/DoNotDisturbOnRounded";
-import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import EventRepeatRoundedIcon from "@mui/icons-material/EventRepeatRounded";
 import ImageNotSupportedRoundedIcon from "@mui/icons-material/ImageNotSupportedRounded";
 import OndemandVideoRoundedIcon from "@mui/icons-material/OndemandVideoRounded";
 import PhotoRoundedIcon from "@mui/icons-material/PhotoRounded";
 import VolumeUpRoundedIcon from "@mui/icons-material/VolumeUpRounded";
-import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
-import { Button, Chip } from "@mui/material";
+import { Chip } from "@mui/material";
 import { OverflowTooltip } from "../../shared/OverflowTooltip";
 import type { CourseItemType, CourseListRecord, CourseReleaseType } from "./courses-list.api";
 import { getCourseTagChipSx } from "./course-tag-colors.util";
@@ -21,12 +19,9 @@ interface CourseCardProps {
   readonly item: CourseListRecord;
   readonly coverImageUrl?: string;
   readonly variant?: "management" | "public";
-  readonly isFlipped?: boolean;
   readonly onOpen: () => void;
-  readonly onFlip?: () => void;
   readonly onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
   readonly onEdit?: (item: CourseListRecord) => void;
-  readonly onDelete?: (item: CourseListRecord) => void;
 }
 
 const RELEASE_TYPE_TOOLTIP_LABEL: Record<CourseReleaseType, string> = {
@@ -93,12 +88,9 @@ const CourseCard = ({
   item,
   coverImageUrl,
   variant = "management",
-  isFlipped = false,
   onOpen,
-  onFlip,
   onKeyDown,
   onEdit,
-  onDelete,
 }: CourseCardProps): ReactElement => {
   const isManagement = variant === "management";
   const releaseTypeChipClass =
@@ -188,10 +180,19 @@ const CourseCard = ({
     resetTagDragState();
   };
 
+  const handleCardClick = (): void => {
+    if (isManagement) {
+      onEdit?.(item);
+      return;
+    }
+
+    onOpen();
+  };
+
   return (
     <article
       data-card-id={item.id}
-      className={`${styles.flipCard}${isManagement && isFlipped ? ` ${styles.isFlipped}` : ""}`}
+      className={styles.courseCard}
       role="button"
       tabIndex={0}
       onMouseDown={(event) => {
@@ -199,205 +200,171 @@ const CourseCard = ({
           event.preventDefault();
         }
       }}
-      onClick={isManagement ? onFlip : onOpen}
+      onClick={handleCardClick}
       onKeyDown={onKeyDown}
       aria-label={item.title}
     >
-      <div className={styles.flipInner}>
-        <div className={`${styles.flipFace} ${styles.flipFaceFront}`}>
-          <div className={styles.coverWrap}>
-            {coverImageUrl ? (
-              <img src={coverImageUrl} alt={item.title} className={styles.coverImage} loading="lazy" />
-            ) : (
-              <span className={styles.defaultCoverIcon}>
-                <ImageNotSupportedRoundedIcon />
-              </span>
-            )}
+      <div className={styles.coverWrap}>
+        {coverImageUrl ? (
+          <img src={coverImageUrl} alt={item.title} className={styles.coverImage} loading="lazy" />
+        ) : (
+          <span className={styles.defaultCoverIcon}>
+            <ImageNotSupportedRoundedIcon />
+          </span>
+        )}
 
-            <div className={styles.topChipsRow} onClick={(event) => event.stopPropagation()}>
-              {isManagement ? (
-                <AppTooltip
-                  title={item.isActive ? "وضعیت فعال" : "وضعیت غیرفعال"}
-                  arrow
-                  leaveTouchDelay={2200}
-                >
-                  <span className={styles.statusChipWrap}>
-                    <Chip
-                      size="small"
-                      icon={
-                        item.isActive ? (
-                          <CheckCircleRoundedIcon fontSize="small" />
-                        ) : (
-                          <DoNotDisturbOnRoundedIcon fontSize="small" />
-                        )
-                      }
-                      aria-label={item.isActive ? "وضعیت فعال" : "وضعیت غیرفعال"}
-                      className={`${styles.iconOnlyChip} ${styles.statusChip} ${statusChipClass}`}
-                    />
-                  </span>
-                </AppTooltip>
-              ) : null}
-              <AppTooltip
-                title={RELEASE_TYPE_TOOLTIP_LABEL[item.releaseType]}
-                arrow
-                leaveTouchDelay={2200}
-              >
-                <span className={styles.releaseTypeChipWrap}>
-                  <Chip
-                    size="small"
-                    icon={RELEASE_TYPE_ICON[item.releaseType]}
-                    aria-label={RELEASE_TYPE_TOOLTIP_LABEL[item.releaseType]}
-                    className={`${styles.iconOnlyChip} ${styles.releaseTypeChip} ${releaseTypeChipClass}`}
-                  />
-                </span>
-              </AppTooltip>
-            </div>
-
-            <div className={styles.coverContent}>
-              <h3>
-                <OverflowTooltip className={styles.titleText} title={item.title}>
-                  {item.title}
-                </OverflowTooltip>
-              </h3>
-              {item.description?.trim() ? (
-                <p>
-                  <OverflowTooltip className={styles.descriptionText} title={item.description.trim()}>
-                    {item.description.trim()}
-                  </OverflowTooltip>
-                </p>
-              ) : null}
-              <div className={styles.coverMeta}>
-                <span>{item.chapterCount} فصل</span>
-                <span className={styles.coverMetaSeparator}>/</span>
-                <span>{item.itemCount} آیتم</span>
-              </div>
-              {item.itemTypes.length > 0 ? (
-                <div className={styles.itemTypeChipsRow}>
-                  <div className={styles.itemTypeChips}>
-                    {item.itemTypes.map((type) => (
-                      <Chip
-                        key={`${item.id}-${type}`}
-                        size="small"
-                        icon={ITEM_TYPE_ICON[type]}
-                        label={ITEM_TYPE_LABEL[type]}
-                        variant="outlined"
-                        className={styles.itemTypeChip}
-                      />
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-              {item.tags.length > 0 ? (
-                <div
-                  ref={tagRowRef}
-                  className={styles.tagRow}
-                  onClick={(event) => event.stopPropagation()}
-                  onPointerDown={handleTagPointerDown}
-                  onPointerMove={handleTagPointerMove}
-                  onPointerUp={handleTagPointerEnd}
-                  onPointerCancel={handleTagPointerEnd}
-                >
-                  {item.tags.map((tag) => (
-                    <Chip
-                      key={`${item.id}-tag-${tag}`}
-                      size="small"
-                      label={
-                        <OverflowTooltip className={styles.tagText} title={tag}>
-                          {tag}
-                        </OverflowTooltip>
-                      }
-                      variant="outlined"
-                      className={`${styles.tagChip} ${styles.overlayTagChip}`}
-                      sx={getCourseTagChipSx(tag)}
-                    />
-                  ))}
-                </div>
-              ) : null}
-            </div>
-
-            <div className={styles.priceFooter}>
-              <div className={styles.priceBarBackdrop} aria-hidden="true">
-                {coverImageUrl ? (
-                  <img src={coverImageUrl} alt="" className={styles.priceBarCoverImage} loading="eager" />
-                ) : (
-                  <span className={styles.priceBarCoverFallback} />
-                )}
-                <span className={styles.priceBarBackdropScrim} />
-              </div>
-              <div
-                className={`${styles.priceBar}${
-                  item.isPurchased
-                    ? ` ${styles.priceBarPurchased}`
-                    : discountedPrice == null
-                      ? ""
-                      : ` ${styles.priceBarDiscounted}`
-                }`}
-                aria-label={
-                  item.isPurchased
-                    ? "وضعیت: خریداری شده"
-                    : `قیمت: ${formatCoursePrice(discountedPrice ?? item.priceIrt)}`
-                }
-              >
-                {item.isPurchased ? (
-                  <>
-                    <span className={styles.priceBarLabel}>وضعیت دوره</span>
-                    <span className={styles.purchasedContent}>
+        <div className={styles.topChipsRow} onClick={(event) => event.stopPropagation()}>
+          {isManagement ? (
+            <AppTooltip
+              title={item.isActive ? "وضعیت فعال" : "وضعیت غیرفعال"}
+              arrow
+              leaveTouchDelay={2200}
+            >
+              <span className={styles.statusChipWrap}>
+                <Chip
+                  size="small"
+                  icon={
+                    item.isActive ? (
                       <CheckCircleRoundedIcon fontSize="small" />
-                      <span>خریداری شده</span>
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <span className={styles.priceBarLabel}>قیمت دوره</span>
-                    <span className={styles.priceContent}>
-                      {discountedPrice == null ? null : (
-                        <span className={styles.originalPriceRow}>
-                          {discountLabel ? <span className={styles.discountBadge}>{discountLabel}</span> : null}
-                          <span className={styles.originalPriceText}>
-                            {formatCoursePrice(item.priceIrt)}
-                          </span>
-                        </span>
-                      )}
-                      <span className={styles.priceText}>
-                        {formatCoursePrice(discountedPrice ?? item.priceIrt)}
-                      </span>
-                    </span>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
+                    ) : (
+                      <DoNotDisturbOnRoundedIcon fontSize="small" />
+                    )
+                  }
+                  aria-label={item.isActive ? "وضعیت فعال" : "وضعیت غیرفعال"}
+                  className={`${styles.iconOnlyChip} ${styles.statusChip} ${statusChipClass}`}
+                />
+              </span>
+            </AppTooltip>
+          ) : null}
+          <AppTooltip
+            title={RELEASE_TYPE_TOOLTIP_LABEL[item.releaseType]}
+            arrow
+            leaveTouchDelay={2200}
+          >
+            <span className={styles.releaseTypeChipWrap}>
+              <Chip
+                size="small"
+                icon={RELEASE_TYPE_ICON[item.releaseType]}
+                aria-label={RELEASE_TYPE_TOOLTIP_LABEL[item.releaseType]}
+                className={`${styles.iconOnlyChip} ${styles.releaseTypeChip} ${releaseTypeChipClass}`}
+              />
+            </span>
+          </AppTooltip>
         </div>
 
-        {isManagement ? (
-          <div className={`${styles.flipFace} ${styles.flipFaceBack}`}>
-            <div className={styles.backActions}>
-              <Button
-                type="button"
-                variant="outlined"
-                startIcon={<EditRoundedIcon />}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onEdit?.(item);
-                }}
-              >
-                ویرایش
-              </Button>
-              <Button
-                type="button"
-                variant="contained"
-                color="error"
-                startIcon={<DeleteRoundedIcon />}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onDelete?.(item);
-                }}
-              >
-                حذف
-              </Button>
-            </div>
+        <div className={styles.coverContent}>
+          <h3>
+            <OverflowTooltip className={styles.titleText} title={item.title}>
+              {item.title}
+            </OverflowTooltip>
+          </h3>
+          {item.description?.trim() ? (
+            <p>
+              <OverflowTooltip className={styles.descriptionText} title={item.description.trim()}>
+                {item.description.trim()}
+              </OverflowTooltip>
+            </p>
+          ) : null}
+          <div className={styles.coverMeta}>
+            <span>{item.chapterCount} فصل</span>
+            <span className={styles.coverMetaSeparator}>/</span>
+            <span>{item.itemCount} آیتم</span>
           </div>
-        ) : null}
+          {item.itemTypes.length > 0 ? (
+            <div className={styles.itemTypeChipsRow}>
+              <div className={styles.itemTypeChips}>
+                {item.itemTypes.map((type) => (
+                  <Chip
+                    key={`${item.id}-${type}`}
+                    size="small"
+                    icon={ITEM_TYPE_ICON[type]}
+                    label={ITEM_TYPE_LABEL[type]}
+                    variant="outlined"
+                    className={styles.itemTypeChip}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {item.tags.length > 0 ? (
+            <div
+              ref={tagRowRef}
+              className={styles.tagRow}
+              onClick={(event) => event.stopPropagation()}
+              onPointerDown={handleTagPointerDown}
+              onPointerMove={handleTagPointerMove}
+              onPointerUp={handleTagPointerEnd}
+              onPointerCancel={handleTagPointerEnd}
+            >
+              {item.tags.map((tag) => (
+                <Chip
+                  key={`${item.id}-tag-${tag}`}
+                  size="small"
+                  label={
+                    <OverflowTooltip className={styles.tagText} title={tag}>
+                      {tag}
+                    </OverflowTooltip>
+                  }
+                  variant="outlined"
+                  className={`${styles.tagChip} ${styles.overlayTagChip}`}
+                  sx={getCourseTagChipSx(tag)}
+                />
+              ))}
+            </div>
+          ) : null}
+        </div>
+
+        <div className={styles.priceFooter}>
+          <div className={styles.priceBarBackdrop} aria-hidden="true">
+            {coverImageUrl ? (
+              <img src={coverImageUrl} alt="" className={styles.priceBarCoverImage} loading="eager" />
+            ) : (
+              <span className={styles.priceBarCoverFallback} />
+            )}
+            <span className={styles.priceBarBackdropScrim} />
+          </div>
+          <div
+            className={`${styles.priceBar}${
+              item.isPurchased
+                ? ` ${styles.priceBarPurchased}`
+                : discountedPrice == null
+                  ? ""
+                  : ` ${styles.priceBarDiscounted}`
+            }`}
+            aria-label={
+              item.isPurchased
+                ? "وضعیت: خریداری شده"
+                : `قیمت: ${formatCoursePrice(discountedPrice ?? item.priceIrt)}`
+            }
+          >
+            {item.isPurchased ? (
+              <>
+                <span className={styles.priceBarLabel}>وضعیت دوره</span>
+                <span className={styles.purchasedContent}>
+                  <CheckCircleRoundedIcon fontSize="small" />
+                  <span>خریداری شده</span>
+                </span>
+              </>
+            ) : (
+              <>
+                <span className={styles.priceBarLabel}>قیمت دوره</span>
+                <span className={styles.priceContent}>
+                  {discountedPrice == null ? null : (
+                    <span className={styles.originalPriceRow}>
+                      {discountLabel ? <span className={styles.discountBadge}>{discountLabel}</span> : null}
+                      <span className={styles.originalPriceText}>
+                        {formatCoursePrice(item.priceIrt)}
+                      </span>
+                    </span>
+                  )}
+                  <span className={styles.priceText}>
+                    {formatCoursePrice(discountedPrice ?? item.priceIrt)}
+                  </span>
+                </span>
+              </>
+            )}
+          </div>
+        </div>
       </div>
     </article>
   );

@@ -8,6 +8,8 @@ import { registerEnumType } from "@nestjs/graphql";
 import { GlobalAnouncementMessageType } from "./global-anouncement-message-type.enum";
 import { AppSettingValueType } from "./app-setting-value-type.enum";
 import { CourseDiscountType } from "./course-discount-type.enum";
+import { CourseReviewVisibility } from "./course-review-visibility.enum";
+import { CourseReviewModerationTarget } from "./course-review-moderation-target.enum";
 import { CourseItemType } from "./course-item-type.enum";
 import { CourseReleaseType } from "./course-release-type.enum";
 import { NotificationMode } from "./notification-mode.enum";
@@ -70,6 +72,16 @@ registerEnumType(CourseReleaseType, {
 registerEnumType(CourseDiscountType, {
   name: "CourseDiscountType",
   description: "Course discount calculation type",
+});
+
+registerEnumType(CourseReviewVisibility, {
+  name: "CourseReviewVisibility",
+  description: "Visibility state for course review content",
+});
+
+registerEnumType(CourseReviewModerationTarget, {
+  name: "CourseReviewModerationTarget",
+  description: "Moderation scope for a course review update",
 });
 
 registerEnumType(CouponDiscountType, {

@@ -3,6 +3,8 @@ export * from "./badge-count-trigger-action.enum";
 export * from "./badge-count-trigger-source.enum";
 export * from "./global-anouncement-message-type.enum";
 export * from "./course-discount-type.enum";
+export * from "./course-review-visibility.enum";
+export * from "./course-review-moderation-target.enum";
 export * from "./course-item-type.enum";
 export * from "./course-release-type.enum";
 export * from "./node-env.enum";
