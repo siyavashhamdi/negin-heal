@@ -140,6 +140,11 @@
                 "brandHomeLink": "صفحه اصلی — {{title}}"
             }
         },
+        "appUpdate": {
+            "message": "نسخه جدید آماده است. برای دریافت آخرین تغییرات، برنامه را به‌روزرسانی کنید.",
+            "updateButton": "به‌روزرسانی",
+            "laterButton": "بعداً"
+        },
         "footer": {
             "ariaLabel": "پاورقی سامانه",
             "copyright": "Negin Heal | ۱۴۰۵",

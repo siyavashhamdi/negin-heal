@@ -1,7 +1,11 @@
 /// <reference lib="webworker" />
 
 import { clientsClaim } from "workbox-core";
-import { cleanupOutdatedCaches, createHandlerBoundToURL, precacheAndRoute } from "workbox-precaching";
+import {
+  cleanupOutdatedCaches,
+  createHandlerBoundToURL,
+  precacheAndRoute,
+} from "workbox-precaching";
 import { NavigationRoute, registerRoute } from "workbox-routing";
 
 declare const self: ServiceWorkerGlobalScope & {
@@ -9,7 +13,11 @@ declare const self: ServiceWorkerGlobalScope & {
 };
 
 const NOTIFICATION_ICON = "/icons/icon-192.png";
-const NAVIGATION_DENYLIST = [/^\/api(?:\/|$)/, /^\/graphql(?:\/|$)/, /^\/enamad-trust-logo(?:\/|$)/];
+const NAVIGATION_DENYLIST = [
+  /^\/api(?:\/|$)/,
+  /^\/graphql(?:\/|$)/,
+  /^\/enamad-trust-logo(?:\/|$)/,
+];
 
 type PushPayload = {
   title: string;
@@ -25,8 +33,15 @@ cleanupOutdatedCaches();
 const navigationHandler = createHandlerBoundToURL("/index.html");
 registerRoute(new NavigationRoute(navigationHandler, { denylist: NAVIGATION_DENYLIST }));
 
-self.skipWaiting();
-clientsClaim();
+self.addEventListener("message", (event: ExtendableMessageEvent) => {
+  if (event.data?.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
+
+self.addEventListener("activate", (event: ExtendableEvent) => {
+  event.waitUntil(clientsClaim());
+});
 
 self.addEventListener("push", (event: PushEvent) => {
   let payload: PushPayload = {
@@ -90,6 +105,6 @@ self.addEventListener("notificationclick", (event: NotificationEvent) => {
       if (self.clients.openWindow) {
         await self.clients.openWindow(absoluteUrl);
       }
-    }),
+    })
   );
 });
