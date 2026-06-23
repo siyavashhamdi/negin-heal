@@ -141,8 +141,6 @@ const CoursesIndex = (): ReactElement => {
   const isCreateDialogOpen = courseFormPath === `${APP_SHELL_ROUTES.courses}/new`;
   const editTargetId =
     /^\/courses\/edit\/([^/]+)$/.exec(courseFormPath)?.[1] ?? null;
-  const flippedItemId =
-    /^\/courses\/flip\/([^/]+)$/.exec(courseFormPath)?.[1] ?? null;
   const isCourseFormDialogOpen = isCreateDialogOpen || editTargetId != null;
 
   const closeCourseFormDialog = (): void => {
@@ -161,8 +159,8 @@ const CoursesIndex = (): ReactElement => {
     navigate(APP_SHELL_ROUTES.courses);
   };
 
-  const openDeleteDialog = (course: CourseListRecord): void => {
-    navigate(`${APP_SHELL_ROUTES.courses}/delete/${course.id}`);
+  const openDeleteDialogForCourseId = (courseId: string): void => {
+    navigate(`${APP_SHELL_ROUTES.courses}/delete/${courseId}`);
   };
 
   useEffect(() => {
@@ -194,18 +192,6 @@ const CoursesIndex = (): ReactElement => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
-  const closeFlippedItem = (): void => {
-    navigate(APP_SHELL_ROUTES.courses);
-  };
-
-  const toggleFlippedItem = (itemId: string): void => {
-    if (flippedItemId === itemId) {
-      closeFlippedItem();
-      return;
-    }
-
-    navigate(`${APP_SHELL_ROUTES.courses}/flip/${itemId}`);
-  };
 
   const clearSearch = (): void => {
     setSearchQuery(DEFAULT_COURSE_LIST_FILTERS.query);
@@ -552,13 +538,13 @@ const CoursesIndex = (): ReactElement => {
     setDraggedCourseId(null);
   };
 
-  const handleCourseKeyDown = (event: KeyboardEvent<HTMLElement>, itemId: string): void => {
+  const handleCourseKeyDown = (event: KeyboardEvent<HTMLElement>, course: CourseListRecord): void => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       if (isPublicCourseView) {
-        navigate(`/courses/${itemId}`);
+        navigate(`/courses/${course.id}`);
       } else {
-        toggleFlippedItem(itemId);
+        openEditCourseDialog(course);
       }
     }
   };
@@ -605,32 +591,6 @@ const CoursesIndex = (): ReactElement => {
 
     return chips;
   }, [filters]);
-
-  useEffect(() => {
-    if (!flippedItemId) {
-      return undefined;
-    }
-
-    const handlePointerDown = (event: MouseEvent): void => {
-      const target = event.target as HTMLElement | null;
-      if (!target?.closest(`[data-card-id="${flippedItemId}"]`)) {
-        closeFlippedItem();
-      }
-    };
-
-    const handleKeyDown = (event: globalThis.KeyboardEvent): void => {
-      if (event.key === "Escape") {
-        closeFlippedItem();
-      }
-    };
-
-    document.addEventListener("mousedown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [flippedItemId]);
 
   useEffect(() => {
     const node = loadMoreRef.current;
@@ -1027,6 +987,7 @@ const CoursesIndex = (): ReactElement => {
 
       <div
         ref={courseFeedRef}
+        className={styles.courseFeed}
         style={isEndUser && courseFeedMinHeight ? { minHeight: courseFeedMinHeight } : undefined}
       >
         <div className={styles.courseGrid}>
@@ -1058,12 +1019,9 @@ const CoursesIndex = (): ReactElement => {
                 item={item}
                 coverImageUrl={resolveFileAccessUrl(item.coverImageAccessUrl) ?? undefined}
                 variant={isPublicCourseView ? "public" : "management"}
-                isFlipped={!isPublicCourseView && flippedItemId === item.id}
                 onOpen={() => navigate(`/courses/${item.id}`)}
-                onFlip={() => toggleFlippedItem(item.id)}
-                onKeyDown={(event) => handleCourseKeyDown(event, item.id)}
+                onKeyDown={(event) => handleCourseKeyDown(event, item)}
                 onEdit={openEditCourseDialog}
-                onDelete={openDeleteDialog}
               />
             </div>
           ))}
@@ -1109,6 +1067,11 @@ const CoursesIndex = (): ReactElement => {
           courseId={editTargetId}
           onClose={closeCourseFormDialog}
           onSaved={onRefresh}
+          onDelete={
+            editTargetId != null
+              ? () => openDeleteDialogForCourseId(editTargetId)
+              : undefined
+          }
         />
       ) : null}
     </section>

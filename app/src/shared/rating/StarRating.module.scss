@@ -1,0 +1,82 @@
+@use "../../styles/variables" as variables;
+
+.root {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.08rem;
+}
+
+.medium {
+  font-size: 1.15rem;
+}
+
+.large {
+  font-size: 2.3rem;
+  gap: 0.16rem;
+}
+
+.small {
+  font-size: 0.92rem;
+}
+
+.starIcon,
+.starButton {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1em;
+  block-size: 1em;
+  color: color-mix(in srgb, var(--text-secondary) 72%, transparent);
+}
+
+.starFill {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  inline-size: calc(var(--star-fill, 0) * 100%);
+  overflow: hidden;
+  color: #f59e0b;
+
+  svg {
+    flex-shrink: 0;
+    inline-size: 1em;
+    block-size: 1em;
+  }
+}
+
+.starIconFilled,
+.starButtonFilled {
+  color: #f59e0b;
+}
+
+.starButton {
+  padding: 0.08rem;
+  border: 0;
+  border-radius: 999rem;
+  background: transparent;
+  cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    color 0.16s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.starButton:hover:not(:disabled),
+.starButton:focus-visible:not(:disabled) {
+  transform: scale(1.08);
+  color: #f59e0b;
+}
+
+.starButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.starButton:focus-visible {
+  outline: 0.12rem solid color-mix(in srgb, variables.$color-primary-main 72%, #ffffff);
+  outline-offset: 0.12rem;
+}

@@ -6,6 +6,8 @@ import {
   AppSetting,
   AppSettingSchema,
   Course,
+  CourseReview,
+  CourseReviewSchema,
   CourseSchema,
   Migration,
   MigrationSchema,
@@ -30,6 +32,7 @@ import {
     MongooseModule.forFeature([
       { name: AppSetting.name, schema: AppSettingSchema },
       { name: Course.name, schema: CourseSchema },
+      { name: CourseReview.name, schema: CourseReviewSchema },
       { name: Migration.name, schema: MigrationSchema },
       { name: Notification.name, schema: NotificationSchema },
       { name: Coupon.name, schema: CouponSchema },

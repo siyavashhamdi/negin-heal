@@ -48,6 +48,14 @@ import EntityModalShell from "../../shared/crud/EntityModalShell";
 import ModalFooterActions from "../../shared/crud/ModalFooterActions";
 import { ChapterCompletionCheckpoint } from "./ChapterCompletionCheckpoint";
 import { CoursePurchaseDialog } from "./CoursePurchaseDialog";
+import CourseDetailSectionTabs, {
+  type CourseDetailSectionTab,
+} from "./CourseDetailSectionTabs";
+import CourseReviewsSection from "./CourseReviewsSection";
+import {
+  COURSE_DETAIL_SECTION_TARGETS,
+  scrollToCourseDetailSection,
+} from "./course-detail-section-scroll.util";
 import {
   formatChapterUnlockCountdown,
   formatChapterUnlockRelativeMessage,
@@ -334,6 +342,7 @@ const CourseDetail = (): ReactElement => {
   const [expandedChapterKeys, setExpandedChapterKeys] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
+  const [activeSectionTab, setActiveSectionTab] = useState<CourseDetailSectionTab>("intro");
   const [isMobilePriceBarVisible, setIsMobilePriceBarVisible] = useState(false);
   const [selectedItemViewer, setSelectedItemViewer] = useState<CourseItemViewer | null>(null);
   const [completingChapterKey, setCompletingChapterKey] = useState<string | null>(null);
@@ -466,43 +475,85 @@ const CourseDetail = (): ReactElement => {
     }
 
     const mobileMediaQuery = window.matchMedia("(max-width: 37.5rem)");
-    const updatePinnedPriceBar = (isIntersecting: boolean): void => {
-      if (!mobileMediaQuery.matches) {
-        setIsMobilePriceBarVisible(false);
-        return;
-      }
-
-      setIsMobilePriceBarVisible(!isIntersecting);
-    };
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        updatePinnedPriceBar(entry.isIntersecting);
-      },
-      {
-        threshold: 0,
-        rootMargin: "0px",
-      },
-    );
-
-    const handleViewportChange = (): void => {
+    const updatePinnedPriceBar = (): void => {
       if (!mobileMediaQuery.matches) {
         setIsMobilePriceBarVisible(false);
         return;
       }
 
       const rect = purchaseCard.getBoundingClientRect();
-      updatePinnedPriceBar(rect.bottom > 0 && rect.top < window.innerHeight);
+      // Only reveal after the purchase card has scrolled above the viewport, not when it is below the fold.
+      setIsMobilePriceBarVisible(rect.bottom <= 0);
     };
 
-    observer.observe(purchaseCard);
-    mobileMediaQuery.addEventListener("change", handleViewportChange);
+    updatePinnedPriceBar();
+    window.addEventListener("scroll", updatePinnedPriceBar, { passive: true });
+    window.addEventListener("resize", updatePinnedPriceBar);
+    mobileMediaQuery.addEventListener("change", updatePinnedPriceBar);
+
+    return () => {
+      window.removeEventListener("scroll", updatePinnedPriceBar);
+      window.removeEventListener("resize", updatePinnedPriceBar);
+      mobileMediaQuery.removeEventListener("change", updatePinnedPriceBar);
+    };
+  }, [canAccessCourse, course, hasPendingPurchase]);
+
+  const handleSectionTabChange = useCallback((tab: CourseDetailSectionTab): void => {
+    setActiveSectionTab(tab);
+    scrollToCourseDetailSection(tab);
+  }, []);
+
+  useEffect(() => {
+    if (!course) {
+      return;
+    }
+
+    const sectionEntries = (
+      Object.entries(COURSE_DETAIL_SECTION_TARGETS) as Array<
+        [CourseDetailSectionTab, string]
+      >
+    )
+      .map(([tab, elementId]) => {
+        const element = document.getElementById(elementId);
+        return element ? { tab, element } : null;
+      })
+      .filter((entry): entry is { tab: CourseDetailSectionTab; element: HTMLElement } =>
+        entry != null,
+      );
+
+    if (sectionEntries.length === 0) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntries = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((left, right) => right.intersectionRatio - left.intersectionRatio);
+
+        const nextTab = sectionEntries.find(
+          ({ element }) => element === visibleEntries[0]?.target,
+        )?.tab;
+
+        if (nextTab) {
+          setActiveSectionTab(nextTab);
+        }
+      },
+      {
+        root: null,
+        rootMargin: "-20% 0px -55% 0px",
+        threshold: [0, 0.15, 0.35, 0.6],
+      },
+    );
+
+    sectionEntries.forEach(({ element }) => {
+      observer.observe(element);
+    });
 
     return () => {
       observer.disconnect();
-      mobileMediaQuery.removeEventListener("change", handleViewportChange);
     };
-  }, [canAccessCourse, course, hasPendingPurchase]);
+  }, [course]);
 
   const handlePrimaryCourseAction = (): void => {
     if (canAccessCourse) {
@@ -656,14 +707,19 @@ const CourseDetail = (): ReactElement => {
   }
 
   return (
-    <section className={styles.page}>
+    <section className={`${styles.page} ${styles.pageWithSectionTabs}`}>
       <PageBackNavigation
         label="بازگشت به دوره‌ها"
         fallbackTo="/courses"
         mobileOverlay
       />
 
-      <Paper className={styles.hero} elevation={0}>
+      <CourseDetailSectionTabs
+        activeTab={activeSectionTab}
+        onChange={handleSectionTabChange}
+      />
+
+      <Paper id="course-intro" className={`${styles.hero} ${styles.sectionScrollTarget}`} elevation={0}>
         <div className={styles.heroMedia}>
           {coverImageUrl ? (
             <img src={coverImageUrl} alt={course.title} className={styles.heroCoverImage} />
@@ -786,7 +842,7 @@ const CourseDetail = (): ReactElement => {
         </div>
       ) : null}
 
-      <div id="course-content" className={styles.contentLayout}>
+      <div id="course-content" className={`${styles.contentLayout} ${styles.sectionScrollTarget}`}>
         <div className={styles.contentHeader}>
           <div>
             <h2>{isSingleChapter ? "محتوای دوره" : "مسیر یادگیری دوره"}</h2>
@@ -1029,6 +1085,26 @@ const CourseDetail = (): ReactElement => {
           })}
         </div>
       </div>
+
+      <div className={styles.sectionContentSeparator} role="separator" aria-hidden="true" />
+
+      <section
+        id="course-reviews"
+        className={`${styles.reviewsSection} ${styles.sectionScrollTarget}`}
+        aria-labelledby="course-reviews-heading"
+      >
+        <div className={styles.reviewsHeader}>
+          <h2 id="course-reviews-heading">امتیاز و نظرات</h2>
+          <p>امتیاز شرکت‌کنندگان و تجربه واقعی استفاده از دوره</p>
+        </div>
+
+        {courseId ? (
+          <CourseReviewsSection
+            courseId={courseId}
+            canSubmitReview={Boolean(isAuthenticated && canAccessCourse && !hasPendingPurchase)}
+          />
+        ) : null}
+      </section>
 
       <EntityModalShell
         open={isMaxRouteOpen && selectedItemViewer != null}

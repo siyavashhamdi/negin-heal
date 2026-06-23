@@ -1,0 +1,697 @@
+@use "../../../styles/variables" as variables;
+@use "../../../styles/mixins" as mixins;
+
+.summaryPanel {
+  display: grid;
+  gap: 1rem;
+  padding: 0.95rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 72%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+
+  @media (min-width: variables.$breakpoint-sm) {
+    grid-template-columns: minmax(9rem, 0.75fr) minmax(0, 1.25fr);
+    align-items: center;
+  }
+}
+
+.summaryScoreBlock {
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+  text-align: center;
+}
+
+.summaryAverage {
+  font-size: clamp(2rem, 5vw, 2.65rem);
+  line-height: 1;
+  color: color-mix(in srgb, variables.$color-info-dark 82%, #0f172a);
+}
+
+.summaryHint {
+  display: block;
+}
+
+.summaryDistribution {
+  display: grid;
+  gap: 0.42rem;
+}
+
+.summaryDistributionRow {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr) 2rem;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.summaryDistributionLabel {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: variables.$font-weight-semibold;
+  white-space: nowrap;
+}
+
+.summaryDistributionTrack {
+  block-size: 0.42rem;
+  border-radius: 999rem;
+  background: color-mix(in srgb, var(--text-secondary) 10%, var(--app-surface-bg));
+  overflow: hidden;
+}
+
+.summaryDistributionFill {
+  display: block;
+  block-size: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.summaryDistributionCount {
+  color: var(--text-secondary);
+  font-size: 0.74rem;
+  text-align: end;
+}
+
+.starFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.listShell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-block-size: 0;
+}
+
+.listFixed {
+  display: grid;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.othersListScroll,
+.listScroll {
+  display: grid;
+  gap: 0.75rem;
+  flex: 1 1 auto;
+  min-block-size: 0;
+  max-block-size: min(28rem, 52vh);
+  padding-inline-end: 0.15rem;
+  overflow-y: auto;
+  @include mixins.visible-scrollbars;
+}
+
+.adminListFlow {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.reviewUserBox {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  border-radius: 1.25rem;
+  @include mixins.surface-card;
+  box-shadow: 0 0.8rem 2rem color-mix(in srgb, #0f172a 5%, transparent);
+}
+
+.reviewUserBoxMine {
+  border-color: color-mix(in srgb, #0d9488 34%, var(--app-surface-border));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, #0d9488 8%, transparent), transparent 58%),
+    color-mix(in srgb, var(--app-surface-bg) 96%, #ffffff);
+}
+
+.reviewUserHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-block-end: 0.15rem;
+}
+
+.reviewUserHeaderStars {
+  justify-content: center;
+  flex-wrap: wrap;
+  padding-block: 0.5rem 0.85rem;
+  border-block-end: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 72%, transparent);
+}
+
+.reviewUserHeaderStars .reviewUserStarsRow {
+  flex: 1 1 auto;
+  justify-content: center;
+}
+
+.reviewUserHeaderOther {
+  justify-content: space-between;
+  padding-block-end: 0.85rem;
+  border-block-end: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 72%, transparent);
+}
+
+.reviewUserHeaderNoDivider {
+  border-block-end: none;
+  padding-block-end: 0.15rem;
+}
+
+.reviewUserAuthor {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: variables.$font-weight-bold;
+  color: var(--text-primary);
+}
+
+.reviewUserStars {
+  display: flex;
+  justify-content: center;
+  padding-block: 0.5rem 0.85rem;
+  border-block-end: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 72%, transparent);
+}
+
+.reviewUserStarsRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+}
+
+.reviewUserStarsLabel {
+  color: var(--text-secondary);
+  font-weight: variables.$font-weight-semibold;
+  white-space: nowrap;
+}
+
+.reviewUserStarsEmpty {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.captchaDialogStarsEmpty {
+  text-align: center;
+  padding-block: 0.35rem 0.5rem;
+}
+
+.captchaDialogStarsRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0.65rem 0.75rem;
+  border: 0.0625rem solid color-mix(in srgb, #0d9488 24%, var(--app-surface-border));
+  border-radius: 0.95rem;
+  background: color-mix(in srgb, #0d9488 6%, var(--app-surface-bg));
+}
+
+.captchaDialogStarsLabel {
+  color: var(--text-secondary);
+  font-weight: variables.$font-weight-semibold;
+  white-space: nowrap;
+}
+
+.reviewCommentsList {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.reviewCommentsExpandButton {
+  justify-self: center;
+  min-width: 0 !important;
+  padding-inline: 0.35rem !important;
+  font-weight: variables.$font-weight-semibold !important;
+}
+
+.reviewCommentBubbleRow {
+  display: flex;
+  inline-size: 100%;
+  justify-content: flex-start;
+}
+
+.reviewCommentBubble {
+  --review-bubble-border: #c9567e;
+  --review-bubble-bg: #fce7f3;
+
+  display: grid;
+  gap: 0.55rem;
+  inline-size: 100%;
+  max-inline-size: min(100%, 36rem);
+  padding: 1.1rem 1.35rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--review-bubble-border) 42%, transparent);
+  border-radius: 1.125rem;
+  background: var(--review-bubble-bg);
+  box-shadow: 0 0.35rem 1rem color-mix(in srgb, #0f172a 6%, transparent);
+}
+
+.reviewCommentBubbleOwn,
+.reviewCommentBubbleSupport,
+.reviewCommentBubbleUser {
+  border-radius: 1.125rem;
+}
+
+.reviewCommentBubbleHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.reviewCommentBubbleName {
+  margin: 0;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.84rem;
+  font-weight: variables.$font-weight-bold;
+  color: var(--review-bubble-border);
+}
+
+.reviewCommentBubbleDate {
+  margin: 0;
+  flex-shrink: 0;
+  color: color-mix(in srgb, var(--review-bubble-border) 72%, var(--text-secondary));
+  font-weight: variables.$font-weight-semibold;
+
+  &:global(.MuiTypography-root) {
+    font-size: 0.62rem !important;
+    line-height: 1.2 !important;
+  }
+}
+
+.reviewCommentBoxEmpty {
+  padding: 1rem 1.15rem;
+  border: 0.0625rem dashed color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  border-radius: 1.125rem;
+  text-align: center;
+  background: color-mix(in srgb, var(--app-surface-bg) 92%, #ffffff);
+}
+
+.reviewCommentForm {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.reviewReplyActionsRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.reviewReplyVisibilityColumn {
+  display: grid;
+  flex-shrink: 0;
+  gap: 0.2rem;
+  justify-items: center;
+  text-align: center;
+}
+
+.reviewReplySubmitButton {
+  flex: 1 1 auto;
+  inline-size: 100%;
+  min-inline-size: 0;
+  border-radius: 0.65rem !important;
+  font-size: 0.78rem !important;
+  font-weight: variables.$font-weight-bold !important;
+  padding-inline: 0.85rem !important;
+}
+
+.reviewCard {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.9rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 72%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--app-surface-bg) 96%, #ffffff);
+}
+
+.reviewCardMine {
+  border-color: color-mix(in srgb, variables.$color-primary-main 28%, var(--app-surface-border));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, variables.$color-primary-main 5%, transparent), transparent 48%),
+    color-mix(in srgb, var(--app-surface-bg) 96%, #ffffff);
+}
+
+.reviewCardAdmin {
+  border-color: color-mix(in srgb, variables.$color-info-dark 18%, var(--app-surface-border));
+}
+
+.reviewCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.reviewCardTitleBlock {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  min-inline-size: 0;
+}
+
+.reviewCardAuthor {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: variables.$font-weight-bold;
+}
+
+.reviewCardDate {
+  display: block;
+}
+
+.reviewCommentBlock {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.reviewComment {
+  margin: 0;
+  color: var(--text-primary);
+  line-height: 1.85;
+  white-space: pre-wrap;
+}
+
+.reviewCommentToggle {
+  align-self: flex-start;
+  min-width: 0 !important;
+  padding-inline: 0.15rem !important;
+  font-weight: variables.$font-weight-semibold !important;
+}
+
+.reviewThread {
+  display: grid;
+  gap: 0.55rem;
+  padding-block-start: 0.35rem;
+  border-block-start: 0.0625rem dashed color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+}
+
+.reviewThreadLabel {
+  display: block;
+  font-weight: variables.$font-weight-semibold;
+}
+
+.reviewThreadList {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.reviewThreadMessage {
+  display: grid;
+  gap: 0.55rem;
+  inline-size: 100%;
+  max-inline-size: min(100%, 36rem);
+  padding: 1.1rem 1.35rem;
+  border: 0.0625rem solid color-mix(in srgb, #7c3aed 42%, transparent);
+  border-radius: 1.125rem;
+  border-start-end-radius: 0;
+  background: #ede9fe;
+  box-shadow: 0 0.35rem 1rem color-mix(in srgb, #0f172a 6%, transparent);
+}
+
+.reviewThreadMessageSupport {
+  background: #ede9fe;
+}
+
+.reviewThreadMessageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.74rem;
+}
+
+.reviewThreadMessageHeaderMain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  min-inline-size: 0;
+}
+
+.reviewThreadMessageDate {
+  margin: 0;
+  flex-shrink: 0;
+  color: color-mix(in srgb, #7c3aed 72%, var(--text-secondary));
+  font-weight: variables.$font-weight-semibold;
+  white-space: nowrap;
+
+  &:global(.MuiTypography-root) {
+    font-size: 0.62rem !important;
+    line-height: 1.2 !important;
+  }
+}
+
+.reviewThreadMessageHeader strong {
+  color: #7c3aed;
+  font-size: 0.84rem;
+  font-weight: variables.$font-weight-bold;
+}
+
+.reviewThreadMessage p {
+  margin: 0;
+  line-height: 1.75;
+}
+
+.reviewAdminAvatar {
+  inline-size: 2.35rem !important;
+  block-size: 2.35rem !important;
+  font-size: 0.85rem !important;
+}
+
+.reviewAdminAvatarColumn {
+  display: grid;
+  flex-shrink: 0;
+  justify-items: center;
+  gap: 0.35rem;
+}
+
+.reviewAdminIdentity {
+  display: grid;
+  gap: 0.08rem;
+  min-inline-size: 0;
+}
+
+.reviewAdminUsername {
+  display: block;
+  inline-size: 100%;
+  direction: ltr;
+  font-family: variables.$font-family-latin !important;
+  font-style: normal;
+  text-align: right;
+  unicode-bidi: isolate;
+}
+
+.reviewAdminMetaRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.reviewModerationSelect {
+  flex-shrink: 0;
+  inline-size: auto;
+  min-inline-size: 0;
+  margin: 0;
+
+  :global(.MuiOutlinedInput-root.MuiInputBase-sizeSmall:not(.MuiInputBase-multiline)) {
+    block-size: 1.05rem !important;
+    min-block-size: 1.05rem !important;
+    max-block-size: 1.05rem !important;
+    border-radius: 0.3rem;
+    background: color-mix(in srgb, var(--app-surface-bg) 94%, #ffffff);
+  }
+
+  :global(.MuiOutlinedInput-notchedOutline) {
+    border-color: color-mix(in srgb, var(--app-surface-border) 78%, transparent);
+  }
+
+  :global(.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline) {
+    border-color: color-mix(in srgb, var(--app-surface-border) 92%, transparent);
+  }
+
+  :global(.MuiSelect-select.MuiInputBase-input) {
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    block-size: 1.05rem !important;
+    min-block-size: 0 !important;
+    padding-block: 0 !important;
+    padding-inline: 0.28rem 0.95rem !important;
+    font-size: 0.6rem !important;
+    font-weight: variables.$font-weight-semibold;
+    line-height: 1 !important;
+  }
+
+  :global(.MuiSelect-icon) {
+    inset-inline-end: 0.05rem;
+    font-size: 0.7rem;
+    top: calc(50% - 0.35rem);
+  }
+}
+
+.reviewModerationSelectInput {
+  block-size: 1.05rem !important;
+  min-block-size: 1.05rem !important;
+}
+
+.reviewModerationSelectValue {
+  min-block-size: 0 !important;
+  block-size: 1.05rem !important;
+  padding-block: 0 !important;
+  line-height: 1 !important;
+}
+
+.reviewModerationSelectMenu {
+  :global(.MuiList-root) {
+    padding-block: 0.15rem;
+  }
+}
+
+.reviewModerationSelectMenuItem {
+  min-block-size: 1.2rem !important;
+  padding-block: 0.1rem !important;
+  padding-inline: 0.4rem !important;
+  font-size: 0.6rem !important;
+  font-weight: variables.$font-weight-semibold;
+  line-height: 1.2;
+}
+
+.reviewModerationNote {
+  display: block;
+}
+
+.submitPanel {
+  display: grid;
+  gap: 0.85rem;
+  padding: 0.95rem;
+  border: 0.0625rem solid color-mix(in srgb, variables.$color-primary-main 18%, var(--app-surface-border));
+  border-radius: 1rem;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, variables.$color-primary-main 6%, transparent), transparent 52%),
+    color-mix(in srgb, var(--app-surface-bg) 96%, #ffffff);
+}
+
+.submitPanelHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  color: variables.$color-primary-main;
+}
+
+.submitPanelTitle {
+  margin: 0 0 0.15rem;
+  font-size: 1rem;
+  font-weight: variables.$font-weight-bold;
+}
+
+.submitStarsRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.submitHint {
+  border-radius: 0.85rem !important;
+}
+
+.submitButton {
+  border-radius: 0.85rem !important;
+  font-weight: variables.$font-weight-bold !important;
+}
+
+.captchaDialogPaper {
+  border-radius: 1.125rem !important;
+}
+
+.captchaDialogTitle {
+  padding-block-end: 0.35rem !important;
+}
+
+.captchaDialogTitleRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: variables.$color-primary-main;
+  font-weight: variables.$font-weight-bold;
+}
+
+.captchaDialogContent {
+  display: grid;
+  gap: 0.85rem;
+  padding-block-start: 0.35rem !important;
+}
+
+.captchaDialogDescription {
+  margin: 0;
+  line-height: 1.75;
+}
+
+.captchaDialogActions {
+  padding: 0.75rem 1rem 1rem !important;
+  gap: 0.5rem;
+}
+
+.emptyState,
+.loadingState,
+.loadMoreState {
+  display: grid;
+  justify-items: center;
+  gap: 0.45rem;
+  padding: 1.5rem 1rem;
+  border: 0.0625rem dashed color-mix(in srgb, var(--app-surface-border) 76%, transparent);
+  border-radius: 1rem;
+  text-align: center;
+}
+
+.emptyState h3,
+.emptyState p {
+  margin: 0;
+}
+
+.emptyState p,
+.loadMoreState {
+  color: var(--text-secondary);
+}
+
+.roleNotice {
+  border-radius: 0.95rem !important;
+}
+
+body[data-theme="dark"] {
+  .summaryPanel,
+  .reviewCard,
+  .reviewUserBox,
+  .submitPanel {
+    @include mixins.surface-panel-dark;
+  }
+
+  .summaryAverage {
+    color: #dbeafe;
+  }
+
+  .reviewUserBoxMine {
+    border-color: color-mix(in srgb, #0d9488 42%, var(--app-surface-border));
+    background:
+      linear-gradient(135deg, color-mix(in srgb, #0d9488 12%, transparent), transparent 58%),
+      color-mix(in srgb, var(--app-surface-bg) 90%, #1e293b);
+  }
+
+  .reviewCommentBubble {
+    border-color: color-mix(in srgb, var(--review-bubble-border) 72%, transparent);
+    box-shadow: 0 0.35rem 1rem rgba(0, 0, 0, 0.18);
+  }
+
+  .reviewCommentBoxEmpty {
+    background: color-mix(in srgb, var(--app-surface-bg) 90%, #1e293b);
+  }
+
+  .reviewThreadMessage,
+  .reviewThreadMessageSupport {
+    border-color: color-mix(in srgb, #7c3aed 72%, transparent);
+    background: rgba(124, 58, 237, 0.24);
+    box-shadow: 0 0.35rem 1rem rgba(0, 0, 0, 0.18);
+  }
+}

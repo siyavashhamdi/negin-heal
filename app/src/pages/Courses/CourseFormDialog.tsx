@@ -9,9 +9,11 @@ import {
   Typography,
 } from "@mui/material";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
+import { useAuth } from "../../contexts/AuthContext";
 import EntityConfirmDialogShell from "../../shared/crud/EntityConfirmDialogShell";
 import EntityModalShell from "../../shared/crud/EntityModalShell";
 import { COURSE_CREATE_MUTATION } from "../../graphql/mutations/courseCreate.mutation";
@@ -19,6 +21,10 @@ import { COURSE_UPDATE_MUTATION } from "../../graphql/mutations/courseUpdate.mut
 import { COURSE_DETAIL_QUERY } from "../../graphql/queries/courseDetail.query";
 import ChaptersSection from "./course-form-dialog/ChaptersSection";
 import MainInfoSection from "./course-form-dialog/MainInfoSection";
+import CourseFormSectionTabs from "./CourseFormSectionTabs";
+import CourseReviewsAdminSection from "./CourseReviewsAdminSection";
+import type { CourseSectionTab } from "./course-section-tabs.shared";
+import formSectionStyles from "./course-form-dialog/styles/CourseFormSections.module.scss";
 import {
   reorderByIdWithInsertion,
   shouldInsertAfterHorizontal,
@@ -59,6 +65,7 @@ type CourseFormDialogProps = {
   readonly onClose: () => void;
   readonly onSaved?: () => void;
   readonly courseId?: string | null;
+  readonly onDelete?: () => void;
 };
 
 type CourseWriteMutationResult = {
@@ -406,10 +413,20 @@ const CourseFormDialog = ({
   onClose,
   onSaved,
   courseId,
+  onDelete,
 }: CourseFormDialogProps): ReactElement => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const { showError, updateUploadProgress, hideUploadProgress } = useSnackbar();
   const isEditMode = Boolean(courseId);
+  const isSuperAdmin = user?.roles?.includes("SUPER_ADMIN") === true;
+  const useEditSectionTabs = isEditMode && isSuperAdmin;
+  const [activeFormSectionTab, setActiveFormSectionTab] = useState<CourseSectionTab>("intro");
+  const isIntroFormTabActive = !useEditSectionTabs || activeFormSectionTab === "intro";
+  const isReviewsFormTabActive = useEditSectionTabs && activeFormSectionTab === "reviews";
+  const showIntroFormSection = !useEditSectionTabs || activeFormSectionTab === "intro";
+  const showContentFormSection = !useEditSectionTabs || activeFormSectionTab === "content";
+  const showReviewsFormSection = isReviewsFormTabActive && Boolean(courseId);
   const { data, loading: detailLoading } = useQuery<CourseDetailQuery, CourseDetailQueryVariables>(
     COURSE_DETAIL_QUERY,
     {
@@ -634,6 +651,12 @@ const CourseFormDialog = ({
 
     updateUploadProgress(calculateBatchUploadPercent(uploadProgressByFieldId));
   }, [hideUploadProgress, updateUploadProgress, uploadProgressByFieldId]);
+
+  useEffect(() => {
+    if (open) {
+      setActiveFormSectionTab("intro");
+    }
+  }, [open, courseId]);
 
   const uploadAndGetFileId = async (file: File, fieldId: string): Promise<string | null> => {
     const uploadPolicy =
@@ -1045,15 +1068,31 @@ const CourseFormDialog = ({
                 onClick: closeDialog,
                 disabled: isSubmitting,
               },
-              {
-                key: "submit",
-                label: isEditMode ? "ذخیره تغییرات" : "ایجاد دوره",
-                onClick: () => void handleSubmit(),
-                variant: "contained",
-                color: "primary",
-                icon: <AddRoundedIcon />,
-                disabled: !canSubmit,
-              },
+              ...(isEditMode && onDelete && isIntroFormTabActive
+                ? [
+                    {
+                      key: "delete",
+                      label: "حذف دوره",
+                      onClick: onDelete,
+                      isDestructive: true,
+                      disabled: isSubmitting,
+                      icon: <DeleteRoundedIcon />,
+                    },
+                  ]
+                : []),
+              ...(isReviewsFormTabActive
+                ? []
+                : [
+                    {
+                      key: "submit",
+                      label: isEditMode ? "ذخیره تغییرات" : "ایجاد دوره",
+                      onClick: () => void handleSubmit(),
+                      variant: "contained" as const,
+                      color: "primary" as const,
+                      icon: <AddRoundedIcon />,
+                      disabled: !canSubmit,
+                    },
+                  ]),
             ]}
           />
         }
@@ -1068,7 +1107,19 @@ const CourseFormDialog = ({
             </Stack>
           ) : (
             <>
-              <MainInfoSection
+              {useEditSectionTabs ? (
+                <CourseFormSectionTabs
+                  activeTab={activeFormSectionTab}
+                  onChange={setActiveFormSectionTab}
+                />
+              ) : null}
+
+              {showIntroFormSection ? (
+              <div
+                id={useEditSectionTabs ? "course-form-intro" : undefined}
+                className={useEditSectionTabs ? formSectionStyles.sectionScrollTarget : undefined}
+              >
+                <MainInfoSection
             title={title}
             onTitleChange={setTitle}
             description={description}
@@ -1101,11 +1152,18 @@ const CourseFormDialog = ({
               uploadProgressByFieldId[COURSE_COVER_UPLOAD_FIELD_ID],
             )}
             uploading={COURSE_COVER_UPLOAD_FIELD_ID in uploadProgressByFieldId}
-          />
+                />
+              </div>
+              ) : null}
 
-          <Divider />
+              {!useEditSectionTabs ? <Divider /> : null}
 
-          <ChaptersSection
+              {showContentFormSection ? (
+              <div
+                id={useEditSectionTabs ? "course-form-content" : undefined}
+                className={useEditSectionTabs ? formSectionStyles.sectionScrollTarget : undefined}
+              >
+                <ChaptersSection
             chapters={chapters}
             activeChapter={activeChapter}
             activeChapterIndex={activeChapterIndex}
@@ -1125,7 +1183,27 @@ const CourseFormDialog = ({
             onAddItem={addItem}
             onRemoveItem={removeItem}
             stripNumberSeparators={stripNumberSeparators}
-          />
+                />
+              </div>
+              ) : null}
+
+              {showReviewsFormSection ? (
+                <section
+                  id="course-form-reviews"
+                  className={`${formSectionStyles.reviewsSection} ${formSectionStyles.reviewsSectionPanel}`}
+                  aria-labelledby="course-form-reviews-heading"
+                >
+                  <div className={formSectionStyles.reviewsHeader}>
+                    <Typography id="course-form-reviews-heading" component="h3" variant="h6">
+                      امتیاز و نظرات
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      مدیریت و بررسی نظرات ثبت‌شده برای این دوره
+                    </Typography>
+                  </div>
+                  <CourseReviewsAdminSection courseId={courseId!} />
+                </section>
+              ) : null}
             </>
           )}
         </Box>

@@ -44,10 +44,6 @@ const ROUTE_TITLE_RULES: readonly RouteTitleRule[] = [
     key: "table.dataGrid.deleteDialog.title",
   },
   {
-    match: (p) => /^\/courses\/flip\/[^/]+$/.test(p),
-    key: "app.pageTitles.courses",
-  },
-  {
     match: (p) => /^\/courses\/[^/]+$/.test(p),
     key: "app.pageTitles.courseDetail",
   },

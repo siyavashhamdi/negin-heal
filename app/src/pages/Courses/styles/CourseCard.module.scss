@@ -2,19 +2,27 @@
 
 $hairline: 0.0625rem solid;
 $ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-$ease-flip: cubic-bezier(0.32, 0.72, 0, 1);
 
-.flipCard {
-  perspective: 93.75rem;
+.courseCard {
+  position: relative;
   border-radius: 1.15rem;
+  border: $hairline color-mix(in srgb, var(--app-surface-border) 75%, transparent);
+  box-shadow:
+    0 0.85rem 1.8rem rgba(15, 23, 42, 0.1),
+    0 0.1rem 0.28rem rgba(15, 23, 42, 0.08),
+    inset 0 0.0625rem 0 rgba(255, 255, 255, 0.75);
   block-size: 100%;
   min-block-size: 27.5rem;
   cursor: pointer;
   outline: none;
+  overflow: hidden;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
   -webkit-user-select: none;
-  transition: transform 0.35s $ease-out;
+  transition:
+    transform 0.35s $ease-out,
+    border-color 0.25s $ease-out,
+    box-shadow 0.25s $ease-out;
 
   &:focus,
   &:focus-visible {
@@ -22,61 +30,21 @@ $ease-flip: cubic-bezier(0.32, 0.72, 0, 1);
   }
 }
 
-.flipCard:hover {
+.courseCard:hover {
   transform: translateY(-0.25rem);
-}
-
-.flipCard:hover .flipFace {
   border-color: color-mix(in srgb, variables.$color-info-dark 26%, var(--app-surface-border));
   box-shadow:
     0 1.1rem 2.2rem rgba(15, 23, 42, 0.14),
     0 0.16rem 0.45rem rgba(15, 23, 42, 0.1);
 }
 
-.flipInner {
-  position: relative;
-  border-radius: 1.15rem;
-  inline-size: 100%;
-  block-size: 100%;
-  min-block-size: 27.5rem;
-  transform-style: preserve-3d;
-  transition: transform 0.7s $ease-flip;
-}
-
-.isFlipped .flipInner {
-  transform: rotateY(180deg);
-}
-
-.flipFace {
-  position: absolute;
-  inset: 0;
-  backface-visibility: hidden;
-  border-radius: 1.15rem;
-  border: $hairline color-mix(in srgb, var(--app-surface-border) 75%, transparent);
-  box-shadow:
-    0 0.85rem 1.8rem rgba(15, 23, 42, 0.1),
-    0 0.1rem 0.28rem rgba(15, 23, 42, 0.08),
-    inset 0 0.0625rem 0 rgba(255, 255, 255, 0.75);
-  overflow: hidden;
-  transition:
-    border-color 0.25s $ease-out,
-    box-shadow 0.25s $ease-out;
-}
-
-.flipFaceFront {
-  position: relative;
-  block-size: 100%;
-  background: transparent;
-  box-shadow: none;
-}
-
 .coverWrap {
   position: absolute;
-  inset: -0.0625rem;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  inline-size: calc(100% + 0.125rem);
-  block-size: calc(100% + 0.125rem);
+  inline-size: 100%;
+  block-size: 100%;
   border-radius: 1.15rem;
   overflow: hidden;
   isolation: isolate;
@@ -535,43 +503,15 @@ $ease-flip: cubic-bezier(0.32, 0.72, 0, 1);
   font-size: 1.08rem;
 }
 
-.flipFaceBack {
-  transform: rotateY(180deg);
-  display: flex;
-  align-items: center;
-  padding: 0.9rem;
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, #ffffff 96%, var(--app-layout-glow) 4%) 0%,
-      color-mix(in srgb, var(--app-surface-bg) 96%, #f8fafc) 58%,
-      color-mix(in srgb, #eef4ff 58%, var(--app-surface-bg)) 100%
-    );
-}
-
-.backActions {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.55rem;
-  inline-size: 100%;
-}
-
-.backActions :global(.MuiButton-root) {
-  inline-size: 100%;
-}
-
 @media (max-width: (variables.$breakpoint-sm - 0.0625rem)) {
-  .flipCard {
+  .courseCard {
     content-visibility: auto;
     contain-intrinsic-size: auto 27.5rem;
     contain: layout style paint;
   }
 
-  .flipCard:hover {
+  .courseCard:hover {
     transform: none;
-  }
-
-  .flipCard:hover .flipFace {
     box-shadow:
       0 0.85rem 1.8rem rgba(15, 23, 42, 0.1),
       0 0.1rem 0.28rem rgba(15, 23, 42, 0.08),
@@ -593,29 +533,19 @@ $ease-flip: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 body[data-theme="dark"] {
-  .flipFace {
+  .courseCard {
     border-color: color-mix(in srgb, #94a3b8 18%, transparent);
     box-shadow:
       0 0.1rem 0.18rem rgba(0, 0, 0, 0.28),
       inset 0 0.0625rem 0 rgba(255, 255, 255, 0.08);
   }
 
-  .flipCard:hover .flipFace {
+  .courseCard:hover {
     border-color: color-mix(in srgb, #60a5fa 36%, var(--app-surface-border));
     box-shadow:
       0 0 0 0.0625rem color-mix(in srgb, #60a5fa 16%, transparent),
       0 1rem 2rem rgba(0, 0, 0, 0.22),
       inset 0 0.0625rem 0 rgba(255, 255, 255, 0.1);
-  }
-
-  .flipFaceBack {
-    background:
-      linear-gradient(
-        180deg,
-        color-mix(in srgb, #22314d 82%, var(--app-layout-glow) 8%) 0%,
-        color-mix(in srgb, var(--app-surface-bg) 86%, #1e2b45) 54%,
-        color-mix(in srgb, #121b2d 76%, var(--app-surface-bg)) 100%
-      );
   }
 
   .coverWrap {
