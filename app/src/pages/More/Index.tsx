@@ -36,6 +36,7 @@ import {
 } from "./terms-of-use-page.api";
 import NotificationPermissionCallout from "./NotificationPermissionCallout";
 import AndroidAppDownloadLink from "./AndroidAppDownloadLink";
+import AndroidHomeScreenInstallPrompt from "./AndroidHomeScreenInstallPrompt";
 import AppVersionBlock from "./AppVersionBlock";
 import IosHomeScreenInstallPrompt from "./IosHomeScreenInstallPrompt";
 import {
@@ -274,6 +275,7 @@ const More = (): ReactElement => {
 
         <div className={styles.installStack}>
           <IosHomeScreenInstallPrompt />
+          <AndroidHomeScreenInstallPrompt />
           <AndroidAppDownloadLink />
         </div>
       </div>

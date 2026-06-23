@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { USER_FORGOT_PASSWORD_MUTATION } from "../graphql/mutations/userForgotPassword.mutation";
 import { USER_RESET_PASSWORD_MUTATION } from "../graphql/mutations/userResetPassword.mutation";
 import { showErrorIfNotQueued } from "../utilities/graphql-error.util";
+import { resolveSuccessMessage } from "../utilities/success-message.util";
 import { normalizeAuthIdentityForSubmit } from "../utilities/contact-validation.util";
 import { useSnackbar } from "./useSnackbar";
 
@@ -30,9 +31,6 @@ interface ForgotPasswordResponse {
 interface ResetPasswordResponse {
   userResetPassword: PasswordResetResponse;
 }
-
-const PASSWORD_RESET_REQUESTED_MESSAGE =
-  "If an account matches the provided information, a password reset code will be sent to the registered email.";
 
 export const usePasswordReset = () => {
   const { t } = useTranslation();
@@ -71,11 +69,12 @@ export const usePasswordReset = () => {
         return false;
       }
 
-      const message =
-        payload.message === PASSWORD_RESET_REQUESTED_MESSAGE
-          ? t("auth.login.success.passwordResetCodeSent")
-          : payload.message || t("auth.login.success.passwordResetCodeSent");
-      showSuccess(message);
+      showSuccess(
+        resolveSuccessMessage(
+          payload.message,
+          "auth.login.success.passwordResetCodeSent",
+        ),
+      );
       return true;
     } catch (error) {
       showErrorIfNotQueued(showError, error);
@@ -106,7 +105,12 @@ export const usePasswordReset = () => {
         return false;
       }
 
-      showSuccess(payload.message || t("auth.login.success.passwordResetSuccessful"));
+      showSuccess(
+        resolveSuccessMessage(
+          payload.message,
+          "auth.login.success.passwordResetSuccessful",
+        ),
+      );
       return true;
     } catch (error) {
       showErrorIfNotQueued(showError, error);

@@ -1,8 +1,10 @@
 const ANDROID_APP_DOWNLOAD_PATH = "/app/negin-heal.apk";
-const ANDROID_APP_NO_CHROME_DOWNLOAD_PATH = "/app/negin-heal-no-chrome.apk";
 
 type WindowWithNativeBridge = Window & {
-  readonly Capacitor?: { readonly getPlatform?: () => string };
+  readonly Capacitor?: {
+    readonly getPlatform?: () => string;
+    readonly isNativePlatform?: () => boolean;
+  };
   readonly ReactNativeWebView?: unknown;
 };
 
@@ -14,13 +16,19 @@ export function isAndroidDevice(): boolean {
   return /Android/i.test(navigator.userAgent);
 }
 
-function isAndroidApp(): boolean {
+/** True when running inside the native Capacitor APK (not Chrome / mobile browser). */
+export function isAndroidApp(): boolean {
   if (typeof window === "undefined" || typeof navigator === "undefined") {
     return false;
   }
 
   const windowWithBridge = window as WindowWithNativeBridge;
-  const capacitorPlatform = windowWithBridge.Capacitor?.getPlatform?.().toLowerCase();
+  const capacitor = windowWithBridge.Capacitor;
+  const capacitorPlatform = capacitor?.getPlatform?.().toLowerCase();
+
+  if (capacitor?.isNativePlatform?.() && capacitorPlatform === "android") {
+    return true;
+  }
 
   if (capacitorPlatform === "android") {
     return true;
@@ -40,8 +48,4 @@ export function shouldShowAndroidAppDownloadLink(): boolean {
 
 export function getAndroidAppDownloadUrl(): string {
   return ANDROID_APP_DOWNLOAD_PATH;
-}
-
-export function getAndroidAppNoChromeDownloadUrl(): string {
-  return ANDROID_APP_NO_CHROME_DOWNLOAD_PATH;
 }

@@ -155,20 +155,26 @@ function shouldPreferExceptionTranslation(code: string | undefined): boolean {
 }
 
 function inferExceptionCodeFromMessage(message: string): string | undefined {
-  const normalized = message.trim().toLowerCase();
+  const normalized = message.trim();
   if (!normalized) {
     return undefined;
   }
 
-  if (normalized.includes("captcha has expired")) {
+  if (/^[A-Z][A-Z0-9_]+$/.test(normalized)) {
+    return normalized;
+  }
+
+  const lowered = normalized.toLowerCase();
+
+  if (lowered.includes("captcha has expired")) {
     return "CAPTCHA_EXPIRED";
   }
 
-  if (normalized.includes("captcha value is incorrect")) {
+  if (lowered.includes("captcha value is incorrect")) {
     return "CAPTCHA_INVALID";
   }
 
-  if (normalized.includes("captcha is required")) {
+  if (lowered.includes("captcha is required")) {
     return "CAPTCHA_REQUIRED";
   }
 
@@ -248,10 +254,6 @@ function resolveGraphQLErrorFieldMessage(
     }
   }
 
-  if (backendMessage && !isGenericBackendErrorMessage(backendMessage)) {
-    return backendMessage;
-  }
-
   if (exceptionCode && GENERIC_EXCEPTION_CODES.has(exceptionCode)) {
     const translatedMessage = getExceptionTranslation(exceptionCode, payload);
     if (translatedMessage) {
@@ -259,7 +261,7 @@ function resolveGraphQLErrorFieldMessage(
     }
   }
 
-  return backendMessage;
+  return i18n.t("errors.unknown");
 }
 
 function getGraphQLErrorCodeFromItem(
@@ -319,7 +321,7 @@ export const extractGraphQLErrorMessage = (error: unknown): string => {
   if (isRawGraphQLErrorResponse(error)) {
     const first = error.errors?.[0];
     const resolvedMessage = resolveGraphQLErrorFieldMessage(first);
-    return resolvedMessage || error.message || i18n.t("errors.graphql.generalMessage");
+    return resolvedMessage || i18n.t("errors.graphql.generalMessage");
   }
 
   if (ServerError.is(error)) {
@@ -368,7 +370,7 @@ export const extractGraphQLErrorMessage = (error: unknown): string => {
       }
     }
 
-    return error.message || i18n.t("errors.graphql.generalMessage");
+    return i18n.t("errors.graphql.generalMessage");
   }
 
   let errorMessage = "";
@@ -386,8 +388,20 @@ export const extractGraphQLErrorMessage = (error: unknown): string => {
     return i18n.t("errors.network.failedToFetch");
   }
 
-  return errorMessage || i18n.t("errors.unknown");
+  return i18n.t("errors.unknown");
 };
+
+export function resolveErrorMessageFromCode(
+  code: string | null | undefined,
+  payload?: Record<string, unknown>,
+): string {
+  if (!code?.trim()) {
+    return i18n.t("errors.unknown");
+  }
+
+  const translatedMessage = getExceptionTranslation(code.trim(), payload);
+  return translatedMessage || i18n.t("errors.unknown");
+}
 
 export function showErrorIfNotQueued(
   showError: (message: string, duration?: number) => void,

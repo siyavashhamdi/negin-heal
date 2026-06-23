@@ -7,6 +7,7 @@ import {
 import { useSearchParams } from "react-router-dom";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
+import { resolveErrorMessageFromCode } from "../../utilities/graphql-error.util";
 import FileUploadField from "../../shared/forms/FileUploadField";
 import {
   ensureBrowserNotificationPermission,
@@ -61,7 +62,7 @@ const Dashboard = (): ReactElement => {
     } else if (paymentStatus === "cancelled") {
       showWarning("پرداخت لغو شد.");
     } else {
-      showError(reason ? `پرداخت ناموفق بود: ${reason}` : "پرداخت ناموفق بود.");
+      showError(resolveErrorMessageFromCode(reason || "ZARINPAL_VERIFICATION_FAILED"));
     }
 
     setSearchParams({}, { replace: true });

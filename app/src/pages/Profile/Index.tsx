@@ -81,6 +81,7 @@ import {
 import { arePasswordRulesPassed } from "../../utils/passwordPolicy.util";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { useSnackbar } from "../../hooks/useSnackbar";
+import { resolveSuccessMessage } from "../../utilities/success-message.util";
 import ModalFooterActions from "../../shared/crud/ModalFooterActions";
 import { APP_SHELL_ROUTES, isProfileAuthRoute } from "../../routing/app-shell-routes";
 import { opaqueShellProps } from "../../shared/opaqueShell";
@@ -512,7 +513,12 @@ const AuthenticatedProfile = (): ReactElement => {
 
     const result = await requestEmailVerification().catch(() => null);
     if (result?.data?.userRequestEmailVerification?.success) {
-      showSuccess("ایمیل تأیید برای شما ارسال شد. لطفاً صندوق ورودی و پوشه هرزنامه را بررسی کنید.");
+      showSuccess(
+        resolveSuccessMessage(
+          result.data.userRequestEmailVerification.message,
+          "success.VERIFICATION_EMAIL_SENT",
+        ),
+      );
     }
   };
 

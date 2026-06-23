@@ -5,10 +5,11 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
 } from "@nestjs/common";
 
-import { APP_SETTING_KEY, PAGINATION_CONSTANT } from "../../constants";
+import { APP_SETTING_KEY, PAGINATION_CONSTANT, EXCEPTION_CONSTANT } from "../../constants";
 import {
   BadgeCountTriggerAction,
   BadgeCountTriggerSource,
@@ -225,6 +226,8 @@ const COURSE_DELETE_DEPENDENCY_SAMPLE_LIMIT = 4;
 
 @Injectable()
 export class CourseService {
+  private readonly logger = new Logger(CourseService.name);
+
   constructor(
     @InjectModel(Course.name)
     private readonly courseModel: Model<CourseDocument>,
@@ -513,7 +516,7 @@ export class CourseService {
     const normalizedAuthority = this.normalizeOptionalText(authority);
 
     if (!normalizedAuthority) {
-      return { status: "failed", reason: "missing-authority" };
+      return { status: "failed", reason: EXCEPTION_CONSTANT.ZARINPAL_MISSING_AUTHORITY.code };
     }
 
     const userCourse = await this.userCourseModel
@@ -524,7 +527,7 @@ export class CourseService {
       .exec();
 
     if (!userCourse) {
-      return { status: "failed", reason: "purchase-not-found" };
+      return { status: "failed", reason: EXCEPTION_CONSTANT.ZARINPAL_PURCHASE_NOT_FOUND.code };
     }
 
     const courseId = userCourse.courseId.toString();
@@ -561,10 +564,13 @@ export class CourseService {
         userCourse.purchase.status = UserCoursePurchaseStatus.FAILED;
         userCourse.purchase.failedAt = new Date();
         await userCourse.save();
+        this.logger.warn(
+          `ZarinPal verification failed for authority=${normalizedAuthority}: ${verification?.message ?? "unknown"}`,
+        );
         return {
           status: "failed",
           courseId,
-          reason: verification?.message || "verification-failed",
+          reason: EXCEPTION_CONSTANT.ZARINPAL_VERIFICATION_FAILED.code,
         };
       }
 
@@ -581,10 +587,13 @@ export class CourseService {
         refId: verification.ref_id?.toString(),
       };
     } catch (error) {
+      this.logger.error(
+        `ZarinPal verification error for authority=${normalizedAuthority}: ${this.extractZarinPalErrorMessage(error) || String(error)}`,
+      );
       return {
         status: "failed",
         courseId,
-        reason: this.extractZarinPalErrorMessage(error) || "verification-error",
+        reason: EXCEPTION_CONSTANT.ZARINPAL_VERIFICATION_ERROR.code,
       };
     }
   }

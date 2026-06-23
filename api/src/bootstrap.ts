@@ -4,13 +4,15 @@ import * as compression from "compression";
 
 import { NestFactory } from "@nestjs/core";
 import { NestExpressApplication } from "@nestjs/platform-express";
-import { Logger, ValidationPipe, ArgumentMetadata } from "@nestjs/common";
+import { Logger, ValidationPipe, ArgumentMetadata, BadRequestException } from "@nestjs/common";
 
 import { NodeEnv } from "./enums";
 import { env, setupSwagger } from "./config";
 import { HttpExceptionFilter } from "./filters";
 import { AppModule } from "./modules/app.module";
 import { SecurityConfig } from "./config/security.config";
+import { EXCEPTION_CONSTANT } from "./constants/exception.constant";
+import { Logger as NestLogger } from "@nestjs/common";
 
 function hideVersionKeyPlugin(schema: Schema) {
   // Stop writing __v for new/updated docs
@@ -33,6 +35,7 @@ export async function bootstrap() {
     extended: true,
   });
   const logger = new Logger("Bootstrap");
+  const validationLogger = new NestLogger("ValidationPipe");
 
   // Security middleware - High Security Mode
   app.use(
@@ -186,10 +189,23 @@ export async function bootstrap() {
   app.useGlobalPipes(
     new SmartValidationPipe({
       whitelist: true,
-      forbidNonWhitelisted: true, // Keep strict for REST and validated GraphQL inputs
+      forbidNonWhitelisted: true,
       transform: true,
       transformOptions: {
         enableImplicitConversion: true,
+      },
+      exceptionFactory: (errors) => {
+        const details = errors.map((error) => ({
+          property: error.property,
+          constraints: error.constraints,
+          children: error.children?.length ?? 0,
+        }));
+        validationLogger.warn(`Validation failed: ${JSON.stringify(details)}`);
+
+        return new BadRequestException({
+          code: EXCEPTION_CONSTANT.VALIDATION_FAILED.code,
+          message: EXCEPTION_CONSTANT.VALIDATION_FAILED.message,
+        });
       },
     }),
   );

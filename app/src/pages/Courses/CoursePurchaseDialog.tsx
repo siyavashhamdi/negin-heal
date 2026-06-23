@@ -24,7 +24,7 @@ import EntityModalShell from "../../shared/crud/EntityModalShell";
 import { COURSE_PURCHASE_SUBMIT_MUTATION } from "../../graphql/mutations/coursePurchaseSubmit.mutation";
 import { PAYMENT_CHECKOUT_CONFIG_QUERY } from "../../graphql/queries/paymentCheckoutConfig.query";
 import { COUPON_VALIDATE_QUERY } from "../../graphql/queries/couponValidate.query";
-import { showErrorIfNotQueued } from "../../utilities/graphql-error.util";
+import { showErrorIfNotQueued, extractGraphQLErrorMessage, resolveErrorMessageFromCode } from "../../utilities/graphql-error.util";
 import { getFileIdFromAccessUrl } from "../../utils/fileAccessUrl.util";
 import { uploadFile } from "../../utils/fileUpload.util";
 import {
@@ -331,14 +331,16 @@ export function CoursePurchaseDialog({
 
       if (error) {
         setAppliedCoupon(null);
-        setCouponError(error.message || "اعتبارسنجی کد تخفیف با خطا مواجه شد.");
+        setCouponError(extractGraphQLErrorMessage(error));
         return;
       }
 
       const result = data?.couponValidate;
       if (!result?.isValid) {
         setAppliedCoupon(null);
-        setCouponError(result?.message || "کد تخفیف معتبر نیست.");
+        setCouponError(
+          resolveErrorMessageFromCode(result?.message || "COUPON_INVALID"),
+        );
         return;
       }
 

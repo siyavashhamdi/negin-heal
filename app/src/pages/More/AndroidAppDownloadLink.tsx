@@ -6,7 +6,6 @@ import { useTranslation } from "../../hooks/useTranslation";
 import AppTooltip from "../../shared/AppTooltip";
 import {
   getAndroidAppDownloadUrl,
-  getAndroidAppNoChromeDownloadUrl,
   shouldShowAndroidAppDownloadLink,
 } from "../../utils/androidAppDownload.util";
 import { opaqueShellProps } from "../../shared/opaqueShell";
@@ -60,22 +59,13 @@ const AndroidAppDownloadLink = (): ReactElement | null => {
           <p>{t("pages.more.androidDownload.accessNote")}</p>
         </div>
 
-        <div className={styles.androidInstallButtonRow}>
-          <a
-            href={getAndroidAppDownloadUrl()}
-            className={styles.androidInstallButton}
-            download="negin-heal.apk"
-          >
-            {t("pages.more.androidDownload.downloadButton")}
-          </a>
-          <a
-            href={getAndroidAppNoChromeDownloadUrl()}
-            className={`${styles.androidInstallButton} ${styles.androidInstallButtonSecondary}`}
-            download="negin-heal-no-chrome.apk"
-          >
-            {t("pages.more.androidDownload.noChromeDownloadButton")}
-          </a>
-        </div>
+        <a
+          href={getAndroidAppDownloadUrl()}
+          className={styles.androidInstallButton}
+          download="negin-heal.apk"
+        >
+          {t("pages.more.androidDownload.downloadButton")}
+        </a>
       </div>
     </section>
   );

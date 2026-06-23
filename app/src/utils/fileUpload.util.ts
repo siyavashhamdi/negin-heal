@@ -3,6 +3,7 @@ import type { FileUploadPolicyId } from "../constants/fileUploadPolicies";
 import {
   FILE_UPLOAD_POLICY_MAX_SIZE_BYTES,
 } from "../constants/fileUploadPolicies";
+import { resolveErrorMessageFromCode } from "../utilities/graphql-error.util";
 import type { FileAccessUrl } from "./fileAccessUrl.util";
 import { compressImageForUpload } from "./imageCompression.util";
 import {
@@ -62,21 +63,17 @@ export class FileUploadError extends Error {
   }
 }
 
-function resolveUploadErrorMessage(body: unknown, fallback: string): string {
+function resolveUploadErrorMessage(body: unknown, fallbackCode: string): string {
   if (typeof body !== "object" || body === null) {
-    return fallback;
+    return resolveErrorMessageFromCode(fallbackCode);
   }
 
-  const error = (body as { error?: { message?: string | string[] } }).error;
-  const message = error?.message;
-  if (Array.isArray(message)) {
-    return message.join(", ");
-  }
-  if (typeof message === "string" && message.trim()) {
-    return message;
+  const error = (body as { error?: { code?: string; message?: string | string[] } }).error;
+  if (error?.code?.trim()) {
+    return resolveErrorMessageFromCode(error.code);
   }
 
-  return fallback;
+  return resolveErrorMessageFromCode(fallbackCode);
 }
 
 export async function uploadFile(
@@ -86,7 +83,7 @@ export async function uploadFile(
   const token =
     options?.accessToken ?? localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
   if (!token) {
-    throw new FileUploadError("Not authenticated", 401);
+    throw new FileUploadError(resolveErrorMessageFromCode("UNAUTHENTICATED"), 401);
   }
 
   const uploadPolicy = options?.policy ?? "ANY";
@@ -99,7 +96,9 @@ export async function uploadFile(
     allowedFormatsLabel: options?.allowedFormatsLabel,
   });
   if (!validation.valid) {
-    throw new FileUploadError(getUploadValidationErrorMessage(validation, "File upload failed"));
+    throw new FileUploadError(
+      getUploadValidationErrorMessage(validation, resolveErrorMessageFromCode("INTERNAL_SERVER_ERROR")),
+    );
   }
 
   options?.onProgress?.({
@@ -155,14 +154,16 @@ export async function uploadFile(
         try {
           resolve(JSON.parse(xhr.responseText) as FileUploadResult);
         } catch {
-          reject(new FileUploadError("Invalid upload response", xhr.status));
+          reject(
+            new FileUploadError(resolveErrorMessageFromCode("INTERNAL_SERVER_ERROR"), xhr.status),
+          );
         }
         return;
       }
 
-      let message = "File upload failed";
+      let message = resolveErrorMessageFromCode("INTERNAL_SERVER_ERROR");
       try {
-        message = resolveUploadErrorMessage(JSON.parse(xhr.responseText), message);
+        message = resolveUploadErrorMessage(JSON.parse(xhr.responseText), "INTERNAL_SERVER_ERROR");
       } catch {
         // Keep fallback message when the error body is not JSON.
       }
@@ -170,11 +171,11 @@ export async function uploadFile(
     };
 
     xhr.onerror = () => {
-      reject(new FileUploadError("File upload failed"));
+      reject(new FileUploadError(resolveErrorMessageFromCode("INTERNAL_SERVER_ERROR")));
     };
 
     xhr.onabort = () => {
-      reject(new FileUploadError("File upload cancelled"));
+      reject(new FileUploadError(resolveErrorMessageFromCode("INTERNAL_SERVER_ERROR")));
     };
 
     xhr.send(uploadFilePayload);

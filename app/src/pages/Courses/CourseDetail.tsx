@@ -44,6 +44,10 @@ import { applyBlankTargetToRichTextLinks } from "../../utils/richTextHtml.util";
 import { USER_COURSE_DETAIL_QUERY } from "../../graphql/queries/userCourseDetail.query";
 import { COURSE_CHAPTER_COMPLETE_MUTATION } from "../../graphql/mutations/courseChapterComplete.mutation";
 import { useSnackbar } from "../../hooks/useSnackbar";
+import {
+  resolveErrorMessageFromCode,
+  showErrorIfNotQueued,
+} from "../../utilities/graphql-error.util";
 import EntityModalShell from "../../shared/crud/EntityModalShell";
 import ModalFooterActions from "../../shared/crud/ModalFooterActions";
 import { ChapterCompletionCheckpoint } from "./ChapterCompletionCheckpoint";
@@ -482,7 +486,9 @@ const CourseDetail = (): ReactElement => {
     } else if (paymentStatus === "cancelled") {
       showWarning("پرداخت لغو شد.");
     } else {
-      showError(reason ? `پرداخت ناموفق بود: ${reason}` : "پرداخت ناموفق بود.");
+      showError(
+        resolveErrorMessageFromCode(reason || "ZARINPAL_VERIFICATION_FAILED"),
+      );
     }
 
     setSearchParams({}, { replace: true });
@@ -676,8 +682,8 @@ const CourseDetail = (): ReactElement => {
           : `فصل «${chapterTitle}» با موفقیت تکمیل شد.`,
       );
       await refetch();
-    } catch {
-      showError("ثبت تکمیل فصل انجام نشد. لطفاً دوباره تلاش کنید.");
+    } catch (error) {
+      showErrorIfNotQueued(showError, error);
     } finally {
       setCompletingChapterKey(null);
     }

@@ -3,6 +3,7 @@ import { initReactI18next } from "react-i18next";
 import faApp from "../locales/fa/app.json";
 import faAuth from "../locales/fa/auth.json";
 import faErrors from "../locales/fa/errors.json";
+import faSuccess from "../locales/fa/success.json";
 import faLayout from "../locales/fa/layout.json";
 import faPages from "../locales/fa/pages.json";
 import faTable from "../locales/fa/table.json";
@@ -18,6 +19,7 @@ const resources = {
       ...faPages,
       ...faAuth,
       ...faErrors,
+      ...faSuccess,
     },
   },
 };

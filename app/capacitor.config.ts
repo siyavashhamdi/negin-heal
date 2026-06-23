@@ -7,7 +7,7 @@ import {
 const PRODUCTION_APP_URL = "https://neginheal.ir";
 
 const config: CapacitorConfig = {
-  appId: "ir.neginheal.app",
+  appId: "neginheal.app",
   appName: "Negin Heal",
   webDir: "dist",
   android: {

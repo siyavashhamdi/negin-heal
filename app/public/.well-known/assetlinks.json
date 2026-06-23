@@ -1,19 +1,23 @@
 [
   {
-    "relation": ["delegate_permission/common.handle_all_urls"],
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
     "target": {
       "namespace": "android_app",
-      "package_name": "ir.neginheal.app",
+      "package_name": "neginheal.app",
       "sha256_cert_fingerprints": [
-        "C7:61:73:0B:0E:0F:63:9C:33:71:16:ED:F1:E1:EC:06:E6:94:D7:80:43:E4:A0:4E:BE:AD:CE:09:87:07:26:DF"
+        "F6:0B:FB:DB:62:39:AD:F3:C8:06:64:49:76:36:AB:75:7B:53:18:02:CC:3D:D5:C8:44:DD:AE:D0:E4:B4:DF:B5"
       ]
     }
   },
   {
-    "relation": ["check_validation"],
+    "relation": [
+      "check_validation"
+    ],
     "target": {
       "namespace": "cafebazaar_twa",
-      "package_name": "ir.neginheal.app"
+      "package_name": "neginheal.app"
     }
   }
 ]

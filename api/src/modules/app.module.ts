@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import * as winston from "winston";
 
-import { Module } from "@nestjs/common";
+import { Module, Logger } from "@nestjs/common";
 import { APP_INTERCEPTOR } from "@nestjs/core";
 import { WinstonModule } from "nest-winston";
 import { ConfigModule } from "@nestjs/config";
@@ -35,9 +35,10 @@ import {
   LoggingInterceptor,
   TransformInterceptor,
 } from "../interceptors";
-import { ExceptionRegistry } from "../exceptions/exception.registry";
-import { EXCEPTION_CONSTANT } from "../constants/exception.constant";
 import { GraphQLError } from "graphql";
+import { formatUserFacingGraphQLError } from "../utils/resolve-user-facing-error.util";
+
+const graphQLErrorLogger = new Logger("GraphQLError");
 
 @Module({
   imports: [
@@ -122,45 +123,18 @@ import { GraphQLError } from "graphql";
             },
           },
           formatError: (error: GraphQLError) => {
-            const exceptionName =
-              error.extensions?.stacktrace?.[0]?.match(/^(\w+Exception):/)?.[1];
-
             const isDevelopment = env.NODE_ENV === NodeEnv.DEVELOPMENT;
-
-            // Check if error code is UNAUTHENTICATED from extensions
-            const extensions = error.extensions as
-              | { code?: string; exception?: { code?: string } }
-              | undefined;
-            const errorCode = extensions?.code || extensions?.exception?.code;
-
-            if (exceptionName) {
-              const exception = ExceptionRegistry.createException(
-                exceptionName,
-                error.message,
-              );
-              if (exception) {
-                return {
-                  message: exception.getMessage(),
-                  code: exception.getCode(),
-                  name: exception.name,
-                  payload: exception.payload,
-                  ...(isDevelopment && { extensions: error.extensions }),
-                };
-              }
-            }
-
-            // Extract message from "Unexpected error value: \"...\"" format
-            const message =
-              error.message.match(/Unexpected error value:\s*"([^"]+)"/)?.[1] ||
-              error.message;
+            const formatted = formatUserFacingGraphQLError(
+              error,
+              graphQLErrorLogger,
+              isDevelopment,
+            );
 
             return {
-              message,
-              code:
-                errorCode === "UNAUTHENTICATED"
-                  ? EXCEPTION_CONSTANT.UNAUTHENTICATED.code
-                  : EXCEPTION_CONSTANT.INTERNAL_SERVER_ERROR.code,
-              ...(isDevelopment && { extensions: error.extensions }),
+              message: formatted.message,
+              code: formatted.code,
+              ...(formatted.payload ? { payload: formatted.payload } : {}),
+              ...(formatted.extensions ? { extensions: formatted.extensions } : {}),
             };
           },
           context: ({

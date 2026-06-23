@@ -21,6 +21,7 @@ import {
   UserCoursePurchaseStatus,
 } from "../../enums";
 import { PAGINATION_CONSTANT } from "../../constants";
+import { EXCEPTION_CONSTANT } from "../../constants/exception.constant";
 import { SortingOrder } from "../../common/pagination/input";
 import { buildSortOptions } from "../../common/pagination/utils";
 import {
@@ -245,7 +246,7 @@ export class CouponService {
   ): Promise<CouponValidateGqlResponse> {
     const normalizedCode = this.normalizeCode(input.code);
     if (!normalizedCode) {
-      return this.invalid("کد تخفیف را وارد کنید.");
+      return this.invalid(EXCEPTION_CONSTANT.COUPON_CODE_EMPTY.code);
     }
 
     const course = await this.courseModel
@@ -254,7 +255,7 @@ export class CouponService {
       .exec();
 
     if (!course) {
-      return this.invalid("دوره موردنظر پیدا نشد یا فعال نیست.");
+      return this.invalid(EXCEPTION_CONSTANT.COURSE_NOT_FOUND_OR_INACTIVE.code);
     }
 
     const existingUserCourse = await this.userCourseModel
@@ -267,12 +268,12 @@ export class CouponService {
       .exec();
 
     if (existingUserCourse) {
-      return this.invalid("شما قبلاً برای این دوره خرید فعال دارید.");
+      return this.invalid(EXCEPTION_CONSTANT.COURSE_ALREADY_PURCHASED.code);
     }
 
     const priceSummary = this.calculateCoursePriceSummary(course);
     if (priceSummary.payableAmountBeforeCouponIrt <= 0) {
-      return this.invalid("این دوره رایگان است و نیازی به کد تخفیف ندارد.");
+      return this.invalid(EXCEPTION_CONSTANT.COUPON_NOT_NEEDED_FOR_FREE_COURSE.code);
     }
 
     const coupon = await this.couponModel
@@ -295,7 +296,7 @@ export class CouponService {
     );
 
     if (couponDiscountAmountIrt <= 0) {
-      return this.invalid("این کد تخفیف مبلغ قابل پرداخت را کاهش نمی‌دهد.");
+      return this.invalid(EXCEPTION_CONSTANT.COUPON_NO_DISCOUNT_APPLIED.code);
     }
 
     return {
@@ -322,37 +323,37 @@ export class CouponService {
     userId: Types.ObjectId,
   ): Promise<string | null> {
     if (!coupon) {
-      return "کد تخفیف معتبر نیست.";
+      return EXCEPTION_CONSTANT.COUPON_INVALID.code;
     }
 
     if (!coupon.isActive) {
-      return "این کد تخفیف فعال نیست.";
+      return EXCEPTION_CONSTANT.COUPON_INACTIVE.code;
     }
 
     const now = new Date();
     if (coupon.startsAt && coupon.startsAt > now) {
-      return "زمان استفاده از این کد تخفیف هنوز شروع نشده است.";
+      return EXCEPTION_CONSTANT.COUPON_NOT_STARTED.code;
     }
 
     if (coupon.expiresAt && coupon.expiresAt < now) {
-      return "مهلت استفاده از این کد تخفیف به پایان رسیده است.";
+      return EXCEPTION_CONSTANT.COUPON_EXPIRED.code;
     }
 
     if (!this.isCouponApplicableToCourse(coupon, courseId)) {
-      return "این کد تخفیف برای این دوره قابل استفاده نیست.";
+      return EXCEPTION_CONSTANT.COUPON_NOT_APPLICABLE_TO_COURSE.code;
     }
 
     if (coupon.totalUsageLimit) {
       const totalUsageCount = await this.countCouponUsage(coupon._id);
       if (totalUsageCount >= coupon.totalUsageLimit) {
-        return "ظرفیت استفاده از این کد تخفیف تکمیل شده است.";
+        return EXCEPTION_CONSTANT.COUPON_USAGE_LIMIT_REACHED.code;
       }
     }
 
     if (coupon.perUserUsageLimit) {
       const userUsageCount = await this.countCouponUsage(coupon._id, userId);
       if (userUsageCount >= coupon.perUserUsageLimit) {
-        return "شما قبلاً از این کد تخفیف استفاده کرده‌اید.";
+        return EXCEPTION_CONSTANT.COUPON_USER_LIMIT_REACHED.code;
       }
     }
 
@@ -363,7 +364,7 @@ export class CouponService {
       });
 
       if (userPurchaseCount > 0) {
-        return "این کد تخفیف فقط برای اولین خرید قابل استفاده است.";
+        return EXCEPTION_CONSTANT.COUPON_FIRST_PURCHASE_ONLY.code;
       }
     }
 
@@ -445,10 +446,10 @@ export class CouponService {
     return code.trim().toUpperCase();
   }
 
-  private invalid(message: string): CouponValidateGqlResponse {
+  private invalid(code: string): CouponValidateGqlResponse {
     return {
       isValid: false,
-      message,
+      message: code,
     };
   }
 

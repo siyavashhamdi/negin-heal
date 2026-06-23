@@ -63,7 +63,7 @@ const ZarinPalCallback = (): ReactElement => {
         navigate(buildPaymentResultUrl(result, callbackCourseId), { replace: true });
       } catch {
         const fallbackPath = callbackCourseId ? `/courses/${callbackCourseId}` : "/dashboard";
-        navigate(`${fallbackPath}?payment=failed&reason=verification-request-failed`, {
+        navigate(`${fallbackPath}?payment=failed&reason=ZARINPAL_VERIFICATION_ERROR`, {
           replace: true,
         });
       }

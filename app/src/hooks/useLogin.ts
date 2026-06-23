@@ -10,6 +10,7 @@ import { USER_ME_QUERY } from "../graphql/queries/userMe.query";
 import { apolloClient } from "../lib/apollo-client";
 import { LOCAL_STORAGE_KEYS } from "../constants";
 import { showErrorIfNotQueued } from "../utilities/graphql-error.util";
+import { resolveSuccessMessage } from "../utilities/success-message.util";
 import { useAuth, type User } from "../contexts/AuthContext";
 import { useSnackbar } from "./useSnackbar";
 import { collectSessionClientContextInput } from "../utils/sessionClientContext.util";
@@ -237,7 +238,7 @@ export const useLogin = () => {
 
       if (result.data?.requestLoginCode?.success) {
         const message = result.data.requestLoginCode.message?.trim();
-        showSuccess(message || t("auth.login.success.codeSent"));
+        showSuccess(resolveSuccessMessage(message, "auth.login.success.codeSent"));
         return true;
       }
 
@@ -308,7 +309,7 @@ export const useLogin = () => {
 
       if (result.data?.requestSignupCode?.success) {
         const message = result.data.requestSignupCode.message?.trim();
-        showSuccess(message || t("auth.login.success.codeSent"));
+        showSuccess(resolveSuccessMessage(message, "auth.login.success.codeSent"));
         return true;
       }
 

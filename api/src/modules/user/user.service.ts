@@ -63,6 +63,7 @@ import { PAGINATION_CONSTANT } from "../../constants/pagination.constant";
 import { SortingOrder } from "../../common/pagination/input";
 import { buildSortOptions } from "../../common/pagination/utils";
 import { env } from "../../config";
+import { USER_FACING_SUCCESS } from "../../constants/user-facing-success.constant";
 import { MongodbErrorUtil } from "../../utils/mongodb-error.util";
 import {
   isValidEmail,
@@ -239,9 +240,7 @@ export class UserService {
     const normalizedIdentity = normalizeAuthIdentityForSubmit(identity);
 
     const isProduction = process.env.NODE_ENV === "production";
-    const message = isProduction
-      ? "Login code sent."
-      : `Development login code: ${code}`;
+    const message = USER_FACING_SUCCESS.LOGIN_CODE_SENT;
 
     if (!isProduction) {
       // TODO: replace this with the SMS provider integration for phone-based login.
@@ -355,7 +354,7 @@ export class UserService {
     if (this.isEmailVerified(user)) {
       return {
         success: true,
-        message: "Email is already verified.",
+        message: USER_FACING_SUCCESS.EMAIL_ALREADY_VERIFIED,
       };
     }
 
@@ -388,7 +387,7 @@ export class UserService {
 
     return {
       success: true,
-      message: "Email verified successfully.",
+      message: USER_FACING_SUCCESS.EMAIL_VERIFIED,
     };
   }
 
@@ -408,7 +407,7 @@ export class UserService {
     if (this.isEmailVerified(user)) {
       return {
         success: true,
-        message: "Email is already verified.",
+        message: USER_FACING_SUCCESS.EMAIL_ALREADY_VERIFIED,
       };
     }
 
@@ -442,7 +441,7 @@ export class UserService {
 
     return {
       success: true,
-      message: "Verification email sent.",
+      message: USER_FACING_SUCCESS.VERIFICATION_EMAIL_SENT,
     };
   }
 
@@ -603,7 +602,7 @@ export class UserService {
 
     return {
       success: true,
-      message: "Password reset successfully.",
+      message: USER_FACING_SUCCESS.PASSWORD_RESET_SUCCESSFUL,
     };
   }
 
@@ -626,9 +625,7 @@ export class UserService {
     });
 
     const isProduction = process.env.NODE_ENV === "production";
-    const message = isProduction
-      ? "Signup verification code sent."
-      : `Development signup code: ${code}`;
+    const message = USER_FACING_SUCCESS.SIGNUP_CODE_SENT;
 
     if (!isProduction) {
       // TODO: replace this with the SMS provider integration.
@@ -790,7 +787,7 @@ export class UserService {
 
     return {
       success: true,
-      message: "Logged in successfully.",
+      message: USER_FACING_SUCCESS.LOGIN_SUCCESSFUL,
       userId: user._id,
       accessToken: loginResult.accessToken,
     };
@@ -882,8 +879,7 @@ export class UserService {
   private buildPasswordResetRequestedResponse(): UserPasswordResetGqlResponse {
     return {
       success: true,
-      message:
-        "If an account matches the provided information, a password reset code will be sent to the registered email.",
+      message: USER_FACING_SUCCESS.PASSWORD_RESET_REQUESTED,
     };
   }
 
