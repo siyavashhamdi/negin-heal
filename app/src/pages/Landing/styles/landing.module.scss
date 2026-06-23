@@ -262,6 +262,71 @@
   backdrop-filter: blur(0.5rem);
 }
 
+.userProfileChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.2rem 0.65rem 0.2rem 0.2rem;
+  border-radius: 999px;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 70%, transparent);
+  background: color-mix(in srgb, var(--app-surface-bg) 78%, transparent);
+  backdrop-filter: blur(0.5rem);
+  color: var(--text-primary);
+  text-decoration: none;
+  max-width: 10rem;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+
+  &:hover {
+    border-color: color-mix(in srgb, variables.$color-primary-light 45%, transparent);
+    box-shadow: 0 0.35rem 1rem color-mix(in srgb, variables.$color-primary-main 12%, transparent);
+    transform: translateY(-0.05rem);
+  }
+
+  @include mixins.respond-below(sm) {
+    padding: 0.125rem;
+    border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 70%, transparent);
+    background: color-mix(in srgb, var(--app-surface-bg) 70%, transparent);
+    backdrop-filter: blur(0.5rem);
+    max-width: none;
+    border-radius: 50%;
+
+    &:hover {
+      border-color: color-mix(in srgb, variables.$color-primary-light 45%, transparent);
+      box-shadow: none;
+      transform: none;
+    }
+  }
+}
+
+.userProfileAvatar {
+  width: 2rem !important;
+  height: 2rem !important;
+  font-size: 0.85rem !important;
+  flex-shrink: 0;
+
+  @include mixins.respond-below(sm) {
+    width: 2.25rem !important;
+    height: 2.25rem !important;
+  }
+}
+
+.userProfileName {
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+
+  @include mixins.respond-below(sm) {
+    display: none;
+  }
+}
+
 .navGhostButton {
   display: none !important;
   text-transform: none !important;

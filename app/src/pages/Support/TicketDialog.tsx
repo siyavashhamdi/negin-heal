@@ -17,6 +17,7 @@ import { useQuery } from "@apollo/client/react";
 import { alpha, type Theme, useTheme } from "@mui/material/styles";
 
 import { resolveAvatarInitial, resolveMeUserDisplayName } from "../../utils/storedUser.util";
+import { AvatarInitial } from "../../shared/display/AvatarInitial";
 import { useAuth } from "../../contexts/AuthContext";
 import { SUPER_ADMIN_TICKET_SEND_MUTATION } from "../../graphql/mutations/superAdminTicketSend.mutation";
 import { TICKET_CLOSE_MUTATION } from "../../graphql/mutations/ticketClose.mutation";
@@ -331,7 +332,7 @@ function MessageSenderAvatar({
       {showSupportIcon ? (
         <SupportAgentRoundedIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
       ) : (
-        initials
+        <AvatarInitial initial={initials} />
       )}
     </Avatar>
   );

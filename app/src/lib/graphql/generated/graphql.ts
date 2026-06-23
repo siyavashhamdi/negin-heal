@@ -175,12 +175,6 @@ export type AppTermsOfUsePageConfigGqlResponse = {
   html: Scalars["String"]["output"];
 };
 
-export type AppVersionConfigGqlResponse = {
-  __typename?: "AppVersionConfigGqlResponse";
-  /** Configured application version label */
-  value: Scalars["String"]["output"];
-};
-
 export type BadgeCountGqlResponse = {
   __typename?: "BadgeCountGqlResponse";
   /** Course badge count. Staff users receive all courses; end users receive active courses. */
@@ -538,6 +532,10 @@ export type CourseCreateGqlInput = {
   discount?: InputMaybe<CourseDiscountGqlInput>;
   /** Whether the course is active */
   isActive?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Whether learners can submit reviews for this course */
+  isReviewSubmissionEnabled?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Whether the reviews section is visible on the course detail page */
+  isReviewsSectionVisible?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** Course price in IRT */
   priceIrt?: InputMaybe<Scalars["Float"]["input"]>;
   /** Course display rank used for manual ordering */
@@ -546,6 +544,72 @@ export type CourseCreateGqlInput = {
   tags?: InputMaybe<Array<Scalars["String"]["input"]>>;
   /** Course title */
   title: Scalars["String"]["input"];
+};
+
+export type CourseDeleteDependenciesGqlResponse = {
+  __typename?: "CourseDeleteDependenciesGqlResponse";
+  /** Course ID */
+  courseId: Scalars["ID"]["output"];
+  /** Course title */
+  courseTitle: Scalars["String"]["output"];
+  /** Detailed dependency groups grouped by impact */
+  groups: Array<CourseDeleteDependencyGroupGqlResponse>;
+  /** High-level delete impact summary */
+  summary: CourseDeleteDependenciesSummaryGqlResponse;
+};
+
+export type CourseDeleteDependenciesSummaryGqlResponse = {
+  __typename?: "CourseDeleteDependenciesSummaryGqlResponse";
+  /** Whether any removed dependency groups exist */
+  hasRemovedDependencies: Scalars["Boolean"]["output"];
+  /** Whether any retained dependency groups exist */
+  hasRetainedDependencies: Scalars["Boolean"]["output"];
+  /** Total records that will be removed together with the course */
+  removedCount: Scalars["Int"]["output"];
+  /** Total records that will remain linked to the deleted course */
+  retainedCount: Scalars["Int"]["output"];
+};
+
+export type CourseDeleteDependencyBreakdownGqlResponse = {
+  __typename?: "CourseDeleteDependencyBreakdownGqlResponse";
+  /** Count for this breakdown bucket */
+  count: Scalars["Int"]["output"];
+  /** Stable breakdown key for client-side labels */
+  key: Scalars["String"]["output"];
+};
+
+export type CourseDeleteDependencyGroupGqlResponse = {
+  __typename?: "CourseDeleteDependencyGroupGqlResponse";
+  /** Optional per-bucket counts inside the group */
+  breakdown: Array<CourseDeleteDependencyBreakdownGqlResponse>;
+  /** Number of additional sample rows not included in samples */
+  hiddenSampleCount: Scalars["Int"]["output"];
+  /** Whether this group is removed or retained on delete */
+  impact: CourseDeleteDependencyImpact;
+  /** Stable group key for client-side labels */
+  key: Scalars["String"]["output"];
+  /** Representative sample rows for richer UI previews */
+  samples: Array<CourseDeleteDependencySampleGqlResponse>;
+  /** Total records in this dependency group */
+  totalCount: Scalars["Int"]["output"];
+};
+
+/** Whether a dependency group is removed or retained when deleting a course */
+export const CourseDeleteDependencyImpact = {
+  REMOVED: "REMOVED",
+  RETAINED: "RETAINED",
+} as const;
+
+export type CourseDeleteDependencyImpact =
+  (typeof CourseDeleteDependencyImpact)[keyof typeof CourseDeleteDependencyImpact];
+export type CourseDeleteDependencySampleGqlResponse = {
+  __typename?: "CourseDeleteDependencySampleGqlResponse";
+  /** Optional related entity ID */
+  id?: Maybe<Scalars["ID"]["output"]>;
+  /** Primary label for the sample row */
+  label: Scalars["String"]["output"];
+  /** Optional secondary label such as status or type */
+  meta?: Maybe<Scalars["String"]["output"]>;
 };
 
 export type CourseDeleteGqlInput = {
@@ -679,6 +743,10 @@ export type CourseListGqlResponse = {
   id: Scalars["ID"]["output"];
   /** Whether the course is active */
   isActive: Scalars["Boolean"]["output"];
+  /** Whether learners can submit reviews for this course */
+  isReviewSubmissionEnabled: Scalars["Boolean"]["output"];
+  /** Whether the reviews section is visible on the course detail page */
+  isReviewsSectionVisible: Scalars["Boolean"]["output"];
   /** Course price in IRT */
   priceIrt?: Maybe<Scalars["Float"]["output"]>;
   /** Calculated release strategy. GRADUAL means at least one chapter has visibleAfterMinutes. */
@@ -1189,6 +1257,231 @@ export const CourseReleaseType = {
 } as const;
 
 export type CourseReleaseType = (typeof CourseReleaseType)[keyof typeof CourseReleaseType];
+export type CourseReviewCourseSnapshotGqlResponse = {
+  __typename?: "CourseReviewCourseSnapshotGqlResponse";
+  /** Stored course title snapshot */
+  title: Scalars["String"]["output"];
+};
+
+export type CourseReviewListCursorPageOptionsParamsInput = {
+  /** Maximum number of records to return */
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  /** Sort options as a map of field names to sort order */
+  sort?: InputMaybe<UserCourseReviewListSortOptionInput>;
+  /** Cursor to start after. Uses the beginning if omitted */
+  startCursor?: InputMaybe<Scalars["ID"]["input"]>;
+};
+
+export type CourseReviewListFilterInput = {
+  /** Filter reviews by course ID */
+  courseId?: InputMaybe<Scalars["ID"]["input"]>;
+  /** Filter reviews that include at least one message */
+  hasMessages?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Filter reviews that include a rating */
+  hasRating?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Filter reviews containing at least one message with this visibility */
+  messageVisibility?: InputMaybe<CourseReviewVisibility>;
+  /** Search query that matches rating comment, message body, user snapshot, or course title */
+  query?: InputMaybe<Scalars["String"]["input"]>;
+  /** Filter reviews by rating moderation visibility */
+  ratingVisibility?: InputMaybe<CourseReviewVisibility>;
+  /** Filter reviews by review thread moderation visibility */
+  reviewVisibility?: InputMaybe<CourseReviewVisibility>;
+  /** Filter reviews by exact star rating */
+  stars?: InputMaybe<Scalars["Int"]["input"]>;
+  /** Filter reviews by linked user course enrollment ID */
+  userCourseId?: InputMaybe<Scalars["ID"]["input"]>;
+  /** Filter reviews by review owner user ID */
+  userId?: InputMaybe<Scalars["ID"]["input"]>;
+};
+
+export type CourseReviewListGqlInput = {
+  /** Filter options for narrowing down the course review list */
+  filters?: InputMaybe<CourseReviewListFilterInput>;
+  /** Cursor pagination and sorting options */
+  options?: InputMaybe<CourseReviewListCursorPageOptionsParamsInput>;
+};
+
+export type CourseReviewListGqlResponse = {
+  __typename?: "CourseReviewListGqlResponse";
+  /** Course ID */
+  courseId: Scalars["ID"]["output"];
+  /** Stored course snapshot */
+  courseSnapshot: CourseReviewCourseSnapshotGqlResponse;
+  /** Date when the review thread was created */
+  createdAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** Minimal user that created the review thread */
+  createdByUser?: Maybe<UserMinimalGqlResponse>;
+  /** User ID that created the review thread */
+  createdByUserId?: Maybe<Scalars["ID"]["output"]>;
+  /** Date when the review thread was soft deleted */
+  deletedAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** Minimal user that soft deleted the review thread */
+  deletedByUser?: Maybe<UserMinimalGqlResponse>;
+  /** User ID that soft deleted the review thread */
+  deletedByUserId?: Maybe<Scalars["ID"]["output"]>;
+  /** Course review thread ID */
+  id: Scalars["ID"]["output"];
+  /** Full Q&A message thread */
+  messages: Array<CourseReviewMessageGqlResponse>;
+  /** Review thread moderation metadata */
+  moderation: CourseReviewModerationGqlResponse;
+  /** Course rating, if submitted */
+  rating?: Maybe<CourseReviewRatingGqlResponse>;
+  /** Date when the review thread was last updated */
+  updatedAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** Minimal user that last updated the review thread */
+  updatedByUser?: Maybe<UserMinimalGqlResponse>;
+  /** User ID that last updated the review thread */
+  updatedByUserId?: Maybe<Scalars["ID"]["output"]>;
+  /** Minimal review owner information */
+  user?: Maybe<UserMinimalGqlResponse>;
+  /** Linked user course enrollment ID, when the reviewer purchased the course */
+  userCourseId?: Maybe<Scalars["ID"]["output"]>;
+  /** Review owner user ID */
+  userId: Scalars["ID"]["output"];
+  /** Stored review owner snapshot */
+  userSnapshot: CourseReviewUserSnapshotGqlResponse;
+};
+
+export type CourseReviewListPaginatedCursorGqlResponse = {
+  __typename?: "CourseReviewListPaginatedCursorGqlResponse";
+  /** Full course review list for SUPER_ADMIN */
+  items: Array<CourseReviewListGqlResponse>;
+  /** Pagination metadata */
+  pagination: PaginationCursorResponse;
+};
+
+export type CourseReviewMessageGqlResponse = {
+  __typename?: "CourseReviewMessageGqlResponse";
+  /** Message body */
+  body: Scalars["String"]["output"];
+  /** Stable message key generated by the database */
+  key: Scalars["String"]["output"];
+  /** Message moderation metadata */
+  moderation: CourseReviewModerationGqlResponse;
+  /** Minimal sender user information */
+  senderUser?: Maybe<UserMinimalGqlResponse>;
+  /** Sender user ID */
+  senderUserId: Scalars["ID"]["output"];
+  /** Date when the message was sent */
+  sentAt: Scalars["DateTime"]["output"];
+};
+
+export type CourseReviewModerationGqlResponse = {
+  __typename?: "CourseReviewModerationGqlResponse";
+  /** Date when the content was hidden */
+  hiddenAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** Minimal user that hid the content */
+  hiddenByUser?: Maybe<UserMinimalGqlResponse>;
+  /** User ID that hid the content */
+  hiddenByUserId?: Maybe<Scalars["ID"]["output"]>;
+  /** Internal moderation note */
+  hiddenReason?: Maybe<Scalars["String"]["output"]>;
+  /** Moderation visibility for this content */
+  visibility: CourseReviewVisibility;
+};
+
+/** Moderation scope for a course review update */
+export const CourseReviewModerationTarget = {
+  MESSAGE: "MESSAGE",
+  RATING: "RATING",
+  REVIEW: "REVIEW",
+} as const;
+
+export type CourseReviewModerationTarget =
+  (typeof CourseReviewModerationTarget)[keyof typeof CourseReviewModerationTarget];
+export type CourseReviewModerationUpdateGqlInput = {
+  /** Optional internal note when hiding content */
+  hiddenReason?: InputMaybe<Scalars["String"]["input"]>;
+  /** Stable message key; required when target is MESSAGE */
+  messageKey?: InputMaybe<Scalars["String"]["input"]>;
+  /** Course review ID */
+  reviewId: Scalars["ID"]["input"];
+  /** Which moderation scope to update: review thread, rating, or message */
+  target: CourseReviewModerationTarget;
+  /** New moderation visibility */
+  visibility: CourseReviewVisibility;
+};
+
+export type CourseReviewRatingGqlResponse = {
+  __typename?: "CourseReviewRatingGqlResponse";
+  /** Optional review comment */
+  comment?: Maybe<Scalars["String"]["output"]>;
+  /** Rating moderation metadata */
+  moderation: CourseReviewModerationGqlResponse;
+  /** Date when the rating was first submitted */
+  ratedAt: Scalars["DateTime"]["output"];
+  /** Star rating from 1 to 5 */
+  stars: Scalars["Int"]["output"];
+  /** Date when the rating was last updated */
+  updatedAt?: Maybe<Scalars["DateTime"]["output"]>;
+};
+
+export type CourseReviewSubmitGqlInput = {
+  /** Captcha challenge identifier issued by the backend */
+  captchaId?: InputMaybe<Scalars["String"]["input"]>;
+  /** Captcha answer entered by the user */
+  captchaValue?: InputMaybe<Scalars["String"]["input"]>;
+  /** Optional review comment */
+  comment?: InputMaybe<Scalars["String"]["input"]>;
+  /** Course ID to review */
+  courseId: Scalars["ID"]["input"];
+  /** Staff only. Visibility for a support message; PUBLIC or PRIVATE */
+  messageVisibility?: InputMaybe<CourseReviewVisibility>;
+  /** Optional star rating from 1 to 5 */
+  stars?: InputMaybe<Scalars["Int"]["input"]>;
+  /** Review owner user ID; staff only. END_USER accounts always review as themselves */
+  userId?: InputMaybe<Scalars["ID"]["input"]>;
+};
+
+export type CourseReviewSubmitGqlResponse = {
+  __typename?: "CourseReviewSubmitGqlResponse";
+  /** Reviewed course ID */
+  courseId: Scalars["ID"]["output"];
+  /** Course review thread ID */
+  id: Scalars["ID"]["output"];
+  /** Whether this call created the rating for the first time */
+  isNewRating: Scalars["Boolean"]["output"];
+  /** Submitted rating, if any */
+  rating?: Maybe<CourseReviewSubmitRatingGqlResponse>;
+  /** Minimal review owner information; returned to staff only */
+  user?: Maybe<UserMinimalGqlResponse>;
+  /** Review owner user ID; returned to staff only */
+  userId?: Maybe<Scalars["ID"]["output"]>;
+};
+
+export type CourseReviewSubmitRatingGqlResponse = {
+  __typename?: "CourseReviewSubmitRatingGqlResponse";
+  /** Optional review comment */
+  comment?: Maybe<Scalars["String"]["output"]>;
+  /** Date when the rating was first submitted */
+  ratedAt: Scalars["DateTime"]["output"];
+  /** Star rating from 1 to 5 */
+  stars: Scalars["Int"]["output"];
+  /** Date when the rating was last updated */
+  updatedAt?: Maybe<Scalars["DateTime"]["output"]>;
+};
+
+export type CourseReviewUserSnapshotGqlResponse = {
+  __typename?: "CourseReviewUserSnapshotGqlResponse";
+  /** Stored avatar file ID snapshot */
+  avatarFileId?: Maybe<Scalars["ID"]["output"]>;
+  /** Stored full name snapshot */
+  fullName: Scalars["String"]["output"];
+  /** Stored username snapshot */
+  username: Scalars["String"]["output"];
+};
+
+/** Visibility state for course review content */
+export const CourseReviewVisibility = {
+  HIDDEN: "HIDDEN",
+  PRIVATE: "PRIVATE",
+  PUBLIC: "PUBLIC",
+} as const;
+
+export type CourseReviewVisibility =
+  (typeof CourseReviewVisibility)[keyof typeof CourseReviewVisibility];
 export type CourseUpdateGqlInput = {
   /** Course chapters */
   chapters: Array<CourseChapterGqlInput>;
@@ -1202,6 +1495,10 @@ export type CourseUpdateGqlInput = {
   id: Scalars["ID"]["input"];
   /** Whether the course is active */
   isActive?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Whether learners can submit reviews for this course */
+  isReviewSubmissionEnabled?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Whether the reviews section is visible on the course detail page */
+  isReviewsSectionVisible?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** Course price in IRT */
   priceIrt?: InputMaybe<Scalars["Float"]["input"]>;
   /** Course display rank used for manual ordering */
@@ -1304,6 +1601,10 @@ export type Mutation = {
   coursePaymentStatusUpdate: CoursePaymentListGqlResponse;
   /** Submit a course purchase using gateway, card-to-card, cryptocurrency, or a free coupon */
   coursePurchaseSubmit: CoursePurchaseSubmitGqlResponse;
+  /** Update course review moderation visibility for the review thread, rating, or a single message */
+  courseReviewModerationUpdate: CourseReviewListGqlResponse;
+  /** Create or update a course star rating and optionally append a follow-up comment */
+  courseReviewSubmit: CourseReviewSubmitGqlResponse;
   /** Update a course and clean up replaced or removed file attachments */
   courseUpdate: CourseListGqlResponse;
   /** Broadcast a global anouncement to active users subscribed to general updates */
@@ -1318,6 +1619,8 @@ export type Mutation = {
   superAdminTicketSend: TicketListGqlResponse;
   /** Close a support ticket as support staff */
   ticketClose: TicketListGqlResponse;
+  /** Activate a newly created account using the emailed activation link */
+  userActivateAccount: UserPasswordResetGqlResponse;
   /** Create a user account with profile, avatar file, roles, status, and initial password */
   userCreate: UserMutationGqlResponse;
   /** Request a password reset code using username, email, or phone number */
@@ -1330,6 +1633,8 @@ export type Mutation = {
   userNotificationUpdate: NotificationUpdateGqlResponse;
   /** Update the authenticated user's user document: account info, profile, preferences, avatar file, or password */
   userProfileUpdate: UserMutationGqlResponse;
+  /** Send a verification email to the authenticated user's address */
+  userRequestEmailVerification: UserPasswordResetGqlResponse;
   /** Reset account password using the emailed one-time code and account identity */
   userResetPassword: UserPasswordResetGqlResponse;
   /** Create an END_USER account using username/email/mobile and start a session */
@@ -1384,6 +1689,14 @@ export type MutationCoursePurchaseSubmitArgs = {
   input: CoursePurchaseSubmitGqlInput;
 };
 
+export type MutationCourseReviewModerationUpdateArgs = {
+  input: CourseReviewModerationUpdateGqlInput;
+};
+
+export type MutationCourseReviewSubmitArgs = {
+  input: CourseReviewSubmitGqlInput;
+};
+
 export type MutationCourseUpdateArgs = {
   input: CourseUpdateGqlInput;
 };
@@ -1410,6 +1723,10 @@ export type MutationSuperAdminTicketSendArgs = {
 
 export type MutationTicketCloseArgs = {
   id: Scalars["ID"]["input"];
+};
+
+export type MutationUserActivateAccountArgs = {
+  token: Scalars["String"]["input"];
 };
 
 export type MutationUserCreateArgs = {
@@ -1728,8 +2045,6 @@ export type Query = {
   appSettingKeyList: AppSettingKeyListPaginatedOffsetGqlResponse;
   /** Get configured terms of use HTML content */
   appTermsOfUsePageConfig: AppTermsOfUsePageConfigGqlResponse;
-  /** Get configured application version label */
-  appVersionConfig: AppVersionConfigGqlResponse;
   /** Get role-aware sidebar badge counts. Anonymous users receive active course count only. */
   badgeCount: BadgeCountGqlResponse;
   /** Get full coupon data for SUPER_ADMIN, including applicable courses for editing */
@@ -1738,6 +2053,8 @@ export type Query = {
   couponList: CouponListPaginatedOffsetGqlResponse;
   /** Validate a coupon for the current user's course purchase */
   couponValidate: CouponValidateGqlResponse;
+  /** Inspect related records before deleting a course, including retained and removed dependencies */
+  courseDeleteDependencies: CourseDeleteDependenciesGqlResponse;
   /** Get full course data for SUPER_ADMIN, including chapters and items for editing */
   courseDetail: CourseListGqlResponse;
   /** Get a paginated, filterable, sortable admin list of courses with calculated release and item types */
@@ -1746,6 +2063,8 @@ export type Query = {
   coursePaymentDetail: CoursePaymentListGqlResponse;
   /** Get paginated list of all course payments from user-course purchase records */
   coursePaymentList: CoursePaymentListPaginatedOffsetGqlResponse;
+  /** Get a cursor-paginated, filterable, sortable staff list of course reviews with full data */
+  courseReviewList: CourseReviewListPaginatedCursorGqlResponse;
   /** Get the currently authenticated user's information */
   me: UserMeGqlResponse;
   /** Get payment checkout settings for course purchases */
@@ -1760,6 +2079,8 @@ export type Query = {
   userCourseDetail: UserCourseDetailGqlResponse;
   /** Get active courses for anonymous users and END_USER views with purchase state */
   userCourseList: UserCourseListPaginatedCursorGqlResponse;
+  /** Get a cursor-paginated list of public course reviews for anonymous users and END_USER accounts */
+  userCourseReviewList: UserCourseReviewListPaginatedCursorGqlResponse;
   /** Get full user data for SUPER_ADMIN, including profile fields for editing */
   userDetail: UserListGqlResponse;
   /** Get a paginated, filterable, sortable super-admin list of users using offset-based pagination */
@@ -1794,6 +2115,10 @@ export type QueryCouponValidateArgs = {
   input: CouponValidateGqlInput;
 };
 
+export type QueryCourseDeleteDependenciesArgs = {
+  input: CourseDeleteGqlInput;
+};
+
 export type QueryCourseDetailArgs = {
   input: CourseDetailGqlInput;
 };
@@ -1810,6 +2135,10 @@ export type QueryCoursePaymentListArgs = {
   input: CoursePaymentListGqlInput;
 };
 
+export type QueryCourseReviewListArgs = {
+  input: CourseReviewListGqlInput;
+};
+
 export type QueryTicketDetailArgs = {
   input: TicketDetailGqlInput;
 };
@@ -1824,6 +2153,10 @@ export type QueryUserCourseDetailArgs = {
 
 export type QueryUserCourseListArgs = {
   input: CourseListGqlInput;
+};
+
+export type QueryUserCourseReviewListArgs = {
+  input: UserCourseReviewListGqlInput;
 };
 
 export type QueryUserDetailArgs = {
@@ -2335,6 +2668,10 @@ export type UserCourseDetailGqlResponse = {
   isFree: Scalars["Boolean"]["output"];
   /** Whether the current END_USER has a paid purchase for this course */
   isPurchased: Scalars["Boolean"]["output"];
+  /** Whether learners can submit reviews for this course */
+  isReviewSubmissionEnabled: Scalars["Boolean"]["output"];
+  /** Whether the reviews section is visible on the course detail page */
+  isReviewsSectionVisible: Scalars["Boolean"]["output"];
   /** Course price in IRT */
   priceIrt?: Maybe<Scalars["Float"]["output"]>;
   /** Current END_USER purchase status for this course, if any */
@@ -2432,6 +2769,100 @@ export const UserCoursePurchaseStatus = {
 
 export type UserCoursePurchaseStatus =
   (typeof UserCoursePurchaseStatus)[keyof typeof UserCoursePurchaseStatus];
+export type UserCourseReviewAuthorGqlResponse = {
+  __typename?: "UserCourseReviewAuthorGqlResponse";
+  /** Review author's first name only */
+  firstName: Scalars["String"]["output"];
+};
+
+export type UserCourseReviewListCursorPageOptionsParamsInput = {
+  /** Maximum number of records to return */
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  /** Sort options as a map of field names to sort order */
+  sort?: InputMaybe<UserCourseReviewListSortOptionInput>;
+  /** Cursor to start after. Uses the beginning if omitted */
+  startCursor?: InputMaybe<Scalars["ID"]["input"]>;
+};
+
+export type UserCourseReviewListFilterInput = {
+  /** Course ID to list reviews for */
+  courseId: Scalars["ID"]["input"];
+  /** Filter reviews by exact star rating */
+  stars?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+export type UserCourseReviewListGqlInput = {
+  /** Filter options for narrowing down the course review list */
+  filters: UserCourseReviewListFilterInput;
+  /** Cursor pagination and sorting options */
+  options?: InputMaybe<UserCourseReviewListCursorPageOptionsParamsInput>;
+};
+
+export type UserCourseReviewListGqlResponse = {
+  __typename?: "UserCourseReviewListGqlResponse";
+  /** Sanitized review author information */
+  author: UserCourseReviewAuthorGqlResponse;
+  /** Course review thread ID */
+  id: Scalars["ID"]["output"];
+  /** Whether this review thread belongs to the current user */
+  isMine: Scalars["Boolean"]["output"];
+  /** Public follow-up comments from the review author plus support messages visible only on the current user's own review */
+  messages: Array<UserCourseReviewMessageGqlResponse>;
+  /** Visible rating for this review, if any */
+  rating?: Maybe<UserCourseReviewRatingGqlResponse>;
+};
+
+export type UserCourseReviewListPaginatedCursorGqlResponse = {
+  __typename?: "UserCourseReviewListPaginatedCursorGqlResponse";
+  /** Course reviews visible to the current END_USER */
+  items: Array<UserCourseReviewListGqlResponse>;
+  /** Pagination metadata */
+  pagination: PaginationCursorResponse;
+};
+
+export type UserCourseReviewListSortOptionInput = {
+  /** Sort by thread creation date */
+  createdAt?: InputMaybe<SortingOrder>;
+  /** Sort by rating submission date */
+  ratedAt?: InputMaybe<SortingOrder>;
+  /** Sort by star rating */
+  stars?: InputMaybe<SortingOrder>;
+  /** Sort by thread last update date */
+  updatedAt?: InputMaybe<SortingOrder>;
+};
+
+export type UserCourseReviewMessageGqlResponse = {
+  __typename?: "UserCourseReviewMessageGqlResponse";
+  /** Message body */
+  body: Scalars["String"]["output"];
+  /** Stable message key generated by the database */
+  key: Scalars["String"]["output"];
+  /** Sanitized sender information */
+  sender: UserCourseReviewMessageSenderGqlResponse;
+  /** Date when the message was sent */
+  sentAt: Scalars["DateTime"]["output"];
+};
+
+export type UserCourseReviewMessageSenderGqlResponse = {
+  __typename?: "UserCourseReviewMessageSenderGqlResponse";
+  /** Message sender first name or support label */
+  firstName: Scalars["String"]["output"];
+  /** Whether the message was sent by support staff rather than the review author */
+  isSupport: Scalars["Boolean"]["output"];
+};
+
+export type UserCourseReviewRatingGqlResponse = {
+  __typename?: "UserCourseReviewRatingGqlResponse";
+  /** Optional review comment */
+  comment?: Maybe<Scalars["String"]["output"]>;
+  /** Date when the rating was first submitted */
+  ratedAt: Scalars["DateTime"]["output"];
+  /** Star rating from 1 to 5 */
+  stars: Scalars["Int"]["output"];
+  /** Date when the rating was last updated */
+  updatedAt?: Maybe<Scalars["DateTime"]["output"]>;
+};
+
 export type UserCreateGqlInput = {
   /** Initial account password */
   password: Scalars["String"]["input"];
@@ -2662,6 +3093,18 @@ export type UserMeGqlResponse = {
   status: UserStatus;
   /** User username */
   username: Scalars["String"]["output"];
+  /** Email and mobile verification timestamps */
+  verification: UserVerificationGqlResponse;
+};
+
+export type UserMinimalGqlResponse = {
+  __typename?: "UserMinimalGqlResponse";
+  /** User ID */
+  id: Scalars["ID"]["output"];
+  /** User profile information */
+  profile?: Maybe<UserProfileMinimalGqlResponse>;
+  /** User roles when explicitly loaded */
+  roles?: Maybe<Array<UserRole>>;
 };
 
 export type UserMutationGqlResponse = {
@@ -3001,6 +3444,14 @@ export type UserUpdateProfileGqlInput = {
   phoneNumber?: InputMaybe<Scalars["String"]["input"]>;
 };
 
+export type UserVerificationGqlResponse = {
+  __typename?: "UserVerificationGqlResponse";
+  /** UTC timestamp when the user's email was verified */
+  emailVerifiedAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** UTC timestamp when the user's mobile number was verified */
+  mobileVerifiedAt?: Maybe<Scalars["DateTime"]["output"]>;
+};
+
 export type UserVerifyLoginCodeGqlInput = {
   /** Client device and browser context captured at login time */
   clientContext?: InputMaybe<SessionClientContextGqlInput>;
@@ -3124,6 +3575,65 @@ export type CoursePurchaseSubmitMutation = {
   };
 };
 
+export type CourseReviewModerationUpdateMutationVariables = Exact<{
+  input: CourseReviewModerationUpdateGqlInput;
+}>;
+
+export type CourseReviewModerationUpdateMutation = {
+  __typename?: "Mutation";
+  courseReviewModerationUpdate: {
+    __typename?: "CourseReviewListGqlResponse";
+    id: string;
+    moderation: {
+      __typename?: "CourseReviewModerationGqlResponse";
+      visibility: CourseReviewVisibility;
+      hiddenAt?: any | null;
+      hiddenReason?: string | null;
+    };
+    rating?: {
+      __typename?: "CourseReviewRatingGqlResponse";
+      stars: number;
+      moderation: {
+        __typename?: "CourseReviewModerationGqlResponse";
+        visibility: CourseReviewVisibility;
+        hiddenAt?: any | null;
+        hiddenReason?: string | null;
+      };
+    } | null;
+    messages: Array<{
+      __typename?: "CourseReviewMessageGqlResponse";
+      key: string;
+      moderation: {
+        __typename?: "CourseReviewModerationGqlResponse";
+        visibility: CourseReviewVisibility;
+        hiddenAt?: any | null;
+        hiddenReason?: string | null;
+      };
+    }>;
+  };
+};
+
+export type CourseReviewSubmitMutationVariables = Exact<{
+  input: CourseReviewSubmitGqlInput;
+}>;
+
+export type CourseReviewSubmitMutation = {
+  __typename?: "Mutation";
+  courseReviewSubmit: {
+    __typename?: "CourseReviewSubmitGqlResponse";
+    id: string;
+    courseId: string;
+    isNewRating: boolean;
+    rating?: {
+      __typename?: "CourseReviewSubmitRatingGqlResponse";
+      stars: number;
+      comment?: string | null;
+      ratedAt: any;
+      updatedAt?: any | null;
+    } | null;
+  };
+};
+
 export type CourseUpdateMutationVariables = Exact<{
   input: CourseUpdateGqlInput;
 }>;
@@ -3167,6 +3677,19 @@ export type TicketCloseMutation = {
     status: TicketStatus;
     closedBy?: TicketClosedBy | null;
     closedAt?: any | null;
+  };
+};
+
+export type UserActivateAccountMutationVariables = Exact<{
+  token: Scalars["String"]["input"];
+}>;
+
+export type UserActivateAccountMutation = {
+  __typename?: "Mutation";
+  userActivateAccount: {
+    __typename?: "UserPasswordResetGqlResponse";
+    success: boolean;
+    message: string;
   };
 };
 
@@ -3234,6 +3757,17 @@ export type UserNotificationUpdateMutation = {
       createdAt?: any | null;
       updatedAt?: any | null;
     }>;
+  };
+};
+
+export type UserRequestEmailVerificationMutationVariables = Exact<{ [key: string]: never }>;
+
+export type UserRequestEmailVerificationMutation = {
+  __typename?: "Mutation";
+  userRequestEmailVerification: {
+    __typename?: "UserPasswordResetGqlResponse";
+    success: boolean;
+    message: string;
   };
 };
 
@@ -3397,13 +3931,6 @@ export type AppTermsOfUsePageConfigQuery = {
   appTermsOfUsePageConfig: { __typename?: "AppTermsOfUsePageConfigGqlResponse"; html: string };
 };
 
-export type AppVersionConfigQueryVariables = Exact<{ [key: string]: never }>;
-
-export type AppVersionConfigQuery = {
-  __typename?: "Query";
-  appVersionConfig: { __typename?: "AppVersionConfigGqlResponse"; value: string };
-};
-
 export type BadgeCountQueryVariables = Exact<{ [key: string]: never }>;
 
 export type BadgeCountQuery = {
@@ -3501,6 +4028,44 @@ export type CouponValidateQuery = {
     payableAmountBeforeCouponIrt?: number | null;
     couponDiscountAmountIrt?: number | null;
     finalAmountIrt?: number | null;
+  };
+};
+
+export type CourseDeleteDependenciesQueryVariables = Exact<{
+  input: CourseDeleteGqlInput;
+}>;
+
+export type CourseDeleteDependenciesQuery = {
+  __typename?: "Query";
+  courseDeleteDependencies: {
+    __typename?: "CourseDeleteDependenciesGqlResponse";
+    courseId: string;
+    courseTitle: string;
+    summary: {
+      __typename?: "CourseDeleteDependenciesSummaryGqlResponse";
+      retainedCount: number;
+      removedCount: number;
+      hasRetainedDependencies: boolean;
+      hasRemovedDependencies: boolean;
+    };
+    groups: Array<{
+      __typename?: "CourseDeleteDependencyGroupGqlResponse";
+      key: string;
+      impact: CourseDeleteDependencyImpact;
+      totalCount: number;
+      hiddenSampleCount: number;
+      breakdown: Array<{
+        __typename?: "CourseDeleteDependencyBreakdownGqlResponse";
+        key: string;
+        count: number;
+      }>;
+      samples: Array<{
+        __typename?: "CourseDeleteDependencySampleGqlResponse";
+        id?: string | null;
+        label: string;
+        meta?: string | null;
+      }>;
+    }>;
   };
 };
 
@@ -3718,6 +4283,51 @@ export type TicketListQuery = {
       skip: number;
       total: number;
       count: number;
+    };
+  };
+};
+
+export type UserCourseReviewListQueryVariables = Exact<{
+  input: UserCourseReviewListGqlInput;
+}>;
+
+export type UserCourseReviewListQuery = {
+  __typename?: "Query";
+  userCourseReviewList: {
+    __typename?: "UserCourseReviewListPaginatedCursorGqlResponse";
+    items: Array<{
+      __typename?: "UserCourseReviewListGqlResponse";
+      id: string;
+      isMine: boolean;
+      author: { __typename?: "UserCourseReviewAuthorGqlResponse"; firstName: string };
+      rating?: {
+        __typename?: "UserCourseReviewRatingGqlResponse";
+        stars: number;
+        comment?: string | null;
+        ratedAt: any;
+        updatedAt?: any | null;
+      } | null;
+      messages: Array<{
+        __typename?: "UserCourseReviewMessageGqlResponse";
+        key: string;
+        body: string;
+        sentAt: any;
+        sender: {
+          __typename?: "UserCourseReviewMessageSenderGqlResponse";
+          firstName: string;
+          isSupport: boolean;
+        };
+      }>;
+    }>;
+    pagination: {
+      __typename?: "PaginationCursorResponse";
+      limit: number;
+      total: number;
+      count: number;
+      startCursor?: string | null;
+      endCursor?: string | null;
+      hasNextPage: boolean;
+      hasPreviousPage: boolean;
     };
   };
 };
@@ -4169,6 +4779,170 @@ export const CoursePurchaseSubmitDocument = {
     },
   ],
 } as unknown as DocumentNode<CoursePurchaseSubmitMutation, CoursePurchaseSubmitMutationVariables>;
+export const CourseReviewModerationUpdateDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "mutation",
+      name: { kind: "Name", value: "CourseReviewModerationUpdate" },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "input" } },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: { kind: "Name", value: "CourseReviewModerationUpdateGqlInput" },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "courseReviewModerationUpdate" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "input" },
+                value: { kind: "Variable", name: { kind: "Name", value: "input" } },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                { kind: "Field", name: { kind: "Name", value: "id" } },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "moderation" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "visibility" } },
+                      { kind: "Field", name: { kind: "Name", value: "hiddenAt" } },
+                      { kind: "Field", name: { kind: "Name", value: "hiddenReason" } },
+                    ],
+                  },
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "rating" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "stars" } },
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "moderation" },
+                        selectionSet: {
+                          kind: "SelectionSet",
+                          selections: [
+                            { kind: "Field", name: { kind: "Name", value: "visibility" } },
+                            { kind: "Field", name: { kind: "Name", value: "hiddenAt" } },
+                            { kind: "Field", name: { kind: "Name", value: "hiddenReason" } },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "messages" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "key" } },
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "moderation" },
+                        selectionSet: {
+                          kind: "SelectionSet",
+                          selections: [
+                            { kind: "Field", name: { kind: "Name", value: "visibility" } },
+                            { kind: "Field", name: { kind: "Name", value: "hiddenAt" } },
+                            { kind: "Field", name: { kind: "Name", value: "hiddenReason" } },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CourseReviewModerationUpdateMutation,
+  CourseReviewModerationUpdateMutationVariables
+>;
+export const CourseReviewSubmitDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "mutation",
+      name: { kind: "Name", value: "CourseReviewSubmit" },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "input" } },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: { kind: "Name", value: "CourseReviewSubmitGqlInput" },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "courseReviewSubmit" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "input" },
+                value: { kind: "Variable", name: { kind: "Name", value: "input" } },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                { kind: "Field", name: { kind: "Name", value: "id" } },
+                { kind: "Field", name: { kind: "Name", value: "courseId" } },
+                { kind: "Field", name: { kind: "Name", value: "isNewRating" } },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "rating" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "stars" } },
+                      { kind: "Field", name: { kind: "Name", value: "comment" } },
+                      { kind: "Field", name: { kind: "Name", value: "ratedAt" } },
+                      { kind: "Field", name: { kind: "Name", value: "updatedAt" } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CourseReviewSubmitMutation, CourseReviewSubmitMutationVariables>;
 export const CourseUpdateDocument = {
   kind: "Document",
   definitions: [
@@ -4343,6 +5117,49 @@ export const TicketCloseDocument = {
     },
   ],
 } as unknown as DocumentNode<TicketCloseMutation, TicketCloseMutationVariables>;
+export const UserActivateAccountDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "mutation",
+      name: { kind: "Name", value: "UserActivateAccount" },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "token" } },
+          type: {
+            kind: "NonNullType",
+            type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "userActivateAccount" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "token" },
+                value: { kind: "Variable", name: { kind: "Name", value: "token" } },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                { kind: "Field", name: { kind: "Name", value: "success" } },
+                { kind: "Field", name: { kind: "Name", value: "message" } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UserActivateAccountMutation, UserActivateAccountMutationVariables>;
 export const UserForgotPasswordDocument = {
   kind: "Document",
   definitions: [
@@ -4530,6 +5347,35 @@ export const UserNotificationUpdateDocument = {
 } as unknown as DocumentNode<
   UserNotificationUpdateMutation,
   UserNotificationUpdateMutationVariables
+>;
+export const UserRequestEmailVerificationDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "mutation",
+      name: { kind: "Name", value: "UserRequestEmailVerification" },
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "userRequestEmailVerification" },
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                { kind: "Field", name: { kind: "Name", value: "success" } },
+                { kind: "Field", name: { kind: "Name", value: "message" } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  UserRequestEmailVerificationMutation,
+  UserRequestEmailVerificationMutationVariables
 >;
 export const UserRequestLoginCodeDocument = {
   kind: "Document",
@@ -5006,29 +5852,6 @@ export const AppTermsOfUsePageConfigDocument = {
     },
   ],
 } as unknown as DocumentNode<AppTermsOfUsePageConfigQuery, AppTermsOfUsePageConfigQueryVariables>;
-export const AppVersionConfigDocument = {
-  kind: "Document",
-  definitions: [
-    {
-      kind: "OperationDefinition",
-      operation: "query",
-      name: { kind: "Name", value: "AppVersionConfig" },
-      selectionSet: {
-        kind: "SelectionSet",
-        selections: [
-          {
-            kind: "Field",
-            name: { kind: "Name", value: "appVersionConfig" },
-            selectionSet: {
-              kind: "SelectionSet",
-              selections: [{ kind: "Field", name: { kind: "Name", value: "value" } }],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<AppVersionConfigQuery, AppVersionConfigQueryVariables>;
 export const BadgeCountDocument = {
   kind: "Document",
   definitions: [
@@ -5246,6 +6069,98 @@ export const CouponValidateDocument = {
     },
   ],
 } as unknown as DocumentNode<CouponValidateQuery, CouponValidateQueryVariables>;
+export const CourseDeleteDependenciesDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "query",
+      name: { kind: "Name", value: "CourseDeleteDependencies" },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "input" } },
+          type: {
+            kind: "NonNullType",
+            type: { kind: "NamedType", name: { kind: "Name", value: "CourseDeleteGqlInput" } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "courseDeleteDependencies" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "input" },
+                value: { kind: "Variable", name: { kind: "Name", value: "input" } },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                { kind: "Field", name: { kind: "Name", value: "courseId" } },
+                { kind: "Field", name: { kind: "Name", value: "courseTitle" } },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "summary" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "retainedCount" } },
+                      { kind: "Field", name: { kind: "Name", value: "removedCount" } },
+                      { kind: "Field", name: { kind: "Name", value: "hasRetainedDependencies" } },
+                      { kind: "Field", name: { kind: "Name", value: "hasRemovedDependencies" } },
+                    ],
+                  },
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "groups" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "key" } },
+                      { kind: "Field", name: { kind: "Name", value: "impact" } },
+                      { kind: "Field", name: { kind: "Name", value: "totalCount" } },
+                      { kind: "Field", name: { kind: "Name", value: "hiddenSampleCount" } },
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "breakdown" },
+                        selectionSet: {
+                          kind: "SelectionSet",
+                          selections: [
+                            { kind: "Field", name: { kind: "Name", value: "key" } },
+                            { kind: "Field", name: { kind: "Name", value: "count" } },
+                          ],
+                        },
+                      },
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "samples" },
+                        selectionSet: {
+                          kind: "SelectionSet",
+                          selections: [
+                            { kind: "Field", name: { kind: "Name", value: "id" } },
+                            { kind: "Field", name: { kind: "Name", value: "label" } },
+                            { kind: "Field", name: { kind: "Name", value: "meta" } },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CourseDeleteDependenciesQuery, CourseDeleteDependenciesQueryVariables>;
 export const CoursePaymentListDocument = {
   kind: "Document",
   definitions: [
@@ -5699,6 +6614,123 @@ export const TicketListDocument = {
     },
   ],
 } as unknown as DocumentNode<TicketListQuery, TicketListQueryVariables>;
+export const UserCourseReviewListDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "query",
+      name: { kind: "Name", value: "UserCourseReviewList" },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "input" } },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: { kind: "Name", value: "UserCourseReviewListGqlInput" },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "userCourseReviewList" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "input" },
+                value: { kind: "Variable", name: { kind: "Name", value: "input" } },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "items" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "id" } },
+                      { kind: "Field", name: { kind: "Name", value: "isMine" } },
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "author" },
+                        selectionSet: {
+                          kind: "SelectionSet",
+                          selections: [
+                            { kind: "Field", name: { kind: "Name", value: "firstName" } },
+                          ],
+                        },
+                      },
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "rating" },
+                        selectionSet: {
+                          kind: "SelectionSet",
+                          selections: [
+                            { kind: "Field", name: { kind: "Name", value: "stars" } },
+                            { kind: "Field", name: { kind: "Name", value: "comment" } },
+                            { kind: "Field", name: { kind: "Name", value: "ratedAt" } },
+                            { kind: "Field", name: { kind: "Name", value: "updatedAt" } },
+                          ],
+                        },
+                      },
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "messages" },
+                        selectionSet: {
+                          kind: "SelectionSet",
+                          selections: [
+                            { kind: "Field", name: { kind: "Name", value: "key" } },
+                            { kind: "Field", name: { kind: "Name", value: "body" } },
+                            { kind: "Field", name: { kind: "Name", value: "sentAt" } },
+                            {
+                              kind: "Field",
+                              name: { kind: "Name", value: "sender" },
+                              selectionSet: {
+                                kind: "SelectionSet",
+                                selections: [
+                                  { kind: "Field", name: { kind: "Name", value: "firstName" } },
+                                  { kind: "Field", name: { kind: "Name", value: "isSupport" } },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "pagination" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "limit" } },
+                      { kind: "Field", name: { kind: "Name", value: "total" } },
+                      { kind: "Field", name: { kind: "Name", value: "count" } },
+                      { kind: "Field", name: { kind: "Name", value: "startCursor" } },
+                      { kind: "Field", name: { kind: "Name", value: "endCursor" } },
+                      { kind: "Field", name: { kind: "Name", value: "hasNextPage" } },
+                      { kind: "Field", name: { kind: "Name", value: "hasPreviousPage" } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UserCourseReviewListQuery, UserCourseReviewListQueryVariables>;
 export const UserLoginCaptchaDocument = {
   kind: "Document",
   definitions: [

@@ -12,6 +12,7 @@ import { useMe } from "../../hooks/useMe";
 import { resolveAvatarInitial, resolveMeUserDisplayName, resolveStoredUserDisplayName } from "../../utils/storedUser.util";
 import { useTranslation } from "../../hooks/useTranslation";
 import ThemeToggle from "../ThemeToggle";
+import { AvatarInitial } from "../../shared/display/AvatarInitial";
 import styles from "./styles/header.module.scss";
 import AppTooltip from "../../shared/AppTooltip";
 
@@ -131,7 +132,7 @@ const Header = (): ReactElement => {
           onClick={(event) => setUserAnchor(event.currentTarget)}
         >
           <Avatar className={styles.avatar} src={avatarUrl ?? undefined} alt={displayName}>
-            {avatarLetter}
+            <AvatarInitial initial={avatarLetter} />
           </Avatar>
           <strong>{displayName}</strong>
         </button>

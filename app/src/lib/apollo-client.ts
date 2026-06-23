@@ -8,7 +8,24 @@ import { LOCAL_STORAGE_KEYS } from "../constants";
 import { paginatedQueryTypePolicies } from "./apollo/paginated-query-cache.policy";
 import { queueApolloError } from "../components/apollo-error-queue";
 import { notifyAuthSessionExpired } from "./auth-session-expired-listeners";
-import { extractGraphQLErrorMessage, isAccessDeniedGraphQLError, type ApolloErrorLike, type GraphQLErrorExtensions } from "../utilities/graphql-error.util";
+import { extractGraphQLErrorMessage, isAccessDeniedGraphQLError, isAuthSessionInvalidGraphQLError, type ApolloErrorLike, type GraphQLErrorExtensions } from "../utilities/graphql-error.util";
+import { isLandingRoute, isStandaloneShellRoute } from "../routing/app-shell-routes";
+
+function shouldBypassApolloErrorUx(): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return isLandingRoute(window.location.pathname);
+}
+
+function shouldIgnoreAuthSessionExpiry(): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return isStandaloneShellRoute(window.location.pathname);
+}
 
 const httpLink = new HttpLink({
   uri: "/graphql",
@@ -71,20 +88,50 @@ const errorLink = new ErrorLink(({ error }) => {
     return;
   }
 
+  if (shouldBypassApolloErrorUx()) {
+    if (CombinedGraphQLErrors.is(error)) {
+      for (const graphQLError of error.errors) {
+        logGraphQlDiagnostic(graphQLError.message, graphQLError.locations, graphQLError.path);
+      }
+    } else if (error) {
+      const rawMessage =
+        error instanceof Error
+          ? error.message
+          : ServerError.is(error)
+            ? error.message || "Network error"
+            : "An error occurred";
+      console.error(`[Error on landing]: ${rawMessage}`);
+    }
+    return;
+  }
+
   if (CombinedGraphQLErrors.is(error)) {
     let shouldLogout = false;
 
     for (const graphQLError of error.errors) {
       logGraphQlDiagnostic(graphQLError.message, graphQLError.locations, graphQLError.path);
 
-      const errorMessage = extractGraphQLErrorMessage(apolloLikeFromGraphQlField(graphQLError));
-      queueApolloError(errorMessage);
-
       const gql = graphQLError as { code?: string };
       const errorCode =
         gql.code ?? (graphQLError.extensions as { code?: string } | undefined)?.code;
-      if (
+      const errorMessage = extractGraphQLErrorMessage(apolloLikeFromGraphQlField(graphQLError));
+      const isRoleForbidden =
         isAccessDeniedGraphQLError({
+          message: graphQLError.message,
+          code: errorCode,
+          extensions: graphQLError.extensions as GraphQLErrorExtensions | undefined,
+        }) && !isAuthSessionInvalidGraphQLError({
+          message: graphQLError.message,
+          code: errorCode,
+          extensions: graphQLError.extensions as GraphQLErrorExtensions | undefined,
+        });
+
+      if (!(shouldIgnoreAuthSessionExpiry() && isRoleForbidden)) {
+        queueApolloError(errorMessage);
+      }
+
+      if (
+        isAuthSessionInvalidGraphQLError({
           message: graphQLError.message,
           code: errorCode,
           extensions: graphQLError.extensions as GraphQLErrorExtensions | undefined,
@@ -94,7 +141,7 @@ const errorLink = new ErrorLink(({ error }) => {
       }
     }
 
-    if (shouldLogout) {
+    if (shouldLogout && !shouldIgnoreAuthSessionExpiry()) {
       notifyAuthSessionExpired();
     }
     return;
@@ -110,7 +157,7 @@ const errorLink = new ErrorLink(({ error }) => {
     });
     queueApolloError(userFriendlyMessage);
 
-    if (error.statusCode === 401 || error.statusCode === 403) {
+    if (error.statusCode === 401 && !shouldIgnoreAuthSessionExpiry()) {
       notifyAuthSessionExpired();
     }
     return;

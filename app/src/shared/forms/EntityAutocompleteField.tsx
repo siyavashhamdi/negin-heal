@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import type { AutocompleteRenderInputParams } from "@mui/material/Autocomplete";
 import { resolveAvatarInitial } from "../../utils/storedUser.util";
+import { AvatarInitial } from "../display/AvatarInitial";
 
 import styles from "./EntityAutocompleteField.module.scss";
 
@@ -135,24 +136,14 @@ function EntityOptionThumbnail({
         ...avatarSx,
         borderRadius: "50%",
         color: "text.secondary",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
+        position: "relative",
+        overflow: "hidden",
         fontSize: initialFontSize,
         fontWeight: 700,
         userSelect: "none",
       }}
     >
-      <Box
-        component="span"
-        sx={{
-          display: "block",
-          lineHeight: 1,
-          transform: "translateY(0.125rem)",
-        }}
-      >
-        {initial}
-      </Box>
+      <AvatarInitial initial={initial} />
     </Box>
   );
 }

@@ -228,6 +228,14 @@ export function isAccessDeniedGraphQLError(error: AccessDeniedGraphQLErrorInput)
   return /access denied/i.test(backendMessage) || /access denied/i.test(error.message);
 }
 
+/** True when the session is invalid and the user should be signed out (not mere role restrictions). */
+export function isAuthSessionInvalidGraphQLError(error: AccessDeniedGraphQLErrorInput): boolean {
+  const errorCode =
+    error.code ?? error.extensions?.code ?? error.extensions?.exception?.code;
+
+  return errorCode === "UNAUTHENTICATED";
+}
+
 function resolveGraphQLErrorFieldMessage(
   error?: RawGraphQLErrorItem,
 ): string {

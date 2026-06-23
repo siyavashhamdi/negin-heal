@@ -116,7 +116,6 @@ const TABLE_TOOLBAR_OPTIONS = {
 } as const;
 
 const COLUMN_WIDTH_BY_ID: Record<string, string> = {
-  id: "14rem",
   code: "11rem",
   title: "16rem",
   discountType: "10rem",
@@ -259,7 +258,6 @@ const CouponsIndex = (): ReactElement => {
 
   const [sorting, setSorting] = useState<SortingState>([{ id: "createdAt", desc: true }]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
-    id: false,
     code: true,
     title: false,
     discountType: false,
@@ -521,7 +519,7 @@ const CouponsIndex = (): ReactElement => {
   const renderTextFilter = (
     key: keyof Pick<
       CouponListFilters,
-      "id" | "code" | "title" | "applicableCourseId" | "createdBy" | "updatedBy"
+      "code" | "title" | "applicableCourseId" | "createdBy" | "updatedBy"
     >,
     label: string
   ): ReactElement => {
@@ -619,7 +617,6 @@ const CouponsIndex = (): ReactElement => {
     const label = String(column.columnDef.header ?? column.id);
 
     switch (column.id) {
-      case "id":
       case "code":
       case "title":
         return renderTextFilter(column.id, label);
@@ -692,15 +689,10 @@ const CouponsIndex = (): ReactElement => {
   const columns = useMemo<ColumnDef<CouponListRecord>[]>(
     () => [
       {
-        accessorKey: "id",
-        header: t("table.pages.coupons.columns.id"),
-        cell: (info) => textCell(info.getValue(), true),
-      },
-      {
         accessorKey: "code",
         header: t("table.pages.coupons.columns.code"),
         cell: (info) => (
-          <Typography variant="body2" fontWeight={800} className={crudPrimitives.tabularNums}>
+          <Typography variant="body2" fontWeight={800} className={crudPrimitives.latinText}>
             {String(info.getValue() || EMPTY_DISPLAY)}
           </Typography>
         ),

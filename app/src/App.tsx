@@ -18,7 +18,7 @@ import { apolloClient } from "./lib/apollo-client";
 import { MainLayout } from "./layouts/MainLayout";
 import { LOCAL_STORAGE_KEYS } from "./constants";
 import { DashboardAppRoutes } from "./routing/DashboardAppRoutes";
-import { APP_SHELL_ROUTES } from "./routing/app-shell-routes";
+import { APP_SHELL_ROUTES, isStandaloneShellRoute } from "./routing/app-shell-routes";
 import { API_CONFIG } from "./config";
 
 const emotionRtlCache = createCache({
@@ -28,17 +28,14 @@ const emotionRtlCache = createCache({
 
 const AppShell = (): ReactElement => {
   const location = useLocation();
-  const isLoginPage = location.pathname === APP_SHELL_ROUTES.login;
-  const isResetPasswordPage = location.pathname === APP_SHELL_ROUTES.resetPassword;
-  const isActivateAccountPage = location.pathname === APP_SHELL_ROUTES.activateAccount;
-  const isLandingPage = location.pathname === APP_SHELL_ROUTES.landing;
   const isUnderConstructionHome =
     API_CONFIG.UNDER_CONSTRUCTION && location.pathname === APP_SHELL_ROUTES.home;
-  const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
 
-  if (isLoginPage || isResetPasswordPage || isActivateAccountPage || isLandingPage || isUnderConstructionHome) {
+  if (isStandaloneShellRoute(location.pathname) || isUnderConstructionHome) {
     return <DashboardAppRoutes />;
   }
+
+  const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
 
   return (
     <MainLayout showSessionTools={Boolean(token)}>
@@ -68,7 +65,12 @@ const App = (): ReactElement => (
   <CacheProvider value={emotionRtlCache}>
     <ApolloProvider client={apolloClient}>
       <ThemeProvider>
-        <BrowserRouter>
+        <BrowserRouter
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true,
+          }}
+        >
           <AuthProvider>
             <LoadingProvider>
               <UserPreferencesSync />

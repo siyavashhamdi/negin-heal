@@ -7,7 +7,6 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
-import { useQuery } from "@apollo/client/react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   AutoStoriesRounded,
@@ -25,6 +24,7 @@ import {
   VerifiedUserRounded,
 } from "@mui/icons-material";
 import {
+  Avatar,
   Box,
   Button,
   Drawer,
@@ -38,7 +38,7 @@ import {
 import { useAuth } from "../../contexts/AuthContext";
 import { useThemeMode } from "../../contexts/ThemeContext";
 import { API_CONFIG } from "../../config";
-import { USER_COURSE_LIST_QUERY } from "../../graphql/queries/userCourseList.query";
+import { useMe } from "../../hooks/useMe";
 import { usePageSeoOverride } from "../../hooks/usePageSeoOverride";
 import { useScrollReveal } from "../../hooks/useScrollReveal";
 import { useTranslation } from "../../hooks/useTranslation";
@@ -50,17 +50,12 @@ import {
 import { resolveAppBaseUrl } from "../../seo/build-page-seo";
 import { buildSeoDescription, resolveAbsoluteUrl } from "../../seo/seo-text.util";
 import AppTooltip from "../../shared/AppTooltip";
+import { AvatarInitial } from "../../shared/display/AvatarInitial";
 import EnamadTrustSeal from "../../shared/EnamadTrustSeal";
+import { resolveAvatarInitial, resolveMeUserDisplayName, resolveStoredUserDisplayName } from "../../utils/storedUser.util";
 import CourseCard from "../Courses/CourseCard";
-import {
-  buildCourseListQueryVariables,
-  DEFAULT_COURSE_LIST_FILTERS,
-  DEFAULT_COURSE_LIST_SORT,
-  mapCourseListRowToRecord,
-  type CourseListQuery,
-  type CourseListRecord,
-} from "../Courses/courses-list.api";
 import { resolveFileAccessUrl } from "../../utils/fileAccessUrl.util";
+import { useLandingFeaturedCourses } from "./useLandingFeaturedCourses";
 import styles from "./styles/landing.module.scss";
 
 const FEATURED_COURSE_COUNT = 3;
@@ -119,25 +114,21 @@ const SectionHeader = ({
 const Landing = (): ReactElement => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user: authUser } = useAuth();
+  const { user: meUser, avatarUrl, loading: userLoading } = useMe();
   const { mode, toggleTheme } = useThemeMode();
   const [navScrolled, setNavScrolled] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
-  const { data: coursesData, loading: coursesLoading } = useQuery<CourseListQuery>(
-    USER_COURSE_LIST_QUERY,
-    {
-      variables: buildCourseListQueryVariables(
-        { ...DEFAULT_COURSE_LIST_FILTERS, isActive: "ACTIVE" },
-        DEFAULT_COURSE_LIST_SORT,
-        FEATURED_COURSE_COUNT,
-      ),
-      fetchPolicy: "cache-first",
-    },
-  );
+  const { courses: featuredCourses, loading: coursesLoading } = useLandingFeaturedCourses();
 
-  const featuredCourses: CourseListRecord[] =
-    coursesData?.courseList.items.map(mapCourseListRowToRecord) ?? [];
+  const { displayName, avatarLetter } = useMemo(() => {
+    const name =
+      userLoading || !meUser
+        ? resolveStoredUserDisplayName(authUser, authUser?.username ?? "")
+        : resolveMeUserDisplayName(meUser, authUser?.username ?? "");
+    return { displayName: name, avatarLetter: resolveAvatarInitial(name) };
+  }, [authUser, meUser, userLoading]);
 
   const pageSeoOverride = useMemo(() => {
     const appUrl = resolveAppBaseUrl(API_CONFIG.APP_URL);
@@ -355,6 +346,25 @@ const Landing = (): ReactElement => {
               </IconButton>
             </AppTooltip>
 
+            {isAuthenticated ? (
+              <AppTooltip title={t("app.pageTitles.profile")}>
+                <Link
+                  to={APP_SHELL_ROUTES.profile}
+                  className={styles.userProfileChip}
+                  aria-label={t("app.pageTitles.profile")}
+                >
+                  <Avatar
+                    className={styles.userProfileAvatar}
+                    src={avatarUrl ?? undefined}
+                    alt={displayName}
+                  >
+                    <AvatarInitial initial={avatarLetter} />
+                  </Avatar>
+                  <span className={styles.userProfileName}>{displayName}</span>
+                </Link>
+              </AppTooltip>
+            ) : null}
+
             {!isAuthenticated ? (
               <>
                 <Button
@@ -435,7 +445,15 @@ const Landing = (): ReactElement => {
                 <ListItemText primary={t("pages.landing.nav.signup")} />
               </ListItemButton>
             </>
-          ) : null}
+          ) : (
+            <ListItemButton
+              component={Link}
+              to={APP_SHELL_ROUTES.profile}
+              onClick={() => setMobileNavOpen(false)}
+            >
+              <ListItemText primary={displayName} secondary={t("app.pageTitles.profile")} />
+            </ListItemButton>
+          )}
         </List>
       </Drawer>
 

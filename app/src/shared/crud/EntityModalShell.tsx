@@ -85,6 +85,17 @@ const EntityModalShell = ({
   const { isCompact, dialogProps, getPaperProps, getContentProps } = useMobileDialogProps();
   const { onEntered } = useScrollContainerToTopOnOpen(open, contentRef, resetKey);
 
+  const handleDialogEnter = useCallback((): void => {
+    const active = document.activeElement;
+    if (
+      active instanceof HTMLElement &&
+      active !== document.body &&
+      !active.closest('[role="dialog"]')
+    ) {
+      active.blur();
+    }
+  }, []);
+
   const requestClose = useCallback((): void => {
     if (disableClose) {
       return;
@@ -196,7 +207,7 @@ const EntityModalShell = ({
           disableRestoreFocus={disableRestoreFocus}
           {...dialogProps}
           fullWidth={fullWidth}
-          TransitionProps={{ onEntered }}
+          TransitionProps={{ onEnter: handleDialogEnter, onEntered }}
           PaperProps={getPaperProps({
             className: isCompact ? styles.modalPaperMobileFlex : undefined,
           })}

@@ -32,3 +32,22 @@ export const isProfileAuthRoute = (pathname: string): boolean =>
   pathname === APP_SHELL_ROUTES.profileSignup ||
   pathname === APP_SHELL_ROUTES.profileForgotPassword ||
   pathname === APP_SHELL_ROUTES.profileResetPassword;
+
+function normalizeShellPathname(pathname: string): string {
+  const trimmed = pathname.replace(/\/+$/, "");
+  return trimmed.length > 0 ? trimmed : "/";
+}
+
+/** Routes rendered outside MainLayout — auth recovery must not navigate away from these. */
+export const isStandaloneShellRoute = (pathname: string): boolean => {
+  const normalized = normalizeShellPathname(pathname);
+  return (
+    normalized === APP_SHELL_ROUTES.landing ||
+    normalized === APP_SHELL_ROUTES.login ||
+    normalized === APP_SHELL_ROUTES.resetPassword ||
+    normalized === APP_SHELL_ROUTES.activateAccount
+  );
+};
+
+export const isLandingRoute = (pathname: string): boolean =>
+  normalizeShellPathname(pathname) === APP_SHELL_ROUTES.landing;

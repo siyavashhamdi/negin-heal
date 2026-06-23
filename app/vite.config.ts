@@ -73,7 +73,7 @@ export default defineConfig(({ mode }) => {
           id: "/",
           name: "Negin Heal",
           short_name: "Negin Heal",
-          description: "پلتفرم آموزشی Negin Heal — مسیر یادگیری و مراقبت سلامت",
+          description: "پلتفرم آموزشی Negin Heal — مسیر یادگیری، مراقبت و سلامت",
           theme_color: PWA_THEME_COLOR,
           background_color: PWA_BACKGROUND_COLOR,
           display: "standalone",

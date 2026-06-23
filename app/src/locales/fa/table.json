@@ -142,7 +142,7 @@
             },
             "support": {
                 "columns": {
-                    "code": "کد",
+                    "id": "شناسه",
                     "title": "عنوان",
                     "category": "دسته‌بندی",
                     "priority": "اولویت",

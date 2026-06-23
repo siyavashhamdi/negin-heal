@@ -54,6 +54,7 @@ import {
   type FileAccessUrl,
 } from "../../utils/fileAccessUrl.util";
 import { resolveAvatarInitial } from "../../utils/storedUser.util";
+import { AvatarInitial } from "../../shared/display/AvatarInitial";
 import { hasFormChanges } from "../../utils/formChange.util";
 import { MULTILINE_TEXTAREA_MIN_ROWS, MULTILINE_TEXTAREA_MAX_ROWS } from "../../constants/multilineTextarea.constants";
 import { uploadFile } from "../../utils/fileUpload.util";
@@ -329,7 +330,7 @@ function UserAvatarCell({
       alt=""
       sx={{ width: 32, height: 32, bgcolor: "action.hover", mx: "auto" }}
     >
-      {initial}
+      <AvatarInitial initial={initial} />
     </Avatar>
   );
 }

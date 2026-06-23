@@ -42,7 +42,6 @@ import EntityTableShell from "../../shared/crud/EntityTableShell";
 import JalaliDateFilterField from "../../shared/table/JalaliDateFilterField";
 import crudPrimitives from "../../shared/crud/styles/crudPrimitives.module.scss";
 import DateTimeValue from "../../shared/display/DateTimeValue";
-import { latinIdentityFieldInputProps } from "../../utilities/mobile-phone.util";
 import TicketDialog, { type TicketDialogMode } from "./TicketDialog";
 import {
   buildTicketListQueryVariables,
@@ -92,6 +91,7 @@ function getSupportTicketColumnVisibility(
   isMobile: boolean,
 ): VisibilityState {
   const staffDefaults: VisibilityState = {
+    id: false,
     title: true,
     category: true,
     priority: true,
@@ -109,6 +109,7 @@ function getSupportTicketColumnVisibility(
   };
 
   const endUserDefaults: VisibilityState = {
+    id: false,
     title: true,
     category: false,
     priority: false,
@@ -136,7 +137,7 @@ function getSupportTicketColumnVisibility(
 }
 
 const COLUMN_WIDTH_BY_ID: Record<string, string> = {
-  code: "14rem",
+  id: "14rem",
   title: "8rem",
   category: "9rem",
   priority: "8rem",
@@ -388,17 +389,6 @@ function SupportTicketListInner({
   const columns = useMemo<ColumnDef<SupportTicketRecord>[]>(() => {
     const sharedColumns: ColumnDef<SupportTicketRecord>[] = [
       {
-        id: "code",
-        accessorKey: "id",
-        header: t("table.pages.support.columns.code"),
-        cell: (info) => (
-          <Typography variant="body2" className={crudPrimitives.latinText}>
-            {orEmpty(info.getValue() as string)}
-          </Typography>
-        ),
-        enableHiding: false,
-      },
-      {
         accessorKey: "title",
         header: t("table.pages.support.columns.title"),
         cell: (info) => (
@@ -609,11 +599,6 @@ function SupportTicketListInner({
       aria-label={label}
       value={pendingFilters[key]}
       onChange={(event) => onPendingFilterChange(key, event.target.value)}
-      inputProps={
-        key === "id"
-          ? { ...latinIdentityFieldInputProps, className: crudPrimitives.latinText }
-          : undefined
-      }
       InputProps={{
         endAdornment:
           pendingFilters[key].trim() !== "" ? (
@@ -695,9 +680,6 @@ function SupportTicketListInner({
   );
 
   const renderFilterCell = (column: Column<SupportTicketRecord, unknown>) => {
-    if (column.id === "code") {
-      return renderTextFilter("id", t("table.pages.support.columns.code"));
-    }
     if (column.id === "title") {
       return renderTextFilter("title", t("table.pages.support.columns.title"));
     }

@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { LOCAL_STORAGE_KEYS } from "../constants";
 import { isMobileAppLayoutViewport } from "../hooks/useMobileAppLayout";
 import { apolloClient } from "../lib/apollo-client";
-import { APP_SHELL_ROUTES } from "../routing/app-shell-routes";
+import { APP_SHELL_ROUTES, isStandaloneShellRoute } from "../routing/app-shell-routes";
 import { consumePostLoginRedirect } from "../routing/post-login-redirect";
 import { USER_LOGOUT_MUTATION } from "../graphql/mutations/userLogout.mutation";
 import { subscribeAuthSessionExpired } from "../lib/auth-session-expired-listeners";
@@ -137,11 +137,14 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
   }, [navigate]);
 
   const forceLogoutToProfile = useCallback((): void => {
+    const stayOnPage = isStandaloneShellRoute(window.location.pathname);
     const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
 
     const finishLogout = (): void => {
       clearLocalAuthSession();
-      navigate(APP_SHELL_ROUTES.profile, { replace: true });
+      if (!stayOnPage) {
+        navigate(APP_SHELL_ROUTES.profile, { replace: true });
+      }
     };
 
     if (!token) {

@@ -91,6 +91,7 @@ import { LoginAdornedTextField } from "../Login/components/LoginAdornedTextField
 import loginFormStyles from "../Login/styles/LoginFormShared.module.scss";
 import styles from "./styles/profile.module.scss";
 import AppTooltip from "../../shared/AppTooltip";
+import { AvatarInitial } from "../../shared/display/AvatarInitial";
 
 const PASSWORD_CHANGE_LOGOUT_COUNTDOWN_SECONDS = 5;
 
@@ -639,7 +640,7 @@ const AuthenticatedProfile = (): ReactElement => {
           <div className={styles.hero} {...opaqueShellProps}>
             <div className={styles.avatarWrap}>
               <Avatar className={styles.avatar} src={avatarUrl ?? undefined} alt={displayName}>
-                {userInitial}
+                <AvatarInitial initial={userInitial} />
               </Avatar>
               <input
                 ref={avatarInputRef}

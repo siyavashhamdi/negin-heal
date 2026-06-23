@@ -14,6 +14,7 @@ import { useQuery } from "@apollo/client/react";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from "react";
 import { Link as RouterLink, NavLink } from "react-router-dom";
 import Footer from "../components/layout/Footer";
+import { AvatarInitial } from "../shared/display/AvatarInitial";
 import { useAuth } from "../contexts/AuthContext";
 import { useThemeMode } from "../contexts/ThemeContext";
 import { BADGE_COUNT_QUERY } from "../graphql/queries/badgeCount.query";
@@ -812,7 +813,7 @@ export function MainLayout({
                     src={avatarUrl ?? undefined}
                     alt={userDisplayName}
                   >
-                    {userInitial}
+                    <AvatarInitial initial={userInitial} />
                   </Avatar>
                   <div className="main-layout__user-meta">
                     <strong className="main-layout__user-name">{userDisplayName}</strong>
@@ -832,7 +833,7 @@ export function MainLayout({
                         src={avatarUrl ?? undefined}
                         alt={userDisplayName}
                       >
-                        {userInitial}
+                        <AvatarInitial initial={userInitial} />
                       </Avatar>
                       <div>
                         <h3>{userDisplayName}</h3>

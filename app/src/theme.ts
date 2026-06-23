@@ -628,6 +628,14 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
           },
         },
       },
+      MuiAvatar: {
+        styleOverrides: {
+          root: {
+            position: "relative",
+            overflow: "hidden",
+          },
+        },
+      },
       MuiAlert: {
         styleOverrides: {
           root: {
