@@ -17,7 +17,7 @@ export class CourseReviewSubmitMutation {
   @Mutation(() => CourseReviewSubmitGqlResponse, {
     name: "courseReviewSubmit",
     description:
-      "Create or update a course star rating and optionally append a follow-up comment for a paid course enrollment",
+      "Create or update a course star rating and optionally append a follow-up comment",
   })
   async submitCourseReview(
     @Args("input") input: CourseReviewSubmitGqlInput,

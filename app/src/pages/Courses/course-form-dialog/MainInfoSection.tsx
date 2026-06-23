@@ -36,6 +36,10 @@ type MainInfoSectionProps = {
   readonly onTagsChange: (value: string[]) => void;
   readonly isActive: boolean;
   readonly onIsActiveChange: (value: boolean) => void;
+  readonly isReviewSubmissionEnabled: boolean;
+  readonly onIsReviewSubmissionEnabledChange: (value: boolean) => void;
+  readonly isReviewsSectionVisible: boolean;
+  readonly onIsReviewsSectionVisibleChange: (value: boolean) => void;
   readonly hasPositivePrice: boolean;
   readonly discountEnabled: boolean;
   readonly onDiscountEnabledChange: (value: boolean) => void;
@@ -64,6 +68,10 @@ const MainInfoSection = ({
   onTagsChange,
   isActive,
   onIsActiveChange,
+  isReviewSubmissionEnabled,
+  onIsReviewSubmissionEnabledChange,
+  isReviewsSectionVisible,
+  onIsReviewsSectionVisibleChange,
   hasPositivePrice,
   discountEnabled,
   onDiscountEnabledChange,
@@ -157,6 +165,38 @@ const MainInfoSection = ({
                 label="دوره فعال باشد."
               />
             </Grid>
+            <Grid item xs={12} md={4}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={isReviewsSectionVisible}
+                    onChange={(event) => {
+                      const checked = event.target.checked;
+                      onIsReviewsSectionVisibleChange(checked);
+                      if (!checked) {
+                        onIsReviewSubmissionEnabledChange(false);
+                      }
+                    }}
+                  />
+                }
+                label="بخش نظرات قابل مشاهده باشد."
+              />
+            </Grid>
+            {isReviewsSectionVisible ? (
+              <Grid item xs={12} md={4}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={isReviewSubmissionEnabled}
+                      onChange={(event) =>
+                        onIsReviewSubmissionEnabledChange(event.target.checked)
+                      }
+                    />
+                  }
+                  label="ثبت نظر فعال باشد."
+                />
+              </Grid>
+            ) : null}
             {hasPositivePrice ? (
               <Grid item xs={12} md={2}>
                 <FormControlLabel

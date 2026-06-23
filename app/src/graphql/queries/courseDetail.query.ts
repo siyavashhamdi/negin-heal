@@ -17,6 +17,8 @@ export const COURSE_DETAIL_QUERY = gql`
         value
       }
       isActive
+      isReviewSubmissionEnabled
+      isReviewsSectionVisible
       tags
       chapters {
         title

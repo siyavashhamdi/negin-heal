@@ -138,8 +138,8 @@ export class CourseReview extends BaseIdTimestampableBlameableSchema {
   @Prop({ ref: "Course", required: true, type: Types.ObjectId })
   courseId: Types.ObjectId;
 
-  @Prop({ ref: "UserCourse", required: true, type: Types.ObjectId })
-  userCourseId: Types.ObjectId;
+  @Prop({ ref: "UserCourse", required: false, type: Types.ObjectId })
+  userCourseId?: Types.ObjectId;
 
   @Prop({ required: true, type: CourseReviewUserSnapshotSchema })
   userSnapshot: CourseReviewUserSnapshot;
@@ -266,6 +266,7 @@ CourseReviewSchema.index(
   { userCourseId: 1 },
   {
     partialFilterExpression: {
+      userCourseId: { $exists: true, $ne: null },
       $or: [
         { "audit.deletedAt": null },
         { "audit.deletedAt": { $exists: false } },

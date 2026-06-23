@@ -165,4 +165,14 @@ export class UserCourseDetailGqlResponse {
       "Number of chapters currently unlocked and eligible for completion",
   })
   accessibleChapterCount: number;
+
+  @Field({
+    description: "Whether learners can submit reviews for this course",
+  })
+  isReviewSubmissionEnabled: boolean;
+
+  @Field({
+    description: "Whether the reviews section is visible on the course detail page",
+  })
+  isReviewsSectionVisible: boolean;
 }

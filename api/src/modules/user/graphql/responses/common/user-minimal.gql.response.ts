@@ -1,6 +1,7 @@
 import { Field, ID, ObjectType } from "@nestjs/graphql";
 import { Types } from "mongoose";
 
+import { UserRole } from "../../../../../enums";
 import { FileAccessUrlGqlResponse } from "../../../../file/graphql/responses";
 
 @ObjectType()
@@ -37,4 +38,10 @@ export class UserMinimalGqlResponse {
     description: "User profile information",
   })
   profile?: UserProfileMinimalGqlResponse;
+
+  @Field(() => [UserRole], {
+    nullable: true,
+    description: "User roles when explicitly loaded",
+  })
+  roles?: UserRole[];
 }

@@ -1,11 +1,13 @@
 import { useCallback, useRef, useState } from "react";
 
 import { API_CONFIG } from "../../config/env";
+import { useAuth } from "../../contexts/AuthContext";
 import { COURSE_REVIEW_SUBMIT_MUTATION } from "../../graphql/mutations/courseReviewSubmit.mutation";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { extractGraphQLErrorCode } from "../../utilities/graphql-error.util";
 import {
+  isStaffCourseReviewer,
   type CourseReviewSubmitMutation,
   type CourseReviewSubmitMutationVariables,
 } from "./course-reviews.api";
@@ -37,8 +39,10 @@ export function useCourseReviewSubmit({
   hasExistingReview,
   onSubmitted,
 }: UseCourseReviewSubmitOptions) {
+  const { user } = useAuth();
   const { showError } = useSnackbar();
-  const captchaEnabled = API_CONFIG.CAPTCHA_ENABLED;
+  const captchaEnabled =
+    API_CONFIG.CAPTCHA_ENABLED && !isStaffCourseReviewer(user?.roles);
   const [captchaId, setCaptchaId] = useState("");
   const [captchaValue, setCaptchaValue] = useState("");
   const [captchaValid, setCaptchaValid] = useState(false);

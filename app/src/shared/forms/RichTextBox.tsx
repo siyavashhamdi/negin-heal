@@ -32,7 +32,7 @@ import EntityModalShell from "../crud/EntityModalShell";
 import ModalFooterActions from "../crud/ModalFooterActions";
 import styles from "./RichTextBox.module.scss";
 import AppTooltip from "../AppTooltip";
-import { applyBlankTargetToRichTextLinks } from "../../utils/richTextHtml.util";
+import { applyBlankTargetToRichTextLinks, hasRichTextContent } from "../../utils/richTextHtml.util";
 
 type RichTextBoxMode = "edit" | "render";
 type RichTextEditorMode = "visual" | "markup";
@@ -87,13 +87,6 @@ const fontSizeOptions = [
   { label: "خیلی بزرگ", value: "24px" },
 ];
 
-function hasRichTextContent(value: string): boolean {
-  const textContent = value
-    .replace(/<[^>]*>/g, "")
-    .replace(/&nbsp;/g, "")
-    .trim();
-  return textContent.length > 0 || value.trim().length > 0;
-}
 
 function getClosestBlock(node: Node | null, editable: HTMLElement): HTMLElement | null {
   const element = node instanceof HTMLElement ? node : node?.parentElement;

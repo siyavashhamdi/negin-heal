@@ -43,9 +43,10 @@ export type AdminCourseReviewRecord = {
   readonly id: string;
   readonly userId: string;
   readonly courseId: string;
-  readonly userCourseId: string;
+  readonly userCourseId?: string | null;
   readonly user?: {
     readonly id: string;
+    readonly roles?: ReadonlyArray<string> | null;
     readonly profile?: {
       readonly firstName?: string | null;
       readonly lastName?: string | null;
@@ -221,6 +222,150 @@ export const COURSE_REVIEW_LIST_PAGE_SIZE = 8;
 export const COURSE_REVIEW_COMMENT_PREVIEW_LIMIT = 2;
 export const COURSE_REVIEW_COMMENT_PREVIEW_LENGTH = 180;
 
+export function canUseEndUserCourseReviewList(
+  roles: readonly string[] | undefined,
+): boolean {
+  if (!roles?.length) {
+    return false;
+  }
+
+  return roles.includes("END_USER") && !isStaffCourseReviewer(roles);
+}
+
+export function canUseAdminCourseReviewList(
+  roles: readonly string[] | undefined,
+): boolean {
+  return isStaffCourseReviewer(roles);
+}
+
+export function canUseCourseReviewExperience(
+  roles: readonly string[] | undefined,
+): boolean {
+  return canUseEndUserCourseReviewList(roles) || canUseAdminCourseReviewList(roles);
+}
+
+export function isStaffCourseReviewer(roles: readonly string[] | undefined): boolean {
+  return (
+    roles?.includes("ADMIN") === true || roles?.includes("SUPER_ADMIN") === true
+  );
+}
+
+export function isStaffReviewOwner(review: AdminCourseReviewRecord): boolean {
+  return isStaffCourseReviewer(review.user?.roles ?? undefined);
+}
+
+export function isReviewsSectionVisibleForViewer(input: {
+  readonly roles?: readonly string[];
+  readonly isReviewsSectionVisible?: boolean | null;
+}): boolean {
+  if (isStaffCourseReviewer(input.roles)) {
+    return true;
+  }
+
+  return input.isReviewsSectionVisible !== false;
+}
+
+export function resolveCanSubmitCourseReview(input: {
+  readonly isAuthenticated: boolean;
+  readonly isFree?: boolean | null;
+  readonly isPurchased?: boolean | null;
+  readonly purchaseStatus?: string | null;
+  readonly roles?: readonly string[];
+  readonly isReviewsSectionVisible?: boolean | null;
+  readonly isReviewSubmissionEnabled?: boolean | null;
+}): boolean {
+  if (!input.isAuthenticated) {
+    return false;
+  }
+
+  if (isStaffCourseReviewer(input.roles)) {
+    return true;
+  }
+
+  if (input.isReviewsSectionVisible === false) {
+    return false;
+  }
+
+  if (input.isReviewSubmissionEnabled === false) {
+    return false;
+  }
+
+  const hasPendingPurchase =
+    input.isFree !== true && input.purchaseStatus === "PENDING";
+  const canAccessCourse =
+    input.isFree === true ||
+    input.isPurchased === true ||
+    input.purchaseStatus === "PAID";
+
+  return canAccessCourse && !hasPendingPurchase;
+}
+
+export function findOwnAdminCourseReview(
+  items: ReadonlyArray<AdminCourseReviewRecord>,
+  userId: string | undefined,
+): AdminCourseReviewRecord | null {
+  if (!userId) {
+    return null;
+  }
+
+  return items.find((item) => item.userId === userId) ?? null;
+}
+
+function extractReviewAuthorFirstName(fullName: string | undefined): string {
+  const normalized = fullName?.trim();
+  if (!normalized) {
+    return "کاربر";
+  }
+
+  return normalized.split(/\s+/)[0] ?? normalized;
+}
+
+export function mapAdminCourseReviewToEndUserRecord(
+  review: AdminCourseReviewRecord,
+  currentUserId: string,
+): EndUserCourseReviewRecord {
+  const isMine = review.userId === currentUserId;
+  const staffOwner = isStaffReviewOwner(review);
+  const authorFirstName = staffOwner
+    ? "پشتیبانی"
+    : extractReviewAuthorFirstName(review.userSnapshot.fullName);
+
+  return {
+    id: review.id,
+    isMine,
+    author: {
+      firstName: authorFirstName,
+    },
+    rating: review.rating
+      ? {
+          stars: review.rating.stars,
+          comment: review.rating.comment,
+          ratedAt: review.rating.ratedAt,
+          updatedAt: review.rating.updatedAt,
+        }
+      : undefined,
+    messages: review.messages.map((message) => {
+      const isSupport = message.senderUserId !== review.userId;
+
+      return {
+        key: message.key,
+        body: message.body,
+        sentAt: message.sentAt,
+        sender: {
+          firstName: isSupport || staffOwner ? "پشتیبانی" : authorFirstName,
+          isSupport,
+        },
+      };
+    }),
+  };
+}
+
+export function findOwnCourseReview(
+  items: ReadonlyArray<EndUserCourseReviewRecord>,
+): EndUserCourseReviewRecord | null {
+  return items.find((item) => item.isMine) ?? null;
+}
+
 export const COURSE_REVIEW_VISIBILITY_LABEL: Record<CourseReviewVisibility, string> = {
   PUBLIC: "عمومی",
   PRIVATE: "خصوصی",
@@ -304,11 +449,24 @@ export function buildAdminCourseReviewListVariables(
 }
 
 export function resolveEndUserReviewAuthorLabel(review: EndUserCourseReviewRecord): string {
-  if (review.isMine) {
+  const firstName = review.author.firstName?.trim();
+  return firstName || "کاربر";
+}
+
+export function resolveCourseReviewThreadEntryAuthorLabel(input: {
+  readonly senderFirstName: string;
+  readonly isSupport: boolean;
+  readonly isReviewOwnedByViewer: boolean;
+}): string {
+  if (input.isSupport) {
+    return "پشتیبانی";
+  }
+
+  if (input.isReviewOwnedByViewer) {
     return "شما";
   }
 
-  const firstName = review.author.firstName?.trim();
+  const firstName = input.senderFirstName.trim();
   return firstName || "کاربر";
 }
 

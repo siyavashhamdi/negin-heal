@@ -1,9 +1,10 @@
+import { ForbiddenException, UseGuards } from "@nestjs/common";
 import { Args, Context, Query, Resolver } from "@nestjs/graphql";
-import { UseGuards } from "@nestjs/common";
+import { Types } from "mongoose";
 
 import { UserRole } from "../../../../enums";
 import { GraphQLContext } from "../../../../types/graphql-context.types";
-import { GqlAuthGuard, Roles, RolesGuard } from "../../../auth";
+import { OptionalGqlAuthGuard } from "../../../auth";
 import { CourseReviewService } from "../../course-review.service";
 import { UserCourseReviewListGqlInput } from "../inputs";
 import {
@@ -12,23 +13,31 @@ import {
 } from "../responses";
 
 @Resolver(() => UserCourseReviewListGqlResponse)
-@UseGuards(GqlAuthGuard, RolesGuard)
-@Roles(UserRole.END_USER)
 export class UserCourseReviewListQuery {
   constructor(private readonly courseReviewService: CourseReviewService) {}
 
   @Query(() => UserCourseReviewListPaginatedCursorGqlResponse, {
     name: "userCourseReviewList",
     description:
-      "Get a cursor-paginated list of course reviews visible to the current END_USER",
+      "Get a cursor-paginated list of public course reviews for anonymous users and END_USER accounts",
   })
+  @UseGuards(OptionalGqlAuthGuard)
   async findUserCourseReviews(
     @Args("input") input: UserCourseReviewListGqlInput,
     @Context() context: GraphQLContext,
   ): Promise<UserCourseReviewListPaginatedCursorGqlResponse> {
+    const user = context.req?.user;
+    const isEndUser = user?.roles?.includes(UserRole.END_USER) === true;
+
+    if (user && !isEndUser) {
+      throw new ForbiddenException(
+        "userCourseReviewList is only available to anonymous users and END_USER accounts",
+      );
+    }
+
     return this.courseReviewService.listForEndUser(
       input,
-      context.req.user!.userId,
+      isEndUser ? new Types.ObjectId(user.userId) : undefined,
     );
   }
 }

@@ -12,6 +12,7 @@ import { APP_SETTING_KEY, PAGINATION_CONSTANT } from "../../constants";
 import {
   BadgeCountTriggerAction,
   BadgeCountTriggerSource,
+  CourseDeleteDependencyImpact,
   CourseDiscountType,
   CourseItemType,
   CourseReleaseType,
@@ -29,17 +30,19 @@ import { SortingOrder } from "../../common/pagination/input";
 import { buildSortOptions } from "../../common/pagination/utils";
 import { env } from "../../config";
 import {
-  CourseChapterItemRequiredException,
-  CourseChapterRequiredException,
-  CourseItemContentRequiredException,
   CourseNotFoundException,
   CourseReferencedFileNotFoundException,
+  CourseValidationFailedException,
 } from "../../exceptions";
 import {
   Course,
   CourseChapter,
   CourseDocument,
   CourseItem,
+  CourseReview,
+  CourseReviewDocument,
+  Coupon,
+  CouponDocument,
   StoredFile,
   StoredFileDocument,
   Notification,
@@ -91,6 +94,11 @@ import {
 } from "./graphql/responses/course-payment-list.gql.response";
 import { CoursePurchaseSubmitGqlResponse } from "./graphql/responses/course-purchase-submit.gql.response";
 import { CourseChapterCompleteGqlResponse } from "./graphql/responses/course-chapter-complete.gql.response";
+import {
+  CourseDeleteDependenciesGqlResponse,
+  CourseDeleteDependencyBreakdownGqlResponse,
+  CourseDeleteDependencyGroupGqlResponse,
+} from "./graphql/responses/course-delete-dependencies.gql.response";
 import { AppSettingsService } from "../app-settings";
 import { BadgeService } from "../badge";
 import { CouponService } from "../coupon";
@@ -99,6 +107,7 @@ import {
   canAccessChapter,
   resolveChapterUnlocksAt,
 } from "./chapter-access.util";
+import { hasRichTextContent } from "../../utils/rich-text-content.util";
 
 type PlainCourse = Course & {
   _id: Types.ObjectId;
@@ -114,7 +123,10 @@ type CourseFileReferenceSource = {
     }>;
   }>;
 };
-type UserCourseListRecord = Pick<UserCourse, "courseId" | "purchase" | "progress"> & {
+type UserCourseListRecord = Pick<
+  UserCourse,
+  "courseId" | "purchase" | "progress"
+> & {
   _id: Types.ObjectId;
 };
 type CoursePaymentListRecord = UserCourse & {
@@ -194,6 +206,23 @@ export type ZarinPalVerificationResult = {
   reason?: string;
 };
 
+type CourseDeleteDependencyCounts = {
+  enrollmentsByStatus: Map<UserCoursePurchaseStatus, number>;
+  reviewTotal: number;
+  reviewRatingCount: number;
+  reviewMessageCount: number;
+  couponTotal: number;
+  couponSamples: Array<
+    Pick<Coupon, "code" | "title" | "isActive"> & { _id: Types.ObjectId }
+  >;
+  notificationTotal: number;
+  notificationsBySource: Map<NotificationSource, number>;
+  attachedFileCount: number;
+  deletableFileCount: number;
+};
+
+const COURSE_DELETE_DEPENDENCY_SAMPLE_LIMIT = 4;
+
 @Injectable()
 export class CourseService {
   constructor(
@@ -201,6 +230,10 @@ export class CourseService {
     private readonly courseModel: Model<CourseDocument>,
     @InjectModel(UserCourse.name)
     private readonly userCourseModel: Model<UserCourseDocument>,
+    @InjectModel(CourseReview.name)
+    private readonly courseReviewModel: Model<CourseReviewDocument>,
+    @InjectModel(Coupon.name)
+    private readonly couponModel: Model<CouponDocument>,
     @InjectModel(StoredFile.name)
     private readonly storedFileModel: Model<StoredFileDocument>,
     @InjectModel(User.name)
@@ -283,6 +316,39 @@ export class CourseService {
     return response;
   }
 
+  async getDeleteDependencies(
+    input: CourseDeleteGqlInput,
+  ): Promise<CourseDeleteDependenciesGqlResponse> {
+    const course = await this.courseModel.findById(input.id).exec();
+    if (!course) {
+      throw new CourseNotFoundException();
+    }
+
+    const counts = await this.collectCourseDeleteDependencyCounts(
+      input.id,
+      course,
+    );
+    const groups = this.buildCourseDeleteDependencyGroups(counts);
+    const retainedCount = groups
+      .filter((group) => group.impact === CourseDeleteDependencyImpact.RETAINED)
+      .reduce((total, group) => total + group.totalCount, 0);
+    const removedCount = groups
+      .filter((group) => group.impact === CourseDeleteDependencyImpact.REMOVED)
+      .reduce((total, group) => total + group.totalCount, 0);
+
+    return {
+      courseId: course._id,
+      courseTitle: course.title,
+      summary: {
+        retainedCount,
+        removedCount,
+        hasRetainedDependencies: retainedCount > 0,
+        hasRemovedDependencies: removedCount > 0,
+      },
+      groups,
+    };
+  }
+
   async delete(input: CourseDeleteGqlInput): Promise<void> {
     const existingCourse = await this.courseModel.findById(input.id).exec();
     if (!existingCourse) {
@@ -291,7 +357,6 @@ export class CourseService {
 
     const oldFileIds = this.collectReferencedFileIds(existingCourse);
 
-    // TODO: Add cascading cleanup for future dependent collections that reference courses.
     const deletedCourse = await this.courseModel
       .findByIdAndDelete(input.id)
       .exec();
@@ -299,6 +364,7 @@ export class CourseService {
       throw new CourseNotFoundException();
     }
 
+    await this.deleteCourseRelatedNotifications(input.id);
     await this.publishCourseBadgeCountSignal(
       BadgeCountTriggerAction.DELETED,
       deletedCourse._id,
@@ -566,8 +632,7 @@ export class CourseService {
         .exec(),
       this.userCourseModel.countDocuments(filterQuery).exec(),
     ]);
-    const relatedLookups =
-      await this.buildCoursePaymentFileLookup(userCourses);
+    const relatedLookups = await this.buildCoursePaymentFileLookup(userCourses);
 
     return {
       items: userCourses.map((userCourse) =>
@@ -657,10 +722,10 @@ export class CourseService {
       );
     }
 
-    if (
-      existingUserCourse?.purchase.status === UserCoursePurchaseStatus.PAID
-    ) {
-      throw new ConflictException("این کاربر قبلاً این دوره را پرداخت کرده است");
+    if (existingUserCourse?.purchase.status === UserCoursePurchaseStatus.PAID) {
+      throw new ConflictException(
+        "این کاربر قبلاً این دوره را پرداخت کرده است",
+      );
     }
 
     if (existingUserCourse) {
@@ -917,6 +982,8 @@ export class CourseService {
         discount: 1,
         tags: 1,
         chapters: 1,
+        isReviewSubmissionEnabled: 1,
+        isReviewsSectionVisible: 1,
       })
       .exec();
     if (!course) {
@@ -957,7 +1024,9 @@ export class CourseService {
       })
       .exec();
     if (!userCourse) {
-      throw new NotFoundException("Course enrollment was not found for this user");
+      throw new NotFoundException(
+        "Course enrollment was not found for this user",
+      );
     }
 
     if (userCourse.purchase.status !== UserCoursePurchaseStatus.PAID) {
@@ -1109,7 +1178,9 @@ export class CourseService {
     isCompleted: boolean;
     userCompletedAt?: Date;
   } {
-    const progress = completedChapters.find((entry) => entry.key === chapterKey);
+    const progress = completedChapters.find(
+      (entry) => entry.key === chapterKey,
+    );
     if (!progress) {
       return { isCompleted: false };
     }
@@ -1281,19 +1352,135 @@ export class CourseService {
     });
   }
 
+  private failCourseValidation(message: string): never {
+    throw new CourseValidationFailedException({ message });
+  }
+
+  private formatChapterValidationLabel(
+    chapterIndex: number,
+    chapterTitle?: string,
+  ): string {
+    const chapterNumber = (chapterIndex + 1).toLocaleString("fa-IR");
+    const trimmedTitle = chapterTitle?.trim();
+    return trimmedTitle ? `فصل «${trimmedTitle}»` : `فصل ${chapterNumber}`;
+  }
+
+  private formatItemValidationLabel(
+    chapterIndex: number,
+    itemIndex: number,
+    chapterTitle: string | undefined,
+    itemTitle: string | undefined,
+  ): string {
+    const chapterLabel = this.formatChapterValidationLabel(
+      chapterIndex,
+      chapterTitle,
+    );
+    const itemNumber = (itemIndex + 1).toLocaleString("fa-IR");
+    const trimmedItemTitle = itemTitle?.trim();
+    const itemLabel = trimmedItemTitle
+      ? `آیتم «${trimmedItemTitle}»`
+      : `آیتم ${itemNumber}`;
+    return `${itemLabel} در ${chapterLabel}`;
+  }
+
   private validateCreateInput(input: CourseCreateGqlInput): void {
-    if (!input.chapters?.length) {
-      throw new CourseChapterRequiredException();
+    if (!input.title?.trim()) {
+      this.failCourseValidation("عنوان دوره الزامی است.");
     }
 
-    for (const chapter of input.chapters) {
-      if (!chapter.items?.length) {
-        throw new CourseChapterItemRequiredException();
+    if (input.priceIrt != null && input.priceIrt < 0) {
+      this.failCourseValidation("قیمت دوره نمی‌تواند منفی باشد.");
+    }
+
+    if (input.discount) {
+      const priceIrt = input.priceIrt ?? 0;
+      if (priceIrt > 0) {
+        if (input.discount.value <= 0) {
+          this.failCourseValidation("مقدار تخفیف باید عددی مثبت باشد.");
+        }
+        if (
+          input.discount.type === CourseDiscountType.PERCENTAGE &&
+          input.discount.value > 100
+        ) {
+          this.failCourseValidation(
+            "مقدار تخفیف درصدی باید بین ۰ تا ۱۰۰ باشد.",
+          );
+        }
+        if (
+          input.discount.type === CourseDiscountType.FIXED_AMOUNT_IRT &&
+          input.discount.value > priceIrt
+        ) {
+          this.failCourseValidation(
+            "مقدار تخفیف ثابت نمی‌تواند بیشتر از قیمت دوره باشد.",
+          );
+        }
+      }
+    }
+
+    if (!input.chapters?.length) {
+      this.failCourseValidation("حداقل یک فصل لازم است.");
+    }
+
+    for (
+      let chapterIndex = 0;
+      chapterIndex < input.chapters.length;
+      chapterIndex += 1
+    ) {
+      const chapter = input.chapters[chapterIndex];
+      const chapterLabel = this.formatChapterValidationLabel(
+        chapterIndex,
+        chapter.title,
+      );
+
+      if (!chapter.title?.trim()) {
+        this.failCourseValidation(`عنوان ${chapterLabel} الزامی است.`);
       }
 
-      for (const item of chapter.items) {
-        if (!item.fileId && !this.hasMeaningfulText(item.article)) {
-          throw new CourseItemContentRequiredException();
+      if (
+        chapter.visibleAfterMinutes != null &&
+        chapter.visibleAfterMinutes < 0
+      ) {
+        this.failCourseValidation(
+          `مقدار «نمایش بعد از» در ${chapterLabel} نمی‌تواند منفی باشد.`,
+        );
+      }
+
+      if (!chapter.items?.length) {
+        this.failCourseValidation(
+          `${chapterLabel} باید حداقل یک آیتم داشته باشد.`,
+        );
+      }
+
+      for (
+        let itemIndex = 0;
+        itemIndex < chapter.items.length;
+        itemIndex += 1
+      ) {
+        const item = chapter.items[itemIndex];
+        const itemLabel = this.formatItemValidationLabel(
+          chapterIndex,
+          itemIndex,
+          chapter.title,
+          item.title,
+        );
+
+        if (!item.title?.trim()) {
+          this.failCourseValidation(`عنوان ${itemLabel} الزامی است.`);
+        }
+
+        const hasFile = Boolean(item.fileId);
+        const hasArticle = hasRichTextContent(item.article);
+
+        if (hasFile && hasArticle) {
+          this.failCourseValidation(
+            `${itemLabel} نمی‌تواند هم‌زمان فایل و متن مقاله داشته باشد.`,
+          );
+        }
+
+        if (!hasFile && !hasArticle) {
+          this.failCourseValidation(
+            `محتوای ${itemLabel} الزامی است. فایل آپلود کنید یا متن مقاله وارد کنید.`,
+          );
         }
       }
     }
@@ -1309,6 +1496,14 @@ export class CourseService {
       priceIrt: input.priceIrt,
       discount: this.normalizeDiscountInput(input.discount),
       isActive: typeof input.isActive === "boolean" ? input.isActive : true,
+      isReviewSubmissionEnabled:
+        typeof input.isReviewSubmissionEnabled === "boolean"
+          ? input.isReviewSubmissionEnabled
+          : true,
+      isReviewsSectionVisible:
+        typeof input.isReviewsSectionVisible === "boolean"
+          ? input.isReviewsSectionVisible
+          : true,
       sortOrder: input.sortOrder,
       tags: this.normalizeTags(input.tags),
       chapters: input.chapters.map((chapter) =>
@@ -1396,6 +1591,247 @@ export class CourseService {
     ].filter((fileId): fileId is Types.ObjectId => Boolean(fileId));
 
     return this.collectUniqueFileIds(fileIds);
+  }
+
+  private async collectCourseDeleteDependencyCounts(
+    courseId: Types.ObjectId,
+    course: CourseDocument,
+  ): Promise<CourseDeleteDependencyCounts> {
+    const courseIdString = courseId.toString();
+    const attachedFileIds = this.collectReferencedFileIds(course);
+    const [
+      enrollmentStatusRows,
+      reviewAggregation,
+      couponTotal,
+      couponSamples,
+      notificationTotal,
+      notificationSourceRows,
+      deletableFileIds,
+    ] = await Promise.all([
+      this.userCourseModel
+        .aggregate<{
+          _id: UserCoursePurchaseStatus;
+          count: number;
+        }>([
+          { $match: { courseId } },
+          { $group: { _id: "$purchase.status", count: { $sum: 1 } } },
+        ])
+        .exec(),
+      this.courseReviewModel
+        .aggregate<{
+          reviewTotal: number;
+          reviewRatingCount: number;
+          reviewMessageCount: number;
+        }>([
+          { $match: { courseId } },
+          {
+            $group: {
+              _id: null,
+              reviewTotal: { $sum: 1 },
+              reviewRatingCount: {
+                $sum: {
+                  $cond: [{ $ifNull: ["$rating", false] }, 1, 0],
+                },
+              },
+              reviewMessageCount: {
+                $sum: { $size: { $ifNull: ["$messages", []] } },
+              },
+            },
+          },
+        ])
+        .exec(),
+      this.couponModel.countDocuments({ applicableCourseIds: courseId }).exec(),
+      this.couponModel
+        .find({ applicableCourseIds: courseId })
+        .sort({ isActive: -1, code: 1 })
+        .limit(COURSE_DELETE_DEPENDENCY_SAMPLE_LIMIT)
+        .select({ code: 1, title: 1, isActive: 1 })
+        .lean()
+        .exec(),
+      this.notificationModel
+        .countDocuments({ "payload.courseId": courseIdString })
+        .exec(),
+      this.notificationModel
+        .aggregate<{
+          _id: NotificationSource;
+          count: number;
+        }>([
+          { $match: { "payload.courseId": courseIdString } },
+          { $group: { _id: "$source", count: { $sum: 1 } } },
+        ])
+        .exec(),
+      this.findDeletableCourseFileIds(courseId, attachedFileIds),
+    ]);
+
+    const enrollmentsByStatus = new Map<UserCoursePurchaseStatus, number>();
+    for (const row of enrollmentStatusRows) {
+      if (!row?._id) {
+        continue;
+      }
+      enrollmentsByStatus.set(row._id, row.count);
+    }
+
+    const reviewSummary = reviewAggregation[0] ?? {
+      reviewTotal: 0,
+      reviewRatingCount: 0,
+      reviewMessageCount: 0,
+    };
+
+    const notificationsBySource = new Map<NotificationSource, number>();
+    for (const row of notificationSourceRows) {
+      if (!row?._id) {
+        continue;
+      }
+      notificationsBySource.set(row._id, row.count);
+    }
+
+    return {
+      enrollmentsByStatus,
+      reviewTotal: reviewSummary.reviewTotal,
+      reviewRatingCount: reviewSummary.reviewRatingCount,
+      reviewMessageCount: reviewSummary.reviewMessageCount,
+      couponTotal,
+      couponSamples: couponSamples as Array<
+        Pick<Coupon, "code" | "title" | "isActive"> & { _id: Types.ObjectId }
+      >,
+      notificationTotal,
+      notificationsBySource,
+      attachedFileCount: attachedFileIds.length,
+      deletableFileCount: deletableFileIds.length,
+    };
+  }
+
+  private buildCourseDeleteDependencyGroups(
+    counts: CourseDeleteDependencyCounts,
+  ): CourseDeleteDependencyGroupGqlResponse[] {
+    const enrollmentBreakdown = this.buildPurchaseStatusBreakdown(
+      counts.enrollmentsByStatus,
+    );
+    const enrollmentTotal = enrollmentBreakdown.reduce(
+      (total, item) => total + item.count,
+      0,
+    );
+
+    const reviewBreakdown = [
+      { key: "reviews", count: counts.reviewTotal },
+      { key: "ratings", count: counts.reviewRatingCount },
+      { key: "messages", count: counts.reviewMessageCount },
+    ].filter((item) => item.count > 0);
+
+    const notificationBreakdown = Array.from(
+      counts.notificationsBySource.entries(),
+    )
+      .sort((left, right) => right[1] - left[1])
+      .map(([source, count]) => ({
+        key: source,
+        count,
+      }));
+
+    const fileBreakdown = [
+      { key: "attached", count: counts.attachedFileCount },
+      { key: "deletable", count: counts.deletableFileCount },
+    ].filter((item) => item.count > 0);
+
+    const groups: CourseDeleteDependencyGroupGqlResponse[] = [
+      {
+        key: "enrollments",
+        impact: CourseDeleteDependencyImpact.RETAINED,
+        totalCount: enrollmentTotal,
+        breakdown: enrollmentBreakdown,
+        samples: [],
+        hiddenSampleCount: 0,
+      },
+      {
+        key: "reviews",
+        impact: CourseDeleteDependencyImpact.RETAINED,
+        totalCount: counts.reviewTotal,
+        breakdown: reviewBreakdown,
+        samples: [],
+        hiddenSampleCount: 0,
+      },
+      {
+        key: "coupons",
+        impact: CourseDeleteDependencyImpact.RETAINED,
+        totalCount: counts.couponTotal,
+        breakdown: [],
+        samples: counts.couponSamples.map((coupon) => ({
+          id: coupon._id,
+          label: coupon.code,
+          meta: coupon.title,
+        })),
+        hiddenSampleCount: Math.max(
+          0,
+          counts.couponTotal - counts.couponSamples.length,
+        ),
+      },
+      {
+        key: "notifications",
+        impact: CourseDeleteDependencyImpact.REMOVED,
+        totalCount: counts.notificationTotal,
+        breakdown: notificationBreakdown,
+        samples: [],
+        hiddenSampleCount: 0,
+      },
+      {
+        key: "files",
+        impact: CourseDeleteDependencyImpact.REMOVED,
+        totalCount: counts.deletableFileCount,
+        breakdown: fileBreakdown,
+        samples: [],
+        hiddenSampleCount: 0,
+      },
+    ];
+
+    return groups.filter((group) => group.totalCount > 0);
+  }
+
+  private buildPurchaseStatusBreakdown(
+    enrollmentsByStatus: Map<UserCoursePurchaseStatus, number>,
+  ): CourseDeleteDependencyBreakdownGqlResponse[] {
+    const orderedStatuses: UserCoursePurchaseStatus[] = [
+      UserCoursePurchaseStatus.PAID,
+      UserCoursePurchaseStatus.PENDING,
+      UserCoursePurchaseStatus.FAILED,
+      UserCoursePurchaseStatus.REFUNDED,
+      UserCoursePurchaseStatus.CANCELLED,
+    ];
+
+    return orderedStatuses
+      .map((status) => ({
+        key: status,
+        count: enrollmentsByStatus.get(status) ?? 0,
+      }))
+      .filter((item) => item.count > 0);
+  }
+
+  private async findDeletableCourseFileIds(
+    courseId: Types.ObjectId,
+    attachedFileIds: Types.ObjectId[],
+  ): Promise<Types.ObjectId[]> {
+    if (attachedFileIds.length === 0) {
+      return [];
+    }
+
+    const fileIdsStillUsedElsewhere =
+      await this.findCourseReferencedFileIdsOutsideCourse(
+        courseId,
+        attachedFileIds,
+      );
+    const fileIdsStillUsedElsewhereSet = new Set(
+      fileIdsStillUsedElsewhere.map((fileId) => fileId.toString()),
+    );
+
+    return attachedFileIds.filter(
+      (fileId) => !fileIdsStillUsedElsewhereSet.has(fileId.toString()),
+    );
+  }
+
+  private async deleteCourseRelatedNotifications(
+    courseId: Types.ObjectId,
+  ): Promise<void> {
+    await this.notificationModel.deleteMany({
+      "payload.courseId": courseId.toString(),
+    });
   }
 
   private async deleteDetachedFiles(
@@ -1730,6 +2166,8 @@ export class CourseService {
       priceIrt: courseObj.priceIrt,
       discount: courseObj.discount,
       isActive: courseObj.isActive,
+      isReviewSubmissionEnabled: courseObj.isReviewSubmissionEnabled !== false,
+      isReviewsSectionVisible: courseObj.isReviewsSectionVisible !== false,
       sortOrder: courseObj.sortOrder,
       tags: courseObj.tags || [],
       releaseType: this.calculateReleaseType(courseObj.chapters || []),
@@ -1807,7 +2245,9 @@ export class CourseService {
       .lean<Array<{ courseId: Types.ObjectId }>>()
       .exec();
 
-    const purchasedCourseObjectIds = paidCourseIds.map((entry) => entry.courseId);
+    const purchasedCourseObjectIds = paidCourseIds.map(
+      (entry) => entry.courseId,
+    );
 
     return {
       $and: [filterQuery, { _id: { $nin: purchasedCourseObjectIds } }],
@@ -1838,7 +2278,9 @@ export class CourseService {
       .lean<Array<{ courseId: Types.ObjectId }>>()
       .exec();
 
-    const purchasedCourseObjectIds = paidCourseIds.map((entry) => entry.courseId);
+    const purchasedCourseObjectIds = paidCourseIds.map(
+      (entry) => entry.courseId,
+    );
 
     return {
       $and: [
@@ -1961,6 +2403,8 @@ export class CourseService {
       purchaseStatus,
       completedChapterCount: progressCounts.completedChapterCount,
       accessibleChapterCount: progressCounts.accessibleChapterCount,
+      isReviewSubmissionEnabled: courseObj.isReviewSubmissionEnabled !== false,
+      isReviewsSectionVisible: courseObj.isReviewsSectionVisible !== false,
       chapters: chapters.map((chapter) => {
         const chapterProgress = this.resolveChapterProgress(
           chapter.key,
@@ -3315,10 +3759,6 @@ export class CourseService {
   private normalizeNullableText(value?: string | null): string | null {
     const normalized = value?.trim();
     return normalized || null;
-  }
-
-  private hasMeaningfulText(value?: string | null): boolean {
-    return Boolean(value?.trim());
   }
 
   private addAndCondition(

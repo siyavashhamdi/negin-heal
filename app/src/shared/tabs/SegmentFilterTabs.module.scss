@@ -2,6 +2,7 @@
 @use "../../styles/mixins" as mixins;
 
 .filterTabs {
+  position: relative;
   display: flex;
   align-items: stretch;
   gap: 0.3rem;
@@ -13,7 +14,28 @@
   border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 72%, transparent);
 }
 
+.filterTabIndicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  border-radius: 999rem;
+  background: var(--app-surface-bg);
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 72%, transparent);
+  pointer-events: none;
+  will-change: transform, width;
+}
+
+.filterTabIndicatorAnimated {
+  transition:
+    transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    height 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .filterTab {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex: 1 1 0;
   align-items: center;
@@ -31,10 +53,7 @@
   font-weight: variables.$font-weight-semibold;
   white-space: nowrap;
   cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease,
-    border-color 0.2s ease;
+  transition: color 0.2s ease;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -43,9 +62,13 @@
 }
 
 .filterTabActive {
-  background: var(--app-surface-bg);
   color: var(--text-primary);
-  border-color: color-mix(in srgb, var(--app-surface-border) 72%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .filterTabIndicatorAnimated {
+    transition: none;
+  }
 }
 
 @media (max-width: (variables.$breakpoint-sm - 0.0625rem)) {

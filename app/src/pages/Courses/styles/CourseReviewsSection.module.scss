@@ -660,6 +660,12 @@
   border-radius: 0.95rem !important;
 }
 
+.sectionDisabledShell {
+  display: grid;
+  gap: 0.85rem;
+  padding: 0.35rem 0 0.15rem;
+}
+
 body[data-theme="dark"] {
   .summaryPanel,
   .reviewCard,

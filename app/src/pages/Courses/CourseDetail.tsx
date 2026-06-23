@@ -53,9 +53,14 @@ import CourseDetailSectionTabs, {
 } from "./CourseDetailSectionTabs";
 import CourseReviewsSection from "./CourseReviewsSection";
 import {
-  COURSE_DETAIL_SECTION_TARGETS,
+  isStaffCourseReviewer,
+  resolveCanSubmitCourseReview,
+} from "./course-reviews.api";
+import {
+  resolveCourseDetailSectionFromScroll,
   scrollToCourseDetailSection,
 } from "./course-detail-section-scroll.util";
+import { COURSE_SECTION_TABS } from "./course-section-tabs.shared";
 import {
   formatChapterUnlockCountdown,
   formatChapterUnlockRelativeMessage,
@@ -275,7 +280,7 @@ const CourseDetail = (): ReactElement => {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const focusChapterKey = searchParams.get("chapter")?.trim() || null;
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { showError, showSuccess, showWarning } = useSnackbar();
   const purchaseCardRef = useRef<HTMLElement | null>(null);
   const { data, loading, error, refetch } = useQuery<
@@ -288,6 +293,10 @@ const CourseDetail = (): ReactElement => {
   });
 
   const course = data?.course;
+  const isStaffViewer = isStaffCourseReviewer(user?.roles);
+  const isReviewsSectionHiddenForEndUser =
+    !isStaffViewer && course?.isReviewsSectionVisible === false;
+
   const coverImageUrl = resolveFileAccessUrl(course?.coverImageAccessUrl);
   const discountedPrice = course
     ? getDiscountedPrice(course.priceIrt, course.discount)
@@ -343,6 +352,7 @@ const CourseDetail = (): ReactElement => {
     () => new Set(),
   );
   const [activeSectionTab, setActiveSectionTab] = useState<CourseDetailSectionTab>("intro");
+
   const [isMobilePriceBarVisible, setIsMobilePriceBarVisible] = useState(false);
   const [selectedItemViewer, setSelectedItemViewer] = useState<CourseItemViewer | null>(null);
   const [completingChapterKey, setCompletingChapterKey] = useState<string | null>(null);
@@ -350,6 +360,22 @@ const CourseDetail = (): ReactElement => {
   const isMaxRouteOpen = isMaxRoutePathname(location.pathname);
   const isUnlockRefetchingRef = useRef(false);
   const purchaseIntentHandledRef = useRef(false);
+  const pendingSectionTabRef = useRef<CourseDetailSectionTab | null>(null);
+  const pendingSectionTabClearTimerRef = useRef<number | null>(null);
+
+  const clearPendingSectionTab = useCallback((): void => {
+    const tab = pendingSectionTabRef.current;
+    pendingSectionTabRef.current = null;
+
+    if (pendingSectionTabClearTimerRef.current != null) {
+      window.clearTimeout(pendingSectionTabClearTimerRef.current);
+      pendingSectionTabClearTimerRef.current = null;
+    }
+
+    if (tab) {
+      setActiveSectionTab(tab);
+    }
+  }, []);
 
   useEffect(() => {
     purchaseIntentHandledRef.current = false;
@@ -499,59 +525,56 @@ const CourseDetail = (): ReactElement => {
   }, [canAccessCourse, course, hasPendingPurchase]);
 
   const handleSectionTabChange = useCallback((tab: CourseDetailSectionTab): void => {
+    pendingSectionTabRef.current = tab;
     setActiveSectionTab(tab);
+
+    if (pendingSectionTabClearTimerRef.current != null) {
+      window.clearTimeout(pendingSectionTabClearTimerRef.current);
+    }
+
     scrollToCourseDetailSection(tab);
-  }, []);
+
+    pendingSectionTabClearTimerRef.current = window.setTimeout(() => {
+      clearPendingSectionTab();
+    }, 900);
+  }, [clearPendingSectionTab]);
+
+  useEffect(() => {
+    const handleScrollEnd = (): void => {
+      if (pendingSectionTabRef.current) {
+        clearPendingSectionTab();
+      }
+    };
+
+    window.addEventListener("scrollend", handleScrollEnd, { passive: true });
+
+    return () => {
+      window.removeEventListener("scrollend", handleScrollEnd);
+    };
+  }, [clearPendingSectionTab]);
 
   useEffect(() => {
     if (!course) {
-      return;
+      return undefined;
     }
 
-    const sectionEntries = (
-      Object.entries(COURSE_DETAIL_SECTION_TARGETS) as Array<
-        [CourseDetailSectionTab, string]
-      >
-    )
-      .map(([tab, elementId]) => {
-        const element = document.getElementById(elementId);
-        return element ? { tab, element } : null;
-      })
-      .filter((entry): entry is { tab: CourseDetailSectionTab; element: HTMLElement } =>
-        entry != null,
-      );
+    const visibleTabs = COURSE_SECTION_TABS.map((tab) => tab.value);
 
-    if (sectionEntries.length === 0) {
-      return;
-    }
+    const syncActiveTabFromScroll = (): void => {
+      if (pendingSectionTabRef.current) {
+        return;
+      }
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visibleEntries = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((left, right) => right.intersectionRatio - left.intersectionRatio);
+      setActiveSectionTab(resolveCourseDetailSectionFromScroll(visibleTabs));
+    };
 
-        const nextTab = sectionEntries.find(
-          ({ element }) => element === visibleEntries[0]?.target,
-        )?.tab;
-
-        if (nextTab) {
-          setActiveSectionTab(nextTab);
-        }
-      },
-      {
-        root: null,
-        rootMargin: "-20% 0px -55% 0px",
-        threshold: [0, 0.15, 0.35, 0.6],
-      },
-    );
-
-    sectionEntries.forEach(({ element }) => {
-      observer.observe(element);
-    });
+    syncActiveTabFromScroll();
+    window.addEventListener("scroll", syncActiveTabFromScroll, { passive: true });
+    window.addEventListener("resize", syncActiveTabFromScroll);
 
     return () => {
-      observer.disconnect();
+      window.removeEventListener("scroll", syncActiveTabFromScroll);
+      window.removeEventListener("resize", syncActiveTabFromScroll);
     };
   }, [course]);
 
@@ -717,6 +740,7 @@ const CourseDetail = (): ReactElement => {
       <CourseDetailSectionTabs
         activeTab={activeSectionTab}
         onChange={handleSectionTabChange}
+        tabs={COURSE_SECTION_TABS}
       />
 
       <Paper id="course-intro" className={`${styles.hero} ${styles.sectionScrollTarget}`} elevation={0}>
@@ -1090,7 +1114,9 @@ const CourseDetail = (): ReactElement => {
 
       <section
         id="course-reviews"
-        className={`${styles.reviewsSection} ${styles.sectionScrollTarget}`}
+        className={`${styles.reviewsSection} ${styles.sectionScrollTarget}${
+          isReviewsSectionHiddenForEndUser ? ` ${styles.reviewsSectionDisabled}` : ""
+        }`}
         aria-labelledby="course-reviews-heading"
       >
         <div className={styles.reviewsHeader}>
@@ -1101,7 +1127,17 @@ const CourseDetail = (): ReactElement => {
         {courseId ? (
           <CourseReviewsSection
             courseId={courseId}
-            canSubmitReview={Boolean(isAuthenticated && canAccessCourse && !hasPendingPurchase)}
+            isReviewsSectionVisible={course.isReviewsSectionVisible !== false}
+            isReviewSubmissionEnabled={course.isReviewSubmissionEnabled !== false}
+            canSubmitReview={resolveCanSubmitCourseReview({
+              isAuthenticated,
+              isFree: course?.isFree,
+              isPurchased: course?.isPurchased,
+              purchaseStatus: course?.purchaseStatus,
+              roles: user?.roles,
+              isReviewsSectionVisible: course?.isReviewsSectionVisible,
+              isReviewSubmissionEnabled: course?.isReviewSubmissionEnabled,
+            })}
           />
         ) : null}
       </section>

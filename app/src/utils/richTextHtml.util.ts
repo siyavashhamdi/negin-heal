@@ -16,3 +16,13 @@ export function applyBlankTargetToRichTextLinks(html: string): string {
 
   return template.innerHTML;
 }
+
+/** True when HTML/rich text has visible text content (not only tags or &nbsp;). */
+export function hasRichTextContent(value: string): boolean {
+  const textContent = value
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/gi, "")
+    .replace(/\u200c/g, "")
+    .trim();
+  return textContent.length > 0;
+}

@@ -173,6 +173,16 @@ export class CourseListGqlResponse {
   @Field({ description: "Whether the course is active" })
   isActive: boolean;
 
+  @Field({
+    description: "Whether learners can submit reviews for this course",
+  })
+  isReviewSubmissionEnabled: boolean;
+
+  @Field({
+    description: "Whether the reviews section is visible on the course detail page",
+  })
+  isReviewsSectionVisible: boolean;
+
   @Field(() => Float, {
     nullable: true,
     description: "Course display rank used for manual ordering",

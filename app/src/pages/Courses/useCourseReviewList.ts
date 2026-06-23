@@ -78,6 +78,8 @@ export function useCourseReviewList({
 }: UseCourseReviewListOptions):
   | UseCourseReviewListResult<EndUserCourseReviewRecord>
   | UseCourseReviewListResult<AdminCourseReviewRecord> {
+  const isAdminMode = mode === "admin";
+
   const [items, setItems] = useState<
     EndUserCourseReviewRecord[] | AdminCourseReviewRecord[]
   >([]);
@@ -91,16 +93,22 @@ export function useCourseReviewList({
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const fetchingMoreRef = useRef(false);
 
-  const endUserVariables = useMemo(
+  const listVariables = useMemo(
     () =>
-      buildEndUserCourseReviewListVariables(courseId, starsFilter, null, COURSE_REVIEW_LIST_PAGE_SIZE),
-    [courseId, starsFilter],
-  );
-
-  const adminVariables = useMemo(
-    () =>
-      buildAdminCourseReviewListVariables(courseId, starsFilter, null, COURSE_REVIEW_LIST_PAGE_SIZE),
-    [courseId, starsFilter],
+      isAdminMode
+        ? buildAdminCourseReviewListVariables(
+            courseId,
+            starsFilter,
+            null,
+            COURSE_REVIEW_LIST_PAGE_SIZE,
+          )
+        : buildEndUserCourseReviewListVariables(
+            courseId,
+            starsFilter,
+            null,
+            COURSE_REVIEW_LIST_PAGE_SIZE,
+          ),
+    [courseId, isAdminMode, starsFilter],
   );
 
   useEffect(() => {
@@ -112,38 +120,25 @@ export function useCourseReviewList({
     });
   }, [courseId, mode, starsFilter]);
 
-  const endUserQuery = useQuery<UserCourseReviewListQuery, UserCourseReviewListQueryVariables>(
-    USER_COURSE_REVIEW_LIST_QUERY,
-    {
-      variables: endUserVariables,
-      skip: !enabled || mode !== "endUser" || !courseId,
-      fetchPolicy: "network-only",
-      notifyOnNetworkStatusChange: true,
-    },
-  );
-
-  const adminQuery = useQuery<CourseReviewListQuery, CourseReviewListQueryVariables>(
-    COURSE_REVIEW_LIST_QUERY,
-    {
-      variables: adminVariables,
-      skip: !enabled || mode !== "admin" || !courseId,
-      fetchPolicy: "network-only",
-      notifyOnNetworkStatusChange: true,
-    },
-  );
-
-  const activeQuery = mode === "admin" ? adminQuery : endUserQuery;
-  const { data, loading, error, fetchMore, refetch, networkStatus } = activeQuery;
+  const { data, loading, error, fetchMore, refetch, networkStatus } = useQuery<
+    CourseReviewListQuery | UserCourseReviewListQuery,
+    CourseReviewListQueryVariables | UserCourseReviewListQueryVariables
+  >(isAdminMode ? COURSE_REVIEW_LIST_QUERY : USER_COURSE_REVIEW_LIST_QUERY, {
+    variables: listVariables,
+    skip: !enabled || !courseId,
+    fetchPolicy: "cache-first",
+    nextFetchPolicy: "cache-first",
+    notifyOnNetworkStatusChange: true,
+  });
 
   const isFetchingMore = networkStatus === NetworkStatus.fetchMore;
   const isInitialLoading =
     (loading || networkStatus === NetworkStatus.loading) && items.length === 0;
 
   useEffect(() => {
-    const page =
-      mode === "admin"
-        ? data?.courseReviewList
-        : data?.userCourseReviewList;
+    const page = isAdminMode
+      ? (data as CourseReviewListQuery | undefined)?.courseReviewList
+      : (data as UserCourseReviewListQuery | undefined)?.userCourseReviewList;
 
     if (!page) {
       return;
@@ -162,10 +157,9 @@ export function useCourseReviewList({
       hasNextPage: page.pagination.hasNextPage,
       endCursor: page.pagination.endCursor ?? null,
     });
-  }, [data, mode, networkStatus]);
+  }, [data, isAdminMode, networkStatus]);
 
-  const listVariables = mode === "admin" ? adminVariables : endUserVariables;
-  const queryField = mode === "admin" ? "courseReviewList" : "userCourseReviewList";
+  const queryField = isAdminMode ? "courseReviewList" : "userCourseReviewList";
 
   const loadNextPage = useCallback(async (): Promise<void> => {
     const nextCursor = pagination.endCursor ?? items[items.length - 1]?.id ?? null;
@@ -265,7 +259,7 @@ export function useCourseReviewList({
   }, [items.length, loadNextPage, pagination.hasNextPage, scrollRoot]);
 
   const refetchList = useCallback((): void => {
-    void refetch();
+    void refetch({ fetchPolicy: "network-only" });
   }, [refetch]);
 
   return {

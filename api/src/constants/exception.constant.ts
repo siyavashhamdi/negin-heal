@@ -101,6 +101,11 @@ export const EXCEPTION_CONSTANT = {
     message: "Each course item must include fileId, article, or both!",
   },
 
+  COURSE_VALIDATION_FAILED: {
+    code: "COURSE_VALIDATION_FAILED",
+    message: "Course validation failed!",
+  },
+
   COURSE_REFERENCED_FILE_NOT_FOUND: {
     code: "COURSE_REFERENCED_FILE_NOT_FOUND",
     message: "Referenced course file was not found!",

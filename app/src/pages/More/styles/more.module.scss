@@ -542,6 +542,12 @@
   line-height: 1.85;
 }
 
+.androidInstallButtonRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .androidInstallButton {
   justify-self: start;
   min-block-size: 2.35rem;
@@ -555,6 +561,12 @@
   font-weight: variables.$font-weight-semibold;
   text-decoration: none;
   cursor: pointer;
+}
+
+.androidInstallButtonSecondary {
+  border: 0.0625rem solid color-mix(in srgb, #3da169 42%, var(--app-surface-border));
+  background: color-mix(in srgb, #3da169 10%, transparent);
+  color: #2f8557;
 }
 
 .androidInstallButton:focus-visible {

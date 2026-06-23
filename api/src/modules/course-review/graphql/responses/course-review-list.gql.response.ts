@@ -1,7 +1,7 @@
 import { Field, GraphQLISODateTime, ID, Int, ObjectType } from "@nestjs/graphql";
 import { Types } from "mongoose";
 
-import { CourseReviewVisibility } from "../../../../enums";
+import { CourseReviewVisibility, UserRole } from "../../../../enums";
 import { PaginationCursorResponse } from "../../../../common/pagination/response";
 import { UserMinimalGqlResponse } from "../../../user/graphql/responses/common";
 
@@ -126,8 +126,11 @@ export class CourseReviewListGqlResponse {
   @Field(() => ID, { description: "Course ID" })
   courseId: Types.ObjectId;
 
-  @Field(() => ID, { description: "Linked user course enrollment ID" })
-  userCourseId: Types.ObjectId;
+  @Field(() => ID, {
+    nullable: true,
+    description: "Linked user course enrollment ID, when the reviewer purchased the course",
+  })
+  userCourseId?: Types.ObjectId;
 
   @Field(() => CourseReviewUserSnapshotGqlResponse, {
     description: "Stored review owner snapshot",

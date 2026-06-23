@@ -1,4 +1,4 @@
-import { Avatar, Button, Chip, CircularProgress, TextField, Typography } from "@mui/material";
+import { Avatar, Button, Chip, Typography } from "@mui/material";
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from "react";
 
 import StarRating from "../../shared/rating/StarRating";
@@ -6,13 +6,13 @@ import { resolveFileAccessUrl } from "../../utils/fileAccessUrl.util";
 import { formatRelativeTimeLabel } from "../../utilities/relative-time.util";
 import {
   COURSE_REVIEW_COMMENT_PREVIEW_LIMIT,
-  COURSE_REVIEW_REPLY_VISIBILITY_OPTIONS,
   type AdminCourseReviewRecord,
   type CourseReviewVisibility,
   resolveAdminReviewAuthorLabel,
   resolveDefaultReplyVisibility,
 } from "./course-reviews.api";
 import { CourseReviewComment } from "./CourseReviewComment";
+import CourseReviewAdminMessageForm from "./CourseReviewAdminMessageForm";
 import CourseReviewModerationSelect from "./CourseReviewModerationSelect";
 import { useAdminCourseReviewModeration } from "./useAdminCourseReviewModeration";
 import { useAdminCourseReviewReply } from "./useAdminCourseReviewReply";
@@ -240,44 +240,17 @@ const CourseReviewAdminCard = ({
         </Button>
       ) : null}
 
-      <div className={styles.reviewCommentForm}>
-        <TextField
-          fullWidth
-          multiline
-          minRows={2}
-          maxRows={5}
-          placeholder="پاسخ پشتیبانی را بنویسید…"
-          value={reply}
-          disabled={isSubmitting}
-          onChange={(event) => handleReplyChange(event.target.value)}
-          helperText={`${replyLength.toLocaleString("fa-IR")} / ${maxReplyLength.toLocaleString("fa-IR")}`}
-        />
-
-        <div className={styles.reviewReplyActionsRow}>
-          <div className={styles.reviewReplyVisibilityColumn}>
-            <Typography component="span" variant="caption" color="text.secondary">
-              نوع پاسخ
-            </Typography>
-            <CourseReviewModerationSelect
-              value={replyVisibility}
-              disabled={isSubmitting}
-              options={COURSE_REVIEW_REPLY_VISIBILITY_OPTIONS}
-              onChange={handleReplyVisibilityChange}
-            />
-          </div>
-
-          <Button
-            type="button"
-            variant="contained"
-            size="small"
-            disabled={!canSubmitReply}
-            onClick={submitAdminReply}
-            className={styles.reviewReplySubmitButton}
-          >
-            {isSubmitting ? <CircularProgress size={16} color="inherit" /> : "ارسال پاسخ"}
-          </Button>
-        </div>
-      </div>
+      <CourseReviewAdminMessageForm
+        reply={reply}
+        replyLength={replyLength}
+        maxReplyLength={maxReplyLength}
+        replyVisibility={replyVisibility}
+        isSubmitting={isSubmitting}
+        canSubmit={canSubmitReply}
+        onReplyChange={handleReplyChange}
+        onReplyVisibilityChange={handleReplyVisibilityChange}
+        onSubmit={submitAdminReply}
+      />
     </article>
   );
 };

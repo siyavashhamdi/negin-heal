@@ -76,7 +76,7 @@ export class CourseReviewSubmitGqlInput {
   @Field(() => CourseReviewVisibility, {
     nullable: true,
     description:
-      "Staff only. Visibility for a support reply message; PUBLIC or PRIVATE",
+      "Staff only. Visibility for a support message; PUBLIC or PRIVATE",
   })
   @IsOptional()
   @IsEnum(CourseReviewVisibility, {

@@ -3,10 +3,12 @@ import {
   IsArray,
   IsBoolean,
   IsEnum,
+  IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
   Min,
+  ArrayMinSize,
   ValidateNested,
 } from "class-validator";
 import { Field, Float, ID, InputType, Int } from "@nestjs/graphql";
@@ -20,6 +22,7 @@ import { IsObjectId } from "../../../../validators/is-object-id.validator";
 export class CourseItemGqlInput {
   @Field({ description: "Course item title" })
   @IsString({ message: "Item title must be a string" })
+  @IsNotEmpty({ message: "Item title is required" })
   title: string;
 
   @Field(() => Int, {
@@ -53,6 +56,7 @@ export class CourseItemGqlInput {
 export class CourseChapterGqlInput {
   @Field({ description: "Chapter title" })
   @IsString({ message: "Chapter title must be a string" })
+  @IsNotEmpty({ message: "Chapter title is required" })
   title: string;
 
   @Field({ nullable: true, description: "Chapter description" })
@@ -87,6 +91,7 @@ export class CourseChapterGqlInput {
     description: "Chapter items",
   })
   @IsArray({ message: "Chapter items must be an array" })
+  @ArrayMinSize(1, { message: "Each chapter must contain at least one item" })
   @ValidateNested({ each: true })
   @Type(() => CourseItemGqlInput)
   items: CourseItemGqlInput[];
@@ -116,6 +121,7 @@ export class CourseDiscountGqlInput {
 export class CourseWriteGqlInput {
   @Field({ description: "Course title" })
   @IsString({ message: "Course title must be a string" })
+  @IsNotEmpty({ message: "Course title is required" })
   title: string;
 
   @Field({ nullable: true, description: "Course description" })
@@ -161,6 +167,22 @@ export class CourseWriteGqlInput {
   @IsBoolean({ message: "Course isActive must be a boolean" })
   isActive?: boolean;
 
+  @Field(() => Boolean, {
+    nullable: true,
+    description: "Whether learners can submit reviews for this course",
+  })
+  @IsOptional()
+  @IsBoolean({ message: "Course isReviewSubmissionEnabled must be a boolean" })
+  isReviewSubmissionEnabled?: boolean;
+
+  @Field(() => Boolean, {
+    nullable: true,
+    description: "Whether the reviews section is visible on the course detail page",
+  })
+  @IsOptional()
+  @IsBoolean({ message: "Course isReviewsSectionVisible must be a boolean" })
+  isReviewsSectionVisible?: boolean;
+
   @Field(() => Float, {
     nullable: true,
     description: "Course display rank used for manual ordering",
@@ -183,6 +205,7 @@ export class CourseWriteGqlInput {
     description: "Course chapters",
   })
   @IsArray({ message: "Course chapters must be an array" })
+  @ArrayMinSize(1, { message: "At least one course chapter is required" })
   @ValidateNested({ each: true })
   @Type(() => CourseChapterGqlInput)
   chapters: CourseChapterGqlInput[];

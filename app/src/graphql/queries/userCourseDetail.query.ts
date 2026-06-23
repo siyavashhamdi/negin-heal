@@ -23,6 +23,8 @@ export const USER_COURSE_DETAIL_QUERY = gql`
       purchaseStatus
       completedChapterCount
       accessibleChapterCount
+      isReviewSubmissionEnabled
+      isReviewsSectionVisible
       chapters {
         key
         title

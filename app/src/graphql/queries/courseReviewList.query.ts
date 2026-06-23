@@ -12,6 +12,7 @@ export const COURSE_REVIEW_LIST_QUERY = gql`
         userCourseId
         user {
           id
+          roles
           profile {
             firstName
             lastName

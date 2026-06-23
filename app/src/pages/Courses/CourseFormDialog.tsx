@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent, type ReactElement } from "react";
+import { NetworkStatus } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
 import {
   Box,
@@ -59,6 +60,7 @@ import {
   type UploadProgressEntry,
 } from "../../utils/uploadProgress.util";
 import ModalFooterActions from "../../shared/crud/ModalFooterActions";
+import { validateCourseForm } from "./course-form-validation.util";
 
 type CourseFormDialogProps = {
   readonly open: boolean;
@@ -303,6 +305,8 @@ function buildCourseWriteMutationInput(input: {
   readonly coverImageFileId: string | null;
   readonly priceIrt: number;
   readonly isActive: boolean;
+  readonly isReviewSubmissionEnabled: boolean;
+  readonly isReviewsSectionVisible: boolean;
   readonly tags: string[];
   readonly discountEnabled: boolean;
   readonly hasPositivePrice: boolean;
@@ -316,6 +320,8 @@ function buildCourseWriteMutationInput(input: {
     coverImageFileId: input.coverImageFileId,
     priceIrt: input.priceIrt,
     isActive: input.isActive === true,
+    isReviewSubmissionEnabled: input.isReviewSubmissionEnabled === true,
+    isReviewsSectionVisible: input.isReviewsSectionVisible === true,
     tags: input.tags,
     chapters: input.chapters,
   };
@@ -344,6 +350,8 @@ type CourseFormSnapshot = {
   readonly priceIrt: string;
   readonly tags: string[];
   readonly isActive: boolean;
+  readonly isReviewSubmissionEnabled: boolean;
+  readonly isReviewsSectionVisible: boolean;
   readonly discountEnabled: boolean;
   readonly discountKind: DiscountKind;
   readonly discountValue: string;
@@ -373,6 +381,8 @@ function buildCourseFormSnapshot(input: {
   readonly priceIrt: string;
   readonly tags: string[];
   readonly isActive: boolean;
+  readonly isReviewSubmissionEnabled: boolean;
+  readonly isReviewsSectionVisible: boolean;
   readonly discountEnabled: boolean;
   readonly discountKind: DiscountKind;
   readonly discountValue: string;
@@ -386,6 +396,8 @@ function buildCourseFormSnapshot(input: {
     priceIrt: input.priceIrt,
     tags: input.tags,
     isActive: input.isActive,
+    isReviewSubmissionEnabled: input.isReviewSubmissionEnabled,
+    isReviewsSectionVisible: input.isReviewsSectionVisible,
     discountEnabled: input.discountEnabled,
     discountKind: input.discountKind,
     discountValue: input.discountValue,
@@ -422,19 +434,22 @@ const CourseFormDialog = ({
   const isSuperAdmin = user?.roles?.includes("SUPER_ADMIN") === true;
   const useEditSectionTabs = isEditMode && isSuperAdmin;
   const [activeFormSectionTab, setActiveFormSectionTab] = useState<CourseSectionTab>("intro");
+  const [reviewsRefreshToken, setReviewsRefreshToken] = useState(0);
   const isIntroFormTabActive = !useEditSectionTabs || activeFormSectionTab === "intro";
   const isReviewsFormTabActive = useEditSectionTabs && activeFormSectionTab === "reviews";
   const showIntroFormSection = !useEditSectionTabs || activeFormSectionTab === "intro";
   const showContentFormSection = !useEditSectionTabs || activeFormSectionTab === "content";
   const showReviewsFormSection = isReviewsFormTabActive && Boolean(courseId);
-  const { data, loading: detailLoading } = useQuery<CourseDetailQuery, CourseDetailQueryVariables>(
-    COURSE_DETAIL_QUERY,
-    {
-      variables: { input: { id: courseId ?? "" } },
-      skip: !open || !courseId,
-      fetchPolicy: "network-only",
-    },
-  );
+  const { data, loading: detailLoading, networkStatus, refetch: refetchCourseDetail } = useQuery<
+    CourseDetailQuery,
+    CourseDetailQueryVariables
+  >(COURSE_DETAIL_QUERY, {
+    variables: { input: { id: courseId ?? "" } },
+    skip: !open || !courseId,
+    fetchPolicy: "network-only",
+    nextFetchPolicy: "network-only",
+    notifyOnNetworkStatusChange: true,
+  });
   const detailCourse = useMemo(() => {
     if (!courseId || data?.courseDetail?.id !== courseId) {
       return null;
@@ -448,6 +463,8 @@ const CourseFormDialog = ({
   const [priceIrt, setPriceIrt] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [isActive, setIsActive] = useState(false);
+  const [isReviewSubmissionEnabled, setIsReviewSubmissionEnabled] = useState(true);
+  const [isReviewsSectionVisible, setIsReviewsSectionVisible] = useState(true);
   const [discountEnabled, setDiscountEnabled] = useState(false);
   const [discountKind, setDiscountKind] = useState<DiscountKind>("PERCENTAGE");
   const [discountValue, setDiscountValue] = useState("");
@@ -486,6 +503,8 @@ const CourseFormDialog = ({
         discountEnabled,
         discountKind,
         discountValue,
+        isReviewSubmissionEnabled,
+        isReviewsSectionVisible,
         chapters,
       }),
     [
@@ -497,6 +516,8 @@ const CourseFormDialog = ({
       discountKind,
       discountValue,
       isActive,
+      isReviewSubmissionEnabled,
+      isReviewsSectionVisible,
       priceIrt,
       tags,
       title,
@@ -515,6 +536,8 @@ const CourseFormDialog = ({
         : "";
     const nextTags = nextCourse?.tags ?? [];
     const nextIsActive = nextCourse?.isActive ?? false;
+    const nextIsReviewSubmissionEnabled = nextCourse?.isReviewSubmissionEnabled ?? true;
+    const nextIsReviewsSectionVisible = nextCourse?.isReviewsSectionVisible ?? true;
     const nextDiscountEnabled = nextCourse?.discount != null;
     const nextDiscountKind = nextCourse?.discount?.type ?? "PERCENTAGE";
     const nextDiscountValue = nextCourse?.discount
@@ -530,6 +553,8 @@ const CourseFormDialog = ({
     setPriceIrt(nextPriceIrt);
     setTags(nextTags);
     setIsActive(nextIsActive);
+    setIsReviewSubmissionEnabled(nextIsReviewSubmissionEnabled);
+    setIsReviewsSectionVisible(nextIsReviewsSectionVisible);
     setDiscountEnabled(nextDiscountEnabled);
     setDiscountKind(nextDiscountKind);
     setDiscountValue(nextDiscountValue);
@@ -545,6 +570,8 @@ const CourseFormDialog = ({
         priceIrt: nextPriceIrt,
         tags: nextTags,
         isActive: nextIsActive,
+        isReviewSubmissionEnabled: nextIsReviewSubmissionEnabled,
+        isReviewsSectionVisible: nextIsReviewsSectionVisible,
         discountEnabled: nextDiscountEnabled,
         discountKind: nextDiscountKind,
         discountValue: nextDiscountValue,
@@ -604,7 +631,6 @@ const CourseFormDialog = ({
     CourseWriteMutationVariables
   >(COURSE_CREATE_MUTATION, {
     successMessage: "دوره جدید با موفقیت ایجاد شد.",
-    errorMessage: "ایجاد دوره انجام نشد.",
     onSuccess: () => {
       closeDialog();
       onSaved?.();
@@ -616,7 +642,6 @@ const CourseFormDialog = ({
     CourseWriteMutationVariables
   >(COURSE_UPDATE_MUTATION, {
     successMessage: "دوره با موفقیت ویرایش شد.",
-    errorMessage: "ویرایش دوره انجام نشد.",
     onSuccess: () => {
       closeDialog();
       onSaved?.();
@@ -631,7 +656,10 @@ const CourseFormDialog = ({
     createCourseResult.loading ||
     updateCourseResult.loading ||
     isUploadingFiles;
-  const isEditFormReady = !isEditMode || (detailCourse != null && !detailLoading);
+  const isInitialEditFormLoading = isEditMode && detailCourse == null && detailLoading;
+  const isCourseDetailTabRefetching =
+    isEditMode && networkStatus === NetworkStatus.refetch;
+  const isEditFormReady = !isEditMode || detailCourse != null;
   const hasCreateInput = title.trim().length > 0;
   const hasEditFormChanges =
     initialSnapshot != null &&
@@ -655,8 +683,43 @@ const CourseFormDialog = ({
   useEffect(() => {
     if (open) {
       setActiveFormSectionTab("intro");
+      setReviewsRefreshToken(0);
     }
   }, [open, courseId]);
+
+  const handleFormSectionTabChange = (tab: CourseSectionTab): void => {
+    if (tab === activeFormSectionTab) {
+      return;
+    }
+
+    setActiveFormSectionTab(tab);
+
+    if (!isEditMode || !courseId) {
+      return;
+    }
+
+    if (tab === "intro" || tab === "content") {
+      void refetchCourseDetail(
+        {
+          input: { id: courseId },
+        },
+        { fetchPolicy: "no-cache" },
+      ).then((result) => {
+        const row = result.data?.courseDetail;
+        if (!row || row.id !== courseId) {
+          return;
+        }
+
+        applyFormState(mapCourseDetailRowToRecord(row));
+        appliedFormKeyRef.current = courseId;
+      });
+      return;
+    }
+
+    if (tab === "reviews") {
+      setReviewsRefreshToken((previous) => previous + 1);
+    }
+  };
 
   const uploadAndGetFileId = async (file: File, fieldId: string): Promise<string | null> => {
     const uploadPolicy =
@@ -781,66 +844,25 @@ const CourseFormDialog = ({
   };
 
   const validateBeforeSubmit = (): boolean => {
-    if (!title.trim()) {
-      showError("عنوان دوره الزامی است.");
-      return false;
-    }
-    if (parsedPriceIrt != null && parsedPriceIrt < 0) {
-      showError("قیمت نمی‌تواند منفی باشد.");
-      return false;
-    }
-    if (discountEnabled && hasPositivePrice) {
-      const parsedDiscountValue = parseOptionalNumber(discountValue);
-      if (parsedDiscountValue == null) {
-        showError("مقدار تخفیف الزامی است.");
-        return false;
+    const validationResult = validateCourseForm({
+      title,
+      parsedPriceIrt,
+      discountEnabled,
+      hasPositivePrice,
+      discountKind,
+      discountValue,
+      chapters,
+      parseOptionalNumber,
+    });
+
+    if (!validationResult.valid) {
+      if (useEditSectionTabs) {
+        setActiveFormSectionTab(validationResult.section);
       }
-      if (
-        discountKind === "PERCENTAGE" &&
-        (parsedDiscountValue <= 0 || parsedDiscountValue > 100)
-      ) {
-        showError("مقدار تخفیف درصدی باید بین ۰ تا ۱۰۰ باشد.");
-        return false;
-      }
-      if (discountKind === "FIXED_AMOUNT_IRT" && parsedDiscountValue <= 0) {
-        showError("مقدار تخفیف باید عددی مثبت باشد.");
-        return false;
-      }
-    }
-    if (chapters.length === 0) {
-      showError("حداقل یک فصل لازم است.");
+      showError(validationResult.message);
       return false;
     }
 
-    for (const chapter of chapters) {
-      if (!chapter.title.trim()) {
-        showError("عنوان فصل نمی‌تواند خالی باشد.");
-        return false;
-      }
-      const parsedVisibleAfter = parseOptionalNumber(chapter.visibleAfterMinutes);
-      if (parsedVisibleAfter != null && parsedVisibleAfter < 0) {
-        showError("نمایش بعد از نمی‌تواند منفی باشد.");
-        return false;
-      }
-      if (chapter.items.length === 0) {
-        showError("هر فصل باید حداقل یک آیتم داشته باشد.");
-        return false;
-      }
-      for (const item of chapter.items) {
-        if (!item.title.trim()) {
-          showError("عنوان آیتم نمی‌تواند خالی باشد.");
-          return false;
-        }
-        if (item.contentType === "FILE" && !item.file && !getFileIdFromAccessUrl(item.fileAccessUrl)) {
-          showError("برای آیتم فایل‌محور باید فایل انتخاب شود.");
-          return false;
-        }
-        if (item.contentType === "ARTICLE" && !item.article.trim()) {
-          showError("برای آیتم مقاله‌ای باید متن مقاله وارد شود.");
-          return false;
-        }
-      }
-    }
     return true;
   };
 
@@ -962,6 +984,8 @@ const CourseFormDialog = ({
       ),
       priceIrt: parsedPriceIrt ?? 0,
       isActive,
+      isReviewSubmissionEnabled,
+      isReviewsSectionVisible,
       tags,
       discountEnabled,
       hasPositivePrice,
@@ -1098,7 +1122,7 @@ const CourseFormDialog = ({
         }
       >
         <Box sx={{ display: "grid", gap: "0.95rem" }}>
-          {isEditMode && !isEditFormReady ? (
+          {isInitialEditFormLoading ? (
             <Stack alignItems="center" justifyContent="center" spacing={2} sx={{ minHeight: 320 }}>
               <CircularProgress />
               <Typography variant="body2" color="text.secondary">
@@ -1110,10 +1134,20 @@ const CourseFormDialog = ({
               {useEditSectionTabs ? (
                 <CourseFormSectionTabs
                   activeTab={activeFormSectionTab}
-                  onChange={setActiveFormSectionTab}
+                  onChange={handleFormSectionTabChange}
                 />
               ) : null}
 
+              {isCourseDetailTabRefetching &&
+              (activeFormSectionTab === "intro" || activeFormSectionTab === "content") ? (
+                <Stack alignItems="center" justifyContent="center" spacing={2} sx={{ minHeight: 240 }}>
+                  <CircularProgress size={28} />
+                  <Typography variant="body2" color="text.secondary">
+                    در حال بروزرسانی اطلاعات...
+                  </Typography>
+                </Stack>
+              ) : (
+                <>
               {showIntroFormSection ? (
               <div
                 id={useEditSectionTabs ? "course-form-intro" : undefined}
@@ -1139,6 +1173,10 @@ const CourseFormDialog = ({
             onTagsChange={setTags}
             isActive={isActive}
             onIsActiveChange={setIsActive}
+            isReviewSubmissionEnabled={isReviewSubmissionEnabled}
+            onIsReviewSubmissionEnabledChange={setIsReviewSubmissionEnabled}
+            isReviewsSectionVisible={isReviewsSectionVisible}
+            onIsReviewsSectionVisibleChange={setIsReviewsSectionVisible}
             hasPositivePrice={hasPositivePrice}
             discountEnabled={discountEnabled}
             onDiscountEnabledChange={setDiscountEnabled}
@@ -1201,9 +1239,14 @@ const CourseFormDialog = ({
                       مدیریت و بررسی نظرات ثبت‌شده برای این دوره
                     </Typography>
                   </div>
-                  <CourseReviewsAdminSection courseId={courseId!} />
+                  <CourseReviewsAdminSection
+                    courseId={courseId!}
+                    refreshToken={reviewsRefreshToken}
+                  />
                 </section>
               ) : null}
+                </>
+              )}
             </>
           )}
         </Box>

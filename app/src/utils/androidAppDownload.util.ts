@@ -1,4 +1,5 @@
 const ANDROID_APP_DOWNLOAD_PATH = "/app/negin-heal.apk";
+const ANDROID_APP_NO_CHROME_DOWNLOAD_PATH = "/app/negin-heal-no-chrome.apk";
 
 type WindowWithNativeBridge = Window & {
   readonly Capacitor?: { readonly getPlatform?: () => string };
@@ -39,4 +40,8 @@ export function shouldShowAndroidAppDownloadLink(): boolean {
 
 export function getAndroidAppDownloadUrl(): string {
   return ANDROID_APP_DOWNLOAD_PATH;
+}
+
+export function getAndroidAppNoChromeDownloadUrl(): string {
+  return ANDROID_APP_NO_CHROME_DOWNLOAD_PATH;
 }

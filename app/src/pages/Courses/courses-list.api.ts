@@ -51,6 +51,8 @@ export type CourseDetailItemRow = {
     readonly value: number;
   } | null;
   readonly isActive?: boolean;
+  readonly isReviewSubmissionEnabled?: boolean;
+  readonly isReviewsSectionVisible?: boolean;
   readonly tags: string[];
   readonly chapters: CourseDetailChapterRow[];
 };
@@ -145,6 +147,8 @@ export type CourseEditRecord = {
     readonly value: number;
   } | null;
   readonly isActive: boolean;
+  readonly isReviewSubmissionEnabled: boolean;
+  readonly isReviewsSectionVisible: boolean;
   readonly tags: string[];
   readonly chapters: Array<{
     readonly title: string;
@@ -279,6 +283,8 @@ export function mapCourseDetailRowToRecord(row: CourseDetailItemRow): CourseEdit
           }
         : null,
     isActive: row.isActive ?? true,
+    isReviewSubmissionEnabled: row.isReviewSubmissionEnabled !== false,
+    isReviewsSectionVisible: row.isReviewsSectionVisible !== false,
     tags: row.tags || [],
     chapters: row.chapters.map((chapter) => ({
       title: chapter.title,

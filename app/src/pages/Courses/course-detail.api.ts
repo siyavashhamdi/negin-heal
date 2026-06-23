@@ -39,6 +39,8 @@ export type CourseDetailRecord = {
   readonly purchaseStatus?: UserCoursePurchaseStatus | null;
   readonly completedChapterCount: number;
   readonly accessibleChapterCount: number;
+  readonly isReviewSubmissionEnabled: boolean;
+  readonly isReviewsSectionVisible: boolean;
   readonly chapters: CourseDetailChapter[];
 };
 

@@ -3,6 +3,10 @@ import {
   IdentityAlreadyExistsException,
   resolveDuplicateIdentityFieldFromMessage,
 } from "./identity-already-exists.exception";
+import {
+  CourseValidationFailedException,
+  resolveCourseValidationMessageFromError,
+} from "./course-validation-failed.exception";
 import * as ExceptionClasses from "./index";
 
 /**
@@ -49,6 +53,12 @@ export class ExceptionRegistry {
     if (name === IdentityAlreadyExistsException.name) {
       const field = resolveDuplicateIdentityFieldFromMessage(errorMessage);
       return new IdentityAlreadyExistsException(field);
+    }
+
+    if (name === CourseValidationFailedException.name) {
+      return new CourseValidationFailedException(
+        resolveCourseValidationMessageFromError(errorMessage),
+      );
     }
 
     // Try no arguments first (for exceptions that don't need payload)

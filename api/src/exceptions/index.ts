@@ -4,6 +4,7 @@ export * from "./course-chapter-required.exception";
 export * from "./course-item-content-required.exception";
 export * from "./course-not-found.exception";
 export * from "./course-referenced-file-not-found.exception";
+export * from "./course-validation-failed.exception";
 export * from "./user-not-found.exception";
 export * from "./password-policy-violation.exception";
 export * from "./invalid-credentials.exception";

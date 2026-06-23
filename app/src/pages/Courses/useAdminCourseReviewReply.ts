@@ -38,7 +38,7 @@ export function useAdminCourseReviewReply({
     CourseReviewSubmitMutationVariables
   >(COURSE_REVIEW_SUBMIT_MUTATION, {
     onSuccess: () => {
-      showSuccess("پاسخ شما ثبت شد.");
+      showSuccess("پیام شما ثبت شد.");
       setReply("");
       onSubmitted();
     },
@@ -50,7 +50,7 @@ export function useAdminCourseReviewReply({
 
   const submitAdminReply = useCallback((): void => {
     const trimmedReply = reply.trim();
-    if (!trimmedReply || submitResult.loading) {
+    if (!trimmedReply || !reviewUserId || submitResult.loading) {
       return;
     }
 

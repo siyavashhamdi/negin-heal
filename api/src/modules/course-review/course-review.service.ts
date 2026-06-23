@@ -85,7 +85,7 @@ type CourseReviewAdminListRecord = Pick<
   | "audit"
 >;
 
-type CourseReviewUserLookupRecord = Pick<User, "profile" | "status" | "audit"> & {
+type CourseReviewUserLookupRecord = Pick<User, "profile" | "status" | "audit" | "roles"> & {
   _id: Types.ObjectId;
 };
 
@@ -128,6 +128,11 @@ export class CourseReviewService {
       actorUserId,
       isStaff,
     );
+    const isStaffSupportSubmit = this.isStaffSupportSubmit(
+      input,
+      actorUserId,
+      isStaff,
+    );
     const course = await this.courseModel.findById(input.courseId).exec();
     if (!course) {
       throw new BadRequestException("Course not found");
@@ -137,8 +142,16 @@ export class CourseReviewService {
       throw new BadRequestException("Course is not available for review");
     }
 
+    if (!isStaff && course.isReviewsSectionVisible === false) {
+      throw new BadRequestException("بخش نظرات برای این دوره غیرفعال است.");
+    }
+
+    if (!isStaff && course.isReviewSubmissionEnabled === false) {
+      throw new BadRequestException("ثبت نظر برای این دوره غیرفعال است.");
+    }
+
     const needsStaffActor =
-      isStaff && Boolean(this.normalizeOptionalText(input.comment));
+      isStaffSupportSubmit && Boolean(this.normalizeOptionalText(input.comment));
 
     const [targetUser, userCourse, actorUser] = await Promise.all([
       this.userModel.findById(targetUserId).exec(),
@@ -158,7 +171,9 @@ export class CourseReviewService {
       throw new BadRequestException("User not found");
     }
 
-    if (!userCourse) {
+    const requiresPaidEnrollment = !isStaff || isStaffSupportSubmit;
+
+    if (!userCourse && requiresPaidEnrollment) {
       throw new BadRequestException(
         "A paid course enrollment is required before submitting a review",
       );
@@ -168,13 +183,19 @@ export class CourseReviewService {
       throw new BadRequestException("Staff user not found");
     }
 
-    if (!this.isSameObjectId(userCourse.userId, targetUserId)) {
+    if (
+      userCourse &&
+      !this.isSameObjectId(userCourse.userId, targetUserId)
+    ) {
       throw new BadRequestException(
         "Course enrollment does not belong to this user",
       );
     }
 
-    if (!this.isSameObjectId(userCourse.courseId, input.courseId)) {
+    if (
+      userCourse &&
+      !this.isSameObjectId(userCourse.courseId, input.courseId)
+    ) {
       throw new BadRequestException(
         "Course enrollment does not match the submitted course",
       );
@@ -192,7 +213,7 @@ export class CourseReviewService {
     }
 
     let review = await this.resolveExistingReviewForSubmit(
-      userCourse._id,
+      userCourse?._id ?? null,
       targetUserId,
       input.courseId,
     );
@@ -202,7 +223,7 @@ export class CourseReviewService {
         CourseReviewVisibility.HIDDEN ||
         review?.rating?.moderation.visibility ===
           CourseReviewVisibility.HIDDEN) &&
-      !isStaff
+      !isStaffSupportSubmit
     ) {
       throw new ForbiddenException(
         "You cannot update a review that has been hidden by moderation",
@@ -255,7 +276,9 @@ export class CourseReviewService {
     const applySubmitChanges = (targetReview: CourseReviewDocument): void => {
       targetReview.userSnapshot = userSnapshot;
       targetReview.courseSnapshot = { title: course.title };
-      targetReview.userCourseId = userCourse._id;
+      if (userCourse) {
+        targetReview.userCourseId = userCourse._id;
+      }
 
       if (!targetReview.moderation?.visibility) {
         targetReview.moderation = {
@@ -270,7 +293,7 @@ export class CourseReviewService {
           targetReview.rating = {
             stars: input.stars!,
             comment:
-              isStaff || (hasCommentInput && !hadRatingComment)
+              !isStaffSupportSubmit && hasCommentInput && !hadRatingComment
                 ? normalizedComment
                 : undefined,
             ratedAt: now,
@@ -283,7 +306,11 @@ export class CourseReviewService {
           targetReview.rating.stars = input.stars!;
           targetReview.rating.updatedAt = now;
 
-          if (!isStaff && hasCommentInput && !hadRatingComment) {
+          if (
+            !isStaffSupportSubmit &&
+            hasCommentInput &&
+            !hadRatingComment
+          ) {
             targetReview.rating.comment = normalizedComment;
           }
         }
@@ -293,7 +320,7 @@ export class CourseReviewService {
         return;
       }
 
-      if (isStaff) {
+      if (isStaffSupportSubmit) {
         appendStaffSupportMessage(
           targetReview,
           normalizedComment!,
@@ -316,13 +343,9 @@ export class CourseReviewService {
     };
 
     if (!review) {
-      if (isStaff && hasCommentInput && !hasStarInput) {
-        throw new BadRequestException(
-          "An existing review is required before sending a reply",
-        );
+      if (userCourse) {
+        await this.assertUserCourseIdIsAvailable(userCourse._id);
       }
-
-      await this.assertUserCourseIdIsAvailable(userCourse._id);
 
       try {
         review = await this.courseReviewModel.create({
@@ -334,14 +357,17 @@ export class CourseReviewService {
           moderation: {
             visibility: CourseReviewVisibility.PUBLIC,
           },
-          userCourseId: userCourse._id,
+          ...(userCourse ? { userCourseId: userCourse._id } : {}),
           userId: targetUserId,
           userSnapshot,
           ...(hasStarInput
             ? {
                 rating: {
                   stars: input.stars!,
-                  comment: hasCommentInput ? normalizedComment : undefined,
+                  comment:
+                    !isStaffSupportSubmit && hasCommentInput
+                      ? normalizedComment
+                      : undefined,
                   ratedAt: now,
                   moderation: {
                     visibility: CourseReviewVisibility.PUBLIC,
@@ -352,8 +378,17 @@ export class CourseReviewService {
         });
         isNewRating = hasStarInput;
 
-        if (!hasStarInput && hasCommentInput && !isStaff) {
-          appendPublicOwnerMessage(review, normalizedComment!);
+        if (hasCommentInput) {
+          if (isStaffSupportSubmit) {
+            appendStaffSupportMessage(
+              review,
+              normalizedComment!,
+              staffReplyVisibility,
+            );
+          } else if (!hasStarInput) {
+            appendPublicOwnerMessage(review, normalizedComment!);
+          }
+
           await review.save();
         }
       } catch (error) {
@@ -362,7 +397,7 @@ export class CourseReviewService {
         }
 
         review = await this.resolveExistingReviewForSubmit(
-          userCourse._id,
+          userCourse?._id ?? null,
           targetUserId,
           input.courseId,
         );
@@ -372,12 +407,16 @@ export class CourseReviewService {
         }
 
         isNewRating = !review.rating;
-        await this.assertUserCourseIdIsAvailable(userCourse._id, review._id);
+        if (userCourse) {
+          await this.assertUserCourseIdIsAvailable(userCourse._id, review._id);
+        }
         applySubmitChanges(review);
         await review.save();
       }
     } else {
-      await this.assertUserCourseIdIsAvailable(userCourse._id, review._id);
+      if (userCourse) {
+        await this.assertUserCourseIdIsAvailable(userCourse._id, review._id);
+      }
 
       isNewRating = !review.rating && hasStarInput;
       applySubmitChanges(review);
@@ -500,11 +539,34 @@ export class CourseReviewService {
 
   async listForEndUser(
     input: UserCourseReviewListGqlInput,
-    currentUserId: Types.ObjectId,
+    currentUserId?: Types.ObjectId,
   ): Promise<UserCourseReviewListPaginatedCursorGqlResponse> {
     const courseId = input.filters?.courseId?.trim();
     if (!courseId) {
       throw new BadRequestException("Course ID is required");
+    }
+
+    const course = await this.courseModel
+      .findById(courseId)
+      .select({ isReviewsSectionVisible: 1 })
+      .lean<{ isReviewsSectionVisible?: boolean }>()
+      .exec();
+
+    if (!course) {
+      throw new BadRequestException("Course not found");
+    }
+
+    if (course.isReviewsSectionVisible === false) {
+      return {
+        items: [],
+        pagination: {
+          limit: input.options?.limit ?? PAGINATION_CONSTANT.CURSOR_BASED.DEFAULT_LIMIT,
+          total: 0,
+          count: 0,
+          hasNextPage: false,
+          hasPreviousPage: Boolean(input.options?.startCursor),
+        },
+      };
     }
 
     const baseFilterQuery = this.buildEndUserListFilterQuery(
@@ -630,33 +692,34 @@ export class CourseReviewService {
 
   private buildEndUserListFilterQuery(
     courseId: Types.ObjectId,
-    currentUserId: Types.ObjectId,
+    currentUserId: Types.ObjectId | undefined,
     stars?: number,
   ): FilterQuery<CourseReview> {
+    const publicReviewCondition = {
+      "moderation.visibility": CourseReviewVisibility.PUBLIC,
+      $or: [
+        {
+          rating: { $exists: true, $ne: null },
+          "rating.moderation.visibility": CourseReviewVisibility.PUBLIC,
+        },
+        {
+          messages: {
+            $elemMatch: {
+              "moderation.visibility": CourseReviewVisibility.PUBLIC,
+            },
+          },
+        },
+      ],
+    };
+
     const query: FilterQuery<CourseReview> = {
       courseId,
       $and: [
         this.buildNotDeletedFilter(),
         {
-          $or: [
-            { userId: currentUserId },
-            {
-              "moderation.visibility": CourseReviewVisibility.PUBLIC,
-              $or: [
-                {
-                  rating: { $exists: true, $ne: null },
-                  "rating.moderation.visibility": CourseReviewVisibility.PUBLIC,
-                },
-                {
-                  messages: {
-                    $elemMatch: {
-                      "moderation.visibility": CourseReviewVisibility.PUBLIC,
-                    },
-                  },
-                },
-              ],
-            },
-          ],
+          $or: currentUserId
+            ? [{ userId: currentUserId }, publicReviewCondition]
+            : [publicReviewCondition],
         },
       ],
     };
@@ -779,7 +842,7 @@ export class CourseReviewService {
 
     const users = await this.userModel
       .find({ _id: { $in: userObjectIds } })
-      .select({ _id: 1, profile: 1, status: 1, audit: 1 })
+      .select({ _id: 1, profile: 1, status: 1, audit: 1, roles: 1 })
       .lean<CourseReviewUserLookupRecord[]>()
       .exec();
     const avatarAccessUrlMap = await this.fileService.getAccessUrlMap(
@@ -807,7 +870,7 @@ export class CourseReviewService {
 
     const users = await this.userModel
       .find({ _id: { $in: userIds } })
-      .select({ _id: 1, status: 1, audit: 1 })
+      .select({ _id: 1, status: 1, audit: 1, roles: 1 })
       .lean<CourseReviewUserLookupRecord[]>()
       .exec();
 
@@ -967,6 +1030,7 @@ export class CourseReviewService {
 
     return {
       id,
+      roles: user?.roles,
       profile: user?.profile
         ? {
             firstName: user.profile.firstName,
@@ -982,7 +1046,7 @@ export class CourseReviewService {
 
   private toEndUserListResponse(
     review: CourseReviewEndUserListRecord,
-    currentUserId: Types.ObjectId,
+    currentUserId: Types.ObjectId | undefined,
     ownerUsersById: Map<string, CourseReviewUserLookupRecord>,
   ): UserCourseReviewListGqlResponse | null {
     const isMine = this.isSameObjectId(review.userId, currentUserId);
@@ -1010,11 +1074,14 @@ export class CourseReviewService {
       isMine,
       ownerListable,
     );
+    const reviewOwner = ownerUsersById.get(review.userId.toString());
+    const ownerIsStaff = this.isStaffUser(reviewOwner);
     const messages = this.mapVisibleMessages(
       review.messages ?? [],
       review.userId,
       isMine,
       ownerListable,
+      ownerIsStaff,
     );
 
     if (!isMine && !rating && messages.length === 0) {
@@ -1029,7 +1096,9 @@ export class CourseReviewService {
       id: review._id,
       isMine,
       author: {
-        firstName: this.extractFirstName(review.userSnapshot.fullName),
+        firstName: ownerIsStaff
+          ? "پشتیبانی"
+          : this.extractFirstName(review.userSnapshot.fullName),
       },
       rating,
       messages,
@@ -1069,6 +1138,7 @@ export class CourseReviewService {
     threadUserId: Types.ObjectId,
     includeSupportMessages: boolean,
     ownerListable = true,
+    ownerIsStaff = false,
   ): UserCourseReviewListGqlResponse["messages"] {
     if (!ownerListable && !includeSupportMessages) {
       return [];
@@ -1106,7 +1176,9 @@ export class CourseReviewService {
           sentAt: message.sentAt,
           sender: {
             firstName: isOwnerMessage
-              ? this.extractFirstName(message.senderSnapshot.fullName)
+              ? ownerIsStaff
+                ? "پشتیبانی"
+                : this.extractFirstName(message.senderSnapshot.fullName)
               : "پشتیبانی",
             isSupport: !isOwnerMessage,
           },
@@ -1253,16 +1325,38 @@ export class CourseReviewService {
     );
   }
 
+  private isStaffUser(user?: CourseReviewUserLookupRecord | null): boolean {
+    if (!user?.roles?.length) {
+      return false;
+    }
+
+    return this.isStaffRole(user.roles);
+  }
+
+  private isStaffSupportSubmit(
+    input: CourseReviewSubmitGqlInput,
+    actorUserId: Types.ObjectId,
+    isStaff: boolean,
+  ): boolean {
+    if (!isStaff || !input.userId) {
+      return false;
+    }
+
+    return !this.isSameObjectId(input.userId, actorUserId);
+  }
+
   private async resolveExistingReviewForSubmit(
-    userCourseId: Types.ObjectId,
+    userCourseId: Types.ObjectId | null,
     userId: Types.ObjectId,
     courseId: Types.ObjectId,
   ): Promise<CourseReviewDocument | null> {
     const notDeletedFilter = this.buildNotDeletedFilter();
     const [reviewByUserCourse, reviewByUserAndCourse] = await Promise.all([
-      this.courseReviewModel
-        .findOne({ userCourseId, ...notDeletedFilter })
-        .exec(),
+      userCourseId
+        ? this.courseReviewModel
+            .findOne({ userCourseId, ...notDeletedFilter })
+            .exec()
+        : Promise.resolve(null),
       this.courseReviewModel
         .findOne({ courseId, userId, ...notDeletedFilter })
         .exec(),
@@ -1294,8 +1388,10 @@ export class CourseReviewService {
     }
 
     if (
+      userCourseId &&
       reviewByUserAndCourse &&
       !reviewByUserCourse &&
+      review.userCourseId &&
       !this.isSameObjectId(review.userCourseId, userCourseId)
     ) {
       await this.assertUserCourseIdIsAvailable(userCourseId, review._id);

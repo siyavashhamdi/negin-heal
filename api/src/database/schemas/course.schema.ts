@@ -101,6 +101,12 @@ export class Course extends BaseIdTimestampableBlameableSchema {
   @Prop({ default: true, required: true, type: Boolean })
   isActive: boolean;
 
+  @Prop({ default: true, required: true, type: Boolean })
+  isReviewSubmissionEnabled: boolean;
+
+  @Prop({ default: true, required: true, type: Boolean })
+  isReviewsSectionVisible: boolean;
+
   @Prop({ default: 0, type: Number })
   sortOrder?: number;
 

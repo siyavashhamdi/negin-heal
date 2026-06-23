@@ -14,6 +14,7 @@ import { CourseReviewComment } from "./CourseReviewComment";
 import CourseReviewCaptchaDialog from "./CourseReviewCaptchaDialog";
 import {
   COURSE_REVIEW_COMMENT_PREVIEW_LIMIT,
+  resolveCourseReviewThreadEntryAuthorLabel,
   type EndUserCourseReviewRecord,
 } from "./course-reviews.api";
 import { useCourseReviewSubmit } from "./useCourseReviewSubmit";
@@ -39,15 +40,13 @@ type ThreadEntry = {
   readonly isSupport: boolean;
 };
 
-function buildThreadEntries(
-  review: EndUserCourseReviewRecord | null,
-  authorLabel: string,
-  isMine: boolean,
-): ThreadEntry[] {
+function buildThreadEntries(review: EndUserCourseReviewRecord | null): ThreadEntry[] {
   if (!review) {
     return [];
   }
 
+  const isReviewOwnedByViewer = review.isMine;
+  const ownerFirstName = review.author.firstName?.trim() || "کاربر";
   const entries: ThreadEntry[] = [];
 
   if (review.rating?.comment?.trim()) {
@@ -55,8 +54,12 @@ function buildThreadEntries(
       key: "initial",
       body: review.rating.comment.trim(),
       sentAt: review.rating.updatedAt ?? review.rating.ratedAt,
-      authorLabel,
-      isOwnMessage: isMine,
+      authorLabel: resolveCourseReviewThreadEntryAuthorLabel({
+        senderFirstName: ownerFirstName,
+        isSupport: false,
+        isReviewOwnedByViewer,
+      }),
+      isOwnMessage: isReviewOwnedByViewer,
       isSupport: false,
     });
   }
@@ -66,8 +69,12 @@ function buildThreadEntries(
       key: message.key,
       body: message.body,
       sentAt: message.sentAt,
-      authorLabel: message.sender.isSupport ? message.sender.firstName : authorLabel,
-      isOwnMessage: isMine && !message.sender.isSupport,
+      authorLabel: resolveCourseReviewThreadEntryAuthorLabel({
+        senderFirstName: message.sender.firstName,
+        isSupport: message.sender.isSupport,
+        isReviewOwnedByViewer,
+      }),
+      isOwnMessage: isReviewOwnedByViewer && !message.sender.isSupport,
       isSupport: message.sender.isSupport,
     });
   }
@@ -163,10 +170,7 @@ const CourseReviewUserBox = ({
     clearStarAutoSubmitBlock();
   }, [clearStarAutoSubmitBlock, review?.id, persistedStars]);
 
-  const threadEntries = useMemo(
-    () => buildThreadEntries(review, authorLabel, isMine),
-    [authorLabel, isMine, review],
-  );
+  const threadEntries = useMemo(() => buildThreadEntries(review), [review]);
   const hiddenCommentCount = Math.max(
     0,
     threadEntries.length - COURSE_REVIEW_COMMENT_PREVIEW_LIMIT,

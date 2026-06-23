@@ -3,11 +3,15 @@ import { Alert, Button, CircularProgress, Skeleton, Typography } from "@mui/mate
 import { useMemo, type ReactElement } from "react";
 
 import { useAuth } from "../../contexts/AuthContext";
-import { LoginRequiredState } from "../../shared/auth/LoginRequiredState";
 import CourseReviewSummary from "./CourseReviewSummary";
 import CourseReviewUserBox from "./CourseReviewUserBox";
 import {
+  canUseAdminCourseReviewList,
   computeCourseReviewSummaryStats,
+  findOwnAdminCourseReview,
+  findOwnCourseReview,
+  isStaffCourseReviewer,
+  mapAdminCourseReviewToEndUserRecord,
   resolveEndUserReviewAuthorLabel,
   type EndUserCourseReviewRecord,
 } from "./course-reviews.api";
@@ -17,15 +21,9 @@ import styles from "./styles/CourseReviewsSection.module.scss";
 type CourseReviewsSectionProps = {
   readonly courseId: string;
   readonly canSubmitReview: boolean;
+  readonly isReviewsSectionVisible: boolean;
+  readonly isReviewSubmissionEnabled: boolean;
 };
-
-function findOwnReview(items: ReadonlyArray<EndUserCourseReviewRecord>): EndUserCourseReviewRecord | null {
-  return items.find((item) => item.isMine) ?? null;
-}
-
-function resolveOwnAuthorLabel(): string {
-  return "شما";
-}
 
 function isOtherUserReview(
   review: EndUserCourseReviewRecord,
@@ -45,28 +43,60 @@ function isOtherUserReview(
 const CourseReviewsSection = ({
   courseId,
   canSubmitReview,
+  isReviewsSectionVisible,
+  isReviewSubmissionEnabled,
 }: CourseReviewsSectionProps): ReactElement => {
   const { user, isAuthenticated } = useAuth();
-  const canUseEndUserReviewList = isAuthenticated && user?.roles?.includes("END_USER") === true;
+  const isStaff = isStaffCourseReviewer(user?.roles);
+  const isSectionDisabledForViewer = !isStaff && !isReviewsSectionVisible;
+  const isSubmissionDisabledForViewer = !isStaff && !isReviewSubmissionEnabled;
+  const listMode = isStaff ? "admin" : "endUser";
 
   const reviewList = useCourseReviewList({
     courseId,
-    mode: "endUser",
-    enabled: canUseEndUserReviewList,
+    mode: listMode,
+    enabled:
+      Boolean(courseId) &&
+      !isSectionDisabledForViewer &&
+      (listMode === "admin"
+        ? isAuthenticated && canUseAdminCourseReviewList(user?.roles)
+        : true),
     starsFilter: null,
   });
+
+  const ownReview = useMemo((): EndUserCourseReviewRecord | null => {
+    if (isStaff) {
+      const ownAdminReview = findOwnAdminCourseReview(reviewList.items, user?.id);
+      if (!ownAdminReview || !user?.id) {
+        return null;
+      }
+
+      return mapAdminCourseReviewToEndUserRecord(ownAdminReview, user.id);
+    }
+
+    return findOwnCourseReview(reviewList.items);
+  }, [isStaff, reviewList.items, user?.id]);
+
+  const otherReviews = useMemo((): EndUserCourseReviewRecord[] => {
+    if (isStaff) {
+      if (!user?.id) {
+        return [];
+      }
+
+      return reviewList.items
+        .filter((review) => review.userId !== user.id)
+        .map((review) => mapAdminCourseReviewToEndUserRecord(review, user.id));
+    }
+
+    const ownReviewId = ownReview?.id;
+    return reviewList.items.filter((review) => isOtherUserReview(review, ownReviewId));
+  }, [isStaff, ownReview?.id, reviewList.items, user?.id]);
 
   const summaryStats = useMemo(
     () => computeCourseReviewSummaryStats(reviewList.items, reviewList.totalCount),
     [reviewList.items, reviewList.totalCount],
   );
-  const ownReview = findOwnReview(reviewList.items);
-  const ownReviewId = ownReview?.id;
-  const otherReviews = useMemo(
-    () => reviewList.items.filter((review) => isOtherUserReview(review, ownReviewId)),
-    [ownReviewId, reviewList.items],
-  );
-  const ownAuthorLabel = resolveOwnAuthorLabel();
+
   const showOwnBox = canSubmitReview || Boolean(ownReview);
   const showOthersScroll =
     reviewList.loading ||
@@ -74,27 +104,16 @@ const CourseReviewsSection = ({
     reviewList.hasNextPage ||
     reviewList.isFetchingMore;
 
-  if (!isAuthenticated) {
-    return (
-      <LoginRequiredState
-        eyebrow="امتیاز و نظرات"
-        title="برای مشاهده نظرات وارد شوید"
-        description="نظرات عمومی دوره و امکان ثبت امتیاز پس از ورود به حساب کاربری در دسترس است."
-        icon={<ReviewsRoundedIcon />}
-      />
-    );
-  }
+  const showEmptyState =
+    !reviewList.loading && !reviewList.error && !showOwnBox && otherReviews.length === 0;
 
-  if (!canUseEndUserReviewList) {
+  if (isSectionDisabledForViewer) {
     return (
-      <Alert severity="info" className={styles.roleNotice}>
-        مشاهده نظرات دوره فقط برای کاربران عادی فعال است.
+      <Alert severity="warning" className={styles.roleNotice}>
+        مشاهده و ثبت نظر برای این دوره در حال حاضر امکان‌پذیر نیست.
       </Alert>
     );
   }
-
-  const showEmptyState =
-    !reviewList.loading && !reviewList.error && !showOwnBox && otherReviews.length === 0;
 
   return (
     <div className={styles.listShell}>
@@ -107,7 +126,15 @@ const CourseReviewsSection = ({
           showReviewCount={false}
         />
 
-        {!canSubmitReview ? (
+        {!isAuthenticated ? (
+          <Alert severity="info" className={styles.roleNotice}>
+            برای ثبت امتیاز و نظر وارد حساب کاربری شوید.
+          </Alert>
+        ) : isSubmissionDisabledForViewer ? (
+          <Alert severity="info" className={styles.roleNotice}>
+            امکان ثبت امتیاز و نظر جدید برای این دوره غیرفعال است.
+          </Alert>
+        ) : !canSubmitReview && !isStaff ? (
           <Alert severity="info" className={styles.roleNotice}>
             پس از خرید و فعال شدن دسترسی دوره می‌توانید امتیاز و نظر خود را ثبت کنید.
           </Alert>
@@ -133,7 +160,7 @@ const CourseReviewsSection = ({
         {!reviewList.loading && showOwnBox ? (
           <CourseReviewUserBox
             review={ownReview}
-            authorLabel={ownAuthorLabel}
+            authorLabel="شما"
             canEdit={canSubmitReview}
             courseId={courseId}
             onSubmitted={reviewList.refetch}
@@ -172,7 +199,11 @@ const CourseReviewsSection = ({
             <div className={styles.emptyState}>
               <ReviewsRoundedIcon color="primary" />
               <h3>هنوز نظری ثبت نشده</h3>
-              <p>اولین نفری باشید که تجربه خود را از این دوره به اشتراک می‌گذارد.</p>
+              <p>
+                {canSubmitReview || isStaff
+                  ? "اولین نفری باشید که تجربه خود را از این دوره به اشتراک می‌گذارد."
+                  : "هنوز نظری برای نمایش وجود ندارد."}
+              </p>
             </div>
           ) : null}
 

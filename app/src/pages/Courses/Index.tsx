@@ -27,6 +27,7 @@ import { useTranslation } from "../../hooks/useTranslation";
 import { COURSE_LIST_QUERY } from "../../graphql/queries/courseList.query";
 import { USER_COURSE_LIST_QUERY } from "../../graphql/queries/userCourseList.query";
 import { COURSE_DELETE_MUTATION } from "../../graphql/mutations/courseDelete.mutation";
+import { COURSE_DELETE_DEPENDENCIES_QUERY } from "../../graphql/queries/courseDeleteDependencies.query";
 import CourseCard from "./CourseCard";
 import CourseFormDialog from "./CourseFormDialog";
 import EndUserCourseFilterTabs, { type EndUserCourseTab } from "./EndUserCourseFilterTabs";
@@ -45,6 +46,11 @@ import {
 } from "./courses-list.api";
 import { resolveFileAccessUrl } from "../../utils/fileAccessUrl.util";
 import EntityDeleteDialog from "../../shared/crud/EntityDeleteDialog";
+import CourseDeleteDependenciesPanel from "./CourseDeleteDependenciesPanel";
+import type {
+  CourseDeleteDependenciesQuery,
+  CourseDeleteDependenciesQueryVariables,
+} from "./course-delete-dependencies.api";
 import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
 import { stripOverlayRoutePathname } from "../../routing/max-route.util";
 import styles from "./styles/courses.module.scss";
@@ -448,13 +454,28 @@ const CoursesIndex = (): ReactElement => {
     CourseDeleteMutationResult,
     CourseDeleteMutationVariables
   >(COURSE_DELETE_MUTATION, {
-    successMessage: "دوره با موفقیت حذف شد.",
+    successMessage: "دوره و اعلان‌های مرتبط با موفقیت حذف شد.",
     errorMessage: "حذف دوره انجام نشد.",
     onSuccess: () => {
       closeDeleteDialog();
       onRefresh();
     },
   });
+
+  const {
+    data: deleteDependenciesData,
+    loading: deleteDependenciesLoading,
+    error: deleteDependenciesError,
+  } = useQuery<CourseDeleteDependenciesQuery, CourseDeleteDependenciesQueryVariables>(
+    COURSE_DELETE_DEPENDENCIES_QUERY,
+    {
+      variables: {
+        input: { id: deleteTarget?.id ?? "" },
+      },
+      skip: !deleteTarget?.id,
+      fetchPolicy: "network-only",
+    },
+  );
 
   const canReorderCourses =
     !isPublicCourseView && sort.field === "sortOrder" && sort.order === "ASC";
@@ -1057,9 +1078,11 @@ const CoursesIndex = (): ReactElement => {
         loading={deleteCourseResult.loading}
         prominent
       >
-        <Typography variant="body2">
-          فایل‌های جداشده این دوره نیز حذف می‌شوند و این عملیات قابل بازگشت نیست.
-        </Typography>
+        <CourseDeleteDependenciesPanel
+          dependencies={deleteDependenciesData?.courseDeleteDependencies ?? null}
+          loading={deleteDependenciesLoading}
+          error={Boolean(deleteDependenciesError)}
+        />
       </EntityDeleteDialog>
       {!isPublicCourseView ? (
         <CourseFormDialog

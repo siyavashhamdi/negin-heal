@@ -37,3 +37,24 @@ export function scrollToCourseDetailSection(section: CourseDetailSectionTab): vo
     behavior: "smooth",
   });
 }
+
+/** Picks the last section whose top has passed the pinned-tabs offset (scroll-spy). */
+export function resolveCourseDetailSectionFromScroll(
+  visibleTabs: readonly CourseDetailSectionTab[],
+): CourseDetailSectionTab {
+  const offset = getPinnedTabsScrollOffset() + 8;
+  let activeTab: CourseDetailSectionTab = visibleTabs[0] ?? "intro";
+
+  for (const tab of visibleTabs) {
+    const target = document.getElementById(COURSE_DETAIL_SECTION_TARGETS[tab]);
+    if (!target) {
+      continue;
+    }
+
+    if (target.getBoundingClientRect().top <= offset) {
+      activeTab = tab;
+    }
+  }
+
+  return activeTab;
+}

@@ -20,6 +20,7 @@ import {
   CourseUpdateMutation,
 } from "./graphql/mutations";
 import {
+  CourseDeleteDependenciesQuery,
   CourseDetailQuery,
   CourseListQuery,
   CoursePaymentDetailQuery,
@@ -49,6 +50,7 @@ import {
     CoursePaymentStatusUpdateMutation,
     CoursePurchaseSubmitMutation,
     CourseUpdateMutation,
+    CourseDeleteDependenciesQuery,
     CourseDetailQuery,
     CourseListQuery,
     CoursePaymentDetailQuery,
