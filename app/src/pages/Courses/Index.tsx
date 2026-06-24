@@ -448,6 +448,7 @@ const CoursesIndex = (): ReactElement => {
   });
 
   useCoursePaymentStatusNotificationRefetch({
+    enabled: Boolean(authUser),
     refetch: onRefresh,
   });
 

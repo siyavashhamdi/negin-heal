@@ -1,10 +1,7 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 
 import { GENERAL_SUBSCRIPTION_UPDATE_TYPES } from "../constants";
-import {
-  useGeneralUpdatesSubscription,
-  type GeneralUpdateEvent,
-} from "./useGeneralUpdatesSubscription";
+import { subscribeGeneralUpdates } from "../lib/general-updates-listeners";
 import { parseCoursePaymentStatusNotificationCourseId } from "../utilities/course-payment-notification.util";
 
 type UseCoursePaymentStatusNotificationRefetchOptions = {
@@ -16,9 +13,11 @@ type UseCoursePaymentStatusNotificationRefetchOptions = {
 /**
  * Refetches course data when a payment-status notification arrives for the
  * active course (or any course when `courseId` is omitted).
+ *
+ * Listens via MainLayout's general-updates subscription — does not open its own GQL subscription.
  */
 export function useCoursePaymentStatusNotificationRefetch({
-  enabled = true,
+  enabled = false,
   courseId,
   refetch,
 }: UseCoursePaymentStatusNotificationRefetchOptions): void {
@@ -33,25 +32,29 @@ export function useCoursePaymentStatusNotificationRefetch({
     refetchRef.current = refetch;
   }, [refetch]);
 
-  const handleNotificationUpdate = useCallback((event: GeneralUpdateEvent): void => {
-    const matchedCourseId = parseCoursePaymentStatusNotificationCourseId(event.payload);
-    if (!matchedCourseId) {
-      return;
+  useEffect(() => {
+    if (!enabled) {
+      return undefined;
     }
 
-    const activeCourseId = courseIdRef.current?.trim() || null;
-    if (activeCourseId && matchedCourseId !== activeCourseId) {
-      return;
-    }
+    return subscribeGeneralUpdates((event) => {
+      if (event.updateType !== GENERAL_SUBSCRIPTION_UPDATE_TYPES.NOTIFICATION) {
+        return;
+      }
 
-    refetchRef.current();
-  }, []);
+      const matchedCourseId = parseCoursePaymentStatusNotificationCourseId(event.payload);
+      if (!matchedCourseId) {
+        return;
+      }
 
-  useGeneralUpdatesSubscription({
-    enabled,
-    updateTypes: [GENERAL_SUBSCRIPTION_UPDATE_TYPES.NOTIFICATION],
-    onNotification: handleNotificationUpdate,
-  });
+      const activeCourseId = courseIdRef.current?.trim() || null;
+      if (activeCourseId && matchedCourseId !== activeCourseId) {
+        return;
+      }
+
+      refetchRef.current();
+    });
+  }, [enabled]);
 }
 
 /** @deprecated Use `useCoursePaymentStatusNotificationRefetch` instead. */

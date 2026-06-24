@@ -4,6 +4,7 @@ import {
   GENERAL_SUBSCRIPTION_UPDATE_TYPES,
   type GeneralSubscriptionUpdateType,
 } from "../constants";
+import { useAuth } from "../contexts/AuthContext";
 import { GENERAL_UPDATES_SUBSCRIPTION } from "../graphql/subscriptions/generalUpdates.subscription";
 import { WS_SUBSCRIPTION_RETRY_ATTEMPTS } from "../lib/graphql-ws-client";
 import { isRecoverableSubscriptionError } from "../lib/subscription-error.util";
@@ -49,11 +50,13 @@ export const useGeneralUpdatesSubscription = ({
   onVerificationStatus,
   onAnyUpdate,
 }: UseGeneralUpdatesSubscriptionProps): void => {
-  const enabledRef = useRef(enabled);
+  const { isAuthenticated } = useAuth();
+  const subscriptionActive = enabled && isAuthenticated;
+  const enabledRef = useRef(subscriptionActive);
   const restartRef = useRef<(() => void) | null>(null);
   const restartAttemptRef = useRef(0);
   const restartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const subscriptionAliveRef = useRef(enabled);
+  const subscriptionAliveRef = useRef(subscriptionActive);
   const callbacksRef = useRef<SubscriptionCallbacks>({
     onNotification,
     onBadgeCounts,
@@ -62,14 +65,14 @@ export const useGeneralUpdatesSubscription = ({
   });
 
   useEffect(() => {
-    enabledRef.current = enabled;
+    enabledRef.current = subscriptionActive;
     callbacksRef.current = {
       onNotification,
       onBadgeCounts,
       onVerificationStatus,
       onAnyUpdate,
     };
-  }, [enabled, onNotification, onBadgeCounts, onVerificationStatus, onAnyUpdate]);
+  }, [subscriptionActive, onNotification, onBadgeCounts, onVerificationStatus, onAnyUpdate]);
 
   const clearRestartTimer = useCallback(() => {
     if (restartTimerRef.current) {
@@ -107,7 +110,7 @@ export const useGeneralUpdatesSubscription = ({
     GeneralUpdatesSubscriptionData,
     GeneralUpdatesSubscriptionVariables
   >(GENERAL_UPDATES_SUBSCRIPTION, {
-    skip: !enabled,
+    skip: !subscriptionActive,
     ignoreResults: true,
     variables: {
       updateTypes: updateTypes && updateTypes.length ? updateTypes : undefined,
@@ -161,9 +164,9 @@ export const useGeneralUpdatesSubscription = ({
   }, [restart]);
 
   useEffect(() => {
-    subscriptionAliveRef.current = enabled;
+    subscriptionAliveRef.current = subscriptionActive;
 
-    if (!enabled) {
+    if (!subscriptionActive) {
       clearRestartTimer();
       restartAttemptRef.current = 0;
       return;
@@ -191,5 +194,5 @@ export const useGeneralUpdatesSubscription = ({
       document.removeEventListener("visibilitychange", recoverDeadSubscription);
       clearRestartTimer();
     };
-  }, [enabled, clearRestartTimer]);
+  }, [subscriptionActive, clearRestartTimer]);
 };
