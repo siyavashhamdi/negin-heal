@@ -72,6 +72,7 @@ Set production values:
 
 ```env
 VITE_PORT=5700
+VITE_APP_URL=https://neginheal.ir
 VITE_API_BASE_URL=https://neginheal.ir
 VITE_ALLOWED_HOSTS=neginheal.ir,www.neginheal.ir
 VITE_NODE_ENV=production

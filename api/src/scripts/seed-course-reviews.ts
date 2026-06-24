@@ -251,6 +251,10 @@ function randomUserMessageCount(): number {
   return randomInt(1, 11);
 }
 
+function randomAdminReplyCount(): number {
+  return randomInt(1, 6);
+}
+
 function shiftStoredDate(value: unknown): Date | undefined {
   if (value == null) {
     return undefined;

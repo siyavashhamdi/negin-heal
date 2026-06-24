@@ -165,7 +165,7 @@ async function fetchActiveCourseIds(apiBaseUrl) {
 async function generateSitemap() {
   await loadEnvFile(envFilePath);
 
-  const siteUrl = normalizeSiteUrl(process.env.VITE_APP_URL ?? process.env.VITE_API_BASE_URL);
+  const siteUrl = normalizeSiteUrl(process.env.VITE_APP_URL);
   const apiBaseUrl = normalizeSiteUrl(process.env.VITE_API_BASE_URL ?? siteUrl);
   const lastmod = toLastModDate();
 

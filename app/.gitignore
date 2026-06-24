@@ -32,6 +32,9 @@ lerna-debug.log*
 # Environment variables
 .env
 
+# Generated at build time — do not commit localhost URLs
+public/sitemap.xml
+
 # public/app/negin-heal.apk is committed for direct APK download
 
 # Testing

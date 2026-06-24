@@ -17,6 +17,8 @@ const NAVIGATION_DENYLIST = [
   /^\/api(?:\/|$)/,
   /^\/graphql(?:\/|$)/,
   /^\/enamad-trust-logo(?:\/|$)/,
+  /^\/sitemap\.xml$/,
+  /^\/robots\.txt$/,
 ];
 
 type PushPayload = {
