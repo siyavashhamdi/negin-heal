@@ -4,7 +4,7 @@ import * as compression from "compression";
 
 import { NestFactory } from "@nestjs/core";
 import { NestExpressApplication } from "@nestjs/platform-express";
-import { Logger, ValidationPipe, ArgumentMetadata, BadRequestException } from "@nestjs/common";
+import { Logger, ValidationPipe, ArgumentMetadata, BadRequestException, Logger as NestLogger } from "@nestjs/common";
 
 import { NodeEnv } from "./enums";
 import { env, setupSwagger } from "./config";
@@ -12,7 +12,6 @@ import { HttpExceptionFilter } from "./filters";
 import { AppModule } from "./modules/app.module";
 import { SecurityConfig } from "./config/security.config";
 import { EXCEPTION_CONSTANT } from "./constants/exception.constant";
-import { Logger as NestLogger } from "@nestjs/common";
 
 function hideVersionKeyPlugin(schema: Schema) {
   // Stop writing __v for new/updated docs
@@ -202,10 +201,7 @@ export async function bootstrap() {
         }));
         validationLogger.warn(`Validation failed: ${JSON.stringify(details)}`);
 
-        return new BadRequestException({
-          code: EXCEPTION_CONSTANT.VALIDATION_FAILED.code,
-          message: EXCEPTION_CONSTANT.VALIDATION_FAILED.message,
-        });
+        return new BadRequestException(EXCEPTION_CONSTANT.VALIDATION_FAILED);
       },
     }),
   );

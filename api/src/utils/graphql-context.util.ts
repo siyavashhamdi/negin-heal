@@ -1,8 +1,10 @@
+import { NotFoundException } from "@nestjs/common";
+
+import { EXCEPTION_CONSTANT } from "../constants/exception.constant";
 import {
   GraphQLContext,
   AuthenticatedUser,
 } from "../types/graphql-context.types";
-import { UserNotFoundException } from "@/exceptions";
 
 export class GraphQLContextUtil {
   static getUser(
@@ -13,7 +15,7 @@ export class GraphQLContextUtil {
 
     if (!user?.userId) {
       if (throwIfNotFound) {
-        throw new UserNotFoundException({ username: user.username });
+        throw new NotFoundException(EXCEPTION_CONSTANT.UNAUTHENTICATED);
       }
 
       return null;

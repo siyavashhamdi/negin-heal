@@ -2,6 +2,8 @@ import { extname } from "path";
 
 import { BadRequestException } from "@nestjs/common";
 
+import { EXCEPTION_CONSTANT } from "../../constants/exception.constant";
+
 import {
   FILE_UPLOAD_POLICIES,
   FILE_UPLOAD_POLICY,
@@ -120,11 +122,14 @@ export function assertFileAllowedByPolicy(params: {
 
     if (!matchesMime && !matchesExtension) {
       const allowedFormats = describePolicyAllowedFormats(params.policy);
-      throw new BadRequestException(`فرمت مجاز نیست. فرمت مجاز: ${allowedFormats}`);
+      throw new BadRequestException({
+        key: EXCEPTION_CONSTANT.FILE_FORMAT_NOT_ALLOWED,
+        params: { allowedFormats },
+      });
     }
   }
 
   if (params.sizeBytes > params.policy.maxSizeBytes) {
-    throw new BadRequestException("حجم فایل بیش از حد مجاز است.");
+    throw new BadRequestException(EXCEPTION_CONSTANT.FILE_SIZE_EXCEEDED);
   }
 }

@@ -11,6 +11,7 @@ import {
   UnauthorizedException,
   UseGuards,
 } from "@nestjs/common";
+import { EXCEPTION_CONSTANT } from "../../../constants/exception.constant";
 import { Request, Response } from "express";
 
 import { SecurityConfig } from "../../../config/security.config";
@@ -38,23 +39,23 @@ export class FileController {
     const globalMaxSize = SecurityConfig.getMaxRequestSize();
     const sizeBytes = Number.parseInt(contentLengthHeader ?? "", 10);
     if (!Number.isFinite(sizeBytes) || sizeBytes < 0) {
-      throw new BadRequestException("Content-Length header is required");
+      throw new BadRequestException(EXCEPTION_CONSTANT.CONTENT_LENGTH_REQUIRED);
     }
 
     const trimmedFileName = encodedFileName?.trim();
     if (!trimmedFileName) {
-      throw new BadRequestException("X-File-Name header is required");
+      throw new BadRequestException(EXCEPTION_CONSTANT.FILE_NAME_HEADER_REQUIRED);
     }
 
     let name: string;
     try {
       name = decodeURIComponent(trimmedFileName);
     } catch {
-      throw new BadRequestException("X-File-Name header is invalid");
+      throw new BadRequestException(EXCEPTION_CONSTANT.FILE_NAME_HEADER_INVALID);
     }
 
     if (!name.trim()) {
-      throw new BadRequestException("File name is required");
+      throw new BadRequestException(EXCEPTION_CONSTANT.FILE_NAME_REQUIRED);
     }
 
     const mimeType =
@@ -68,7 +69,7 @@ export class FileController {
     });
 
     if (sizeBytes > globalMaxSize) {
-      throw new BadRequestException("حجم فایل بیش از حد مجاز است.");
+      throw new BadRequestException(EXCEPTION_CONSTANT.FILE_SIZE_EXCEEDED);
     }
 
     const uploadedFile = await this.fileService.uploadFromStream({
@@ -92,7 +93,7 @@ export class FileController {
     @Res() response: Response,
   ): Promise<void> {
     if (!token || !this.fileService.verifyAccessToken(id, token)) {
-      throw new UnauthorizedException("Invalid or expired file access token");
+      throw new UnauthorizedException(EXCEPTION_CONSTANT.FILE_ACCESS_TOKEN_INVALID);
     }
 
     const { storedFile, stream } =

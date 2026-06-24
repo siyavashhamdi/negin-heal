@@ -9,6 +9,7 @@ import {
 } from "@nestjs/common";
 
 import { SecurityConfig } from "../../config";
+import { EXCEPTION_CONSTANT } from "../../constants/exception.constant";
 import { UserService, JwtPayload } from "../user/user.service";
 
 @Injectable()
@@ -34,9 +35,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const user = await this.userService.validateUser(payload);
 
     if (!user) {
-      throw new UnauthorizedException(
-        "Invalid token, session expired, or user not found",
-      );
+      throw new UnauthorizedException(EXCEPTION_CONSTANT.SESSION_EXPIRED);
     }
 
     // Return user data (fresh from database) to be attached to request

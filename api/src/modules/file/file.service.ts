@@ -15,6 +15,7 @@ import {
 
 import { SecurityConfig } from "../../config/security.config";
 import { env } from "../../config";
+import { EXCEPTION_CONSTANT } from "../../constants/exception.constant";
 import { formatInfrastructureConnectionError } from "../../utils/infrastructure-connection-error.util";
 import { StoredFile, StoredFileDocument } from "../../database/schemas";
 import {
@@ -93,15 +94,15 @@ export class FileService implements OnModuleInit {
     uploadPolicy?: FileUploadPolicyRule;
   }): Promise<StoredFileUploadResult> {
     if (!params.name.trim()) {
-      throw new BadRequestException("File name is required");
+      throw new BadRequestException(EXCEPTION_CONSTANT.FILE_NAME_REQUIRED);
     }
 
     if (params.sizeBytes < 0) {
-      throw new BadRequestException("File size must be zero or greater");
+      throw new BadRequestException(EXCEPTION_CONSTANT.FILE_SIZE_INVALID);
     }
 
     if (isExecutableFileType(params.mimeType, params.name)) {
-      throw new BadRequestException("Executable files are not allowed");
+      throw new BadRequestException(EXCEPTION_CONSTANT.EXECUTABLE_FILE_NOT_ALLOWED);
     }
 
     const uploadPolicy =
@@ -222,7 +223,7 @@ export class FileService implements OnModuleInit {
   async findById(id: string): Promise<FileUploadGqlResponse> {
     const storedFile = await this.storedFileModel.findById(id).exec();
     if (!storedFile) {
-      throw new NotFoundException("File not found");
+      throw new NotFoundException(EXCEPTION_CONSTANT.FILE_NOT_FOUND);
     }
 
     return this.toUploadResult(storedFile);
@@ -234,7 +235,7 @@ export class FileService implements OnModuleInit {
   }> {
     const storedFile = await this.storedFileModel.findById(id).exec();
     if (!storedFile) {
-      throw new NotFoundException("File not found");
+      throw new NotFoundException(EXCEPTION_CONSTANT.FILE_NOT_FOUND);
     }
 
     const { bucket, objectKey } = this.resolveStorageLocation(storedFile);
@@ -822,7 +823,7 @@ export class FileService implements OnModuleInit {
 
     const slashIndex = storedFile.path?.indexOf("/") ?? -1;
     if (slashIndex <= 0 || !storedFile.path) {
-      throw new InternalServerErrorException("Stored file path is invalid");
+      throw new InternalServerErrorException(EXCEPTION_CONSTANT.FILE_PATH_INVALID);
     }
 
     return {
@@ -911,7 +912,7 @@ export class FileService implements OnModuleInit {
       totalLength += bufferChunk.length;
 
       if (totalLength > maxSizeBytes) {
-        throw new BadRequestException("حجم فایل بیش از حد مجاز است.");
+        throw new BadRequestException(EXCEPTION_CONSTANT.FILE_SIZE_EXCEEDED);
       }
 
       chunks.push(bufferChunk);
@@ -937,11 +938,7 @@ export class FileService implements OnModuleInit {
         await this.minioClient.makeBucket(env.MINIO_BUCKET);
       }
     } catch (error) {
-      throw new InternalServerErrorException(
-        `Unable to prepare MinIO bucket: ${
-          error instanceof Error ? error.message : "unknown error"
-        }`,
-      );
+      throw new InternalServerErrorException(EXCEPTION_CONSTANT.FILE_UPLOAD_BUCKET_ERROR);
     }
   }
 

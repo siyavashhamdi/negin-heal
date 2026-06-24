@@ -11,6 +11,7 @@ import {
   Logger,
   NotFoundException,
   forwardRef,
+  ConflictException,
 } from "@nestjs/common";
 
 import {
@@ -39,24 +40,14 @@ import {
   UserCaptchaService,
 } from "./user-captcha.service";
 import {
-  ExpiredPasswordResetTokenException,
-  IdentityAlreadyExistsException,
-  type DuplicateIdentityField,
-  IdentityRequiredException,
-  InvalidCredentialsException,
-  CaptchaExpiredException,
-  CaptchaInvalidException,
-  CaptchaRequiredException,
-  InvalidPasswordResetTokenException,
-  InvalidAccountActivationTokenException,
-  InvalidSignupVerificationCodeException,
-  SignupCredentialRequiredException,
-  EmailSendCooldownException,
-} from "../../exceptions";
-import {
   APP_SETTING_KEY,
   LOGIN_CAPTCHA_FAILED_ATTEMPTS_THRESHOLD,
 } from "../../constants";
+import {
+  DUPLICATE_IDENTITY_KEY_BY_FIELD,
+  EXCEPTION_CONSTANT,
+  type DuplicateIdentityField,
+} from "../../constants/exception.constant";
 import { EMAIL_SEND_COOLDOWN_MS } from "../../constants/email.constant";
 import { buildVerificationStatusSubscriptionPayload } from "../../constants/verification-status-subscription.constant";
 import { PAGINATION_CONSTANT } from "../../constants/pagination.constant";
@@ -188,7 +179,7 @@ export class UserService {
 
     if (!isPasswordValid) {
       await this.incrementFailedLoginAttemptsForUser(user._id);
-      throw new InvalidCredentialsException();
+      throw new BadRequestException(EXCEPTION_CONSTANT.INVALID_CREDENTIALS);
     }
 
     return this.createLoginSession(user, rememberMe, clientContext);
@@ -207,7 +198,7 @@ export class UserService {
     captchaValue?: string,
   ): void {
     if (!captchaId?.trim() || !captchaValue?.trim()) {
-      throw new CaptchaRequiredException();
+      throw new BadRequestException(EXCEPTION_CONSTANT.CAPTCHA_REQUIRED);
     }
 
     const verificationStatus = this.userCaptchaService.verifyCaptcha(
@@ -216,11 +207,11 @@ export class UserService {
     );
 
     if (verificationStatus === CaptchaVerificationStatus.EXPIRED) {
-      throw new CaptchaExpiredException();
+      throw new BadRequestException(EXCEPTION_CONSTANT.CAPTCHA_EXPIRED);
     }
 
     if (verificationStatus === CaptchaVerificationStatus.INVALID) {
-      throw new CaptchaInvalidException();
+      throw new BadRequestException(EXCEPTION_CONSTANT.CAPTCHA_INVALID);
     }
   }
 
@@ -329,7 +320,7 @@ export class UserService {
   async activateAccount(token: string): Promise<UserPasswordResetGqlResponse> {
     const normalizedToken = this.normalizeOptionalText(token);
     if (!normalizedToken) {
-      throw new InvalidAccountActivationTokenException();
+      throw new BadRequestException(EXCEPTION_CONSTANT.INVALID_ACCOUNT_ACTIVATION_TOKEN);
     }
 
     const tokenHash = this.hashAccountActivationToken(normalizedToken);
@@ -348,7 +339,7 @@ export class UserService {
       .exec();
 
     if (!user?.authentication.accountActivationToken?.createdAt) {
-      throw new InvalidAccountActivationTokenException();
+      throw new BadRequestException(EXCEPTION_CONSTANT.INVALID_ACCOUNT_ACTIVATION_TOKEN);
     }
 
     if (this.isEmailVerified(user)) {
@@ -361,7 +352,7 @@ export class UserService {
     const tokenCreatedAt = user.authentication.accountActivationToken.createdAt;
     if (tokenCreatedAt < oldestValidCreatedAt) {
       await this.clearAccountActivationToken(user._id);
-      throw new InvalidAccountActivationTokenException();
+      throw new BadRequestException(EXCEPTION_CONSTANT.INVALID_ACCOUNT_ACTIVATION_TOKEN);
     }
 
     const verifiedAt = new Date();
@@ -396,12 +387,12 @@ export class UserService {
   ): Promise<UserPasswordResetGqlResponse> {
     const user = await this.findById(userId);
     if (!user) {
-      throw new NotFoundException("User not found");
+      throw new NotFoundException(EXCEPTION_CONSTANT.USER_NOT_FOUND);
     }
 
     const recipientEmail = this.normalizeOptionalText(user.profile?.email);
     if (!recipientEmail || !this.looksLikeEmail(recipientEmail)) {
-      throw new BadRequestException("A valid email address is required");
+      throw new BadRequestException(EXCEPTION_CONSTANT.EMAIL_REQUIRED);
     }
 
     if (this.isEmailVerified(user)) {
@@ -527,7 +518,7 @@ export class UserService {
   ): Promise<UserPasswordResetGqlResponse> {
     const normalizedIdentity = this.normalizeOptionalText(identity);
     if (!normalizedIdentity) {
-      throw new IdentityRequiredException();
+      throw new BadRequestException(EXCEPTION_CONSTANT.IDENTITY_REQUIRED);
     }
 
     const password = this.normalizeRequiredText(newPassword, "Password");
@@ -535,7 +526,7 @@ export class UserService {
 
     const resetCode = otp.trim();
     if (!/^\d{6}$/.test(resetCode)) {
-      throw new InvalidPasswordResetTokenException();
+      throw new BadRequestException(EXCEPTION_CONSTANT.INVALID_PASSWORD_RESET_TOKEN);
     }
 
     const resetCodeTtlMinutes = await this.getPasswordResetTokenTtlMinutes();
@@ -553,19 +544,19 @@ export class UserService {
     });
 
     if (!tokenOwner?.authentication.passwordResetToken?.hash) {
-      throw new InvalidPasswordResetTokenException();
+      throw new BadRequestException(EXCEPTION_CONSTANT.INVALID_PASSWORD_RESET_TOKEN);
     }
 
     const resetTokenCreatedAt =
       tokenOwner.authentication.passwordResetToken?.createdAt;
     if (!resetTokenCreatedAt || resetTokenCreatedAt < oldestValidCreatedAt) {
       await this.clearPasswordResetToken(tokenOwner._id);
-      throw new ExpiredPasswordResetTokenException();
+      throw new BadRequestException(EXCEPTION_CONSTANT.EXPIRED_PASSWORD_RESET_TOKEN);
     }
 
     if (tokenOwner.authentication.passwordResetToken.hash !== resetCodeHash) {
       await this.incrementPasswordResetOtpAttempts(tokenOwner._id);
-      throw new InvalidPasswordResetTokenException();
+      throw new BadRequestException(EXCEPTION_CONSTANT.INVALID_PASSWORD_RESET_TOKEN);
     }
 
     const passwordSalt = await bcrypt.genSalt(this.SALT_ROUNDS);
@@ -595,7 +586,7 @@ export class UserService {
     );
 
     if (!user) {
-      throw new InvalidPasswordResetTokenException();
+      throw new BadRequestException(EXCEPTION_CONSTANT.INVALID_PASSWORD_RESET_TOKEN);
     }
 
     await this.sessionService.revokeAllUserSessions(user._id);
@@ -612,7 +603,7 @@ export class UserService {
     const normalizedMobile = this.normalizePhoneNumber(mobile);
 
     if (!normalizedMobile) {
-      throw new BadRequestException("شماره موبایل وارد شده معتبر نیست.");
+      throw new BadRequestException(EXCEPTION_CONSTANT.INVALID_MOBILE);
     }
 
     await this.assertIdentityFieldsAreUnique({ mobile: normalizedMobile });
@@ -657,15 +648,15 @@ export class UserService {
       : undefined;
 
     if (!username && !email && !mobile) {
-      throw new IdentityRequiredException();
+      throw new BadRequestException(EXCEPTION_CONSTANT.IDENTITY_REQUIRED);
     }
 
     if (email && !isValidEmail(email)) {
-      throw new BadRequestException("ایمیل وارد شده معتبر نیست.");
+      throw new BadRequestException(EXCEPTION_CONSTANT.INVALID_EMAIL);
     }
 
     if (input.mobile?.trim() && !mobile) {
-      throw new BadRequestException("شماره موبایل وارد شده معتبر نیست.");
+      throw new BadRequestException(EXCEPTION_CONSTANT.INVALID_MOBILE);
     }
 
     if (input.username?.trim()) {
@@ -676,12 +667,12 @@ export class UserService {
     const signupCode = input.signupCode?.trim();
 
     if (!password && !signupCode) {
-      throw new SignupCredentialRequiredException();
+      throw new BadRequestException(EXCEPTION_CONSTANT.SIGNUP_CREDENTIAL_REQUIRED);
     }
 
     if (signupCode) {
       if (!mobile) {
-        throw new SignupCredentialRequiredException();
+        throw new BadRequestException(EXCEPTION_CONSTANT.SIGNUP_CREDENTIAL_REQUIRED);
       }
 
       this.verifyPendingSignupCode(mobile, signupCode);
@@ -766,7 +757,7 @@ export class UserService {
 
     if (!pendingCode || pendingCode.expiresAt.getTime() < Date.now()) {
       this.loginCodesByUserId.delete(loginCodeKey);
-      throw new InvalidCredentialsException();
+      throw new BadRequestException(EXCEPTION_CONSTANT.INVALID_CREDENTIALS);
     }
 
     if (pendingCode.code !== code.trim()) {
@@ -774,7 +765,7 @@ export class UserService {
       if (pendingCode.attempts >= this.MAX_LOGIN_CODE_ATTEMPTS) {
         this.loginCodesByUserId.delete(loginCodeKey);
       }
-      throw new InvalidCredentialsException();
+      throw new BadRequestException(EXCEPTION_CONSTANT.INVALID_CREDENTIALS);
     }
 
     this.loginCodesByUserId.delete(loginCodeKey);
@@ -849,7 +840,7 @@ export class UserService {
     );
 
     if (!user || user.status !== UserStatus.ACTIVE) {
-      throw new InvalidCredentialsException();
+      throw new BadRequestException(EXCEPTION_CONSTANT.INVALID_CREDENTIALS);
     }
 
     return user;
@@ -870,7 +861,7 @@ export class UserService {
   ): FilterQuery<User> {
     const identity = this.normalizeOptionalText(input.identity);
     if (!identity) {
-      throw new IdentityRequiredException();
+      throw new BadRequestException(EXCEPTION_CONSTANT.IDENTITY_REQUIRED);
     }
 
     return this.buildIdentityFilter(identity);
@@ -948,7 +939,7 @@ export class UserService {
     });
 
     if (duplicateExists) {
-      throw new IdentityAlreadyExistsException("username");
+      throw new ConflictException(DUPLICATE_IDENTITY_KEY_BY_FIELD.username );
     }
   }
 
@@ -963,7 +954,7 @@ export class UserService {
     });
 
     if (duplicateExists) {
-      throw new IdentityAlreadyExistsException("email");
+      throw new ConflictException(DUPLICATE_IDENTITY_KEY_BY_FIELD.email );
     }
   }
 
@@ -982,7 +973,7 @@ export class UserService {
     });
 
     if (duplicateExists) {
-      throw new IdentityAlreadyExistsException("mobile");
+      throw new ConflictException(DUPLICATE_IDENTITY_KEY_BY_FIELD.mobile );
     }
   }
 
@@ -998,7 +989,7 @@ export class UserService {
     );
 
     if (!hasAnyIdentity) {
-      throw new IdentityRequiredException();
+      throw new BadRequestException(EXCEPTION_CONSTANT.IDENTITY_REQUIRED);
     }
 
     if (identity.username?.trim()) {
@@ -1043,8 +1034,11 @@ export class UserService {
 
   private rethrowIfDuplicateIdentityKey(error: unknown): never {
     if (MongodbErrorUtil.isDuplicateKeyError(error)) {
-      throw new IdentityAlreadyExistsException(
-        this.resolveDuplicateIdentityField(error),
+      const field = this.resolveDuplicateIdentityField(error);
+      throw new ConflictException(
+        field
+          ? DUPLICATE_IDENTITY_KEY_BY_FIELD[field]
+          : EXCEPTION_CONSTANT.IDENTITY_ALREADY_EXISTS,
       );
     }
 
@@ -1101,7 +1095,7 @@ export class UserService {
 
     const elapsedMs = Date.now() - lastSentAt.getTime();
     if (elapsedMs < EMAIL_SEND_COOLDOWN_MS) {
-      throw new EmailSendCooldownException();
+      throw new BadRequestException(EXCEPTION_CONSTANT.EMAIL_SEND_COOLDOWN);
     }
   }
 
@@ -1200,13 +1194,13 @@ export class UserService {
 
   private throwIfInvalidEmail(value: string | undefined): void {
     if (value && !isValidEmail(value)) {
-      throw new BadRequestException("ایمیل وارد شده معتبر نیست.");
+      throw new BadRequestException(EXCEPTION_CONSTANT.INVALID_EMAIL);
     }
   }
 
   private throwIfInvalidMobilePhone(value: string | undefined): void {
     if (value && !isValidMobilePhone(value)) {
-      throw new BadRequestException("شماره موبایل وارد شده معتبر نیست.");
+      throw new BadRequestException(EXCEPTION_CONSTANT.INVALID_MOBILE);
     }
   }
 
@@ -1215,7 +1209,7 @@ export class UserService {
 
     if (!pendingCode || pendingCode.expiresAt.getTime() < Date.now()) {
       this.signupCodesByMobile.delete(mobile);
-      throw new InvalidSignupVerificationCodeException();
+      throw new BadRequestException(EXCEPTION_CONSTANT.INVALID_SIGNUP_VERIFICATION_CODE);
     }
 
     if (pendingCode.code !== signupCode) {
@@ -1223,7 +1217,7 @@ export class UserService {
       if (pendingCode.attempts >= this.MAX_SIGNUP_CODE_ATTEMPTS) {
         this.signupCodesByMobile.delete(mobile);
       }
-      throw new InvalidSignupVerificationCodeException();
+      throw new BadRequestException(EXCEPTION_CONSTANT.INVALID_SIGNUP_VERIFICATION_CODE);
     }
   }
 
@@ -1418,7 +1412,7 @@ export class UserService {
       .exec();
 
     if (!existingUser) {
-      throw new NotFoundException("User not found");
+      throw new NotFoundException(EXCEPTION_CONSTANT.USER_NOT_FOUND);
     }
 
     await this.assertUpdateIdentityFieldsAreUnique(input);
@@ -1446,7 +1440,7 @@ export class UserService {
     }
 
     if (!updatedUser) {
-      throw new NotFoundException("User not found");
+      throw new NotFoundException(EXCEPTION_CONSTANT.USER_NOT_FOUND);
     }
 
     if (passwordChanged || shouldRevokeSessions) {
@@ -1518,22 +1512,18 @@ export class UserService {
       .exec();
 
     if (!user) {
-      throw new NotFoundException("User not found");
+      throw new NotFoundException(EXCEPTION_CONSTANT.USER_NOT_FOUND);
     }
 
     if (updatesEmail && this.normalizeOptionalText(user.profile?.email)) {
-      throw new BadRequestException(
-        "Email is already set. Please contact support to change it.",
-      );
+      throw new BadRequestException(EXCEPTION_CONSTANT.EMAIL_ALREADY_SET);
     }
 
     if (
       updatesPhoneNumber &&
       this.normalizeOptionalText(user.profile?.phoneNumber)
     ) {
-      throw new BadRequestException(
-        "Phone number is already set. Please contact support to change it.",
-      );
+      throw new BadRequestException(EXCEPTION_CONSTANT.PHONE_ALREADY_SET);
     }
   }
 
@@ -1557,7 +1547,7 @@ export class UserService {
       .exec();
 
     if (!user) {
-      throw new NotFoundException("User not found");
+      throw new NotFoundException(EXCEPTION_CONSTANT.USER_NOT_FOUND);
     }
 
     const isCurrentPasswordValid = await bcrypt.compare(
@@ -1566,7 +1556,7 @@ export class UserService {
     );
 
     if (!isCurrentPasswordValid) {
-      throw new InvalidCredentialsException();
+      throw new BadRequestException(EXCEPTION_CONSTANT.INVALID_CREDENTIALS);
     }
   }
 
@@ -1621,7 +1611,7 @@ export class UserService {
       .exec();
 
     if (!user) {
-      throw new NotFoundException("User not found");
+      throw new NotFoundException(EXCEPTION_CONSTANT.USER_NOT_FOUND);
     }
 
     const avatarAccessUrlMap = await this.fileService.getAccessUrlMap([
@@ -2027,11 +2017,11 @@ export class UserService {
       .exec();
 
     if (!avatarFile) {
-      throw new NotFoundException("Avatar file not found");
+      throw new NotFoundException(EXCEPTION_CONSTANT.AVATAR_FILE_NOT_FOUND);
     }
 
     if (!avatarFile.mimeType?.startsWith("image/")) {
-      throw new BadRequestException("Avatar file must be an image");
+      throw new BadRequestException(EXCEPTION_CONSTANT.AVATAR_MUST_BE_IMAGE);
     }
   }
 
@@ -2088,7 +2078,7 @@ export class UserService {
   ): string {
     const normalizedValue = this.normalizeOptionalText(value);
     if (!normalizedValue) {
-      throw new BadRequestException(`${fieldName} is required`);
+      throw new BadRequestException({ key: EXCEPTION_CONSTANT.VALIDATION_FAILED, params: { fieldName } });
     }
 
     return normalizedValue;

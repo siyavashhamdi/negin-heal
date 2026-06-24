@@ -2,6 +2,7 @@ import { createHmac, randomBytes, timingSafeEqual } from "crypto";
 import { Injectable, InternalServerErrorException } from "@nestjs/common";
 
 import { env } from "../../config";
+import { EXCEPTION_CONSTANT } from "../../constants/exception.constant";
 import { SecurityConfig } from "../../config/security.config";
 import { UserLoginCaptchaGqlResponse } from "./graphql/responses/user-login-captcha.gql.response";
 
@@ -234,9 +235,7 @@ export class UserCaptchaService {
 
       return Buffer.from(svg, "utf8").toString("base64");
     } catch {
-      throw new InternalServerErrorException(
-        "Unable to generate captcha image",
-      );
+      throw new InternalServerErrorException(EXCEPTION_CONSTANT.CAPTCHA_GENERATION_FAILED);
     }
   }
 

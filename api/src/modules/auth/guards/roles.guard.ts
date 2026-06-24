@@ -8,6 +8,7 @@ import {
 } from "@nestjs/common";
 
 import { ROLES_KEY } from "../decorators/roles.decorator";
+import { EXCEPTION_CONSTANT } from "../../../constants/exception.constant";
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -29,7 +30,7 @@ export class RolesGuard implements CanActivate {
     const user = ctx.getContext().req?.user;
 
     if (!user) {
-      throw new ForbiddenException("User not authenticated");
+      throw new ForbiddenException(EXCEPTION_CONSTANT.UNAUTHENTICATED);
     }
 
     // Check if user has ANY of the required roles (OR logic)
@@ -38,9 +39,7 @@ export class RolesGuard implements CanActivate {
     );
 
     if (!hasRole) {
-      throw new ForbiddenException(
-        `Access denied. Required roles: ${requiredRoles.join(", ")}`,
-      );
+      throw new ForbiddenException(EXCEPTION_CONSTANT.FORBIDDEN);
     }
 
     return true;

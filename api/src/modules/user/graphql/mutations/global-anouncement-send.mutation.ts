@@ -1,4 +1,6 @@
 import { BadRequestException, UseGuards } from "@nestjs/common";
+
+import { EXCEPTION_CONSTANT } from "../../../../constants/exception.constant";
 import { Args, Mutation, Resolver } from "@nestjs/graphql";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
@@ -44,15 +46,11 @@ export class GlobalAnouncementSendMutation {
     const isPushNotification = Boolean(input.isPushNotification);
 
     if (!description) {
-      throw new BadRequestException(
-        "Global anouncement description is required",
-      );
+      throw new BadRequestException(EXCEPTION_CONSTANT.GLOBAL_ANNOUNCEMENT_DESCRIPTION_REQUIRED);
     }
 
     if (messageType === GlobalAnouncementMessageType.POPUP && !title) {
-      throw new BadRequestException(
-        "Global anouncement title is required for popup messages",
-      );
+      throw new BadRequestException(EXCEPTION_CONSTANT.GLOBAL_ANNOUNCEMENT_TITLE_REQUIRED);
     }
 
     const activeSubscribedUsers =

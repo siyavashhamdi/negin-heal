@@ -5,6 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
+import { EXCEPTION_CONSTANT } from "../../constants/exception.constant";
 
 import {
   HIDDEN_APP_SETTING_KEYS,
@@ -212,7 +213,7 @@ export class AppSettingsService {
       .exec();
 
     if (!setting) {
-      throw new NotFoundException("App setting not found");
+      throw new NotFoundException(EXCEPTION_CONSTANT.APP_SETTING_NOT_FOUND);
     }
 
     return this.toAppSettingMutationResponse(setting);
@@ -232,7 +233,7 @@ export class AppSettingsService {
       .exec();
 
     if (!existingSetting) {
-      throw new NotFoundException("App setting not found");
+      throw new NotFoundException(EXCEPTION_CONSTANT.APP_SETTING_NOT_FOUND);
     }
 
     const update = this.buildAppSettingUpdateOperation(
@@ -255,7 +256,7 @@ export class AppSettingsService {
       .exec();
 
     if (!updatedSetting) {
-      throw new NotFoundException("App setting not found");
+      throw new NotFoundException(EXCEPTION_CONSTANT.APP_SETTING_NOT_FOUND);
     }
 
     return this.toAppSettingMutationResponse(updatedSetting);
@@ -835,9 +836,7 @@ export class AppSettingsService {
       input.valueType != null && input.valueType !== existingSetting.valueType;
 
     if (valueTypeChanged && !hasValue) {
-      throw new BadRequestException(
-        "Value is required when changing the app setting value type",
-      );
+      throw new BadRequestException(EXCEPTION_CONSTANT.APP_SETTING_VALUE_INVALID);
     }
 
     if (input.label !== undefined) {
@@ -884,15 +883,13 @@ export class AppSettingsService {
       case AppSettingValueType.JSON:
         return this.normalizeJsonSettingValue(value);
       default:
-        throw new BadRequestException("Unsupported app setting value type");
+        throw new BadRequestException(EXCEPTION_CONSTANT.APP_SETTING_VALUE_TYPE_UNSUPPORTED);
     }
   }
 
   private normalizeStringSettingValue(value: unknown): string {
     if (typeof value !== "string") {
-      throw new BadRequestException(
-        "String app setting value must be provided as a string",
-      );
+      throw new BadRequestException(EXCEPTION_CONSTANT.APP_SETTING_VALUE_INVALID);
     }
 
     return value;
@@ -901,9 +898,7 @@ export class AppSettingsService {
   private normalizeNumberSettingValue(value: unknown): number {
     if (typeof value === "number") {
       if (!Number.isFinite(value)) {
-        throw new BadRequestException(
-          "Number app setting value must be a finite number",
-        );
+        throw new BadRequestException(EXCEPTION_CONSTANT.APP_SETTING_VALUE_INVALID);
       }
 
       return value;
@@ -912,17 +907,13 @@ export class AppSettingsService {
     if (typeof value === "string" && value.trim()) {
       const parsedValue = Number(value.trim());
       if (!Number.isFinite(parsedValue)) {
-        throw new BadRequestException(
-          "Number app setting value must be a finite number",
-        );
+        throw new BadRequestException(EXCEPTION_CONSTANT.APP_SETTING_VALUE_INVALID);
       }
 
       return parsedValue;
     }
 
-    throw new BadRequestException(
-      "Number app setting value must be a finite number",
-    );
+    throw new BadRequestException(EXCEPTION_CONSTANT.APP_SETTING_VALUE_INVALID);
   }
 
   private normalizeBooleanSettingValue(value: unknown): boolean {
@@ -940,9 +931,7 @@ export class AppSettingsService {
       }
     }
 
-    throw new BadRequestException(
-      "Boolean app setting value must be a boolean",
-    );
+    throw new BadRequestException(EXCEPTION_CONSTANT.APP_SETTING_VALUE_INVALID);
   }
 
   private normalizeJsonSettingValue(
@@ -951,17 +940,13 @@ export class AppSettingsService {
     if (typeof value === "string") {
       const trimmedValue = value.trim();
       if (!trimmedValue) {
-        throw new BadRequestException(
-          "JSON app setting value must be a valid JSON value",
-        );
+        throw new BadRequestException(EXCEPTION_CONSTANT.APP_SETTING_VALUE_INVALID);
       }
 
       try {
         return this.assertJsonSettingValue(JSON.parse(trimmedValue));
       } catch {
-        throw new BadRequestException(
-          "JSON app setting value must be valid JSON",
-        );
+        throw new BadRequestException(EXCEPTION_CONSTANT.APP_SETTING_VALUE_INVALID);
       }
     }
 
@@ -970,9 +955,7 @@ export class AppSettingsService {
 
   private assertJsonSettingValue(value: unknown): StoredAppSettingJsonValue {
     if (value == null) {
-      throw new BadRequestException(
-        "JSON app setting value must be a valid JSON value",
-      );
+      throw new BadRequestException(EXCEPTION_CONSTANT.APP_SETTING_VALUE_INVALID);
     }
 
     if (Array.isArray(value)) {
@@ -987,17 +970,13 @@ export class AppSettingsService {
       this.isPlainObject(value)
     ) {
       if (valueKind === "number" && !Number.isFinite(value)) {
-        throw new BadRequestException(
-          "JSON app setting value must be a valid JSON value",
-        );
+        throw new BadRequestException(EXCEPTION_CONSTANT.APP_SETTING_VALUE_INVALID);
       }
 
       return value as StoredAppSettingJsonValue;
     }
 
-    throw new BadRequestException(
-      "JSON app setting value must be a valid JSON value",
-    );
+    throw new BadRequestException(EXCEPTION_CONSTANT.APP_SETTING_VALUE_INVALID);
   }
 
   private toAppSettingMutationResponse(
@@ -1019,7 +998,7 @@ export class AppSettingsService {
   private normalizeRequiredText(value: unknown, fieldName: string): string {
     const normalizedValue = this.normalizeOptionalText(value);
     if (!normalizedValue) {
-      throw new BadRequestException(`${fieldName} is required`);
+      throw new BadRequestException({ key: EXCEPTION_CONSTANT.VALIDATION_FAILED, params: { fieldName } });
     }
 
     return normalizedValue;

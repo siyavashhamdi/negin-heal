@@ -3,17 +3,28 @@ import { CombinedGraphQLErrors, ServerError } from "@apollo/client/errors";
 
 export interface GraphQLErrorExtensions {
   code?: string;
+  params?: Record<string, unknown>;
   payload?: Record<string, unknown>;
   exception?: {
-    message?: string | string[];
+    message?: string | string[] | { key?: string; params?: Record<string, unknown> };
     statusCode?: number;
     code?: string;
+    params?: Record<string, unknown>;
     payload?: Record<string, unknown>;
-  };
-  originalError?: {
-    message?: string | string[];
+    response?: {
+      message?: string | string[] | { key?: string; params?: Record<string, unknown> };
+      code?: string;
+      key?: string;
+      params?: Record<string, unknown>;
+    };
   };
   response?: {
+    message?: string | string[] | { key?: string; params?: Record<string, unknown> };
+    code?: string;
+    key?: string;
+    params?: Record<string, unknown>;
+  };
+  originalError?: {
     message?: string | string[];
   };
 }
@@ -22,6 +33,7 @@ export interface ApolloErrorLike {
   graphQLErrors?: Array<{
     message: string;
     code?: string;
+    params?: Record<string, unknown>;
     payload?: Record<string, unknown>;
     extensions?: GraphQLErrorExtensions;
   }>;
@@ -32,6 +44,7 @@ export interface ApolloErrorLike {
 interface RawGraphQLErrorItem {
   message?: string;
   code?: string;
+  params?: Record<string, unknown>;
   payload?: Record<string, unknown>;
   extensions?: GraphQLErrorExtensions;
 }
@@ -73,17 +86,22 @@ function looksLikeUnreachableNetwork(message: string): boolean {
   );
 }
 
-function formatTranslatedMessage(message: string, payload?: Record<string, unknown>): string {
-  if (!payload || typeof payload !== "object") {
+function formatTranslatedMessage(message: string, params?: Record<string, unknown>): string {
+  if (!params || typeof params !== "object") {
     return message;
   }
 
-  const payloadValues = Object.values(payload);
+  let formatted = message.replace(/@@@(\w+)@@@/g, (match, fieldName: string) => {
+    const value = params[fieldName];
+    return value !== undefined && value !== null ? String(value) : match;
+  });
+
+  const payloadValues = Object.values(params);
   let valueIndex = 0;
 
-  return message.replace(/%([sdfo]|{(\w+)}|.)/g, (match, typeOrField, fieldName) => {
+  formatted = formatted.replace(/%([sdfo]|{(\w+)}|.)/g, (match, typeOrField, fieldName) => {
     if (match.startsWith("%{") && fieldName) {
-      const value = payload[fieldName];
+      const value = params[fieldName];
       return value !== undefined && value !== null ? String(value) : match;
     }
 
@@ -104,6 +122,76 @@ function formatTranslatedMessage(message: string, payload?: Record<string, unkno
 
     return match;
   });
+
+  return formatted;
+}
+
+function extractKeyedBodyFromExtensions(
+  extensions?: GraphQLErrorExtensions,
+): { key?: string; params?: Record<string, unknown> } | undefined {
+  const candidates: unknown[] = [
+    extensions?.exception?.response,
+    extensions?.response,
+    extensions?.exception?.message,
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === "string") {
+      if (/^[A-Z][A-Z0-9_]+$/.test(candidate.trim())) {
+        return { key: candidate.trim() };
+      }
+      continue;
+    }
+
+    if (!candidate || typeof candidate !== "object") {
+      continue;
+    }
+
+    if (
+      "key" in candidate &&
+      typeof (candidate as { key?: unknown }).key === "string"
+    ) {
+      const keyed = candidate as {
+        key: string;
+        params?: Record<string, unknown>;
+      };
+      return { key: keyed.key, params: keyed.params };
+    }
+
+    if ("message" in candidate) {
+      const nested = extractKeyedBodyFromExtensions({
+        exception: {
+          message: (candidate as { message?: unknown }).message as
+            | string
+            | string[]
+            | undefined,
+        },
+      });
+      if (nested) {
+        return nested;
+      }
+    }
+  }
+
+  return undefined;
+}
+
+function resolveErrorParams(
+  error?: RawGraphQLErrorItem,
+): Record<string, unknown> | undefined {
+  const keyedParams = extractKeyedBodyFromExtensions(error?.extensions)?.params;
+  if (keyedParams && typeof keyedParams === "object") {
+    return keyedParams;
+  }
+
+  const params = (error?.params ||
+    error?.extensions?.params ||
+    error?.extensions?.exception?.params ||
+    error?.payload ||
+    error?.extensions?.payload ||
+    error?.extensions?.exception?.payload) as Record<string, unknown> | undefined;
+
+  return params && typeof params === "object" ? params : undefined;
 }
 
 function joinMessageParts(value: string | string[]): string {
@@ -135,7 +223,7 @@ function isGenericBackendErrorMessage(message: string): boolean {
 
 function getExceptionTranslation(
   code: string | undefined,
-  payload?: Record<string, unknown>,
+  params?: Record<string, unknown>,
 ): string {
   if (!code) {
     return "";
@@ -147,7 +235,7 @@ function getExceptionTranslation(
     return "";
   }
 
-  return formatTranslatedMessage(translatedMessage, payload);
+  return formatTranslatedMessage(translatedMessage, params);
 }
 
 function shouldPreferExceptionTranslation(code: string | undefined): boolean {
@@ -185,6 +273,11 @@ function resolveExceptionCode(
   error?: RawGraphQLErrorItem,
   backendMessage = "",
 ): string | undefined {
+  const keyedCode = extractKeyedBodyFromExtensions(error?.extensions)?.key;
+  if (keyedCode) {
+    return keyedCode;
+  }
+
   const explicitCode =
     error?.code || error?.extensions?.code || error?.extensions?.exception?.code;
   if (explicitCode) {
@@ -197,15 +290,45 @@ function resolveExceptionCode(
 function extractBackendGraphQLErrorMessage(
   error?: RawGraphQLErrorItem,
 ): string {
+  const keyedCode = extractKeyedBodyFromExtensions(error?.extensions)?.key;
+  if (keyedCode) {
+    return keyedCode;
+  }
+
   const extensions = error?.extensions;
   if (extensions?.exception?.message) {
-    return joinMessageParts(extensions.exception.message);
+    const message = extensions.exception.message;
+    if (typeof message === "string") {
+      return message;
+    }
+    if (Array.isArray(message)) {
+      return joinMessageParts(message);
+    }
+    if (
+      typeof message === "object" &&
+      message !== null &&
+      "key" in message &&
+      typeof (message as { key?: unknown }).key === "string"
+    ) {
+      return (message as { key: string }).key;
+    }
   }
   if (extensions?.originalError?.message) {
     return joinMessageParts(extensions.originalError.message);
   }
   if (extensions?.response?.message) {
-    return joinMessageParts(extensions.response.message);
+    const message = extensions.response.message;
+    if (
+      typeof message === "object" &&
+      message !== null &&
+      !Array.isArray(message) &&
+      "key" in message &&
+      typeof (message as { key?: unknown }).key === "string"
+    ) {
+      return (message as { key: string }).key;
+    }
+
+    return joinMessageParts(message as string | string[]);
   }
   return error?.message ?? "";
 }
@@ -241,9 +364,7 @@ function resolveGraphQLErrorFieldMessage(
 ): string {
   const backendMessage = extractBackendGraphQLErrorMessage(error);
   const exceptionCode = resolveExceptionCode(error, backendMessage);
-  const payload = (error?.payload ||
-    error?.extensions?.payload ||
-    error?.extensions?.exception?.payload) as Record<string, unknown> | undefined;
+  const params = resolveErrorParams(error);
 
   if (
     isAccessDeniedGraphQLError({
@@ -256,14 +377,14 @@ function resolveGraphQLErrorFieldMessage(
   }
 
   if (shouldPreferExceptionTranslation(exceptionCode)) {
-    const translatedMessage = getExceptionTranslation(exceptionCode, payload);
+    const translatedMessage = getExceptionTranslation(exceptionCode, params);
     if (translatedMessage) {
       return translatedMessage;
     }
   }
 
   if (exceptionCode && GENERIC_EXCEPTION_CODES.has(exceptionCode)) {
-    const translatedMessage = getExceptionTranslation(exceptionCode, payload);
+    const translatedMessage = getExceptionTranslation(exceptionCode, params);
     if (translatedMessage) {
       return translatedMessage;
     }
@@ -315,12 +436,14 @@ export const extractGraphQLErrorMessage = (error: unknown): string => {
     const ge = first as {
       readonly message: string;
       readonly code?: string;
+      readonly params?: Record<string, unknown>;
       readonly payload?: Record<string, unknown>;
       readonly extensions?: GraphQLErrorExtensions;
     };
     return resolveGraphQLErrorFieldMessage({
       message: ge.message,
       code: ge.code,
+      params: ge.params,
       payload: ge.payload,
       extensions: ge.extensions,
     });
@@ -401,13 +524,13 @@ export const extractGraphQLErrorMessage = (error: unknown): string => {
 
 export function resolveErrorMessageFromCode(
   code: string | null | undefined,
-  payload?: Record<string, unknown>,
+  params?: Record<string, unknown>,
 ): string {
   if (!code?.trim()) {
     return i18n.t("errors.unknown");
   }
 
-  const translatedMessage = getExceptionTranslation(code.trim(), payload);
+  const translatedMessage = getExceptionTranslation(code.trim(), params);
   return translatedMessage || i18n.t("errors.unknown");
 }
 

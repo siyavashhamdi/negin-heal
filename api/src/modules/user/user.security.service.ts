@@ -1,14 +1,14 @@
 import { Model } from "mongoose";
 
 import { InjectModel } from "@nestjs/mongoose";
-import { BadRequestException, Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 
 import { User, UserDocument } from "../../database/schemas";
-import {
-  UserNotFoundException,
-  AccountLockedException,
-  PasswordPolicyViolationException,
-} from "../../exceptions";
+import { EXCEPTION_CONSTANT } from "../../constants/exception.constant";
 import { PasswordValidator, UsernameValidator } from "@/utils";
 
 @Injectable()
@@ -18,7 +18,10 @@ export class UserSecurityService {
   async throwIfUserDoesNotExist(username: string): Promise<UserDocument> {
     const user = await this.userModel.findOne({ username: username.trim() });
     if (!user) {
-      throw new UserNotFoundException({ username });
+      throw new NotFoundException({
+        key: EXCEPTION_CONSTANT.USER_NOT_FOUND,
+        params: { username },
+      });
     }
 
     return user;
@@ -29,14 +32,14 @@ export class UserSecurityService {
       user.authentication?.lockedUntil &&
       user.authentication.lockedUntil > new Date()
     ) {
-      throw new AccountLockedException();
+      throw new BadRequestException(EXCEPTION_CONSTANT.ACCOUNT_LOCKED);
     }
   }
 
   async throwIfPasswordPolicyIsViolated(password: string) {
     const passwordValidation = PasswordValidator.validate(password);
     if (!passwordValidation.valid) {
-      throw new PasswordPolicyViolationException();
+      throw new BadRequestException(EXCEPTION_CONSTANT.PASSWORD_POLICY_VIOLATION);
     }
 
     return passwordValidation;
@@ -45,7 +48,7 @@ export class UserSecurityService {
   throwIfUsernameLengthIsInvalid(username: string): void {
     const usernameValidation = UsernameValidator.validate(username);
     if (!usernameValidation.valid) {
-      throw new BadRequestException("نام کاربری باید حداقل ۵ کاراکتر باشد.");
+      throw new BadRequestException(EXCEPTION_CONSTANT.USERNAME_MIN_LENGTH);
     }
   }
 }

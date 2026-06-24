@@ -145,7 +145,7 @@ export class CouponService {
       .exec();
 
     if (!coupon) {
-      throw new NotFoundException("Coupon not found");
+      throw new NotFoundException(EXCEPTION_CONSTANT.COUPON_NOT_FOUND);
     }
 
     const usageCountsByCouponId = await this.buildCouponUsageCountsByCouponId([
@@ -165,7 +165,7 @@ export class CouponService {
       .exec();
 
     if (existingCoupon) {
-      throw new ConflictException("Coupon code already exists");
+      throw new ConflictException(EXCEPTION_CONSTANT.COUPON_CODE_EXISTS);
     }
 
     const coupon = await this.couponModel.create(createData);
@@ -190,7 +190,7 @@ export class CouponService {
       .exec();
 
     if (!existingCoupon) {
-      throw new NotFoundException("Coupon not found");
+      throw new NotFoundException(EXCEPTION_CONSTANT.COUPON_NOT_FOUND);
     }
 
     const updateOperation = await this.buildUpdateOperation(
@@ -217,7 +217,7 @@ export class CouponService {
       .exec();
 
     if (!updatedCoupon) {
-      throw new NotFoundException("Coupon not found");
+      throw new NotFoundException(EXCEPTION_CONSTANT.COUPON_NOT_FOUND);
     }
 
     const usageCountsByCouponId = await this.buildCouponUsageCountsByCouponId([
@@ -236,7 +236,7 @@ export class CouponService {
       .exec();
 
     if (!deletedCoupon) {
-      throw new NotFoundException("Coupon not found");
+      throw new NotFoundException(EXCEPTION_CONSTANT.COUPON_NOT_FOUND);
     }
   }
 
@@ -246,7 +246,7 @@ export class CouponService {
   ): Promise<CouponValidateGqlResponse> {
     const normalizedCode = this.normalizeCode(input.code);
     if (!normalizedCode) {
-      return this.invalid(EXCEPTION_CONSTANT.COUPON_CODE_EMPTY.code);
+      return this.invalid(EXCEPTION_CONSTANT.COUPON_CODE_EMPTY);
     }
 
     const course = await this.courseModel
@@ -255,7 +255,7 @@ export class CouponService {
       .exec();
 
     if (!course) {
-      return this.invalid(EXCEPTION_CONSTANT.COURSE_NOT_FOUND_OR_INACTIVE.code);
+      return this.invalid(EXCEPTION_CONSTANT.COURSE_NOT_FOUND_OR_INACTIVE);
     }
 
     const existingUserCourse = await this.userCourseModel
@@ -268,12 +268,12 @@ export class CouponService {
       .exec();
 
     if (existingUserCourse) {
-      return this.invalid(EXCEPTION_CONSTANT.COURSE_ALREADY_PURCHASED.code);
+      return this.invalid(EXCEPTION_CONSTANT.COURSE_ALREADY_PURCHASED);
     }
 
     const priceSummary = this.calculateCoursePriceSummary(course);
     if (priceSummary.payableAmountBeforeCouponIrt <= 0) {
-      return this.invalid(EXCEPTION_CONSTANT.COUPON_NOT_NEEDED_FOR_FREE_COURSE.code);
+      return this.invalid(EXCEPTION_CONSTANT.COUPON_NOT_NEEDED_FOR_FREE_COURSE);
     }
 
     const coupon = await this.couponModel
@@ -296,7 +296,7 @@ export class CouponService {
     );
 
     if (couponDiscountAmountIrt <= 0) {
-      return this.invalid(EXCEPTION_CONSTANT.COUPON_NO_DISCOUNT_APPLIED.code);
+      return this.invalid(EXCEPTION_CONSTANT.COUPON_NO_DISCOUNT_APPLIED);
     }
 
     return {
@@ -323,37 +323,37 @@ export class CouponService {
     userId: Types.ObjectId,
   ): Promise<string | null> {
     if (!coupon) {
-      return EXCEPTION_CONSTANT.COUPON_INVALID.code;
+      return EXCEPTION_CONSTANT.COUPON_INVALID;
     }
 
     if (!coupon.isActive) {
-      return EXCEPTION_CONSTANT.COUPON_INACTIVE.code;
+      return EXCEPTION_CONSTANT.COUPON_INACTIVE;
     }
 
     const now = new Date();
     if (coupon.startsAt && coupon.startsAt > now) {
-      return EXCEPTION_CONSTANT.COUPON_NOT_STARTED.code;
+      return EXCEPTION_CONSTANT.COUPON_NOT_STARTED;
     }
 
     if (coupon.expiresAt && coupon.expiresAt < now) {
-      return EXCEPTION_CONSTANT.COUPON_EXPIRED.code;
+      return EXCEPTION_CONSTANT.COUPON_EXPIRED;
     }
 
     if (!this.isCouponApplicableToCourse(coupon, courseId)) {
-      return EXCEPTION_CONSTANT.COUPON_NOT_APPLICABLE_TO_COURSE.code;
+      return EXCEPTION_CONSTANT.COUPON_NOT_APPLICABLE_TO_COURSE;
     }
 
     if (coupon.totalUsageLimit) {
       const totalUsageCount = await this.countCouponUsage(coupon._id);
       if (totalUsageCount >= coupon.totalUsageLimit) {
-        return EXCEPTION_CONSTANT.COUPON_USAGE_LIMIT_REACHED.code;
+        return EXCEPTION_CONSTANT.COUPON_USAGE_LIMIT_REACHED;
       }
     }
 
     if (coupon.perUserUsageLimit) {
       const userUsageCount = await this.countCouponUsage(coupon._id, userId);
       if (userUsageCount >= coupon.perUserUsageLimit) {
-        return EXCEPTION_CONSTANT.COUPON_USER_LIMIT_REACHED.code;
+        return EXCEPTION_CONSTANT.COUPON_USER_LIMIT_REACHED;
       }
     }
 
@@ -364,7 +364,7 @@ export class CouponService {
       });
 
       if (userPurchaseCount > 0) {
-        return EXCEPTION_CONSTANT.COUPON_FIRST_PURCHASE_ONLY.code;
+        return EXCEPTION_CONSTANT.COUPON_FIRST_PURCHASE_ONLY;
       }
     }
 
@@ -466,7 +466,7 @@ export class CouponService {
     );
 
     if (!code) {
-      throw new BadRequestException("Coupon code is required");
+      throw new BadRequestException(EXCEPTION_CONSTANT.COUPON_CODE_REQUIRED);
     }
 
     this.validateCouponDiscount(input.discountType, input.discountValue);
@@ -498,26 +498,20 @@ export class CouponService {
     discountValue: number,
   ): void {
     if (discountValue <= 0) {
-      throw new BadRequestException(
-        "Coupon discount value must be greater than 0",
-      );
+      throw new BadRequestException(EXCEPTION_CONSTANT.COUPON_DISCOUNT_INVALID);
     }
 
     if (
       discountType === CouponDiscountType.PERCENTAGE &&
       discountValue > 100
     ) {
-      throw new BadRequestException(
-        "Percentage coupon discount value cannot be greater than 100",
-      );
+      throw new BadRequestException(EXCEPTION_CONSTANT.COUPON_PERCENTAGE_INVALID);
     }
   }
 
   private validateCouponDateRange(startsAt?: Date, expiresAt?: Date): void {
     if (startsAt && expiresAt && startsAt > expiresAt) {
-      throw new BadRequestException(
-        "Coupon start date cannot be later than expiration date",
-      );
+      throw new BadRequestException(EXCEPTION_CONSTANT.COUPON_DATE_RANGE_INVALID);
     }
   }
 
@@ -539,9 +533,7 @@ export class CouponService {
       .exec();
 
     if (existingCourseCount !== applicableCourseIds.length) {
-      throw new BadRequestException(
-        "One or more applicable course IDs do not exist",
-      );
+      throw new BadRequestException(EXCEPTION_CONSTANT.COUPON_COURSE_IDS_INVALID);
     }
   }
 
@@ -554,12 +546,12 @@ export class CouponService {
 
     if (this.hasOwnInputField(input, "code")) {
       if (input.code == null) {
-        throw new BadRequestException("Coupon code cannot be null");
+        throw new BadRequestException(EXCEPTION_CONSTANT.COUPON_FIELD_NULL);
       }
 
       const code = this.normalizeCode(input.code);
       if (!code) {
-        throw new BadRequestException("Coupon code is required");
+        throw new BadRequestException(EXCEPTION_CONSTANT.COUPON_CODE_REQUIRED);
       }
 
       await this.ensureCouponCodeIsAvailable(code, input.id);
@@ -568,7 +560,7 @@ export class CouponService {
 
     if (this.hasOwnInputField(input, "title")) {
       if (input.title == null) {
-        throw new BadRequestException("Coupon title cannot be null");
+        throw new BadRequestException(EXCEPTION_CONSTANT.COUPON_FIELD_NULL);
       }
 
       set.title = this.normalizeRequiredText(input.title, "Coupon title");
@@ -585,7 +577,7 @@ export class CouponService {
 
     if (this.hasOwnInputField(input, "discountType")) {
       if (input.discountType == null) {
-        throw new BadRequestException("Coupon discount type cannot be null");
+        throw new BadRequestException(EXCEPTION_CONSTANT.COUPON_FIELD_NULL);
       }
 
       set.discountType = input.discountType;
@@ -593,7 +585,7 @@ export class CouponService {
 
     if (this.hasOwnInputField(input, "discountValue")) {
       if (input.discountValue == null) {
-        throw new BadRequestException("Coupon discount value cannot be null");
+        throw new BadRequestException(EXCEPTION_CONSTANT.COUPON_FIELD_NULL);
       }
 
       set.discountValue = input.discountValue;
@@ -614,9 +606,7 @@ export class CouponService {
 
     if (this.hasOwnInputField(input, "isFirstPurchaseOnly")) {
       if (input.isFirstPurchaseOnly == null) {
-        throw new BadRequestException(
-          "First-purchase-only flag cannot be null",
-        );
+        throw new BadRequestException(EXCEPTION_CONSTANT.COUPON_FIELD_NULL);
       }
 
       set.isFirstPurchaseOnly = input.isFirstPurchaseOnly;
@@ -624,7 +614,7 @@ export class CouponService {
 
     if (this.hasOwnInputField(input, "isActive")) {
       if (input.isActive == null) {
-        throw new BadRequestException("Active status cannot be null");
+        throw new BadRequestException(EXCEPTION_CONSTANT.COUPON_FIELD_NULL);
       }
 
       set.isActive = input.isActive;
@@ -651,7 +641,7 @@ export class CouponService {
       .exec();
 
     if (existingCoupon) {
-      throw new ConflictException("Coupon code already exists");
+      throw new ConflictException(EXCEPTION_CONSTANT.COUPON_CODE_EXISTS);
     }
   }
 
@@ -675,7 +665,7 @@ export class CouponService {
     );
 
     if (nextDiscountValue == null) {
-      throw new BadRequestException("Coupon discount value cannot be null");
+      throw new BadRequestException(EXCEPTION_CONSTANT.COUPON_FIELD_NULL);
     }
 
     this.validateCouponDiscount(nextDiscountType, nextDiscountValue);
@@ -1063,7 +1053,7 @@ export class CouponService {
   private normalizeRequiredText(value: string, fieldName: string): string {
     const normalizedValue = value.trim();
     if (!normalizedValue) {
-      throw new BadRequestException(`${fieldName} is required`);
+      throw new BadRequestException({ key: EXCEPTION_CONSTANT.VALIDATION_FAILED, params: { fieldName } });
     }
 
     return normalizedValue;

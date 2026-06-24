@@ -3,6 +3,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { FilterQuery, Model, PipelineStage, Types } from "mongoose";
 
 import { PAGINATION_CONSTANT } from "../../constants";
+import { EXCEPTION_CONSTANT } from "../../constants/exception.constant";
 import {
   Notification,
   NotificationDocument,
@@ -177,9 +178,7 @@ export class NotificationService {
       .exec();
 
     if (matchingNotifications.length !== notificationIds.length) {
-      throw new ForbiddenException(
-        "One or more notifications do not belong to the current user",
-      );
+      throw new ForbiddenException(EXCEPTION_CONSTANT.NOTIFICATION_OWNERSHIP_REQUIRED);
     }
 
     const updateResult = await this.notificationModel

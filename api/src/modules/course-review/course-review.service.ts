@@ -9,12 +9,8 @@ import { randomUUID } from "crypto";
 import { FilterQuery, Model, PipelineStage, Types } from "mongoose";
 
 import { PAGINATION_CONSTANT } from "../../constants";
+import { EXCEPTION_CONSTANT } from "../../constants/exception.constant";
 import { env } from "../../config";
-import {
-  CaptchaExpiredException,
-  CaptchaInvalidException,
-  CaptchaRequiredException,
-} from "../../exceptions";
 import {
   Course,
   CourseDocument,
@@ -132,19 +128,19 @@ export class CourseReviewService {
     );
     const course = await this.courseModel.findById(input.courseId).exec();
     if (!course) {
-      throw new BadRequestException("Course not found");
+      throw new BadRequestException(EXCEPTION_CONSTANT.COURSE_NOT_FOUND);
     }
 
     if (!course.isActive && !isStaff) {
-      throw new BadRequestException("Course is not available for review");
+      throw new BadRequestException(EXCEPTION_CONSTANT.COURSE_NOT_AVAILABLE_FOR_REVIEW);
     }
 
     if (!isStaff && course.isReviewsSectionVisible === false) {
-      throw new BadRequestException("بخش نظرات برای این دوره غیرفعال است.");
+      throw new BadRequestException(EXCEPTION_CONSTANT.COURSE_REVIEWS_SECTION_DISABLED);
     }
 
     if (!isStaff && course.isReviewSubmissionEnabled === false) {
-      throw new BadRequestException("ثبت نظر برای این دوره غیرفعال است.");
+      throw new BadRequestException(EXCEPTION_CONSTANT.COURSE_REVIEW_SUBMISSION_DISABLED);
     }
 
     const needsStaffActor =
@@ -166,7 +162,7 @@ export class CourseReviewService {
     ]);
 
     if (!targetUser) {
-      throw new BadRequestException("User not found");
+      throw new BadRequestException(EXCEPTION_CONSTANT.USER_NOT_FOUND);
     }
 
     const courseIsFree = isCourseFree(course);
@@ -174,28 +170,22 @@ export class CourseReviewService {
       (!isStaff || isStaffSupportSubmit) && !courseIsFree;
 
     if (!userCourse && requiresPaidEnrollment) {
-      throw new BadRequestException(
-        "برای ثبت نظر، ابتدا باید در این دورهٔ پولی ثبت‌نام کرده باشید.",
-      );
+      throw new BadRequestException(EXCEPTION_CONSTANT.COURSE_REVIEW_PAID_ENROLLMENT_REQUIRED);
     }
 
     if (needsStaffActor && !actorUser) {
-      throw new BadRequestException("Staff user not found");
+      throw new BadRequestException(EXCEPTION_CONSTANT.STAFF_USER_NOT_FOUND);
     }
 
     if (userCourse && !this.isSameObjectId(userCourse.userId, targetUserId)) {
-      throw new BadRequestException(
-        "Course enrollment does not belong to this user",
-      );
+      throw new BadRequestException(EXCEPTION_CONSTANT.COURSE_REVIEW_ENROLLMENT_USER_MISMATCH);
     }
 
     if (
       userCourse &&
       !this.isSameObjectId(userCourse.courseId, input.courseId)
     ) {
-      throw new BadRequestException(
-        "Course enrollment does not match the submitted course",
-      );
+      throw new BadRequestException(EXCEPTION_CONSTANT.COURSE_REVIEW_ENROLLMENT_MISMATCH);
     }
 
     const now = new Date();
@@ -204,9 +194,7 @@ export class CourseReviewService {
     const hasCommentInput = Boolean(normalizedComment);
 
     if (!hasStarInput && !hasCommentInput) {
-      throw new BadRequestException(
-        "Either a star rating or a comment is required",
-      );
+      throw new BadRequestException(EXCEPTION_CONSTANT.COURSE_REVIEW_INPUT_REQUIRED);
     }
 
     let review = await this.resolveExistingReviewForSubmit(
@@ -440,7 +428,7 @@ export class CourseReviewService {
       .exec();
 
     if (!review) {
-      throw new NotFoundException("Course review not found");
+      throw new NotFoundException(EXCEPTION_CONSTANT.COURSE_REVIEW_NOT_FOUND);
     }
 
     const now = new Date();
@@ -460,7 +448,7 @@ export class CourseReviewService {
       }
       case CourseReviewModerationTarget.RATING: {
         if (!review.rating) {
-          throw new BadRequestException("This review does not have a rating");
+          throw new BadRequestException(EXCEPTION_CONSTANT.COURSE_REVIEW_NO_RATING);
         }
 
         review.rating.moderation = this.buildModerationVisibility(
@@ -475,16 +463,14 @@ export class CourseReviewService {
       case CourseReviewModerationTarget.MESSAGE: {
         const messageKey = input.messageKey?.trim();
         if (!messageKey) {
-          throw new BadRequestException(
-            "Message key is required when updating message moderation",
-          );
+          throw new BadRequestException(EXCEPTION_CONSTANT.COURSE_REVIEW_MESSAGE_KEY_REQUIRED);
         }
 
         const message = (review.messages ?? []).find(
           (item) => item.key === messageKey,
         );
         if (!message) {
-          throw new NotFoundException("Review message not found");
+          throw new NotFoundException(EXCEPTION_CONSTANT.COURSE_REVIEW_MESSAGE_NOT_FOUND);
         }
 
         message.moderation = this.buildModerationVisibility(
@@ -497,7 +483,7 @@ export class CourseReviewService {
         break;
       }
       default:
-        throw new BadRequestException("Unsupported moderation target");
+        throw new BadRequestException(EXCEPTION_CONSTANT.MODERATION_TARGET_UNSUPPORTED);
     }
 
     await review.save();
@@ -548,7 +534,7 @@ export class CourseReviewService {
   ): Promise<UserCourseReviewListPaginatedCursorGqlResponse> {
     const courseId = input.filters?.courseId?.trim();
     if (!courseId) {
-      throw new BadRequestException("Course ID is required");
+      throw new BadRequestException(EXCEPTION_CONSTANT.COURSE_ID_REQUIRED);
     }
 
     const course = await this.courseModel
@@ -558,7 +544,7 @@ export class CourseReviewService {
       .exec();
 
     if (!course) {
-      throw new BadRequestException("Course not found");
+      throw new BadRequestException(EXCEPTION_CONSTANT.COURSE_NOT_FOUND);
     }
 
     if (course.isReviewsSectionVisible === false) {
@@ -1424,7 +1410,7 @@ export class CourseReviewService {
 
   private verifyCaptcha(captchaId?: string, captchaValue?: string): void {
     if (!captchaId?.trim() || !captchaValue?.trim()) {
-      throw new CaptchaRequiredException();
+      throw new BadRequestException(EXCEPTION_CONSTANT.CAPTCHA_REQUIRED);
     }
 
     const verificationStatus = this.userCaptchaService.verifyCaptcha(
@@ -1433,11 +1419,11 @@ export class CourseReviewService {
     );
 
     if (verificationStatus === CaptchaVerificationStatus.EXPIRED) {
-      throw new CaptchaExpiredException();
+      throw new BadRequestException(EXCEPTION_CONSTANT.CAPTCHA_EXPIRED);
     }
 
     if (verificationStatus === CaptchaVerificationStatus.INVALID) {
-      throw new CaptchaInvalidException();
+      throw new BadRequestException(EXCEPTION_CONSTANT.CAPTCHA_INVALID);
     }
   }
 
@@ -1448,9 +1434,7 @@ export class CourseReviewService {
   ): Types.ObjectId {
     if (requestedUserId) {
       if (!isStaff) {
-        throw new ForbiddenException(
-          "Only staff accounts can submit reviews for another user",
-        );
+        throw new ForbiddenException(EXCEPTION_CONSTANT.STAFF_ONLY_CROSS_USER_REVIEW);
       }
 
       return requestedUserId;
@@ -1540,7 +1524,7 @@ export class CourseReviewService {
     ).visibility;
 
     if (reviewVisibility === CourseReviewVisibility.HIDDEN) {
-      throw new ForbiddenException("امکان ثبت نظر برای شما وجود ندارد.");
+      throw new ForbiddenException(EXCEPTION_CONSTANT.COURSE_REVIEW_HIDDEN);
     }
 
     if (
@@ -1550,13 +1534,11 @@ export class CourseReviewService {
     }
 
     if (hasStarInput) {
-      throw new ForbiddenException(
-        "امکان ثبت یا ویرایش امتیاز برای شما وجود ندارد.",
-      );
+      throw new ForbiddenException(EXCEPTION_CONSTANT.COURSE_REVIEW_HIDDEN);
     }
 
     if (hasCommentInput) {
-      throw new ForbiddenException("امکان ثبت نظر برای شما وجود ندارد.");
+      throw new ForbiddenException(EXCEPTION_CONSTANT.COURSE_REVIEW_HIDDEN);
     }
   }
 
@@ -1600,9 +1582,7 @@ export class CourseReviewService {
     }
 
     if (visibility === CourseReviewVisibility.HIDDEN) {
-      throw new BadRequestException(
-        "Support reply visibility must be PUBLIC or PRIVATE",
-      );
+      throw new BadRequestException(EXCEPTION_CONSTANT.SUPPORT_REPLY_VISIBILITY_INVALID);
     }
 
     return CourseReviewVisibility.PRIVATE;
@@ -1654,9 +1634,7 @@ export class CourseReviewService {
       reviewByUserAndCourse &&
       !reviewByUserCourse._id.equals(reviewByUserAndCourse._id)
     ) {
-      throw new BadRequestException(
-        "Conflicting review records exist for this course enrollment",
-      );
+      throw new BadRequestException(EXCEPTION_CONSTANT.COURSE_REVIEW_CONFLICT);
     }
 
     const review = reviewByUserCourse ?? reviewByUserAndCourse;
@@ -1669,9 +1647,7 @@ export class CourseReviewService {
       !this.isSameObjectId(review.userId, userId) ||
       !this.isSameObjectId(review.courseId, courseId)
     ) {
-      throw new BadRequestException(
-        "This course enrollment is already linked to a different review",
-      );
+      throw new BadRequestException(EXCEPTION_CONSTANT.COURSE_REVIEW_ENROLLMENT_LINKED);
     }
 
     if (
@@ -1700,9 +1676,7 @@ export class CourseReviewService {
       .exec();
 
     if (conflictingReview) {
-      throw new BadRequestException(
-        "A review already exists for this course enrollment",
-      );
+      throw new BadRequestException(EXCEPTION_CONSTANT.COURSE_REVIEW_ALREADY_EXISTS);
     }
   }
 

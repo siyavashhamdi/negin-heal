@@ -68,9 +68,15 @@ function resolveUploadErrorMessage(body: unknown, fallbackCode: string): string 
     return resolveErrorMessageFromCode(fallbackCode);
   }
 
-  const error = (body as { error?: { code?: string; message?: string | string[] } }).error;
+  const error = (body as {
+    error?: {
+      code?: string;
+      params?: Record<string, unknown>;
+      message?: string | string[];
+    };
+  }).error;
   if (error?.code?.trim()) {
-    return resolveErrorMessageFromCode(error.code);
+    return resolveErrorMessageFromCode(error.code, error.params);
   }
 
   return resolveErrorMessageFromCode(fallbackCode);

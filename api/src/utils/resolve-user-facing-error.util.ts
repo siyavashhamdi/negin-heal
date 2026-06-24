@@ -2,62 +2,33 @@ import { Logger } from "@nestjs/common";
 import { GraphQLError } from "graphql";
 
 import { EXCEPTION_CONSTANT } from "../constants/exception.constant";
-import { resolveErrorCodeFromMessage } from "../constants/user-facing-error-message-map.constant";
-import { ExceptionRegistry } from "../exceptions/exception.registry";
+import {
+  extractKeyedExceptionBody,
+  isKeyedExceptionBody,
+  type KeyedExceptionBody,
+} from "./keyed-exception.util";
 
 export interface UserFacingErrorResponse {
   readonly code: string;
-  readonly message: string;
-  readonly payload?: Record<string, unknown>;
+  readonly params?: Record<string, unknown>;
 }
-
-const SENSITIVE_PAYLOAD_KEYS = new Set([
-  "username",
-  "email",
-  "mobile",
-  "password",
-  "token",
-  "otp",
-  "code",
-  "stack",
-  "stacktrace",
-]);
 
 function isKnownErrorCode(code: string | undefined): code is string {
   if (!code) {
     return false;
   }
 
-  return Object.values(EXCEPTION_CONSTANT).some((entry) => entry.code === code);
-}
-
-function getPublicMessage(code: string): string {
-  const entry = Object.values(EXCEPTION_CONSTANT).find((item) => item.code === code);
-  return entry?.message ?? EXCEPTION_CONSTANT.INTERNAL_SERVER_ERROR.message;
-}
-
-function sanitizePayload(
-  payload?: Record<string, unknown>,
-): Record<string, unknown> | undefined {
-  if (!payload || typeof payload !== "object") {
-    return undefined;
-  }
-
-  const safeEntries = Object.entries(payload).filter(
-    ([key]) => !SENSITIVE_PAYLOAD_KEYS.has(key.toLowerCase()),
+  return Object.values(EXCEPTION_CONSTANT).includes(
+    code as (typeof EXCEPTION_CONSTANT)[keyof typeof EXCEPTION_CONSTANT],
   );
-
-  const filteredEntries = safeEntries.filter(([key]) => key !== "message");
-
-  if (filteredEntries.length === 0) {
-    return undefined;
-  }
-
-  return Object.fromEntries(filteredEntries);
 }
 
-function joinMessages(value: string | string[] | undefined): string {
+function joinMessages(value: string | string[] | KeyedExceptionBody | undefined): string {
   if (!value) {
+    return "";
+  }
+
+  if (typeof value === "object" && "key" in value) {
     return "";
   }
 
@@ -68,19 +39,31 @@ function extractRawGraphQLErrorDetails(error: GraphQLError): {
   rawMessage: string;
   rawCode?: string;
   exceptionName?: string;
-  payload?: Record<string, unknown>;
+  keyedBody?: ReturnType<typeof extractKeyedExceptionBody>;
 } {
   const extensions = error.extensions as
     | {
         code?: string;
+        params?: Record<string, unknown>;
         payload?: Record<string, unknown>;
         exception?: {
           code?: string;
-          message?: string | string[];
+          message?: string | string[] | KeyedExceptionBody;
+          params?: Record<string, unknown>;
           payload?: Record<string, unknown>;
-          response?: { message?: string | string[] };
+          response?: {
+            message?: string | string[] | KeyedExceptionBody;
+            code?: string;
+            key?: string;
+            params?: Record<string, unknown>;
+          };
         };
-        response?: { message?: string | string[] };
+        response?: {
+          message?: string | string[] | KeyedExceptionBody;
+          code?: string;
+          key?: string;
+          params?: Record<string, unknown>;
+        };
         originalError?: { message?: string | string[] };
       }
     | undefined;
@@ -95,15 +78,34 @@ function extractRawGraphQLErrorDetails(error: GraphQLError): {
   const responseObject =
     extensions?.exception?.response &&
     typeof extensions.exception.response === "object"
-      ? (extensions.exception.response as {
-          message?: string | string[];
-          code?: string;
-        })
-      : undefined;
+      ? extensions.exception.response
+      : extensions?.response &&
+          typeof extensions.response === "object"
+        ? extensions.response
+        : undefined;
+
+  const keyedBody =
+    extractKeyedExceptionBody(responseObject) ||
+    extractKeyedExceptionBody(extensions?.exception?.message) ||
+    extractKeyedExceptionBody(extensions?.exception?.response?.message) ||
+    extractKeyedExceptionBody(extensions?.response?.message) ||
+    extractKeyedExceptionBody(error.message);
 
   const rawMessage =
-    joinMessages(responseObject?.message) ||
-    joinMessages(extensions?.exception?.message) ||
+    joinMessages(
+      keyedBody
+        ? undefined
+        : typeof responseObject?.message === "string" ||
+            Array.isArray(responseObject?.message)
+          ? responseObject.message
+          : undefined,
+    ) ||
+    joinMessages(
+      typeof extensions?.exception?.message === "string" ||
+        Array.isArray(extensions?.exception?.message)
+        ? extensions.exception.message
+        : undefined,
+    ) ||
     joinMessages(extensions?.exception?.response?.message) ||
     joinMessages(extensions?.response?.message) ||
     joinMessages(extensions?.originalError?.message) ||
@@ -115,15 +117,14 @@ function extractRawGraphQLErrorDetails(error: GraphQLError): {
   return {
     rawMessage: extractedMessage,
     rawCode:
+      keyedBody?.key ||
       (error as { code?: string }).code ||
+      responseObject?.key ||
       responseObject?.code ||
       extensions?.code ||
       extensions?.exception?.code,
     exceptionName: exceptionName || undefined,
-    payload:
-      (error as { payload?: Record<string, unknown> }).payload ||
-      extensions?.payload ||
-      extensions?.exception?.payload,
+    keyedBody,
   };
 }
 
@@ -131,63 +132,33 @@ export function resolveUserFacingError(input: {
   rawMessage: string;
   rawCode?: string;
   exceptionName?: string;
-  payload?: Record<string, unknown>;
+  keyedBody?: ReturnType<typeof extractKeyedExceptionBody>;
+  params?: Record<string, unknown>;
 }): UserFacingErrorResponse {
-  if (input.exceptionName) {
-    const exception = ExceptionRegistry.createException(
-      input.exceptionName,
-      input.rawMessage,
-    );
-
-    if (exception) {
-      let code = exception.getCode();
-      if (code === EXCEPTION_CONSTANT.COURSE_VALIDATION_FAILED.code) {
-        const specificCode = resolveErrorCodeFromMessage(exception.getMessage());
-        if (specificCode) {
-          code = specificCode;
-        }
-      }
-
-      const payload = sanitizePayload({
-        ...(exception.payload as Record<string, unknown> | undefined),
-        ...(input.payload ?? {}),
-      });
-
-      return {
-        code,
-        message: getPublicMessage(code),
-        ...(payload ? { payload } : {}),
-      };
-    }
+  if (input.keyedBody?.key) {
+    return {
+      code: input.keyedBody.key,
+      ...(input.keyedBody.params ? { params: input.keyedBody.params } : {}),
+    };
   }
 
   if (isKnownErrorCode(input.rawCode)) {
     return {
       code: input.rawCode,
-      message: getPublicMessage(input.rawCode),
-      ...(sanitizePayload(input.payload) ? { payload: sanitizePayload(input.payload) } : {}),
-    };
-  }
-
-  const mappedCode = resolveErrorCodeFromMessage(input.rawMessage);
-  if (mappedCode) {
-    return {
-      code: mappedCode,
-      message: getPublicMessage(mappedCode),
-      ...(sanitizePayload(input.payload) ? { payload: sanitizePayload(input.payload) } : {}),
+      ...(input.params ? { params: input.params } : {}),
     };
   }
 
   if (input.rawCode === "UNAUTHENTICATED" || input.rawCode === "FORBIDDEN") {
-    return {
-      code: input.rawCode,
-      message: getPublicMessage(input.rawCode),
-    };
+    return { code: input.rawCode };
+  }
+
+  if (isKnownErrorCode(input.rawMessage)) {
+    return { code: input.rawMessage };
   }
 
   return {
-    code: EXCEPTION_CONSTANT.INTERNAL_SERVER_ERROR.code,
-    message: getPublicMessage(EXCEPTION_CONSTANT.INTERNAL_SERVER_ERROR.code),
+    code: EXCEPTION_CONSTANT.INTERNAL_SERVER_ERROR,
   };
 }
 
@@ -273,7 +244,9 @@ export function logTechnicalError(
   const summary = [
     `[${context.channel.toUpperCase()}]`,
     `code=${context.resolved.code}`,
-    `public="${context.resolved.message}"`,
+    context.resolved.params
+      ? `params=${JSON.stringify(context.resolved.params)}`
+      : null,
     `raw="${context.rawMessage}"`,
     context.exceptionName ? `exception=${context.exceptionName}` : null,
     context.statusCode != null ? `status=${context.statusCode}` : null,
@@ -291,9 +264,8 @@ export function logTechnicalError(
 
   const technicalDetails = formatTechnicalErrorDetails({
     channel: context.channel,
-    publicCode: context.resolved.code,
-    publicMessage: context.resolved.message,
-    publicPayload: context.resolved.payload,
+    code: context.resolved.code,
+    params: context.resolved.params,
     rawMessage: context.rawMessage,
     exceptionName: context.exceptionName,
     statusCode: context.statusCode,
@@ -319,7 +291,12 @@ export function formatUserFacingGraphQLError(
   includeDebugExtensions: boolean,
 ): UserFacingErrorResponse & { extensions?: GraphQLError["extensions"] } {
   const details = extractRawGraphQLErrorDetails(error);
-  const resolved = resolveUserFacingError(details);
+  const resolved = resolveUserFacingError({
+    rawMessage: details.rawMessage,
+    rawCode: details.rawCode,
+    exceptionName: details.exceptionName,
+    keyedBody: details.keyedBody,
+  });
 
   logTechnicalError(logger, {
     channel: "graphql",
@@ -352,24 +329,31 @@ export function resolveUserFacingHttpError(input: {
   message: string | string[];
   errorName?: string;
   rawCode?: string;
+  keyedBody?: ReturnType<typeof extractKeyedExceptionBody>;
 }): UserFacingErrorResponse {
   const rawMessage = joinMessages(
     Array.isArray(input.message) ? input.message : [input.message],
   );
 
-  const resolved = resolveUserFacingError({
+  const keyedBody =
+    input.keyedBody ||
+    (isKeyedExceptionBody(input.message) ? input.message : undefined) ||
+    extractKeyedExceptionBody(rawMessage);
+
+  return resolveUserFacingError({
     rawMessage,
     rawCode:
+      keyedBody?.key ||
       input.rawCode ||
       (input.statusCode === 401
-        ? EXCEPTION_CONSTANT.UNAUTHENTICATED.code
+        ? EXCEPTION_CONSTANT.UNAUTHENTICATED
         : input.statusCode === 403
-          ? EXCEPTION_CONSTANT.FORBIDDEN.code
+          ? EXCEPTION_CONSTANT.FORBIDDEN
           : undefined),
     exceptionName: input.errorName,
+    keyedBody,
+    params: keyedBody?.params,
   });
-
-  return resolved;
 }
 
 export function logUserFacingHttpError(

@@ -18,7 +18,7 @@
             "generalMessage": "خطایی رخ داد!"
         },
         "exceptions": {
-            "USER_NOT_FOUND": "کاربر یافت نشد!",
+            "USER_NOT_FOUND": "کاربر با نام کاربری '%{username}' پیدا نشد!",
             "INVALID_CREDENTIALS": "نام کاربری یا گذرواژه نامعتبر است!",
             "CAPTCHA_REQUIRED": "پس از چند تلاش ناموفق، وارد کردن کد امنیتی الزامی است.",
             "CAPTCHA_EXPIRED": "مهلت کد امنیتی تمام شده است.",

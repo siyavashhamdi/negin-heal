@@ -1,5 +1,6 @@
 import { Args, Context, ID, Mutation, Resolver } from "@nestjs/graphql";
 import { BadRequestException, UseGuards } from "@nestjs/common";
+import { EXCEPTION_CONSTANT } from "../../../../constants/exception.constant";
 import { Types } from "mongoose";
 
 import { UserRole } from "../../../../enums";
@@ -10,7 +11,7 @@ import { TicketListGqlResponse, UserTicketListGqlResponse } from "../responses";
 
 function toObjectId(id: string): Types.ObjectId {
   if (!Types.ObjectId.isValid(id)) {
-    throw new BadRequestException("Ticket ID must be a valid MongoDB ObjectId");
+    throw new BadRequestException(EXCEPTION_CONSTANT.TICKET_ID_INVALID);
   }
 
   return new Types.ObjectId(id);

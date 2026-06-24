@@ -1,4 +1,5 @@
 import { UseGuards, NotFoundException } from "@nestjs/common";
+import { EXCEPTION_CONSTANT } from "../../../../constants/exception.constant";
 import { Query, Resolver, Context } from "@nestjs/graphql";
 import { Types } from "mongoose";
 
@@ -31,7 +32,7 @@ export class UserMeQuery {
     const userDoc = await this.userService.findById(user.userId);
 
     if (!userDoc) {
-      throw new NotFoundException("User not found");
+      throw new NotFoundException(EXCEPTION_CONSTANT.USER_NOT_FOUND);
     }
 
     // Convert to GraphQL response

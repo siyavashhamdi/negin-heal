@@ -8,6 +8,8 @@ import {
   Logger,
 } from "@nestjs/common";
 import { NodeEnv } from "../enums";
+import { EXCEPTION_CONSTANT } from "../constants/exception.constant";
+import { extractKeyedExceptionBody } from "../utils/keyed-exception.util";
 import {
   logUserFacingHttpError,
   resolveUserFacingHttpError,
@@ -44,6 +46,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     let originalMessage: string | string[];
     let errorName: string;
     let responseCode: string | undefined;
+    let keyedBody: ReturnType<typeof extractKeyedExceptionBody>;
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
@@ -51,16 +54,20 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
       if (typeof exceptionResponse === "string") {
         originalMessage = exceptionResponse;
+        keyedBody = extractKeyedExceptionBody(exceptionResponse);
         errorName = exception.constructor.name;
+        responseCode = keyedBody?.key;
       } else if (typeof exceptionResponse === "object") {
         const responseObj = exceptionResponse as {
           message?: string | string[];
           error?: string;
           code?: string;
+          key?: string;
         };
+        keyedBody = extractKeyedExceptionBody(exceptionResponse);
         originalMessage = responseObj.message || exception.message;
         errorName = responseObj.error || exception.constructor.name;
-        responseCode = responseObj.code;
+        responseCode = keyedBody?.key || responseObj.key || responseObj.code;
       } else {
         originalMessage = exception.message;
         errorName = exception.constructor.name;
@@ -97,8 +104,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
       ) {
         status = HttpStatus.CONFLICT;
         errorName = "ConflictError";
-        const field = Object.keys(exceptionObj.keyPattern || {})[0] || "field";
-        originalMessage = `${field} already exists`;
+        keyedBody = { key: EXCEPTION_CONSTANT.DUPLICATE_KEY };
+        originalMessage = "Duplicate key";
       } else {
         status = HttpStatus.INTERNAL_SERVER_ERROR;
         errorName = "InternalServerError";
@@ -114,6 +121,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       message: originalMessage,
       errorName,
       rawCode: responseCode,
+      keyedBody,
     });
 
     logUserFacingHttpError(
@@ -137,7 +145,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       error: {
         statusCode: status,
         code: resolved.code,
-        message: [resolved.message],
+        ...(resolved.params ? { params: resolved.params } : {}),
         error: errorName,
         timestamp: new Date().toISOString(),
         path: request?.url || request?.path || "unknown",

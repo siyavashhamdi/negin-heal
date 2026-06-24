@@ -31,11 +31,6 @@ import { SortingOrder } from "../../common/pagination/input";
 import { buildSortOptions } from "../../common/pagination/utils";
 import { env } from "../../config";
 import {
-  CourseNotFoundException,
-  CourseReferencedFileNotFoundException,
-  CourseValidationFailedException,
-} from "../../exceptions";
-import {
   Course,
   CourseChapter,
   CourseDocument,
@@ -279,7 +274,7 @@ export class CourseService {
 
     const existingCourse = await this.courseModel.findById(input.id).exec();
     if (!existingCourse) {
-      throw new CourseNotFoundException();
+      throw new NotFoundException(EXCEPTION_CONSTANT.COURSE_NOT_FOUND);
     }
 
     const oldFileIds = this.collectReferencedFileIds(existingCourse);
@@ -295,7 +290,7 @@ export class CourseService {
       .exec();
 
     if (!updatedCourse) {
-      throw new CourseNotFoundException();
+      throw new NotFoundException(EXCEPTION_CONSTANT.COURSE_NOT_FOUND);
     }
 
     const newFileIds = this.collectReferencedFileIds(normalizedInput);
@@ -330,7 +325,7 @@ export class CourseService {
   ): Promise<CourseDeleteDependenciesGqlResponse> {
     const course = await this.courseModel.findById(input.id).exec();
     if (!course) {
-      throw new CourseNotFoundException();
+      throw new NotFoundException(EXCEPTION_CONSTANT.COURSE_NOT_FOUND);
     }
 
     const counts = await this.collectCourseDeleteDependencyCounts(
@@ -361,7 +356,7 @@ export class CourseService {
   async delete(input: CourseDeleteGqlInput): Promise<void> {
     const existingCourse = await this.courseModel.findById(input.id).exec();
     if (!existingCourse) {
-      throw new CourseNotFoundException();
+      throw new NotFoundException(EXCEPTION_CONSTANT.COURSE_NOT_FOUND);
     }
 
     const oldFileIds = this.collectReferencedFileIds(existingCourse);
@@ -370,7 +365,7 @@ export class CourseService {
       .findByIdAndDelete(input.id)
       .exec();
     if (!deletedCourse) {
-      throw new CourseNotFoundException();
+      throw new NotFoundException(EXCEPTION_CONSTANT.COURSE_NOT_FOUND);
     }
 
     await this.deleteCourseRelatedNotifications(input.id);
@@ -403,23 +398,21 @@ export class CourseService {
     ]);
 
     if (!course) {
-      throw new NotFoundException("Course not found or inactive");
+      throw new NotFoundException(EXCEPTION_CONSTANT.COURSE_NOT_FOUND_OR_INACTIVE);
     }
 
     if (!user) {
-      throw new NotFoundException("User not found");
+      throw new NotFoundException(EXCEPTION_CONSTANT.USER_NOT_FOUND);
     }
 
     if (existingUserCourse?.purchase.status === UserCoursePurchaseStatus.PAID) {
-      throw new ConflictException("You have already purchased this course");
+      throw new ConflictException(EXCEPTION_CONSTANT.COURSE_ALREADY_PURCHASED);
     }
 
     if (
       existingUserCourse?.purchase.status === UserCoursePurchaseStatus.PENDING
     ) {
-      throw new ConflictException(
-        "You already have a pending purchase for this course",
-      );
+      throw new ConflictException(EXCEPTION_CONSTANT.COURSE_PENDING_PURCHASE);
     }
 
     const priceSummary = await this.resolvePurchasePriceSummary(
@@ -503,9 +496,7 @@ export class CourseService {
       await userCourse.save();
     } catch (error) {
       if (this.isDuplicateKeyError(error)) {
-        throw new ConflictException(
-          "You already have a purchase record for this course",
-        );
+        throw new ConflictException(EXCEPTION_CONSTANT.COURSE_PURCHASE_EXISTS);
       }
 
       throw error;
@@ -538,7 +529,7 @@ export class CourseService {
     const normalizedAuthority = this.normalizeOptionalText(authority);
 
     if (!normalizedAuthority) {
-      return { status: "failed", reason: EXCEPTION_CONSTANT.ZARINPAL_MISSING_AUTHORITY.code };
+      return { status: "failed", reason: EXCEPTION_CONSTANT.ZARINPAL_MISSING_AUTHORITY };
     }
 
     const userCourse = await this.userCourseModel
@@ -549,7 +540,7 @@ export class CourseService {
       .exec();
 
     if (!userCourse) {
-      return { status: "failed", reason: EXCEPTION_CONSTANT.ZARINPAL_PURCHASE_NOT_FOUND.code };
+      return { status: "failed", reason: EXCEPTION_CONSTANT.ZARINPAL_PURCHASE_NOT_FOUND };
     }
 
     const courseId = userCourse.courseId.toString();
@@ -606,7 +597,7 @@ export class CourseService {
         return {
           status: "failed",
           courseId,
-          reason: EXCEPTION_CONSTANT.ZARINPAL_VERIFICATION_FAILED.code,
+          reason: EXCEPTION_CONSTANT.ZARINPAL_VERIFICATION_FAILED,
         };
       }
 
@@ -635,7 +626,7 @@ export class CourseService {
       return {
         status: "failed",
         courseId,
-        reason: EXCEPTION_CONSTANT.ZARINPAL_VERIFICATION_ERROR.code,
+        reason: EXCEPTION_CONSTANT.ZARINPAL_VERIFICATION_ERROR,
       };
     }
   }
@@ -646,7 +637,7 @@ export class CourseService {
     const userCourse = await this.userCourseModel.findById(input.id).exec();
 
     if (!userCourse) {
-      throw new NotFoundException("Payment record not found");
+      throw new NotFoundException(EXCEPTION_CONSTANT.PAYMENT_NOT_FOUND);
     }
 
     const relatedLookups = await this.buildCoursePaymentRelatedLookups([
@@ -705,7 +696,7 @@ export class CourseService {
     const userCourse = await this.userCourseModel.findById(input.id).exec();
 
     if (!userCourse) {
-      throw new NotFoundException("Payment record not found");
+      throw new NotFoundException(EXCEPTION_CONSTANT.PAYMENT_NOT_FOUND);
     }
 
     const previousStatus = userCourse.purchase.status;
@@ -764,31 +755,23 @@ export class CourseService {
     ]);
 
     if (!course) {
-      throw new NotFoundException("Course not found or inactive");
+      throw new NotFoundException(EXCEPTION_CONSTANT.COURSE_NOT_FOUND_OR_INACTIVE);
     }
 
     if (this.isCourseFree(course)) {
-      throw new BadRequestException(
-        "Manual payment can only be created for active paid courses",
-      );
+      throw new BadRequestException(EXCEPTION_CONSTANT.MANUAL_PAYMENT_PAID_COURSE_ONLY);
     }
 
     if (!user) {
-      throw new BadRequestException(
-        "Manual payment can only be created for active END_USER accounts",
-      );
+      throw new BadRequestException(EXCEPTION_CONSTANT.MANUAL_PAYMENT_END_USER_ONLY);
     }
 
     if (existingUserCourse?.purchase.status === UserCoursePurchaseStatus.PAID) {
-      throw new ConflictException(
-        "این کاربر قبلاً این دوره را پرداخت کرده است",
-      );
+      throw new ConflictException(EXCEPTION_CONSTANT.USER_COURSE_ALREADY_PAID);
     }
 
     if (existingUserCourse) {
-      throw new ConflictException(
-        "This user already has a purchase record for this course",
-      );
+      throw new ConflictException(EXCEPTION_CONSTANT.USER_COURSE_PURCHASE_EXISTS);
     }
 
     const priceSummary = await this.resolvePurchasePriceSummary(
@@ -868,7 +851,7 @@ export class CourseService {
   async detail(input: CourseDetailGqlInput): Promise<CourseListGqlResponse> {
     const course = await this.courseModel.findById(input.id).exec();
     if (!course) {
-      throw new CourseNotFoundException();
+      throw new NotFoundException(EXCEPTION_CONSTANT.COURSE_NOT_FOUND);
     }
 
     const fileTypeLookup = await this.buildFileTypeLookup([course]);
@@ -1052,7 +1035,7 @@ export class CourseService {
       })
       .exec();
     if (!course) {
-      throw new CourseNotFoundException();
+      throw new NotFoundException(EXCEPTION_CONSTANT.COURSE_NOT_FOUND);
     }
 
     const [fileTypeLookup, userCourseLookup] = await Promise.all([
@@ -1079,7 +1062,7 @@ export class CourseService {
       .select({ chapters: 1, priceIrt: 1, discount: 1 })
       .exec();
     if (!course) {
-      throw new CourseNotFoundException();
+      throw new NotFoundException(EXCEPTION_CONSTANT.COURSE_NOT_FOUND);
     }
 
     const userCourse = await this.userCourseModel
@@ -1089,15 +1072,11 @@ export class CourseService {
       })
       .exec();
     if (!userCourse) {
-      throw new NotFoundException(
-        "Course enrollment was not found for this user",
-      );
+      throw new NotFoundException(EXCEPTION_CONSTANT.COURSE_ENROLLMENT_NOT_FOUND);
     }
 
     if (userCourse.purchase.status !== UserCoursePurchaseStatus.PAID) {
-      throw new BadRequestException(
-        "Chapter completion is only available after course purchase is confirmed",
-      );
+      throw new BadRequestException(EXCEPTION_CONSTANT.CHAPTER_COMPLETION_REQUIRES_PURCHASE);
     }
 
     const chapters = this.sortChaptersForDisplay(
@@ -1107,7 +1086,7 @@ export class CourseService {
       (entry) => entry.key === input.chapterKey.trim(),
     );
     if (!chapter) {
-      throw new NotFoundException("Chapter was not found in this course");
+      throw new NotFoundException(EXCEPTION_CONSTANT.CHAPTER_NOT_FOUND);
     }
 
     const isCourseFree = this.isCourseFree(
@@ -1119,9 +1098,7 @@ export class CourseService {
       paidAt: userCourse.purchase.paidAt,
     };
     if (!canAccessChapter(chapter, chapterAccessContext)) {
-      throw new BadRequestException(
-        "This chapter is locked and cannot be marked as completed yet",
-      );
+      throw new BadRequestException(EXCEPTION_CONSTANT.CHAPTER_LOCKED);
     }
 
     const existingProgress = (userCourse.progress?.chapters || []).find(
@@ -1173,9 +1150,7 @@ export class CourseService {
         (entry) => entry.key === chapter.key,
       );
       if (!latestProgress) {
-        throw new ConflictException(
-          "Chapter completion could not be recorded. Please try again",
-        );
+        throw new ConflictException(EXCEPTION_CONSTANT.CHAPTER_COMPLETION_FAILED);
       }
 
       const latestCounts = this.calculateChapterProgressCounts(
@@ -1497,8 +1472,15 @@ export class CourseService {
     return pendingPurchase != null;
   }
 
-  private failCourseValidation(message: string): never {
-    throw new CourseValidationFailedException({ message });
+  private failCourseValidation(
+    key: (typeof EXCEPTION_CONSTANT)[keyof typeof EXCEPTION_CONSTANT],
+    params?: Record<string, unknown>,
+  ): never {
+    if (params && Object.keys(params).length > 0) {
+      throw new BadRequestException({ key, params });
+    }
+
+    throw new BadRequestException(key);
   }
 
   private formatChapterValidationLabel(
@@ -1530,25 +1512,25 @@ export class CourseService {
 
   private validateCreateInput(input: CourseCreateGqlInput): void {
     if (!input.title?.trim()) {
-      this.failCourseValidation("عنوان دوره الزامی است.");
+      this.failCourseValidation(EXCEPTION_CONSTANT.COURSE_VALIDATION_TITLE_REQUIRED);
     }
 
     if (input.priceIrt != null && input.priceIrt < 0) {
-      this.failCourseValidation("قیمت دوره نمی‌تواند منفی باشد.");
+      this.failCourseValidation(EXCEPTION_CONSTANT.COURSE_VALIDATION_PRICE_NEGATIVE);
     }
 
     if (input.discount) {
       const priceIrt = input.priceIrt ?? 0;
       if (priceIrt > 0) {
         if (input.discount.value <= 0) {
-          this.failCourseValidation("مقدار تخفیف باید عددی مثبت باشد.");
+          this.failCourseValidation(EXCEPTION_CONSTANT.COURSE_VALIDATION_DISCOUNT_POSITIVE);
         }
         if (
           input.discount.type === CourseDiscountType.PERCENTAGE &&
           input.discount.value > 100
         ) {
           this.failCourseValidation(
-            "مقدار تخفیف درصدی باید بین ۰ تا ۱۰۰ باشد.",
+            EXCEPTION_CONSTANT.COURSE_VALIDATION_DISCOUNT_PERCENTAGE_RANGE,
           );
         }
         if (
@@ -1556,14 +1538,14 @@ export class CourseService {
           input.discount.value > priceIrt
         ) {
           this.failCourseValidation(
-            "مقدار تخفیف ثابت نمی‌تواند بیشتر از قیمت دوره باشد.",
+            EXCEPTION_CONSTANT.COURSE_VALIDATION_DISCOUNT_FIXED_TOO_HIGH,
           );
         }
       }
     }
 
     if (!input.chapters?.length) {
-      this.failCourseValidation("حداقل یک فصل لازم است.");
+      this.failCourseValidation(EXCEPTION_CONSTANT.COURSE_CHAPTER_REQUIRED);
     }
 
     for (
@@ -1578,7 +1560,10 @@ export class CourseService {
       );
 
       if (!chapter.title?.trim()) {
-        this.failCourseValidation(`عنوان ${chapterLabel} الزامی است.`);
+        this.failCourseValidation(
+          EXCEPTION_CONSTANT.COURSE_VALIDATION_CHAPTER_TITLE_REQUIRED,
+          { chapterLabel },
+        );
       }
 
       if (
@@ -1586,13 +1571,15 @@ export class CourseService {
         chapter.visibleAfterMinutes < 0
       ) {
         this.failCourseValidation(
-          `مقدار «نمایش بعد از» در ${chapterLabel} نمی‌تواند منفی باشد.`,
+          EXCEPTION_CONSTANT.COURSE_VALIDATION_VISIBLE_AFTER_NEGATIVE,
+          { chapterLabel },
         );
       }
 
       if (!chapter.items?.length) {
         this.failCourseValidation(
-          `${chapterLabel} باید حداقل یک آیتم داشته باشد.`,
+          EXCEPTION_CONSTANT.COURSE_CHAPTER_ITEM_REQUIRED,
+          { chapterLabel },
         );
       }
 
@@ -1610,7 +1597,10 @@ export class CourseService {
         );
 
         if (!item.title?.trim()) {
-          this.failCourseValidation(`عنوان ${itemLabel} الزامی است.`);
+          this.failCourseValidation(
+            EXCEPTION_CONSTANT.COURSE_VALIDATION_CHAPTER_TITLE_REQUIRED,
+            { chapterLabel: itemLabel },
+          );
         }
 
         const hasFile = Boolean(item.fileId);
@@ -1618,13 +1608,15 @@ export class CourseService {
 
         if (hasFile && hasArticle) {
           this.failCourseValidation(
-            `${itemLabel} نمی‌تواند هم‌زمان فایل و متن مقاله داشته باشد.`,
+            EXCEPTION_CONSTANT.COURSE_ITEM_FILE_AND_ARTICLE_BOTH,
+            { itemLabel },
           );
         }
 
         if (!hasFile && !hasArticle) {
           this.failCourseValidation(
-            `محتوای ${itemLabel} الزامی است. فایل آپلود کنید یا متن مقاله وارد کنید.`,
+            EXCEPTION_CONSTANT.COURSE_ITEM_CONTENT_REQUIRED,
+            { itemLabel },
           );
         }
       }
@@ -1721,7 +1713,7 @@ export class CourseService {
       .exec();
 
     if (existingFileIds.length !== fileIds.length) {
-      throw new CourseReferencedFileNotFoundException();
+      throw new NotFoundException(EXCEPTION_CONSTANT.COURSE_REFERENCED_FILE_NOT_FOUND);
     }
   }
 
@@ -2654,7 +2646,7 @@ export class CourseService {
     input: CoursePurchaseSubmitGqlInput,
   ): void {
     if (!Types.ObjectId.isValid(input.courseId)) {
-      throw new BadRequestException("Course ID is invalid");
+      throw new BadRequestException(EXCEPTION_CONSTANT.COURSE_ID_INVALID);
     }
 
     if (
@@ -2665,7 +2657,7 @@ export class CourseService {
         UserCoursePaymentMethod.FREE,
       ].includes(input.paymentMethod)
     ) {
-      throw new BadRequestException("Payment method is not supported");
+      throw new BadRequestException(EXCEPTION_CONSTANT.PAYMENT_METHOD_NOT_SUPPORTED);
     }
 
     if (input.paymentMethod === UserCoursePaymentMethod.CARD_TO_CARD) {
@@ -2677,9 +2669,7 @@ export class CourseService {
         Types.ObjectId.isValid(input.uploadedReceiptFileId);
 
       if (!hasPaymentReference && !hasReceiptFile) {
-        throw new BadRequestException(
-          "Payment reference or uploaded receipt file is required for card-to-card purchases",
-        );
+        throw new BadRequestException(EXCEPTION_CONSTANT.CARD_TO_CARD_EVIDENCE_REQUIRED);
       }
     }
 
@@ -2687,9 +2677,7 @@ export class CourseService {
       input.paymentMethod === UserCoursePaymentMethod.CRYPTOCURRENCY &&
       !this.normalizeOptionalText(input.transactionId)
     ) {
-      throw new BadRequestException(
-        "Transaction ID is required for cryptocurrency purchases",
-      );
+      throw new BadRequestException(EXCEPTION_CONSTANT.TRANSACTION_ID_REQUIRED);
     }
 
     if (input.paymentMethod === UserCoursePaymentMethod.FREE) {
@@ -2698,9 +2686,7 @@ export class CourseService {
         this.normalizeOptionalText(input.transactionId) ||
         input.uploadedReceiptFileId
       ) {
-        throw new BadRequestException(
-          "Free purchases cannot include manual payment evidence",
-        );
+        throw new BadRequestException(EXCEPTION_CONSTANT.FREE_PURCHASE_NO_EVIDENCE);
       }
     }
 
@@ -2710,9 +2696,7 @@ export class CourseService {
         this.normalizeOptionalText(input.transactionId) ||
         input.uploadedReceiptFileId
       ) {
-        throw new BadRequestException(
-          "Gateway purchases cannot include manual payment evidence",
-        );
+        throw new BadRequestException(EXCEPTION_CONSTANT.GATEWAY_PURCHASE_NO_EVIDENCE);
       }
     }
   }
@@ -2721,19 +2705,19 @@ export class CourseService {
     input: CoursePaymentManualCreateGqlInput,
   ): void {
     if (!Types.ObjectId.isValid(input.userId)) {
-      throw new BadRequestException("User ID is invalid");
+      throw new BadRequestException(EXCEPTION_CONSTANT.USER_ID_INVALID);
     }
 
     if (!Types.ObjectId.isValid(input.courseId)) {
-      throw new BadRequestException("Course ID is invalid");
+      throw new BadRequestException(EXCEPTION_CONSTANT.COURSE_ID_INVALID);
     }
 
     if (!Object.values(UserCoursePaymentMethod).includes(input.paymentMethod)) {
-      throw new BadRequestException("Payment method is not supported");
+      throw new BadRequestException(EXCEPTION_CONSTANT.PAYMENT_METHOD_NOT_SUPPORTED);
     }
 
     if (!Object.values(UserCoursePurchaseStatus).includes(input.status)) {
-      throw new BadRequestException("Purchase status is not supported");
+      throw new BadRequestException(EXCEPTION_CONSTANT.PURCHASE_STATUS_NOT_SUPPORTED);
     }
   }
 
@@ -2768,17 +2752,12 @@ export class CourseService {
         },
       ));
     } catch (error) {
-      throw new BadRequestException(
-        this.extractZarinPalErrorMessage(error) ||
-          "Unable to connect to ZarinPal",
-      );
+      throw new BadRequestException(EXCEPTION_CONSTANT.ZARINPAL_CONNECTION_FAILED);
     }
 
     const payment = data.data;
     if (!payment || payment.code !== 100 || !payment.authority) {
-      throw new BadRequestException(
-        payment?.message || "ZarinPal payment request failed",
-      );
+      throw new BadRequestException(EXCEPTION_CONSTANT.ZARINPAL_PAYMENT_FAILED);
     }
 
     return {
@@ -2798,16 +2777,16 @@ export class CourseService {
       );
 
     if (!parsedConfig) {
-      throw new BadRequestException("ZarinPal config is not configured");
+      throw new BadRequestException(EXCEPTION_CONSTANT.ZARINPAL_CONFIG_ERROR);
     }
 
     if (Array.isArray(parsedConfig)) {
-      throw new BadRequestException("ZarinPal config is invalid");
+      throw new BadRequestException(EXCEPTION_CONSTANT.ZARINPAL_CONFIG_ERROR);
     }
 
     const minAmountIrr = Number(parsedConfig.minAmountIrr);
     if (!Number.isFinite(minAmountIrr) || minAmountIrr <= 0) {
-      throw new BadRequestException("ZarinPal min amount is not configured");
+      throw new BadRequestException(EXCEPTION_CONSTANT.ZARINPAL_CONFIG_ERROR);
     }
 
     return {
@@ -2835,7 +2814,10 @@ export class CourseService {
 
   private resolveZarinPalConfigUrl(value: unknown, fieldName: string): string {
     if (typeof value !== "string" || !value.trim()) {
-      throw new BadRequestException(`ZarinPal ${fieldName} is not configured`);
+      throw new BadRequestException({
+        key: EXCEPTION_CONSTANT.ZARINPAL_CONFIG_ERROR,
+        params: { fieldName },
+      });
     }
 
     return value.trim().replace(/\/+$/, "");
@@ -2845,7 +2827,7 @@ export class CourseService {
     const normalizedMerchantId =
       typeof value === "string" ? this.normalizeOptionalText(value) : undefined;
     if (!normalizedMerchantId) {
-      throw new BadRequestException("ZarinPal merchant ID is not configured");
+      throw new BadRequestException(EXCEPTION_CONSTANT.ZARINPAL_CONFIG_ERROR);
     }
 
     return normalizedMerchantId;
@@ -2926,9 +2908,7 @@ export class CourseService {
       );
 
       if (!couponResult.isValid) {
-        throw new BadRequestException(
-          couponResult.message || "Coupon is not valid for this purchase",
-        );
+        throw new BadRequestException(couponResult.message || EXCEPTION_CONSTANT.COUPON_INVALID_FOR_PURCHASE);
       }
 
       if (
@@ -2940,9 +2920,7 @@ export class CourseService {
         couponResult.couponDiscountAmountIrt == null ||
         couponResult.finalAmountIrt == null
       ) {
-        throw new BadRequestException(
-          "Coupon validation response is incomplete",
-        );
+        throw new BadRequestException(EXCEPTION_CONSTANT.COUPON_VALIDATION_INCOMPLETE);
       }
 
       return {
@@ -3012,18 +2990,14 @@ export class CourseService {
   ): void {
     if (input.paymentMethod === UserCoursePaymentMethod.FREE) {
       if (finalAmountIrt > 0) {
-        throw new BadRequestException(
-          "Free purchase is only available when the final amount is zero",
-        );
+        throw new BadRequestException(EXCEPTION_CONSTANT.FREE_PURCHASE_AMOUNT_MISMATCH);
       }
 
       return;
     }
 
     if (finalAmountIrt <= 0) {
-      throw new BadRequestException(
-        "Use FREE payment method when the final amount is zero",
-      );
+      throw new BadRequestException(EXCEPTION_CONSTANT.FREE_PAYMENT_METHOD_REQUIRED);
     }
   }
 
@@ -3043,7 +3017,7 @@ export class CourseService {
       .exec();
 
     if (!receiptFile) {
-      throw new NotFoundException("Uploaded receipt file not found");
+      throw new NotFoundException(EXCEPTION_CONSTANT.RECEIPT_FILE_NOT_FOUND);
     }
 
     return receiptFile._id;
@@ -3062,7 +3036,7 @@ export class CourseService {
       .exec();
 
     if (!receiptFile) {
-      throw new NotFoundException("Uploaded payment evidence file not found");
+      throw new NotFoundException(EXCEPTION_CONSTANT.PAYMENT_EVIDENCE_NOT_FOUND);
     }
 
     return receiptFile._id;

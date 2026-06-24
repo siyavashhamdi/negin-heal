@@ -8,6 +8,7 @@ import {
 } from "@nestjs/common";
 
 import { PAGINATION_CONSTANT } from "../../constants";
+import { EXCEPTION_CONSTANT } from "../../constants/exception.constant";
 import { SortingOrder } from "../../common/pagination/input";
 import { buildSortOptions } from "../../common/pagination/utils";
 import {
@@ -103,7 +104,7 @@ export class TicketService {
     const ticket = await this.ticketModel.findById(input.id).exec();
 
     if (!ticket) {
-      throw new NotFoundException("Ticket not found");
+      throw new NotFoundException(EXCEPTION_CONSTANT.TICKET_NOT_FOUND);
     }
 
     const relatedLookups = await this.buildTicketRelatedLookups([
@@ -125,7 +126,7 @@ export class TicketService {
       .exec();
 
     if (!ticket) {
-      throw new NotFoundException("Ticket not found");
+      throw new NotFoundException(EXCEPTION_CONSTANT.TICKET_NOT_FOUND);
     }
 
     const relatedLookups = await this.buildTicketRelatedLookups([
@@ -237,7 +238,7 @@ export class TicketService {
         .findById(params.input.id)
         .exec();
       if (!existingTicket) {
-        throw new NotFoundException("Ticket not found");
+        throw new NotFoundException(EXCEPTION_CONSTANT.TICKET_NOT_FOUND);
       }
 
       if (
@@ -247,9 +248,7 @@ export class TicketService {
           params.actorUserId,
         )
       ) {
-        throw new ForbiddenException(
-          "You can only update your own support tickets",
-        );
+        throw new ForbiddenException(EXCEPTION_CONSTANT.TICKET_OWNERSHIP_REQUIRED);
       }
 
       if (this.hasNonEmptyText(params.input.title)) {
@@ -296,7 +295,7 @@ export class TicketService {
       "Ticket title",
     );
     if (!params.input.category) {
-      throw new BadRequestException("Ticket category is required");
+      throw new BadRequestException(EXCEPTION_CONSTANT.TICKET_CATEGORY_REQUIRED);
     }
 
     const assignedEndUserId =
@@ -338,16 +337,14 @@ export class TicketService {
   }): Promise<TicketListRecord> {
     const ticket = await this.ticketModel.findById(params.ticketId).exec();
     if (!ticket) {
-      throw new NotFoundException("Ticket not found");
+      throw new NotFoundException(EXCEPTION_CONSTANT.TICKET_NOT_FOUND);
     }
 
     if (
       params.actorRole === UserRole.END_USER &&
       !this.isSameObjectId(ticket.audit?.createdBy, params.actorUserId)
     ) {
-      throw new ForbiddenException(
-        "You can only close your own support tickets",
-      );
+      throw new ForbiddenException(EXCEPTION_CONSTANT.TICKET_CLOSE_OWNERSHIP_REQUIRED);
     }
 
     ticket.status = TicketStatus.CLOSED;
@@ -408,7 +405,7 @@ export class TicketService {
   ): Promise<Types.ObjectId> {
     const endUserId = "endUserId" in input ? input.endUserId : undefined;
     if (!endUserId) {
-      throw new BadRequestException("End-user ID is required");
+      throw new BadRequestException(EXCEPTION_CONSTANT.END_USER_ID_REQUIRED);
     }
 
     const user = await this.userModel
@@ -417,10 +414,10 @@ export class TicketService {
       .lean<Pick<User, "roles"> & { _id: Types.ObjectId }>()
       .exec();
     if (!user) {
-      throw new NotFoundException("End user not found");
+      throw new NotFoundException(EXCEPTION_CONSTANT.END_USER_NOT_FOUND);
     }
     if (!user.roles?.includes(UserRole.END_USER)) {
-      throw new BadRequestException("Assigned user must have END_USER role");
+      throw new BadRequestException(EXCEPTION_CONSTANT.ASSIGNED_USER_MUST_BE_END_USER);
     }
 
     return user._id;
@@ -1148,7 +1145,7 @@ export class TicketService {
   ): string {
     const normalizedValue = this.normalizeOptionalText(value);
     if (!normalizedValue) {
-      throw new BadRequestException(`${fieldName} is required`);
+      throw new BadRequestException({ key: EXCEPTION_CONSTANT.VALIDATION_FAILED, params: { fieldName } });
     }
 
     return normalizedValue;

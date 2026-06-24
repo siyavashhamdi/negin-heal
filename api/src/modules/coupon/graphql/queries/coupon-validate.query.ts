@@ -1,4 +1,6 @@
 import { ForbiddenException, UseGuards } from "@nestjs/common";
+
+import { EXCEPTION_CONSTANT } from "../../../../constants/exception.constant";
 import { Args, Context, Query, Resolver } from "@nestjs/graphql";
 
 import { UserRole } from "../../../../enums";
@@ -25,9 +27,7 @@ export class CouponValidateQuery {
     const isEndUser = user?.roles?.includes(UserRole.END_USER) === true;
 
     if (!user || !isEndUser) {
-      throw new ForbiddenException(
-        "couponValidate is only available to END_USER accounts",
-      );
+      throw new ForbiddenException(EXCEPTION_CONSTANT.END_USER_ONLY);
     }
 
     return this.couponService.validateForCoursePurchase(
