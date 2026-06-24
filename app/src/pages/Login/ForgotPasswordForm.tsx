@@ -29,6 +29,7 @@ interface ForgotPasswordFormProps {
 export const ForgotPasswordForm = ({
   embedded = false,
   initialIdentity = null,
+  onBackToLogin,
   onPasswordResetRequested,
 }: ForgotPasswordFormProps): ReactElement => {
   const { t } = useTranslation();
@@ -167,6 +168,16 @@ export const ForgotPasswordForm = ({
           }
         >
           {requestingResetCode ? t("auth.login.sendingResetCode") : t("auth.login.sendResetCode")}
+        </Button>
+
+        <Button
+          type="button"
+          variant="text"
+          className={formStyles.formTextButton}
+          disabled={requestingResetCode}
+          onClick={onBackToLogin}
+        >
+          {t("auth.login.backToSignIn")}
         </Button>
       </form>
     </LoginShell>
