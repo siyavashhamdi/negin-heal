@@ -10,7 +10,7 @@ export function AppUpdatePrompt(): ReactElement {
   const { t } = useTranslation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"), { noSsr: true });
-  const { updateAvailable, confirmUpdate, dismissUpdate } = useAppUpdatePrompt();
+  const { updateAvailable, isApplyingUpdate, confirmUpdate, dismissUpdate } = useAppUpdatePrompt();
   const alertSx = getSnackbarFilledAlertSx("info");
   const alertTone = getSnackbarFilledAlertTone("info");
 
@@ -38,10 +38,16 @@ export function AppUpdatePrompt(): ReactElement {
         }}
         action={
           <Stack direction="row" spacing={0.5} sx={{ flexShrink: 0 }}>
-            <Button color="inherit" size="small" variant="outlined" onClick={dismissUpdate}>
+            <Button color="inherit" size="small" variant="outlined" onClick={dismissUpdate} disabled={isApplyingUpdate}>
               {t("layout.appUpdate.laterButton")}
             </Button>
-            <Button color="inherit" size="small" variant="outlined" onClick={confirmUpdate}>
+            <Button
+              color="inherit"
+              size="small"
+              variant="outlined"
+              onClick={confirmUpdate}
+              disabled={isApplyingUpdate}
+            >
               {t("layout.appUpdate.updateButton")}
             </Button>
           </Stack>

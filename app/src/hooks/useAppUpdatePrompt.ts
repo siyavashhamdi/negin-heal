@@ -4,14 +4,18 @@ import { applyAppUpdate, subscribeAppUpdateAvailable } from "../utils/pwaRegistr
 
 export function useAppUpdatePrompt(): {
   readonly updateAvailable: boolean;
+  readonly isApplyingUpdate: boolean;
   readonly confirmUpdate: () => void;
   readonly dismissUpdate: () => void;
 } {
   const [updateAvailable, setUpdateAvailable] = useState(false);
+  const [isApplyingUpdate, setIsApplyingUpdate] = useState(false);
 
   useEffect(() => subscribeAppUpdateAvailable(() => setUpdateAvailable(true)), []);
 
   const confirmUpdate = useCallback(() => {
+    setUpdateAvailable(false);
+    setIsApplyingUpdate(true);
     applyAppUpdate();
   }, []);
 
@@ -19,5 +23,5 @@ export function useAppUpdatePrompt(): {
     setUpdateAvailable(false);
   }, []);
 
-  return { updateAvailable, confirmUpdate, dismissUpdate };
+  return { updateAvailable, isApplyingUpdate, confirmUpdate, dismissUpdate };
 }

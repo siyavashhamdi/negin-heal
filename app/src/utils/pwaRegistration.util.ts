@@ -1,8 +1,9 @@
 import { registerSW } from "virtual:pwa-register";
 
-import { emptyCacheAndHardReload } from "./hardReload.util";
-
 const LEGACY_PUSH_SW_FILENAME = "push-sw.js";
+const SESSION_APP_UPDATE_RELOADING_KEY = "negin-heal:app-update-reloading";
+/** Fallback when skipWaiting/activation does not reload within this window. */
+const APP_UPDATE_RELOAD_FALLBACK_MS = 4_000;
 
 type NeedRefreshListener = () => void;
 type ApplyServiceWorkerUpdate = (reloadPage?: boolean) => Promise<void>;
@@ -10,6 +11,7 @@ type ApplyServiceWorkerUpdate = (reloadPage?: boolean) => Promise<void>;
 let activeRegistration: ServiceWorkerRegistration | undefined;
 let applyServiceWorkerUpdate: ApplyServiceWorkerUpdate | undefined;
 let updateAvailablePending = false;
+let updateApplying = false;
 const needRefreshListeners = new Set<NeedRefreshListener>();
 
 function getRegistrationScriptUrls(registration: ServiceWorkerRegistration): string[] {
@@ -18,7 +20,31 @@ function getRegistrationScriptUrls(registration: ServiceWorkerRegistration): str
     .map((worker) => worker.scriptURL);
 }
 
+function readJustReloadedForUpdate(): boolean {
+  try {
+    const justReloaded = sessionStorage.getItem(SESSION_APP_UPDATE_RELOADING_KEY) === "1";
+    if (justReloaded) {
+      sessionStorage.removeItem(SESSION_APP_UPDATE_RELOADING_KEY);
+    }
+    return justReloaded;
+  } catch {
+    return false;
+  }
+}
+
+function markReloadingForUpdate(): void {
+  try {
+    sessionStorage.setItem(SESSION_APP_UPDATE_RELOADING_KEY, "1");
+  } catch {
+    // Best effort only.
+  }
+}
+
 function notifyNeedRefresh(): void {
+  if (updateApplying) {
+    return;
+  }
+
   if (needRefreshListeners.size === 0) {
     updateAvailablePending = true;
     return;
@@ -50,6 +76,13 @@ async function unregisterLegacyPushServiceWorkers(): Promise<void> {
 export function subscribeAppUpdateAvailable(listener: NeedRefreshListener): () => void {
   needRefreshListeners.add(listener);
 
+  if (readJustReloadedForUpdate()) {
+    updateAvailablePending = false;
+    return () => {
+      needRefreshListeners.delete(listener);
+    };
+  }
+
   if (updateAvailablePending) {
     listener();
     updateAvailablePending = false;
@@ -60,35 +93,41 @@ export function subscribeAppUpdateAvailable(listener: NeedRefreshListener): () =
   };
 }
 
+/**
+ * Activates the waiting service worker and reloads once.
+ * vite-plugin-pwa (prompt mode) reloads on Workbox "controlling"; we only add a
+ * timed fallback — never unregister workers or wipe caches here (that caused
+ * white screens and repeated update prompts).
+ */
 export function applyAppUpdate(): void {
+  if (updateApplying) {
+    return;
+  }
+
+  updateApplying = true;
+  updateAvailablePending = false;
+  markReloadingForUpdate();
+
   void (async () => {
+    let reloaded = false;
+
+    const reloadOnce = (): void => {
+      if (reloaded) {
+        return;
+      }
+      reloaded = true;
+      window.location.reload();
+    };
+
+    const fallbackTimer = window.setTimeout(reloadOnce, APP_UPDATE_RELOAD_FALLBACK_MS);
+
     try {
-      await applyServiceWorkerUpdate?.(true);
+      await applyServiceWorkerUpdate?.();
     } catch {
-      // Best effort before hard reload.
+      window.clearTimeout(fallbackTimer);
+      reloadOnce();
     }
-
-    await emptyCacheAndHardReload();
   })();
-}
-
-function watchForWaitingServiceWorker(registration: ServiceWorkerRegistration): void {
-  const notifyIfWaiting = (): void => {
-    if (registration.waiting) {
-      notifyNeedRefresh();
-    }
-  };
-
-  notifyIfWaiting();
-
-  registration.addEventListener("updatefound", () => {
-    const installingWorker = registration.installing;
-    if (!installingWorker) {
-      return;
-    }
-
-    installingWorker.addEventListener("statechange", notifyIfWaiting);
-  });
 }
 
 export function registerPwaServiceWorker(): void {
@@ -105,7 +144,6 @@ export function registerPwaServiceWorker(): void {
       onRegistered(registration) {
         if (registration) {
           activeRegistration = registration;
-          watchForWaitingServiceWorker(registration);
         }
       },
       onRegisterError(error) {
