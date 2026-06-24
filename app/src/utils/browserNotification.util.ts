@@ -1,3 +1,4 @@
+import { LOCAL_STORAGE_KEYS } from "../constants";
 import { PWA_ICON_192 } from "../constants/pwa.constants";
 import { getPwaServiceWorkerRegistration } from "./pwaRegistration.util";
 
@@ -6,6 +7,57 @@ export type BrowserNotificationInput = {
   readonly body: string;
   readonly tag?: string;
 };
+
+export type NotificationPushPayload = {
+  readonly isPushNotification?: boolean;
+  readonly messageType?: string;
+  readonly courseId?: string;
+  readonly chapterKey?: string;
+  readonly purchaseStatus?: string;
+};
+
+function readNotificationsEnabledPreference(fallback = true): boolean {
+  const stored = localStorage.getItem(LOCAL_STORAGE_KEYS.NOTIFICATIONS_ENABLED);
+  if (stored === "true") {
+    return true;
+  }
+  if (stored === "false") {
+    return false;
+  }
+  return fallback;
+}
+
+export function isGlobalAnnouncementNotificationPayload(
+  payload: NotificationPushPayload | null | undefined
+): boolean {
+  if (!payload) {
+    return false;
+  }
+
+  const messageType =
+    typeof payload.messageType === "string" ? payload.messageType.toUpperCase() : "";
+  const isAnnouncementMessageType = messageType === "POPUP" || messageType === "SNACKBAR";
+  if (!isAnnouncementMessageType) {
+    return false;
+  }
+
+  return !payload.courseId && !payload.chapterKey && payload.purchaseStatus === undefined;
+}
+
+export function shouldDeliverNotificationPush(
+  payload: NotificationPushPayload | null | undefined,
+  notificationsEnabled = readNotificationsEnabledPreference()
+): boolean {
+  if (!notificationsEnabled) {
+    return false;
+  }
+
+  if (isGlobalAnnouncementNotificationPayload(payload)) {
+    return Boolean(payload?.isPushNotification);
+  }
+
+  return true;
+}
 
 export function isSecureBrowserContext(): boolean {
   return typeof window !== "undefined" && window.isSecureContext;
@@ -132,4 +184,31 @@ export async function showBrowserNotification(input: BrowserNotificationInput): 
   }
 
   return showNotificationViaPageConstructor(input);
+}
+
+export async function deliverNotificationPushIfEnabled(
+  input: BrowserNotificationInput,
+  payload?: NotificationPushPayload | null
+): Promise<boolean> {
+  if (!shouldDeliverNotificationPush(payload)) {
+    return false;
+  }
+
+  if (!isBrowserNotificationDeliverySupported()) {
+    return false;
+  }
+
+  const permission = getBrowserNotificationPermission();
+  if (permission !== "granted") {
+    if (permission !== "default") {
+      return false;
+    }
+
+    const granted = await ensureBrowserNotificationPermission();
+    if (!granted) {
+      return false;
+    }
+  }
+
+  return showBrowserNotification(input);
 }

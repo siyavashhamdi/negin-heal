@@ -48,7 +48,7 @@ import { notifyBadgeCountUpdateListeners } from "../lib/badge-count-update-liste
 import { notifyGeneralUpdateListeners } from "../lib/general-updates-listeners";
 import { APP_SHELL_ROUTES, isCourseDetailRoute } from "../routing/app-shell-routes";
 import { resolveNotificationActionPayload } from "../utilities/notification-action.util";
-import { showBrowserNotification } from "../utils/browserNotification.util";
+import { deliverNotificationPushIfEnabled } from "../utils/browserNotification.util";
 import { scrollToTopOnMobile } from "../utils/scrollToTopOnMobile.util";
 import { AppShellNavItemIcon } from "./AppShellNavItemIcon";
 import {
@@ -93,6 +93,9 @@ type NotificationPayload = Partial<TitleDescItem> & {
   readonly messageType?: GeneralNotificationMessageType;
   readonly isPushNotification?: boolean;
   readonly mode?: string;
+  readonly courseId?: string;
+  readonly chapterKey?: string;
+  readonly purchaseStatus?: string;
 };
 type GeneralUpdatePopupMode = "info" | "success" | "warning" | "error";
 type GeneralUpdatePopupAction = {
@@ -281,7 +284,7 @@ export function MainLayout({
 
   const {
     items: headerNotifications,
-    upsertLiveHeaderNotification,
+    upsertLiveItem: upsertLiveHeaderNotification,
     markAllAsRead: markAllHeaderNotificationsAsRead,
     canMarkAllAsRead: canMarkAllHeaderNotificationsAsRead,
     isMarkingAllAsRead: isMarkingAllHeaderNotificationsAsRead,
@@ -341,13 +344,14 @@ export function MainLayout({
         };
       });
 
-      if (payload?.isPushNotification) {
-        void showBrowserNotification({
+      void deliverNotificationPushIfEnabled(
+        {
           title: incomingTitle ?? "اعلان جدید",
           body: incomingDescription,
           tag: popupId,
-        });
-      }
+        },
+        payload
+      );
 
       if (!messageType) {
         return;
@@ -369,7 +373,7 @@ export function MainLayout({
         action,
       });
     },
-    [showSnackbar, upsertLiveHeaderNotification]
+    [showSnackbar, upsertLiveHeaderNotification],
   );
 
   useGeneralUpdatesSubscription({

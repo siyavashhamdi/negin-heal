@@ -34,7 +34,7 @@ export default function AppTooltip({
 }: AppTooltipProps): ReactElement {
   const isMobileLayout = useMobileAppLayout();
   const isControlled = openProp !== undefined;
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const triggerRef = useRef<HTMLElement | null>(null);
   const childElement = isValidElement(children) ? children : null;
   const childRef = childElement?.ref as React.Ref<HTMLElement> | undefined;
@@ -42,11 +42,7 @@ export default function AppTooltip({
 
   const hasTooltipContent = title !== "" && title != null && title !== false;
   const useMobileBehavior = isMobileLayout && hasTooltipContent;
-  const isTooltipOpen = useMobileBehavior
-    ? isControlled
-      ? Boolean(openProp)
-      : mobileOpen
-    : openProp;
+  const isTooltipOpen = isControlled ? Boolean(openProp) : uncontrolledOpen;
 
   const resolvedEnterTouchDelay =
     enterTouchDelay ?? (useMobileBehavior ? MOBILE_TOOLTIP_LONG_PRESS_MS : 700);
@@ -60,7 +56,7 @@ export default function AppTooltip({
       onClose?.({ type: "dismiss" } as SyntheticEvent);
       return;
     }
-    setMobileOpen(false);
+    setUncontrolledOpen(false);
   }, [isControlled, onClose]);
 
   useEffect(() => {
@@ -84,7 +80,7 @@ export default function AppTooltip({
     };
   }, [closeMobileTooltip, isTooltipOpen, useMobileBehavior]);
 
-  const resolvedOpen = useMobileBehavior ? (isControlled ? openProp : mobileOpen) : openProp;
+  const resolvedOpen = isControlled ? openProp : uncontrolledOpen;
 
   const enhancedChild = childElement
     ? cloneElement(childElement as ReactElement<TriggerChildProps>, {
@@ -98,14 +94,14 @@ export default function AppTooltip({
       title={title}
       open={resolvedOpen}
       onOpen={(event) => {
-        if (useMobileBehavior && !isControlled) {
-          setMobileOpen(true);
+        if (!isControlled) {
+          setUncontrolledOpen(true);
         }
         onOpen?.(event);
       }}
       onClose={(event) => {
-        if (useMobileBehavior && !isControlled) {
-          setMobileOpen(false);
+        if (!isControlled) {
+          setUncontrolledOpen(false);
         }
         onClose?.(event);
       }}
