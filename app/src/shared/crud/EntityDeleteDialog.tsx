@@ -41,15 +41,13 @@ const EntityDeleteDialog = ({
     ) : undefined);
 
   const resolvedHint =
-    prominent && children != null && isValidElement(children) ? (
-      cloneElement(children, {
-        className: [confirmStyles.confirmDialogHint, children.props.className]
-          .filter(Boolean)
-          .join(" "),
-      })
-    ) : (
-      children
-    );
+    prominent && children != null && isValidElement(children)
+      ? cloneElement(children, {
+          className: [confirmStyles.confirmDialogHint, children.props.className]
+            .filter(Boolean)
+            .join(" "),
+        })
+      : children;
 
   return (
     <EntityConfirmDialogShell

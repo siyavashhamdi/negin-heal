@@ -10,10 +10,8 @@ export type ActiveEndUserOption = {
 };
 
 export const ACTIVE_END_USER_COMBOBOX_LABEL = "کاربر";
-export const ACTIVE_END_USER_COMBOBOX_PLACEHOLDER =
-  "جستجو براساس نام، نام کاربری، ایمیل یا موبایل";
-export const ACTIVE_END_USER_COMBOBOX_NO_OPTIONS_TEXT =
-  "کاربر فعال با نقش کاربر نهایی پیدا نشد.";
+export const ACTIVE_END_USER_COMBOBOX_PLACEHOLDER = "جستجو براساس نام، نام کاربری، ایمیل یا موبایل";
+export const ACTIVE_END_USER_COMBOBOX_NO_OPTIONS_TEXT = "کاربر فعال با نقش کاربر نهایی پیدا نشد.";
 
 export const ACTIVE_END_USER_DEFAULT_OPTIONS_LIMIT = 10;
 export const ACTIVE_END_USER_SEARCH_OPTIONS_LIMIT = 200;
@@ -36,7 +34,9 @@ export function userToActiveEndUserOption(row: UserListItemRow): ActiveEndUserOp
   };
 }
 
-export function mapActiveEndUserListItems(items: readonly UserListItemRow[]): ActiveEndUserOption[] {
+export function mapActiveEndUserListItems(
+  items: readonly UserListItemRow[]
+): ActiveEndUserOption[] {
   return items
     .filter((user) => user.roles.length === 1 && user.roles[0] === "END_USER")
     .map(userToActiveEndUserOption);

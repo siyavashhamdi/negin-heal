@@ -45,7 +45,9 @@ export class EmailTemplate<TInputs extends EmailTemplateInputs> {
   }
 
   render(): string {
-    const requiredPlaceholders = EmailTemplate.extractPlaceholders(this.template);
+    const requiredPlaceholders = EmailTemplate.extractPlaceholders(
+      this.template,
+    );
     const missingInputs = requiredPlaceholders.filter(
       (key) =>
         !Object.prototype.hasOwnProperty.call(this.normalizedInputs, key),

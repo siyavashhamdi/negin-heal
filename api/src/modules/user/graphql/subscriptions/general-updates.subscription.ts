@@ -45,7 +45,8 @@ export class GeneralUpdatesSubscription {
 
       return selectedTypes.includes(update.data.updateType);
     },
-    resolve: (payload: GeneralUpdatesTopicPayload) => payload.generalUpdates.data,
+    resolve: (payload: GeneralUpdatesTopicPayload) =>
+      payload.generalUpdates.data,
   })
   @UseGuards(GqlAuthGuard)
   subscribe(
@@ -72,7 +73,8 @@ export class GeneralUpdatesSubscription {
       updateTypes,
     });
 
-    const iterator = this.userSubscriptionService.createGeneralUpdatesIterator();
+    const iterator =
+      this.userSubscriptionService.createGeneralUpdatesIterator();
 
     return this.wrapIterator(iterator, connectionId, operationId);
   }
@@ -86,7 +88,10 @@ export class GeneralUpdatesSubscription {
     const originalThrow = iterator.throw?.bind(iterator);
 
     iterator.return = async (value?: unknown) => {
-      this.userSubscriptionService.unregisterSubscription(connectionId, operationId);
+      this.userSubscriptionService.unregisterSubscription(
+        connectionId,
+        operationId,
+      );
       if (originalReturn) {
         return originalReturn(value);
       }
@@ -95,7 +100,10 @@ export class GeneralUpdatesSubscription {
     };
 
     iterator.throw = async (error?: unknown) => {
-      this.userSubscriptionService.unregisterSubscription(connectionId, operationId);
+      this.userSubscriptionService.unregisterSubscription(
+        connectionId,
+        operationId,
+      );
       if (originalThrow) {
         return originalThrow(error);
       }

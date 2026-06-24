@@ -17,7 +17,8 @@ export class UserRequestEmailVerificationMutation {
 
   @Mutation(() => UserPasswordResetGqlResponse, {
     name: "userRequestEmailVerification",
-    description: "Send a verification email to the authenticated user's address",
+    description:
+      "Send a verification email to the authenticated user's address",
   })
   @UseGuards(GqlAuthGuard, RateLimitGuard)
   @RateLimit({ ttl: 60, limit: 5 })

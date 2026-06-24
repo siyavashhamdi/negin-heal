@@ -12,12 +12,7 @@ import {
   ToggleButtonGroup,
   Typography,
 } from "@mui/material";
-import {
-  Lock as LockIcon,
-  Sms as SmsIcon,
-  Visibility,
-  VisibilityOff,
-} from "@mui/icons-material";
+import { Lock as LockIcon, Sms as SmsIcon, Visibility, VisibilityOff } from "@mui/icons-material";
 import { useTranslation } from "../../hooks/useTranslation";
 import { useLogin } from "../../hooks/useLogin";
 import { useSnackbar } from "../../hooks/useSnackbar";
@@ -36,11 +31,7 @@ import verifyStyles from "./styles/VerifyLoginCode.module.scss";
 const VERIFICATION_CODE_LENGTH = 6;
 const VERIFICATION_CODE_REGEX = /^\d{4,6}$/;
 const EMPTY_DIGITS: readonly string[] = Array.from({ length: VERIFICATION_CODE_LENGTH }, () => "");
-const CAPTCHA_ERROR_CODES = new Set([
-  "CAPTCHA_REQUIRED",
-  "CAPTCHA_EXPIRED",
-  "CAPTCHA_INVALID",
-]);
+const CAPTCHA_ERROR_CODES = new Set(["CAPTCHA_REQUIRED", "CAPTCHA_EXPIRED", "CAPTCHA_INVALID"]);
 
 type CredentialMode = "password" | "otp";
 
@@ -80,8 +71,7 @@ export const VerifyLoginCodeForm = ({
   const captchaEnabled = API_CONFIG.CAPTCHA_ENABLED;
   const shouldShowCaptcha =
     captchaEnabled && failedPasswordAttempts >= LOGIN_CAPTCHA_FAILED_ATTEMPTS_THRESHOLD;
-  const passwordReady =
-    password.trim().length > 0 && (!shouldShowCaptcha || captchaValid);
+  const passwordReady = password.trim().length > 0 && (!shouldShowCaptcha || captchaValid);
   const otpReady = codeRequested && VERIFICATION_CODE_REGEX.test(verificationCode.trim());
 
   useEffect(() => {
@@ -214,13 +204,16 @@ export const VerifyLoginCodeForm = ({
       nextFailedPasswordAttempts >= LOGIN_CAPTCHA_FAILED_ATTEMPTS_THRESHOLD
     ) {
       setFailedPasswordAttempts(
-        Math.max(nextFailedPasswordAttempts, LOGIN_CAPTCHA_FAILED_ATTEMPTS_THRESHOLD),
+        Math.max(nextFailedPasswordAttempts, LOGIN_CAPTCHA_FAILED_ATTEMPTS_THRESHOLD)
       );
     } else {
       setFailedPasswordAttempts(nextFailedPasswordAttempts);
     }
 
-    if (captchaEnabled && (shouldShowCaptcha || CAPTCHA_ERROR_CODES.has(loginResult.errorCode || ""))) {
+    if (
+      captchaEnabled &&
+      (shouldShowCaptcha || CAPTCHA_ERROR_CODES.has(loginResult.errorCode || ""))
+    ) {
       setCaptchaId("");
       setCaptchaValue("");
       setCaptchaValid(false);
@@ -260,7 +253,7 @@ export const VerifyLoginCodeForm = ({
 
   const handleModeChange = (
     _event: React.MouseEvent<HTMLElement>,
-    nextMode: CredentialMode | null,
+    nextMode: CredentialMode | null
   ): void => {
     if (!nextMode || nextMode === mode) {
       return;
@@ -283,7 +276,7 @@ export const VerifyLoginCodeForm = ({
       setCaptchaValue(value);
       setCaptchaValid(isValid);
     },
-    [],
+    []
   );
 
   return (
@@ -412,9 +405,7 @@ export const VerifyLoginCodeForm = ({
               </Typography>
               <Typography className={verifyStyles.verificationCodeSectionHint}>
                 {t("auth.login.verificationCodeSectionHintPrefix")}{" "}
-                <span className={verifyStyles.verificationHintPhone}>
-                  {identity.identity}
-                </span>{" "}
+                <span className={verifyStyles.verificationHintPhone}>{identity.identity}</span>{" "}
                 {t("auth.login.verificationCodeSectionHintSuffix")}
               </Typography>
             </Box>

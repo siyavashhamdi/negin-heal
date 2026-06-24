@@ -8,8 +8,7 @@ export const FILE_UPLOAD_POLICY = {
   PAYMENT_EVIDENCE: "PAYMENT_EVIDENCE",
 } as const;
 
-export type FileUploadPolicyId =
-  (typeof FILE_UPLOAD_POLICY)[keyof typeof FILE_UPLOAD_POLICY];
+export type FileUploadPolicyId = (typeof FILE_UPLOAD_POLICY)[keyof typeof FILE_UPLOAD_POLICY];
 
 export const FILE_UPLOAD_POLICY_MAX_SIZE_BYTES: Record<FileUploadPolicyId, number> = {
   [FILE_UPLOAD_POLICY.ANY]: 50 * 1024 * 1024,

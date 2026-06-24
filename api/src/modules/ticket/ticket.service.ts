@@ -248,7 +248,9 @@ export class TicketService {
           params.actorUserId,
         )
       ) {
-        throw new ForbiddenException(EXCEPTION_CONSTANT.TICKET_OWNERSHIP_REQUIRED);
+        throw new ForbiddenException(
+          EXCEPTION_CONSTANT.TICKET_OWNERSHIP_REQUIRED,
+        );
       }
 
       if (this.hasNonEmptyText(params.input.title)) {
@@ -295,7 +297,9 @@ export class TicketService {
       "Ticket title",
     );
     if (!params.input.category) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.TICKET_CATEGORY_REQUIRED);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.TICKET_CATEGORY_REQUIRED,
+      );
     }
 
     const assignedEndUserId =
@@ -344,7 +348,9 @@ export class TicketService {
       params.actorRole === UserRole.END_USER &&
       !this.isSameObjectId(ticket.audit?.createdBy, params.actorUserId)
     ) {
-      throw new ForbiddenException(EXCEPTION_CONSTANT.TICKET_CLOSE_OWNERSHIP_REQUIRED);
+      throw new ForbiddenException(
+        EXCEPTION_CONSTANT.TICKET_CLOSE_OWNERSHIP_REQUIRED,
+      );
     }
 
     ticket.status = TicketStatus.CLOSED;
@@ -417,7 +423,9 @@ export class TicketService {
       throw new NotFoundException(EXCEPTION_CONSTANT.END_USER_NOT_FOUND);
     }
     if (!user.roles?.includes(UserRole.END_USER)) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.ASSIGNED_USER_MUST_BE_END_USER);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.ASSIGNED_USER_MUST_BE_END_USER,
+      );
     }
 
     return user._id;
@@ -1145,7 +1153,10 @@ export class TicketService {
   ): string {
     const normalizedValue = this.normalizeOptionalText(value);
     if (!normalizedValue) {
-      throw new BadRequestException({ key: EXCEPTION_CONSTANT.VALIDATION_FAILED, params: { fieldName } });
+      throw new BadRequestException({
+        key: EXCEPTION_CONSTANT.VALIDATION_FAILED,
+        params: { fieldName },
+      });
     }
 
     return normalizedValue;

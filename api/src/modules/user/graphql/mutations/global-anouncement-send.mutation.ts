@@ -46,11 +46,15 @@ export class GlobalAnouncementSendMutation {
     const isPushNotification = Boolean(input.isPushNotification);
 
     if (!description) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.GLOBAL_ANNOUNCEMENT_DESCRIPTION_REQUIRED);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.GLOBAL_ANNOUNCEMENT_DESCRIPTION_REQUIRED,
+      );
     }
 
     if (messageType === GlobalAnouncementMessageType.POPUP && !title) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.GLOBAL_ANNOUNCEMENT_TITLE_REQUIRED);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.GLOBAL_ANNOUNCEMENT_TITLE_REQUIRED,
+      );
     }
 
     const activeSubscribedUsers =

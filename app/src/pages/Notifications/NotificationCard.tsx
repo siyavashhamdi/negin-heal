@@ -59,11 +59,7 @@ const CourseActionLink = ({
   onNavigate,
 }: CourseActionLinkProps): ReactElement => (
   <span className={styles.cardMessageLinkWrap}>
-    <RouterLink
-      to={courseLink.href}
-      className={styles.cardMessageLink}
-      onClick={onNavigate}
-    >
+    <RouterLink to={courseLink.href} className={styles.cardMessageLink} onClick={onNavigate}>
       <span>{label}</span>
       <ArrowBackRoundedIcon fontSize="inherit" />
     </RouterLink>
@@ -86,15 +82,14 @@ const NotificationCard = ({
   const shouldShowMessage = notification.message.trim() !== notification.title.trim();
   const courseLink = useMemo(
     () => resolveNotificationCourseLink(notification.source, notification.payload),
-    [notification.payload, notification.source],
+    [notification.payload, notification.source]
   );
   const courseLinkActionLabel = courseLink
     ? t(`pages.notifications.${courseLink.actionLabel}.action`)
     : null;
   const isChapterReleaseNotification = notification.source === "COURSE_CHAPTER";
   const showChapterAction = isChapterReleaseNotification && courseLink != null;
-  const showPaymentAction =
-    notification.source === "PAYMENT" && courseLink != null;
+  const showPaymentAction = notification.source === "PAYMENT" && courseLink != null;
   const handleCourseLinkClick = (): void => {
     if (!notification.isRead) {
       onMarkRead(notification.id);
@@ -103,10 +98,10 @@ const NotificationCard = ({
   const readActionLabel = t(
     !notification.isRead
       ? "pages.notifications.actions.markRead"
-      : "pages.notifications.actions.markUnread",
+      : "pages.notifications.actions.markUnread"
   );
   const archiveActionLabel = t(
-    isArchived ? "pages.notifications.actions.unarchive" : "pages.notifications.actions.archive",
+    isArchived ? "pages.notifications.actions.unarchive" : "pages.notifications.actions.archive"
   );
   const cardClassName = [
     styles.card,
@@ -134,7 +129,11 @@ const NotificationCard = ({
   };
 
   return (
-    <article className={cardClassName} {...opaqueShellProps} aria-labelledby={`notification-title-${notification.id}`}>
+    <article
+      className={cardClassName}
+      {...opaqueShellProps}
+      aria-labelledby={`notification-title-${notification.id}`}
+    >
       <div className={styles.cardAccent} aria-hidden="true" />
 
       <div className={styles.cardBody}>
@@ -145,9 +144,7 @@ const NotificationCard = ({
 
           <div className={styles.cardTitleRow}>
             <h3 id={`notification-title-${notification.id}`}>{notification.title}</h3>
-            {!notification.isRead ? (
-              <span className={styles.unreadDot} aria-hidden="true" />
-            ) : null}
+            {!notification.isRead ? <span className={styles.unreadDot} aria-hidden="true" /> : null}
           </div>
         </div>
 

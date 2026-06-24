@@ -21,7 +21,7 @@ type UseCouponEditRecordResult = {
 export function useCouponEditRecord(editCouponId: string | null): UseCouponEditRecordResult {
   const variables = useMemo<CouponDetailQueryVariables | undefined>(
     () => (editCouponId ? { input: { id: editCouponId } } : undefined),
-    [editCouponId],
+    [editCouponId]
   );
 
   const { data, previousData, loading } = useQuery<CouponDetailQuery, CouponDetailQueryVariables>(
@@ -30,7 +30,7 @@ export function useCouponEditRecord(editCouponId: string | null): UseCouponEditR
       variables,
       skip: !editCouponId,
       fetchPolicy: "cache-first",
-    },
+    }
   );
 
   const record = useMemo(() => {

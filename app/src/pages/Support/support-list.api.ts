@@ -55,13 +55,13 @@ function dateFilterToIsoDate(value: string): string | null {
 }
 
 function formatUserDisplayName(
-  user?: SupportTicketUserMinimal | SupportTicketListUserSummary | null,
+  user?: SupportTicketUserMinimal | SupportTicketListUserSummary | null
 ): string {
   if (!user) {
     return EMPTY_DISPLAY;
   }
   const parts = [user.profile?.firstName?.trim(), user.profile?.lastName?.trim()].filter(
-    (part): part is string => Boolean(part),
+    (part): part is string => Boolean(part)
   );
   if (parts.length > 0) {
     return parts.join(" ");
@@ -89,7 +89,7 @@ function getLastMessageBody(messages: readonly SupportTicketMessage[]): string {
 }
 
 function mapDetailMessages(
-  messages: SupportTicketDetailRow["messages"],
+  messages: SupportTicketDetailRow["messages"]
 ): SupportTicketRecord["messages"] {
   return messages.map((message) => ({
     body: message.body,
@@ -101,7 +101,7 @@ function mapDetailMessages(
 }
 
 export function mapSupportTicketListItemRowToRecord(
-  row: SupportTicketListItemRow,
+  row: SupportTicketListItemRow
 ): SupportTicketRecord {
   return {
     id: String(row.id),
@@ -128,7 +128,7 @@ export function mapSupportTicketListItemRowToRecord(
 }
 
 export function mapUserSupportTicketListRowToRecord(
-  row: UserSupportTicketListItemRow,
+  row: UserSupportTicketListItemRow
 ): SupportTicketRecord {
   return {
     id: String(row.id),
@@ -154,9 +154,7 @@ export function mapUserSupportTicketListRowToRecord(
   };
 }
 
-export function mapUserTicketDetailRowToRecord(
-  row: UserTicketDetailRow,
-): SupportTicketRecord {
+export function mapUserTicketDetailRowToRecord(row: UserTicketDetailRow): SupportTicketRecord {
   return {
     id: String(row.id),
     title: display(row.title),
@@ -188,7 +186,7 @@ export function mapUserTicketDetailRowToRecord(
 }
 
 export function mapSupportTicketDetailRowToRecord(
-  row: SupportTicketDetailRow,
+  row: SupportTicketDetailRow
 ): SupportTicketRecord {
   return {
     id: String(row.id),
@@ -275,7 +273,7 @@ function buildSharedTicketFilters(
     updatedAtTo: string;
     closedAtFrom: string;
     closedAtTo: string;
-  },
+  }
 ): Record<string, string | null> {
   return {
     query: trimToNull(search) ?? trimToNull(filters.query),
@@ -300,7 +298,7 @@ export function buildTicketListQueryVariables(
   search: string,
   filters: SupportTicketListFilters,
   page: number,
-  pageSize: number,
+  pageSize: number
 ): TicketListQueryVariables {
   const limit = Math.max(1, pageSize);
   const skip = Math.max(0, (Math.max(1, page) - 1) * limit);
@@ -326,7 +324,7 @@ export function buildUserTicketListQueryVariables(
   search: string,
   filters: UserSupportTicketListFilters,
   page: number,
-  pageSize: number,
+  pageSize: number
 ): UserTicketListQueryVariables {
   const limit = Math.max(1, pageSize);
   const skip = Math.max(0, (Math.max(1, page) - 1) * limit);

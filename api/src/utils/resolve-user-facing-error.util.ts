@@ -23,7 +23,9 @@ function isKnownErrorCode(code: string | undefined): code is string {
   );
 }
 
-function joinMessages(value: string | string[] | KeyedExceptionBody | undefined): string {
+function joinMessages(
+  value: string | string[] | KeyedExceptionBody | undefined,
+): string {
   if (!value) {
     return "";
   }
@@ -79,8 +81,7 @@ function extractRawGraphQLErrorDetails(error: GraphQLError): {
     extensions?.exception?.response &&
     typeof extensions.exception.response === "object"
       ? extensions.exception.response
-      : extensions?.response &&
-          typeof extensions.response === "object"
+      : extensions?.response && typeof extensions.response === "object"
         ? extensions.response
         : undefined;
 
@@ -305,7 +306,9 @@ export function formatUserFacingGraphQLError(
     exceptionName: details.exceptionName,
     stack:
       (error.extensions?.stacktrace as string[] | undefined)?.join("\n") ||
-      (error.originalError instanceof Error ? error.originalError.stack : undefined),
+      (error.originalError instanceof Error
+        ? error.originalError.stack
+        : undefined),
     graphql: {
       path: error.path,
       locations: error.locations?.map((location) => ({

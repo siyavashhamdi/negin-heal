@@ -11,7 +11,8 @@ export class FileAccessUrlGqlResponse {
   baseUrl?: string;
 
   @Field({
-    description: "API path prefix for file content requests, e.g. /api/v1/files",
+    description:
+      "API path prefix for file content requests, e.g. /api/v1/files",
   })
   apiPath: string;
 

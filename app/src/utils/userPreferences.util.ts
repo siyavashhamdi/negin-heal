@@ -50,7 +50,7 @@ export function applyUserPreferences(preferences: UserPreferencesLike | null | u
   if (typeof preferences.notificationsEnabled === "boolean") {
     localStorage.setItem(
       LOCAL_STORAGE_KEYS.NOTIFICATIONS_ENABLED,
-      String(preferences.notificationsEnabled),
+      String(preferences.notificationsEnabled)
     );
     changed = true;
 

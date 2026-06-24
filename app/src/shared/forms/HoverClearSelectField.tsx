@@ -1,5 +1,12 @@
 import { useMemo, type ReactElement, type SyntheticEvent } from "react";
-import { Autocomplete, Box, IconButton, TextField, Typography, createFilterOptions } from "@mui/material";
+import {
+  Autocomplete,
+  Box,
+  IconButton,
+  TextField,
+  Typography,
+  createFilterOptions,
+} from "@mui/material";
 import { Clear as ClearIcon } from "@mui/icons-material";
 import { useTranslation } from "../../hooks/useTranslation";
 import styles from "./HoverClearSelectField.module.scss";
@@ -72,7 +79,7 @@ const HoverClearSelectField = ({
 
   const selectableOptions = useMemo(
     () => (omitEmptyEntries ? options.filter(isSelectableOption) : [...options]),
-    [omitEmptyEntries, options],
+    [omitEmptyEntries, options]
   );
 
   const selected = useMemo((): HoverClearSelectOption | null => {
@@ -81,7 +88,8 @@ const HoverClearSelectField = ({
     }
     const selectedValue = normalizeOptionValue(normalizedValue);
     return (
-      selectableOptions.find((option) => normalizeOptionValue(option.value) === selectedValue) ?? null
+      selectableOptions.find((option) => normalizeOptionValue(option.value) === selectedValue) ??
+      null
     );
   }, [isAtDefault, normalizedValue, selectableOptions]);
 

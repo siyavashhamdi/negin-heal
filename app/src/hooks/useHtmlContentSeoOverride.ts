@@ -44,12 +44,12 @@ export const useHtmlContentSeoOverride = ({
     const logoUrl = buildStructuredDataLogoUrl(appUrl, "/icons/icon-512.png");
     const breadcrumbJsonLd = breadcrumbs?.length
       ? buildBreadcrumbStructuredData({
-        appUrl,
-        items: breadcrumbs.map((item) => ({
-          name: item.name,
-          url: resolveAbsoluteUrl(appUrl, item.path),
-        })),
-      })
+          appUrl,
+          items: breadcrumbs.map((item) => ({
+            name: item.name,
+            url: resolveAbsoluteUrl(appUrl, item.path),
+          })),
+        })
       : [];
 
     return {

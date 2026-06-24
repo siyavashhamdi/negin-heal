@@ -38,10 +38,10 @@ async function unregisterLegacyPushServiceWorkers(): Promise<void> {
     registrations
       .filter((registration) =>
         getRegistrationScriptUrls(registration).some((scriptUrl) =>
-          scriptUrl.includes(LEGACY_PUSH_SW_FILENAME),
-        ),
+          scriptUrl.includes(LEGACY_PUSH_SW_FILENAME)
+        )
       )
-      .map((registration) => registration.unregister()),
+      .map((registration) => registration.unregister())
   );
 }
 

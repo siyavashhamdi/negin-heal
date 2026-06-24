@@ -12,7 +12,12 @@ import {
   TicketCloseMutation,
   UserTicketSendMutation,
 } from "./graphql/mutations";
-import { TicketListQuery, TicketDetailQuery, UserTicketListQuery, UserTicketDetailQuery } from "./graphql/queries";
+import {
+  TicketListQuery,
+  TicketDetailQuery,
+  UserTicketListQuery,
+  UserTicketDetailQuery,
+} from "./graphql/queries";
 
 @Module({
   imports: [AppSettingsModule, BadgeModule, DatabaseModule, FileModule],

@@ -471,9 +471,7 @@ export function hasCouponFiltersApplied(filters: CouponListFilters): boolean {
   });
 }
 
-export function buildInitialCouponForm(
-  record?: CouponRecord | null
-): CouponFormState {
+export function buildInitialCouponForm(record?: CouponRecord | null): CouponFormState {
   if (!record) {
     return { ...EMPTY_COUPON_FORM };
   }
@@ -494,9 +492,7 @@ export function buildInitialCouponForm(
   };
 }
 
-export function buildCouponCreateVariables(
-  form: CouponFormState
-): CouponCreateMutationVariables {
+export function buildCouponCreateVariables(form: CouponFormState): CouponCreateMutationVariables {
   return {
     input: {
       code: form.code.trim(),

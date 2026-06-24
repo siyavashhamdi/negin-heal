@@ -31,10 +31,10 @@ const PaymentCardsEditor = ({ jsonValue, updateJson }: PaymentCardsEditorProps):
               updateJson((current) =>
                 current.kind === "paymentCards"
                   ? {
-                    ...current,
-                    cards: removeAt(current.cards, index, createEmptyPaymentCard()),
-                  }
-                  : current,
+                      ...current,
+                      cards: removeAt(current.cards, index, createEmptyPaymentCard()),
+                    }
+                  : current
               )
             }
           >
@@ -69,7 +69,7 @@ const PaymentCardsEditor = ({ jsonValue, updateJson }: PaymentCardsEditorProps):
         updateJson((current) =>
           current.kind === "paymentCards"
             ? { ...current, cards: [...current.cards, createEmptyPaymentCard()] }
-            : current,
+            : current
         )
       }
     >

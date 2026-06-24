@@ -112,7 +112,7 @@ const CourseReviewUserBox = ({
   const threadEntries = useMemo(() => buildCourseReviewDisplayThreadEntries(review), [review]);
   const hiddenCommentCount = Math.max(
     0,
-    threadEntries.length - COURSE_REVIEW_COMMENT_PREVIEW_LIMIT,
+    threadEntries.length - COURSE_REVIEW_COMMENT_PREVIEW_LIMIT
   );
   const shouldCollapseComments =
     limitCommentsPreview && hiddenCommentCount > 0 && !commentsExpanded;
@@ -123,9 +123,9 @@ const CourseReviewUserBox = ({
         threadEntries,
         COURSE_REVIEW_COMMENT_PREVIEW_LIMIT,
         shouldCollapseComments,
-        isOwnViewerBox ? "newest" : "oldest",
+        isOwnViewerBox ? "newest" : "oldest"
       ),
-    [isOwnViewerBox, shouldCollapseComments, threadEntries],
+    [isOwnViewerBox, shouldCollapseComments, threadEntries]
   );
   const visibleThreadSegments = useMemo(() => {
     const segments = buildCourseReviewThreadSegments(visibleThreadEntries);
@@ -149,7 +149,13 @@ const CourseReviewUserBox = ({
   const canSubmitComment = trimmedComment.length > 0 && canEditReview && !isSubmitting;
 
   useEffect(() => {
-    if (!canEditReview || isSubmitting || captchaDialogOpen || stars < 1 || stars === persistedStars) {
+    if (
+      !canEditReview ||
+      isSubmitting ||
+      captchaDialogOpen ||
+      stars < 1 ||
+      stars === persistedStars
+    ) {
       return;
     }
 

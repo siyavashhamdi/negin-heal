@@ -16,6 +16,8 @@ export class CourseChapterCompleteGqlInput {
   @Field({ description: "Stable chapter key to mark as completed" })
   @IsString({ message: "Chapter key must be a string" })
   @IsNotEmpty({ message: "Chapter key cannot be empty" })
-  @MaxLength(128, { message: "Chapter key cannot be longer than 128 characters" })
+  @MaxLength(128, {
+    message: "Chapter key cannot be longer than 128 characters",
+  })
   chapterKey: string;
 }

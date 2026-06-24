@@ -25,11 +25,7 @@ type CourseReviewCaptchaDialogProps = {
   readonly selectedStars: number;
   readonly onClose: () => void;
   readonly onConfirm: () => void;
-  readonly onCaptchaChange: (input: {
-    captchaId: string;
-    value: string;
-    isValid: boolean;
-  }) => void;
+  readonly onCaptchaChange: (input: { captchaId: string; value: string; isValid: boolean }) => void;
 };
 
 const CourseReviewCaptchaDialog = ({
@@ -83,12 +79,20 @@ const CourseReviewCaptchaDialog = ({
             <StarRating value={selectedStars} size="medium" ariaLabel={`امتیاز ${selectedStars}`} />
           </Box>
         ) : (
-          <Typography variant="body2" color="text.secondary" className={styles.captchaDialogStarsEmpty}>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            className={styles.captchaDialogStarsEmpty}
+          >
             هنوز امتیازی ثبت نکرده‌اید.
           </Typography>
         )}
 
-        <Typography variant="body2" color="text.secondary" className={styles.captchaDialogDescription}>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          className={styles.captchaDialogDescription}
+        >
           برای ثبت امتیاز یا نظر، کد امنیتی زیر را وارد کنید.
         </Typography>
 

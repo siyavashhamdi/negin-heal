@@ -141,11 +141,9 @@ export function useServerPaginatedQuery<
     if (!accumulatePages || !isMatchingPage || pageResult == null) {
       return;
     }
-    setAccumulatedPages((prev) => (
-      page === 1
-        ? { [page]: currentPageItems }
-        : { ...prev, [page]: currentPageItems }
-    ));
+    setAccumulatedPages((prev) =>
+      page === 1 ? { [page]: currentPageItems } : { ...prev, [page]: currentPageItems }
+    );
   }, [accumulatePages, currentPageItems, isMatchingPage, page, pageResult]);
 
   const accumulatedItems = useMemo(
@@ -153,7 +151,7 @@ export function useServerPaginatedQuery<
       Object.entries(accumulatedPages)
         .sort(([pageA], [pageB]) => Number(pageA) - Number(pageB))
         .flatMap(([, pageItems]) => pageItems),
-    [accumulatedPages],
+    [accumulatedPages]
   );
 
   const items = accumulatePages ? accumulatedItems : currentPageItems;

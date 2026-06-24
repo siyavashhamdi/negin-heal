@@ -9,10 +9,7 @@ export type HeaderPanelNavItem = {
   readonly requiresAuth?: boolean;
 };
 
-const hasRequiredRole = (
-  roles: readonly string[],
-  requiredRoles?: readonly string[],
-): boolean => {
+const hasRequiredRole = (roles: readonly string[], requiredRoles?: readonly string[]): boolean => {
   if (!requiredRoles?.length) {
     return true;
   }
@@ -23,11 +20,10 @@ const hasRequiredRole = (
 export const filterHeaderPanelNavItems = (
   items: readonly HeaderPanelNavItem[],
   roles: readonly string[],
-  isAuthenticated: boolean,
+  isAuthenticated: boolean
 ): readonly HeaderPanelNavItem[] =>
   items.filter(
-    (item) =>
-      (!item.requiresAuth || isAuthenticated) && hasRequiredRole(roles, item.requiredRoles),
+    (item) => (!item.requiresAuth || isAuthenticated) && hasRequiredRole(roles, item.requiredRoles)
   );
 
 export const HEADER_SETTINGS_ITEMS: readonly HeaderPanelNavItem[] = [
@@ -90,6 +86,4 @@ export const HEADER_USER_ITEMS: readonly HeaderPanelNavItem[] = [
 ];
 
 export const resolveHeaderSettingsDestination = (roles: readonly string[]): string =>
-  roles.includes("SUPER_ADMIN")
-    ? APP_SHELL_ROUTES.moreSystemSettings
-    : APP_SHELL_ROUTES.more;
+  roles.includes("SUPER_ADMIN") ? APP_SHELL_ROUTES.moreSystemSettings : APP_SHELL_ROUTES.more;

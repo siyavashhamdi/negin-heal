@@ -3,12 +3,7 @@
  * Runtime rendering still validates against the stored template text.
  */
 export const EMAIL_TEMPLATE_PLACEHOLDERS = {
-  PASSWORD_RESET: [
-    "APP_NAME",
-    "APP_URL",
-    "RESET_CODE",
-    "SECURITY_TEAM_NAME",
-  ],
+  PASSWORD_RESET: ["APP_NAME", "APP_URL", "RESET_CODE", "SECURITY_TEAM_NAME"],
   WELCOME: [
     "APP_NAME",
     "APP_URL",

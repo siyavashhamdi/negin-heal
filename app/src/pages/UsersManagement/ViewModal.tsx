@@ -61,34 +61,28 @@ const UsersManagementViewModal = ({
       }
       pinFooterToBottomOnMobile
     >
-        <Stack spacing={2}>
-          <FieldRow
-            label={t("pages.usersManagement.viewModal.firstName")}
-            value={record.firstName}
-          />
-          <FieldRow label={t("pages.usersManagement.viewModal.lastName")} value={record.lastName} />
-          <FieldRow label={t("pages.usersManagement.viewModal.username")} value={record.username} />
-          <FieldRow label={t("pages.usersManagement.viewModal.email")} value={record.email} />
-          <FieldRow
-            label={t("pages.usersManagement.viewModal.mobile")}
-            value={record.phoneNumber}
-          />
-          <FieldRow
-            label={t("pages.usersManagement.viewModal.avatarFileId")}
-            value={getFileIdFromAccessUrl(record.avatarAccessUrl) ?? "—"}
-          />
-          <FieldRow label={t("pages.usersManagement.viewModal.bio")} value={record.bio} />
-          <FieldRow label={t("pages.usersManagement.viewModal.roleDesc")} value={record.roleDesc} />
-          <FieldRow label={t("pages.usersManagement.viewModal.status")} value={record.status} />
-          <FieldRow
-            label={t("pages.usersManagement.viewModal.createdAt")}
-            value={<DateTimeValue value={record.createdAt} emphasizeDate />}
-          />
-          <FieldRow
-            label={t("pages.usersManagement.viewModal.updatedAt")}
-            value={<DateTimeValue value={record.updatedAt} emphasizeDate />}
-          />
-        </Stack>
+      <Stack spacing={2}>
+        <FieldRow label={t("pages.usersManagement.viewModal.firstName")} value={record.firstName} />
+        <FieldRow label={t("pages.usersManagement.viewModal.lastName")} value={record.lastName} />
+        <FieldRow label={t("pages.usersManagement.viewModal.username")} value={record.username} />
+        <FieldRow label={t("pages.usersManagement.viewModal.email")} value={record.email} />
+        <FieldRow label={t("pages.usersManagement.viewModal.mobile")} value={record.phoneNumber} />
+        <FieldRow
+          label={t("pages.usersManagement.viewModal.avatarFileId")}
+          value={getFileIdFromAccessUrl(record.avatarAccessUrl) ?? "—"}
+        />
+        <FieldRow label={t("pages.usersManagement.viewModal.bio")} value={record.bio} />
+        <FieldRow label={t("pages.usersManagement.viewModal.roleDesc")} value={record.roleDesc} />
+        <FieldRow label={t("pages.usersManagement.viewModal.status")} value={record.status} />
+        <FieldRow
+          label={t("pages.usersManagement.viewModal.createdAt")}
+          value={<DateTimeValue value={record.createdAt} emphasizeDate />}
+        />
+        <FieldRow
+          label={t("pages.usersManagement.viewModal.updatedAt")}
+          value={<DateTimeValue value={record.updatedAt} emphasizeDate />}
+        />
+      </Stack>
     </EntityModalShell>
   );
 };

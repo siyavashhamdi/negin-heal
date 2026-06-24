@@ -54,7 +54,7 @@ export function usePageBackNavigation(fallbackTo?: string): () => void {
 
 function usePageBackHandler(
   onClick: (() => void) | undefined,
-  fallbackTo: string | undefined,
+  fallbackTo: string | undefined
 ): () => void {
   const navigateBack = usePageBackNavigation(fallbackTo);
   return onClick ?? navigateBack;
@@ -114,12 +114,7 @@ export default function PageBackNavigation({
   return (
     <>
       <div className={topBarClassName}>
-        <PageBackTextButton
-          label={label}
-          className={className}
-          size={size}
-          {...controlProps}
-        />
+        <PageBackTextButton label={label} className={className} size={size} {...controlProps} />
       </div>
       {mobileOverlay ? (
         <PageBackIconButton

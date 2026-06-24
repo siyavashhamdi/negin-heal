@@ -43,7 +43,10 @@ export class CoursePaymentListFilterInput {
   @IsString({ message: "Email filter must be a string" })
   email?: string;
 
-  @Field({ nullable: true, description: "Filter by buyer mobile phone snapshot" })
+  @Field({
+    nullable: true,
+    description: "Filter by buyer mobile phone snapshot",
+  })
   @IsOptional()
   @IsString({ message: "Mobile phone filter must be a string" })
   mobilePhone?: string;

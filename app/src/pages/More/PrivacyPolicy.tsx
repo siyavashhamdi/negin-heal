@@ -20,7 +20,7 @@ const PrivacyPolicyPage = (): ReactElement => {
     APP_PRIVACY_POLICY_PAGE_QUERY,
     {
       fetchPolicy: "cache-and-network",
-    },
+    }
   );
   const privacyPolicyPage = data?.appPrivacyPolicyPageConfig ?? EMPTY_APP_PRIVACY_POLICY_PAGE;
 

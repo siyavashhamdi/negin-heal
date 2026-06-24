@@ -27,7 +27,7 @@ export type CourseReviewThreadMessageSegment = {
 };
 
 export function buildCourseReviewThreadEntries(
-  review: EndUserCourseReviewRecord | null,
+  review: EndUserCourseReviewRecord | null
 ): CourseReviewThreadEntry[] {
   if (!review) {
     return [];
@@ -67,15 +67,15 @@ export function buildCourseReviewThreadEntries(
   }
 
   return entries.sort(
-    (left, right) => new Date(right.sentAt).getTime() - new Date(left.sentAt).getTime(),
+    (left, right) => new Date(right.sentAt).getTime() - new Date(left.sentAt).getTime()
   );
 }
 
 export function sortCourseReviewThreadEntriesChronologically(
-  entries: ReadonlyArray<CourseReviewThreadEntry>,
+  entries: ReadonlyArray<CourseReviewThreadEntry>
 ): CourseReviewThreadEntry[] {
   return [...entries].sort(
-    (left, right) => new Date(left.sentAt).getTime() - new Date(right.sentAt).getTime(),
+    (left, right) => new Date(left.sentAt).getTime() - new Date(right.sentAt).getTime()
   );
 }
 
@@ -85,7 +85,7 @@ export function resolveCourseReviewThreadPreviewEntries(
   entries: ReadonlyArray<CourseReviewThreadEntry>,
   previewLimit: number,
   collapsed: boolean,
-  previewMode: CourseReviewThreadPreviewMode = "newest",
+  previewMode: CourseReviewThreadPreviewMode = "newest"
 ): CourseReviewThreadEntry[] {
   const chronological = sortCourseReviewThreadEntriesChronologically(entries);
 
@@ -102,7 +102,7 @@ export function resolveCourseReviewThreadPreviewEntries(
 
 function insertStarsOnlyEntry(
   entries: CourseReviewThreadEntry[],
-  starsOnlyEntry: CourseReviewThreadEntry,
+  starsOnlyEntry: CourseReviewThreadEntry
 ): CourseReviewThreadEntry[] {
   const starsTime = new Date(starsOnlyEntry.sentAt).getTime();
   const insertIndex = entries.findIndex((entry) => {
@@ -114,15 +114,11 @@ function insertStarsOnlyEntry(
     return [...entries, starsOnlyEntry];
   }
 
-  return [
-    ...entries.slice(0, insertIndex),
-    starsOnlyEntry,
-    ...entries.slice(insertIndex),
-  ];
+  return [...entries.slice(0, insertIndex), starsOnlyEntry, ...entries.slice(insertIndex)];
 }
 
 export function buildCourseReviewDisplayThreadEntries(
-  review: EndUserCourseReviewRecord | null,
+  review: EndUserCourseReviewRecord | null
 ): CourseReviewThreadEntry[] {
   const entries = buildCourseReviewThreadEntries(review);
   const rating = review?.rating;
@@ -133,7 +129,7 @@ export function buildCourseReviewDisplayThreadEntries(
   const initialIndex = entries.findIndex((entry) => entry.key === "initial");
   if (initialIndex >= 0) {
     return entries.map((entry, index) =>
-      index === initialIndex ? { ...entry, stars: rating.stars } : entry,
+      index === initialIndex ? { ...entry, stars: rating.stars } : entry
     );
   }
 
@@ -156,7 +152,7 @@ export function buildCourseReviewDisplayThreadEntries(
 }
 
 export function buildAdminCourseReviewThreadEntries(
-  review: AdminCourseReviewRecord,
+  review: AdminCourseReviewRecord
 ): CourseReviewThreadEntry[] {
   const ownerLabel = resolveAdminReviewAuthorLabel(review);
   const entries: CourseReviewThreadEntry[] = [];
@@ -186,7 +182,7 @@ export function buildAdminCourseReviewThreadEntries(
   }
 
   return entries.sort(
-    (left, right) => new Date(right.sentAt).getTime() - new Date(left.sentAt).getTime(),
+    (left, right) => new Date(right.sentAt).getTime() - new Date(left.sentAt).getTime()
   );
 }
 
@@ -203,7 +199,7 @@ function resolveThreadReplierKey(input: {
 }
 
 export function buildCourseReviewThreadSegments(
-  entries: ReadonlyArray<CourseReviewThreadEntry>,
+  entries: ReadonlyArray<CourseReviewThreadEntry>
 ): CourseReviewThreadMessageSegment[] {
   const segments: CourseReviewThreadMessageSegment[] = [];
   let previousReplierKey: string | null = null;

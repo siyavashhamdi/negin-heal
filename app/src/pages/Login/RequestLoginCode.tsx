@@ -1,9 +1,5 @@
 import { useState, type ReactElement } from "react";
-import {
-  Button,
-  CircularProgress,
-  Typography,
-} from "@mui/material";
+import { Button, CircularProgress, Typography } from "@mui/material";
 import { ArrowBack as ArrowBackIcon } from "@mui/icons-material";
 import { useTranslation } from "../../hooks/useTranslation";
 import { useSnackbar } from "../../hooks/useSnackbar";
@@ -39,10 +35,9 @@ const RequestLoginCode = ({
   const { resolveAuthIdentity, loading } = useLogin();
 
   const [identity, setIdentity] = useState(() =>
-    sanitizeAuthIdentityInput(initialPrefill?.identity ?? ""),
+    sanitizeAuthIdentityInput(initialPrefill?.identity ?? "")
   );
-  const [fieldError, setFieldError] =
-    useState<SubmittedAuthIdentityValidationError | null>(null);
+  const [fieldError, setFieldError] = useState<SubmittedAuthIdentityValidationError | null>(null);
 
   const canSubmit = identity.trim().length > 0;
 

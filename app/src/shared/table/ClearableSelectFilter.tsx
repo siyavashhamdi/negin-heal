@@ -1,7 +1,5 @@
 import type { ReactElement } from "react";
-import HoverClearSelectField, {
-  type HoverClearSelectOption,
-} from "../forms/HoverClearSelectField";
+import HoverClearSelectField, { type HoverClearSelectOption } from "../forms/HoverClearSelectField";
 
 export interface ClearableSelectOption {
   readonly value: string;

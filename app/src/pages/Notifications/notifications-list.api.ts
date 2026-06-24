@@ -8,11 +8,7 @@ export type NotificationSource =
   | "USER"
   | "TICKET"
   | "OTHER";
-export type NotificationUpdateAction =
-  | "SET_AS_READ"
-  | "SET_AS_UNREAD"
-  | "ARCHIVE"
-  | "UNARCHIVE";
+export type NotificationUpdateAction = "SET_AS_READ" | "SET_AS_UNREAD" | "ARCHIVE" | "UNARCHIVE";
 export type NotificationFilterTab = "all" | "unread" | "read" | "archived";
 
 export type NotificationListItemRow = {
@@ -113,7 +109,7 @@ export const NOTIFICATION_SOURCE_LABEL: Record<NotificationSource, string> = {
 };
 
 export const buildNotificationListFilters = (
-  tab: NotificationFilterTab,
+  tab: NotificationFilterTab
 ): NotificationListFilterInput | undefined => {
   switch (tab) {
     case "unread":
@@ -131,7 +127,7 @@ export const buildNotificationListFilters = (
 export const buildNotificationListQueryVariables = (
   tab: NotificationFilterTab,
   limit: number = NOTIFICATION_LIST_PAGE_SIZE,
-  startCursor?: string | null,
+  startCursor?: string | null
 ): NotificationListQueryVariables => ({
   input: {
     filters: buildNotificationListFilters(tab),
@@ -143,7 +139,7 @@ export const buildNotificationListQueryVariables = (
 });
 
 export const mapNotificationListRowToRecord = (
-  item: NotificationListItemRow,
+  item: NotificationListItemRow
 ): NotificationRecord => ({
   id: item.id,
   userId: item.userId ?? null,
@@ -151,8 +147,7 @@ export const mapNotificationListRowToRecord = (
   mode: item.mode,
   title: item.title?.trim() || item.message,
   message: item.message,
-  payload:
-    item.payload && typeof item.payload === "object" ? item.payload : null,
+  payload: item.payload && typeof item.payload === "object" ? item.payload : null,
   isRead: item.isRead,
   readAt: item.readAt ?? null,
   archivedAt: item.archivedAt ?? null,
@@ -165,10 +160,10 @@ export const mapNotificationListRowToRecord = (
 export const mergeUpdatedNotificationRecords = (
   current: NotificationRecord[],
   updatedItems: NotificationListItemRow[],
-  tab: NotificationFilterTab,
+  tab: NotificationFilterTab
 ): NotificationRecord[] => {
   const updatedById = new Map(
-    updatedItems.map((item) => [item.id, mapNotificationListRowToRecord(item)]),
+    updatedItems.map((item) => [item.id, mapNotificationListRowToRecord(item)])
   );
 
   return current
@@ -178,7 +173,7 @@ export const mergeUpdatedNotificationRecords = (
 
 const shouldKeepNotificationInTab = (
   item: NotificationRecord,
-  tab: NotificationFilterTab,
+  tab: NotificationFilterTab
 ): boolean => {
   const isArchived = Boolean(item.archivedAt);
 

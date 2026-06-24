@@ -63,7 +63,7 @@ const JalaliDateTimeField = ({
       mode === "dark"
         ? "rmdp-prime bg-dark jalali-date-filter-popup"
         : "rmdp-prime jalali-date-filter-popup",
-    [mode],
+    [mode]
   );
 
   const handleChange = (next: Value): void => {

@@ -11,15 +11,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-export function parseCoursePaymentStatusNotificationCourseId(
-  payload: unknown,
-): string | null {
+export function parseCoursePaymentStatusNotificationCourseId(payload: unknown): string | null {
   if (!isRecord(payload)) {
     return null;
   }
 
-  const courseId =
-    typeof payload.courseId === "string" ? payload.courseId.trim() : "";
+  const courseId = typeof payload.courseId === "string" ? payload.courseId.trim() : "";
   if (!courseId) {
     return null;
   }
@@ -29,9 +26,7 @@ export function parseCoursePaymentStatusNotificationCourseId(
   }
 
   const purchaseStatus =
-    typeof payload.purchaseStatus === "string"
-      ? payload.purchaseStatus.trim()
-      : "";
+    typeof payload.purchaseStatus === "string" ? payload.purchaseStatus.trim() : "";
   if (purchaseStatus === "PENDING") {
     return null;
   }

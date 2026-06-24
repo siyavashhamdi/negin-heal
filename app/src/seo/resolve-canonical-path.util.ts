@@ -6,7 +6,7 @@ const ADMIN_OVERLAY_ROUTE_PATTERN = new RegExp(
     "|users/(new|edit/[^/]+(/confirm)?)" +
     "|payments/(new|[^/]+(/confirm)?)" +
     "|support/tickets/(new|[^/]+)" +
-    "|profile/(edit|password))$",
+    "|profile/(edit|password))$"
 );
 
 function normalizePathname(pathname: string): string {

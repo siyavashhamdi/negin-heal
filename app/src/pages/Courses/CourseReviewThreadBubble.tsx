@@ -26,12 +26,8 @@ type CourseReviewThreadBubbleProps = {
   readonly expandControl?: CourseReviewThreadExpandControl;
   readonly expandControlPlacement?: "top" | "bottom";
   readonly segmentActionsPlacement?: "author" | "footer";
-  readonly renderSegmentActions?: (
-    segment: CourseReviewThreadMessageSegment,
-  ) => ReactNode;
-  readonly renderSegmentFooter?: (
-    segment: CourseReviewThreadMessageSegment,
-  ) => ReactNode;
+  readonly renderSegmentActions?: (segment: CourseReviewThreadMessageSegment) => ReactNode;
+  readonly renderSegmentFooter?: (segment: CourseReviewThreadMessageSegment) => ReactNode;
 };
 
 const CourseReviewThreadBubble = ({
@@ -109,7 +105,10 @@ const CourseReviewThreadBubble = ({
                       : ""
                   }`}
                 >
-                  {!hideSegmentStars && !isReviewMine && segment.stars != null && segment.stars >= 1 ? (
+                  {!hideSegmentStars &&
+                  !isReviewMine &&
+                  segment.stars != null &&
+                  segment.stars >= 1 ? (
                     <>
                       <Typography component="p" className={styles.reviewCommentBubbleName}>
                         {segment.authorLabel}

@@ -37,7 +37,11 @@ const IosHomeScreenInstallPrompt = (): ReactElement | null => {
 
   return (
     <>
-      <section className={styles.iosInstallCard} aria-label={t("pages.more.iosInstall.cardAriaLabel")} {...opaqueShellProps}>
+      <section
+        className={styles.iosInstallCard}
+        aria-label={t("pages.more.iosInstall.cardAriaLabel")}
+        {...opaqueShellProps}
+      >
         <div className={styles.iosInstallIcon} aria-hidden="true">
           <AddToHomeScreenRoundedIcon />
         </div>
@@ -65,7 +69,9 @@ const IosHomeScreenInstallPrompt = (): ReactElement | null => {
       >
         <div className={styles.iosInstallDialogHeader}>
           <div>
-            <p className={styles.iosInstallDialogEyebrow}>{t("pages.more.iosInstall.guideEyebrow")}</p>
+            <p className={styles.iosInstallDialogEyebrow}>
+              {t("pages.more.iosInstall.guideEyebrow")}
+            </p>
             <h3 id="ios-install-guide-title">{t("pages.more.iosInstall.guideTitle")}</h3>
           </div>
         </div>

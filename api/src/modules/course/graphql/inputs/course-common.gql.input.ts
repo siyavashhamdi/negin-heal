@@ -177,7 +177,8 @@ export class CourseWriteGqlInput {
 
   @Field(() => Boolean, {
     nullable: true,
-    description: "Whether the reviews section is visible on the course detail page",
+    description:
+      "Whether the reviews section is visible on the course detail page",
   })
   @IsOptional()
   @IsBoolean({ message: "Course isReviewsSectionVisible must be a boolean" })

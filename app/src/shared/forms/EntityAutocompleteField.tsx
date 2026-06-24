@@ -210,9 +210,7 @@ function EntityAutocompleteField<TOption extends EntityAutocompleteOption>(
     : createFilterOptions<TOption>({
         stringify: (option) => `${option.label} ${option.subtitle ?? ""} ${option.id}`,
       });
-  const sortOptions = usesServerSideSearch
-    ? (optionList: TOption[]) => optionList
-    : undefined;
+  const sortOptions = usesServerSideSearch ? (optionList: TOption[]) => optionList : undefined;
 
   const renderLoadingEndAdornment = (
     endAdornment: AutocompleteRenderInputParams["InputProps"]["endAdornment"]

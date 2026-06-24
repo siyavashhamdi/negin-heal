@@ -155,9 +155,7 @@ export class CouponService {
     return this.toCouponListResponse(coupon, usageCountsByCouponId);
   }
 
-  async create(
-    input: CouponCreateGqlInput,
-  ): Promise<CouponListGqlResponse> {
+  async create(input: CouponCreateGqlInput): Promise<CouponListGqlResponse> {
     const createData = await this.buildCreateData(input);
     const existingCoupon = await this.couponModel
       .findOne({ code: createData.code })
@@ -176,9 +174,7 @@ export class CouponService {
     );
   }
 
-  async update(
-    input: CouponUpdateGqlInput,
-  ): Promise<CouponListGqlResponse> {
+  async update(input: CouponUpdateGqlInput): Promise<CouponListGqlResponse> {
     const existingCoupon = await this.couponModel
       .findOne({
         _id: input.id,
@@ -501,17 +497,18 @@ export class CouponService {
       throw new BadRequestException(EXCEPTION_CONSTANT.COUPON_DISCOUNT_INVALID);
     }
 
-    if (
-      discountType === CouponDiscountType.PERCENTAGE &&
-      discountValue > 100
-    ) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.COUPON_PERCENTAGE_INVALID);
+    if (discountType === CouponDiscountType.PERCENTAGE && discountValue > 100) {
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.COUPON_PERCENTAGE_INVALID,
+      );
     }
   }
 
   private validateCouponDateRange(startsAt?: Date, expiresAt?: Date): void {
     if (startsAt && expiresAt && startsAt > expiresAt) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.COUPON_DATE_RANGE_INVALID);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.COUPON_DATE_RANGE_INVALID,
+      );
     }
   }
 
@@ -533,7 +530,9 @@ export class CouponService {
       .exec();
 
     if (existingCourseCount !== applicableCourseIds.length) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.COUPON_COURSE_IDS_INVALID);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.COUPON_COURSE_IDS_INVALID,
+      );
     }
   }
 
@@ -1053,7 +1052,10 @@ export class CouponService {
   private normalizeRequiredText(value: string, fieldName: string): string {
     const normalizedValue = value.trim();
     if (!normalizedValue) {
-      throw new BadRequestException({ key: EXCEPTION_CONSTANT.VALIDATION_FAILED, params: { fieldName } });
+      throw new BadRequestException({
+        key: EXCEPTION_CONSTANT.VALIDATION_FAILED,
+        params: { fieldName },
+      });
     }
 
     return normalizedValue;

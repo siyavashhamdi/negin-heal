@@ -1,10 +1,7 @@
 import { Typography } from "@mui/material";
 import { useState, type ReactElement } from "react";
 
-import {
-  shouldTruncateReviewComment,
-  truncateReviewComment,
-} from "./course-reviews.api";
+import { shouldTruncateReviewComment, truncateReviewComment } from "./course-reviews.api";
 import styles from "./styles/CourseReviewsSection.module.scss";
 
 type CourseReviewCommentProps = {
@@ -20,8 +17,7 @@ export function CourseReviewComment({ comment }: CourseReviewCommentProps): Reac
   }
 
   const needsTruncate = shouldTruncateReviewComment(normalized);
-  const displayText =
-    needsTruncate && !expanded ? truncateReviewComment(normalized) : normalized;
+  const displayText = needsTruncate && !expanded ? truncateReviewComment(normalized) : normalized;
 
   return (
     <Typography component="p" className={styles.reviewComment}>

@@ -67,7 +67,7 @@ export function dateInputToJalaliParam(value: string | null | undefined): string
         date: asDate,
         calendar: persian,
         locale: persian_fa,
-      }),
+      })
     );
   }
   const digits = toWesternDigits(trimmed).replace(/\D/g, "");
@@ -95,11 +95,7 @@ export function jalaliDateColumnFilterMatch(
     if (queryCompact !== "" && rawCompact !== "" && queryCompact === rawCompact) {
       return true;
     }
-    const blob = [
-      trimmed,
-      rawCompact,
-      formatJalaliParamDateDisplay(rawCompact),
-    ]
+    const blob = [trimmed, rawCompact, formatJalaliParamDateDisplay(rawCompact)]
       .join(" ")
       .toLowerCase();
     if (blob.includes(query.toLowerCase())) {

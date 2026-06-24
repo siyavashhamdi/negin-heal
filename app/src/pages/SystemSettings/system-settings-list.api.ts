@@ -136,7 +136,7 @@ function dateFilterToIsoDate(value: string): string | null {
 }
 
 export function mapAppSettingKeyListItemRowToRecord(
-  row: AppSettingKeyListItemRow,
+  row: AppSettingKeyListItemRow
 ): AppSettingRecord {
   return {
     id: String(row.id),
@@ -161,7 +161,7 @@ export function buildAppSettingListQueryVariables(
   appliedFilters: AppSettingListFilters,
   sort: Partial<Record<AppSettingListSortField, SortingOrder>>,
   page: number,
-  pageSize: number,
+  pageSize: number
 ): AppSettingListQueryVariables {
   return {
     input: {

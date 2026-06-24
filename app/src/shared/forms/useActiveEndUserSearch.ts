@@ -39,7 +39,9 @@ export function useActiveEndUserSearch({
           status: "ACTIVE",
         },
         options: {
-          limit: query ? ACTIVE_END_USER_SEARCH_OPTIONS_LIMIT : ACTIVE_END_USER_DEFAULT_OPTIONS_LIMIT,
+          limit: query
+            ? ACTIVE_END_USER_SEARCH_OPTIONS_LIMIT
+            : ACTIVE_END_USER_DEFAULT_OPTIONS_LIMIT,
           skip: 0,
           sort: { createdAt: "DESC" },
         },
@@ -53,10 +55,7 @@ export function useActiveEndUserSearch({
     skip: !enabled,
   });
 
-  const options = useMemo(
-    () => mapActiveEndUserListItems(data?.userList.items ?? []),
-    [data]
-  );
+  const options = useMemo(() => mapActiveEndUserListItems(data?.userList.items ?? []), [data]);
 
   const handleInputChange = useCallback(
     (nextValue: string): void => {

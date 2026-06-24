@@ -8,7 +8,13 @@ import { LOCAL_STORAGE_KEYS } from "../constants";
 import { paginatedQueryTypePolicies } from "./apollo/paginated-query-cache.policy";
 import { queueApolloError } from "../components/apollo-error-queue";
 import { notifyAuthSessionExpired } from "./auth-session-expired-listeners";
-import { extractGraphQLErrorMessage, isAccessDeniedGraphQLError, isAuthSessionInvalidGraphQLError, type ApolloErrorLike, type GraphQLErrorExtensions } from "../utilities/graphql-error.util";
+import {
+  extractGraphQLErrorMessage,
+  isAccessDeniedGraphQLError,
+  isAuthSessionInvalidGraphQLError,
+  type ApolloErrorLike,
+  type GraphQLErrorExtensions,
+} from "../utilities/graphql-error.util";
 import { isLandingRoute, isStandaloneShellRoute } from "../routing/app-shell-routes";
 
 function shouldBypassApolloErrorUx(): boolean {
@@ -120,7 +126,8 @@ const errorLink = new ErrorLink(({ error }) => {
           message: graphQLError.message,
           code: errorCode,
           extensions: graphQLError.extensions as GraphQLErrorExtensions | undefined,
-        }) && !isAuthSessionInvalidGraphQLError({
+        }) &&
+        !isAuthSessionInvalidGraphQLError({
           message: graphQLError.message,
           code: errorCode,
           extensions: graphQLError.extensions as GraphQLErrorExtensions | undefined,
@@ -181,8 +188,7 @@ export const apolloClient = new ApolloClient({
           ({ query }) => {
             const definition = getMainDefinition(query);
             return (
-              definition.kind === "OperationDefinition" &&
-              definition.operation === "subscription"
+              definition.kind === "OperationDefinition" && definition.operation === "subscription"
             );
           },
           wsLink,

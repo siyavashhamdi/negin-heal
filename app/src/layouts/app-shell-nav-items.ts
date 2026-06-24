@@ -90,7 +90,7 @@ export type AppShellNavBadgeCounts = {
 
 export function filterAppShellNavItems(
   items: readonly AppShellNavItemDefinition[],
-  context: AppShellNavContext,
+  context: AppShellNavContext
 ): readonly AppShellNavItemDefinition[] {
   return items.filter((item) => {
     if (item.requiresAuth && !context.isAuthenticated) {
@@ -107,7 +107,7 @@ export function filterAppShellNavItems(
 
 export function resolveAppShellNavPath(
   item: AppShellNavItemDefinition,
-  context: AppShellNavContext,
+  context: AppShellNavContext
 ): string {
   if (item.supportTicketsForSuperAdmin && context.roles.includes("SUPER_ADMIN")) {
     return APP_SHELL_ROUTES.supportTickets;
@@ -118,7 +118,7 @@ export function resolveAppShellNavPath(
 
 export function resolveAppShellNavBadgeCount(
   item: AppShellNavItemDefinition,
-  counts: AppShellNavBadgeCounts,
+  counts: AppShellNavBadgeCounts
 ): number {
   if (!item.badge) {
     return 0;

@@ -4,7 +4,7 @@ export function reorderByIdWithInsertion<T extends { id: string }>(
   items: readonly T[],
   draggedId: string,
   targetId: string,
-  insertAfter: boolean,
+  insertAfter: boolean
 ): T[] {
   if (draggedId === targetId) {
     return [...items];
@@ -41,7 +41,7 @@ export function reorderByIdWithInsertion<T extends { id: string }>(
 
 export function shouldInsertAfterHorizontal(
   event: DragEvent<HTMLElement>,
-  element: HTMLElement,
+  element: HTMLElement
 ): boolean {
   const rect = element.getBoundingClientRect();
   const isRtl = getComputedStyle(element).direction === "rtl";
@@ -52,7 +52,7 @@ export function shouldInsertAfterHorizontal(
 
 export function shouldInsertAfterVertical(
   event: DragEvent<HTMLElement>,
-  element: HTMLElement,
+  element: HTMLElement
 ): boolean {
   const rect = element.getBoundingClientRect();
   return event.clientY > rect.top + rect.height / 2;

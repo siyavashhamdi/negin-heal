@@ -15,9 +15,7 @@ export function scrollToCourseChapter(chapterKey: string): void {
   });
 }
 
-export function resolveActiveChapterKeyFromScroll(
-  chapterKeys: readonly string[],
-): string | null {
+export function resolveActiveChapterKeyFromScroll(chapterKeys: readonly string[]): string | null {
   if (chapterKeys.length === 0) {
     return null;
   }

@@ -87,7 +87,8 @@ export class CourseReviewListFilterInput {
 
   @Field(() => CourseReviewVisibility, {
     nullable: true,
-    description: "Filter reviews containing at least one message with this visibility",
+    description:
+      "Filter reviews containing at least one message with this visibility",
   })
   @IsOptional()
   @IsEnum(CourseReviewVisibility, {

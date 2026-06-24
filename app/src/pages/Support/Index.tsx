@@ -199,15 +199,15 @@ const Support = (): ReactElement => {
         .filter((channel) => channel.type !== "TICKET")
         .sort(
           (first, second) =>
-            CONTACT_CHANNEL_ORDER.indexOf(first.type) - CONTACT_CHANNEL_ORDER.indexOf(second.type),
+            CONTACT_CHANNEL_ORDER.indexOf(first.type) - CONTACT_CHANNEL_ORDER.indexOf(second.type)
         ),
-    [visibleChannels],
+    [visibleChannels]
   );
   const hasFaqCard = hasText(supportConfig.faqTitle);
   const hasMainCards = hasFaqCard || ticketChannel != null;
   const quickTips = useMemo(
     () => supportConfig.quickTips.filter((tip) => hasText(tip)),
-    [supportConfig.quickTips],
+    [supportConfig.quickTips]
   );
   const hasContactSectionHeading =
     hasText(supportConfig.contactSectionEyebrow) ||
@@ -260,94 +260,107 @@ const Support = (): ReactElement => {
       <div className={styles.contentStack}>
         {hasMainCards ? (
           <div className={styles.grid}>
-          {hasFaqCard ? (
-            <button type="button" className={styles.card} {...opaqueShellProps} onClick={() => navigate("/support/faq")}>
-              <span className={styles.cardBody}>
-                <span className={styles.cardHeading}>
-                  <span className={styles.cardIcon}>
-                    <HelpCenterRoundedIcon />
+            {hasFaqCard ? (
+              <button
+                type="button"
+                className={styles.card}
+                {...opaqueShellProps}
+                onClick={() => navigate("/support/faq")}
+              >
+                <span className={styles.cardBody}>
+                  <span className={styles.cardHeading}>
+                    <span className={styles.cardIcon}>
+                      <HelpCenterRoundedIcon />
+                    </span>
+                    <strong>{supportConfig.faqTitle}</strong>
                   </span>
-                  <strong>{supportConfig.faqTitle}</strong>
+                  {hasText(supportConfig.faqDescription) ? (
+                    <small>{supportConfig.faqDescription}</small>
+                  ) : null}
                 </span>
-                {hasText(supportConfig.faqDescription) ? (
-                  <small>{supportConfig.faqDescription}</small>
-                ) : null}
-              </span>
-              <OpenInNewRoundedIcon className={styles.cardArrow} />
-            </button>
-          ) : null}
+                <OpenInNewRoundedIcon className={styles.cardArrow} />
+              </button>
+            ) : null}
 
-          {ticketChannel ? (
-            <button
-              type="button"
-              className={`${styles.card} ${styles.cardPrimary}`}
-              {...opaqueShellProps}
-              onClick={() => openChannel(ticketChannel)}
-            >
-              <span className={styles.cardBody}>
-                <span className={styles.cardHeading}>
-                  <span className={styles.cardIcon}>
-                    <ConfirmationNumberRoundedIcon />
+            {ticketChannel ? (
+              <button
+                type="button"
+                className={`${styles.card} ${styles.cardPrimary}`}
+                {...opaqueShellProps}
+                onClick={() => openChannel(ticketChannel)}
+              >
+                <span className={styles.cardBody}>
+                  <span className={styles.cardHeading}>
+                    <span className={styles.cardIcon}>
+                      <ConfirmationNumberRoundedIcon />
+                    </span>
+                    <strong>{ticketChannel.label}</strong>
                   </span>
-                  <strong>{ticketChannel.label}</strong>
+                  {hasText(ticketChannel.description) ? (
+                    <small>{ticketChannel.description}</small>
+                  ) : null}
                 </span>
-                {hasText(ticketChannel.description) ? (
-                  <small>{ticketChannel.description}</small>
-                ) : null}
-              </span>
-              <OpenInNewRoundedIcon className={styles.cardArrow} />
-            </button>
-          ) : null}
+                <OpenInNewRoundedIcon className={styles.cardArrow} />
+              </button>
+            ) : null}
           </div>
         ) : null}
 
         {contactChannels.length > 0 ? (
           <div className={styles.contactSection} {...opaqueShellProps}>
-          {hasContactSectionHeading ? (
-            <div className={styles.contactSectionIntro}>
-              <div>
-                {hasText(supportConfig.contactSectionEyebrow) ? (
-                  <p>{supportConfig.contactSectionEyebrow}</p>
-                ) : null}
-                {hasText(supportConfig.contactSectionHeading) ? (
-                  <h3>{supportConfig.contactSectionHeading}</h3>
+            {hasContactSectionHeading ? (
+              <div className={styles.contactSectionIntro}>
+                <div>
+                  {hasText(supportConfig.contactSectionEyebrow) ? (
+                    <p>{supportConfig.contactSectionEyebrow}</p>
+                  ) : null}
+                  {hasText(supportConfig.contactSectionHeading) ? (
+                    <h3>{supportConfig.contactSectionHeading}</h3>
+                  ) : null}
+                </div>
+                {hasText(supportConfig.contactSectionSubtitle) ? (
+                  <span>{supportConfig.contactSectionSubtitle}</span>
                 ) : null}
               </div>
-              {hasText(supportConfig.contactSectionSubtitle) ? (
-                <span>{supportConfig.contactSectionSubtitle}</span>
-              ) : null}
-            </div>
-          ) : null}
+            ) : null}
 
-          <div className={styles.contactIconRow} role="list" aria-label={supportConfig.contactSectionHeading || "راه‌های ارتباطی"}>
-            {contactChannels.map((channel) => {
-              const Icon = CHANNEL_ICONS[channel.type] ?? ChatRoundedIcon;
-              return (
-                <div key={`${channel.type}-${channel.href}`} className={styles.contactIconItem} role="listitem">
-                  <ContactIconLink channel={channel} Icon={Icon} onOpen={openChannel} />
-                </div>
-              );
-            })}
-          </div>
+            <div
+              className={styles.contactIconRow}
+              role="list"
+              aria-label={supportConfig.contactSectionHeading || "راه‌های ارتباطی"}
+            >
+              {contactChannels.map((channel) => {
+                const Icon = CHANNEL_ICONS[channel.type] ?? ChatRoundedIcon;
+                return (
+                  <div
+                    key={`${channel.type}-${channel.href}`}
+                    className={styles.contactIconItem}
+                    role="listitem"
+                  >
+                    <ContactIconLink channel={channel} Icon={Icon} onOpen={openChannel} />
+                  </div>
+                );
+              })}
+            </div>
           </div>
         ) : null}
 
         {quickTips.length > 0 ? (
           <div className={styles.supportPanel} {...opaqueShellProps}>
-          {hasTipsSectionHeading ? (
-            <div className={styles.panelIntro}>
-              <TipsAndUpdatesRoundedIcon />
-              <div>
-                {hasText(supportConfig.tipsEyebrow) ? <p>{supportConfig.tipsEyebrow}</p> : null}
-                {hasText(supportConfig.tipsHeading) ? <h3>{supportConfig.tipsHeading}</h3> : null}
+            {hasTipsSectionHeading ? (
+              <div className={styles.panelIntro}>
+                <TipsAndUpdatesRoundedIcon />
+                <div>
+                  {hasText(supportConfig.tipsEyebrow) ? <p>{supportConfig.tipsEyebrow}</p> : null}
+                  {hasText(supportConfig.tipsHeading) ? <h3>{supportConfig.tipsHeading}</h3> : null}
+                </div>
               </div>
-            </div>
-          ) : null}
-          <ul className={styles.tipList}>
-            {quickTips.map((tip) => (
-              <li key={tip}>{tip}</li>
-            ))}
-          </ul>
+            ) : null}
+            <ul className={styles.tipList}>
+              {quickTips.map((tip) => (
+                <li key={tip}>{tip}</li>
+              ))}
+            </ul>
           </div>
         ) : null}
       </div>

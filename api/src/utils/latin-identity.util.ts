@@ -22,9 +22,7 @@ export function toWesternDigits(value: string): string {
     .replace(EXTENDED_ARABIC_INDIC_DIGIT, (ch) =>
       String(ch.charCodeAt(0) - 0x06f0),
     )
-    .replace(ARABIC_INDIC_DIGIT, (ch) =>
-      String(ch.charCodeAt(0) - 0x0660),
-    );
+    .replace(ARABIC_INDIC_DIGIT, (ch) => String(ch.charCodeAt(0) - 0x0660));
 }
 
 function enforceLatinIdentityStart(value: string): string {

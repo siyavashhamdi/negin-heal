@@ -24,8 +24,7 @@ export class GeneralSubscriptionGqlResponse {
 
   @Field(() => GraphQLJSON, {
     nullable: true,
-    description:
-      "Type-specific payload object",
+    description: "Type-specific payload object",
   })
   payload?: Record<string, unknown>;
 }

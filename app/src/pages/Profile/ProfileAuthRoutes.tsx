@@ -17,8 +17,7 @@ const ProfileLogin = (): ReactElement => {
   const navigate = useNavigate();
   const location = useLocation();
   const verifyState = isProfileLoginVerifyState(location.state) ? location.state : null;
-  const prefill =
-    verifyState || !isLoginNavState(location.state) ? null : location.state;
+  const prefill = verifyState || !isLoginNavState(location.state) ? null : location.state;
 
   if (verifyState) {
     return (
@@ -50,9 +49,7 @@ const ProfileLogin = (): ReactElement => {
           state: createProfileLoginVerifyState(identity),
         })
       }
-      onSignupRequired={(identity) =>
-        navigate(APP_SHELL_ROUTES.profileSignup, { state: identity })
-      }
+      onSignupRequired={(identity) => navigate(APP_SHELL_ROUTES.profileSignup, { state: identity })}
       onForgotPassword={(identity) =>
         navigate(APP_SHELL_ROUTES.profileForgotPassword, {
           state: identity ?? undefined,

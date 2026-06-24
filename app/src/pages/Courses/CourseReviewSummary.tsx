@@ -38,7 +38,9 @@ const CourseReviewSummary = ({
     <div className={styles.summaryPanel}>
       <div className={styles.summaryScoreBlock}>
         {showAverageNumber ? (
-          <strong className={styles.summaryAverage}>{formatAverageRating(stats.averageRating)}</strong>
+          <strong className={styles.summaryAverage}>
+            {formatAverageRating(stats.averageRating)}
+          </strong>
         ) : null}
         <StarRating
           value={averageRating}
@@ -47,9 +49,7 @@ const CourseReviewSummary = ({
         />
         {showReviewCount ? (
           <Typography variant="caption" color="text.secondary">
-            {hasRatings
-              ? `${toPersianDigits(stats.ratedCount)} نظر ثبت‌شده`
-              : "هنوز نظری ثبت نشده"}
+            {hasRatings ? `${toPersianDigits(stats.ratedCount)} نظر ثبت‌شده` : "هنوز نظری ثبت نشده"}
           </Typography>
         ) : null}
         {showDistribution && showDistributionBars && isPartialSample && hasRatings ? (

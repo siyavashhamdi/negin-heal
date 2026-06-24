@@ -8,10 +8,23 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
-import { Snackbar, Alert, Box, LinearProgress, Slide, Typography, useMediaQuery, useTheme } from "@mui/material";
+import {
+  Snackbar,
+  Alert,
+  Box,
+  LinearProgress,
+  Slide,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
 import type { SlideProps } from "@mui/material/Slide";
 import { SNACKBAR_AUTO_HIDE_DURATION_MS } from "../constants/snackbar.constants";
-import { getSnackbarFilledAlertSx, getSnackbarFilledAlertTone, SNACKBAR_ALERT_CLASS } from "../theme";
+import {
+  getSnackbarFilledAlertSx,
+  getSnackbarFilledAlertTone,
+  SNACKBAR_ALERT_CLASS,
+} from "../theme";
 import {
   SnackbarContext,
   type SnackbarSeverity,
@@ -90,13 +103,13 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
     (
       message: string,
       severity: SnackbarSeverity = "info",
-      duration: number = SNACKBAR_AUTO_HIDE_DURATION_MS,
+      duration: number = SNACKBAR_AUTO_HIDE_DURATION_MS
     ) => {
       setSnackbarData({ message, severity, duration });
       setSnackbarInstance((instance) => instance + 1);
       setOpen(true);
     },
-    [],
+    []
   );
 
   /**
@@ -106,7 +119,7 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
     (message: string, duration: number = SNACKBAR_AUTO_HIDE_DURATION_MS) => {
       showSnackbar(message, "success", duration);
     },
-    [showSnackbar],
+    [showSnackbar]
   );
 
   /**
@@ -116,7 +129,7 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
     (message: string, duration: number = SNACKBAR_AUTO_HIDE_DURATION_MS) => {
       showSnackbar(message, "error", duration);
     },
-    [showSnackbar],
+    [showSnackbar]
   );
 
   /**
@@ -126,7 +139,7 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
     (message: string, duration: number = SNACKBAR_AUTO_HIDE_DURATION_MS) => {
       showSnackbar(message, "warning", duration);
     },
-    [showSnackbar],
+    [showSnackbar]
   );
 
   /**
@@ -136,7 +149,7 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
     (message: string, duration: number = SNACKBAR_AUTO_HIDE_DURATION_MS) => {
       showSnackbar(message, "info", duration);
     },
-    [showSnackbar],
+    [showSnackbar]
   );
 
   const updateUploadProgress = useCallback((percent: number) => {
@@ -158,7 +171,7 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
       setOpen(false);
       resetDrag();
     },
-    [resetDrag],
+    [resetDrag]
   );
 
   const handlePointerDown = useCallback(
@@ -176,7 +189,7 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
       setIsDragging(true);
       event.currentTarget.setPointerCapture(event.pointerId);
     },
-    [isMobile, open],
+    [isMobile, open]
   );
 
   const handlePointerMove = useCallback(
@@ -196,7 +209,7 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
       dragState.y = deltaY;
       setDragOffset({ x: deltaX, y: deltaY });
     },
-    [isDragging, isMobile],
+    [isDragging, isMobile]
   );
 
   const handlePointerEnd = useCallback(
@@ -220,7 +233,7 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
 
       resetDrag();
     },
-    [handleClose, isMobile, resetDrag],
+    [handleClose, isMobile, resetDrag]
   );
 
   const dragTransform = useMemo(() => {

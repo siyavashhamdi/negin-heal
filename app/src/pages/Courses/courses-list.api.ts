@@ -179,7 +179,13 @@ export type CourseListFilters = {
   readonly tagsAny: string;
 };
 
-export type CourseSortField = "sortOrder" | "createdAt" | "updatedAt" | "title" | "priceIrt" | "isActive";
+export type CourseSortField =
+  | "sortOrder"
+  | "createdAt"
+  | "updatedAt"
+  | "title"
+  | "priceIrt"
+  | "isActive";
 
 export type CourseListSort = {
   readonly field: CourseSortField;
@@ -204,7 +210,9 @@ export const DEFAULT_COURSE_LIST_SORT: CourseListSort = {
   order: "DESC",
 };
 
-export function isCourseFreeForList(item: Pick<CourseListRecord, "priceIrt" | "discount">): boolean {
+export function isCourseFreeForList(
+  item: Pick<CourseListRecord, "priceIrt" | "discount">
+): boolean {
   const price = item.priceIrt ?? 0;
   if (price <= 0) {
     return true;
@@ -308,7 +316,7 @@ export function buildCourseListQueryVariables(
   filters: CourseListFilters,
   sort: CourseListSort,
   pageSize: number,
-  startCursor?: string | null,
+  startCursor?: string | null
 ): CourseListQueryVariables {
   const query = trimToNull(filters.query);
   const tagsAny = parseTags(filters.tagsAny);
@@ -319,22 +327,12 @@ export function buildCourseListQueryVariables(
     input: {
       filters: {
         query,
-        isActive:
-          filters.isActive === "ALL"
-            ? null
-            : filters.isActive === "ACTIVE",
+        isActive: filters.isActive === "ALL" ? null : filters.isActive === "ACTIVE",
         releaseType: filters.releaseType === "ALL" ? null : filters.releaseType,
         itemType: filters.itemType === "ALL" ? null : filters.itemType,
-        hasPrice:
-          filters.hasPrice === "ALL"
-            ? null
-            : filters.hasPrice === "WITH_PRICE",
-        hasFreeChapter:
-          filters.hasFreeChapter === "ALL"
-            ? null
-            : filters.hasFreeChapter === "YES",
-        isPurchased:
-          filters.isPurchased === "ALL" ? null : filters.isPurchased === "YES",
+        hasPrice: filters.hasPrice === "ALL" ? null : filters.hasPrice === "WITH_PRICE",
+        hasFreeChapter: filters.hasFreeChapter === "ALL" ? null : filters.hasFreeChapter === "YES",
+        isPurchased: filters.isPurchased === "ALL" ? null : filters.isPurchased === "YES",
         minPriceIrt,
         maxPriceIrt,
         tagsAny,

@@ -32,9 +32,7 @@ export function AppShellNavItemIcon({
     return (
       <Avatar
         className={
-          variant === "bottom"
-            ? "main-layout__mobile-bottom-avatar"
-            : "side-menu-nav__item-avatar"
+          variant === "bottom" ? "main-layout__mobile-bottom-avatar" : "side-menu-nav__item-avatar"
         }
         src={profileAvatar.src}
         alt={profileAvatar.alt}
@@ -43,9 +41,7 @@ export function AppShellNavItemIcon({
   }
 
   const icon = (
-    <ItemIcon
-      className={variant === "bottom" ? undefined : "side-menu-nav__item-icon"}
-    />
+    <ItemIcon className={variant === "bottom" ? undefined : "side-menu-nav__item-icon"} />
   );
 
   if (item.badge === "support" && badgeCount > 0) {

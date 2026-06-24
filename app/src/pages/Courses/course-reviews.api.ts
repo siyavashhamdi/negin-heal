@@ -226,9 +226,7 @@ export const COURSE_REVIEW_LIST_PAGE_SIZE = 8;
 export const COURSE_REVIEW_COMMENT_PREVIEW_LIMIT = 2;
 export const COURSE_REVIEW_COMMENT_PREVIEW_LENGTH = 180;
 
-export function canUseEndUserCourseReviewList(
-  roles: readonly string[] | undefined,
-): boolean {
+export function canUseEndUserCourseReviewList(roles: readonly string[] | undefined): boolean {
   if (!roles?.length) {
     return false;
   }
@@ -236,22 +234,16 @@ export function canUseEndUserCourseReviewList(
   return roles.includes("END_USER") && !isStaffCourseReviewer(roles);
 }
 
-export function canUseAdminCourseReviewList(
-  roles: readonly string[] | undefined,
-): boolean {
+export function canUseAdminCourseReviewList(roles: readonly string[] | undefined): boolean {
   return isStaffCourseReviewer(roles);
 }
 
-export function canUseCourseReviewExperience(
-  roles: readonly string[] | undefined,
-): boolean {
+export function canUseCourseReviewExperience(roles: readonly string[] | undefined): boolean {
   return canUseEndUserCourseReviewList(roles) || canUseAdminCourseReviewList(roles);
 }
 
 export function isStaffCourseReviewer(roles: readonly string[] | undefined): boolean {
-  return (
-    roles?.includes("SUPER_ADMIN") === true
-  );
+  return roles?.includes("SUPER_ADMIN") === true;
 }
 
 export function isStaffReviewOwner(review: AdminCourseReviewRecord): boolean {
@@ -294,19 +286,16 @@ export function resolveCanSubmitCourseReview(input: {
     return false;
   }
 
-  const hasPendingPurchase =
-    input.isFree !== true && input.purchaseStatus === "PENDING";
+  const hasPendingPurchase = input.isFree !== true && input.purchaseStatus === "PENDING";
   const canAccessCourse =
-    input.isFree === true ||
-    input.isPurchased === true ||
-    input.purchaseStatus === "PAID";
+    input.isFree === true || input.isPurchased === true || input.purchaseStatus === "PAID";
 
   return canAccessCourse && !hasPendingPurchase;
 }
 
 export function findOwnAdminCourseReview(
   items: ReadonlyArray<AdminCourseReviewRecord>,
-  userId: string | undefined,
+  userId: string | undefined
 ): AdminCourseReviewRecord | null {
   if (!userId) {
     return null;
@@ -317,7 +306,7 @@ export function findOwnAdminCourseReview(
 
 export function mapAdminCourseReviewToEndUserRecord(
   review: AdminCourseReviewRecord,
-  currentUserId: string,
+  currentUserId: string
 ): EndUserCourseReviewRecord {
   const isMine = review.userId === currentUserId;
   const authorFirstName =
@@ -359,13 +348,13 @@ export function mapAdminCourseReviewToEndUserRecord(
 }
 
 export function mapAdminCourseReviewToViewerRecord(
-  review: AdminCourseReviewRecord,
+  review: AdminCourseReviewRecord
 ): EndUserCourseReviewRecord {
   return mapAdminCourseReviewToEndUserRecord(review, "__viewer_not_owner__");
 }
 
 export function findOwnCourseReview(
-  items: ReadonlyArray<EndUserCourseReviewRecord>,
+  items: ReadonlyArray<EndUserCourseReviewRecord>
 ): EndUserCourseReviewRecord | null {
   return items.find((item) => item.isMine) ?? null;
 }
@@ -393,10 +382,7 @@ export const COURSE_REVIEW_REPLY_VISIBILITY_OPTIONS: ReadonlyArray<{
   { value: "PRIVATE", label: COURSE_REVIEW_VISIBILITY_LABEL.PRIVATE },
 ];
 
-export type CourseReviewReplyVisibility = Extract<
-  CourseReviewVisibility,
-  "PUBLIC" | "PRIVATE"
->;
+export type CourseReviewReplyVisibility = Extract<CourseReviewVisibility, "PUBLIC" | "PRIVATE">;
 
 export const COURSE_REVIEW_STAR_FILTER_OPTIONS: ReadonlyArray<{
   readonly value: number | null;
@@ -414,7 +400,7 @@ export function buildEndUserCourseReviewListVariables(
   courseId: string,
   starsFilter: number | null,
   startCursor: string | null,
-  limit = COURSE_REVIEW_LIST_PAGE_SIZE,
+  limit = COURSE_REVIEW_LIST_PAGE_SIZE
 ): UserCourseReviewListQueryVariables {
   return {
     input: {
@@ -434,7 +420,7 @@ export function buildAdminCourseReviewListVariables(
   courseId: string,
   starsFilter: number | null,
   startCursor: string | null,
-  limit = COURSE_REVIEW_LIST_PAGE_SIZE,
+  limit = COURSE_REVIEW_LIST_PAGE_SIZE
 ): CourseReviewListQueryVariables {
   return {
     input: {
@@ -473,7 +459,7 @@ export function resolveCourseReviewThreadEntryAuthorLabel(input: {
 }
 
 export function resolveDefaultReplyVisibility(
-  review: AdminCourseReviewRecord,
+  review: AdminCourseReviewRecord
 ): CourseReviewReplyVisibility {
   const timeline: Array<{ sentAt: string; visibility: CourseReviewVisibility }> = [];
 
@@ -496,7 +482,7 @@ export function resolveDefaultReplyVisibility(
   }
 
   timeline.sort(
-    (left, right) => new Date(left.sentAt).getTime() - new Date(right.sentAt).getTime(),
+    (left, right) => new Date(left.sentAt).getTime() - new Date(right.sentAt).getTime()
   );
 
   const lastVisibility = timeline[timeline.length - 1]!.visibility;
@@ -522,7 +508,7 @@ export function resolveAdminReviewAuthorLabel(review: AdminCourseReviewRecord): 
 }
 
 export function resolveAdminCourseReviewSenderUserLabel(
-  senderUser?: AdminCourseReviewRecord["messages"][number]["senderUser"],
+  senderUser?: AdminCourseReviewRecord["messages"][number]["senderUser"]
 ): string {
   const profileName = [senderUser?.profile?.firstName, senderUser?.profile?.lastName]
     .filter((part) => part?.trim())
@@ -534,7 +520,7 @@ export function resolveAdminCourseReviewSenderUserLabel(
 
 export function resolveAdminCourseReviewMessageSenderLabel(
   review: AdminCourseReviewRecord,
-  message: AdminCourseReviewRecord["messages"][number],
+  message: AdminCourseReviewRecord["messages"][number]
 ): string {
   if (message.senderUserId === review.userId) {
     return resolveAdminReviewAuthorLabel(review);
@@ -544,7 +530,7 @@ export function resolveAdminCourseReviewMessageSenderLabel(
 }
 
 export function resolveReviewRatingDate(
-  rating?: { readonly ratedAt: string; readonly updatedAt?: string | null } | null,
+  rating?: { readonly ratedAt: string; readonly updatedAt?: string | null } | null
 ): string | null {
   if (!rating) {
     return null;
@@ -574,7 +560,7 @@ type CourseReviewSummarySourceItem = {
 };
 
 export function isCourseReviewRatingEligibleForSummary(
-  item: CourseReviewSummarySourceItem,
+  item: CourseReviewSummarySourceItem
 ): boolean {
   if (item.isSubmissionBlocked || item.moderation?.visibility === "HIDDEN") {
     return false;
@@ -597,7 +583,7 @@ export function isCourseReviewRatingEligibleForSummary(
 }
 
 export function mapCourseReviewRatingSummaryToStats(
-  summary?: CourseReviewSummaryStats | null,
+  summary?: CourseReviewSummaryStats | null
 ): CourseReviewSummaryStats {
   return (
     summary ?? {
@@ -613,7 +599,7 @@ export function mapCourseReviewRatingSummaryToStats(
 }
 
 export function computeCourseReviewSummaryStats(
-  items: ReadonlyArray<CourseReviewSummarySourceItem>,
+  items: ReadonlyArray<CourseReviewSummarySourceItem>
 ): CourseReviewSummaryStats {
   const eligibleRatedItems = items.filter(isCourseReviewRatingEligibleForSummary);
   const distributionCounts = [5, 4, 3, 2, 1].map((stars) => ({
@@ -625,8 +611,7 @@ export function computeCourseReviewSummaryStats(
 
   const averageRating =
     ratedCount > 0
-      ? eligibleRatedItems.reduce((sum, item) => sum + (item.rating?.stars ?? 0), 0) /
-        ratedCount
+      ? eligibleRatedItems.reduce((sum, item) => sum + (item.rating?.stars ?? 0), 0) / ratedCount
       : null;
 
   return {

@@ -56,7 +56,7 @@ const itemMatchesSearch = (item: SupportFaqItem, searchTerm: string): boolean =>
 const hasText = (value: string): boolean => value.trim().length > 0;
 
 const getRenderableSections = (
-  sections: readonly SupportFaqSection[],
+  sections: readonly SupportFaqSection[]
 ): readonly SupportFaqSection[] =>
   sections
     .map((section) => ({
@@ -81,7 +81,7 @@ const SupportFaq = (): ReactElement => {
 
   const renderableSections = useMemo(
     () => getRenderableSections(faqPage.sections),
-    [faqPage.sections],
+    [faqPage.sections]
   );
 
   const filteredSections = useMemo(
@@ -92,7 +92,7 @@ const SupportFaq = (): ReactElement => {
           items: section.items.filter((item) => itemMatchesSearch(item, searchTerm)),
         }))
         .filter((section) => section.items.length > 0),
-    [renderableSections, searchTerm],
+    [renderableSections, searchTerm]
   );
 
   const faqStructuredItems = useMemo(
@@ -101,9 +101,9 @@ const SupportFaq = (): ReactElement => {
         section.items.map((item) => ({
           question: item.question,
           answer: htmlToPlainText(item.answer),
-        })),
+        }))
       ),
-    [renderableSections],
+    [renderableSections]
   );
 
   const pageSeoOverride = useMemo(() => {
@@ -154,7 +154,7 @@ const SupportFaq = (): ReactElement => {
 
   const visibleItemCount = useMemo(
     () => filteredSections.reduce((total, section) => total + section.items.length, 0),
-    [filteredSections],
+    [filteredSections]
   );
   const hasSearch = searchTerm.length > 0;
   const hasResults = filteredSections.length > 0;
@@ -175,7 +175,9 @@ const SupportFaq = (): ReactElement => {
     <section className={styles.page} aria-busy={loading}>
       <div className={`${styles.hero} ${styles.faqHero}`} {...opaqueShellProps}>
         <div className={styles.faqHeroContent}>
-          {hasText(faqPage.eyebrow) ? <p className={styles.faqHeroEyebrow}>{faqPage.eyebrow}</p> : null}
+          {hasText(faqPage.eyebrow) ? (
+            <p className={styles.faqHeroEyebrow}>{faqPage.eyebrow}</p>
+          ) : null}
           {hasText(faqPage.heading) ? (
             <div className={styles.faqHeroHeading}>
               <span className={styles.faqHeroIcon}>

@@ -16,12 +16,9 @@ const hasText = (value: string): boolean => value.trim().length > 0;
 
 const TermsOfUsePage = (): ReactElement => {
   const { t } = useTranslation();
-  const { data, loading } = useQuery<AppTermsOfUsePageConfigQuery>(
-    APP_TERMS_OF_USE_PAGE_QUERY,
-    {
-      fetchPolicy: "cache-and-network",
-    },
-  );
+  const { data, loading } = useQuery<AppTermsOfUsePageConfigQuery>(APP_TERMS_OF_USE_PAGE_QUERY, {
+    fetchPolicy: "cache-and-network",
+  });
   const termsOfUsePage = data?.appTermsOfUsePageConfig ?? EMPTY_APP_TERMS_OF_USE_PAGE;
 
   useHtmlContentSeoOverride({

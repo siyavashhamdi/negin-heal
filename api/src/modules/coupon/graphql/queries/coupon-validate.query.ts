@@ -30,9 +30,6 @@ export class CouponValidateQuery {
       throw new ForbiddenException(EXCEPTION_CONSTANT.END_USER_ONLY);
     }
 
-    return this.couponService.validateForCoursePurchase(
-      input,
-      user.userId,
-    );
+    return this.couponService.validateForCoursePurchase(input, user.userId);
   }
 }

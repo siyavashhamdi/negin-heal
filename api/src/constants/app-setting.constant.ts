@@ -17,9 +17,7 @@ export const APP_SETTING_KEY = {
 } as const;
 
 /** Settings managed outside the system settings UI. */
-export const HIDDEN_APP_SETTING_KEYS = [
-  APP_SETTING_KEY.APP_VERSION,
-] as const;
+export const HIDDEN_APP_SETTING_KEYS = [APP_SETTING_KEY.APP_VERSION] as const;
 
 export const PAYMENT_CHECKOUT_SETTING_KEYS = [
   APP_SETTING_KEY.PAYMENT_CARDS,

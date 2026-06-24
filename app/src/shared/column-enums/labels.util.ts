@@ -145,10 +145,7 @@ export function bankStatusLabel(
   return labelFromMap(BANK_STATUS_LABELS, code, empty);
 }
 
-export function jobTypeLabel(
-  code: string | null | undefined,
-  empty = EMPTY_DEFAULT
-): string {
+export function jobTypeLabel(code: string | null | undefined, empty = EMPTY_DEFAULT): string {
   const v = (code ?? "").trim();
   if (v === "") {
     return empty;
@@ -160,10 +157,7 @@ export function jobTypeFilterOptions(): { value: string; label: string }[] {
   return selectOptionsFromMap(JOB_TYPE_LABELS, { includeEmpty: false });
 }
 
-export function genderLabel(
-  code: string | null | undefined,
-  empty = EMPTY_DEFAULT
-): string {
+export function genderLabel(code: string | null | undefined, empty = EMPTY_DEFAULT): string {
   const v = (code ?? "").trim();
   if (v === "") {
     return empty;
@@ -171,14 +165,13 @@ export function genderLabel(
   return labelFromMap(GENDER_LABELS, v, v);
 }
 
-export function genderSelectOptions(emptyLabel = EMPTY_DEFAULT): { value: string; label: string }[] {
+export function genderSelectOptions(
+  emptyLabel = EMPTY_DEFAULT
+): { value: string; label: string }[] {
   return selectOptionsFromMap(GENDER_LABELS, { emptyLabel });
 }
 
-export function maritalStatusLabel(
-  code: string | null | undefined,
-  empty = EMPTY_DEFAULT
-): string {
+export function maritalStatusLabel(code: string | null | undefined, empty = EMPTY_DEFAULT): string {
   const v = (code ?? "").trim();
   if (v === "") {
     return empty;
@@ -209,10 +202,7 @@ export function militaryStatusSelectOptions(
   return selectOptionsFromMap(MILITARY_STATUS_LABELS, { emptyLabel });
 }
 
-export function householdsLabel(
-  code: string | null | undefined,
-  empty = EMPTY_DEFAULT
-): string {
+export function householdsLabel(code: string | null | undefined, empty = EMPTY_DEFAULT): string {
   const v = (code ?? "").trim();
   if (v === "") {
     return empty;
@@ -254,10 +244,7 @@ export function enactmentModeFilterOptions(): { value: string; label: string }[]
   return selectOptionsFromMap(ENACTMENT_MODE_LABELS, { includeEmpty: false });
 }
 
-export function enactmentReadLabel(
-  code: string | null | undefined,
-  empty = EMPTY_DEFAULT
-): string {
+export function enactmentReadLabel(code: string | null | undefined, empty = EMPTY_DEFAULT): string {
   const v = (code ?? "").trim();
   if (v === "" || v === "-") {
     return empty;

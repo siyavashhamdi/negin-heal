@@ -9,7 +9,10 @@ import {
   type ReactElement,
 } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
-import { AddRounded as AddRoundedIcon, DeleteRounded as DeleteRoundedIcon } from "@mui/icons-material";
+import {
+  AddRounded as AddRoundedIcon,
+  DeleteRounded as DeleteRoundedIcon,
+} from "@mui/icons-material";
 import {
   Checkbox,
   Chip,
@@ -48,7 +51,10 @@ import { useSnackbar } from "../../hooks/useSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
 import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
 import { hasFormChanges } from "../../utils/formChange.util";
-import { MULTILINE_TEXTAREA_MIN_ROWS, MULTILINE_TEXTAREA_MAX_ROWS } from "../../constants/multilineTextarea.constants";
+import {
+  MULTILINE_TEXTAREA_MIN_ROWS,
+  MULTILINE_TEXTAREA_MAX_ROWS,
+} from "../../constants/multilineTextarea.constants";
 import CrudRowActions from "../../shared/crud/CrudRowActions";
 import EntityDeleteDialog from "../../shared/crud/EntityDeleteDialog";
 import EntityModalShell from "../../shared/crud/EntityModalShell";
@@ -257,12 +263,10 @@ const CouponsIndex = (): ReactElement => {
   const [showColumnFilters, setShowColumnFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
-  const [appliedFilters, setAppliedFilters] = useState<CouponListFilters>(
-    EMPTY_COUPON_LIST_FILTERS
-  );
-  const [pendingFilters, setPendingFilters] = useState<CouponListFilters>(
-    EMPTY_COUPON_LIST_FILTERS
-  );
+  const [appliedFilters, setAppliedFilters] =
+    useState<CouponListFilters>(EMPTY_COUPON_LIST_FILTERS);
+  const [pendingFilters, setPendingFilters] =
+    useState<CouponListFilters>(EMPTY_COUPON_LIST_FILTERS);
   const debouncedPendingFilters = useDebounce(pendingFilters, 500);
   const applyFiltersRef = useRef<(() => void) | null>(null);
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
@@ -377,8 +381,7 @@ const CouponsIndex = (): ReactElement => {
   const hasEditFormChanges =
     initialForm != null && form != null && hasFormChanges(initialForm, form);
 
-  const canSubmitCouponForm =
-    dialogMode === "create" ? isCreateFormReady : hasEditFormChanges;
+  const canSubmitCouponForm = dialogMode === "create" ? isCreateFormReady : hasEditFormChanges;
 
   useEffect(() => {
     if (!error) {
@@ -590,9 +593,7 @@ const CouponsIndex = (): ReactElement => {
         label={fromLabel}
         ariaLabel={fromLabel}
         value={String(pendingFilters[fromKey] || "")}
-        onChange={(value) =>
-          setFilterValue(fromKey, value as CouponListFilters[typeof fromKey])
-        }
+        onChange={(value) => setFilterValue(fromKey, value as CouponListFilters[typeof fromKey])}
       />
       <JalaliDateFilterField
         label={toLabel}
@@ -613,9 +614,7 @@ const CouponsIndex = (): ReactElement => {
       fullWidth
       aria-label={label}
       value={pendingFilters[key]}
-      onChange={(event) =>
-        setFilterValue(key, event.target.value as CouponListFilters[typeof key])
-      }
+      onChange={(event) => setFilterValue(key, event.target.value as CouponListFilters[typeof key])}
     >
       {BOOLEAN_FILTER_OPTIONS.map((option) => (
         <MenuItem key={option.value} value={option.value}>
@@ -799,9 +798,7 @@ const CouponsIndex = (): ReactElement => {
       {
         id: "actions",
         header: t("table.columns.actions"),
-        cell: ({ row }) => (
-          <CrudRowActions onEdit={() => openEditDialog(row.original)} />
-        ),
+        cell: ({ row }) => <CrudRowActions onEdit={() => openEditDialog(row.original)} />,
         enableSorting: false,
         enableHiding: false,
       },
@@ -870,9 +867,7 @@ const CouponsIndex = (): ReactElement => {
         relaxedHeaderSpacing
         resetKey={editCouponId != null ? `${editCouponId}-${Boolean(editCouponRecord)}` : undefined}
         title={
-          dialogMode === "create"
-            ? t("pages.coupons.create.title")
-            : t("pages.coupons.edit.title")
+          dialogMode === "create" ? t("pages.coupons.create.title") : t("pages.coupons.edit.title")
         }
         subtitle={
           dialogMode === "create"
@@ -928,144 +923,140 @@ const CouponsIndex = (): ReactElement => {
             </Typography>
           </Stack>
         ) : form ? (
-              <Stack spacing={2.5}>
-                <TextField
-                  label={t("table.pages.coupons.columns.title")}
-                  value={form.title}
-                  onChange={(event) => setFormField("title", event.target.value)}
-                  required
-                  fullWidth
-                  size="small"
-                />
-                <TextField
-                  label={t("table.pages.coupons.columns.code")}
-                  value={form.code}
-                  onChange={(event) => setFormField("code", event.target.value)}
-                  required
-                  fullWidth
-                  size="small"
-                  sx={COUPON_CODE_INPUT_SX}
-                  inputProps={COUPON_CODE_INPUT_PROPS}
-                />
+          <Stack spacing={2.5}>
+            <TextField
+              label={t("table.pages.coupons.columns.title")}
+              value={form.title}
+              onChange={(event) => setFormField("title", event.target.value)}
+              required
+              fullWidth
+              size="small"
+            />
+            <TextField
+              label={t("table.pages.coupons.columns.code")}
+              value={form.code}
+              onChange={(event) => setFormField("code", event.target.value)}
+              required
+              fullWidth
+              size="small"
+              sx={COUPON_CODE_INPUT_SX}
+              inputProps={COUPON_CODE_INPUT_PROPS}
+            />
 
-                <TextField
-                  label={t("table.pages.coupons.columns.description")}
-                  value={form.description}
-                  onChange={(event) => setFormField("description", event.target.value)}
-                  fullWidth
-                  size="small"
-                  multiline
-                  minRows={MULTILINE_TEXTAREA_MIN_ROWS}
-                  maxRows={MULTILINE_TEXTAREA_MAX_ROWS}
-                />
+            <TextField
+              label={t("table.pages.coupons.columns.description")}
+              value={form.description}
+              onChange={(event) => setFormField("description", event.target.value)}
+              fullWidth
+              size="small"
+              multiline
+              minRows={MULTILINE_TEXTAREA_MIN_ROWS}
+              maxRows={MULTILINE_TEXTAREA_MAX_ROWS}
+            />
 
-                <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-                  <TextField
-                    select
-                    label={t("table.pages.coupons.columns.discountType")}
-                    value={form.discountType}
-                    onChange={(event) =>
-                      setFormField("discountType", event.target.value as CouponDiscountType)
-                    }
-                    fullWidth
-                    size="small"
-                    required
-                  >
-                    {DISCOUNT_TYPE_OPTIONS.map((discountType) => (
-                      <MenuItem key={discountType} value={discountType}>
-                        {DISCOUNT_TYPE_LABEL[discountType]}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                  <TextField
-                    label={t("table.pages.coupons.columns.discountValue")}
-                    value={form.discountValue}
-                    onChange={(event) => setFormField("discountValue", event.target.value)}
-                    fullWidth
-                    size="small"
-                    type="number"
-                    required
-                    inputProps={{ min: 0, step: form.discountType === "PERCENTAGE" ? 1 : 1000 }}
-                  />
-                </Stack>
+            <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+              <TextField
+                select
+                label={t("table.pages.coupons.columns.discountType")}
+                value={form.discountType}
+                onChange={(event) =>
+                  setFormField("discountType", event.target.value as CouponDiscountType)
+                }
+                fullWidth
+                size="small"
+                required
+              >
+                {DISCOUNT_TYPE_OPTIONS.map((discountType) => (
+                  <MenuItem key={discountType} value={discountType}>
+                    {DISCOUNT_TYPE_LABEL[discountType]}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                label={t("table.pages.coupons.columns.discountValue")}
+                value={form.discountValue}
+                onChange={(event) => setFormField("discountValue", event.target.value)}
+                fullWidth
+                size="small"
+                type="number"
+                required
+                inputProps={{ min: 0, step: form.discountType === "PERCENTAGE" ? 1 : 1000 }}
+              />
+            </Stack>
 
-                <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-                  <JalaliDateTimeField
-                    label={t("table.pages.coupons.columns.startsAt")}
-                    value={form.startsAt}
-                    onChange={(value) => setFormField("startsAt", value)}
-                    ariaLabel={t("table.pages.coupons.columns.startsAt")}
-                    size="small"
-                  />
-                  <JalaliDateTimeField
-                    label={t("table.pages.coupons.columns.expiresAt")}
-                    value={form.expiresAt}
-                    onChange={(value) => setFormField("expiresAt", value)}
-                    ariaLabel={t("table.pages.coupons.columns.expiresAt")}
-                    size="small"
-                  />
-                </Stack>
+            <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+              <JalaliDateTimeField
+                label={t("table.pages.coupons.columns.startsAt")}
+                value={form.startsAt}
+                onChange={(value) => setFormField("startsAt", value)}
+                ariaLabel={t("table.pages.coupons.columns.startsAt")}
+                size="small"
+              />
+              <JalaliDateTimeField
+                label={t("table.pages.coupons.columns.expiresAt")}
+                value={form.expiresAt}
+                onChange={(value) => setFormField("expiresAt", value)}
+                ariaLabel={t("table.pages.coupons.columns.expiresAt")}
+                size="small"
+              />
+            </Stack>
 
-                <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-                  <TextField
-                    label={t("table.pages.coupons.columns.totalUsageLimit")}
-                    value={form.totalUsageLimit}
-                    onChange={(event) => setFormField("totalUsageLimit", event.target.value)}
-                    fullWidth
-                    size="small"
-                    type="number"
-                    inputProps={{ min: 1, step: 1 }}
-                  />
-                  <TextField
-                    label={t("table.pages.coupons.columns.perUserUsageLimit")}
-                    value={form.perUserUsageLimit}
-                    onChange={(event) => setFormField("perUserUsageLimit", event.target.value)}
-                    fullWidth
-                    size="small"
-                    type="number"
-                    inputProps={{ min: 1, step: 1 }}
-                  />
-                </Stack>
+            <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+              <TextField
+                label={t("table.pages.coupons.columns.totalUsageLimit")}
+                value={form.totalUsageLimit}
+                onChange={(event) => setFormField("totalUsageLimit", event.target.value)}
+                fullWidth
+                size="small"
+                type="number"
+                inputProps={{ min: 1, step: 1 }}
+              />
+              <TextField
+                label={t("table.pages.coupons.columns.perUserUsageLimit")}
+                value={form.perUserUsageLimit}
+                onChange={(event) => setFormField("perUserUsageLimit", event.target.value)}
+                fullWidth
+                size="small"
+                type="number"
+                inputProps={{ min: 1, step: 1 }}
+              />
+            </Stack>
 
-                <CoursePickerField
-                  multiple
-                  enabled={couponDialogOpen}
-                  limit={500}
-                  label={t("table.pages.coupons.columns.applicableCourseIds")}
-                  placeholder={t("pages.coupons.form.applicableCourseIdsPlaceholder")}
-                  helperText={t("pages.coupons.form.applicableCourseIdsHelp")}
-                  noOptionsText={t("table.filters.noOptions")}
-                  loadErrorText={t("pages.coupons.form.applicableCourseIdsLoadError")}
-                  value={form.applicableCourseIds}
-                  onChange={(nextCourseIds) =>
-                    setFormField("applicableCourseIds", [...nextCourseIds])
-                  }
-                />
+            <CoursePickerField
+              multiple
+              enabled={couponDialogOpen}
+              limit={500}
+              label={t("table.pages.coupons.columns.applicableCourseIds")}
+              placeholder={t("pages.coupons.form.applicableCourseIdsPlaceholder")}
+              helperText={t("pages.coupons.form.applicableCourseIdsHelp")}
+              noOptionsText={t("table.filters.noOptions")}
+              loadErrorText={t("pages.coupons.form.applicableCourseIdsLoadError")}
+              value={form.applicableCourseIds}
+              onChange={(nextCourseIds) => setFormField("applicableCourseIds", [...nextCourseIds])}
+            />
 
-                <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={form.isFirstPurchaseOnly}
-                        onChange={(event) =>
-                          setFormField("isFirstPurchaseOnly", event.target.checked)
-                        }
-                      />
-                    }
-                    label={t("table.pages.coupons.columns.isFirstPurchaseOnly")}
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={form.isFirstPurchaseOnly}
+                    onChange={(event) => setFormField("isFirstPurchaseOnly", event.target.checked)}
                   />
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={form.isActive}
-                        onChange={(event) => setFormField("isActive", event.target.checked)}
-                      />
-                    }
-                    label={t("table.pages.coupons.columns.isActive")}
+                }
+                label={t("table.pages.coupons.columns.isFirstPurchaseOnly")}
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={form.isActive}
+                    onChange={(event) => setFormField("isActive", event.target.checked)}
                   />
-                </Stack>
-              </Stack>
-            ) : null}
+                }
+                label={t("table.pages.coupons.columns.isActive")}
+              />
+            </Stack>
+          </Stack>
+        ) : null}
       </EntityModalShell>
 
       <EntityDeleteDialog

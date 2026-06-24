@@ -40,7 +40,7 @@ export function AuthIdentityTextField({
     ? t(
         resolveAuthIdentityValidationMessageKey(error, {
           requiredMessageKey,
-        }),
+        })
       )
     : helperText;
 

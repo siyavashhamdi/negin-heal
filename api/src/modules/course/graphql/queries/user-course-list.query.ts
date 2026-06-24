@@ -31,7 +31,9 @@ export class UserCourseListQuery {
     const isEndUser = user?.roles?.includes(UserRole.END_USER) === true;
 
     if (user && !isEndUser) {
-      throw new ForbiddenException(EXCEPTION_CONSTANT.END_USER_OR_ANONYMOUS_ONLY);
+      throw new ForbiddenException(
+        EXCEPTION_CONSTANT.END_USER_OR_ANONYMOUS_ONLY,
+      );
     }
 
     return this.courseService.listForUser(

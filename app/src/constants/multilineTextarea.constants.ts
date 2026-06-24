@@ -10,9 +10,7 @@ export const MULTILINE_TEXTAREA_ROW_HEIGHT_PX = 23;
 /** Total vertical padding for outlined multiline inputs (~16.5px × 2). */
 export const MULTILINE_TEXTAREA_PADDING_BLOCK_PX = 33;
 
-export function multilineTextareaHeightPx(
-  rows: number = MULTILINE_TEXTAREA_MIN_ROWS,
-): number {
+export function multilineTextareaHeightPx(rows: number = MULTILINE_TEXTAREA_MIN_ROWS): number {
   return rows * MULTILINE_TEXTAREA_ROW_HEIGHT_PX + MULTILINE_TEXTAREA_PADDING_BLOCK_PX;
 }
 
@@ -22,8 +20,6 @@ export const MULTILINE_TEXTAREA_MIN_HEIGHT_CSS = `${multilineTextareaHeightPx()}
 export const MULTILINE_TEXTAREA_MAX_HEIGHT_CSS = `${multilineTextareaHeightPx(MULTILINE_TEXTAREA_MAX_ROWS)}px`;
 
 /** @deprecated Use MULTILINE_TEXTAREA_MIN_HEIGHT_CSS */
-export function multilineTextareaMinHeightPx(
-  rows: number = MULTILINE_TEXTAREA_MIN_ROWS,
-): number {
+export function multilineTextareaMinHeightPx(rows: number = MULTILINE_TEXTAREA_MIN_ROWS): number {
   return multilineTextareaHeightPx(rows);
 }

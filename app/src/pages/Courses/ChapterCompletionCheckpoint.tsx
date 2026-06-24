@@ -41,10 +41,7 @@ export function ChapterCompletionCheckpoint({
 
   if (isCompleted) {
     return (
-      <section
-        className={styles.checkpoint}
-        aria-label={`وضعیت تکمیل ${completionScopeLabel}`}
-      >
+      <section className={styles.checkpoint} aria-label={`وضعیت تکمیل ${completionScopeLabel}`}>
         <div className={styles.completedCard}>
           <span className={styles.completedMessage}>
             <CheckCircleRoundedIcon fontSize="small" aria-hidden="true" />
@@ -68,10 +65,7 @@ export function ChapterCompletionCheckpoint({
   }
 
   return (
-    <section
-      className={styles.checkpoint}
-      aria-label={`تأیید تکمیل ${completionScopeLabel}`}
-    >
+    <section className={styles.checkpoint} aria-label={`تأیید تکمیل ${completionScopeLabel}`}>
       <div className={styles.pendingCard}>
         <div className={styles.pendingMain}>
           <FormControlLabel
@@ -86,9 +80,7 @@ export function ChapterCompletionCheckpoint({
               />
             }
             label={
-              isSingleChapter
-                ? "محتوای دوره را کامل مرور کردم."
-                : "این فصل را کامل مرور کردم."
+              isSingleChapter ? "محتوای دوره را کامل مرور کردم." : "این فصل را کامل مرور کردم."
             }
           />
           <Button
@@ -109,9 +101,7 @@ export function ChapterCompletionCheckpoint({
             {isSubmitting ? "..." : "تأیید تکمیل"}
           </Button>
         </div>
-        <span className={styles.pendingHint}>
-          این تأیید فقط برای پیگیری پیشرفت شخصی شماست.
-        </span>
+        <span className={styles.pendingHint}>این تأیید فقط برای پیگیری پیشرفت شخصی شماست.</span>
       </div>
     </section>
   );
@@ -134,9 +124,7 @@ export function CourseProgressSummary({
     return null;
   }
 
-  const progressPercent = Math.round(
-    (completedChapterCount / accessibleChapterCount) * 100,
-  );
+  const progressPercent = Math.round((completedChapterCount / accessibleChapterCount) * 100);
   const isFullyComplete =
     completedChapterCount >= accessibleChapterCount && accessibleChapterCount > 0;
 

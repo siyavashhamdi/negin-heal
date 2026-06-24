@@ -31,10 +31,7 @@ import verifyStyles from "./styles/VerifyLoginCode.module.scss";
 
 const RESET_CODE_LENGTH = 6;
 const RESET_CODE_REGEX = /^\d{6}$/;
-const EMPTY_DIGITS: readonly string[] = Array.from(
-  { length: RESET_CODE_LENGTH },
-  () => "",
-);
+const EMPTY_DIGITS: readonly string[] = Array.from({ length: RESET_CODE_LENGTH }, () => "");
 
 interface ResetPasswordFormProps {
   readonly embedded?: boolean;
@@ -62,8 +59,7 @@ export const ResetPasswordForm = ({
 
   const resetCode = resetDigits.join("");
   const passwordRulesPassed = arePasswordRulesPassed(newPassword);
-  const passwordsMatch =
-    confirmPassword.trim().length > 0 && newPassword === confirmPassword;
+  const passwordsMatch = confirmPassword.trim().length > 0 && newPassword === confirmPassword;
   const otpReady = RESET_CODE_REGEX.test(resetCode.trim());
   const canSubmit =
     otpReady &&

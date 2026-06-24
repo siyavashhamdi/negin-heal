@@ -56,7 +56,10 @@ import {
 import { resolveAvatarInitial } from "../../utils/storedUser.util";
 import { AvatarInitial } from "../../shared/display/AvatarInitial";
 import { hasFormChanges } from "../../utils/formChange.util";
-import { MULTILINE_TEXTAREA_MIN_ROWS, MULTILINE_TEXTAREA_MAX_ROWS } from "../../constants/multilineTextarea.constants";
+import {
+  MULTILINE_TEXTAREA_MIN_ROWS,
+  MULTILINE_TEXTAREA_MAX_ROWS,
+} from "../../constants/multilineTextarea.constants";
 import { uploadFile } from "../../utils/fileUpload.util";
 import {
   FILE_UPLOAD_POLICY,
@@ -72,7 +75,13 @@ import {
 } from "../../hooks/useServerPaginatedQuery";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
-import { sanitizeMobilePhoneInput, normalizeOptionalMobilePhoneToLocal, sanitizeLatinEmailInput, sanitizeLatinUsernameInput, latinIdentityFieldInputProps } from "../../utilities/mobile-phone.util";
+import {
+  sanitizeMobilePhoneInput,
+  normalizeOptionalMobilePhoneToLocal,
+  sanitizeLatinEmailInput,
+  sanitizeLatinUsernameInput,
+  latinIdentityFieldInputProps,
+} from "../../utilities/mobile-phone.util";
 import { isValidEmail, isValidMobilePhone } from "../../utilities/contact-validation.util";
 import { isValidUsernameLength } from "../../utils/usernamePolicy.util";
 import { arePasswordRulesPassed } from "../../utils/passwordPolicy.util";
@@ -336,7 +345,7 @@ function UserAvatarCell({
 }
 
 function selectUserListPage(
-  data: UserListQuery | undefined,
+  data: UserListQuery | undefined
 ): ServerPageResult<UserListItemRow> | null {
   const page = data?.userList;
   if (!page) {
@@ -549,9 +558,7 @@ const UsersManagementList = (): ReactElement => {
     (hasFormChanges(initialEditForm, editForm) || avatarFile != null);
 
   const canSubmitUserForm =
-    dialogMode === "create"
-      ? isCreateFormReady
-      : hasEditFormChanges && isEditFormValid;
+    dialogMode === "create" ? isCreateFormReady : hasEditFormChanges && isEditFormValid;
 
   const editSensitiveChanges = useMemo((): readonly UserEditSensitiveChangeKind[] => {
     if (dialogMode !== "edit" || !initialEditForm || !editForm) {
@@ -560,13 +567,13 @@ const UsersManagementList = (): ReactElement => {
 
     return collectUserEditSensitiveChanges(
       toUserEditSnapshot(initialEditForm),
-      toUserEditSnapshot(editForm),
+      toUserEditSnapshot(editForm)
     );
   }, [dialogMode, editForm, initialEditForm]);
 
   const loginImpactChanges = useMemo(
     () => editSensitiveChanges.filter((kind) => kind !== "role"),
-    [editSensitiveChanges],
+    [editSensitiveChanges]
   );
 
   const hasRoleSensitiveChange = editSensitiveChanges.includes("role");
@@ -768,7 +775,7 @@ const UsersManagementList = (): ReactElement => {
       "username" | "firstName" | "lastName" | "fullName" | "email" | "phoneNumber"
     >,
     label: string,
-    sanitize?: (value: string) => string,
+    sanitize?: (value: string) => string
   ): ReactElement => {
     const textFilterValue = pendingFilters[key];
     return (
@@ -874,7 +881,7 @@ const UsersManagementList = (): ReactElement => {
       return renderTextFilter(
         "username",
         t("table.pages.usersManagement.columns.username"),
-        sanitizeLatinUsernameInput,
+        sanitizeLatinUsernameInput
       );
     }
     if (column.id === "firstName") {
@@ -890,14 +897,14 @@ const UsersManagementList = (): ReactElement => {
       return renderTextFilter(
         "email",
         t("table.pages.usersManagement.columns.email"),
-        sanitizeLatinEmailInput,
+        sanitizeLatinEmailInput
       );
     }
     if (column.id === "phoneNumber") {
       return renderTextFilter(
         "phoneNumber",
         t("table.pages.usersManagement.columns.phoneNumber"),
-        sanitizeMobilePhoneInput,
+        sanitizeMobilePhoneInput
       );
     }
     if (column.id === "roles") {
@@ -1080,7 +1087,14 @@ const UsersManagementList = (): ReactElement => {
     if (editSensitiveChanges.length === 0) {
       navigate(`${APP_SHELL_ROUTES.users}/edit/${editUserId}`, { replace: true });
     }
-  }, [editForm, editSensitiveChanges.length, editUserId, initialEditForm, isEditConfirmRoute, navigate]);
+  }, [
+    editForm,
+    editSensitiveChanges.length,
+    editUserId,
+    initialEditForm,
+    isEditConfirmRoute,
+    navigate,
+  ]);
 
   const handleSubmitEdit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
@@ -1350,7 +1364,7 @@ const UsersManagementList = (): ReactElement => {
               onChange={setAvatarFile}
               existingFile={buildExistingFilePreview(
                 editForm.avatarAccessUrl,
-                editForm.username.trim() || "آواتار",
+                editForm.username.trim() || "آواتار"
               )}
               onExistingFileClear={() => {
                 setAvatarFile(null);
@@ -1450,7 +1464,7 @@ const UsersManagementList = (): ReactElement => {
                   "roles",
                   typeof value === "string"
                     ? (value.split(",") as UserRole[])
-                    : (value as UserRole[]),
+                    : (value as UserRole[])
                 );
               }}
               SelectProps={{

@@ -52,7 +52,11 @@ import { buildSeoDescription, resolveAbsoluteUrl } from "../../seo/seo-text.util
 import AppTooltip from "../../shared/AppTooltip";
 import { AvatarInitial } from "../../shared/display/AvatarInitial";
 import EnamadTrustSeal from "../../shared/EnamadTrustSeal";
-import { resolveAvatarInitial, resolveMeUserDisplayName, resolveStoredUserDisplayName } from "../../utils/storedUser.util";
+import {
+  resolveAvatarInitial,
+  resolveMeUserDisplayName,
+  resolveStoredUserDisplayName,
+} from "../../utils/storedUser.util";
 import CourseCard from "../Courses/CourseCard";
 import { resolveFileAccessUrl } from "../../utils/fileAccessUrl.util";
 import { useLandingFeaturedCourses } from "./useLandingFeaturedCourses";
@@ -67,7 +71,12 @@ type RevealSectionProps = {
   readonly id?: string;
 };
 
-const RevealSection = ({ children, className, delay = 0, id }: RevealSectionProps): ReactElement => {
+const RevealSection = ({
+  children,
+  className,
+  delay = 0,
+  id,
+}: RevealSectionProps): ReactElement => {
   const { ref, isVisible } = useScrollReveal<HTMLElement>();
 
   return (
@@ -180,7 +189,7 @@ const Landing = (): ReactElement => {
     (courseId: string): void => {
       navigate(`${APP_SHELL_ROUTES.courses}/${courseId}`);
     },
-    [navigate],
+    [navigate]
   );
 
   const handleCourseKeyDown = useCallback(
@@ -190,7 +199,7 @@ const Landing = (): ReactElement => {
         handleCourseOpen(courseId);
       }
     },
-    [handleCourseOpen],
+    [handleCourseOpen]
   );
 
   const primaryCtaLabel = isAuthenticated
@@ -284,22 +293,37 @@ const Landing = (): ReactElement => {
       <Box className={styles.orbThree} aria-hidden />
       <Box className={styles.sparkleField} aria-hidden>
         {Array.from({ length: 12 }, (_, index) => (
-          <span key={`sparkle-${index}`} className={styles.sparkle} style={{ "--i": index } as React.CSSProperties} />
+          <span
+            key={`sparkle-${index}`}
+            className={styles.sparkle}
+            style={{ "--i": index } as React.CSSProperties}
+          />
         ))}
       </Box>
       <Box className={styles.petalField} aria-hidden>
         {Array.from({ length: 6 }, (_, index) => (
-          <span key={`petal-${index}`} className={styles.petal} style={{ "--i": index } as React.CSSProperties} />
+          <span
+            key={`petal-${index}`}
+            className={styles.petal}
+            style={{ "--i": index } as React.CSSProperties}
+          />
         ))}
       </Box>
 
       <Box
         component="header"
-        className={[styles.header, navScrolled ? styles.headerScrolled : ""].filter(Boolean).join(" ")}
+        className={[styles.header, navScrolled ? styles.headerScrolled : ""]
+          .filter(Boolean)
+          .join(" ")}
       >
         <Box className={styles.headerInner}>
           <Link to={APP_SHELL_ROUTES.landing} className={styles.brandLink}>
-            <Box component="img" src="/logo.png" alt={t("layout.header.brand.title")} className={styles.brandLogo} />
+            <Box
+              component="img"
+              src="/logo.png"
+              alt={t("layout.header.brand.title")}
+              className={styles.brandLogo}
+            />
             <Box className={styles.brandText}>
               <Typography component="span" className={styles.brandName}>
                 {t("layout.header.brand.title")}
@@ -310,7 +334,11 @@ const Landing = (): ReactElement => {
             </Box>
           </Link>
 
-          <Box component="nav" className={styles.desktopNav} aria-label={t("pages.landing.pageTitle")}>
+          <Box
+            component="nav"
+            className={styles.desktopNav}
+            aria-label={t("pages.landing.pageTitle")}
+          >
             {navLinks.map((link) =>
               "href" in link && link.href ? (
                 <Link key={link.id} to={link.href} className={styles.navLink}>
@@ -325,7 +353,7 @@ const Landing = (): ReactElement => {
                 >
                   {link.label}
                 </button>
-              ),
+              )
             )}
           </Box>
 
@@ -426,7 +454,7 @@ const Landing = (): ReactElement => {
               <ListItemButton key={link.id} onClick={() => scrollToSection(link.id)}>
                 <ListItemText primary={link.label} />
               </ListItemButton>
-            ),
+            )
           )}
           {!isAuthenticated ? (
             <>
@@ -521,7 +549,9 @@ const Landing = (): ReactElement => {
             <Box className={styles.heroCard}>
               <Box className={styles.heroCardGlow} />
               <Box component="img" src="/logo.png" alt="" className={styles.heroCardLogo} />
-              <Typography className={styles.heroCardBadge}>{t("pages.landing.hero.badge")}</Typography>
+              <Typography className={styles.heroCardBadge}>
+                {t("pages.landing.hero.badge")}
+              </Typography>
               <Box className={styles.heroCardRings}>
                 <span className={styles.heroRing} />
                 <span className={styles.heroRing} />
@@ -599,7 +629,9 @@ const Landing = (): ReactElement => {
                 ))
               : null}
             {!coursesLoading && featuredCourses.length === 0 ? (
-              <Typography className={styles.coursesEmpty}>{t("pages.landing.courses.empty")}</Typography>
+              <Typography className={styles.coursesEmpty}>
+                {t("pages.landing.courses.empty")}
+              </Typography>
             ) : null}
             {!coursesLoading
               ? featuredCourses.map((course) => (
@@ -692,10 +724,18 @@ const Landing = (): ReactElement => {
         <Box className={styles.footerInner}>
           <Box className={styles.footerBrand}>
             <Box component="img" src="/logo.png" alt="" className={styles.footerLogo} />
-            <Typography className={styles.footerBrandName}>{t("layout.header.brand.title")}</Typography>
-            <Typography className={styles.footerTagline}>{t("pages.landing.footer.tagline")}</Typography>
+            <Typography className={styles.footerBrandName}>
+              {t("layout.header.brand.title")}
+            </Typography>
+            <Typography className={styles.footerTagline}>
+              {t("pages.landing.footer.tagline")}
+            </Typography>
           </Box>
-          <Box component="nav" className={styles.footerLinks} aria-label={t("layout.footer.ariaLabel")}>
+          <Box
+            component="nav"
+            className={styles.footerLinks}
+            aria-label={t("layout.footer.ariaLabel")}
+          >
             <Link to={APP_SHELL_ROUTES.courses} className={styles.footerLink}>
               {t("pages.landing.footer.links.courses")}
             </Link>

@@ -427,9 +427,7 @@ export class EmailService {
     return null;
   }
 
-  private renderBuiltInEmailTemplate<
-    TInputs extends EmailTemplateInputs,
-  >(
+  private renderBuiltInEmailTemplate<TInputs extends EmailTemplateInputs>(
     template: { subject: string; html: string },
     inputs: TInputs,
   ): RenderedEmailTemplate {

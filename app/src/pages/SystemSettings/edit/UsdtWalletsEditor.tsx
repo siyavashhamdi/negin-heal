@@ -29,10 +29,10 @@ const UsdtWalletsEditor = ({ jsonValue, updateJson }: UsdtWalletsEditorProps): R
               updateJson((current) =>
                 current.kind === "usdtWallets"
                   ? {
-                    ...current,
-                    wallets: removeAt(current.wallets, index, createEmptyUsdtWallet()),
-                  }
-                  : current,
+                      ...current,
+                      wallets: removeAt(current.wallets, index, createEmptyUsdtWallet()),
+                    }
+                  : current
               )
             }
           >
@@ -91,7 +91,7 @@ const UsdtWalletsEditor = ({ jsonValue, updateJson }: UsdtWalletsEditorProps): R
         updateJson((current) =>
           current.kind === "usdtWallets"
             ? { ...current, wallets: [...current.wallets, createEmptyUsdtWallet()] }
-            : current,
+            : current
         )
       }
     >

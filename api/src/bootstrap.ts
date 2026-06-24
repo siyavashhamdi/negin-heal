@@ -4,7 +4,13 @@ import * as compression from "compression";
 
 import { NestFactory } from "@nestjs/core";
 import { NestExpressApplication } from "@nestjs/platform-express";
-import { Logger, ValidationPipe, ArgumentMetadata, BadRequestException, Logger as NestLogger } from "@nestjs/common";
+import {
+  Logger,
+  ValidationPipe,
+  ArgumentMetadata,
+  BadRequestException,
+  Logger as NestLogger,
+} from "@nestjs/common";
 
 import { NodeEnv } from "./enums";
 import { env, setupSwagger } from "./config";

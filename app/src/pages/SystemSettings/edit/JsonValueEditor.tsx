@@ -53,7 +53,9 @@ const JsonValueEditor = ({ jsonValue, updateJson }: JsonValueEditorProps): React
           value={jsonValue.rate}
           fields={usdtRateFields}
           onChange={(rate) =>
-            updateJson((current) => (current.kind === "usdtIrtRate" ? { ...current, rate } : current))
+            updateJson((current) =>
+              current.kind === "usdtIrtRate" ? { ...current, rate } : current
+            )
           }
         />
       );
@@ -64,7 +66,7 @@ const JsonValueEditor = ({ jsonValue, updateJson }: JsonValueEditorProps): React
           fields={zarinpalFields}
           onChange={(config) =>
             updateJson((current) =>
-              current.kind === "zarinpalConfig" ? { ...current, config } : current,
+              current.kind === "zarinpalConfig" ? { ...current, config } : current
             )
           }
         />
@@ -77,7 +79,7 @@ const JsonValueEditor = ({ jsonValue, updateJson }: JsonValueEditorProps): React
             fields={smtpFields}
             onChange={(config) =>
               updateJson((current) =>
-                current.kind === "emailSmtpConfig" ? { ...current, config } : current,
+                current.kind === "emailSmtpConfig" ? { ...current, config } : current
               )
             }
           />
@@ -89,10 +91,10 @@ const JsonValueEditor = ({ jsonValue, updateJson }: JsonValueEditorProps): React
                   updateJson((current) =>
                     current.kind === "emailSmtpConfig"
                       ? {
-                        ...current,
-                        config: { ...current.config, secure: event.target.checked },
-                      }
-                      : current,
+                          ...current,
+                          config: { ...current.config, secure: event.target.checked },
+                        }
+                      : current
                   )
                 }
               />
@@ -117,7 +119,7 @@ const JsonValueEditor = ({ jsonValue, updateJson }: JsonValueEditorProps): React
             value={jsonValue.value}
             onChange={(event) =>
               updateJson((current) =>
-                current.kind === "rawJson" ? { ...current, value: event.target.value } : current,
+                current.kind === "rawJson" ? { ...current, value: event.target.value } : current
               )
             }
           />

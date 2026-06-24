@@ -28,6 +28,5 @@ export {
   sanitizeLatinUsernameInput,
 } from "../../utilities/contact-validation.util";
 
-export const createForgotPasswordPrefill = (
-  identity?: LoginNavState | null,
-): string => identity?.identity ?? "";
+export const createForgotPasswordPrefill = (identity?: LoginNavState | null): string =>
+  identity?.identity ?? "";

@@ -11,7 +11,7 @@ type BuildDefaultStructuredDataInput = {
 };
 
 export function buildDefaultStructuredData(
-  input: BuildDefaultStructuredDataInput,
+  input: BuildDefaultStructuredDataInput
 ): ReadonlyArray<Record<string, unknown>> {
   const { t, appUrl, canonicalUrl, siteName, description, logoUrl } = input;
 
@@ -72,7 +72,7 @@ type BuildCourseStructuredDataInput = {
 };
 
 export function buildCourseStructuredData(
-  input: BuildCourseStructuredDataInput,
+  input: BuildCourseStructuredDataInput
 ): ReadonlyArray<Record<string, unknown>> {
   const {
     appUrl,
@@ -146,7 +146,7 @@ type BreadcrumbStructuredDataInput = {
 };
 
 export function buildBreadcrumbStructuredData(
-  input: BreadcrumbStructuredDataInput,
+  input: BreadcrumbStructuredDataInput
 ): ReadonlyArray<Record<string, unknown>> {
   if (input.items.length === 0) {
     return [];
@@ -172,7 +172,7 @@ type FaqStructuredDataInput = {
 };
 
 export function buildFaqStructuredData(
-  input: FaqStructuredDataInput,
+  input: FaqStructuredDataInput
 ): ReadonlyArray<Record<string, unknown>> {
   if (input.items.length === 0) {
     return [];
@@ -212,7 +212,7 @@ type CourseListStructuredDataInput = {
 };
 
 export function buildCourseListStructuredData(
-  input: CourseListStructuredDataInput,
+  input: CourseListStructuredDataInput
 ): ReadonlyArray<Record<string, unknown>> {
   return [
     {

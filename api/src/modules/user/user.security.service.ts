@@ -39,7 +39,9 @@ export class UserSecurityService {
   async throwIfPasswordPolicyIsViolated(password: string) {
     const passwordValidation = PasswordValidator.validate(password);
     if (!passwordValidation.valid) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.PASSWORD_POLICY_VIOLATION);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.PASSWORD_POLICY_VIOLATION,
+      );
     }
 
     return passwordValidation;

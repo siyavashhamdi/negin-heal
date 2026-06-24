@@ -1,11 +1,4 @@
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type DragEvent,
-  type ReactElement,
-} from "react";
+import { useEffect, useMemo, useRef, useState, type DragEvent, type ReactElement } from "react";
 import {
   Box,
   Button,
@@ -24,7 +17,10 @@ import {
   Typography,
 } from "@mui/material";
 import { OverflowTooltip } from "../../../shared/OverflowTooltip";
-import { MULTILINE_TEXTAREA_MIN_ROWS, MULTILINE_TEXTAREA_MAX_ROWS } from "../../../constants/multilineTextarea.constants";
+import {
+  MULTILINE_TEXTAREA_MIN_ROWS,
+  MULTILINE_TEXTAREA_MAX_ROWS,
+} from "../../../constants/multilineTextarea.constants";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
@@ -32,12 +28,7 @@ import { useMobileAppLayout } from "../../../hooks/useMobileAppLayout";
 import ItemsSection from "./ItemsSection";
 import { getChapterVisibleAfterOrderWarnings } from "../course-form-validation.util";
 import { setDragTransferData } from "./reorder-drag.util";
-import type {
-  DraftChapter,
-  DraftItem,
-  ExpandedItemByChapter,
-  VisibleAfterUnit,
-} from "./types";
+import type { DraftChapter, DraftItem, ExpandedItemByChapter, VisibleAfterUnit } from "./types";
 import type { UploadProgressEntry } from "../../../utils/uploadProgress.util";
 import styles from "./styles/ChaptersSection.module.scss";
 
@@ -52,7 +43,7 @@ type ChaptersSectionProps = {
   readonly onSetDraggedChapterId: (chapterId: string | null) => void;
   readonly onChapterDragOver: (
     event: DragEvent<HTMLButtonElement>,
-    targetChapterId: string,
+    targetChapterId: string
   ) => void;
   readonly onRemoveChapter: (chapterId: string) => void;
   readonly onUpdateChapter: (chapterId: string, patch: Partial<DraftChapter>) => void;
@@ -61,7 +52,7 @@ type ChaptersSectionProps = {
   readonly onItemDragOver: (
     event: DragEvent<HTMLDivElement>,
     chapterId: string,
-    targetItemId: string,
+    targetItemId: string
   ) => void;
   readonly onUpdateItem: (chapterId: string, itemId: string, patch: Partial<DraftItem>) => void;
   readonly onAddItem: (chapterId: string) => void;
@@ -163,7 +154,7 @@ const ChaptersSection = ({
   const chapterStepsRailRef = useRef<HTMLDivElement>(null);
   const visibleAfterOrderWarnings = useMemo(
     () => getChapterVisibleAfterOrderWarnings(chapters),
-    [chapters],
+    [chapters]
   );
 
   useEffect(() => {

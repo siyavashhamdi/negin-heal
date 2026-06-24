@@ -13,10 +13,14 @@ type UseScrollRevealResult<T extends HTMLElement> = {
  * Reveals an element when it enters the viewport — used for landing-page scroll animations.
  */
 export function useScrollReveal<T extends HTMLElement>(
-  options: UseScrollRevealOptions = {},
+  options: UseScrollRevealOptions = {}
 ): UseScrollRevealResult<T> {
-  const { once = true, threshold = 0.12, rootMargin = "0px 0px -4% 0px", ...observerOptions } =
-    options;
+  const {
+    once = true,
+    threshold = 0.12,
+    rootMargin = "0px 0px -4% 0px",
+    ...observerOptions
+  } = options;
   const ref = useRef<T>(null);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -26,7 +30,10 @@ export function useScrollReveal<T extends HTMLElement>(
       return undefined;
     }
 
-    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
       setIsVisible(true);
       return undefined;
     }
@@ -43,7 +50,7 @@ export function useScrollReveal<T extends HTMLElement>(
           observer.unobserve(element);
         }
       },
-      { threshold, rootMargin, ...observerOptions },
+      { threshold, rootMargin, ...observerOptions }
     );
 
     observer.observe(element);

@@ -26,10 +26,7 @@ const CourseTagInput = ({
   const shouldFloatLabel = isFocused || value.length > 0 || draft.trim().length > 0;
 
   const addTags = (rawValue: string): void => {
-    const nextTags = rawValue
-      .split(",")
-      .map(normalizeTag)
-      .filter(Boolean);
+    const nextTags = rawValue.split(",").map(normalizeTag).filter(Boolean);
 
     if (nextTags.length === 0) {
       setDraft("");

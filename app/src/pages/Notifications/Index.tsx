@@ -44,7 +44,7 @@ const NotificationsContent = (): ReactElement => {
       }
       setActiveTab(tab);
     },
-    [setActiveTab],
+    [setActiveTab]
   );
 
   useEffect(() => {

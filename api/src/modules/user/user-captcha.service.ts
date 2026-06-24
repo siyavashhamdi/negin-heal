@@ -235,7 +235,9 @@ export class UserCaptchaService {
 
       return Buffer.from(svg, "utf8").toString("base64");
     } catch {
-      throw new InternalServerErrorException(EXCEPTION_CONSTANT.CAPTCHA_GENERATION_FAILED);
+      throw new InternalServerErrorException(
+        EXCEPTION_CONSTANT.CAPTCHA_GENERATION_FAILED,
+      );
     }
   }
 

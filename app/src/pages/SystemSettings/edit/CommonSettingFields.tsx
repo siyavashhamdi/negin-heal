@@ -1,11 +1,7 @@
 import type { ReactElement } from "react";
 import { Checkbox, FormControlLabel, Stack, TextField } from "@mui/material";
 
-import type {
-  AppSettingDetail,
-  AppSettingEditFormState,
-  UpdateEditFormState,
-} from "./types";
+import type { AppSettingDetail, AppSettingEditFormState, UpdateEditFormState } from "./types";
 import { MULTILINE_TEXTAREA_MIN_ROWS, MULTILINE_TEXTAREA_MAX_ROWS } from "./shared";
 import systemSettingsStyles from "../styles/system-settings.module.scss";
 import SectionPaper from "./SectionPaper";
@@ -31,18 +27,8 @@ const CommonSettingFields = ({
         value={form.label}
         onChange={(event) => updateForm({ label: event.target.value })}
       />
-      <TextField
-        fullWidth
-        label="کلید"
-        value={detail.key}
-        disabled
-      />
-      <TextField
-        fullWidth
-        label="نوع مقدار"
-        value={form.valueType}
-        disabled
-      />
+      <TextField fullWidth label="کلید" value={detail.key} disabled />
+      <TextField fullWidth label="نوع مقدار" value={form.valueType} disabled />
     </Stack>
     <TextField
       fullWidth

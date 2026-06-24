@@ -19,11 +19,12 @@ import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import PlaylistAddRoundedIcon from "@mui/icons-material/PlaylistAddRounded";
 import { OverflowTooltip } from "../../../shared/OverflowTooltip";
 import FileUploadField from "../../../shared/forms/FileUploadField";
-import {
-  FILE_UPLOAD_POLICY_MAX_SIZE_BYTES,
-} from "../../../constants/fileUploadPolicies";
+import { FILE_UPLOAD_POLICY_MAX_SIZE_BYTES } from "../../../constants/fileUploadPolicies";
 import { buildExistingFilePreview } from "../../../utils/fileAccessUrl.util";
-import { getFieldUploadPercent, type UploadProgressEntry } from "../../../utils/uploadProgress.util";
+import {
+  getFieldUploadPercent,
+  type UploadProgressEntry,
+} from "../../../utils/uploadProgress.util";
 import RichTextBox from "../../../shared/forms/RichTextBox";
 import { MULTILINE_TEXTAREA_MIN_ROWS } from "../../../constants/multilineTextarea.constants";
 import type { DraftChapter, DraftItem, DraftItemContentType } from "./types";
@@ -38,7 +39,7 @@ type ItemsSectionProps = {
   readonly onItemDragOver: (
     event: DragEvent<HTMLDivElement>,
     chapterId: string,
-    targetItemId: string,
+    targetItemId: string
   ) => void;
   readonly onUpdateItem: (chapterId: string, itemId: string, patch: Partial<DraftItem>) => void;
   readonly onAddItem: (chapterId: string) => void;
@@ -101,138 +102,136 @@ const ItemsSection = ({
               }}
               onDragEnd={() => onSetDraggedItemId(null)}
             >
-                <AccordionSummary className={styles.itemSummary} expandIcon={null}>
-                  <div className={styles.itemHead}>
-                    <Typography className={styles.itemTitle}>آیتم {index + 1}</Typography>
-                    <OverflowTooltip
-                      className={styles.itemSubtitle}
-                      title={item.title.trim() || "بدون عنوان"}
+              <AccordionSummary className={styles.itemSummary} expandIcon={null}>
+                <div className={styles.itemHead}>
+                  <Typography className={styles.itemTitle}>آیتم {index + 1}</Typography>
+                  <OverflowTooltip
+                    className={styles.itemSubtitle}
+                    title={item.title.trim() || "بدون عنوان"}
+                  >
+                    {item.title.trim() || "بدون عنوان"}
+                  </OverflowTooltip>
+                  <div className={styles.itemActions}>
+                    <IconButton
+                      size="small"
+                      className={`${styles.expandHandle}${
+                        isExpanded ? ` ${styles.expandHandleOpen}` : ""
+                      }`}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onExpandedItemChange(isExpanded ? null : item.id);
+                      }}
+                      aria-label={isExpanded ? "بستن آیتم" : "باز کردن آیتم"}
                     >
-                      {item.title.trim() || "بدون عنوان"}
-                    </OverflowTooltip>
-                    <div className={styles.itemActions}>
-                      <IconButton
-                        size="small"
-                        className={`${styles.expandHandle}${
-                          isExpanded ? ` ${styles.expandHandleOpen}` : ""
-                        }`}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          onExpandedItemChange(isExpanded ? null : item.id);
-                        }}
-                        aria-label={isExpanded ? "بستن آیتم" : "باز کردن آیتم"}
-                      >
-                        <ExpandMoreRoundedIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        className={styles.dragHandle}
-                        draggable
-                        onClick={(event) => event.stopPropagation()}
-                        onDragStart={(event) => {
-                          event.stopPropagation();
-                          setDragTransferData(event, item.id);
-                          onSetDraggedItemId(item.id);
-                        }}
-                        onDragEnd={() => onSetDraggedItemId(null)}
-                      >
-                        <DragIndicatorRoundedIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          onRemoveItem(chapter.id, item.id);
-                        }}
-                        disabled={chapter.items.length <= 1}
-                      >
-                        <DeleteOutlineRoundedIcon fontSize="small" />
-                      </IconButton>
-                    </div>
+                      <ExpandMoreRoundedIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      className={styles.dragHandle}
+                      draggable
+                      onClick={(event) => event.stopPropagation()}
+                      onDragStart={(event) => {
+                        event.stopPropagation();
+                        setDragTransferData(event, item.id);
+                        onSetDraggedItemId(item.id);
+                      }}
+                      onDragEnd={() => onSetDraggedItemId(null)}
+                    >
+                      <DragIndicatorRoundedIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onRemoveItem(chapter.id, item.id);
+                      }}
+                      disabled={chapter.items.length <= 1}
+                    >
+                      <DeleteOutlineRoundedIcon fontSize="small" />
+                    </IconButton>
                   </div>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Grid container spacing={1.25}>
+                </div>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Grid container spacing={1.25}>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      required
+                      label="عنوان آیتم"
+                      value={item.title}
+                      onChange={(event) => updateCurrentItem({ title: event.target.value })}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <FormControl fullWidth required>
+                      <InputLabel required>نوع محتوای آیتم</InputLabel>
+                      <Select
+                        value={item.contentType}
+                        label="نوع محتوای آیتم"
+                        onChange={(event) => {
+                          const nextContentType = event.target.value as DraftItemContentType;
+                          updateCurrentItem(getContentTypePatch(nextContentType));
+                        }}
+                      >
+                        <MenuItem value="FILE">آپلود فایل</MenuItem>
+                        <MenuItem value="ARTICLE">متن مقاله</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  {item.contentType === "FILE" ? (
                     <Grid item xs={12}>
-                      <TextField
-                        fullWidth
+                      <div className={styles.uploaderRow}>
+                        <FileUploadField
+                          previewId={`course-item-file-${item.id}`}
+                          label="فایل آیتم"
+                          file={item.file}
+                          onChange={(file) =>
+                            updateCurrentItem({
+                              file,
+                              ...(file != null ? { fileAccessUrl: null } : {}),
+                            })
+                          }
+                          existingFile={buildExistingFilePreview(
+                            item.fileAccessUrl,
+                            item.title.trim() || "فایل آیتم"
+                          )}
+                          onExistingFileClear={() => updateCurrentItem({ fileAccessUrl: null })}
+                          accept="*/*"
+                          allowedFormatsLabel="فرمت مجاز: همه"
+                          maxSizeLabel="حداکثر: ۵۰ مگابایت"
+                          maxSizeBytes={FILE_UPLOAD_POLICY_MAX_SIZE_BYTES.COURSE_ITEM}
+                          dropTitle="انتخاب فایل آیتم"
+                          mobileDropTitle="انتخاب فایل آیتم"
+                          dropHint="هنگام ایجاد دوره آپلود می‌شود"
+                          mobileDropHint="هنگام ایجاد دوره آپلود می‌شود"
+                          removeLabel="حذف فایل"
+                          invalidLabel="فایل معتبر نیست"
+                          required
+                          uploading={`course-item-file-${item.id}` in uploadProgressByFieldId}
+                          uploadProgress={getFieldUploadPercent(
+                            uploadProgressByFieldId[`course-item-file-${item.id}`]
+                          )}
+                        />
+                      </div>
+                    </Grid>
+                  ) : null}
+                  {item.contentType === "ARTICLE" ? (
+                    <Grid item xs={12}>
+                      <RichTextBox
+                        previewId={`course-item-article-${chapter.id}-${index}`}
+                        label="متن مقاله"
+                        value={item.article}
+                        onChange={(nextValue) => updateCurrentItem({ article: nextValue })}
+                        placeholder="متن مقاله را وارد کنید"
+                        minRows={MULTILINE_TEXTAREA_MIN_ROWS}
                         required
-                        label="عنوان آیتم"
-                        value={item.title}
-                        onChange={(event) => updateCurrentItem({ title: event.target.value })}
                       />
                     </Grid>
-                    <Grid item xs={12}>
-                      <FormControl fullWidth required>
-                        <InputLabel required>نوع محتوای آیتم</InputLabel>
-                        <Select
-                          value={item.contentType}
-                          label="نوع محتوای آیتم"
-                          onChange={(event) => {
-                            const nextContentType = event.target.value as DraftItemContentType;
-                            updateCurrentItem(getContentTypePatch(nextContentType));
-                          }}
-                        >
-                          <MenuItem value="FILE">آپلود فایل</MenuItem>
-                          <MenuItem value="ARTICLE">متن مقاله</MenuItem>
-                        </Select>
-                      </FormControl>
-                    </Grid>
-                    {item.contentType === "FILE" ? (
-                      <Grid item xs={12}>
-                        <div className={styles.uploaderRow}>
-                          <FileUploadField
-                            previewId={`course-item-file-${item.id}`}
-                            label="فایل آیتم"
-                            file={item.file}
-                            onChange={(file) =>
-                              updateCurrentItem({
-                                file,
-                                ...(file != null ? { fileAccessUrl: null } : {}),
-                              })
-                            }
-                            existingFile={buildExistingFilePreview(
-                              item.fileAccessUrl,
-                              item.title.trim() || "فایل آیتم",
-                            )}
-                            onExistingFileClear={() =>
-                              updateCurrentItem({ fileAccessUrl: null })
-                            }
-                            accept="*/*"
-                            allowedFormatsLabel="فرمت مجاز: همه"
-                            maxSizeLabel="حداکثر: ۵۰ مگابایت"
-                            maxSizeBytes={FILE_UPLOAD_POLICY_MAX_SIZE_BYTES.COURSE_ITEM}
-                            dropTitle="انتخاب فایل آیتم"
-                            mobileDropTitle="انتخاب فایل آیتم"
-                            dropHint="هنگام ایجاد دوره آپلود می‌شود"
-                            mobileDropHint="هنگام ایجاد دوره آپلود می‌شود"
-                            removeLabel="حذف فایل"
-                            invalidLabel="فایل معتبر نیست"
-                            required
-                            uploading={`course-item-file-${item.id}` in uploadProgressByFieldId}
-                            uploadProgress={getFieldUploadPercent(
-                              uploadProgressByFieldId[`course-item-file-${item.id}`],
-                            )}
-                          />
-                        </div>
-                      </Grid>
-                    ) : null}
-                    {item.contentType === "ARTICLE" ? (
-                      <Grid item xs={12}>
-                        <RichTextBox
-                          previewId={`course-item-article-${chapter.id}-${index}`}
-                          label="متن مقاله"
-                          value={item.article}
-                          onChange={(nextValue) => updateCurrentItem({ article: nextValue })}
-                          placeholder="متن مقاله را وارد کنید"
-                          minRows={MULTILINE_TEXTAREA_MIN_ROWS}
-                          required
-                        />
-                      </Grid>
-                    ) : null}
-                  </Grid>
-                </AccordionDetails>
+                  ) : null}
+                </Grid>
+              </AccordionDetails>
             </Accordion>
           );
         })}

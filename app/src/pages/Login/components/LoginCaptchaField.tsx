@@ -1,12 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from "react";
 import { useQuery } from "@apollo/client/react";
-import {
-  Box,
-  CircularProgress,
-  FormLabel,
-  IconButton,
-  InputAdornment,
-} from "@mui/material";
+import { Box, CircularProgress, FormLabel, IconButton, InputAdornment } from "@mui/material";
 import { Replay as ReplayIcon, Security as SecurityIcon } from "@mui/icons-material";
 import { useTranslation } from "../../../hooks/useTranslation";
 import { USER_LOGIN_CAPTCHA_QUERY } from "../../../graphql/queries/userLoginCaptcha.query";
@@ -35,11 +29,7 @@ export interface LoginCaptchaFieldProps {
   readonly disabled?: boolean;
   readonly error?: boolean;
   readonly required?: boolean;
-  readonly onCaptchaChange: (input: {
-    captchaId: string;
-    value: string;
-    isValid: boolean;
-  }) => void;
+  readonly onCaptchaChange: (input: { captchaId: string; value: string; isValid: boolean }) => void;
 }
 
 export const LoginCaptchaField = ({
@@ -51,13 +41,10 @@ export const LoginCaptchaField = ({
   const { t } = useTranslation();
   const [captchaValue, setCaptchaValue] = useState("");
   const [autoRefreshCount, setAutoRefreshCount] = useState(0);
-  const { data, loading, refetch } = useQuery<UserLoginCaptchaResponse>(
-    USER_LOGIN_CAPTCHA_QUERY,
-    {
-      fetchPolicy: "no-cache",
-      nextFetchPolicy: "no-cache",
-    },
-  );
+  const { data, loading, refetch } = useQuery<UserLoginCaptchaResponse>(USER_LOGIN_CAPTCHA_QUERY, {
+    fetchPolicy: "no-cache",
+    nextFetchPolicy: "no-cache",
+  });
   const captchaId = data?.userLoginCaptcha?.captchaId || "";
   const imageSrc = useMemo(() => {
     const image = data?.userLoginCaptcha;
@@ -127,9 +114,7 @@ export const LoginCaptchaField = ({
   return (
     <Box className={captchaStyles.captchaWrapper}>
       <FormLabel component="div" className={captchaStyles.captchaSectionTitle}>
-        <RequiredFieldLabel required={required}>
-          {t("auth.login.captchaLabel")}
-        </RequiredFieldLabel>
+        <RequiredFieldLabel required={required}>{t("auth.login.captchaLabel")}</RequiredFieldLabel>
       </FormLabel>
 
       <Box className={captchaStyles.captchaRow}>

@@ -17,7 +17,10 @@ export type FileUploadPolicyRule = {
   readonly allowedExtensions?: readonly string[];
 };
 
-export const FILE_UPLOAD_POLICIES: Record<FileUploadPolicyId, FileUploadPolicyRule> = {
+export const FILE_UPLOAD_POLICIES: Record<
+  FileUploadPolicyId,
+  FileUploadPolicyRule
+> = {
   [FILE_UPLOAD_POLICY.ANY]: {
     maxSizeBytes: 50 * 1024 * 1024,
     allowedMimePatterns: null,

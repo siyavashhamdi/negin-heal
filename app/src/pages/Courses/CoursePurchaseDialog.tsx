@@ -1,11 +1,5 @@
 import { useEffect, useMemo, useState, type ReactElement } from "react";
-import {
-  Button,
-  IconButton,
-  InputAdornment,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Button, IconButton, InputAdornment, TextField, Typography } from "@mui/material";
 import { useLazyQuery, useQuery } from "@apollo/client/react";
 import AccountBalanceRoundedIcon from "@mui/icons-material/AccountBalanceRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
@@ -24,7 +18,11 @@ import EntityModalShell from "../../shared/crud/EntityModalShell";
 import { COURSE_PURCHASE_SUBMIT_MUTATION } from "../../graphql/mutations/coursePurchaseSubmit.mutation";
 import { PAYMENT_CHECKOUT_CONFIG_QUERY } from "../../graphql/queries/paymentCheckoutConfig.query";
 import { COUPON_VALIDATE_QUERY } from "../../graphql/queries/couponValidate.query";
-import { showErrorIfNotQueued, extractGraphQLErrorMessage, resolveErrorMessageFromCode } from "../../utilities/graphql-error.util";
+import {
+  showErrorIfNotQueued,
+  extractGraphQLErrorMessage,
+  resolveErrorMessageFromCode,
+} from "../../utilities/graphql-error.util";
 import { getFileIdFromAccessUrl } from "../../utils/fileAccessUrl.util";
 import { uploadFile } from "../../utils/fileUpload.util";
 import {
@@ -111,7 +109,7 @@ type CryptoPriceSummary = {
 
 function calculateUsdtPrice(
   priceIrt: number | null | undefined,
-  rateConfig?: UsdtIrtRateConfig | null,
+  rateConfig?: UsdtIrtRateConfig | null
 ): number | null {
   if (!priceIrt || priceIrt <= 0 || !rateConfig?.valueIrt || rateConfig.valueIrt <= 0) {
     return null;
@@ -197,11 +195,11 @@ export function CoursePurchaseDialog({
     const configuredMethods = checkoutConfig?.paymentMethods?.length
       ? checkoutConfig.paymentMethods
       : PAYMENT_METHOD_OPTIONS.map((option) => ({
-        method: option.value,
-        isVisible: true,
-        isActive: true,
-        isRecommended: option.badge != null,
-      }));
+          method: option.value,
+          isVisible: true,
+          isActive: true,
+          isRecommended: option.badge != null,
+        }));
 
     return configuredMethods.reduce<PaymentMethodOption[]>((options, methodConfig) => {
       if (!methodConfig.isVisible) {
@@ -209,7 +207,7 @@ export function CoursePurchaseDialog({
       }
 
       const option = PAYMENT_METHOD_OPTIONS.find(
-        (paymentOption) => paymentOption.value === methodConfig.method,
+        (paymentOption) => paymentOption.value === methodConfig.method
       );
 
       if (!option) {
@@ -231,7 +229,7 @@ export function CoursePurchaseDialog({
       paymentMethodOptions.find((option) => option.value === selectedPaymentMethod) ??
       paymentMethodOptions[0] ??
       DEFAULT_PAYMENT_METHOD_OPTION,
-    [paymentMethodOptions, selectedPaymentMethod],
+    [paymentMethodOptions, selectedPaymentMethod]
   );
   const effectiveDisplayPrice = appliedCoupon?.finalAmountIrt ?? displayPrice ?? null;
   const summaryOriginalPrice = appliedCoupon?.amountIrt ?? originalPrice ?? displayPrice ?? null;
@@ -273,7 +271,7 @@ export function CoursePurchaseDialog({
     }
 
     const selectedOption = paymentMethodOptions.find(
-      (option) => option.value === selectedPaymentMethod,
+      (option) => option.value === selectedPaymentMethod
     );
     if (selectedOption?.isActive) {
       return;
@@ -338,9 +336,7 @@ export function CoursePurchaseDialog({
       const result = data?.couponValidate;
       if (!result?.isValid) {
         setAppliedCoupon(null);
-        setCouponError(
-          resolveErrorMessageFromCode(result?.message || "COUPON_INVALID"),
-        );
+        setCouponError(resolveErrorMessageFromCode(result?.message || "COUPON_INVALID"));
         return;
       }
 
@@ -425,7 +421,7 @@ export function CoursePurchaseDialog({
         showSuccess(
           purchase.isPurchased
             ? "خرید رایگان ثبت شد و دسترسی دوره برای شما فعال شد."
-            : "درخواست خرید ثبت شد.",
+            : "درخواست خرید ثبت شد."
         );
         onPurchaseSuccess?.();
         onClose();
@@ -486,9 +482,7 @@ export function CoursePurchaseDialog({
                 ? paymentReference.trim()
                 : undefined,
             transactionId:
-              selectedPaymentMethod === "CRYPTOCURRENCY"
-                ? cryptoTransactionHash.trim()
-                : undefined,
+              selectedPaymentMethod === "CRYPTOCURRENCY" ? cryptoTransactionHash.trim() : undefined,
           },
         },
       });
@@ -564,326 +558,323 @@ export function CoursePurchaseDialog({
       }
     >
       <div className={styles.layout}>
-          <aside className={styles.summaryPanel}>
-            <div className={styles.summaryHero}>
-              {coverImageUrl ? (
-                <img src={coverImageUrl} alt="" className={styles.summaryCover} />
-              ) : (
-                <div className={styles.summaryCoverFallback} />
-              )}
-              <div>
-                <span>خلاصه سفارش</span>
-                <strong>{formatCoursePrice(effectiveDisplayPrice)}</strong>
-                {shouldShowSummaryDiscount ? (
-                  <div className={styles.summaryDiscount}>
-                    <small>{formatCoursePrice(summaryOriginalPrice)}</small>
-                    <b>{summaryDiscountLabel}</b>
-                  </div>
-                ) : null}
-                {selectedPaymentMethod === "CRYPTOCURRENCY" && !isFreePurchase ? (
-                  <div className={styles.summaryCryptoPrice}>
-                    {hasCryptoDiscount ? (
-                      <small className={styles.latinText}>
-                        {formatUsdtPrice(cryptoPriceSummary.originalUsdtPrice)}
-                      </small>
-                    ) : null}
-                    <b className={styles.latinText}>
-                      {formatUsdtPrice(cryptoPriceSummary.finalUsdtPrice)}
-                    </b>
-                  </div>
-                ) : null}
-              </div>
-            </div>
-          </aside>
-
-          <section className={styles.checkoutPanel}>
-            {canApplyCoupon ? (
-              <div className={styles.couponSection}>
-                <div className={styles.sectionHeading}>
-                  <h3>کد تخفیف</h3>
-                  <p>در صورت داشتن کد تخفیف، آن را وارد و اعمال کنید.</p>
+        <aside className={styles.summaryPanel}>
+          <div className={styles.summaryHero}>
+            {coverImageUrl ? (
+              <img src={coverImageUrl} alt="" className={styles.summaryCover} />
+            ) : (
+              <div className={styles.summaryCoverFallback} />
+            )}
+            <div>
+              <span>خلاصه سفارش</span>
+              <strong>{formatCoursePrice(effectiveDisplayPrice)}</strong>
+              {shouldShowSummaryDiscount ? (
+                <div className={styles.summaryDiscount}>
+                  <small>{formatCoursePrice(summaryOriginalPrice)}</small>
+                  <b>{summaryDiscountLabel}</b>
                 </div>
-                <div className={styles.couponForm}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="کد تخفیف"
-                    value={couponCode}
-                    onChange={(event) => handleCouponCodeChange(event.target.value)}
-                    placeholder="مثال: SPRING26"
+              ) : null}
+              {selectedPaymentMethod === "CRYPTOCURRENCY" && !isFreePurchase ? (
+                <div className={styles.summaryCryptoPrice}>
+                  {hasCryptoDiscount ? (
+                    <small className={styles.latinText}>
+                      {formatUsdtPrice(cryptoPriceSummary.originalUsdtPrice)}
+                    </small>
+                  ) : null}
+                  <b className={styles.latinText}>
+                    {formatUsdtPrice(cryptoPriceSummary.finalUsdtPrice)}
+                  </b>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </aside>
+
+        <section className={styles.checkoutPanel}>
+          {canApplyCoupon ? (
+            <div className={styles.couponSection}>
+              <div className={styles.sectionHeading}>
+                <h3>کد تخفیف</h3>
+                <p>در صورت داشتن کد تخفیف، آن را وارد و اعمال کنید.</p>
+              </div>
+              <div className={styles.couponForm}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="کد تخفیف"
+                  value={couponCode}
+                  onChange={(event) => handleCouponCodeChange(event.target.value)}
+                  placeholder="مثال: SPRING26"
+                  disabled={isCouponValidating}
+                  error={couponError != null}
+                  helperText={couponError ?? undefined}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <LocalOfferRoundedIcon fontSize="small" />
+                      </InputAdornment>
+                    ),
+                  }}
+                  inputProps={{
+                    className: styles.latinInput,
+                    dir: "ltr",
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      void handleValidateCoupon();
+                    }
+                  }}
+                />
+                {appliedCoupon ? (
+                  <Button
+                    variant="outlined"
+                    color="inherit"
+                    onClick={handleRemoveCoupon}
                     disabled={isCouponValidating}
-                    error={couponError != null}
-                    helperText={couponError ?? undefined}
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <LocalOfferRoundedIcon fontSize="small" />
-                        </InputAdornment>
-                      ),
-                    }}
-                    inputProps={{
-                      className: styles.latinInput,
-                      dir: "ltr",
-                    }}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") {
-                        event.preventDefault();
-                        void handleValidateCoupon();
+                  >
+                    حذف
+                  </Button>
+                ) : (
+                  <Button
+                    variant="contained"
+                    onClick={() => void handleValidateCoupon()}
+                    disabled={isCouponValidating || !couponCode.trim()}
+                  >
+                    {isCouponValidating ? "در حال بررسی..." : "اعمال"}
+                  </Button>
+                )}
+              </div>
+              {appliedCoupon ? (
+                <div className={styles.couponApplied}>
+                  <CheckCircleRoundedIcon fontSize="small" />
+                  <small>
+                    {appliedCoupon.couponDiscountAmountIrt != null
+                      ? `${formatCoursePrice(appliedCoupon.couponDiscountAmountIrt)} کسر شد.`
+                      : "کد تخفیف اعمال شد."}
+                  </small>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
+          {isFreePurchase ? (
+            <>
+              <div className={styles.sectionHeading}>
+                <h3>روش پرداخت</h3>
+                <p>برای این سفارش نیازی به پرداخت نیست.</p>
+              </div>
+              <div className={styles.methodDetails}>
+                <Typography component="h4" className={styles.methodDetailsTitle}>
+                  خرید رایگان
+                </Typography>
+                <Typography className={styles.methodDetailsDescription}>
+                  {freePurchaseMessage}
+                </Typography>
+                <div className={styles.freePurchaseNotice}>
+                  <CheckCircleRoundedIcon fontSize="small" />
+                  <span>با زدن دکمه خرید رایگان، دسترسی دوره برای شما فعال می‌شود.</span>
+                </div>
+              </div>
+            </>
+          ) : null}
+
+          {!isFreePurchase ? (
+            <>
+              <div className={styles.sectionHeading}>
+                <h3>روش پرداخت</h3>
+                <p>یکی از مسیرهای پرداخت را انتخاب کنید.</p>
+              </div>
+
+              <div className={styles.methodGrid}>
+                {paymentMethodOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className={`${styles.methodCard}${
+                      selectedPaymentMethod === option.value ? ` ${styles.methodCardActive}` : ""
+                    }${!option.isActive ? ` ${styles.methodCardDisabled}` : ""}`}
+                    disabled={!option.isActive}
+                    onClick={() => {
+                      if (option.isActive) {
+                        setSelectedPaymentMethod(option.value);
                       }
                     }}
-                  />
-                  {appliedCoupon ? (
-                    <Button
-                      variant="outlined"
-                      color="inherit"
-                      onClick={handleRemoveCoupon}
-                      disabled={isCouponValidating}
-                    >
-                      حذف
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="contained"
-                      onClick={() => void handleValidateCoupon()}
-                      disabled={isCouponValidating || !couponCode.trim()}
-                    >
-                      {isCouponValidating ? "در حال بررسی..." : "اعمال"}
-                    </Button>
-                  )}
-                </div>
-                {appliedCoupon ? (
-                  <div className={styles.couponApplied}>
-                    <CheckCircleRoundedIcon fontSize="small" />
-                    <small>
-                      {appliedCoupon.couponDiscountAmountIrt != null
-                        ? `${formatCoursePrice(appliedCoupon.couponDiscountAmountIrt)} کسر شد.`
-                        : "کد تخفیف اعمال شد."}
-                    </small>
+                  >
+                    <span className={styles.methodIcon}>{option.icon}</span>
+                    <span className={styles.methodText}>
+                      <strong>
+                        {option.title}
+                        {option.badge ? (
+                          <span className={styles.methodBadge}>{option.badge}</span>
+                        ) : null}
+                      </strong>
+                      <small>{option.isActive ? option.subtitle : "موقتاً غیرفعال"}</small>
+                    </span>
+                    {selectedPaymentMethod === option.value ? (
+                      <CheckCircleRoundedIcon className={styles.methodSelectedIcon} />
+                    ) : null}
+                  </button>
+                ))}
+              </div>
+              {isCheckoutConfigLoading ? (
+                <p className={styles.gatewayHint}>در حال دریافت تنظیمات پرداخت...</p>
+              ) : null}
+              {!isCheckoutConfigLoading && paymentMethodOptions.length === 0 ? (
+                <p className={styles.gatewayHint}>در حال حاضر هیچ روش پرداختی فعال نیست.</p>
+              ) : null}
+
+              <div className={styles.methodDetails}>
+                <Typography component="h4" className={styles.methodDetailsTitle}>
+                  {selectedPaymentOption.title}
+                </Typography>
+                <Typography className={styles.methodDetailsDescription}>
+                  {selectedPaymentOption.description}
+                </Typography>
+
+                {selectedPaymentMethod === "GATEWAY" ? (
+                  <div className={styles.gatewayPanel}>
+                    <div className={styles.gatewayFeature}>
+                      <LockRoundedIcon fontSize="small" />
+                      <span>اتصال مستقیم به درگاه معتبر بانکی</span>
+                    </div>
+                    <div className={styles.gatewayFeature}>
+                      <ShieldRoundedIcon fontSize="small" />
+                      <span>فعال‌سازی خودکار دوره پس از پرداخت موفق</span>
+                    </div>
                   </div>
                 ) : null}
-              </div>
-            ) : null}
 
-            {isFreePurchase ? (
-              <>
-                <div className={styles.sectionHeading}>
-                  <h3>روش پرداخت</h3>
-                  <p>برای این سفارش نیازی به پرداخت نیست.</p>
-                </div>
-                <div className={styles.methodDetails}>
-                  <Typography component="h4" className={styles.methodDetailsTitle}>
-                    خرید رایگان
-                  </Typography>
-                  <Typography className={styles.methodDetailsDescription}>
-                    {freePurchaseMessage}
-                  </Typography>
-                  <div className={styles.freePurchaseNotice}>
-                    <CheckCircleRoundedIcon fontSize="small" />
-                    <span>با زدن دکمه خرید رایگان، دسترسی دوره برای شما فعال می‌شود.</span>
-                  </div>
-                </div>
-              </>
-            ) : null}
-
-            {!isFreePurchase ? (
-              <>
-                <div className={styles.sectionHeading}>
-                  <h3>روش پرداخت</h3>
-                  <p>یکی از مسیرهای پرداخت را انتخاب کنید.</p>
-                </div>
-
-                <div className={styles.methodGrid}>
-                  {paymentMethodOptions.map((option) => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      className={`${styles.methodCard}${
-                        selectedPaymentMethod === option.value ? ` ${styles.methodCardActive}` : ""
-                      }${!option.isActive ? ` ${styles.methodCardDisabled}` : ""}`}
-                      disabled={!option.isActive}
-                      onClick={() => {
-                        if (option.isActive) {
-                          setSelectedPaymentMethod(option.value);
-                        }
+                {selectedPaymentMethod === "CARD_TO_CARD" ? (
+                  <div className={styles.manualPaymentPanel}>
+                    {paymentCards.length > 0 ? (
+                      paymentCards.map((card) => (
+                        <button
+                          key={`${card.cardNumber}-${card.bankName}`}
+                          type="button"
+                          className={styles.copyRow}
+                          onClick={() => void handleCopy(card.cardNumber, "شماره کارت")}
+                        >
+                          <div>
+                            <span>شماره کارت</span>
+                            <strong>{card.cardNumber}</strong>
+                            <small>
+                              {[card.holderName ? `به نام ${card.holderName}` : "", card.bankName]
+                                .filter(Boolean)
+                                .join(" - ")}
+                            </small>
+                          </div>
+                          <ContentCopyRoundedIcon fontSize="small" />
+                        </button>
+                      ))
+                    ) : (
+                      <p className={styles.gatewayHint}>شماره کارت پرداخت هنوز تنظیم نشده است.</p>
+                    )}
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="شماره رسید یا ۴ رقم آخر کارت مبدا"
+                      value={paymentReference}
+                      onChange={(event) => setPaymentReference(event.target.value)}
+                      InputProps={{
+                        startAdornment: getClearAdornment(paymentReference, () =>
+                          setPaymentReference("")
+                        ),
                       }}
-                    >
-                      <span className={styles.methodIcon}>{option.icon}</span>
-                      <span className={styles.methodText}>
-                        <strong>
-                          {option.title}
-                          {option.badge ? (
-                            <span className={styles.methodBadge}>{option.badge}</span>
-                          ) : null}
-                        </strong>
-                        <small>{option.isActive ? option.subtitle : "موقتاً غیرفعال"}</small>
-                      </span>
-                      {selectedPaymentMethod === option.value ? (
-                        <CheckCircleRoundedIcon className={styles.methodSelectedIcon} />
-                      ) : null}
-                    </button>
-                  ))}
-                </div>
-                {isCheckoutConfigLoading ? (
-                  <p className={styles.gatewayHint}>در حال دریافت تنظیمات پرداخت...</p>
-                ) : null}
-                {!isCheckoutConfigLoading && paymentMethodOptions.length === 0 ? (
-                  <p className={styles.gatewayHint}>در حال حاضر هیچ روش پرداختی فعال نیست.</p>
+                      inputProps={{
+                        className: styles.latinInput,
+                        dir: "ltr",
+                      }}
+                    />
+                    <FileUploadField
+                      label="رسید پرداخت"
+                      file={receiptFile}
+                      onChange={setReceiptFile}
+                      accept="image/*,.pdf"
+                      allowedFormatsLabel="JPG, PNG, PDF"
+                      maxSizeLabel="حداکثر ۵ مگابایت"
+                      maxSizeBytes={FILE_UPLOAD_POLICY_MAX_SIZE_BYTES.PAYMENT_RECEIPT}
+                      dropTitle="رسید پرداخت را اینجا رها کنید"
+                      mobileDropTitle="انتخاب رسید پرداخت"
+                      dropHint="یا برای انتخاب فایل کلیک کنید"
+                      removeLabel="حذف رسید"
+                      invalidLabel="فرمت یا حجم فایل معتبر نیست"
+                    />
+                  </div>
                 ) : null}
 
-                <div className={styles.methodDetails}>
-                  <Typography component="h4" className={styles.methodDetailsTitle}>
-                    {selectedPaymentOption.title}
-                  </Typography>
-                  <Typography className={styles.methodDetailsDescription}>
-                    {selectedPaymentOption.description}
-                  </Typography>
-
-                  {selectedPaymentMethod === "GATEWAY" ? (
-                    <div className={styles.gatewayPanel}>
-                      <div className={styles.gatewayFeature}>
-                        <LockRoundedIcon fontSize="small" />
-                        <span>اتصال مستقیم به درگاه معتبر بانکی</span>
-                      </div>
-                      <div className={styles.gatewayFeature}>
-                        <ShieldRoundedIcon fontSize="small" />
-                        <span>فعال‌سازی خودکار دوره پس از پرداخت موفق</span>
-                      </div>
-                    </div>
-                  ) : null}
-
-                  {selectedPaymentMethod === "CARD_TO_CARD" ? (
-                    <div className={styles.manualPaymentPanel}>
-                      {paymentCards.length > 0 ? (
-                        paymentCards.map((card) => (
-                          <button
-                            key={`${card.cardNumber}-${card.bankName}`}
-                            type="button"
-                            className={styles.copyRow}
-                            onClick={() => void handleCopy(card.cardNumber, "شماره کارت")}
-                          >
-                            <div>
-                              <span>شماره کارت</span>
-                              <strong>{card.cardNumber}</strong>
-                              <small>
-                                {[
-                                  card.holderName ? `به نام ${card.holderName}` : "",
-                                  card.bankName,
-                                ]
-                                  .filter(Boolean)
-                                  .join(" - ")}
-                              </small>
-                            </div>
-                            <ContentCopyRoundedIcon fontSize="small" />
-                          </button>
-                        ))
-                      ) : (
-                        <p className={styles.gatewayHint}>شماره کارت پرداخت هنوز تنظیم نشده است.</p>
-                      )}
-                      <TextField
-                        fullWidth
-                        size="small"
-                        label="شماره رسید یا ۴ رقم آخر کارت مبدا"
-                        value={paymentReference}
-                        onChange={(event) => setPaymentReference(event.target.value)}
-                        InputProps={{
-                          startAdornment: getClearAdornment(paymentReference, () =>
-                            setPaymentReference(""),
-                          ),
-                        }}
-                        inputProps={{
-                          className: styles.latinInput,
-                          dir: "ltr",
-                        }}
-                      />
-                      <FileUploadField
-                        label="رسید پرداخت"
-                        file={receiptFile}
-                        onChange={setReceiptFile}
-                        accept="image/*,.pdf"
-                        allowedFormatsLabel="JPG, PNG, PDF"
-                        maxSizeLabel="حداکثر ۵ مگابایت"
-                        maxSizeBytes={FILE_UPLOAD_POLICY_MAX_SIZE_BYTES.PAYMENT_RECEIPT}
-                        dropTitle="رسید پرداخت را اینجا رها کنید"
-                        mobileDropTitle="انتخاب رسید پرداخت"
-                        dropHint="یا برای انتخاب فایل کلیک کنید"
-                        removeLabel="حذف رسید"
-                        invalidLabel="فرمت یا حجم فایل معتبر نیست"
-                      />
-                    </div>
-                  ) : null}
-
-                  {selectedPaymentMethod === "CRYPTOCURRENCY" ? (
-                    <div className={styles.manualPaymentPanel}>
-                      {cryptoWallets.length > 0 ? (
-                        cryptoWallets.map((wallet) => (
-                          <button
-                            key={`${wallet.network}-${wallet.address}`}
-                            type="button"
-                            className={styles.copyRow}
-                            onClick={() =>
-                              void handleCopy(wallet.address, `آدرس کیف پول ${wallet.network}`)
-                            }
-                          >
-                            <div>
-                              <span>
-                                آدرس کیف پول (
-                                <span className={styles.latinText}>USDT / {wallet.network}</span>)
-                              </span>
-                              <strong className={styles.latinText}>{wallet.address}</strong>
-                              <small>
-                                {cryptoPriceSummary.finalUsdtPrice != null ? (
-                                  <>
-                                    مبلغ نهایی:{" "}
-                                    <span className={styles.latinText}>
-                                      {formatUsdtPrice(cryptoPriceSummary.finalUsdtPrice)}
-                                    </span>
-                                  </>
-                                ) : (
-                                  cryptoAmountHint
-                                )}
-                              </small>
-                            </div>
-                            <ContentCopyRoundedIcon fontSize="small" />
-                          </button>
-                        ))
-                      ) : (
-                        <p className={styles.cryptoHint}>آدرس کیف پول هنوز تنظیم نشده است.</p>
-                      )}
-                      <TextField
-                        fullWidth
-                        size="small"
-                        label="شناسه تراکنش"
-                        value={cryptoTransactionHash}
-                        onChange={(event) => setCryptoTransactionHash(event.target.value)}
-                        placeholder="پس از ارسال رمزارز، شناسه تراکنش را وارد کنید"
-                        InputProps={{
-                          startAdornment: getClearAdornment(cryptoTransactionHash, () =>
-                            setCryptoTransactionHash(""),
-                          ),
-                        }}
-                        inputProps={{
-                          className: styles.latinInput,
-                          dir: "ltr",
-                        }}
-                        required
-                      />
-                      <p className={styles.cryptoHint}>
-                        پس از تایید تراکنش در شبکه و بررسی تیم پشتیبانی، دسترسی دوره برای شما فعال
-                        می‌شود.
-                      </p>
-                    </div>
-                  ) : null}
-                </div>
-              </>
-            ) : null}
-
-            {selectedPaymentMethod === "GATEWAY" && !isFreePurchase ? (
-              <div className={styles.trustSealRow}>
-                <EnamadTrustSeal />
+                {selectedPaymentMethod === "CRYPTOCURRENCY" ? (
+                  <div className={styles.manualPaymentPanel}>
+                    {cryptoWallets.length > 0 ? (
+                      cryptoWallets.map((wallet) => (
+                        <button
+                          key={`${wallet.network}-${wallet.address}`}
+                          type="button"
+                          className={styles.copyRow}
+                          onClick={() =>
+                            void handleCopy(wallet.address, `آدرس کیف پول ${wallet.network}`)
+                          }
+                        >
+                          <div>
+                            <span>
+                              آدرس کیف پول (
+                              <span className={styles.latinText}>USDT / {wallet.network}</span>)
+                            </span>
+                            <strong className={styles.latinText}>{wallet.address}</strong>
+                            <small>
+                              {cryptoPriceSummary.finalUsdtPrice != null ? (
+                                <>
+                                  مبلغ نهایی:{" "}
+                                  <span className={styles.latinText}>
+                                    {formatUsdtPrice(cryptoPriceSummary.finalUsdtPrice)}
+                                  </span>
+                                </>
+                              ) : (
+                                cryptoAmountHint
+                              )}
+                            </small>
+                          </div>
+                          <ContentCopyRoundedIcon fontSize="small" />
+                        </button>
+                      ))
+                    ) : (
+                      <p className={styles.cryptoHint}>آدرس کیف پول هنوز تنظیم نشده است.</p>
+                    )}
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="شناسه تراکنش"
+                      value={cryptoTransactionHash}
+                      onChange={(event) => setCryptoTransactionHash(event.target.value)}
+                      placeholder="پس از ارسال رمزارز، شناسه تراکنش را وارد کنید"
+                      InputProps={{
+                        startAdornment: getClearAdornment(cryptoTransactionHash, () =>
+                          setCryptoTransactionHash("")
+                        ),
+                      }}
+                      inputProps={{
+                        className: styles.latinInput,
+                        dir: "ltr",
+                      }}
+                      required
+                    />
+                    <p className={styles.cryptoHint}>
+                      پس از تایید تراکنش در شبکه و بررسی تیم پشتیبانی، دسترسی دوره برای شما فعال
+                      می‌شود.
+                    </p>
+                  </div>
+                ) : null}
               </div>
-            ) : null}
-          </section>
-        </div>
+            </>
+          ) : null}
+
+          {selectedPaymentMethod === "GATEWAY" && !isFreePurchase ? (
+            <div className={styles.trustSealRow}>
+              <EnamadTrustSeal />
+            </div>
+          ) : null}
+        </section>
+      </div>
     </EntityModalShell>
   );
 }

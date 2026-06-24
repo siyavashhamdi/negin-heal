@@ -23,9 +23,6 @@ export class SuperAdminTicketSendMutation {
     @Args("input") input: SuperAdminTicketSendGqlInput,
     @Context() context: GraphQLContext,
   ): Promise<TicketListGqlResponse> {
-    return this.ticketService.sendBySuperAdmin(
-      input,
-      context.req.user!.userId,
-    );
+    return this.ticketService.sendBySuperAdmin(input, context.req.user!.userId);
   }
 }

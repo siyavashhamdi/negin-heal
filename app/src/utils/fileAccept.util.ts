@@ -64,8 +64,7 @@ export function matchesFileAccept(file: File, accept: string): boolean {
     return true;
   }
 
-  const mimeType =
-    normalizeMimeType(file.type) || resolveMimeTypeFromFileName(file.name);
+  const mimeType = normalizeMimeType(file.type) || resolveMimeTypeFromFileName(file.name);
   const extension = getFileExtension(file.name);
 
   return tokens.some((token) => tokenMatchesFile(token, mimeType, extension));

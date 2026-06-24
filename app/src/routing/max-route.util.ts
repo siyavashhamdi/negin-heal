@@ -15,7 +15,7 @@ export function buildMaxRoutePathname(pathname: string): string {
 
 export function buildMaxRouteLocation(
   pathname: string,
-  searchParams: URLSearchParams,
+  searchParams: URLSearchParams
 ): { pathname: string; search: string } {
   const search = searchParams.toString();
 
@@ -27,7 +27,7 @@ export function buildMaxRouteLocation(
 
 export function buildCloseMaxRouteLocation(
   pathname: string,
-  searchParams: URLSearchParams,
+  searchParams: URLSearchParams
 ): { pathname: string; search: string } {
   const search = searchParams.toString();
 
@@ -41,7 +41,7 @@ export function openMaxRoute(
   ownerId: string,
   pathname: string,
   searchParams: URLSearchParams,
-  navigate: (to: { pathname: string; search: string }) => void,
+  navigate: (to: { pathname: string; search: string }) => void
 ): void {
   setMaxRouteOwner(ownerId);
   navigate(buildMaxRouteLocation(pathname, searchParams));
@@ -51,7 +51,7 @@ export function closeMaxRoute(
   ownerId: string,
   pathname: string,
   searchParams: URLSearchParams,
-  navigate: (to: { pathname: string; search: string }) => void,
+  navigate: (to: { pathname: string; search: string }) => void
 ): void {
   clearMaxRouteOwner(ownerId);
 

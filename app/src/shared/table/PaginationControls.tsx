@@ -1,5 +1,17 @@
 import { type ReactElement } from "react";
-import { Box, ButtonBase, Typography, Pagination, PaginationItem, Select, MenuItem, FormControl, InputLabel, useTheme, useMediaQuery } from "@mui/material";
+import {
+  Box,
+  ButtonBase,
+  Typography,
+  Pagination,
+  PaginationItem,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  useTheme,
+  useMediaQuery,
+} from "@mui/material";
 import type { PaginationRenderItemParams } from "@mui/material/Pagination";
 import { useTranslation } from "../../hooks/useTranslation";
 import { usePaginationGoToPagePopover } from "./PaginationGoToPagePopover";

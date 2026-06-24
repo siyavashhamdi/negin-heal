@@ -39,7 +39,11 @@ const CourseReviewCard = ({ review }: CourseReviewCardProps): ReactElement | nul
             {authorLabel}
           </Typography>
         </div>
-        <StarRating value={review.rating.stars} size="small" ariaLabel={`امتیاز ${review.rating.stars}`} />
+        <StarRating
+          value={review.rating.stars}
+          size="small"
+          ariaLabel={`امتیاز ${review.rating.stars}`}
+        />
       </div>
 
       {ratingDate ? (

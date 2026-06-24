@@ -109,8 +109,7 @@ const SystemSettingEditDialog = ({
   const isSaving = updateSettingResult.loading;
   const hasEditFormChanges =
     initialForm != null && form != null && hasFormChanges(initialForm, form);
-  const canSubmit =
-    Boolean(detail && form && !detailLoading && !isSaving) && hasEditFormChanges;
+  const canSubmit = Boolean(detail && form && !detailLoading && !isSaving) && hasEditFormChanges;
 
   return (
     <EntityModalShell
@@ -120,9 +119,7 @@ const SystemSettingEditDialog = ({
       hasUnsavedChanges={canSubmit}
       title="ویرایش تنظیمات سامانه"
       subtitle={
-        detail?.label?.trim() ||
-        detail?.key?.trim() ||
-        "مقدار و وضعیت این تنظیم را تغییر دهید."
+        detail?.label?.trim() || detail?.key?.trim() || "مقدار و وضعیت این تنظیم را تغییر دهید."
       }
       maxWidth="lg"
       resetKey={settingId != null ? `${settingId}-${Boolean(form)}` : undefined}

@@ -81,26 +81,18 @@ function enforceMobileInputStart(value: string): string {
 }
 
 export const sanitizeLatinUsernameInput = (value: string): string =>
-  enforceLatinIdentityStart(
-    toWesternDigits(value).replace(NON_LATIN_USERNAME, ""),
-  );
+  enforceLatinIdentityStart(toWesternDigits(value).replace(NON_LATIN_USERNAME, ""));
 
 export const sanitizeLatinEmailInput = (value: string): string =>
-  enforceLatinIdentityStart(
-    toWesternDigits(value).replace(NON_LATIN_EMAIL, ""),
-  );
+  enforceLatinIdentityStart(toWesternDigits(value).replace(NON_LATIN_EMAIL, ""));
 
 export const sanitizeMobilePhoneInput = (value: string): string =>
-  enforceMobileInputStart(
-    toWesternDigits(value).replace(NON_MOBILE_DIGITS, ""),
-  );
+  enforceMobileInputStart(toWesternDigits(value).replace(NON_MOBILE_DIGITS, ""));
 
 /** @deprecated Use normalizeAuthIdentityMobileForSubmit */
 export const normalizeMobilePhoneToLocal = normalizeAuthIdentityMobileForSubmit;
 
-export const normalizeOptionalMobilePhoneToLocal = (
-  value: string,
-): string | undefined => {
+export const normalizeOptionalMobilePhoneToLocal = (value: string): string | undefined => {
   const trimmed = value.trim();
   if (!trimmed) {
     return undefined;

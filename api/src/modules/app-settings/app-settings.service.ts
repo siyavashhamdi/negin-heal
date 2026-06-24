@@ -130,13 +130,7 @@ type AppSettingKeyListSortField = Extract<
 
 type AppSettingKeyListRecord = Pick<
   AppSetting,
-  | "_id"
-  | "key"
-  | "label"
-  | "valueType"
-  | "description"
-  | "isActive"
-  | "audit"
+  "_id" | "key" | "label" | "valueType" | "description" | "isActive" | "audit"
 >;
 
 type AppSettingMutationRecord = Pick<
@@ -836,7 +830,9 @@ export class AppSettingsService {
       input.valueType != null && input.valueType !== existingSetting.valueType;
 
     if (valueTypeChanged && !hasValue) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.APP_SETTING_VALUE_INVALID);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.APP_SETTING_VALUE_INVALID,
+      );
     }
 
     if (input.label !== undefined) {
@@ -883,13 +879,17 @@ export class AppSettingsService {
       case AppSettingValueType.JSON:
         return this.normalizeJsonSettingValue(value);
       default:
-        throw new BadRequestException(EXCEPTION_CONSTANT.APP_SETTING_VALUE_TYPE_UNSUPPORTED);
+        throw new BadRequestException(
+          EXCEPTION_CONSTANT.APP_SETTING_VALUE_TYPE_UNSUPPORTED,
+        );
     }
   }
 
   private normalizeStringSettingValue(value: unknown): string {
     if (typeof value !== "string") {
-      throw new BadRequestException(EXCEPTION_CONSTANT.APP_SETTING_VALUE_INVALID);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.APP_SETTING_VALUE_INVALID,
+      );
     }
 
     return value;
@@ -898,7 +898,9 @@ export class AppSettingsService {
   private normalizeNumberSettingValue(value: unknown): number {
     if (typeof value === "number") {
       if (!Number.isFinite(value)) {
-        throw new BadRequestException(EXCEPTION_CONSTANT.APP_SETTING_VALUE_INVALID);
+        throw new BadRequestException(
+          EXCEPTION_CONSTANT.APP_SETTING_VALUE_INVALID,
+        );
       }
 
       return value;
@@ -907,7 +909,9 @@ export class AppSettingsService {
     if (typeof value === "string" && value.trim()) {
       const parsedValue = Number(value.trim());
       if (!Number.isFinite(parsedValue)) {
-        throw new BadRequestException(EXCEPTION_CONSTANT.APP_SETTING_VALUE_INVALID);
+        throw new BadRequestException(
+          EXCEPTION_CONSTANT.APP_SETTING_VALUE_INVALID,
+        );
       }
 
       return parsedValue;
@@ -934,19 +938,21 @@ export class AppSettingsService {
     throw new BadRequestException(EXCEPTION_CONSTANT.APP_SETTING_VALUE_INVALID);
   }
 
-  private normalizeJsonSettingValue(
-    value: unknown,
-  ): StoredAppSettingJsonValue {
+  private normalizeJsonSettingValue(value: unknown): StoredAppSettingJsonValue {
     if (typeof value === "string") {
       const trimmedValue = value.trim();
       if (!trimmedValue) {
-        throw new BadRequestException(EXCEPTION_CONSTANT.APP_SETTING_VALUE_INVALID);
+        throw new BadRequestException(
+          EXCEPTION_CONSTANT.APP_SETTING_VALUE_INVALID,
+        );
       }
 
       try {
         return this.assertJsonSettingValue(JSON.parse(trimmedValue));
       } catch {
-        throw new BadRequestException(EXCEPTION_CONSTANT.APP_SETTING_VALUE_INVALID);
+        throw new BadRequestException(
+          EXCEPTION_CONSTANT.APP_SETTING_VALUE_INVALID,
+        );
       }
     }
 
@@ -955,7 +961,9 @@ export class AppSettingsService {
 
   private assertJsonSettingValue(value: unknown): StoredAppSettingJsonValue {
     if (value == null) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.APP_SETTING_VALUE_INVALID);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.APP_SETTING_VALUE_INVALID,
+      );
     }
 
     if (Array.isArray(value)) {
@@ -970,7 +978,9 @@ export class AppSettingsService {
       this.isPlainObject(value)
     ) {
       if (valueKind === "number" && !Number.isFinite(value)) {
-        throw new BadRequestException(EXCEPTION_CONSTANT.APP_SETTING_VALUE_INVALID);
+        throw new BadRequestException(
+          EXCEPTION_CONSTANT.APP_SETTING_VALUE_INVALID,
+        );
       }
 
       return value as StoredAppSettingJsonValue;
@@ -998,7 +1008,10 @@ export class AppSettingsService {
   private normalizeRequiredText(value: unknown, fieldName: string): string {
     const normalizedValue = this.normalizeOptionalText(value);
     if (!normalizedValue) {
-      throw new BadRequestException({ key: EXCEPTION_CONSTANT.VALIDATION_FAILED, params: { fieldName } });
+      throw new BadRequestException({
+        key: EXCEPTION_CONSTANT.VALIDATION_FAILED,
+        params: { fieldName },
+      });
     }
 
     return normalizedValue;

@@ -41,7 +41,7 @@ const HoverClearMultiSelectField = ({
   const useFloatingLabel = label != null && label !== "";
   const selectedSet = new Set(value.map(normalizeOptionValue));
   const selectedOptions = options.filter((option) =>
-    selectedSet.has(normalizeOptionValue(option.value)),
+    selectedSet.has(normalizeOptionValue(option.value))
   );
   const hasSelection = value.length > 0;
   const showClearButton = !disabled && !loading && hasSelection;

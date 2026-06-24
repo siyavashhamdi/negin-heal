@@ -43,7 +43,7 @@ export type CourseDeleteDependenciesQueryVariables = {
 };
 
 export const groupCourseDeleteDependenciesByImpact = (
-  groups: CourseDeleteDependencyGroupRow[],
+  groups: CourseDeleteDependencyGroupRow[]
 ): {
   retained: CourseDeleteDependencyGroupRow[];
   removed: CourseDeleteDependencyGroupRow[];

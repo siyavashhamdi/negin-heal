@@ -11,14 +11,12 @@ import { parseVerificationStatusSubscriptionPayload } from "../utilities/verific
 
 interface UseVerificationStatusSubscriptionOptions {
   readonly enabled: boolean;
-  readonly onVerificationStatus?: (
-    verification: VerificationStatusSubscriptionPayload,
-  ) => void;
+  readonly onVerificationStatus?: (verification: VerificationStatusSubscriptionPayload) => void;
 }
 
 export function applyVerificationStatusToMeCache(
   client: ApolloClient<NormalizedCacheObject>,
-  verification: VerificationStatusSubscriptionPayload,
+  verification: VerificationStatusSubscriptionPayload
 ): void {
   client.cache.updateQuery<UserMeResponse>({ query: USER_ME_QUERY }, (existing) => {
     if (!existing?.me) {

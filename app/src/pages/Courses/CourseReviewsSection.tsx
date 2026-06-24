@@ -26,10 +26,7 @@ type CourseReviewsSectionProps = {
   readonly isFree?: boolean;
 };
 
-function isOtherUserReview(
-  review: EndUserCourseReviewRecord,
-  ownReviewId?: string,
-): boolean {
+function isOtherUserReview(review: EndUserCourseReviewRecord, ownReviewId?: string): boolean {
   if (review.isMine) {
     return false;
   }
@@ -58,7 +55,7 @@ const CourseReviewsSection = ({
     if (isStaff) {
       const ownAdminReview = findOwnAdminCourseReview(
         reviewList.items as AdminCourseReviewRecord[],
-        user?.id,
+        user?.id
       );
       if (!ownAdminReview || !user?.id) {
         return null;
@@ -83,7 +80,7 @@ const CourseReviewsSection = ({
 
     const ownReviewId = ownReview?.id;
     return (reviewList.items as EndUserCourseReviewRecord[]).filter((review) =>
-      isOtherUserReview(review, ownReviewId),
+      isOtherUserReview(review, ownReviewId)
     );
   }, [isStaff, ownReview?.id, reviewList.items, user?.id]);
 

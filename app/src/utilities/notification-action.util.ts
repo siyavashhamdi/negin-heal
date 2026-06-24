@@ -11,7 +11,7 @@ export type NotificationActionInput = {
 };
 
 export function buildNotificationActionPayload(
-  input: NotificationActionInput,
+  input: NotificationActionInput
 ): NotificationActionPayload | null {
   const label = input.label.trim();
   const href = input.href.trim();
@@ -23,17 +23,14 @@ export function buildNotificationActionPayload(
   return { label, href };
 }
 
-const buildCourseChapterHref = (
-  courseId: string,
-  chapterKey: string,
-): string => {
+const buildCourseChapterHref = (courseId: string, chapterKey: string): string => {
   const baseHref = APP_SHELL_ROUTES.courseDetail.replace(":courseId", courseId);
   const params = new URLSearchParams({ chapter: chapterKey });
   return `${baseHref}?${params.toString()}`;
 };
 
 export function resolveNotificationActionPayload(
-  payload: unknown,
+  payload: unknown
 ): NotificationActionPayload | null {
   if (!payload || typeof payload !== "object") {
     return null;
@@ -75,10 +72,8 @@ export function resolveNotificationActionPayload(
     return { label, href };
   }
 
-  const courseId =
-    typeof record.courseId === "string" ? record.courseId.trim() : "";
-  const chapterKey =
-    typeof record.chapterKey === "string" ? record.chapterKey.trim() : "";
+  const courseId = typeof record.courseId === "string" ? record.courseId.trim() : "";
+  const chapterKey = typeof record.chapterKey === "string" ? record.chapterKey.trim() : "";
 
   if (courseId && chapterKey) {
     return {

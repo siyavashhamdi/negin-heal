@@ -1,13 +1,6 @@
 import { NetworkStatus } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type RefObject,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 
 import { COURSE_REVIEW_LIST_QUERY } from "../../graphql/queries/courseReviewList.query";
 import { USER_COURSE_REVIEW_LIST_QUERY } from "../../graphql/queries/userCourseReviewList.query";
@@ -78,7 +71,7 @@ function findScrollableAncestor(element: HTMLElement | null): HTMLElement | null
 
 function appendUniqueReviewItems(
   previousItems: ReadonlyArray<ReviewListItem>,
-  incomingItems: ReadonlyArray<ReviewListItem>,
+  incomingItems: ReadonlyArray<ReviewListItem>
 ): ReviewListItem[] {
   const existingIds = new Set(previousItems.map((item) => item.id));
   const newItems = incomingItems.filter((item) => !existingIds.has(item.id));
@@ -109,7 +102,7 @@ export function useCourseReviewList({
   const [hasNextPage, setHasNextPage] = useState(false);
   const [endCursor, setEndCursor] = useState<string | null>(null);
   const [ratingSummary, setRatingSummary] = useState<CourseReviewSummaryStats>(() =>
-    mapCourseReviewRatingSummaryToStats(null),
+    mapCourseReviewRatingSummaryToStats(null)
   );
 
   const listVariables = useMemo(
@@ -119,15 +112,15 @@ export function useCourseReviewList({
             courseId,
             starsFilter,
             null,
-            COURSE_REVIEW_LIST_PAGE_SIZE,
+            COURSE_REVIEW_LIST_PAGE_SIZE
           )
         : buildEndUserCourseReviewListVariables(
             courseId,
             starsFilter,
             null,
-            COURSE_REVIEW_LIST_PAGE_SIZE,
+            COURSE_REVIEW_LIST_PAGE_SIZE
           ),
-    [courseId, isAdminMode, starsFilter],
+    [courseId, isAdminMode, starsFilter]
   );
 
   const queryDocument = isAdminMode ? COURSE_REVIEW_LIST_QUERY : USER_COURSE_REVIEW_LIST_QUERY;
@@ -193,13 +186,7 @@ export function useCourseReviewList({
 
   const loadNextPage = useCallback(async (): Promise<void> => {
     const nextCursor = endCursor ?? items[items.length - 1]?.id ?? null;
-    if (
-      fetchingMoreRef.current ||
-      loading ||
-      isFetchingMore ||
-      !hasNextPage ||
-      !nextCursor
-    ) {
+    if (fetchingMoreRef.current || loading || isFetchingMore || !hasNextPage || !nextCursor) {
       return;
     }
 
@@ -272,9 +259,7 @@ export function useCourseReviewList({
     }
 
     const observerRoot =
-      scrollRoot === "parent"
-        ? findScrollableAncestor(sentinel)
-        : scrollContainerRef.current;
+      scrollRoot === "parent" ? findScrollableAncestor(sentinel) : scrollContainerRef.current;
 
     if (!observerRoot && scrollRoot === "list") {
       return undefined;
@@ -289,7 +274,7 @@ export function useCourseReviewList({
       {
         root: observerRoot,
         rootMargin: "120px 0px",
-      },
+      }
     );
 
     observer.observe(sentinel);

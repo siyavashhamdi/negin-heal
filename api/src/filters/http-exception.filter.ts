@@ -124,21 +124,16 @@ export class HttpExceptionFilter implements ExceptionFilter {
       keyedBody,
     });
 
-    logUserFacingHttpError(
-      this.logger,
-      originalMessage,
-      resolved,
-      {
-        stack: (exception as { stack?: string })?.stack,
-        statusCode: status,
-        errorName,
-        request: {
-          method: request?.method,
-          url: request?.url || request?.path,
-        },
-        exception,
+    logUserFacingHttpError(this.logger, originalMessage, resolved, {
+      stack: (exception as { stack?: string })?.stack,
+      statusCode: status,
+      errorName,
+      request: {
+        method: request?.method,
+        url: request?.url || request?.path,
       },
-    );
+      exception,
+    });
 
     const errorResponse = {
       success: false,

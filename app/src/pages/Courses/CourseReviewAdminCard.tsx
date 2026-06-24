@@ -42,7 +42,7 @@ type AdminSegmentModeration = {
 };
 
 function buildAdminSegmentModerationMap(
-  review: AdminCourseReviewRecord,
+  review: AdminCourseReviewRecord
 ): Map<string, AdminSegmentModeration> {
   const moderationBySegmentKey = new Map<string, AdminSegmentModeration>();
 
@@ -78,18 +78,9 @@ const CourseReviewAdminCard = ({
   const [commentsExpanded, setCommentsExpanded] = useState(false);
   const boxEndRef = useRef<HTMLDivElement | null>(null);
   const pendingScrollToEndRef = useRef(false);
-  const segmentModerationByKey = useMemo(
-    () => buildAdminSegmentModerationMap(review),
-    [review],
-  );
-  const adminThreadEntries = useMemo(
-    () => buildAdminCourseReviewThreadEntries(review),
-    [review],
-  );
-  const defaultReplyVisibility = useMemo(
-    () => resolveDefaultReplyVisibility(review),
-    [review],
-  );
+  const segmentModerationByKey = useMemo(() => buildAdminSegmentModerationMap(review), [review]);
+  const adminThreadEntries = useMemo(() => buildAdminCourseReviewThreadEntries(review), [review]);
+  const defaultReplyVisibility = useMemo(() => resolveDefaultReplyVisibility(review), [review]);
   const { isUpdating, updateVisibility } = useAdminCourseReviewModeration({
     reviewId: review.id,
     onUpdated: onModerationUpdated,
@@ -115,7 +106,7 @@ const CourseReviewAdminCard = ({
   });
   const hiddenCommentCount = Math.max(
     0,
-    adminThreadEntries.length - COURSE_REVIEW_COMMENT_PREVIEW_LIMIT,
+    adminThreadEntries.length - COURSE_REVIEW_COMMENT_PREVIEW_LIMIT
   );
   const shouldCollapseComments =
     limitCommentsPreview && hiddenCommentCount > 0 && !commentsExpanded;
@@ -124,13 +115,13 @@ const CourseReviewAdminCard = ({
       resolveCourseReviewThreadPreviewEntries(
         adminThreadEntries,
         COURSE_REVIEW_COMMENT_PREVIEW_LIMIT,
-        shouldCollapseComments,
+        shouldCollapseComments
       ),
-    [adminThreadEntries, shouldCollapseComments],
+    [adminThreadEntries, shouldCollapseComments]
   );
   const visibleThreadSegments = useMemo(
     () => buildCourseReviewThreadSegments(visibleThreadEntries),
-    [visibleThreadEntries],
+    [visibleThreadEntries]
   );
   const trimmedReply = reply.trim();
   const canSubmitReply = trimmedReply.length > 0 && !isSubmitting;
@@ -162,17 +153,13 @@ const CourseReviewAdminCard = ({
             value={moderation.visibility}
             disabled={moderationDisabled}
             onChange={(visibility) =>
-              updateVisibility(
-                moderation.moderationTarget,
-                visibility,
-                moderation.messageKey,
-              )
+              updateVisibility(moderation.moderationTarget, visibility, moderation.messageKey)
             }
           />
         </div>
       );
     },
-    [moderationDisabled, segmentModerationByKey, updateVisibility],
+    [moderationDisabled, segmentModerationByKey, updateVisibility]
   );
 
   const renderSegmentFooter = useCallback(
@@ -188,7 +175,7 @@ const CourseReviewAdminCard = ({
         </Typography>
       );
     },
-    [segmentModerationByKey],
+    [segmentModerationByKey]
   );
 
   return (

@@ -8,7 +8,8 @@ export class GlobalAnouncementSendGqlResponse {
   deliveredUsers: number;
 
   @Field(() => Int, {
-    description: "Number of active users subscribed to the general updates channel",
+    description:
+      "Number of active users subscribed to the general updates channel",
   })
   activeSubscribedUsers: number;
 }

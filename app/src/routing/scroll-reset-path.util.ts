@@ -3,5 +3,8 @@
  * underlying page (purchase dialog, media viewer, etc.) are normalized away.
  */
 export function getPathnameForScrollReset(pathname: string): string {
-  return pathname.replace(/\/purchase$/, "").replace(/\/max$/, "").replace(/\/confirm$/, "");
+  return pathname
+    .replace(/\/purchase$/, "")
+    .replace(/\/max$/, "")
+    .replace(/\/confirm$/, "");
 }

@@ -36,7 +36,9 @@ export class UserSignupGqlInput {
   @ValidateIf((value: UserSignupGqlInput) => !value.email && !value.mobile)
   @IsString({ message: "Username must be a string" })
   @IsNotEmpty({ message: "At least one identity is required" })
-  @ValidateIf((_, value) => typeof value === "string" && value.trim().length > 0)
+  @ValidateIf(
+    (_, value) => typeof value === "string" && value.trim().length > 0,
+  )
   @MinLength(MIN_USERNAME_LENGTH, {
     message: `Username must be at least ${MIN_USERNAME_LENGTH} characters long`,
   })
@@ -48,7 +50,9 @@ export class UserSignupGqlInput {
   @ValidateIf((value: UserSignupGqlInput) => !value.username && !value.mobile)
   @IsString({ message: "Email must be a string" })
   @IsNotEmpty({ message: "At least one identity is required" })
-  @ValidateIf((_, value) => typeof value === "string" && value.trim().length > 0)
+  @ValidateIf(
+    (_, value) => typeof value === "string" && value.trim().length > 0,
+  )
   @IsLatinEmail()
   @IsOptional()
   email?: string;
@@ -57,7 +61,9 @@ export class UserSignupGqlInput {
   @ValidateIf((value: UserSignupGqlInput) => !value.username && !value.email)
   @IsString({ message: "Mobile number must be a string" })
   @IsNotEmpty({ message: "At least one identity is required" })
-  @ValidateIf((_, value) => typeof value === "string" && value.trim().length > 0)
+  @ValidateIf(
+    (_, value) => typeof value === "string" && value.trim().length > 0,
+  )
   @IsAuthIdentityMobile()
   @IsOptional()
   mobile?: string;

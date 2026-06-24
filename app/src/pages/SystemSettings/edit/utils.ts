@@ -473,7 +473,7 @@ function serializeJsonForm(jsonForm: JsonFormState): JsonValue {
 
 export function buildUpdateVariables(
   setting: AppSettingDetail,
-  form: AppSettingEditFormState,
+  form: AppSettingEditFormState
 ): AppSettingUpdateMutationVariables {
   const label = requiredText(form.label, "عنوان");
   let value: unknown;

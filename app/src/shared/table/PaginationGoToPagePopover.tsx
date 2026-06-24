@@ -97,9 +97,7 @@ export function usePaginationGoToPagePopover({
             }}
             onKeyDown={handleKeyDown}
             error={error}
-            helperText={
-              error ? t("table.pagination.goToPageInvalid", { totalPages }) : undefined
-            }
+            helperText={error ? t("table.pagination.goToPageInvalid", { totalPages }) : undefined}
             inputProps={{
               inputMode: "numeric",
               pattern: "[0-9]*",

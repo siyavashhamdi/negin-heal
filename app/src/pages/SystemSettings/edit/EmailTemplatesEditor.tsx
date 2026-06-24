@@ -41,14 +41,10 @@ const EmailTemplatesEditor = ({
                   updateJson((current) =>
                     current.kind === "emailTemplates"
                       ? {
-                        ...current,
-                        templates: removeAt(
-                          current.templates,
-                          index,
-                          createEmptyEmailTemplate(),
-                        ),
-                      }
-                      : current,
+                          ...current,
+                          templates: removeAt(current.templates, index, createEmptyEmailTemplate()),
+                        }
+                      : current
                   )
                 }
               >
@@ -120,7 +116,7 @@ const EmailTemplatesEditor = ({
         updateJson((current) =>
           current.kind === "emailTemplates"
             ? { ...current, templates: [...current.templates, createEmptyEmailTemplate()] }
-            : current,
+            : current
         )
       }
     >

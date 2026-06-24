@@ -22,10 +22,7 @@ type NotificationPermissionCalloutProps = {
   readonly notificationsEnabled: boolean;
 };
 
-type DeviceHintKey =
-  | "blockedHelpIos"
-  | "blockedHelpAndroid"
-  | "blockedHelpDesktop";
+type DeviceHintKey = "blockedHelpIos" | "blockedHelpAndroid" | "blockedHelpDesktop";
 
 function resolveBlockedHelpKey(): DeviceHintKey {
   if (typeof navigator === "undefined") {

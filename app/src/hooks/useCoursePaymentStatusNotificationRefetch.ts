@@ -58,5 +58,4 @@ export function useCoursePaymentStatusNotificationRefetch({
 }
 
 /** @deprecated Use `useCoursePaymentStatusNotificationRefetch` instead. */
-export const useCoursePaymentPaidNotificationRefetch =
-  useCoursePaymentStatusNotificationRefetch;
+export const useCoursePaymentPaidNotificationRefetch = useCoursePaymentStatusNotificationRefetch;

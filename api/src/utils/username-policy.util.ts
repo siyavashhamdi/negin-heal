@@ -10,7 +10,9 @@ export class UsernameValidator {
     if (trimmed.length < MIN_USERNAME_LENGTH) {
       return {
         valid: false,
-        errors: [`Username must be at least ${MIN_USERNAME_LENGTH} characters long`],
+        errors: [
+          `Username must be at least ${MIN_USERNAME_LENGTH} characters long`,
+        ],
       };
     }
 

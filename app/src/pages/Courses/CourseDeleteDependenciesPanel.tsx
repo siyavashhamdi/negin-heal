@@ -57,9 +57,7 @@ const CourseDeleteDependenciesPanel = ({
   if (error) {
     return (
       <div className={styles.panel}>
-        <p className={styles.errorState}>
-          {t("pages.courses.deleteDialog.dependenciesLoadError")}
-        </p>
+        <p className={styles.errorState}>{t("pages.courses.deleteDialog.dependenciesLoadError")}</p>
         <p className={styles.footnote}>{t("pages.courses.deleteDialog.footnote")}</p>
       </div>
     );
@@ -69,12 +67,9 @@ const CourseDeleteDependenciesPanel = ({
     return null;
   }
 
-  const { retained, removed } = groupCourseDeleteDependenciesByImpact(
-    dependencies.groups,
-  );
+  const { retained, removed } = groupCourseDeleteDependenciesByImpact(dependencies.groups);
   const hasAnyDependencies =
-    dependencies.summary.hasRetainedDependencies ||
-    dependencies.summary.hasRemovedDependencies;
+    dependencies.summary.hasRetainedDependencies || dependencies.summary.hasRemovedDependencies;
 
   return (
     <div className={styles.panel}>
@@ -103,9 +98,7 @@ const CourseDeleteDependenciesPanel = ({
       </div>
 
       {!hasAnyDependencies ? (
-        <p className={styles.emptyState}>
-          {t("pages.courses.deleteDialog.noDependenciesMessage")}
-        </p>
+        <p className={styles.emptyState}>{t("pages.courses.deleteDialog.noDependenciesMessage")}</p>
       ) : null}
 
       {retained.length > 0 ? (
@@ -114,9 +107,7 @@ const CourseDeleteDependenciesPanel = ({
           groups={retained}
           title={t("pages.courses.deleteDialog.retainedSectionTitle")}
           icon={<WarningAmberRoundedIcon className={styles.sectionHeadingIcon} />}
-          translateGroupTitle={(key) =>
-            t(`pages.courses.deleteDialog.groups.${key}.title`)
-          }
+          translateGroupTitle={(key) => t(`pages.courses.deleteDialog.groups.${key}.title`)}
           translateGroupDescription={(key) =>
             t(`pages.courses.deleteDialog.groups.${key}.description`)
           }
@@ -139,9 +130,7 @@ const CourseDeleteDependenciesPanel = ({
           groups={removed}
           title={t("pages.courses.deleteDialog.removedSectionTitle")}
           icon={<DeleteOutlineRoundedIcon className={styles.sectionHeadingIcon} />}
-          translateGroupTitle={(key) =>
-            t(`pages.courses.deleteDialog.groups.${key}.title`)
-          }
+          translateGroupTitle={(key) => t(`pages.courses.deleteDialog.groups.${key}.title`)}
           translateGroupDescription={(key) =>
             t(`pages.courses.deleteDialog.groups.${key}.description`)
           }
@@ -251,9 +240,7 @@ const DependencyGroupCard = ({
           </span>
           <div>
             <p className={styles.groupTitle}>{translateGroupTitle(group.key)}</p>
-            <p className={styles.groupDescription}>
-              {translateGroupDescription(group.key)}
-            </p>
+            <p className={styles.groupDescription}>{translateGroupDescription(group.key)}</p>
           </div>
         </div>
         <span

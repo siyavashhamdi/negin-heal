@@ -1,10 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from "react";
-import {
-  useLocation,
-  useNavigate,
-  useParams,
-  useSearchParams,
-} from "react-router-dom";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery } from "@apollo/client/react";
 import {
   Alert,
@@ -63,9 +58,7 @@ import EntityModalShell from "../../shared/crud/EntityModalShell";
 import ModalFooterActions from "../../shared/crud/ModalFooterActions";
 import { ChapterCompletionCheckpoint } from "./ChapterCompletionCheckpoint";
 import { CoursePurchaseDialog } from "./CoursePurchaseDialog";
-import CourseDetailSectionTabs, {
-  type CourseDetailSectionTab,
-} from "./CourseDetailSectionTabs";
+import CourseDetailSectionTabs, { type CourseDetailSectionTab } from "./CourseDetailSectionTabs";
 import CourseReviewsSection from "./CourseReviewsSection";
 import {
   canUseAdminCourseReviewList,
@@ -103,9 +96,7 @@ import RichTextBox from "../../shared/forms/RichTextBox";
 import FileUploadField from "../../shared/forms/FileUploadField";
 import richTextStyles from "../../shared/forms/RichTextBox.module.scss";
 import type { CourseItemType } from "./courses-list.api";
-import {
-  buildCourseItemPreviewId,
-} from "./course-item-preview.util";
+import { buildCourseItemPreviewId } from "./course-item-preview.util";
 import styles from "./styles/CourseDetail.module.scss";
 
 const ITEM_TYPE_ICON: Record<CourseItemType, ReactElement> = {
@@ -121,10 +112,7 @@ type CourseItemViewer = {
   readonly article: string;
 };
 
-function buildArticleViewer(
-  item: CourseDetailItem,
-  previewId: string,
-): CourseItemViewer | null {
+function buildArticleViewer(item: CourseDetailItem, previewId: string): CourseItemViewer | null {
   const article = item.article?.trim();
   if (!article) {
     return null;
@@ -170,10 +158,7 @@ function CourseItemContent({
     );
   }
 
-  const existingFile = buildExistingFilePreview(
-    item.fileAccessUrl,
-    item.title.trim() || "فایل",
-  );
+  const existingFile = buildExistingFilePreview(item.fileAccessUrl, item.title.trim() || "فایل");
   if (!existingFile) {
     return null;
   }
@@ -242,10 +227,7 @@ function ChapterUnlockNotice({
     if (remaining <= CHAPTER_UNLOCK_COUNTDOWN_THRESHOLD_MS) {
       startTicker();
     } else {
-      timeoutId = window.setTimeout(
-        startTicker,
-        remaining - CHAPTER_UNLOCK_COUNTDOWN_THRESHOLD_MS,
-      );
+      timeoutId = window.setTimeout(startTicker, remaining - CHAPTER_UNLOCK_COUNTDOWN_THRESHOLD_MS);
     }
 
     return () => {
@@ -307,7 +289,7 @@ const CourseDetail = (): ReactElement => {
   const purchaseCardRef = useRef<HTMLElement | null>(null);
   const courseDetailVariables = useMemo(
     (): UserCourseDetailQueryVariables => ({ input: { id: courseId || "" } }),
-    [courseId],
+    [courseId]
   );
 
   const { data, previousData, loading, error, refetch } = useQuery<
@@ -344,17 +326,13 @@ const CourseDetail = (): ReactElement => {
     enabled:
       Boolean(courseId) &&
       !isReviewsSectionHiddenForEndUser &&
-      (isStaffViewer
-        ? isAuthenticated && canUseAdminCourseReviewList(user?.roles)
-        : true),
+      (isStaffViewer ? isAuthenticated && canUseAdminCourseReviewList(user?.roles) : true),
     starsFilter: null,
     scrollRoot: "parent",
   });
 
   const coverImageUrl = resolveFileAccessUrl(course?.coverImageAccessUrl);
-  const discountedPrice = course
-    ? getDiscountedPrice(course.priceIrt, course.discount)
-    : null;
+  const discountedPrice = course ? getDiscountedPrice(course.priceIrt, course.discount) : null;
   const displayPrice = discountedPrice ?? course?.priceIrt ?? null;
   const discountLabel =
     course?.discount && discountedPrice != null
@@ -372,7 +350,7 @@ const CourseDetail = (): ReactElement => {
   const isSingleChapter = (course?.chapters.length ?? 0) === 1;
   const chapterKeys = useMemo(
     () => course?.chapters.map((chapter) => chapter.key) ?? [],
-    [course?.chapters],
+    [course?.chapters]
   );
   const isGradualRelease = course?.releaseType === "GRADUAL";
   const hasLockedChapters = course?.chapters.some((chapter) => chapter.isLocked) ?? false;
@@ -384,7 +362,7 @@ const CourseDetail = (): ReactElement => {
       canAccessCourse,
       totalItems,
     }),
-    [canAccessCourse, hasLockedChapters, isGradualRelease, isSingleChapter, totalItems],
+    [canAccessCourse, hasLockedChapters, isGradualRelease, isSingleChapter, totalItems]
   );
   const courseContentIntroText = getCourseContentIntroText(courseDetailCopyContext);
   const courseContentAccessNoteText = getCourseContentAccessNoteText(courseDetailCopyContext);
@@ -407,7 +385,7 @@ const CourseDetail = (): ReactElement => {
     course?.releaseType === "GRADUAL" &&
     course.chapters.some((chapter) => isGradualChapterLock(chapter));
   const [expandedChapterKeys, setExpandedChapterKeys] = useState<ReadonlySet<string>>(
-    () => new Set(),
+    () => new Set()
   );
   const [activeChapterKey, setActiveChapterKey] = useState<string | null>(null);
   const [activeSectionTab, setActiveSectionTab] = useState<CourseDetailSectionTab>("intro");
@@ -466,14 +444,7 @@ const CourseDetail = (): ReactElement => {
         }),
       ],
     };
-  }, [
-    course,
-    coverImageUrl,
-    displayPrice,
-    isMaxRouteOpen,
-    isPurchaseDialogOpen,
-    t,
-  ]);
+  }, [course, coverImageUrl, displayPrice, isMaxRouteOpen, isPurchaseDialogOpen, t]);
 
   usePageSeoOverride(pageSeoOverride);
 
@@ -566,9 +537,7 @@ const CourseDetail = (): ReactElement => {
     }
 
     if (focusChapterKey) {
-      const chapterExists = course.chapters.some(
-        (chapter) => chapter.key === focusChapterKey,
-      );
+      const chapterExists = course.chapters.some((chapter) => chapter.key === focusChapterKey);
 
       if (chapterExists) {
         setExpandedChapterKeys(new Set([focusChapterKey]));
@@ -578,7 +547,7 @@ const CourseDetail = (): ReactElement => {
     }
 
     setExpandedChapterKeys(
-      defaultExpandedChapterKey ? new Set([defaultExpandedChapterKey]) : new Set(),
+      defaultExpandedChapterKey ? new Set([defaultExpandedChapterKey]) : new Set()
     );
     setActiveChapterKey(defaultExpandedChapterKey);
   }, [course, defaultExpandedChapterKey, focusChapterKey]);
@@ -618,15 +587,13 @@ const CourseDetail = (): ReactElement => {
       showSuccess(
         refId
           ? `پرداخت با موفقیت انجام شد. کد پیگیری: ${refId}`
-          : "پرداخت با موفقیت انجام شد و دسترسی دوره فعال شد.",
+          : "پرداخت با موفقیت انجام شد و دسترسی دوره فعال شد."
       );
       void refetchCourseDetail();
     } else if (paymentStatus === "cancelled") {
       showWarning("پرداخت لغو شد.");
     } else {
-      showError(
-        resolveErrorMessageFromCode(reason || "ZARINPAL_VERIFICATION_FAILED"),
-      );
+      showError(resolveErrorMessageFromCode(reason || "ZARINPAL_VERIFICATION_FAILED"));
     }
 
     setSearchParams({}, { replace: true });
@@ -668,20 +635,23 @@ const CourseDetail = (): ReactElement => {
     };
   }, [canAccessCourse, course, hasPendingPurchase]);
 
-  const handleSectionTabChange = useCallback((tab: CourseDetailSectionTab): void => {
-    pendingSectionTabRef.current = tab;
-    setActiveSectionTab(tab);
+  const handleSectionTabChange = useCallback(
+    (tab: CourseDetailSectionTab): void => {
+      pendingSectionTabRef.current = tab;
+      setActiveSectionTab(tab);
 
-    if (pendingSectionTabClearTimerRef.current != null) {
-      window.clearTimeout(pendingSectionTabClearTimerRef.current);
-    }
+      if (pendingSectionTabClearTimerRef.current != null) {
+        window.clearTimeout(pendingSectionTabClearTimerRef.current);
+      }
 
-    scrollToCourseDetailSection(tab);
+      scrollToCourseDetailSection(tab);
 
-    pendingSectionTabClearTimerRef.current = window.setTimeout(() => {
-      clearPendingSectionTab();
-    }, 900);
-  }, [clearPendingSectionTab]);
+      pendingSectionTabClearTimerRef.current = window.setTimeout(() => {
+        clearPendingSectionTab();
+      }, 900);
+    },
+    [clearPendingSectionTab]
+  );
 
   useEffect(() => {
     const handleScrollEnd = (): void => {
@@ -784,27 +754,30 @@ const CourseDetail = (): ReactElement => {
     });
   };
 
-  const handleChapterNavigate = useCallback((chapterKey: string): void => {
-    pendingChapterNavigationRef.current = chapterKey;
-    setActiveChapterKey(chapterKey);
-    setExpandedChapterKeys((current) => {
-      if (current.has(chapterKey)) {
-        return current;
+  const handleChapterNavigate = useCallback(
+    (chapterKey: string): void => {
+      pendingChapterNavigationRef.current = chapterKey;
+      setActiveChapterKey(chapterKey);
+      setExpandedChapterKeys((current) => {
+        if (current.has(chapterKey)) {
+          return current;
+        }
+
+        return new Set([...current, chapterKey]);
+      });
+
+      if (pendingChapterNavigationClearTimerRef.current != null) {
+        window.clearTimeout(pendingChapterNavigationClearTimerRef.current);
       }
 
-      return new Set([...current, chapterKey]);
-    });
+      scrollToCourseChapter(chapterKey);
 
-    if (pendingChapterNavigationClearTimerRef.current != null) {
-      window.clearTimeout(pendingChapterNavigationClearTimerRef.current);
-    }
-
-    scrollToCourseChapter(chapterKey);
-
-    pendingChapterNavigationClearTimerRef.current = window.setTimeout(() => {
-      clearPendingChapterNavigation();
-    }, 900);
-  }, [clearPendingChapterNavigation]);
+      pendingChapterNavigationClearTimerRef.current = window.setTimeout(() => {
+        clearPendingChapterNavigation();
+      }, 900);
+    },
+    [clearPendingChapterNavigation]
+  );
 
   const closeItemViewer = (): void => {
     if (selectedItemViewer) {
@@ -858,15 +831,14 @@ const CourseDetail = (): ReactElement => {
       });
 
       const completedCount = result.data?.courseChapterComplete.completedChapterCount ?? 0;
-      const accessibleCount =
-        result.data?.courseChapterComplete.accessibleChapterCount ?? 0;
+      const accessibleCount = result.data?.courseChapterComplete.accessibleChapterCount ?? 0;
 
       showSuccess(
         isSingleChapter || (accessibleCount > 0 && completedCount >= accessibleCount)
           ? isSingleChapter
             ? "محتوای دوره را با موفقیت به پایان رساندید!"
             : `فصل «${chapterTitle}» تکمیل شد. همه فصل‌های در دسترس را به پایان رساندید!`
-          : `فصل «${chapterTitle}» با موفقیت تکمیل شد.`,
+          : `فصل «${chapterTitle}» با موفقیت تکمیل شد.`
       );
       await refetchCourseDetail();
     } catch (error) {
@@ -924,13 +896,13 @@ const CourseDetail = (): ReactElement => {
         tabs={COURSE_SECTION_TABS}
       />
 
-      <Paper id="course-intro" className={`${styles.hero} ${styles.sectionScrollTarget}`} elevation={0}>
+      <Paper
+        id="course-intro"
+        className={`${styles.hero} ${styles.sectionScrollTarget}`}
+        elevation={0}
+      >
         <div className={styles.heroBackNav}>
-          <PageBackNavigation
-            label="بازگشت به دوره‌ها"
-            fallbackTo="/courses"
-            mobileOverlay
-          />
+          <PageBackNavigation label="بازگشت به دوره‌ها" fallbackTo="/courses" mobileOverlay />
         </div>
 
         <div className={styles.heroMedia}>
@@ -1154,7 +1126,9 @@ const CourseDetail = (): ReactElement => {
                       ) : null}
                     </span>
                     {chapter.description?.trim() ? (
-                      <span className={styles.chapterDescription}>{chapter.description.trim()}</span>
+                      <span className={styles.chapterDescription}>
+                        {chapter.description.trim()}
+                      </span>
                     ) : null}
                   </div>
                 ) : (
@@ -1228,7 +1202,9 @@ const CourseDetail = (): ReactElement => {
                         />
                       </span>
                       {chapter.description?.trim() ? (
-                        <span className={styles.chapterDescription}>{chapter.description.trim()}</span>
+                        <span className={styles.chapterDescription}>
+                          {chapter.description.trim()}
+                        </span>
                       ) : null}
                     </button>
                   </div>

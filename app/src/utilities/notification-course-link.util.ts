@@ -7,10 +7,7 @@ export type NotificationCourseLink = {
   readonly chapterKey?: string;
 };
 
-const buildCourseDetailHref = (
-  courseId: string,
-  chapterKey?: string,
-): string => {
+const buildCourseDetailHref = (courseId: string, chapterKey?: string): string => {
   const baseHref = APP_SHELL_ROUTES.courseDetail.replace(":courseId", courseId);
 
   if (!chapterKey) {
@@ -23,22 +20,20 @@ const buildCourseDetailHref = (
 
 export const resolveNotificationCourseLink = (
   source: string,
-  payload: Record<string, unknown> | null,
+  payload: Record<string, unknown> | null
 ): NotificationCourseLink | null => {
   if (!payload) {
     return null;
   }
 
-  const courseId =
-    typeof payload.courseId === "string" ? payload.courseId.trim() : "";
+  const courseId = typeof payload.courseId === "string" ? payload.courseId.trim() : "";
 
   if (!courseId) {
     return null;
   }
 
   if (source === "COURSE_CHAPTER") {
-    const chapterKey =
-      typeof payload.chapterKey === "string" ? payload.chapterKey.trim() : "";
+    const chapterKey = typeof payload.chapterKey === "string" ? payload.chapterKey.trim() : "";
 
     if (!chapterKey) {
       return null;

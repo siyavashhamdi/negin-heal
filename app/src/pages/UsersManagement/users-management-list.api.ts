@@ -134,7 +134,10 @@ function joinName(first?: string | null, last?: string | null): string {
 }
 
 function mapUserProfileRowToRecord(
-  row: Pick<UserListItemRow, "id" | "username" | "roles" | "status" | "profile" | "createdAt" | "updatedAt">,
+  row: Pick<
+    UserListItemRow,
+    "id" | "username" | "roles" | "status" | "profile" | "createdAt" | "updatedAt"
+  >
 ): ManagedUserRecord {
   const firstName = display(row.profile?.firstName);
   const lastName = display(row.profile?.lastName);

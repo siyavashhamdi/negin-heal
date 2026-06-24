@@ -7,7 +7,7 @@ export function isTooltipPortalTarget(target: EventTarget | null): boolean {
 
 export function isOutsideTooltipTrigger(
   target: EventTarget | null,
-  triggerElement: HTMLElement | null,
+  triggerElement: HTMLElement | null
 ): boolean {
   if (!(target instanceof Node)) {
     return true;

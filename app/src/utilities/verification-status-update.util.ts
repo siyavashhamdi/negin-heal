@@ -23,17 +23,17 @@ function parseOptionalIsoDateField(value: unknown): string | null | undefined {
 }
 
 export function parseVerificationStatusSubscriptionPayload(
-  payload: unknown,
+  payload: unknown
 ): VerificationStatusSubscriptionPayload | null {
   if (!isRecord(payload)) {
     return null;
   }
 
   const emailVerifiedAt = parseOptionalIsoDateField(
-    payload[VERIFICATION_STATUS_SUBSCRIPTION_PAYLOAD_KEYS.EMAIL_VERIFIED_AT],
+    payload[VERIFICATION_STATUS_SUBSCRIPTION_PAYLOAD_KEYS.EMAIL_VERIFIED_AT]
   );
   const mobileVerifiedAt = parseOptionalIsoDateField(
-    payload[VERIFICATION_STATUS_SUBSCRIPTION_PAYLOAD_KEYS.MOBILE_VERIFIED_AT],
+    payload[VERIFICATION_STATUS_SUBSCRIPTION_PAYLOAD_KEYS.MOBILE_VERIFIED_AT]
   );
 
   if (emailVerifiedAt === undefined || mobileVerifiedAt === undefined) {

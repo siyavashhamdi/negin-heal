@@ -31,7 +31,10 @@ export class TicketCloseMutation {
     @Args("id", { type: () => ID }) id: string,
     @Context() context: GraphQLContext,
   ): Promise<TicketListGqlResponse> {
-    return this.ticketService.closeByStaff(toObjectId(id), context.req.user!.userId);
+    return this.ticketService.closeByStaff(
+      toObjectId(id),
+      context.req.user!.userId,
+    );
   }
 
   @Mutation(() => UserTicketListGqlResponse, {
@@ -43,6 +46,9 @@ export class TicketCloseMutation {
     @Args("id", { type: () => ID }) id: string,
     @Context() context: GraphQLContext,
   ): Promise<UserTicketListGqlResponse> {
-    return this.ticketService.closeByEndUser(toObjectId(id), context.req.user!.userId);
+    return this.ticketService.closeByEndUser(
+      toObjectId(id),
+      context.req.user!.userId,
+    );
   }
 }

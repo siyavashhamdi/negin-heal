@@ -214,7 +214,9 @@ export class TicketListSummaryGqlResponse {
   @Field({ description: "Body of the most recent message" })
   lastMessageBody: string;
 
-  @Field(() => Int, { description: "Total number of attachments across messages" })
+  @Field(() => Int, {
+    description: "Total number of attachments across messages",
+  })
   attachmentCount: number;
 
   @Field({ nullable: true, description: "Date when the ticket was created" })
@@ -349,7 +351,9 @@ export class UserTicketListSummaryGqlResponse {
   @Field({ description: "Body of the most recent message" })
   lastMessageBody: string;
 
-  @Field(() => Int, { description: "Total number of attachments across messages" })
+  @Field(() => Int, {
+    description: "Total number of attachments across messages",
+  })
   attachmentCount: number;
 
   @Field({ nullable: true, description: "Date when the ticket was created" })

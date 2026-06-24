@@ -28,7 +28,7 @@ export const isLoginNavState = (value: unknown): value is LoginNavState => {
 export type ProfileLoginVerifyState = LoginNavState & { readonly verify: true };
 
 export const createProfileLoginVerifyState = (
-  identity: LoginNavState,
+  identity: LoginNavState
 ): ProfileLoginVerifyState => ({
   ...identity,
   verify: true,

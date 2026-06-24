@@ -14,7 +14,8 @@ export class CourseChapterCompleteGqlResponse {
   userCompletedAt: Date;
 
   @Field(() => Int, {
-    description: "Total chapters the learner has marked complete in this course",
+    description:
+      "Total chapters the learner has marked complete in this course",
   })
   completedChapterCount: number;
 

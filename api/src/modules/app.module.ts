@@ -134,7 +134,9 @@ const graphQLErrorLogger = new Logger("GraphQLError");
               message: formatted.code,
               code: formatted.code,
               ...(formatted.params ? { params: formatted.params } : {}),
-              ...(formatted.extensions ? { extensions: formatted.extensions } : {}),
+              ...(formatted.extensions
+                ? { extensions: formatted.extensions }
+                : {}),
             };
           },
           context: ({

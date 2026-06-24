@@ -15,7 +15,7 @@ function findScrollableAncestor(element: HTMLElement | null): HTMLElement | null
 
 export function scrollToCourseReviewBoxEnd(
   anchor: HTMLElement | null,
-  options?: { delayMs?: number },
+  options?: { delayMs?: number }
 ): void {
   if (!anchor) {
     return;

@@ -27,7 +27,10 @@ import { USER_ME_QUERY } from "../../graphql/queries/userMe.query";
 import { type UserMeResponse } from "../../hooks/useMe";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
-import { MULTILINE_TEXTAREA_MIN_ROWS, MULTILINE_TEXTAREA_MAX_ROWS } from "../../constants/multilineTextarea.constants";
+import {
+  MULTILINE_TEXTAREA_MIN_ROWS,
+  MULTILINE_TEXTAREA_MAX_ROWS,
+} from "../../constants/multilineTextarea.constants";
 import EntityModalShell from "../../shared/crud/EntityModalShell";
 import ModalFooterActions, { type ModalFooterAction } from "../../shared/crud/ModalFooterActions";
 import DateTimeValue from "../../shared/display/DateTimeValue";

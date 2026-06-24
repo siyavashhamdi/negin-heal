@@ -84,5 +84,4 @@ export class NotificationListSortOptionInput {
   @IsOptional()
   @IsEnum(SortingOrder, { message: "Sort order must be ASC or DESC" })
   isRead?: SortingOrder;
-
 }

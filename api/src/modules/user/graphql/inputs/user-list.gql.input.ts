@@ -47,7 +47,9 @@ export class UserListFilterInput {
   })
   @IsOptional()
   @IsString({ message: "Username filter must be a string" })
-  @ValidateIf((_, value) => typeof value === "string" && value.trim().length > 0)
+  @ValidateIf(
+    (_, value) => typeof value === "string" && value.trim().length > 0,
+  )
   @Matches(LATIN_USERNAME_REGEX, {
     message:
       "Username filter may only contain English letters, numbers, dots, underscores, and hyphens",
@@ -84,7 +86,9 @@ export class UserListFilterInput {
   })
   @IsOptional()
   @IsString({ message: "Email filter must be a string" })
-  @ValidateIf((_, value) => typeof value === "string" && value.trim().length > 0)
+  @ValidateIf(
+    (_, value) => typeof value === "string" && value.trim().length > 0,
+  )
   @Matches(LATIN_EMAIL_CHARSET_REGEX, {
     message:
       "Email filter may only contain English letters, numbers, and email symbols",
@@ -97,7 +101,9 @@ export class UserListFilterInput {
   })
   @IsOptional()
   @IsString({ message: "Phone number filter must be a string" })
-  @ValidateIf((_, value) => typeof value === "string" && value.trim().length > 0)
+  @ValidateIf(
+    (_, value) => typeof value === "string" && value.trim().length > 0,
+  )
   @Matches(/^[0-9+]+$/, {
     message: "Phone number filter may only contain digits and +",
   })
@@ -109,7 +115,9 @@ export class UserListFilterInput {
   })
   @IsOptional()
   @IsString({ message: "Mobile phone filter must be a string" })
-  @ValidateIf((_, value) => typeof value === "string" && value.trim().length > 0)
+  @ValidateIf(
+    (_, value) => typeof value === "string" && value.trim().length > 0,
+  )
   @Matches(/^[0-9+]+$/, {
     message: "Mobile phone filter may only contain digits and +",
   })

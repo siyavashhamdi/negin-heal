@@ -1,8 +1,5 @@
 import type { CapacitorConfig } from "@capacitor/cli";
-import {
-  PWA_BACKGROUND_COLOR,
-  PWA_THEME_COLOR,
-} from "./src/constants/pwa.constants";
+import { PWA_BACKGROUND_COLOR, PWA_THEME_COLOR } from "./src/constants/pwa.constants";
 
 const PRODUCTION_APP_URL = "https://neginheal.ir";
 

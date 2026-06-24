@@ -1,9 +1,5 @@
 import { useCallback, useMemo, useState, type ReactElement } from "react";
-import {
-  Button,
-  CircularProgress,
-  Typography,
-} from "@mui/material";
+import { Button, CircularProgress, Typography } from "@mui/material";
 import { MarkEmailUnread as MarkEmailUnreadIcon } from "@mui/icons-material";
 import { useTranslation } from "../../hooks/useTranslation";
 import { useSnackbar } from "../../hooks/useSnackbar";
@@ -40,7 +36,7 @@ export const ForgotPasswordForm = ({
   const { requestResetCode, requestingResetCode } = usePasswordReset();
   const initialValues = useMemo(
     () => sanitizeAuthIdentityInput(createForgotPasswordPrefill(initialIdentity)),
-    [initialIdentity],
+    [initialIdentity]
   );
 
   const [identity, setIdentity] = useState(initialValues);
@@ -48,14 +44,12 @@ export const ForgotPasswordForm = ({
   const [captchaValue, setCaptchaValue] = useState("");
   const [captchaValid, setCaptchaValid] = useState(false);
   const [captchaVersion, setCaptchaVersion] = useState(0);
-  const [fieldError, setFieldError] =
-    useState<SubmittedAuthIdentityValidationError | null>(null);
+  const [fieldError, setFieldError] = useState<SubmittedAuthIdentityValidationError | null>(null);
   const [captchaError, setCaptchaError] = useState(false);
 
   const trimmedIdentity = identity.trim();
   const captchaEnabled = API_CONFIG.CAPTCHA_ENABLED;
-  const canSubmit =
-    trimmedIdentity.length > 0 && (!captchaEnabled || captchaValid);
+  const canSubmit = trimmedIdentity.length > 0 && (!captchaEnabled || captchaValid);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
@@ -67,8 +61,8 @@ export const ForgotPasswordForm = ({
         t(
           resolveAuthIdentityValidationMessageKey(validation.error, {
             requiredMessageKey: "auth.login.errors.passwordResetIdentityRequired",
-          }),
-        ),
+          })
+        )
       );
       return;
     }
@@ -118,7 +112,7 @@ export const ForgotPasswordForm = ({
       setCaptchaValid(isValid);
       setCaptchaError(false);
     },
-    [],
+    []
   );
 
   return (
@@ -172,9 +166,7 @@ export const ForgotPasswordForm = ({
             )
           }
         >
-          {requestingResetCode
-            ? t("auth.login.sendingResetCode")
-            : t("auth.login.sendResetCode")}
+          {requestingResetCode ? t("auth.login.sendingResetCode") : t("auth.login.sendResetCode")}
         </Button>
       </form>
     </LoginShell>

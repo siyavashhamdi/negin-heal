@@ -62,9 +62,7 @@ function getDiscountedPrice(item: CourseListRecord): number | null {
   }
 
   const discountAmount =
-    discount.type === "PERCENTAGE"
-      ? price * (Math.min(discount.value, 100) / 100)
-      : discount.value;
+    discount.type === "PERCENTAGE" ? price * (Math.min(discount.value, 100) / 100) : discount.value;
   const discountedPrice = Math.max(0, Math.round(price - discountAmount));
 
   return discountedPrice < price ? discountedPrice : null;
@@ -319,7 +317,12 @@ const CourseCard = ({
         <div className={styles.priceFooter}>
           <div className={styles.priceBarBackdrop} aria-hidden="true">
             {coverImageUrl ? (
-              <img src={coverImageUrl} alt="" className={styles.priceBarCoverImage} loading="eager" />
+              <img
+                src={coverImageUrl}
+                alt=""
+                className={styles.priceBarCoverImage}
+                loading="eager"
+              />
             ) : (
               <span className={styles.priceBarCoverFallback} />
             )}
@@ -353,7 +356,9 @@ const CourseCard = ({
                 <span className={styles.priceContent}>
                   {discountedPrice == null ? null : (
                     <span className={styles.originalPriceRow}>
-                      {discountLabel ? <span className={styles.discountBadge}>{discountLabel}</span> : null}
+                      {discountLabel ? (
+                        <span className={styles.discountBadge}>{discountLabel}</span>
+                      ) : null}
                       <span className={styles.originalPriceText}>
                         {formatCoursePrice(item.priceIrt)}
                       </span>

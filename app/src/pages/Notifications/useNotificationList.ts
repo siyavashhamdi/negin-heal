@@ -1,13 +1,6 @@
 import { NetworkStatus } from "@apollo/client";
 import { useMutation, useQuery } from "@apollo/client/react";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type RefObject,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 
 import { USER_NOTIFICATION_LIST_QUERY } from "../../graphql/queries/userNotificationList.query";
 import { USER_NOTIFICATION_UPDATE_MUTATION } from "../../graphql/mutations/userNotificationUpdate.mutation";
@@ -65,7 +58,7 @@ export const useNotificationList = (): UseNotificationListResult => {
 
   const listVariables = useMemo(
     () => buildNotificationListQueryVariables(activeTab, NOTIFICATION_LIST_PAGE_SIZE, null),
-    [activeTab],
+    [activeTab]
   );
 
   useEffect(() => {
@@ -78,21 +71,14 @@ export const useNotificationList = (): UseNotificationListResult => {
     });
   }, [activeTab]);
 
-  const {
-    data,
-    loading,
-    error,
-    fetchMore,
-    refetch,
-    networkStatus,
-  } = useQuery<NotificationListQuery, NotificationListQueryVariables>(
-    USER_NOTIFICATION_LIST_QUERY,
-    {
-      variables: listVariables,
-      fetchPolicy: "network-only",
-      notifyOnNetworkStatusChange: true,
-    },
-  );
+  const { data, loading, error, fetchMore, refetch, networkStatus } = useQuery<
+    NotificationListQuery,
+    NotificationListQueryVariables
+  >(USER_NOTIFICATION_LIST_QUERY, {
+    variables: listVariables,
+    fetchPolicy: "network-only",
+    notifyOnNetworkStatusChange: true,
+  });
 
   const { t } = useTranslation();
   const { showError, showSuccess } = useSnackbar();
@@ -116,10 +102,7 @@ export const useNotificationList = (): UseNotificationListResult => {
       return;
     }
 
-    if (
-      networkStatus === NetworkStatus.loading ||
-      networkStatus === NetworkStatus.setVariables
-    ) {
+    if (networkStatus === NetworkStatus.loading || networkStatus === NetworkStatus.setVariables) {
       return;
     }
 
@@ -160,11 +143,9 @@ export const useNotificationList = (): UseNotificationListResult => {
             return previous;
           }
 
-          const existingIds = new Set(
-            previous.userNotificationList.items.map((item) => item.id),
-          );
+          const existingIds = new Set(previous.userNotificationList.items.map((item) => item.id));
           const newItems = fetchMoreResult.userNotificationList.items.filter(
-            (item) => !existingIds.has(item.id),
+            (item) => !existingIds.has(item.id)
           );
 
           return {
@@ -201,7 +182,7 @@ export const useNotificationList = (): UseNotificationListResult => {
           void loadNextPage();
         }
       },
-      { rootMargin: "320px 0px" },
+      { rootMargin: "320px 0px" }
     );
     observer.observe(node);
 
@@ -228,18 +209,16 @@ export const useNotificationList = (): UseNotificationListResult => {
         return;
       }
 
-      setItems((current) =>
-        mergeUpdatedNotificationRecords(current, payload.items, activeTab),
-      );
+      setItems((current) => mergeUpdatedNotificationRecords(current, payload.items, activeTab));
     },
-    [activeTab, refetch],
+    [activeTab, refetch]
   );
 
   const runUpdate = useCallback(
     async (
       notificationIds: string[],
       action: NotificationUpdateAction,
-      successMessage?: string,
+      successMessage?: string
     ): Promise<void> => {
       if (notificationIds.length === 0) {
         return;
@@ -259,35 +238,35 @@ export const useNotificationList = (): UseNotificationListResult => {
         showSuccess(successMessage);
       }
     },
-    [applyMutationResult, showSuccess, updateNotifications],
+    [applyMutationResult, showSuccess, updateNotifications]
   );
 
   const markAsRead = useCallback(
     async (id: string): Promise<void> => {
       await runUpdate([id], "SET_AS_READ");
     },
-    [runUpdate],
+    [runUpdate]
   );
 
   const markAsUnread = useCallback(
     async (id: string): Promise<void> => {
       await runUpdate([id], "SET_AS_UNREAD");
     },
-    [runUpdate],
+    [runUpdate]
   );
 
   const archive = useCallback(
     async (id: string): Promise<void> => {
       await runUpdate([id], "ARCHIVE");
     },
-    [runUpdate],
+    [runUpdate]
   );
 
   const unarchive = useCallback(
     async (id: string): Promise<void> => {
       await runUpdate([id], "UNARCHIVE");
     },
-    [runUpdate],
+    [runUpdate]
   );
 
   const actionableUnreadIds = useMemo(
@@ -295,14 +274,14 @@ export const useNotificationList = (): UseNotificationListResult => {
       items
         .filter((item) => item.isActionable && !item.isRead && !item.archivedAt)
         .map((item) => item.id),
-    [items],
+    [items]
   );
 
   const markAllLoadedAsRead = useCallback(async (): Promise<void> => {
     await runUpdate(
       actionableUnreadIds,
       "SET_AS_READ",
-      t("pages.notifications.markAllReadSuccess"),
+      t("pages.notifications.markAllReadSuccess")
     );
   }, [actionableUnreadIds, runUpdate, t]);
 

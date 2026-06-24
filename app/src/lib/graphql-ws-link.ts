@@ -45,18 +45,18 @@ export class GraphqlWsLink extends ApolloLink {
             if (likeClose || isLikeErrorEvent(err)) {
               return observer.error(
                 new Error(
-                  `Socket closed${likeClose ? ` with event ${err.code}` : ""}${likeClose ? ` ${err.reason}` : ""}`,
-                ),
+                  `Socket closed${likeClose ? ` with event ${err.code}` : ""}${likeClose ? ` ${err.reason}` : ""}`
+                )
               );
             }
 
             return observer.error(
               new CombinedGraphQLErrors({
                 errors: Array.isArray(err) ? err : [err],
-              }),
+              })
             );
           },
-        },
+        }
       );
     });
   }

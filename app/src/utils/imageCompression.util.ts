@@ -20,12 +20,7 @@ const SKIP_MIME_TYPES = new Set([
   "image/vnd.microsoft.icon",
 ]);
 
-const LOSSY_IMAGE_MIME_TYPES = new Set([
-  "image/jpeg",
-  "image/jpg",
-  "image/webp",
-  "image/avif",
-]);
+const LOSSY_IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/jpg", "image/webp", "image/avif"]);
 
 const COMPRESSIBLE_IMAGE_EXTENSION = /\.(jpe?g|png|webp|bmp|avif)$/i;
 
@@ -127,10 +122,7 @@ export async function compressImageForUpload(file: File): Promise<File> {
   const mimeType = resolveMimeType(file);
 
   try {
-    const compressedFile = await imageCompression(
-      file,
-      buildCompressionOptions(mimeType),
-    );
+    const compressedFile = await imageCompression(file, buildCompressionOptions(mimeType));
 
     if (compressedFile.size >= file.size) {
       return file;

@@ -1,10 +1,7 @@
 import { useCallback, type ReactElement } from "react";
 
 import SegmentFilterTabs from "../../shared/tabs/SegmentFilterTabs";
-import {
-  COURSE_FORM_SECTION_TABS,
-  type CourseSectionTab,
-} from "./course-section-tabs.shared";
+import { COURSE_FORM_SECTION_TABS, type CourseSectionTab } from "./course-section-tabs.shared";
 
 type CourseFormSectionTabsProps = {
   readonly activeTab: CourseSectionTab;
@@ -19,7 +16,7 @@ const CourseFormSectionTabs = ({
     (tab: CourseSectionTab): void => {
       onChange(tab);
     },
-    [onChange],
+    [onChange]
   );
 
   return (

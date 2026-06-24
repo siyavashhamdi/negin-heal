@@ -4,10 +4,7 @@ import { FilterQuery, Model, PipelineStage, Types } from "mongoose";
 
 import { PAGINATION_CONSTANT } from "../../constants";
 import { EXCEPTION_CONSTANT } from "../../constants/exception.constant";
-import {
-  Notification,
-  NotificationDocument,
-} from "../../database/schemas";
+import { Notification, NotificationDocument } from "../../database/schemas";
 import {
   BadgeCountTriggerAction,
   BadgeCountTriggerSource,
@@ -178,7 +175,9 @@ export class NotificationService {
       .exec();
 
     if (matchingNotifications.length !== notificationIds.length) {
-      throw new ForbiddenException(EXCEPTION_CONSTANT.NOTIFICATION_OWNERSHIP_REQUIRED);
+      throw new ForbiddenException(
+        EXCEPTION_CONSTANT.NOTIFICATION_OWNERSHIP_REQUIRED,
+      );
     }
 
     const updateResult = await this.notificationModel
@@ -217,7 +216,9 @@ export class NotificationService {
         .map((id) => updatedNotificationById.get(id))
         .filter(Boolean)
         .map((notification) =>
-          this.toNotificationListResponse(notification as NotificationListRecord),
+          this.toNotificationListResponse(
+            notification as NotificationListRecord,
+          ),
         ),
     };
   }
@@ -542,9 +543,7 @@ export class NotificationService {
     };
   }
 
-  private hasCustomListSort(
-    sort?: NotificationListSortOptionInput,
-  ): boolean {
+  private hasCustomListSort(sort?: NotificationListSortOptionInput): boolean {
     if (!sort) {
       return false;
     }
@@ -590,8 +589,9 @@ export class NotificationService {
 
     const statusOrder = this.computeStatusOrder(cursorNotification);
     const createdAt = cursorNotification.audit?.createdAt ?? null;
-    const conditions: Array<FilterQuery<Notification & { statusOrder: number }>> =
-      [{ statusOrder: { $gt: statusOrder } }];
+    const conditions: Array<
+      FilterQuery<Notification & { statusOrder: number }>
+    > = [{ statusOrder: { $gt: statusOrder } }];
 
     if (createdAt == null) {
       conditions.push({

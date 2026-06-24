@@ -132,15 +132,21 @@ export class CourseReviewService {
     }
 
     if (!course.isActive && !isStaff) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.COURSE_NOT_AVAILABLE_FOR_REVIEW);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.COURSE_NOT_AVAILABLE_FOR_REVIEW,
+      );
     }
 
     if (!isStaff && course.isReviewsSectionVisible === false) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.COURSE_REVIEWS_SECTION_DISABLED);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.COURSE_REVIEWS_SECTION_DISABLED,
+      );
     }
 
     if (!isStaff && course.isReviewSubmissionEnabled === false) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.COURSE_REVIEW_SUBMISSION_DISABLED);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.COURSE_REVIEW_SUBMISSION_DISABLED,
+      );
     }
 
     const needsStaffActor =
@@ -170,7 +176,9 @@ export class CourseReviewService {
       (!isStaff || isStaffSupportSubmit) && !courseIsFree;
 
     if (!userCourse && requiresPaidEnrollment) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.COURSE_REVIEW_PAID_ENROLLMENT_REQUIRED);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.COURSE_REVIEW_PAID_ENROLLMENT_REQUIRED,
+      );
     }
 
     if (needsStaffActor && !actorUser) {
@@ -178,14 +186,18 @@ export class CourseReviewService {
     }
 
     if (userCourse && !this.isSameObjectId(userCourse.userId, targetUserId)) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.COURSE_REVIEW_ENROLLMENT_USER_MISMATCH);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.COURSE_REVIEW_ENROLLMENT_USER_MISMATCH,
+      );
     }
 
     if (
       userCourse &&
       !this.isSameObjectId(userCourse.courseId, input.courseId)
     ) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.COURSE_REVIEW_ENROLLMENT_MISMATCH);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.COURSE_REVIEW_ENROLLMENT_MISMATCH,
+      );
     }
 
     const now = new Date();
@@ -194,7 +206,9 @@ export class CourseReviewService {
     const hasCommentInput = Boolean(normalizedComment);
 
     if (!hasStarInput && !hasCommentInput) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.COURSE_REVIEW_INPUT_REQUIRED);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.COURSE_REVIEW_INPUT_REQUIRED,
+      );
     }
 
     let review = await this.resolveExistingReviewForSubmit(
@@ -448,7 +462,9 @@ export class CourseReviewService {
       }
       case CourseReviewModerationTarget.RATING: {
         if (!review.rating) {
-          throw new BadRequestException(EXCEPTION_CONSTANT.COURSE_REVIEW_NO_RATING);
+          throw new BadRequestException(
+            EXCEPTION_CONSTANT.COURSE_REVIEW_NO_RATING,
+          );
         }
 
         review.rating.moderation = this.buildModerationVisibility(
@@ -463,14 +479,18 @@ export class CourseReviewService {
       case CourseReviewModerationTarget.MESSAGE: {
         const messageKey = input.messageKey?.trim();
         if (!messageKey) {
-          throw new BadRequestException(EXCEPTION_CONSTANT.COURSE_REVIEW_MESSAGE_KEY_REQUIRED);
+          throw new BadRequestException(
+            EXCEPTION_CONSTANT.COURSE_REVIEW_MESSAGE_KEY_REQUIRED,
+          );
         }
 
         const message = (review.messages ?? []).find(
           (item) => item.key === messageKey,
         );
         if (!message) {
-          throw new NotFoundException(EXCEPTION_CONSTANT.COURSE_REVIEW_MESSAGE_NOT_FOUND);
+          throw new NotFoundException(
+            EXCEPTION_CONSTANT.COURSE_REVIEW_MESSAGE_NOT_FOUND,
+          );
         }
 
         message.moderation = this.buildModerationVisibility(
@@ -483,7 +503,9 @@ export class CourseReviewService {
         break;
       }
       default:
-        throw new BadRequestException(EXCEPTION_CONSTANT.MODERATION_TARGET_UNSUPPORTED);
+        throw new BadRequestException(
+          EXCEPTION_CONSTANT.MODERATION_TARGET_UNSUPPORTED,
+        );
     }
 
     await review.save();
@@ -1434,7 +1456,9 @@ export class CourseReviewService {
   ): Types.ObjectId {
     if (requestedUserId) {
       if (!isStaff) {
-        throw new ForbiddenException(EXCEPTION_CONSTANT.STAFF_ONLY_CROSS_USER_REVIEW);
+        throw new ForbiddenException(
+          EXCEPTION_CONSTANT.STAFF_ONLY_CROSS_USER_REVIEW,
+        );
       }
 
       return requestedUserId;
@@ -1582,7 +1606,9 @@ export class CourseReviewService {
     }
 
     if (visibility === CourseReviewVisibility.HIDDEN) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.SUPPORT_REPLY_VISIBILITY_INVALID);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.SUPPORT_REPLY_VISIBILITY_INVALID,
+      );
     }
 
     return CourseReviewVisibility.PRIVATE;
@@ -1647,7 +1673,9 @@ export class CourseReviewService {
       !this.isSameObjectId(review.userId, userId) ||
       !this.isSameObjectId(review.courseId, courseId)
     ) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.COURSE_REVIEW_ENROLLMENT_LINKED);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.COURSE_REVIEW_ENROLLMENT_LINKED,
+      );
     }
 
     if (
@@ -1676,7 +1704,9 @@ export class CourseReviewService {
       .exec();
 
     if (conflictingReview) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.COURSE_REVIEW_ALREADY_EXISTS);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.COURSE_REVIEW_ALREADY_EXISTS,
+      );
     }
   }
 

@@ -21,7 +21,12 @@ import {
   UserSignupGqlInput,
   UserVerifyLoginCodeGqlResponse,
 } from "./graphql";
-import { AppSettingValueType, GeneralSubscriptionUpdateType, UserRole, UserStatus } from "../../enums";
+import {
+  AppSettingValueType,
+  GeneralSubscriptionUpdateType,
+  UserRole,
+  UserStatus,
+} from "../../enums";
 import { SessionService } from "../auth/session.service";
 import { SessionClientContext } from "../../database/schemas/session-client-context.schema";
 import { EmailService } from "../email";
@@ -297,16 +302,13 @@ export class UserService {
       },
     );
 
-    this.dispatchOutboundEmail(
-      async () => {
-        await this.emailService.sendPasswordResetEmail({
-          to: recipientEmail,
-          resetCode,
-          expiresInMinutes: resetCodeTtlMinutes,
-        });
-      },
-      `password-reset:${recipientEmail}`,
-    );
+    this.dispatchOutboundEmail(async () => {
+      await this.emailService.sendPasswordResetEmail({
+        to: recipientEmail,
+        resetCode,
+        expiresInMinutes: resetCodeTtlMinutes,
+      });
+    }, `password-reset:${recipientEmail}`);
 
     if (process.env.NODE_ENV !== "production") {
       console.log(
@@ -320,7 +322,9 @@ export class UserService {
   async activateAccount(token: string): Promise<UserPasswordResetGqlResponse> {
     const normalizedToken = this.normalizeOptionalText(token);
     if (!normalizedToken) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.INVALID_ACCOUNT_ACTIVATION_TOKEN);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.INVALID_ACCOUNT_ACTIVATION_TOKEN,
+      );
     }
 
     const tokenHash = this.hashAccountActivationToken(normalizedToken);
@@ -339,7 +343,9 @@ export class UserService {
       .exec();
 
     if (!user?.authentication.accountActivationToken?.createdAt) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.INVALID_ACCOUNT_ACTIVATION_TOKEN);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.INVALID_ACCOUNT_ACTIVATION_TOKEN,
+      );
     }
 
     if (this.isEmailVerified(user)) {
@@ -352,7 +358,9 @@ export class UserService {
     const tokenCreatedAt = user.authentication.accountActivationToken.createdAt;
     if (tokenCreatedAt < oldestValidCreatedAt) {
       await this.clearAccountActivationToken(user._id);
-      throw new BadRequestException(EXCEPTION_CONSTANT.INVALID_ACCOUNT_ACTIVATION_TOKEN);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.INVALID_ACCOUNT_ACTIVATION_TOKEN,
+      );
     }
 
     const verifiedAt = new Date();
@@ -409,22 +417,18 @@ export class UserService {
     const userFirstName =
       this.normalizeOptionalText(user.profile?.firstName) || "کاربر عزیز";
 
-    const verificationToken =
-      await this.issueAccountActivationToken(userId, {
-        markVerificationEmailSent: true,
-      });
+    const verificationToken = await this.issueAccountActivationToken(userId, {
+      markVerificationEmailSent: true,
+    });
     const verificationUrl = `${this.resolveAppBaseUrl()}/activate?token=${encodeURIComponent(verificationToken)}`;
 
-    this.dispatchOutboundEmail(
-      async () => {
-        await this.emailService.sendVerifyEmail({
-          to: recipientEmail,
-          userFirstName,
-          verificationUrl,
-        });
-      },
-      `verify-email:${recipientEmail}`,
-    );
+    this.dispatchOutboundEmail(async () => {
+      await this.emailService.sendVerifyEmail({
+        to: recipientEmail,
+        userFirstName,
+        verificationUrl,
+      });
+    }, `verify-email:${recipientEmail}`);
 
     if (process.env.NODE_ENV !== "production") {
       console.log(`[auth] Verification email requested for ${recipientEmail}`);
@@ -526,7 +530,9 @@ export class UserService {
 
     const resetCode = otp.trim();
     if (!/^\d{6}$/.test(resetCode)) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.INVALID_PASSWORD_RESET_TOKEN);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.INVALID_PASSWORD_RESET_TOKEN,
+      );
     }
 
     const resetCodeTtlMinutes = await this.getPasswordResetTokenTtlMinutes();
@@ -544,19 +550,25 @@ export class UserService {
     });
 
     if (!tokenOwner?.authentication.passwordResetToken?.hash) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.INVALID_PASSWORD_RESET_TOKEN);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.INVALID_PASSWORD_RESET_TOKEN,
+      );
     }
 
     const resetTokenCreatedAt =
       tokenOwner.authentication.passwordResetToken?.createdAt;
     if (!resetTokenCreatedAt || resetTokenCreatedAt < oldestValidCreatedAt) {
       await this.clearPasswordResetToken(tokenOwner._id);
-      throw new BadRequestException(EXCEPTION_CONSTANT.EXPIRED_PASSWORD_RESET_TOKEN);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.EXPIRED_PASSWORD_RESET_TOKEN,
+      );
     }
 
     if (tokenOwner.authentication.passwordResetToken.hash !== resetCodeHash) {
       await this.incrementPasswordResetOtpAttempts(tokenOwner._id);
-      throw new BadRequestException(EXCEPTION_CONSTANT.INVALID_PASSWORD_RESET_TOKEN);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.INVALID_PASSWORD_RESET_TOKEN,
+      );
     }
 
     const passwordSalt = await bcrypt.genSalt(this.SALT_ROUNDS);
@@ -586,7 +598,9 @@ export class UserService {
     );
 
     if (!user) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.INVALID_PASSWORD_RESET_TOKEN);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.INVALID_PASSWORD_RESET_TOKEN,
+      );
     }
 
     await this.sessionService.revokeAllUserSessions(user._id);
@@ -667,12 +681,16 @@ export class UserService {
     const signupCode = input.signupCode?.trim();
 
     if (!password && !signupCode) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.SIGNUP_CREDENTIAL_REQUIRED);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.SIGNUP_CREDENTIAL_REQUIRED,
+      );
     }
 
     if (signupCode) {
       if (!mobile) {
-        throw new BadRequestException(EXCEPTION_CONSTANT.SIGNUP_CREDENTIAL_REQUIRED);
+        throw new BadRequestException(
+          EXCEPTION_CONSTANT.SIGNUP_CREDENTIAL_REQUIRED,
+        );
       }
 
       this.verifyPendingSignupCode(mobile, signupCode);
@@ -939,7 +957,7 @@ export class UserService {
     });
 
     if (duplicateExists) {
-      throw new ConflictException(DUPLICATE_IDENTITY_KEY_BY_FIELD.username );
+      throw new ConflictException(DUPLICATE_IDENTITY_KEY_BY_FIELD.username);
     }
   }
 
@@ -954,7 +972,7 @@ export class UserService {
     });
 
     if (duplicateExists) {
-      throw new ConflictException(DUPLICATE_IDENTITY_KEY_BY_FIELD.email );
+      throw new ConflictException(DUPLICATE_IDENTITY_KEY_BY_FIELD.email);
     }
   }
 
@@ -973,7 +991,7 @@ export class UserService {
     });
 
     if (duplicateExists) {
-      throw new ConflictException(DUPLICATE_IDENTITY_KEY_BY_FIELD.mobile );
+      throw new ConflictException(DUPLICATE_IDENTITY_KEY_BY_FIELD.mobile);
     }
   }
 
@@ -984,8 +1002,8 @@ export class UserService {
   }): Promise<void> {
     const hasAnyIdentity = Boolean(
       identity.username?.trim() ||
-        identity.email?.trim() ||
-        identity.mobile?.trim(),
+      identity.email?.trim() ||
+      identity.mobile?.trim(),
     );
 
     if (!hasAnyIdentity) {
@@ -1120,24 +1138,28 @@ export class UserService {
       firstName?: string;
     },
   ): void {
-    this.dispatchOutboundEmail(async () => {
-      const recipientEmail = this.normalizeOptionalText(profile.email);
-      if (!recipientEmail || !this.looksLikeEmail(recipientEmail)) {
-        return;
-      }
+    this.dispatchOutboundEmail(
+      async () => {
+        const recipientEmail = this.normalizeOptionalText(profile.email);
+        if (!recipientEmail || !this.looksLikeEmail(recipientEmail)) {
+          return;
+        }
 
-      const userFirstName =
-        this.normalizeOptionalText(profile.firstName) || "کاربر عزیز";
+        const userFirstName =
+          this.normalizeOptionalText(profile.firstName) || "کاربر عزیز";
 
-      const verificationToken = await this.issueAccountActivationToken(userId);
-      const activationUrl = `${this.resolveAppBaseUrl()}/activate?token=${encodeURIComponent(verificationToken)}`;
+        const verificationToken =
+          await this.issueAccountActivationToken(userId);
+        const activationUrl = `${this.resolveAppBaseUrl()}/activate?token=${encodeURIComponent(verificationToken)}`;
 
-      await this.emailService.sendWelcomeEmail({
-        to: recipientEmail,
-        userFirstName,
-        activationUrl,
-      });
-    }, `welcome:${profile.email ?? userId.toString()}`);
+        await this.emailService.sendWelcomeEmail({
+          to: recipientEmail,
+          userFirstName,
+          activationUrl,
+        });
+      },
+      `welcome:${profile.email ?? userId.toString()}`,
+    );
   }
 
   private async issueAccountActivationToken(
@@ -1209,7 +1231,9 @@ export class UserService {
 
     if (!pendingCode || pendingCode.expiresAt.getTime() < Date.now()) {
       this.signupCodesByMobile.delete(mobile);
-      throw new BadRequestException(EXCEPTION_CONSTANT.INVALID_SIGNUP_VERIFICATION_CODE);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.INVALID_SIGNUP_VERIFICATION_CODE,
+      );
     }
 
     if (pendingCode.code !== signupCode) {
@@ -1217,7 +1241,9 @@ export class UserService {
       if (pendingCode.attempts >= this.MAX_SIGNUP_CODE_ATTEMPTS) {
         this.signupCodesByMobile.delete(mobile);
       }
-      throw new BadRequestException(EXCEPTION_CONSTANT.INVALID_SIGNUP_VERIFICATION_CODE);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.INVALID_SIGNUP_VERIFICATION_CODE,
+      );
     }
   }
 
@@ -1393,7 +1419,10 @@ export class UserService {
       this.rethrowIfDuplicateIdentityKey(error);
     }
 
-    this.dispatchWelcomeEmailIfPossible(createdUser._id, createdUser.profile ?? {});
+    this.dispatchWelcomeEmailIfPossible(
+      createdUser._id,
+      createdUser.profile ?? {},
+    );
 
     return this.toUserMutationResponse(
       createdUser.toObject() as UserListRecord,
@@ -1783,11 +1812,7 @@ export class UserService {
       await this.applyUserProfileUpdate(input.profile, set, unset);
       Object.assign(
         verificationReset,
-        this.applyVerificationResetOnContactChange(
-          input,
-          existingUser,
-          unset,
-        ),
+        this.applyVerificationResetOnContactChange(input, existingUser, unset),
       );
     }
 
@@ -2078,7 +2103,10 @@ export class UserService {
   ): string {
     const normalizedValue = this.normalizeOptionalText(value);
     if (!normalizedValue) {
-      throw new BadRequestException({ key: EXCEPTION_CONSTANT.VALIDATION_FAILED, params: { fieldName } });
+      throw new BadRequestException({
+        key: EXCEPTION_CONSTANT.VALIDATION_FAILED,
+        params: { fieldName },
+      });
     }
 
     return normalizedValue;

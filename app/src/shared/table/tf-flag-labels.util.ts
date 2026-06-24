@@ -51,10 +51,7 @@ export function parseTfFlag(raw: string | null | undefined): boolean | null {
   return null;
 }
 
-function resolveVariant(
-  variant?: TfLabelVariant,
-  fieldName?: string
-): TfLabelVariant {
+function resolveVariant(variant?: TfLabelVariant, fieldName?: string): TfLabelVariant {
   if (variant != null) {
     return variant;
   }

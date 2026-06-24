@@ -174,7 +174,9 @@ async function seedNotifications(): Promise<void> {
 
   if (users.length === 0) {
     console.log("No users found. Skipping notification seed.");
-    console.log(`Removed ${removed.deletedCount} previous ${SEED_TAG} notifications.`);
+    console.log(
+      `Removed ${removed.deletedCount} previous ${SEED_TAG} notifications.`,
+    );
     return;
   }
 
@@ -188,7 +190,9 @@ async function seedNotifications(): Promise<void> {
   console.log(
     `Seeded ${result.insertedCount} notifications for ${users.length} users (${countPerUser} per user).`,
   );
-  console.log(`Removed ${removed.deletedCount} previous ${SEED_TAG} notifications.`);
+  console.log(
+    `Removed ${removed.deletedCount} previous ${SEED_TAG} notifications.`,
+  );
 }
 
 seedNotifications()

@@ -12,7 +12,7 @@ export function getFieldUploadPercent(entry: UploadProgressEntry | undefined): n
 }
 
 export function calculateBatchUploadPercent(
-  entries: Readonly<Record<string, UploadProgressEntry>>,
+  entries: Readonly<Record<string, UploadProgressEntry>>
 ): number {
   let loaded = 0;
   let total = 0;

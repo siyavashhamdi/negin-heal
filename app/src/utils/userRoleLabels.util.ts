@@ -10,7 +10,9 @@ export function getUserRoleLabel(role: string): string {
 }
 
 /** Elevated roles are shown on profile; end-users see no role badge. */
-export function getProfileDisplayRoles(roles: readonly string[] | undefined | null): readonly string[] {
+export function getProfileDisplayRoles(
+  roles: readonly string[] | undefined | null
+): readonly string[] {
   if (!roles?.length) {
     return [];
   }

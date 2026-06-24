@@ -56,10 +56,7 @@ export function resolveFileUploadPolicy(
   policyHeader: string | undefined,
 ): FileUploadPolicyRule {
   const normalizedPolicy = policyHeader?.trim().toUpperCase();
-  if (
-    normalizedPolicy &&
-    normalizedPolicy in FILE_UPLOAD_POLICIES
-  ) {
+  if (normalizedPolicy && normalizedPolicy in FILE_UPLOAD_POLICIES) {
     return FILE_UPLOAD_POLICIES[normalizedPolicy as FileUploadPolicyId];
   }
 

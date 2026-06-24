@@ -1,4 +1,13 @@
-import { Avatar, Badge, Box, Button, Divider, IconButton, Popover, Typography } from "@mui/material";
+import {
+  Avatar,
+  Badge,
+  Box,
+  Button,
+  Divider,
+  IconButton,
+  Popover,
+  Typography,
+} from "@mui/material";
 import {
   HelpOutlineRounded as HelpIcon,
   LogoutRounded as LogoutIcon,
@@ -9,7 +18,11 @@ import { useMemo, useState, type ReactElement, type ReactNode } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useMe } from "../../hooks/useMe";
-import { resolveAvatarInitial, resolveMeUserDisplayName, resolveStoredUserDisplayName } from "../../utils/storedUser.util";
+import {
+  resolveAvatarInitial,
+  resolveMeUserDisplayName,
+  resolveStoredUserDisplayName,
+} from "../../utils/storedUser.util";
 import { useTranslation } from "../../hooks/useTranslation";
 import ThemeToggle from "../ThemeToggle";
 import { AvatarInitial } from "../../shared/display/AvatarInitial";

@@ -52,25 +52,26 @@ const CourseReviewsAdminSection = ({
 
   const ownAdminReview = useMemo(
     () => findOwnAdminCourseReview(reviewList.items, user?.id),
-    [reviewList.items, user?.id],
+    [reviewList.items, user?.id]
   );
   const ownReview = useMemo(
     () =>
       ownAdminReview && user?.id
         ? mapAdminCourseReviewToEndUserRecord(ownAdminReview, user.id)
         : null,
-    [ownAdminReview, user?.id],
+    [ownAdminReview, user?.id]
   );
   const otherAdminReviews = useMemo(
     () => reviewList.items.filter((review) => review.userId !== user?.id),
-    [reviewList.items, user?.id],
+    [reviewList.items, user?.id]
   );
   const showOwnStaffBox = canSubmitOwnReview || Boolean(ownReview);
 
   const summaryStats = reviewList.ratingSummary;
 
   const hasLoadedItems = otherAdminReviews.length > 0;
-  const showEmptyState = !reviewList.loading && !reviewList.error && !hasLoadedItems && !showOwnStaffBox;
+  const showEmptyState =
+    !reviewList.loading && !reviewList.error && !hasLoadedItems && !showOwnStaffBox;
   const showReviewsScroll =
     showOwnStaffBox ||
     reviewList.loading ||
@@ -90,10 +91,7 @@ const CourseReviewsAdminSection = ({
   return (
     <div className={styles.listShell}>
       <div className={styles.listFixed}>
-        <CourseReviewSummary
-          stats={summaryStats}
-          isPartialSample={false}
-        />
+        <CourseReviewSummary stats={summaryStats} isPartialSample={false} />
 
         <CourseReviewStarFilters
           activeStars={starsFilter}

@@ -295,7 +295,7 @@ const AuthenticatedProfile = (): ReactElement => {
         showSuccess("ایمیل شما با موفقیت تأیید شد.");
       }
     },
-    [showSuccess],
+    [showSuccess]
   );
 
   useEffect(() => {
@@ -518,8 +518,8 @@ const AuthenticatedProfile = (): ReactElement => {
       showSuccess(
         resolveSuccessMessage(
           result.data.userRequestEmailVerification.message,
-          "success.VERIFICATION_EMAIL_SENT",
-        ),
+          "success.VERIFICATION_EMAIL_SENT"
+        )
       );
     }
   };
@@ -914,13 +914,13 @@ const AuthenticatedProfile = (): ReactElement => {
               FormHelperTextProps={
                 hasProfileEmail
                   ? {
-                    sx: {
-                      color: isEmailVerified ? "success.main" : "warning.main",
-                      display: "flex",
-                      alignItems: "center",
-                      lineHeight: 1,
-                    },
-                  }
+                      sx: {
+                        color: isEmailVerified ? "success.main" : "warning.main",
+                        display: "flex",
+                        alignItems: "center",
+                        lineHeight: 1,
+                      },
+                    }
                   : undefined
               }
               InputProps={{

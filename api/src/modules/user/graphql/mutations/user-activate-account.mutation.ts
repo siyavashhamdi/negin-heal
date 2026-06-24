@@ -14,7 +14,8 @@ export class UserActivateAccountMutation {
 
   @Mutation(() => UserPasswordResetGqlResponse, {
     name: "userActivateAccount",
-    description: "Activate a newly created account using the emailed activation link",
+    description:
+      "Activate a newly created account using the emailed activation link",
   })
   @UseGuards(RateLimitGuard)
   @RateLimit({ ttl: 60, limit: 10 })

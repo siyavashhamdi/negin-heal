@@ -131,9 +131,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
   }, []);
 
   const redirectToLoginAfterLogout = useCallback((): void => {
-    navigate(
-      isMobileAppLayoutViewport() ? APP_SHELL_ROUTES.profileLogin : APP_SHELL_ROUTES.login,
-    );
+    navigate(isMobileAppLayoutViewport() ? APP_SHELL_ROUTES.profileLogin : APP_SHELL_ROUTES.login);
   }, [navigate]);
 
   const forceLogoutToProfile = useCallback((): void => {

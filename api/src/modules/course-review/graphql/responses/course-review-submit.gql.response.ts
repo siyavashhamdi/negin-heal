@@ -1,4 +1,10 @@
-import { Field, GraphQLISODateTime, ID, Int, ObjectType } from "@nestjs/graphql";
+import {
+  Field,
+  GraphQLISODateTime,
+  ID,
+  Int,
+  ObjectType,
+} from "@nestjs/graphql";
 import { Types } from "mongoose";
 
 import { UserMinimalGqlResponse } from "../../../user/graphql/responses/common";

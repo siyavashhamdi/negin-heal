@@ -13,11 +13,11 @@ function formatRemValue(value: number): string {
 function totalRemWidth(
   columnIds: readonly string[],
   widthById: Record<string, string>,
-  fallbackRem = 10,
+  fallbackRem = 10
 ): number {
   return columnIds.reduce(
     (sum, id) => sum + parseRemValue(widthById[id] ?? formatRemValue(fallbackRem)),
-    0,
+    0
   );
 }
 
@@ -35,7 +35,7 @@ export function columnWidthPercent(
   columnId: string,
   allColumnIds: readonly string[],
   widthById: Record<string, string>,
-  fallbackRem = 10,
+  fallbackRem = 10
 ): string {
   const total = totalRemWidth(allColumnIds, widthById, fallbackRem);
   if (total <= 0) {
@@ -50,7 +50,7 @@ export function sumColumnWidthPercents(
   columnIds: readonly string[],
   allColumnIds: readonly string[],
   widthById: Record<string, string>,
-  fallbackRem = 10,
+  fallbackRem = 10
 ): string {
   const totalAll = totalRemWidth(allColumnIds, widthById, fallbackRem);
   if (totalAll <= 0) {

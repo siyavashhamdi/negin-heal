@@ -112,10 +112,7 @@ export function buildChapterReleaseRetryClaimFilter(
     "chapterReleaseNotifications.chapters": {
       $elemMatch: {
         key: chapterKey,
-        $or: [
-          { notificationId: { $exists: false } },
-          { notificationId: null },
-        ],
+        $or: [{ notificationId: { $exists: false } }, { notificationId: null }],
       },
     },
   };

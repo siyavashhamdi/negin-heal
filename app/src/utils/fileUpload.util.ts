@@ -1,8 +1,6 @@
 import { LOCAL_STORAGE_KEYS } from "../constants";
 import type { FileUploadPolicyId } from "../constants/fileUploadPolicies";
-import {
-  FILE_UPLOAD_POLICY_MAX_SIZE_BYTES,
-} from "../constants/fileUploadPolicies";
+import { FILE_UPLOAD_POLICY_MAX_SIZE_BYTES } from "../constants/fileUploadPolicies";
 import { resolveErrorMessageFromCode } from "../utilities/graphql-error.util";
 import type { FileAccessUrl } from "./fileAccessUrl.util";
 import { compressImageForUpload } from "./imageCompression.util";
@@ -68,13 +66,15 @@ function resolveUploadErrorMessage(body: unknown, fallbackCode: string): string 
     return resolveErrorMessageFromCode(fallbackCode);
   }
 
-  const error = (body as {
-    error?: {
-      code?: string;
-      params?: Record<string, unknown>;
-      message?: string | string[];
-    };
-  }).error;
+  const error = (
+    body as {
+      error?: {
+        code?: string;
+        params?: Record<string, unknown>;
+        message?: string | string[];
+      };
+    }
+  ).error;
   if (error?.code?.trim()) {
     return resolveErrorMessageFromCode(error.code, error.params);
   }
@@ -84,17 +84,15 @@ function resolveUploadErrorMessage(body: unknown, fallbackCode: string): string 
 
 export async function uploadFile(
   file: File,
-  options?: FileUploadOptions,
+  options?: FileUploadOptions
 ): Promise<FileUploadResult> {
-  const token =
-    options?.accessToken ?? localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+  const token = options?.accessToken ?? localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
   if (!token) {
     throw new FileUploadError(resolveErrorMessageFromCode("UNAUTHENTICATED"), 401);
   }
 
   const uploadPolicy = options?.policy ?? "ANY";
-  const maxSizeBytes =
-    options?.maxSizeBytes ?? FILE_UPLOAD_POLICY_MAX_SIZE_BYTES[uploadPolicy];
+  const maxSizeBytes = options?.maxSizeBytes ?? FILE_UPLOAD_POLICY_MAX_SIZE_BYTES[uploadPolicy];
 
   const validation = validateSelectedUploadFile(file, {
     accept: options?.accept ?? "*/*",
@@ -103,7 +101,10 @@ export async function uploadFile(
   });
   if (!validation.valid) {
     throw new FileUploadError(
-      getUploadValidationErrorMessage(validation, resolveErrorMessageFromCode("INTERNAL_SERVER_ERROR")),
+      getUploadValidationErrorMessage(
+        validation,
+        resolveErrorMessageFromCode("INTERNAL_SERVER_ERROR")
+      )
     );
   }
 
@@ -125,10 +126,7 @@ export async function uploadFile(
     const xhr = new XMLHttpRequest();
     xhr.open("PUT", FILE_UPLOAD_PATH);
     xhr.setRequestHeader("Authorization", `Bearer ${token}`);
-    xhr.setRequestHeader(
-      "Content-Type",
-      uploadFilePayload.type || "application/octet-stream",
-    );
+    xhr.setRequestHeader("Content-Type", uploadFilePayload.type || "application/octet-stream");
     xhr.setRequestHeader("X-File-Name", encodeURIComponent(uploadFilePayload.name));
     xhr.setRequestHeader("X-Upload-Policy", uploadPolicy);
 
@@ -161,7 +159,7 @@ export async function uploadFile(
           resolve(JSON.parse(xhr.responseText) as FileUploadResult);
         } catch {
           reject(
-            new FileUploadError(resolveErrorMessageFromCode("INTERNAL_SERVER_ERROR"), xhr.status),
+            new FileUploadError(resolveErrorMessageFromCode("INTERNAL_SERVER_ERROR"), xhr.status)
           );
         }
         return;

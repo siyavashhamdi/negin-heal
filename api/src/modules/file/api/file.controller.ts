@@ -44,14 +44,18 @@ export class FileController {
 
     const trimmedFileName = encodedFileName?.trim();
     if (!trimmedFileName) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.FILE_NAME_HEADER_REQUIRED);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.FILE_NAME_HEADER_REQUIRED,
+      );
     }
 
     let name: string;
     try {
       name = decodeURIComponent(trimmedFileName);
     } catch {
-      throw new BadRequestException(EXCEPTION_CONSTANT.FILE_NAME_HEADER_INVALID);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.FILE_NAME_HEADER_INVALID,
+      );
     }
 
     if (!name.trim()) {
@@ -93,7 +97,9 @@ export class FileController {
     @Res() response: Response,
   ): Promise<void> {
     if (!token || !this.fileService.verifyAccessToken(id, token)) {
-      throw new UnauthorizedException(EXCEPTION_CONSTANT.FILE_ACCESS_TOKEN_INVALID);
+      throw new UnauthorizedException(
+        EXCEPTION_CONSTANT.FILE_ACCESS_TOKEN_INVALID,
+      );
     }
 
     const { storedFile, stream } =

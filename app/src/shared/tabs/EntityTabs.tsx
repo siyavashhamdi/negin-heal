@@ -26,10 +26,7 @@ export interface EntityTabsProps {
   onTabChange?: (tabId: string) => void;
 }
 
-function resolveInitialTabId(
-  tabs: readonly EntityTabItem[],
-  defaultTabId?: string,
-): string {
+function resolveInitialTabId(tabs: readonly EntityTabItem[], defaultTabId?: string): string {
   const defaultTab = tabs.find((tab) => tab.id === defaultTabId && tab.disabled !== true);
   if (defaultTab) {
     return defaultTab.id;
@@ -50,7 +47,7 @@ const EntityTabs = ({
 
   const activeTab = useMemo(
     () => tabs.find((tab) => tab.id === activeTabId) ?? tabs.find((tab) => tab.disabled !== true),
-    [activeTabId, tabs],
+    [activeTabId, tabs]
   );
 
   useEffect(() => {

@@ -32,14 +32,11 @@ function includesNonEndUserRole(roles: readonly UserRole[]): boolean {
 
 export function collectUserEditSensitiveChanges(
   initial: UserEditFormSnapshot,
-  current: UserEditFormSnapshot,
+  current: UserEditFormSnapshot
 ): readonly UserEditSensitiveChangeKind[] {
   const changes: UserEditSensitiveChangeKind[] = [];
 
-  if (
-    hasStoredValue(initial.username) &&
-    initial.username.trim() !== current.username.trim()
-  ) {
+  if (hasStoredValue(initial.username) && initial.username.trim() !== current.username.trim()) {
     changes.push("username");
   }
 

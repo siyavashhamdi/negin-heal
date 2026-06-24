@@ -1,10 +1,7 @@
 import { useQuery, type QueryResult } from "@apollo/client/react";
 import { LOCAL_STORAGE_KEYS } from "../constants";
 import { USER_ME_QUERY } from "../graphql/queries/userMe.query";
-import {
-  resolveFileAccessUrl,
-  type FileAccessUrl,
-} from "../utils/fileAccessUrl.util";
+import { resolveFileAccessUrl, type FileAccessUrl } from "../utils/fileAccessUrl.util";
 
 export type UserMeGqlResponse = {
   readonly id: string;

@@ -12,12 +12,11 @@ export const SCALAR_NUMBER_FIELD_CONFIG: Record<string, ScalarNumberFieldConfig>
   },
   TICKET_AUTO_CLOSE_AFTER_ANSWERED_HOURS: {
     label: "بستن خودکار تیکت پاسخ‌داده‌شده (ساعت)",
-    helperText:
-      "پس از پاسخ پشتیبانی، تیکت پس از این مدت به‌صورت خودکار بسته می‌شود.",
+    helperText: "پس از پاسخ پشتیبانی، تیکت پس از این مدت به‌صورت خودکار بسته می‌شود.",
     min: 1,
   },
 };
 
 export const POSITIVE_INTEGER_NUMBER_SETTING_KEYS = new Set(
-  Object.keys(SCALAR_NUMBER_FIELD_CONFIG),
+  Object.keys(SCALAR_NUMBER_FIELD_CONFIG)
 );

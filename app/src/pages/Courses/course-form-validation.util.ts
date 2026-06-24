@@ -9,7 +9,9 @@ function normalizeDigits(value: string): string {
 }
 
 function parseDraftNumber(value: string): number | undefined {
-  const trimmed = normalizeDigits(value).replace(/[,٬\s]/g, "").trim();
+  const trimmed = normalizeDigits(value)
+    .replace(/[,٬\s]/g, "")
+    .trim();
   if (!trimmed) {
     return undefined;
   }
@@ -79,7 +81,7 @@ function formatItemLabel(
   chapterIndex: number,
   itemIndex: number,
   chapterTitle: string,
-  itemTitle: string,
+  itemTitle: string
 ): string {
   const chapterLabel = formatChapterLabel(chapterIndex, chapterTitle);
   const itemNumber = formatPersianNumber(itemIndex + 1);
@@ -90,7 +92,7 @@ function formatItemLabel(
 
 function invalid(
   message: string,
-  section: CourseFormValidationSection,
+  section: CourseFormValidationSection
 ): CourseFormValidationResult {
   return { valid: false, message, section };
 }
@@ -150,12 +152,7 @@ export function validateCourseForm(input: ValidateCourseFormInput): CourseFormVa
 
     for (let itemIndex = 0; itemIndex < chapter.items.length; itemIndex += 1) {
       const item = chapter.items[itemIndex];
-      const itemLabel = formatItemLabel(
-        chapterIndex,
-        itemIndex,
-        chapter.title,
-        item.title,
-      );
+      const itemLabel = formatItemLabel(chapterIndex, itemIndex, chapter.title, item.title);
 
       if (!item.title.trim()) {
         return invalid(`عنوان ${itemLabel} الزامی است.`, "content");
@@ -180,7 +177,7 @@ export function validateCourseForm(input: ValidateCourseFormInput): CourseFormVa
 }
 
 export function getChapterVisibleAfterOrderWarnings(
-  chapters: readonly DraftChapter[],
+  chapters: readonly DraftChapter[]
 ): readonly string[] {
   const warnings: string[] = [];
 
@@ -198,7 +195,7 @@ export function getChapterVisibleAfterOrderWarnings(
     const nextChapterLabel = formatChapterLabel(chapterIndex + 1, nextChapter.title);
 
     warnings.push(
-      `${nextChapterLabel} (${formatVisibleAfterDelay(nextMinutes)}) قبل از ${currentChapterLabel} (${formatVisibleAfterDelay(currentMinutes)}) در دسترس قرار می‌گیرد، در حالی که در ترتیب فصل‌ها بعد از آن قرار دارد.`,
+      `${nextChapterLabel} (${formatVisibleAfterDelay(nextMinutes)}) قبل از ${currentChapterLabel} (${formatVisibleAfterDelay(currentMinutes)}) در دسترس قرار می‌گیرد، در حالی که در ترتیب فصل‌ها بعد از آن قرار دارد.`
     );
   }
 

@@ -127,7 +127,7 @@ function formatTranslatedMessage(message: string, params?: Record<string, unknow
 }
 
 function extractKeyedBodyFromExtensions(
-  extensions?: GraphQLErrorExtensions,
+  extensions?: GraphQLErrorExtensions
 ): { key?: string; params?: Record<string, unknown> } | undefined {
   const candidates: unknown[] = [
     extensions?.exception?.response,
@@ -147,10 +147,7 @@ function extractKeyedBodyFromExtensions(
       continue;
     }
 
-    if (
-      "key" in candidate &&
-      typeof (candidate as { key?: unknown }).key === "string"
-    ) {
+    if ("key" in candidate && typeof (candidate as { key?: unknown }).key === "string") {
       const keyed = candidate as {
         key: string;
         params?: Record<string, unknown>;
@@ -161,10 +158,7 @@ function extractKeyedBodyFromExtensions(
     if ("message" in candidate) {
       const nested = extractKeyedBodyFromExtensions({
         exception: {
-          message: (candidate as { message?: unknown }).message as
-            | string
-            | string[]
-            | undefined,
+          message: (candidate as { message?: unknown }).message as string | string[] | undefined,
         },
       });
       if (nested) {
@@ -176,9 +170,7 @@ function extractKeyedBodyFromExtensions(
   return undefined;
 }
 
-function resolveErrorParams(
-  error?: RawGraphQLErrorItem,
-): Record<string, unknown> | undefined {
+function resolveErrorParams(error?: RawGraphQLErrorItem): Record<string, unknown> | undefined {
   const keyedParams = extractKeyedBodyFromExtensions(error?.extensions)?.params;
   if (keyedParams && typeof keyedParams === "object") {
     return keyedParams;
@@ -198,10 +190,7 @@ function joinMessageParts(value: string | string[]): string {
   return Array.isArray(value) ? value.join(", ") : value;
 }
 
-const GENERIC_EXCEPTION_CODES = new Set([
-  "INTERNAL_SERVER_ERROR",
-  "UNKNOWN_ERROR_OCCURRED",
-]);
+const GENERIC_EXCEPTION_CODES = new Set(["INTERNAL_SERVER_ERROR", "UNKNOWN_ERROR_OCCURRED"]);
 
 const GENERIC_BACKEND_ERROR_MESSAGES = new Set([
   "An internal server error occurred!",
@@ -223,7 +212,7 @@ function isGenericBackendErrorMessage(message: string): boolean {
 
 function getExceptionTranslation(
   code: string | undefined,
-  params?: Record<string, unknown>,
+  params?: Record<string, unknown>
 ): string {
   if (!code) {
     return "";
@@ -271,15 +260,14 @@ function inferExceptionCodeFromMessage(message: string): string | undefined {
 
 function resolveExceptionCode(
   error?: RawGraphQLErrorItem,
-  backendMessage = "",
+  backendMessage = ""
 ): string | undefined {
   const keyedCode = extractKeyedBodyFromExtensions(error?.extensions)?.key;
   if (keyedCode) {
     return keyedCode;
   }
 
-  const explicitCode =
-    error?.code || error?.extensions?.code || error?.extensions?.exception?.code;
+  const explicitCode = error?.code || error?.extensions?.code || error?.extensions?.exception?.code;
   if (explicitCode) {
     return explicitCode;
   }
@@ -287,9 +275,7 @@ function resolveExceptionCode(
   return inferExceptionCodeFromMessage(backendMessage || error?.message || "");
 }
 
-function extractBackendGraphQLErrorMessage(
-  error?: RawGraphQLErrorItem,
-): string {
+function extractBackendGraphQLErrorMessage(error?: RawGraphQLErrorItem): string {
   const keyedCode = extractKeyedBodyFromExtensions(error?.extensions)?.key;
   if (keyedCode) {
     return keyedCode;
@@ -340,8 +326,7 @@ type AccessDeniedGraphQLErrorInput = {
 };
 
 export function isAccessDeniedGraphQLError(error: AccessDeniedGraphQLErrorInput): boolean {
-  const errorCode =
-    error.code ?? error.extensions?.code ?? error.extensions?.exception?.code;
+  const errorCode = error.code ?? error.extensions?.code ?? error.extensions?.exception?.code;
 
   if (errorCode === "UNAUTHENTICATED" || errorCode === "FORBIDDEN") {
     return true;
@@ -353,15 +338,12 @@ export function isAccessDeniedGraphQLError(error: AccessDeniedGraphQLErrorInput)
 
 /** True when the session is invalid and the user should be signed out (not mere role restrictions). */
 export function isAuthSessionInvalidGraphQLError(error: AccessDeniedGraphQLErrorInput): boolean {
-  const errorCode =
-    error.code ?? error.extensions?.code ?? error.extensions?.exception?.code;
+  const errorCode = error.code ?? error.extensions?.code ?? error.extensions?.exception?.code;
 
   return errorCode === "UNAUTHENTICATED";
 }
 
-function resolveGraphQLErrorFieldMessage(
-  error?: RawGraphQLErrorItem,
-): string {
+function resolveGraphQLErrorFieldMessage(error?: RawGraphQLErrorItem): string {
   const backendMessage = extractBackendGraphQLErrorMessage(error);
   const exceptionCode = resolveExceptionCode(error, backendMessage);
   const params = resolveErrorParams(error);
@@ -393,13 +375,11 @@ function resolveGraphQLErrorFieldMessage(
   return i18n.t("errors.unknown");
 }
 
-function getGraphQLErrorCodeFromItem(
-  error?: {
-    readonly message?: string;
-    readonly code?: string;
-    readonly extensions?: GraphQLErrorExtensions;
-  },
-): string | undefined {
+function getGraphQLErrorCodeFromItem(error?: {
+  readonly message?: string;
+  readonly code?: string;
+  readonly extensions?: GraphQLErrorExtensions;
+}): string | undefined {
   const backendMessage = extractBackendGraphQLErrorMessage(error);
   return resolveExceptionCode(error, backendMessage);
 }
@@ -407,7 +387,7 @@ function getGraphQLErrorCodeFromItem(
 export function extractGraphQLErrorCode(error: unknown): string | undefined {
   if (CombinedGraphQLErrors.is(error)) {
     return getGraphQLErrorCodeFromItem(
-      error.errors[0] as { code?: string; extensions?: GraphQLErrorExtensions },
+      error.errors[0] as { code?: string; extensions?: GraphQLErrorExtensions }
     );
   }
 
@@ -524,7 +504,7 @@ export const extractGraphQLErrorMessage = (error: unknown): string => {
 
 export function resolveErrorMessageFromCode(
   code: string | null | undefined,
-  params?: Record<string, unknown>,
+  params?: Record<string, unknown>
 ): string {
   if (!code?.trim()) {
     return i18n.t("errors.unknown");
@@ -536,7 +516,7 @@ export function resolveErrorMessageFromCode(
 
 export function showErrorIfNotQueued(
   showError: (message: string, duration?: number) => void,
-  error: unknown,
+  error: unknown
 ): void {
   if (!isApolloHandledError(error)) {
     showError(extractGraphQLErrorMessage(error));

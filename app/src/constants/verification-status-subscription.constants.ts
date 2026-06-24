@@ -9,13 +9,13 @@ export type VerificationStatusSubscriptionPayload = {
 };
 
 export function isUserEmailVerified(
-  verification?: Pick<VerificationStatusSubscriptionPayload, "emailVerifiedAt"> | null,
+  verification?: Pick<VerificationStatusSubscriptionPayload, "emailVerifiedAt"> | null
 ): boolean {
   return Boolean(verification?.emailVerifiedAt);
 }
 
 export function isUserMobileVerified(
-  verification?: Pick<VerificationStatusSubscriptionPayload, "mobileVerifiedAt"> | null,
+  verification?: Pick<VerificationStatusSubscriptionPayload, "mobileVerifiedAt"> | null
 ): boolean {
   return Boolean(verification?.mobileVerifiedAt);
 }

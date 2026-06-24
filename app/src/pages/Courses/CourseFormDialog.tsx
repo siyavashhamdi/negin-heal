@@ -103,7 +103,7 @@ function getCourseItemUploadFieldId(itemId: string): string {
 
 function hasPendingLocalFileSelections(
   coverImageFile: File | null,
-  chapters: DraftChapter[],
+  chapters: DraftChapter[]
 ): boolean {
   if (coverImageFile != null) {
     return true;
@@ -142,7 +142,7 @@ function createDraftChapter(): DraftChapter {
 }
 
 function getVisibleAfterDraft(
-  visibleAfterMinutes: number | null,
+  visibleAfterMinutes: number | null
 ): Pick<DraftChapter, "visibleAfterMinutes" | "visibleAfterUnit"> {
   if (visibleAfterMinutes == null) {
     return {
@@ -267,7 +267,7 @@ function trimToNull(value: string): string | null {
 
 function resolveStoredFileId(
   uploadedFileId: string | undefined,
-  existingAccessUrl: FileAccessUrl | null,
+  existingAccessUrl: FileAccessUrl | null
 ): string | null {
   return uploadedFileId ?? getFileIdFromAccessUrl(existingAccessUrl) ?? null;
 }
@@ -275,16 +275,13 @@ function resolveStoredFileId(
 function buildCourseItemInput(
   item: DraftItem,
   itemIndex: number,
-  uploadedFiles: UploadedCourseFiles,
+  uploadedFiles: UploadedCourseFiles
 ): Record<string, unknown> {
   if (item.contentType === "FILE") {
     return {
       title: item.title.trim(),
       sortOrder: itemIndex + 1,
-      fileId: resolveStoredFileId(
-        uploadedFiles.itemFileIdsByItemId[item.id],
-        item.fileAccessUrl,
-      ),
+      fileId: resolveStoredFileId(uploadedFiles.itemFileIdsByItemId[item.id], item.fileAccessUrl),
       article: null,
     };
   }
@@ -440,10 +437,12 @@ const CourseFormDialog = ({
   const showIntroFormSection = !useEditSectionTabs || activeFormSectionTab === "intro";
   const showContentFormSection = !useEditSectionTabs || activeFormSectionTab === "content";
   const showReviewsFormSection = isReviewsFormTabActive && Boolean(courseId);
-  const { data, loading: detailLoading, networkStatus, refetch: refetchCourseDetail } = useQuery<
-    CourseDetailQuery,
-    CourseDetailQueryVariables
-  >(COURSE_DETAIL_QUERY, {
+  const {
+    data,
+    loading: detailLoading,
+    networkStatus,
+    refetch: refetchCourseDetail,
+  } = useQuery<CourseDetailQuery, CourseDetailQueryVariables>(COURSE_DETAIL_QUERY, {
     variables: { input: { id: courseId ?? "" } },
     skip: !open || !courseId,
     fetchPolicy: "network-only",
@@ -477,14 +476,14 @@ const CourseFormDialog = ({
     () => {
       const firstChapter = chapters[0];
       return firstChapter ? { [firstChapter.id]: firstChapter.items[0]?.id ?? null } : {};
-    },
+    }
   );
   const [initialSnapshot, setInitialSnapshot] = useState<CourseFormSnapshot | null>(null);
   const appliedFormKeyRef = useRef<string | null>(null);
 
   const activeChapterIndex = useMemo(
     () => chapters.findIndex((chapter) => chapter.id === activeChapterId),
-    [activeChapterId, chapters],
+    [activeChapterId, chapters]
   );
   const activeChapter = activeChapterIndex >= 0 ? chapters[activeChapterIndex] : undefined;
   const parsedPriceIrt = parseOptionalNumber(priceIrt);
@@ -521,11 +520,13 @@ const CourseFormDialog = ({
       priceIrt,
       tags,
       title,
-    ],
+    ]
   );
 
   const applyFormState = (nextCourse?: CourseEditRecord | null): void => {
-    const nextChapters = nextCourse ? createDraftChaptersFromCourse(nextCourse) : [createDraftChapter()];
+    const nextChapters = nextCourse
+      ? createDraftChaptersFromCourse(nextCourse)
+      : [createDraftChapter()];
     const activeDraftChapter = getLastChapter(nextChapters) ?? createDraftChapter();
     const nextTitle = nextCourse?.title ?? "";
     const nextDescription = nextCourse?.description ?? "";
@@ -576,7 +577,7 @@ const CourseFormDialog = ({
         discountKind: nextDiscountKind,
         discountValue: nextDiscountValue,
         chapters: nextChapters,
-      }),
+      })
     );
   };
 
@@ -653,13 +654,9 @@ const CourseFormDialog = ({
   const [uploadProgressByFieldId, setUploadProgressByFieldId] = useState<
     Record<string, UploadProgressEntry>
   >({});
-  const isSubmitting =
-    createCourseResult.loading ||
-    updateCourseResult.loading ||
-    isUploadingFiles;
+  const isSubmitting = createCourseResult.loading || updateCourseResult.loading || isUploadingFiles;
   const isInitialEditFormLoading = isEditMode && detailCourse == null && detailLoading;
-  const isCourseDetailTabRefetching =
-    isEditMode && networkStatus === NetworkStatus.refetch;
+  const isCourseDetailTabRefetching = isEditMode && networkStatus === NetworkStatus.refetch;
   const isEditFormReady = !isEditMode || detailCourse != null;
   const hasCreateInput = title.trim().length > 0;
   const hasEditFormChanges =
@@ -667,9 +664,7 @@ const CourseFormDialog = ({
     (hasFormChanges(initialSnapshot, currentSnapshot) ||
       hasPendingLocalFileSelections(coverImageFile, chapters));
   const canSubmit =
-    isEditFormReady &&
-    !isSubmitting &&
-    (isEditMode ? hasEditFormChanges : hasCreateInput);
+    isEditFormReady && !isSubmitting && (isEditMode ? hasEditFormChanges : hasCreateInput);
 
   useEffect(() => {
     const activeUploadCount = Object.keys(uploadProgressByFieldId).length;
@@ -704,7 +699,7 @@ const CourseFormDialog = ({
         {
           input: { id: courseId },
         },
-        { fetchPolicy: "no-cache" },
+        { fetchPolicy: "no-cache" }
       ).then((result) => {
         const row = result.data?.courseDetail;
         if (!row || row.id !== courseId) {
@@ -727,10 +722,8 @@ const CourseFormDialog = ({
       fieldId === COURSE_COVER_UPLOAD_FIELD_ID
         ? FILE_UPLOAD_POLICY.COURSE_COVER
         : FILE_UPLOAD_POLICY.COURSE_ITEM;
-    const accept =
-      uploadPolicy === FILE_UPLOAD_POLICY.COURSE_COVER ? "image/*" : "*/*";
-    const allowedFormatsLabel =
-      uploadPolicy === FILE_UPLOAD_POLICY.COURSE_COVER ? "تصویر" : "همه";
+    const accept = uploadPolicy === FILE_UPLOAD_POLICY.COURSE_COVER ? "image/*" : "*/*";
+    const allowedFormatsLabel = uploadPolicy === FILE_UPLOAD_POLICY.COURSE_COVER ? "تصویر" : "همه";
 
     setUploadProgressByFieldId((previous) => ({
       ...previous,
@@ -774,10 +767,10 @@ const CourseFormDialog = ({
 
   const mapChapterById = (
     chapterId: string,
-    mapper: (chapter: DraftChapter) => DraftChapter,
+    mapper: (chapter: DraftChapter) => DraftChapter
   ): void => {
     setChapters((prev) =>
-      prev.map((chapter) => (chapter.id === chapterId ? mapper(chapter) : chapter)),
+      prev.map((chapter) => (chapter.id === chapterId ? mapper(chapter) : chapter))
     );
   };
 
@@ -797,7 +790,7 @@ const CourseFormDialog = ({
       const nextActiveChapter = getLastChapter(nextChapters);
       setActiveChapterId(nextActiveChapter?.id ?? "");
       setExpandedItemByChapter(
-        nextActiveChapter ? { [nextActiveChapter.id]: getLastItemId(nextActiveChapter) } : {},
+        nextActiveChapter ? { [nextActiveChapter.id]: getLastItemId(nextActiveChapter) } : {}
       );
     }
   };
@@ -838,8 +831,8 @@ const CourseFormDialog = ({
     const nextItems = chapter.items.filter((item) => item.id !== itemId);
     setChapters((prev) =>
       prev.map((draftChapter) =>
-        draftChapter.id === chapterId ? { ...draftChapter, items: nextItems } : draftChapter,
-      ),
+        draftChapter.id === chapterId ? { ...draftChapter, items: nextItems } : draftChapter
+      )
     );
     setExpandedItemByChapter({ [chapterId]: nextItems[nextItems.length - 1]?.id ?? null });
   };
@@ -917,7 +910,7 @@ const CourseFormDialog = ({
       uploadTasks.map(async (task) => ({
         task,
         uploadedFileId: await uploadAndGetFileId(task.file, task.fieldId),
-      })),
+      }))
     );
 
     const failedUpload = uploadResults.find((result) => !result.uploadedFileId);
@@ -930,7 +923,7 @@ const CourseFormDialog = ({
       (files, result) => result.task.applyFileId(result.uploadedFileId ?? "", files),
       {
         itemFileIdsByItemId: {},
-      },
+      }
     );
   };
 
@@ -940,12 +933,12 @@ const CourseFormDialog = ({
       description: trimToNull(chapter.description),
       visibleAfterMinutes: parseVisibleAfterMinutes(
         chapter.visibleAfterMinutes,
-        chapter.visibleAfterUnit,
+        chapter.visibleAfterUnit
       ),
       isFree: hasPositivePrice ? chapter.isFree === true : false,
       sortOrder: chapterIndex + 1,
       items: chapter.items.map((item, itemIndex) =>
-        buildCourseItemInput(item, itemIndex, uploadedFiles),
+        buildCourseItemInput(item, itemIndex, uploadedFiles)
       ),
     }));
 
@@ -979,10 +972,7 @@ const CourseFormDialog = ({
       courseId,
       title,
       description,
-      coverImageFileId: resolveStoredFileId(
-        uploadedFiles.coverImageFileId,
-        coverImageAccessUrl,
-      ),
+      coverImageFileId: resolveStoredFileId(uploadedFiles.coverImageFileId, coverImageAccessUrl),
       priceIrt: parsedPriceIrt ?? 0,
       isActive,
       isReviewSubmissionEnabled,
@@ -1013,7 +1003,7 @@ const CourseFormDialog = ({
 
   const handleChapterDragOver = (
     event: DragEvent<HTMLButtonElement>,
-    targetChapterId: string,
+    targetChapterId: string
   ): void => {
     const draggedChapterId = draggedChapterIdRef.current;
     if (!draggedChapterId || draggedChapterId === targetChapterId) {
@@ -1025,14 +1015,14 @@ const CourseFormDialog = ({
 
     const insertAfter = shouldInsertAfterHorizontal(event, event.currentTarget);
     setChapters((prev) =>
-      reorderByIdWithInsertion(prev, draggedChapterId, targetChapterId, insertAfter),
+      reorderByIdWithInsertion(prev, draggedChapterId, targetChapterId, insertAfter)
     );
   };
 
   const handleItemDragOver = (
     event: DragEvent<HTMLDivElement>,
     chapterId: string,
-    targetItemId: string,
+    targetItemId: string
   ): void => {
     const draggedItemId = draggedItemIdRef.current;
     if (!draggedItemId || draggedItemId === targetItemId) {
@@ -1141,7 +1131,12 @@ const CourseFormDialog = ({
 
               {isCourseDetailTabRefetching &&
               (activeFormSectionTab === "intro" || activeFormSectionTab === "content") ? (
-                <Stack alignItems="center" justifyContent="center" spacing={2} sx={{ minHeight: 240 }}>
+                <Stack
+                  alignItems="center"
+                  justifyContent="center"
+                  spacing={2}
+                  sx={{ minHeight: 240 }}
+                >
                   <CircularProgress size={28} />
                   <Typography variant="body2" color="text.secondary">
                     در حال بروزرسانی اطلاعات...
@@ -1149,103 +1144,107 @@ const CourseFormDialog = ({
                 </Stack>
               ) : (
                 <>
-              {showIntroFormSection ? (
-              <div
-                id={useEditSectionTabs ? "course-form-intro" : undefined}
-                className={useEditSectionTabs ? formSectionStyles.sectionScrollTarget : undefined}
-              >
-                <MainInfoSection
-            title={title}
-            onTitleChange={setTitle}
-            description={description}
-            onDescriptionChange={setDescription}
-            coverImageFile={coverImageFile}
-            onCoverImageFileChange={handleCoverImageFileChange}
-            coverImageExistingFile={buildExistingFilePreview(
-              coverImageAccessUrl,
-              title.trim() || "کاور دوره",
-            )}
-            onCoverImageExistingFileClear={() => {
-              setCoverImageAccessUrl(null);
-            }}
-            priceIrt={priceIrt}
-            onPriceIrtChange={setPriceIrt}
-            tags={tags}
-            onTagsChange={setTags}
-            isActive={isActive}
-            onIsActiveChange={setIsActive}
-            isReviewSubmissionEnabled={isReviewSubmissionEnabled}
-            onIsReviewSubmissionEnabledChange={setIsReviewSubmissionEnabled}
-            isReviewsSectionVisible={isReviewsSectionVisible}
-            onIsReviewsSectionVisibleChange={setIsReviewsSectionVisible}
-            hasPositivePrice={hasPositivePrice}
-            discountEnabled={discountEnabled}
-            onDiscountEnabledChange={setDiscountEnabled}
-            discountKind={discountKind}
-            onDiscountKindChange={handleDiscountKindChange}
-            discountValue={discountValue}
-            onDiscountValueChange={setDiscountValue}
-            formatIntegerWithThousands={formatIntegerWithThousands}
-            sanitizePercentageValue={sanitizePercentageValue}
-            uploadProgress={getFieldUploadPercent(
-              uploadProgressByFieldId[COURSE_COVER_UPLOAD_FIELD_ID],
-            )}
-            uploading={COURSE_COVER_UPLOAD_FIELD_ID in uploadProgressByFieldId}
-                />
-              </div>
-              ) : null}
+                  {showIntroFormSection ? (
+                    <div
+                      id={useEditSectionTabs ? "course-form-intro" : undefined}
+                      className={
+                        useEditSectionTabs ? formSectionStyles.sectionScrollTarget : undefined
+                      }
+                    >
+                      <MainInfoSection
+                        title={title}
+                        onTitleChange={setTitle}
+                        description={description}
+                        onDescriptionChange={setDescription}
+                        coverImageFile={coverImageFile}
+                        onCoverImageFileChange={handleCoverImageFileChange}
+                        coverImageExistingFile={buildExistingFilePreview(
+                          coverImageAccessUrl,
+                          title.trim() || "کاور دوره"
+                        )}
+                        onCoverImageExistingFileClear={() => {
+                          setCoverImageAccessUrl(null);
+                        }}
+                        priceIrt={priceIrt}
+                        onPriceIrtChange={setPriceIrt}
+                        tags={tags}
+                        onTagsChange={setTags}
+                        isActive={isActive}
+                        onIsActiveChange={setIsActive}
+                        isReviewSubmissionEnabled={isReviewSubmissionEnabled}
+                        onIsReviewSubmissionEnabledChange={setIsReviewSubmissionEnabled}
+                        isReviewsSectionVisible={isReviewsSectionVisible}
+                        onIsReviewsSectionVisibleChange={setIsReviewsSectionVisible}
+                        hasPositivePrice={hasPositivePrice}
+                        discountEnabled={discountEnabled}
+                        onDiscountEnabledChange={setDiscountEnabled}
+                        discountKind={discountKind}
+                        onDiscountKindChange={handleDiscountKindChange}
+                        discountValue={discountValue}
+                        onDiscountValueChange={setDiscountValue}
+                        formatIntegerWithThousands={formatIntegerWithThousands}
+                        sanitizePercentageValue={sanitizePercentageValue}
+                        uploadProgress={getFieldUploadPercent(
+                          uploadProgressByFieldId[COURSE_COVER_UPLOAD_FIELD_ID]
+                        )}
+                        uploading={COURSE_COVER_UPLOAD_FIELD_ID in uploadProgressByFieldId}
+                      />
+                    </div>
+                  ) : null}
 
-              {!useEditSectionTabs ? <Divider /> : null}
+                  {!useEditSectionTabs ? <Divider /> : null}
 
-              {showContentFormSection ? (
-              <div
-                id={useEditSectionTabs ? "course-form-content" : undefined}
-                className={useEditSectionTabs ? formSectionStyles.sectionScrollTarget : undefined}
-              >
-                <ChaptersSection
-            chapters={chapters}
-            activeChapter={activeChapter}
-            activeChapterIndex={activeChapterIndex}
-            expandedItemByChapter={expandedItemByChapter}
-            hasPositivePrice={hasPositivePrice}
-            uploadProgressByFieldId={uploadProgressByFieldId}
-            onAddChapter={addChapter}
-            onSelectChapterIndex={handleSelectChapterIndex}
-            onSetDraggedChapterId={handleSetDraggedChapterId}
-            onChapterDragOver={handleChapterDragOver}
-            onRemoveChapter={removeChapter}
-            onUpdateChapter={updateChapter}
-            onSetExpandedItemByChapter={handleSetExpandedItem}
-            onSetDraggedItemId={handleSetDraggedItemId}
-            onItemDragOver={handleItemDragOver}
-            onUpdateItem={updateItem}
-            onAddItem={addItem}
-            onRemoveItem={removeItem}
-            stripNumberSeparators={stripNumberSeparators}
-                />
-              </div>
-              ) : null}
+                  {showContentFormSection ? (
+                    <div
+                      id={useEditSectionTabs ? "course-form-content" : undefined}
+                      className={
+                        useEditSectionTabs ? formSectionStyles.sectionScrollTarget : undefined
+                      }
+                    >
+                      <ChaptersSection
+                        chapters={chapters}
+                        activeChapter={activeChapter}
+                        activeChapterIndex={activeChapterIndex}
+                        expandedItemByChapter={expandedItemByChapter}
+                        hasPositivePrice={hasPositivePrice}
+                        uploadProgressByFieldId={uploadProgressByFieldId}
+                        onAddChapter={addChapter}
+                        onSelectChapterIndex={handleSelectChapterIndex}
+                        onSetDraggedChapterId={handleSetDraggedChapterId}
+                        onChapterDragOver={handleChapterDragOver}
+                        onRemoveChapter={removeChapter}
+                        onUpdateChapter={updateChapter}
+                        onSetExpandedItemByChapter={handleSetExpandedItem}
+                        onSetDraggedItemId={handleSetDraggedItemId}
+                        onItemDragOver={handleItemDragOver}
+                        onUpdateItem={updateItem}
+                        onAddItem={addItem}
+                        onRemoveItem={removeItem}
+                        stripNumberSeparators={stripNumberSeparators}
+                      />
+                    </div>
+                  ) : null}
 
-              {showReviewsFormSection ? (
-                <section
-                  id="course-form-reviews"
-                  className={`${formSectionStyles.reviewsSection} ${formSectionStyles.reviewsSectionPanel}`}
-                  aria-labelledby="course-form-reviews-heading"
-                >
-                  <div className={formSectionStyles.reviewsHeader}>
-                    <Typography id="course-form-reviews-heading" component="h3" variant="h6">
-                      امتیاز و نظرات
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      مدیریت و بررسی نظرات ثبت‌شده برای این دوره
-                    </Typography>
-                  </div>
-                  <CourseReviewsAdminSection
-                    courseId={courseId!}
-                    refreshToken={reviewsRefreshToken}
-                  />
-                </section>
-              ) : null}
+                  {showReviewsFormSection ? (
+                    <section
+                      id="course-form-reviews"
+                      className={`${formSectionStyles.reviewsSection} ${formSectionStyles.reviewsSectionPanel}`}
+                      aria-labelledby="course-form-reviews-heading"
+                    >
+                      <div className={formSectionStyles.reviewsHeader}>
+                        <Typography id="course-form-reviews-heading" component="h3" variant="h6">
+                          امتیاز و نظرات
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          مدیریت و بررسی نظرات ثبت‌شده برای این دوره
+                        </Typography>
+                      </div>
+                      <CourseReviewsAdminSection
+                        courseId={courseId!}
+                        refreshToken={reviewsRefreshToken}
+                      />
+                    </section>
+                  ) : null}
                 </>
               )}
             </>

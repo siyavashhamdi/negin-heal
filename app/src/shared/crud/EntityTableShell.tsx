@@ -8,7 +8,21 @@ import {
   useRef,
   useState,
 } from "react";
-import { Badge, Box, Fade, IconButton, Paper, Table, TableBody, TableCell, TableHead, TableRow, TableSortLabel, Typography, useTheme } from "@mui/material";
+import {
+  Badge,
+  Box,
+  Fade,
+  IconButton,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  TableSortLabel,
+  Typography,
+  useTheme,
+} from "@mui/material";
 import { darken, lighten } from "@mui/material/styles";
 import {
   FilterAltOff as FilterAltOffIcon,
@@ -531,228 +545,233 @@ function EntityTableShell<TData extends object>({
 
         <Box className={styles.tableScrollFrame}>
           <Box ref={tableContainerRef} className={styles.tableContainerFlex}>
-          <Table
-            size={isMobile ? "small" : "medium"}
-            className={useFixedColumnWidths ? styles.tableLayoutFixed : styles.tableLayoutAuto}
-            sx={{
-              ...(tableContentWidth != null
-                ? columnLayoutMode === "fixed"
-                  ? { width: tableContentWidth, minWidth: tableContentWidth }
-                  : { width: "100%", minWidth: tableContentWidth }
-                : { width: "100%" }),
-              borderCollapse: "separate",
-              borderSpacing: 0,
-              "& tbody .MuiTableCell-root": {
-                borderBottom: tableCellRowBorder,
-              },
-              "& thead .MuiTableCell-head": {
-                backgroundColor: pinnedActionHeaderBg,
-                borderBottom: "none",
-                boxShadow: tableRowDividerShadow,
-              },
-            }}
-          >
-            <colgroup>
-              {shellVisibleLeafColumns.map((column) => (
-                <col
-                  key={column.id}
-                  style={{
-                    width:
-                      columnLayoutMode === "fixed"
-                        ? columnWidthRem(column.id, effectiveColumnWidthById)
-                        : columnWidthPercent(
-                            column.id,
-                            shellVisibleLeafColumnIds,
-                            effectiveColumnWidthById
-                          ),
-                  }}
-                />
-              ))}
-            </colgroup>
-            <TableHead>
-              {table.getHeaderGroups().map((headerGroup, headerGroupIndex) => (
-                <TableRow
-                  key={headerGroup.id}
-                  ref={headerGroupIndex === 0 ? headerRowRef : undefined}
-                >
-                  {shellVisibleLeafColumns.map((column) => {
-                    const header = headerGroup.headers.find(
-                      (h) => h.column.id === column.id && !h.isPlaceholder
-                    );
-                    if (!header) {
-                      return null;
-                    }
-                    const headerRowZIndex = 40 - headerGroup.depth;
-                    const isActionsColumn = column.id === pinnedActionColumnId;
-                    return (
-                      <TableCell
-                        key={header.id}
-                        align="center"
-                        className={isActionsColumn ? styles.actionsColumnCell : undefined}
-                        sx={{
-                          position: "sticky",
-                          top: 0,
-                          zIndex: headerRowZIndex,
-                          backgroundColor: pinnedActionHeaderBg,
-                          fontWeight: 700,
-                          whiteSpace: "normal",
-                          minWidth: 0,
-                          overflow: "hidden",
-                          ...pinnedActionCellSx(
-                            column.id,
-                            headerRowZIndex + 1,
-                            pinnedActionHeaderBg
-                          ),
-                        }}
-                      >
-                        {header.column.getCanSort() ? (
-                          <TableSortLabel
-                            active={header.column.getIsSorted() !== false}
-                            direction={header.column.getIsSorted() === "asc" ? "asc" : "desc"}
-                            onClick={header.column.getToggleSortingHandler()}
-                            sx={{
-                              whiteSpace: "normal",
-                              transform: "translateX(0.8rem)",
-                            }}
-                          >
-                            {flexRender(header.column.columnDef.header, header.getContext())}
-                          </TableSortLabel>
-                        ) : (
-                          flexRender(header.column.columnDef.header, header.getContext())
-                        )}
-                      </TableCell>
-                    );
-                  })}
-                </TableRow>
-              ))}
-              {resolvedShowColumnFilters && renderFilterCell ? (
-                <TableRow ref={columnFilterRowRef}>
-                  {(() => {
-                    let columnsToSkip = 0;
-                    return shellVisibleLeafColumns.map((column, columnIndex) => {
-                      if (columnsToSkip > 0) {
-                        columnsToSkip -= 1;
+            <Table
+              size={isMobile ? "small" : "medium"}
+              className={useFixedColumnWidths ? styles.tableLayoutFixed : styles.tableLayoutAuto}
+              sx={{
+                ...(tableContentWidth != null
+                  ? columnLayoutMode === "fixed"
+                    ? { width: tableContentWidth, minWidth: tableContentWidth }
+                    : { width: "100%", minWidth: tableContentWidth }
+                  : { width: "100%" }),
+                borderCollapse: "separate",
+                borderSpacing: 0,
+                "& tbody .MuiTableCell-root": {
+                  borderBottom: tableCellRowBorder,
+                },
+                "& thead .MuiTableCell-head": {
+                  backgroundColor: pinnedActionHeaderBg,
+                  borderBottom: "none",
+                  boxShadow: tableRowDividerShadow,
+                },
+              }}
+            >
+              <colgroup>
+                {shellVisibleLeafColumns.map((column) => (
+                  <col
+                    key={column.id}
+                    style={{
+                      width:
+                        columnLayoutMode === "fixed"
+                          ? columnWidthRem(column.id, effectiveColumnWidthById)
+                          : columnWidthPercent(
+                              column.id,
+                              shellVisibleLeafColumnIds,
+                              effectiveColumnWidthById
+                            ),
+                    }}
+                  />
+                ))}
+              </colgroup>
+              <TableHead>
+                {table.getHeaderGroups().map((headerGroup, headerGroupIndex) => (
+                  <TableRow
+                    key={headerGroup.id}
+                    ref={headerGroupIndex === 0 ? headerRowRef : undefined}
+                  >
+                    {shellVisibleLeafColumns.map((column) => {
+                      const header = headerGroup.headers.find(
+                        (h) => h.column.id === column.id && !h.isPlaceholder
+                      );
+                      if (!header) {
                         return null;
                       }
-
+                      const headerRowZIndex = 40 - headerGroup.depth;
                       const isActionsColumn = column.id === pinnedActionColumnId;
-                      const requestedColSpan = filterCellColSpanById?.[column.id] ?? 1;
-                      const maxColSpan = shellVisibleLeafColumns.length - columnIndex;
-                      const colSpan = Math.max(1, Math.min(requestedColSpan, maxColSpan));
-                      columnsToSkip = colSpan - 1;
-
                       return (
                         <TableCell
-                          key={`${column.id}-filter`}
-                          align={isActionsColumn ? "center" : "inherit"}
-                          colSpan={colSpan}
-                          className={
-                            isActionsColumn
-                              ? `${styles.tableFilterCell} ${styles.actionsColumnCell}`
-                              : styles.tableFilterCell
-                          }
+                          key={header.id}
+                          align="center"
+                          className={isActionsColumn ? styles.actionsColumnCell : undefined}
                           sx={{
                             position: "sticky",
-                            top: `${headerRowHeightPx}px`,
-                            zIndex: 30,
+                            top: 0,
+                            zIndex: headerRowZIndex,
                             backgroundColor: pinnedActionHeaderBg,
+                            fontWeight: 700,
+                            whiteSpace: "normal",
                             minWidth: 0,
-                            whiteSpace: isActionsColumn ? "nowrap" : undefined,
-                            ...pinnedActionCellSx(column.id, 31, pinnedActionHeaderBg),
+                            overflow: "hidden",
+                            ...pinnedActionCellSx(
+                              column.id,
+                              headerRowZIndex + 1,
+                              pinnedActionHeaderBg
+                            ),
                           }}
                         >
-                          {isActionsColumn && onApplyFilters && onClearFilters ? (
-                            <Box className={styles.actionsCellFlex}>
-                              <AppTooltip title={t("table.dataGrid.filter.applyFilters")} arrow>
-                                <IconButton size="small" color="primary" onClick={onApplyFilters}>
-                                  <SearchIcon fontSize="small" />
-                                </IconButton>
-                              </AppTooltip>
-                              <AppTooltip title={t("table.dataGrid.filter.clearAllFilters")} arrow>
-                                <IconButton size="small" color="default" onClick={onClearFilters}>
-                                  <FilterAltOffIcon fontSize="small" />
-                                </IconButton>
-                              </AppTooltip>
-                            </Box>
+                          {header.column.getCanSort() ? (
+                            <TableSortLabel
+                              active={header.column.getIsSorted() !== false}
+                              direction={header.column.getIsSorted() === "asc" ? "asc" : "desc"}
+                              onClick={header.column.getToggleSortingHandler()}
+                              sx={{
+                                whiteSpace: "normal",
+                                transform: "translateX(0.8rem)",
+                              }}
+                            >
+                              {flexRender(header.column.columnDef.header, header.getContext())}
+                            </TableSortLabel>
                           ) : (
-                            renderFilterCell(column)
+                            flexRender(header.column.columnDef.header, header.getContext())
                           )}
                         </TableCell>
                       );
-                    });
-                  })()}
-                </TableRow>
-              ) : null}
-            </TableHead>
-            <TableBody>
-              {pagedRows.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={shellVisibleLeafColumnCount}
-                    align="center"
-                    className={styles.noDataCell}
-                  >
-                    <Typography variant="body2" color="text.secondary">
-                      {noDataLabel ?? t("table.dataGrid.emptyState.noData")}
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                pagedRows.map((row) => {
-                  const visibleCells = row.getVisibleCells();
-                  return (
-                    <TableRow
-                      key={row.id}
-                      hover
-                      onClick={onRowClick ? () => onRowClick(row.original) : undefined}
-                      className={onRowClick ? styles.clickableRow : undefined}
-                    >
-                      {shellVisibleLeafColumns.map((column) => {
-                        const cell = visibleCells.find((c) => c.column.id === column.id);
-                        if (!cell) {
+                    })}
+                  </TableRow>
+                ))}
+                {resolvedShowColumnFilters && renderFilterCell ? (
+                  <TableRow ref={columnFilterRowRef}>
+                    {(() => {
+                      let columnsToSkip = 0;
+                      return shellVisibleLeafColumns.map((column, columnIndex) => {
+                        if (columnsToSkip > 0) {
+                          columnsToSkip -= 1;
                           return null;
                         }
-                        const bodyPinnedBg = theme.palette.background.paper;
+
                         const isActionsColumn = column.id === pinnedActionColumnId;
-                        const cellContent = flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        );
+                        const requestedColSpan = filterCellColSpanById?.[column.id] ?? 1;
+                        const maxColSpan = shellVisibleLeafColumns.length - columnIndex;
+                        const colSpan = Math.max(1, Math.min(requestedColSpan, maxColSpan));
+                        columnsToSkip = colSpan - 1;
+
                         return (
                           <TableCell
-                            key={cell.id}
-                            align="center"
-                            className={isActionsColumn ? styles.actionsColumnCell : undefined}
-                            onClick={isActionsColumn ? (event) => event.stopPropagation() : undefined}
+                            key={`${column.id}-filter`}
+                            align={isActionsColumn ? "center" : "inherit"}
+                            colSpan={colSpan}
+                            className={
+                              isActionsColumn
+                                ? `${styles.tableFilterCell} ${styles.actionsColumnCell}`
+                                : styles.tableFilterCell
+                            }
                             sx={{
+                              position: "sticky",
+                              top: `${headerRowHeightPx}px`,
+                              zIndex: 30,
+                              backgroundColor: pinnedActionHeaderBg,
                               minWidth: 0,
-                              overflow: "hidden",
-                              ...pinnedActionCellSx(column.id, 1, bodyPinnedBg),
-                              ...(isActionsColumn && !isMobile
-                                ? {
-                                  "@media (hover: hover)": {
-                                    ".MuiTableRow-root:hover &": {
-                                      backgroundColor: opaquePinnedRowHoverBg,
-                                    },
-                                  },
-                                }
-                                : {}),
+                              whiteSpace: isActionsColumn ? "nowrap" : undefined,
+                              ...pinnedActionCellSx(column.id, 31, pinnedActionHeaderBg),
                             }}
                           >
-                            {isActionsColumn ? (
-                              cellContent
+                            {isActionsColumn && onApplyFilters && onClearFilters ? (
+                              <Box className={styles.actionsCellFlex}>
+                                <AppTooltip title={t("table.dataGrid.filter.applyFilters")} arrow>
+                                  <IconButton size="small" color="primary" onClick={onApplyFilters}>
+                                    <SearchIcon fontSize="small" />
+                                  </IconButton>
+                                </AppTooltip>
+                                <AppTooltip
+                                  title={t("table.dataGrid.filter.clearAllFilters")}
+                                  arrow
+                                >
+                                  <IconButton size="small" color="default" onClick={onClearFilters}>
+                                    <FilterAltOffIcon fontSize="small" />
+                                  </IconButton>
+                                </AppTooltip>
+                              </Box>
                             ) : (
-                              <TruncatedTableCellContent>{cellContent}</TruncatedTableCellContent>
+                              renderFilterCell(column)
                             )}
                           </TableCell>
                         );
-                      })}
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
+                      });
+                    })()}
+                  </TableRow>
+                ) : null}
+              </TableHead>
+              <TableBody>
+                {pagedRows.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={shellVisibleLeafColumnCount}
+                      align="center"
+                      className={styles.noDataCell}
+                    >
+                      <Typography variant="body2" color="text.secondary">
+                        {noDataLabel ?? t("table.dataGrid.emptyState.noData")}
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  pagedRows.map((row) => {
+                    const visibleCells = row.getVisibleCells();
+                    return (
+                      <TableRow
+                        key={row.id}
+                        hover
+                        onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+                        className={onRowClick ? styles.clickableRow : undefined}
+                      >
+                        {shellVisibleLeafColumns.map((column) => {
+                          const cell = visibleCells.find((c) => c.column.id === column.id);
+                          if (!cell) {
+                            return null;
+                          }
+                          const bodyPinnedBg = theme.palette.background.paper;
+                          const isActionsColumn = column.id === pinnedActionColumnId;
+                          const cellContent = flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          );
+                          return (
+                            <TableCell
+                              key={cell.id}
+                              align="center"
+                              className={isActionsColumn ? styles.actionsColumnCell : undefined}
+                              onClick={
+                                isActionsColumn ? (event) => event.stopPropagation() : undefined
+                              }
+                              sx={{
+                                minWidth: 0,
+                                overflow: "hidden",
+                                ...pinnedActionCellSx(column.id, 1, bodyPinnedBg),
+                                ...(isActionsColumn && !isMobile
+                                  ? {
+                                      "@media (hover: hover)": {
+                                        ".MuiTableRow-root:hover &": {
+                                          backgroundColor: opaquePinnedRowHoverBg,
+                                        },
+                                      },
+                                    }
+                                  : {}),
+                              }}
+                            >
+                              {isActionsColumn ? (
+                                cellContent
+                              ) : (
+                                <TruncatedTableCellContent>{cellContent}</TruncatedTableCellContent>
+                              )}
+                            </TableCell>
+                          );
+                        })}
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
           </Box>
           <Box className={styles.tableSideRailStart} aria-hidden />
           <Box className={styles.tableSideRailEnd} aria-hidden />

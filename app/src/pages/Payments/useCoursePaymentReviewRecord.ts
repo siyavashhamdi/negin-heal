@@ -19,7 +19,7 @@ type UseCoursePaymentReviewRecordResult = {
  * reviewPaymentId becomes active (including reopening after close), and ignores parent re-renders.
  */
 export function useCoursePaymentReviewRecord(
-  reviewPaymentId: string | null,
+  reviewPaymentId: string | null
 ): UseCoursePaymentReviewRecordResult {
   const [record, setRecord] = useState<CoursePaymentRecord | null>(null);
   const [loading, setLoading] = useState(false);

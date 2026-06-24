@@ -2,7 +2,7 @@ export type CourseReviewMessageBubbleTone = "own" | "user" | "support";
 
 export function resolveCourseReviewMessageBubbleTone(
   isMine: boolean,
-  isSupport = false,
+  isSupport = false
 ): CourseReviewMessageBubbleTone {
   if (isSupport) {
     return "support";
@@ -13,7 +13,7 @@ export function resolveCourseReviewMessageBubbleTone(
 
 export function getCourseReviewMessageBubbleClassName(
   styles: Record<string, string>,
-  tone: CourseReviewMessageBubbleTone,
+  tone: CourseReviewMessageBubbleTone
 ): string {
   if (tone === "own") {
     return styles.reviewCommentBubbleOwn;

@@ -153,7 +153,7 @@ export default defineConfig(({ mode }) => {
       alias: {
         "stylis-plugin-rtl": path.resolve(
           appDir,
-          "node_modules/stylis-plugin-rtl/dist/cjs/stylis-rtl.js",
+          "node_modules/stylis-plugin-rtl/dist/cjs/stylis-rtl.js"
         ),
       },
     },

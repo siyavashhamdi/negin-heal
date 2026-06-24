@@ -64,14 +64,7 @@ export function useAdminCourseReviewReply({
         },
       },
     });
-  }, [
-    courseId,
-    reply,
-    replyVisibility,
-    reviewUserId,
-    submitReply,
-    submitResult.loading,
-  ]);
+  }, [courseId, reply, replyVisibility, reviewUserId, submitReply, submitResult.loading]);
 
   return {
     handleReplyChange,

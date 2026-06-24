@@ -33,7 +33,7 @@ const truncatedCellContentSx = {
 
 function measureOverflow(
   element: HTMLElement,
-  measureNested: boolean,
+  measureNested: boolean
 ): { overflowing: boolean; text: string } {
   const measureTargets = measureNested
     ? [
@@ -126,7 +126,11 @@ export function OverflowTooltip({
   );
 }
 
-export function TruncatedTableCellContent({ children }: { readonly children: ReactNode }): ReactElement {
+export function TruncatedTableCellContent({
+  children,
+}: {
+  readonly children: ReactNode;
+}): ReactElement {
   return (
     <OverflowTooltip component="div" sx={truncatedCellContentSx} measureNested>
       {children}

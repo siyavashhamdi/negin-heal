@@ -40,7 +40,7 @@ export function scrollToCourseDetailSection(section: CourseDetailSectionTab): vo
 
 /** Picks the last section whose top has passed the pinned-tabs offset (scroll-spy). */
 export function resolveCourseDetailSectionFromScroll(
-  visibleTabs: readonly CourseDetailSectionTab[],
+  visibleTabs: readonly CourseDetailSectionTab[]
 ): CourseDetailSectionTab {
   const offset = getCourseDetailPinnedTabsScrollOffset() + 8;
   let activeTab: CourseDetailSectionTab = visibleTabs[0] ?? "intro";

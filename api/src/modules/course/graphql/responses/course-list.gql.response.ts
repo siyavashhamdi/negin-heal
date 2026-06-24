@@ -179,7 +179,8 @@ export class CourseListGqlResponse {
   isReviewSubmissionEnabled: boolean;
 
   @Field({
-    description: "Whether the reviews section is visible on the course detail page",
+    description:
+      "Whether the reviews section is visible on the course detail page",
   })
   isReviewsSectionVisible: boolean;
 

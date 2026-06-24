@@ -66,7 +66,8 @@ export class GlobalAnouncementSendGqlInput {
   @Field(() => Boolean, {
     defaultValue: false,
     nullable: true,
-    description: "Whether this notification should also be pushed through native push channel",
+    description:
+      "Whether this notification should also be pushed through native push channel",
   })
   @IsOptional()
   @IsBoolean({ message: "isPushNotification must be a boolean" })

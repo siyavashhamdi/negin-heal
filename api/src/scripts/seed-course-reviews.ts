@@ -241,9 +241,7 @@ function buildRatedAt(paidAt: Date, now: Date): Date {
     (now.getTime() - paidAt.getTime()) / (24 * 60 * 60 * 1000),
   );
   const daysAfterPurchase =
-    daysSincePurchase < 1
-      ? 0
-      : 1 + randomInt(Math.min(14, daysSincePurchase));
+    daysSincePurchase < 1 ? 0 : 1 + randomInt(Math.min(14, daysSincePurchase));
   return new Date(paidAt.getTime() + daysAfterPurchase * 24 * 60 * 60 * 1000);
 }
 
@@ -260,7 +258,8 @@ function shiftStoredDate(value: unknown): Date | undefined {
     return undefined;
   }
 
-  const date = value instanceof Date ? value : new Date(value as string | number);
+  const date =
+    value instanceof Date ? value : new Date(value as string | number);
   if (Number.isNaN(date.getTime())) {
     return undefined;
   }
@@ -354,7 +353,9 @@ async function shiftStoredSeedDates(
   for (const user of users) {
     const $set: Record<string, unknown> = {};
     const emailVerifiedAt = shiftStoredDate(user.verification?.emailVerifiedAt);
-    const mobileVerifiedAt = shiftStoredDate(user.verification?.mobileVerifiedAt);
+    const mobileVerifiedAt = shiftStoredDate(
+      user.verification?.mobileVerifiedAt,
+    );
     const auditCreatedAt = shiftStoredDate(user.audit?.createdAt);
     const auditUpdatedAt = shiftStoredDate(user.audit?.updatedAt);
 

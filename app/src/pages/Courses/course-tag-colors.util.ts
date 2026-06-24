@@ -19,7 +19,7 @@ export function getCourseTagChipSx(text: string) {
       minWidth: 0,
       maxWidth: "100%",
     },
-    "body[data-theme=\"dark\"] &": {
+    'body[data-theme="dark"] &': {
       borderColor: `hsl(${hue} ${TAG_COLOR_SATURATION - 15}% 34%)`,
       bgcolor: `hsl(${hue} ${TAG_COLOR_SATURATION - 25}% 18%)`,
       color: `hsl(${hue} ${TAG_COLOR_SATURATION - 10}% 82%)`,

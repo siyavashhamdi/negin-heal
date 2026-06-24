@@ -12,10 +12,11 @@ import {
   Typography,
 } from "@mui/material";
 import FileUploadField from "../../../shared/forms/FileUploadField";
-import { MULTILINE_TEXTAREA_MIN_ROWS, MULTILINE_TEXTAREA_MAX_ROWS } from "../../../constants/multilineTextarea.constants";
 import {
-  FILE_UPLOAD_POLICY_MAX_SIZE_BYTES,
-} from "../../../constants/fileUploadPolicies";
+  MULTILINE_TEXTAREA_MIN_ROWS,
+  MULTILINE_TEXTAREA_MAX_ROWS,
+} from "../../../constants/multilineTextarea.constants";
+import { FILE_UPLOAD_POLICY_MAX_SIZE_BYTES } from "../../../constants/fileUploadPolicies";
 import type { ExistingFilePreview } from "../../../utils/fileAccessUrl.util";
 import CourseTagInput from "../CourseTagInput";
 import type { DiscountKind } from "./types";
@@ -188,9 +189,7 @@ const MainInfoSection = ({
                   control={
                     <Switch
                       checked={isReviewSubmissionEnabled}
-                      onChange={(event) =>
-                        onIsReviewSubmissionEnabledChange(event.target.checked)
-                      }
+                      onChange={(event) => onIsReviewSubmissionEnabledChange(event.target.checked)}
                     />
                   }
                   label="ثبت نظر فعال باشد."
@@ -219,7 +218,9 @@ const MainInfoSection = ({
                       <Select
                         value={discountKind}
                         label="نوع تخفیف"
-                        onChange={(event) => onDiscountKindChange(event.target.value as DiscountKind)}
+                        onChange={(event) =>
+                          onDiscountKindChange(event.target.value as DiscountKind)
+                        }
                       >
                         <MenuItem value="PERCENTAGE">درصدی</MenuItem>
                         <MenuItem value="FIXED_AMOUNT_IRT">مبلغ ثابت (تومان)</MenuItem>
@@ -236,7 +237,7 @@ const MainInfoSection = ({
                         onDiscountValueChange(
                           discountKind === "PERCENTAGE"
                             ? sanitizePercentageValue(event.target.value)
-                            : formatIntegerWithThousands(event.target.value),
+                            : formatIntegerWithThousands(event.target.value)
                         )
                       }
                       inputProps={{ inputMode: "decimal" }}

@@ -10,7 +10,16 @@ import {
 } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Clear as ClearIcon } from "@mui/icons-material";
-import { Chip, IconButton, InputAdornment, MenuItem, Stack, TextField, Typography, useMediaQuery } from "@mui/material";
+import {
+  Chip,
+  IconButton,
+  InputAdornment,
+  MenuItem,
+  Stack,
+  TextField,
+  Typography,
+  useMediaQuery,
+} from "@mui/material";
 import {
   getCoreRowModel,
   getSortedRowModel,
@@ -88,7 +97,7 @@ type SupportListViewMode = "staff" | "endUser";
 
 function getSupportTicketColumnVisibility(
   viewMode: SupportListViewMode,
-  isMobile: boolean,
+  isMobile: boolean
 ): VisibilityState {
   const staffDefaults: VisibilityState = {
     id: false,
@@ -190,7 +199,7 @@ function orEmpty(value: string): string {
 }
 
 function selectTicketListPage(
-  data: TicketListQuery | undefined,
+  data: TicketListQuery | undefined
 ): ServerPageResult<SupportTicketListItemRow> | null {
   const page = data?.ticketList;
   if (!page) {
@@ -211,7 +220,7 @@ function selectTicketListPage(
 }
 
 function selectUserTicketListPage(
-  data: UserTicketListQuery | undefined,
+  data: UserTicketListQuery | undefined
 ): ServerPageResult<UserSupportTicketListItemRow> | null {
   const page = data?.userTicketList;
   if (!page) {
@@ -247,11 +256,11 @@ type SupportTicketListInnerProps = {
   readonly onClearFilters: () => void;
   readonly onPendingFilterChange: <K extends keyof SupportTicketListFilters>(
     key: K,
-    value: SupportTicketListFilters[K],
+    value: SupportTicketListFilters[K]
   ) => void;
   readonly onPendingStaffFilterChange: <K extends keyof SupportTicketListFilters>(
     key: K,
-    value: SupportTicketListFilters[K],
+    value: SupportTicketListFilters[K]
   ) => void;
   readonly searchQuery: string;
   readonly onSearchQueryChange: (value: string) => void;
@@ -287,7 +296,7 @@ function SupportTicketListInner({
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(() =>
-    getSupportTicketColumnVisibility(viewMode, isMobile),
+    getSupportTicketColumnVisibility(viewMode, isMobile)
   );
   const [showColumnFilters, setShowColumnFilters] = useState(false);
   const applyFiltersRef = useRef<(() => void) | null>(null);
@@ -301,19 +310,19 @@ function SupportTicketListInner({
   const shouldFetchTicketDetail = viewMode === "staff" && viewRouteId != null;
   const shouldFetchUserTicketDetail = viewMode === "endUser" && viewRouteId != null;
 
-  const {
-    data: ticketDetailData,
-    loading: ticketDetailLoading,
-  } = useQuery<TicketDetailQuery, TicketDetailQueryVariables>(TICKET_DETAIL_QUERY, {
+  const { data: ticketDetailData, loading: ticketDetailLoading } = useQuery<
+    TicketDetailQuery,
+    TicketDetailQueryVariables
+  >(TICKET_DETAIL_QUERY, {
     variables: { input: { id: viewRouteId ?? "" } },
     skip: !shouldFetchTicketDetail,
     fetchPolicy: "network-only",
   });
 
-  const {
-    data: userTicketDetailData,
-    loading: userTicketDetailLoading,
-  } = useQuery<UserTicketDetailQuery, UserTicketDetailQueryVariables>(USER_TICKET_DETAIL_QUERY, {
+  const { data: userTicketDetailData, loading: userTicketDetailLoading } = useQuery<
+    UserTicketDetailQuery,
+    UserTicketDetailQueryVariables
+  >(USER_TICKET_DETAIL_QUERY, {
     variables: { input: { id: viewRouteId ?? "" } },
     skip: !shouldFetchUserTicketDetail,
     fetchPolicy: "network-only",
@@ -561,7 +570,7 @@ function SupportTicketListInner({
         !("accessorKey" in column) ||
         (column.accessorKey !== "createdByUserName" &&
           column.accessorKey !== "updatedByUserName" &&
-          column.accessorKey !== "closedByUserName"),
+          column.accessorKey !== "closedByUserName")
     );
   }, [canReply, t, viewMode]);
 
@@ -621,7 +630,7 @@ function SupportTicketListInner({
 
   const renderStaffTextFilter = (
     key: "createdByUserId" | "updatedByUserId" | "closedByUserId" | "attachmentFileId",
-    label: string,
+    label: string
   ): ReactElement => (
     <TextField
       size="small"
@@ -636,7 +645,7 @@ function SupportTicketListInner({
     key: "category" | "priority" | "status" | "closedBy",
     label: string,
     options: readonly string[],
-    labels: Record<string, string>,
+    labels: Record<string, string>
   ): ReactElement => (
     <TextField
       select
@@ -661,7 +670,7 @@ function SupportTicketListInner({
     fromKey: "createdAtFrom" | "updatedAtFrom" | "closedAtFrom",
     toKey: "createdAtTo" | "updatedAtTo" | "closedAtTo",
     fromLabel: string,
-    toLabel: string,
+    toLabel: string
   ): ReactElement => (
     <Stack spacing={1}>
       <JalaliDateFilterField
@@ -688,7 +697,7 @@ function SupportTicketListInner({
         "category",
         t("table.pages.support.columns.category"),
         TICKET_CATEGORY_OPTIONS,
-        TICKET_CATEGORY_LABEL,
+        TICKET_CATEGORY_LABEL
       );
     }
     if (column.id === "priority") {
@@ -696,7 +705,7 @@ function SupportTicketListInner({
         "priority",
         t("table.pages.support.columns.priority"),
         TICKET_PRIORITY_OPTIONS,
-        TICKET_PRIORITY_LABEL,
+        TICKET_PRIORITY_LABEL
       );
     }
     if (column.id === "status") {
@@ -704,7 +713,7 @@ function SupportTicketListInner({
         "status",
         t("table.pages.support.columns.status"),
         TICKET_STATUS_OPTIONS,
-        TICKET_STATUS_LABEL,
+        TICKET_STATUS_LABEL
       );
     }
     if (column.id === "closedBy") {
@@ -712,7 +721,7 @@ function SupportTicketListInner({
         "closedBy",
         t("table.pages.support.columns.closedBy"),
         TICKET_CLOSED_BY_OPTIONS,
-        TICKET_CLOSED_BY_LABEL,
+        TICKET_CLOSED_BY_LABEL
       );
     }
     if (column.id === "lastMessageBody") {
@@ -721,19 +730,19 @@ function SupportTicketListInner({
     if (column.id === "createdByUserName" && viewMode === "staff") {
       return renderStaffTextFilter(
         "createdByUserId",
-        t("table.pages.support.columns.createdByUserName"),
+        t("table.pages.support.columns.createdByUserName")
       );
     }
     if (column.id === "updatedByUserName" && viewMode === "staff") {
       return renderStaffTextFilter(
         "updatedByUserId",
-        t("table.pages.support.columns.updatedByUserName"),
+        t("table.pages.support.columns.updatedByUserName")
       );
     }
     if (column.id === "closedByUserName" && viewMode === "staff") {
       return renderStaffTextFilter(
         "closedByUserId",
-        t("table.pages.support.columns.closedByUserName"),
+        t("table.pages.support.columns.closedByUserName")
       );
     }
     if (column.id === "attachmentCount") {
@@ -752,7 +761,7 @@ function SupportTicketListInner({
         "createdAtFrom",
         "createdAtTo",
         t("table.pages.support.filters.createdAtFrom"),
-        t("table.pages.support.filters.createdAtTo"),
+        t("table.pages.support.filters.createdAtTo")
       );
     }
     if (column.id === "updatedAt") {
@@ -760,7 +769,7 @@ function SupportTicketListInner({
         "updatedAtFrom",
         "updatedAtTo",
         t("table.pages.support.filters.updatedAtFrom"),
-        t("table.pages.support.filters.updatedAtTo"),
+        t("table.pages.support.filters.updatedAtTo")
       );
     }
     if (column.id === "closedAt") {
@@ -768,7 +777,7 @@ function SupportTicketListInner({
         "closedAtFrom",
         "closedAtTo",
         t("table.pages.support.filters.closedAtFrom"),
-        t("table.pages.support.filters.closedAtTo"),
+        t("table.pages.support.filters.closedAtTo")
       );
     }
     return null;
@@ -841,20 +850,27 @@ function StaffSupportTicketList({
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const [appliedFilters, setAppliedFilters] = useState<SupportTicketListFilters>(
-    EMPTY_SUPPORT_TICKET_LIST_FILTERS,
+    EMPTY_SUPPORT_TICKET_LIST_FILTERS
   );
   const [pendingFilters, setPendingFilters] = useState<SupportTicketListFilters>(
-    EMPTY_SUPPORT_TICKET_LIST_FILTERS,
+    EMPTY_SUPPORT_TICKET_LIST_FILTERS
   );
   const debouncedPendingFilters = useDebounce(pendingFilters, 500);
 
   const buildVariables = useCallback(
     ({ page, pageSize }: { page: number; pageSize: number }) =>
       buildTicketListQueryVariables(debouncedSearchQuery, appliedFilters, page, pageSize),
-    [appliedFilters, debouncedSearchQuery],
+    [appliedFilters, debouncedSearchQuery]
   );
 
-  const { items: rows, loading, error, onRefresh, pagination, page } = useServerPaginatedQuery<
+  const {
+    items: rows,
+    loading,
+    error,
+    onRefresh,
+    pagination,
+    page,
+  } = useServerPaginatedQuery<
     TicketListQuery,
     TicketListQueryVariables,
     SupportTicketListItemRow,
@@ -912,20 +928,27 @@ function EndUserSupportTicketList({
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const [appliedFilters, setAppliedFilters] = useState<UserSupportTicketListFilters>(
-    EMPTY_USER_SUPPORT_TICKET_LIST_FILTERS,
+    EMPTY_USER_SUPPORT_TICKET_LIST_FILTERS
   );
   const [pendingFilters, setPendingFilters] = useState<UserSupportTicketListFilters>(
-    EMPTY_USER_SUPPORT_TICKET_LIST_FILTERS,
+    EMPTY_USER_SUPPORT_TICKET_LIST_FILTERS
   );
   const debouncedPendingFilters = useDebounce(pendingFilters, 500);
 
   const buildVariables = useCallback(
     ({ page, pageSize }: { page: number; pageSize: number }) =>
       buildUserTicketListQueryVariables(debouncedSearchQuery, appliedFilters, page, pageSize),
-    [appliedFilters, debouncedSearchQuery],
+    [appliedFilters, debouncedSearchQuery]
   );
 
-  const { items: rows, loading, error, onRefresh, pagination, page } = useServerPaginatedQuery<
+  const {
+    items: rows,
+    loading,
+    error,
+    onRefresh,
+    pagination,
+    page,
+  } = useServerPaginatedQuery<
     UserTicketListQuery,
     UserTicketListQueryVariables,
     UserSupportTicketListItemRow,
@@ -980,22 +1003,10 @@ const SupportList = (): ReactElement => {
   const isStaff = isSuperAdmin;
 
   if (isStaff) {
-    return (
-      <StaffSupportTicketList
-        canCreate
-        canReply
-        isSuperAdmin
-      />
-    );
+    return <StaffSupportTicketList canCreate canReply isSuperAdmin />;
   }
 
-  return (
-    <EndUserSupportTicketList
-      canCreate
-      canReply
-      isSuperAdmin={false}
-    />
-  );
+  return <EndUserSupportTicketList canCreate canReply isSuperAdmin={false} />;
 };
 
 export default SupportList;

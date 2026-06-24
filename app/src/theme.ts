@@ -417,7 +417,8 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
           paper: {
             backgroundColor: "var(--app-popover-bg)",
             backgroundImage: "none",
-            border: "0.0625rem solid color-mix(in srgb, var(--app-surface-border) 72%, transparent)",
+            border:
+              "0.0625rem solid color-mix(in srgb, var(--app-surface-border) 72%, transparent)",
           },
           listbox: {
             backgroundColor: "var(--app-popover-bg)",
@@ -429,7 +430,8 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
           paper: {
             backgroundColor: "var(--app-popover-bg)",
             backgroundImage: "none",
-            border: "0.0625rem solid color-mix(in srgb, var(--app-surface-border) 72%, transparent)",
+            border:
+              "0.0625rem solid color-mix(in srgb, var(--app-surface-border) 72%, transparent)",
           },
           list: {
             backgroundColor: "var(--app-popover-bg)",
@@ -441,7 +443,8 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
           paper: {
             backgroundColor: "var(--app-popover-bg)",
             backgroundImage: "none",
-            border: "0.0625rem solid color-mix(in srgb, var(--app-surface-border) 72%, transparent)",
+            border:
+              "0.0625rem solid color-mix(in srgb, var(--app-surface-border) 72%, transparent)",
           },
         },
       },
@@ -501,15 +504,17 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
         styleOverrides: {
           root: {
             ...transparentInputChrome,
-            "&.MuiInputBase-sizeSmall:not(.MuiInputBase-multiline):not(:has(.MuiAutocomplete-tag))": {
-              minHeight: INPUT_MIN_HEIGHT,
-              alignItems: "center",
-            },
-            [`${TABLE_SHELL_SCOPE} &`]: {
-              "&.MuiInputBase-sizeSmall:not(.MuiInputBase-multiline):not(:has(.MuiAutocomplete-tag))": {
-                minHeight: TABLE_INPUT_MIN_HEIGHT,
+            "&.MuiInputBase-sizeSmall:not(.MuiInputBase-multiline):not(:has(.MuiAutocomplete-tag))":
+              {
+                minHeight: INPUT_MIN_HEIGHT,
                 alignItems: "center",
               },
+            [`${TABLE_SHELL_SCOPE} &`]: {
+              "&.MuiInputBase-sizeSmall:not(.MuiInputBase-multiline):not(:has(.MuiAutocomplete-tag))":
+                {
+                  minHeight: TABLE_INPUT_MIN_HEIGHT,
+                  alignItems: "center",
+                },
             },
             "& .MuiInputBase-input": {
               ...transparentInputChrome,
@@ -542,10 +547,11 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
               alignItems: "center",
             },
             [`${TABLE_SHELL_SCOPE} &`]: {
-              "&.MuiInputBase-sizeSmall:not(.MuiInputBase-multiline):not(:has(.MuiAutocomplete-tag))": {
-                minHeight: TABLE_INPUT_MIN_HEIGHT,
-                alignItems: "center",
-              },
+              "&.MuiInputBase-sizeSmall:not(.MuiInputBase-multiline):not(:has(.MuiAutocomplete-tag))":
+                {
+                  minHeight: TABLE_INPUT_MIN_HEIGHT,
+                  alignItems: "center",
+                },
               "&.MuiInputBase-sizeSmall:not(.MuiInputBase-multiline) .MuiInputBase-input:not(.MuiInputBase-inputMultiline), &.MuiInputBase-sizeSmall:not(.MuiInputBase-multiline) .MuiSelect-select":
                 {
                   paddingTop: TABLE_INPUT_PADDING_BLOCK,
@@ -737,16 +743,18 @@ export const createAppTheme = (mode: PaletteMode): Theme => {
 export const SNACKBAR_ALERT_CLASS = "app-snackbar-alert";
 
 /** Solid filled snackbar tones — matches MUI `filled` Alert in dark mode. */
-const SNACKBAR_FILLED_ALERT_TONES: Record<AlertColor, { backgroundColor: string; color: string }> = {
-  success: { backgroundColor: darkColors.success.dark, color: "#ffffff" },
-  error: { backgroundColor: darkColors.error.dark, color: "#ffffff" },
-  warning: { backgroundColor: darkColors.warning.dark, color: "#ffffff" },
-  info: { backgroundColor: darkColors.info.dark, color: "#ffffff" },
-};
+const SNACKBAR_FILLED_ALERT_TONES: Record<AlertColor, { backgroundColor: string; color: string }> =
+  {
+    success: { backgroundColor: darkColors.success.dark, color: "#ffffff" },
+    error: { backgroundColor: darkColors.error.dark, color: "#ffffff" },
+    warning: { backgroundColor: darkColors.warning.dark, color: "#ffffff" },
+    info: { backgroundColor: darkColors.info.dark, color: "#ffffff" },
+  };
 
-export function getSnackbarFilledAlertTone(
-  severity: AlertColor,
-): { backgroundColor: string; color: string } {
+export function getSnackbarFilledAlertTone(severity: AlertColor): {
+  backgroundColor: string;
+  color: string;
+} {
   return SNACKBAR_FILLED_ALERT_TONES[severity];
 }
 

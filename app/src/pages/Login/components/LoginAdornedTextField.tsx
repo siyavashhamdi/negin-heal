@@ -43,11 +43,7 @@ export function LoginAdornedTextField({
     <TextField
       {...props}
       value={value}
-      label={
-        <RequiredFieldLabel required={required}>
-          {label}
-        </RequiredFieldLabel>
-      }
+      label={<RequiredFieldLabel required={required}>{label}</RequiredFieldLabel>}
       required={false}
       variant={variant}
       className={[

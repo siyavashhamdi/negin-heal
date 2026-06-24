@@ -70,7 +70,10 @@ import FileUploadField from "../../shared/forms/FileUploadField";
 import AppTooltip from "../../shared/AppTooltip";
 import { getFileIdFromAccessUrl } from "../../utils/fileAccessUrl.util";
 import { hasFormChanges } from "../../utils/formChange.util";
-import { MULTILINE_TEXTAREA_MIN_ROWS, MULTILINE_TEXTAREA_MAX_ROWS } from "../../constants/multilineTextarea.constants";
+import {
+  MULTILINE_TEXTAREA_MIN_ROWS,
+  MULTILINE_TEXTAREA_MAX_ROWS,
+} from "../../constants/multilineTextarea.constants";
 import { uploadFile } from "../../utils/fileUpload.util";
 import {
   FILE_UPLOAD_POLICY,
@@ -292,8 +295,7 @@ function renderReceiptFileSection(record: CoursePaymentRecord): ReactElement | n
   }
 
   const existingFile = buildPaymentReceiptExistingFile(record);
-  const canUseReadOnlyUploader =
-    existingFile != null && isImageMimeType(existingFile.mimeType);
+  const canUseReadOnlyUploader = existingFile != null && isImageMimeType(existingFile.mimeType);
   const title =
     record.uploadedReceiptFileTitle !== "-" ? record.uploadedReceiptFileTitle : "رسید پرداخت";
   const mimeType =
@@ -1494,9 +1496,7 @@ const PaymentsList = (): ReactElement => {
           reviewPaymentId != null ? `${reviewPaymentId}-${Boolean(reviewPayment)}` : undefined
         }
         title="بررسی پرداخت"
-        subtitle={
-          reviewPayment?.courseTitle?.trim() || t("pages.payments.review.subtitle")
-        }
+        subtitle={reviewPayment?.courseTitle?.trim() || t("pages.payments.review.subtitle")}
         footer={
           <ReviewPaymentDialogActions
             onCancel={closeReviewDialog}

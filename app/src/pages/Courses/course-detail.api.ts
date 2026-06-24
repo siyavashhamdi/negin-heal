@@ -54,18 +54,9 @@ export type UserCourseDetailQueryVariables = {
   };
 };
 
-export type UserCoursePaymentMethod =
-  | "GATEWAY"
-  | "CARD_TO_CARD"
-  | "CRYPTOCURRENCY"
-  | "FREE";
+export type UserCoursePaymentMethod = "GATEWAY" | "CARD_TO_CARD" | "CRYPTOCURRENCY" | "FREE";
 
-export type UserCoursePurchaseStatus =
-  | "PENDING"
-  | "PAID"
-  | "FAILED"
-  | "REFUNDED"
-  | "CANCELLED";
+export type UserCoursePurchaseStatus = "PENDING" | "PAID" | "FAILED" | "REFUNDED" | "CANCELLED";
 
 export type CouponDiscountType = "PERCENTAGE" | "FIXED_AMOUNT";
 
@@ -185,7 +176,7 @@ export type CourseChapterCompleteMutationVariables = {
 
 export function getDiscountedPrice(
   priceIrt?: number | null,
-  discount?: CourseDetailRecord["discount"],
+  discount?: CourseDetailRecord["discount"]
 ): number | null {
   if (!priceIrt || !discount || discount.value <= 0) {
     return null;
@@ -233,7 +224,7 @@ function diffInCalendarDays(unlockDate: Date, now: Date): number {
 
 export function getChapterUnlockRemainingMs(
   unlocksAt?: string | null,
-  now: Date = new Date(),
+  now: Date = new Date()
 ): number | null {
   if (!unlocksAt) {
     return null;
@@ -249,7 +240,7 @@ export function getChapterUnlockRemainingMs(
 
 export function shouldShowChapterUnlockCountdown(
   unlocksAt?: string | null,
-  now: Date = new Date(),
+  now: Date = new Date()
 ): boolean {
   const remainingMs = getChapterUnlockRemainingMs(unlocksAt, now);
   if (remainingMs == null) {
@@ -275,7 +266,7 @@ export function formatChapterUnlockCountdown(remainingMs: number): string {
 
 export function formatChapterUnlockRelativeMessage(
   unlocksAt?: string | null,
-  now: Date = new Date(),
+  now: Date = new Date()
 ): string | null {
   if (!unlocksAt) {
     return null;
@@ -304,7 +295,7 @@ export function formatChapterUnlockRelativeMessage(
 }
 
 export function isGradualChapterLock(
-  chapter: Pick<CourseDetailChapter, "isLocked" | "unlocksAt">,
+  chapter: Pick<CourseDetailChapter, "isLocked" | "unlocksAt">
 ): boolean {
   return chapter.isLocked && Boolean(chapter.unlocksAt);
 }
@@ -361,9 +352,7 @@ export function getCourseContentAccessNoteText({
         : " فصل‌های زمان‌بندی‌شده در زمان مقرر باز می‌شوند.";
     }
 
-    return isSingleChapter
-      ? " بخشی از محتوا هنوز قفل است."
-      : " برخی فصل‌ها هنوز قفل هستند.";
+    return isSingleChapter ? " بخشی از محتوا هنوز قفل است." : " برخی فصل‌ها هنوز قفل هستند.";
   }
 
   if (isGradualRelease) {

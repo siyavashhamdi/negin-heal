@@ -111,7 +111,7 @@ function textCell(value: unknown, latin = false): ReactElement {
 }
 
 function selectAppSettingListPage(
-  data: AppSettingKeyListQuery | undefined,
+  data: AppSettingKeyListQuery | undefined
 ): ServerPageResult<AppSettingKeyListItemRow> | null {
   const page = data?.appSettingKeyList;
   if (!page) {
@@ -132,7 +132,7 @@ function selectAppSettingListPage(
 }
 
 function sortingToServerSort(
-  sorting: SortingState,
+  sorting: SortingState
 ): Partial<Record<AppSettingListSortField, SortingOrder>> {
   const sort = sorting.find((item) => SORTABLE_FIELDS.has(item.id as AppSettingListSortField));
   if (!sort) {
@@ -179,10 +179,10 @@ const SystemSettingsIndex = (): ReactElement => {
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const [appliedFilters, setAppliedFilters] = useState<AppSettingListFilters>(
-    EMPTY_APP_SETTING_LIST_FILTERS,
+    EMPTY_APP_SETTING_LIST_FILTERS
   );
   const [pendingFilters, setPendingFilters] = useState<AppSettingListFilters>(
-    EMPTY_APP_SETTING_LIST_FILTERS,
+    EMPTY_APP_SETTING_LIST_FILTERS
   );
   const debouncedPendingFilters = useDebounce(pendingFilters, 500);
   const applyFiltersRef = useRef<(() => void) | null>(null);
@@ -190,7 +190,7 @@ const SystemSettingsIndex = (): ReactElement => {
 
   const hasAppliedFilters = useMemo(
     () => debouncedSearchQuery.trim() !== "" || hasAppSettingFiltersApplied(appliedFilters),
-    [appliedFilters, debouncedSearchQuery],
+    [appliedFilters, debouncedSearchQuery]
   );
 
   const buildVariables = useCallback(
@@ -200,9 +200,9 @@ const SystemSettingsIndex = (): ReactElement => {
         appliedFilters,
         serverSort,
         page,
-        pageSize,
+        pageSize
       ),
-    [appliedFilters, debouncedSearchQuery, serverSort],
+    [appliedFilters, debouncedSearchQuery, serverSort]
   );
 
   const {
@@ -322,14 +322,16 @@ const SystemSettingsIndex = (): ReactElement => {
         header: t("table.columns.actions"),
         cell: ({ row }) => (
           <CrudRowActions
-            onEdit={() => navigate(`${APP_SHELL_ROUTES.moreSystemSettings}/edit/${row.original.id}`)}
+            onEdit={() =>
+              navigate(`${APP_SHELL_ROUTES.moreSystemSettings}/edit/${row.original.id}`)
+            }
           />
         ),
         enableSorting: false,
         enableHiding: false,
       },
     ],
-    [navigate, t],
+    [navigate, t]
   );
 
   const table = useReactTable({
@@ -371,14 +373,14 @@ const SystemSettingsIndex = (): ReactElement => {
 
   const setFilterValue = <TKey extends keyof AppSettingListFilters>(
     key: TKey,
-    value: AppSettingListFilters[TKey],
+    value: AppSettingListFilters[TKey]
   ): void => {
     setPendingFilters((prev) => ({ ...prev, [key]: value }));
   };
 
   const renderTextFilter = (
     key: keyof Pick<AppSettingListFilters, "id" | "key" | "label">,
-    label: string,
+    label: string
   ): ReactElement => {
     const filterValue = pendingFilters[key];
     return (
@@ -406,7 +408,7 @@ const SystemSettingsIndex = (): ReactElement => {
     fromKey: keyof AppSettingListFilters,
     toKey: keyof AppSettingListFilters,
     fromLabel: string,
-    toLabel: string,
+    toLabel: string
   ): ReactElement => (
     <Stack spacing={0.5}>
       <JalaliDateFilterField
@@ -476,14 +478,14 @@ const SystemSettingsIndex = (): ReactElement => {
           "createdAtFrom",
           "createdAtTo",
           t("table.pages.appSettings.filters.createdAtFrom"),
-          t("table.pages.appSettings.filters.createdAtTo"),
+          t("table.pages.appSettings.filters.createdAtTo")
         );
       case "updatedAt":
         return renderDateFilter(
           "updatedAtFrom",
           "updatedAtTo",
           t("table.pages.appSettings.filters.updatedAtFrom"),
-          t("table.pages.appSettings.filters.updatedAtTo"),
+          t("table.pages.appSettings.filters.updatedAtTo")
         );
       default:
         return null;
@@ -515,9 +517,7 @@ const SystemSettingsIndex = (): ReactElement => {
         noDataLabel={error ? t("errors.general.loadData") : undefined}
         hasActiveFilters={hasAppliedFilters}
         pagination={pagination}
-        onRowClick={(row) =>
-          navigate(`${APP_SHELL_ROUTES.moreSystemSettings}/edit/${row.id}`)
-        }
+        onRowClick={(row) => navigate(`${APP_SHELL_ROUTES.moreSystemSettings}/edit/${row.id}`)}
       />
       <SystemSettingEditDialog
         open={editDialogOpen}

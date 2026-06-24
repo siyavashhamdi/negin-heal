@@ -6,7 +6,7 @@ export function buildCourseItemPreviewId(chapterKey: string, itemIndex: number):
 
 export function findCourseDetailItemByPreviewId(
   chapters: readonly CourseDetailChapter[],
-  previewId: string,
+  previewId: string
 ): { chapterKey: string; itemIndex: number; item: CourseDetailItem } | null {
   const match = /^([^:]+):(\d+)$/.exec(previewId.trim());
   if (!match) {

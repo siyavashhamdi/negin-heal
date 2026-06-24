@@ -317,12 +317,7 @@ const FileUploadField = ({
     }
     setIsMaximized(false);
     setIsViewOpen(false);
-  }, [
-    isPreviewControlled,
-    maxRoutePreview,
-    onPreviewDialogClose,
-    usesUrlMaxRoute,
-  ]);
+  }, [isPreviewControlled, maxRoutePreview, onPreviewDialogClose, usesUrlMaxRoute]);
 
   const isPreviewActionEnabled = useCallback(
     (action: FileUploadPreviewAction): boolean => {
@@ -476,7 +471,7 @@ const FileUploadField = ({
       setPickErrorMessage(null);
       onChange(nextFile);
     },
-    [accept, allowedFormatsLabel, maxSizeBytes, onChange],
+    [accept, allowedFormatsLabel, maxSizeBytes, onChange]
   );
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>): void => {

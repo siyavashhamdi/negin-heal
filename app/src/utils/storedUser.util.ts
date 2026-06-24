@@ -23,15 +23,17 @@ export function mapMeToUser(me: UserMeGqlResponse): User {
 
 export function joinProfileDisplayName(
   firstName?: string | null,
-  lastName?: string | null,
+  lastName?: string | null
 ): string {
-  const parts = [firstName?.trim(), lastName?.trim()].filter((part): part is string => Boolean(part));
+  const parts = [firstName?.trim(), lastName?.trim()].filter((part): part is string =>
+    Boolean(part)
+  );
   return parts.join(" ");
 }
 
 export function resolveStoredUserDisplayName(
   user: Pick<User, "username" | "firstName" | "lastName"> | null | undefined,
-  fallback = "",
+  fallback = ""
 ): string {
   if (!user) {
     return fallback;
@@ -52,16 +54,13 @@ export function resolveAvatarInitial(displayName: string, fallback = "?"): strin
 
 export function resolveMeUserDisplayName(
   meUser: MeDisplayNameLike | null | undefined,
-  fallback = "",
+  fallback = ""
 ): string {
   if (!meUser) {
     return fallback;
   }
 
-  const joined = joinProfileDisplayName(
-    meUser.profile?.firstName,
-    meUser.profile?.lastName,
-  );
+  const joined = joinProfileDisplayName(meUser.profile?.firstName, meUser.profile?.lastName);
   if (joined) {
     return joined;
   }

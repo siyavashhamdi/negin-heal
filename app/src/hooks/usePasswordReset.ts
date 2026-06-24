@@ -70,10 +70,7 @@ export const usePasswordReset = () => {
       }
 
       showSuccess(
-        resolveSuccessMessage(
-          payload.message,
-          "auth.login.success.passwordResetCodeSent",
-        ),
+        resolveSuccessMessage(payload.message, "auth.login.success.passwordResetCodeSent")
       );
       return true;
     } catch (error) {
@@ -106,10 +103,7 @@ export const usePasswordReset = () => {
       }
 
       showSuccess(
-        resolveSuccessMessage(
-          payload.message,
-          "auth.login.success.passwordResetSuccessful",
-        ),
+        resolveSuccessMessage(payload.message, "auth.login.success.passwordResetSuccessful")
       );
       return true;
     } catch (error) {

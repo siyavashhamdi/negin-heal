@@ -1,6 +1,4 @@
-import {
-  getRelativeTimeNextTickMs,
-} from "./relative-time.util";
+import { getRelativeTimeNextTickMs } from "./relative-time.util";
 
 type RelativeTimeSubscriber = {
   readonly dateMs: number;

@@ -122,12 +122,18 @@ function extractGraphQLErrorCode(error: unknown): string | undefined {
     return undefined;
   }
 
-  const graphQLErrors = (error as {
-    errors?: Array<{ code?: string; extensions?: { code?: string } }>;
-    graphQLErrors?: Array<{ code?: string; extensions?: { code?: string } }>;
-  }).errors ?? (error as {
-    graphQLErrors?: Array<{ code?: string; extensions?: { code?: string } }>;
-  }).graphQLErrors;
+  const graphQLErrors =
+    (
+      error as {
+        errors?: Array<{ code?: string; extensions?: { code?: string } }>;
+        graphQLErrors?: Array<{ code?: string; extensions?: { code?: string } }>;
+      }
+    ).errors ??
+    (
+      error as {
+        graphQLErrors?: Array<{ code?: string; extensions?: { code?: string } }>;
+      }
+    ).graphQLErrors;
   const firstGraphQLError = graphQLErrors?.[0];
 
   return firstGraphQLError?.code || firstGraphQLError?.extensions?.code;
@@ -139,7 +145,7 @@ async function establishSession(
   showSuccess: (message: string) => void,
   showError: (message: string) => void,
   successMessage: string,
-  failureMessage: string,
+  failureMessage: string
 ): Promise<boolean> {
   localStorage.setItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN, accessToken);
 
@@ -204,8 +210,7 @@ export const useLogin = () => {
 
   const buildClientContext = () => collectSessionClientContextInput();
 
-  const normalizeIdentity = (identity: string): string =>
-    normalizeAuthIdentityForSubmit(identity);
+  const normalizeIdentity = (identity: string): string => normalizeAuthIdentityForSubmit(identity);
 
   const resolveAuthIdentity = async (input: RequestLoginCodeInput): Promise<boolean | null> => {
     try {
@@ -282,7 +287,7 @@ export const useLogin = () => {
         showSuccess,
         showError,
         t("auth.login.success.loginSuccessful"),
-        t("auth.login.errors.failed"),
+        t("auth.login.errors.failed")
       );
     } catch (err) {
       localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
@@ -296,8 +301,7 @@ export const useLogin = () => {
       const result = await requestSignupCodeMutation({
         variables: {
           input: {
-            mobile:
-              normalizeAuthIdentityMobileForSubmit(mobile.trim()) ?? mobile.trim(),
+            mobile: normalizeAuthIdentityMobileForSubmit(mobile.trim()) ?? mobile.trim(),
           },
         },
       });
@@ -357,7 +361,7 @@ export const useLogin = () => {
         showSuccess,
         showError,
         t("auth.login.success.loginSuccessful"),
-        t("auth.login.errors.failed"),
+        t("auth.login.errors.failed")
       );
       return { success };
     } catch (err) {
@@ -382,7 +386,7 @@ export const useLogin = () => {
               ? sanitizeLatinEmailInput(input.email).toLowerCase()
               : undefined,
             mobile: input.mobile?.trim()
-              ? normalizeAuthIdentityMobileForSubmit(input.mobile) ?? undefined
+              ? (normalizeAuthIdentityMobileForSubmit(input.mobile) ?? undefined)
               : undefined,
             profile: {
               firstName: input.profile.firstName.trim(),
@@ -417,7 +421,7 @@ export const useLogin = () => {
         showSuccess,
         showError,
         t("auth.login.success.signupSuccessful"),
-        t("auth.login.errors.failed"),
+        t("auth.login.errors.failed")
       );
     } catch (err) {
       localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);

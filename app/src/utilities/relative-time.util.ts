@@ -15,7 +15,13 @@ const RELATIVE_TIME_THRESHOLD_MS = RELATIVE_TIME_THRESHOLD_SECONDS * 1000;
 /** Smallest setTimeout delay — avoids 0 ms tight loops only. */
 const MIN_TIMEOUT_MS = 1;
 
-export type RelativeTimePeriod = "just_now" | "minutes" | "hours" | "yesterday" | "days" | "expired";
+export type RelativeTimePeriod =
+  | "just_now"
+  | "minutes"
+  | "hours"
+  | "yesterday"
+  | "days"
+  | "expired";
 
 function getStartOfNextLocalDay(from: Date): Date {
   const nextDay = new Date(from);
@@ -70,7 +76,7 @@ export function getRelativeTimePeriod(date: Date, now = Date.now()): RelativeTim
 
 export function shouldUseRelativeTimeLabel(
   value?: string | Date | null,
-  now = Date.now(),
+  now = Date.now()
 ): boolean {
   if (!value) {
     return false;
@@ -135,10 +141,7 @@ export function getRelativeTimeNextTickMs(date: Date, now = Date.now()): number 
 /**
  * Human-readable relative time label in Persian for notification timestamps.
  */
-export const formatRelativeTimeLabel = (
-  value?: string | Date | null,
-  now = Date.now(),
-): string => {
+export const formatRelativeTimeLabel = (value?: string | Date | null, now = Date.now()): string => {
   if (!value) {
     return "نامشخص";
   }

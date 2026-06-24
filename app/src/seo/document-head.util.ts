@@ -37,11 +37,7 @@ function removeUnmanagedStaticSeoFallbacks(): void {
   }
 }
 
-function upsertMeta(
-  attribute: "name" | "property",
-  key: string,
-  content: string,
-): void {
+function upsertMeta(attribute: "name" | "property", key: string, content: string): void {
   const selector = `meta[${attribute}="${key}"][${SEO_MANAGED_ATTR}]`;
   let element = document.head.querySelector(selector);
 

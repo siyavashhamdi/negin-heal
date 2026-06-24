@@ -245,7 +245,9 @@ export interface AuthIdentityLookup {
   value: string;
 }
 
-export function resolveAuthIdentityLookup(identity: string): AuthIdentityLookup {
+export function resolveAuthIdentityLookup(
+  identity: string,
+): AuthIdentityLookup {
   const normalizedIdentity = normalizeAuthIdentityForSubmit(identity);
   const kind = detectAuthIdentityKind(normalizedIdentity);
 

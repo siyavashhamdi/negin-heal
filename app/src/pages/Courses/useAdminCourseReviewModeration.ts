@@ -35,7 +35,7 @@ export function useAdminCourseReviewModeration({
     (
       target: CourseReviewModerationTarget,
       visibility: CourseReviewVisibility,
-      messageKey?: string,
+      messageKey?: string
     ): void => {
       if (updateResult.loading) {
         return;
@@ -52,7 +52,7 @@ export function useAdminCourseReviewModeration({
         },
       });
     },
-    [reviewId, updateModeration, updateResult.loading],
+    [reviewId, updateModeration, updateResult.loading]
   );
 
   return {

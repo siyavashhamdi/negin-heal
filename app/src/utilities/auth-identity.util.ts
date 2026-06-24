@@ -41,11 +41,7 @@ export const LATIN_USERNAME_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9._-]*$/i;
 export const LATIN_EMAIL_CHARSET_REGEX = /^[a-zA-Z0-9+][a-zA-Z0-9@._+-]*$/;
 
 export type AuthIdentityKind = "email" | "mobile" | "username";
-export type AuthIdentityValidationErrorKind =
-  | "email"
-  | "mobile"
-  | "identity"
-  | "usernameMinLength";
+export type AuthIdentityValidationErrorKind = "email" | "mobile" | "identity" | "usernameMinLength";
 
 function normalizeIdentityValue(value: string): string {
   return toWesternDigits(value.trim());
@@ -56,9 +52,7 @@ function enforceLatinAuthIdentityStart(value: string): string {
 }
 
 export const sanitizeAuthIdentityInput = (value: string): string =>
-  enforceLatinAuthIdentityStart(
-    toWesternDigits(value).replace(NON_LATIN_AUTH_IDENTITY, ""),
-  );
+  enforceLatinAuthIdentityStart(toWesternDigits(value).replace(NON_LATIN_AUTH_IDENTITY, ""));
 
 export const isValidEmail = (value: string): boolean => {
   const trimmed = value.trim();
@@ -78,11 +72,7 @@ export const isLatinIdentityUsername = (value: string): boolean => {
 
 export const isLatinEmailValue = (value: string): boolean => {
   const trimmed = value.trim();
-  return (
-    trimmed.length > 0 &&
-    LATIN_EMAIL_CHARSET_REGEX.test(trimmed) &&
-    isValidEmail(trimmed)
-  );
+  return trimmed.length > 0 && LATIN_EMAIL_CHARSET_REGEX.test(trimmed) && isValidEmail(trimmed);
 };
 
 /**
@@ -134,9 +124,7 @@ export const isValidAuthIdentityMobileInput = (value: string): boolean => {
 };
 
 /** Normalizes a valid mobile for submit (local 09… or unchanged + numbers). */
-export const normalizeAuthIdentityMobileForSubmit = (
-  value: string,
-): string | undefined => {
+export const normalizeAuthIdentityMobileForSubmit = (value: string): string | undefined => {
   const normalized = normalizeIdentityValue(value);
 
   if (!normalized || !isValidAuthIdentityMobileValue(normalized)) {
@@ -207,7 +195,7 @@ export const detectAuthIdentityKind = (identity: string): AuthIdentityKind => {
 };
 
 export const resolveInvalidAuthIdentityErrorKind = (
-  value: string,
+  value: string
 ): AuthIdentityValidationErrorKind => {
   const trimmed = value.trim();
 
@@ -251,9 +239,7 @@ export const resolveAuthIdentityIconKind = (identity: string): AuthIdentityKind 
 export const isAuthIdentityMobile = (value: string): boolean =>
   tryNormalizeAuthIdentityMobile(value) !== undefined;
 
-export type SubmittedAuthIdentityValidationError =
-  | "required"
-  | AuthIdentityValidationErrorKind;
+export type SubmittedAuthIdentityValidationError = "required" | AuthIdentityValidationErrorKind;
 
 export type SubmittedAuthIdentityValidationResult =
   | {
@@ -268,7 +254,7 @@ export type SubmittedAuthIdentityValidationResult =
     };
 
 export const validateSubmittedAuthIdentity = (
-  value: string,
+  value: string
 ): SubmittedAuthIdentityValidationResult => {
   const trimmed = value.trim();
 
@@ -295,7 +281,7 @@ export const validateSubmittedAuthIdentity = (
 
 export const resolveAuthIdentityValidationMessageKey = (
   error: SubmittedAuthIdentityValidationError,
-  options?: { requiredMessageKey?: string },
+  options?: { requiredMessageKey?: string }
 ): string => {
   if (error === "required") {
     return options?.requiredMessageKey ?? "auth.login.errors.identityRequired";

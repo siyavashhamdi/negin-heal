@@ -2,7 +2,7 @@ import type { TypePolicies } from "@apollo/client";
 
 /** Strip nullish pagination cursors so first-page cache keys stay stable. */
 function normalizePaginatedListInput(
-  input: Record<string, unknown> | undefined,
+  input: Record<string, unknown> | undefined
 ): Record<string, unknown> {
   if (!input) {
     return {};

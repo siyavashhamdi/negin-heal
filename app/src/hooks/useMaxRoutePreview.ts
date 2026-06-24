@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { clearMaxRouteOwner, isMaxRouteOwner } from "../routing/max-route-owner.store";
-import {
-  closeMaxRoute,
-  isMaxRoutePathname,
-  openMaxRoute,
-} from "../routing/max-route.util";
+import { closeMaxRoute, isMaxRoutePathname, openMaxRoute } from "../routing/max-route.util";
 
-export function useMaxRoutePreview(ownerId: string, enabled = true): {
+export function useMaxRoutePreview(
+  ownerId: string,
+  enabled = true
+): {
   readonly isOpen: boolean;
   readonly open: () => void;
   readonly close: () => void;

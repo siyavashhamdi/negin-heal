@@ -29,11 +29,7 @@ import {
   type TextFieldConfig,
 } from "./shared";
 import SectionPaper from "./SectionPaper";
-import {
-  createEmptyFaqItem,
-  createEmptyFaqSection,
-  createEmptyQuickTip,
-} from "./utils";
+import { createEmptyFaqItem, createEmptyFaqSection, createEmptyQuickTip } from "./utils";
 
 const supportMainFields: readonly TextFieldConfig<keyof SupportContactForm>[] = [
   { key: "eyebrow", label: "روتیتر صفحه پشتیبانی" },
@@ -168,11 +164,7 @@ const SupportContactEditor = ({
                         ...current,
                         config: {
                           ...current.config,
-                          quickTips: replaceAt(
-                            current.config.quickTips,
-                            index,
-                            event.target.value,
-                          ),
+                          quickTips: replaceAt(current.config.quickTips, index, event.target.value),
                         },
                       };
                     })
@@ -184,17 +176,17 @@ const SupportContactEditor = ({
                     updateJson((current) =>
                       current.kind === "supportContact"
                         ? {
-                          ...current,
-                          config: {
-                            ...current.config,
-                            quickTips: removeAt(
-                              current.config.quickTips,
-                              index,
-                              createEmptyQuickTip(),
-                            ),
-                          },
-                        }
-                        : current,
+                            ...current,
+                            config: {
+                              ...current.config,
+                              quickTips: removeAt(
+                                current.config.quickTips,
+                                index,
+                                createEmptyQuickTip()
+                              ),
+                            },
+                          }
+                        : current
                     )
                   }
                 >
@@ -209,13 +201,13 @@ const SupportContactEditor = ({
                 updateJson((current) =>
                   current.kind === "supportContact"
                     ? {
-                      ...current,
-                      config: {
-                        ...current.config,
-                        quickTips: [...current.config.quickTips, createEmptyQuickTip()],
-                      },
-                    }
-                    : current,
+                        ...current,
+                        config: {
+                          ...current.config,
+                          quickTips: [...current.config.quickTips, createEmptyQuickTip()],
+                        },
+                      }
+                    : current
                 )
               }
             >
@@ -289,7 +281,7 @@ const SupportContactEditor = ({
                                   sections: removeAt(
                                     current.config.faqPage.sections,
                                     sectionIndex,
-                                    createEmptyFaqSection(),
+                                    createEmptyFaqSection()
                                   ),
                                 },
                               },
@@ -300,11 +292,13 @@ const SupportContactEditor = ({
                         <DeleteOutlineRoundedIcon />
                       </IconButton>
                     </Stack>
-                    {([
-                      ["id", "شناسه دسته"],
-                      ["title", "عنوان دسته"],
-                      ["description", "توضیح دسته"],
-                    ] as const).map(([field, label]) => (
+                    {(
+                      [
+                        ["id", "شناسه دسته"],
+                        ["title", "عنوان دسته"],
+                        ["description", "توضیح دسته"],
+                      ] as const
+                    ).map(([field, label]) => (
                       <TextField
                         key={field}
                         fullWidth
@@ -328,7 +322,7 @@ const SupportContactEditor = ({
                                   sections: replaceAt(
                                     current.config.faqPage.sections,
                                     sectionIndex,
-                                    nextSection,
+                                    nextSection
                                   ),
                                 },
                               },
@@ -362,7 +356,7 @@ const SupportContactEditor = ({
                                       sections: replaceAt(
                                         current.config.faqPage.sections,
                                         sectionIndex,
-                                        nextSection,
+                                        nextSection
                                       ),
                                     },
                                   },
@@ -373,11 +367,13 @@ const SupportContactEditor = ({
                             <DeleteOutlineRoundedIcon />
                           </IconButton>
                         </Stack>
-                        {([
-                          ["id", "شناسه سوال"],
-                          ["question", "متن سوال"],
-                          ["answer", "پاسخ", true],
-                        ] as const).map(([field, label, multiline]) => (
+                        {(
+                          [
+                            ["id", "شناسه سوال"],
+                            ["question", "متن سوال"],
+                            ["answer", "پاسخ", true],
+                          ] as const
+                        ).map(([field, label, multiline]) => (
                           <TextField
                             key={field}
                             fullWidth
@@ -408,7 +404,7 @@ const SupportContactEditor = ({
                                       sections: replaceAt(
                                         current.config.faqPage.sections,
                                         sectionIndex,
-                                        nextSection,
+                                        nextSection
                                       ),
                                     },
                                   },
@@ -441,7 +437,7 @@ const SupportContactEditor = ({
                                 sections: replaceAt(
                                   current.config.faqPage.sections,
                                   sectionIndex,
-                                  nextSection,
+                                  nextSection
                                 ),
                               },
                             },
@@ -463,16 +459,16 @@ const SupportContactEditor = ({
                 updateJson((current) =>
                   current.kind === "supportContact"
                     ? {
-                      ...current,
-                      config: {
-                        ...current.config,
-                        faqPage: {
-                          ...current.config.faqPage,
-                          sections: [...current.config.faqPage.sections, createEmptyFaqSection()],
+                        ...current,
+                        config: {
+                          ...current.config,
+                          faqPage: {
+                            ...current.config.faqPage,
+                            sections: [...current.config.faqPage.sections, createEmptyFaqSection()],
+                          },
                         },
-                      },
-                    }
-                    : current,
+                      }
+                    : current
                 )
               }
             >

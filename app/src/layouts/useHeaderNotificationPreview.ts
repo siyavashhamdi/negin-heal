@@ -53,7 +53,7 @@ function formatHeaderNotificationTimeLabel(value: string | null | undefined): st
 }
 
 function mapPreviewItem(
-  row: NotificationListQuery["userNotificationList"]["items"][number],
+  row: NotificationListQuery["userNotificationList"]["items"][number]
 ): HeaderNotificationPreviewItem {
   const record = mapNotificationListRowToRecord(row);
   return {
@@ -64,16 +64,14 @@ function mapPreviewItem(
   };
 }
 
-export function useHeaderNotificationPreview(
-  enabled: boolean,
-): UseHeaderNotificationPreviewResult {
+export function useHeaderNotificationPreview(enabled: boolean): UseHeaderNotificationPreviewResult {
   const { t } = useTranslation();
   const { showError, showSuccess } = useSnackbar();
   const [liveItems, setLiveItems] = useState<readonly HeaderNotificationPreviewItem[]>([]);
 
   const listVariables = useMemo(
     () => buildNotificationListQueryVariables("unread", HEADER_NOTIFICATION_PREVIEW_LIMIT, null),
-    [],
+    []
   );
 
   const { data, refetch } = useQuery<NotificationListQuery, NotificationListQueryVariables>(
@@ -82,7 +80,7 @@ export function useHeaderNotificationPreview(
       variables: listVariables,
       skip: !enabled,
       fetchPolicy: "cache-and-network",
-    },
+    }
   );
 
   const [updateNotifications, updateResult] = useMutation<
@@ -96,7 +94,7 @@ export function useHeaderNotificationPreview(
 
   const fetchedItems = useMemo(
     () => (data?.userNotificationList.items ?? []).map(mapPreviewItem),
-    [data],
+    [data]
   );
 
   useEffect(() => {

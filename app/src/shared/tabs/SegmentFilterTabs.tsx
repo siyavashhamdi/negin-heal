@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type ReactElement,
-} from "react";
+import { useCallback, useLayoutEffect, useRef, useState, type ReactElement } from "react";
 
 import { scrollToTopOnMobile } from "../../utils/scrollToTopOnMobile.util";
 import styles from "./SegmentFilterTabs.module.scss";
@@ -94,9 +88,7 @@ function SegmentFilterTabs<T extends string>({
 
   const pinnedClassName =
     pinnedSurface === "dialog" ? styles.filterTabsPinnedDialog : styles.filterTabsPinned;
-  const tabListClassName = pinned
-    ? `${styles.filterTabs} ${pinnedClassName}`
-    : styles.filterTabs;
+  const tabListClassName = pinned ? `${styles.filterTabs} ${pinnedClassName}` : styles.filterTabs;
 
   return (
     <div

@@ -81,9 +81,10 @@ const EntityConfirmDialogShell = ({
       {...dialogProps}
       TransitionProps={{ onEntered }}
       PaperProps={getPaperProps({
-        className: [isCompact ? styles.modalPaperMobileFlex : undefined, paperClassName]
-          .filter(Boolean)
-          .join(" ") || undefined,
+        className:
+          [isCompact ? styles.modalPaperMobileFlex : undefined, paperClassName]
+            .filter(Boolean)
+            .join(" ") || undefined,
       })}
     >
       {showTitle ? (

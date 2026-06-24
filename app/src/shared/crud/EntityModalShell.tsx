@@ -115,7 +115,7 @@ const EntityModalShell = ({
         requestClose();
       }
     },
-    [requestClose],
+    [requestClose]
   );
 
   const handleConfirmDiscard = useCallback((): void => {
@@ -173,10 +173,7 @@ const EntityModalShell = ({
   );
 
   const renderContent = (): ReactElement => (
-    <DialogContent
-      ref={contentRef}
-      {...getContentProps({ className: dialogContentClassName })}
-    >
+    <DialogContent ref={contentRef} {...getContentProps({ className: dialogContentClassName })}>
       {children}
     </DialogContent>
   );

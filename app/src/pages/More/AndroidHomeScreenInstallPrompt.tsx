@@ -89,7 +89,9 @@ const AndroidHomeScreenInstallPrompt = (): ReactElement | null => {
         </div>
 
         <div className={styles.androidHomeInstallDialogBody}>
-          <p className={styles.androidHomeInstallDialogIntro}>{t("pages.more.androidInstall.guideIntro")}</p>
+          <p className={styles.androidHomeInstallDialogIntro}>
+            {t("pages.more.androidInstall.guideIntro")}
+          </p>
 
           <ol className={styles.androidHomeInstallSteps}>
             {ANDROID_INSTALL_STEPS.map((step, index) => {
@@ -112,7 +114,9 @@ const AndroidHomeScreenInstallPrompt = (): ReactElement | null => {
             })}
           </ol>
 
-          <p className={styles.androidHomeInstallDialogNote}>{t("pages.more.androidInstall.guideNote")}</p>
+          <p className={styles.androidHomeInstallDialogNote}>
+            {t("pages.more.androidInstall.guideNote")}
+          </p>
 
           <button
             type="button"

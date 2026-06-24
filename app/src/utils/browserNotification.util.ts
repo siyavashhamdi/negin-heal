@@ -44,7 +44,7 @@ export function getBrowserNotificationPermission(): NotificationPermission | "un
 }
 
 export function canRequestBrowserNotificationPrompt(
-  permission: NotificationPermission | "unsupported",
+  permission: NotificationPermission | "unsupported"
 ): boolean {
   return permission === "default" || permission === "denied";
 }
@@ -58,7 +58,9 @@ export async function registerNotificationServiceWorker(): Promise<boolean> {
   return registration != null;
 }
 
-export async function requestBrowserNotificationPermission(): Promise<NotificationPermission | "unsupported"> {
+export async function requestBrowserNotificationPermission(): Promise<
+  NotificationPermission | "unsupported"
+> {
   if (!isBrowserNotificationSupported()) {
     return "unsupported";
   }
@@ -81,9 +83,7 @@ export async function ensureBrowserNotificationPermission(): Promise<boolean> {
   return permission === "granted";
 }
 
-async function showNotificationViaServiceWorker(
-  input: BrowserNotificationInput,
-): Promise<boolean> {
+async function showNotificationViaServiceWorker(input: BrowserNotificationInput): Promise<boolean> {
   const registration = await ensureNotificationServiceWorkerRegistration();
   if (!registration) {
     return false;

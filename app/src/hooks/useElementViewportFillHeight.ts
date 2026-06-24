@@ -34,7 +34,7 @@ export function useElementViewportFillHeight(enabled: boolean): {
       const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
       const nextHeight = Math.max(
         MIN_FILL_HEIGHT_PX,
-        Math.floor(viewportHeight - top - readMobileBottomReservePx()),
+        Math.floor(viewportHeight - top - readMobileBottomReservePx())
       );
 
       setHeightPx((previous) => (previous === nextHeight ? previous : nextHeight));

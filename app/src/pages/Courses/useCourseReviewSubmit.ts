@@ -12,11 +12,7 @@ import {
   type CourseReviewSubmitMutationVariables,
 } from "./course-reviews.api";
 
-const CAPTCHA_ERROR_CODES = new Set([
-  "CAPTCHA_REQUIRED",
-  "CAPTCHA_EXPIRED",
-  "CAPTCHA_INVALID",
-]);
+const CAPTCHA_ERROR_CODES = new Set(["CAPTCHA_REQUIRED", "CAPTCHA_EXPIRED", "CAPTCHA_INVALID"]);
 
 type UseCourseReviewSubmitOptions = {
   readonly courseId: string;
@@ -41,8 +37,7 @@ export function useCourseReviewSubmit({
 }: UseCourseReviewSubmitOptions) {
   const { user } = useAuth();
   const { showError } = useSnackbar();
-  const captchaEnabled =
-    API_CONFIG.CAPTCHA_ENABLED && !isStaffCourseReviewer(user?.roles);
+  const captchaEnabled = API_CONFIG.CAPTCHA_ENABLED && !isStaffCourseReviewer(user?.roles);
   const [captchaId, setCaptchaId] = useState("");
   const [captchaValue, setCaptchaValue] = useState("");
   const [captchaValid, setCaptchaValid] = useState(false);
@@ -76,7 +71,7 @@ export function useCourseReviewSubmit({
 
       resetCaptcha();
     },
-    [resetCaptcha],
+    [resetCaptcha]
   );
 
   const clearStarAutoSubmitBlock = useCallback((): void => {
@@ -90,7 +85,7 @@ export function useCourseReviewSubmit({
     onSuccess: async () => {
       const pending = pendingSubmitRef.current;
       const wasStarOnlySubmit = Boolean(
-        pending && !pending.comment && typeof pending.stars === "number",
+        pending && !pending.comment && typeof pending.stars === "number"
       );
 
       if (wasStarOnlySubmit) {
@@ -114,13 +109,12 @@ export function useCourseReviewSubmit({
       setCaptchaValue(input.value);
       setCaptchaValid(input.isValid);
     },
-    [],
+    []
   );
 
   const runSubmit = useCallback(
     (input: PendingReviewSubmit): void => {
-      const hasStarInput =
-        typeof input.stars === "number" && input.stars >= 1 && input.stars <= 5;
+      const hasStarInput = typeof input.stars === "number" && input.stars >= 1 && input.stars <= 5;
       const hasCommentInput = Boolean(input.comment?.trim());
 
       if ((!hasStarInput && !hasCommentInput) || submitResult.loading) {
@@ -155,7 +149,7 @@ export function useCourseReviewSubmit({
       showError,
       submitResult.loading,
       submitReview,
-    ],
+    ]
   );
 
   const queueSubmit = useCallback(
@@ -168,7 +162,7 @@ export function useCourseReviewSubmit({
 
       runSubmit(input);
     },
-    [captchaEnabled, runSubmit],
+    [captchaEnabled, runSubmit]
   );
 
   const submitStars = useCallback(
@@ -187,7 +181,7 @@ export function useCourseReviewSubmit({
       });
       return true;
     },
-    [hasExistingRating, persistedStars, queueSubmit],
+    [hasExistingRating, persistedStars, queueSubmit]
   );
 
   const submitComment = useCallback(
@@ -205,7 +199,7 @@ export function useCourseReviewSubmit({
         successMessage: hasExistingReview ? "نظر جدید ثبت شد." : "نظر شما ثبت شد.",
       });
     },
-    [hasExistingReview, queueSubmit],
+    [hasExistingReview, queueSubmit]
   );
 
   const confirmCaptchaDialog = useCallback((): void => {
@@ -227,7 +221,7 @@ export function useCourseReviewSubmit({
     handleCaptchaChange,
     isSubmitting: submitResult.loading,
     pendingIsStarUpdate: Boolean(
-      pendingSubmit && !pendingSubmit.comment && typeof pendingSubmit.stars === "number",
+      pendingSubmit && !pendingSubmit.comment && typeof pendingSubmit.stars === "number"
     ),
     pendingSubmitStars: pendingSubmit?.stars ?? 0,
     submitComment,

@@ -53,14 +53,18 @@ export class UserUpdateProfileGqlInput {
   @Field({ nullable: true, description: "User email address" })
   @IsOptional()
   @IsString({ message: "Email must be a string" })
-  @ValidateIf((_, value) => typeof value === "string" && value.trim().length > 0)
+  @ValidateIf(
+    (_, value) => typeof value === "string" && value.trim().length > 0,
+  )
   @IsLatinEmail()
   email?: string | null;
 
   @Field({ nullable: true, description: "User mobile phone number" })
   @IsOptional()
   @IsString({ message: "Phone number must be a string" })
-  @ValidateIf((_, value) => typeof value === "string" && value.trim().length > 0)
+  @ValidateIf(
+    (_, value) => typeof value === "string" && value.trim().length > 0,
+  )
   @IsAuthIdentityMobile()
   phoneNumber?: string | null;
 
@@ -116,7 +120,9 @@ export class UserUpdateGqlInput {
   @MinLength(MIN_USERNAME_LENGTH, {
     message: `Username must be at least ${MIN_USERNAME_LENGTH} characters long`,
   })
-  @ValidateIf((_, value) => typeof value === "string" && value.trim().length > 0)
+  @ValidateIf(
+    (_, value) => typeof value === "string" && value.trim().length > 0,
+  )
   @IsLatinUsername()
   username?: string;
 

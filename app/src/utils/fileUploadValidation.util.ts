@@ -73,10 +73,7 @@ function describeAcceptToken(token: string): string {
   return normalizedToken;
 }
 
-export function describeAllowedUploadFormats(
-  accept: string,
-  allowedFormatsLabel?: string,
-): string {
+export function describeAllowedUploadFormats(accept: string, allowedFormatsLabel?: string): string {
   const trimmedLabel = allowedFormatsLabel?.trim();
   if (trimmedLabel) {
     return trimmedLabel.replace(/^فرمت(?:\s*های)?\s*مجاز\s*:\s*/i, "");
@@ -94,22 +91,16 @@ export function describeAllowedUploadFormats(
   return [...new Set(tokens.map(describeAcceptToken))].join("، ");
 }
 
-function buildTypeValidationMessage(
-  accept: string,
-  allowedFormatsLabel?: string,
-): string {
+function buildTypeValidationMessage(accept: string, allowedFormatsLabel?: string): string {
   const allowedFormats = describeAllowedUploadFormats(accept, allowedFormatsLabel);
   return `فرمت مجاز نیست. فرمت مجاز: ${allowedFormats}`;
 }
 
 export function validateSelectedUploadFile(
   file: File,
-  options: FileUploadValidationOptions,
+  options: FileUploadValidationOptions
 ): FileUploadValidationResult {
-  const allowedFormats = describeAllowedUploadFormats(
-    options.accept,
-    options.allowedFormatsLabel,
-  );
+  const allowedFormats = describeAllowedUploadFormats(options.accept, options.allowedFormatsLabel);
 
   if (isExecutableFileType(file.type, file.name)) {
     return {
@@ -140,7 +131,7 @@ export function validateSelectedUploadFile(
 
 export function getUploadValidationErrorMessage(
   validation: FileUploadValidationResult,
-  fallback = "فایل انتخاب‌شده معتبر نیست.",
+  fallback = "فایل انتخاب‌شده معتبر نیست."
 ): string {
   if (validation.valid) {
     return fallback;
@@ -152,7 +143,7 @@ export function getUploadValidationErrorMessage(
 /** @deprecated Use validation.message or getUploadValidationErrorMessage instead. */
 export function resolveUploadValidationErrorMessage(
   reason: FileUploadValidationFailureReason,
-  fallback: string,
+  fallback: string
 ): string {
   switch (reason) {
     case "executable":

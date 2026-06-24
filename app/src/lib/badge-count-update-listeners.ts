@@ -2,9 +2,7 @@ type BadgeCountUpdateListener = () => void;
 
 const listeners = new Set<BadgeCountUpdateListener>();
 
-export const subscribeBadgeCountUpdates = (
-  listener: BadgeCountUpdateListener,
-): (() => void) => {
+export const subscribeBadgeCountUpdates = (listener: BadgeCountUpdateListener): (() => void) => {
   listeners.add(listener);
 
   return () => {

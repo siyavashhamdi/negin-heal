@@ -2,16 +2,14 @@ import { useCallback, useEffect, useState } from "react";
 
 import { getBrowserNotificationPermission } from "../utils/browserNotification.util";
 
-export type BrowserNotificationPermissionState =
-  | NotificationPermission
-  | "unsupported";
+export type BrowserNotificationPermissionState = NotificationPermission | "unsupported";
 
 export function useBrowserNotificationPermission(): {
   readonly permission: BrowserNotificationPermissionState;
   readonly refreshPermission: () => void;
 } {
   const [permission, setPermission] = useState<BrowserNotificationPermissionState>(() =>
-    getBrowserNotificationPermission(),
+    getBrowserNotificationPermission()
   );
 
   const syncPermission = useCallback((): void => {

@@ -11,7 +11,26 @@ import {
 import { NetworkStatus } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Alert, Box, Button, Chip, FormControl, Grid, InputLabel, InputAdornment, IconButton, MenuItem, Paper, Select, Skeleton, Stack, TextField, Typography, Divider, useMediaQuery } from "@mui/material";
+import {
+  Alert,
+  Box,
+  Button,
+  Chip,
+  FormControl,
+  Grid,
+  InputLabel,
+  InputAdornment,
+  IconButton,
+  MenuItem,
+  Paper,
+  Select,
+  Skeleton,
+  Stack,
+  TextField,
+  Typography,
+  Divider,
+  useMediaQuery,
+} from "@mui/material";
 import ClearRoundedIcon from "@mui/icons-material/ClearRounded";
 import FilterAltOffRoundedIcon from "@mui/icons-material/FilterAltOffRounded";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
@@ -69,7 +88,7 @@ import AppTooltip from "../../shared/AppTooltip";
 const COURSE_LIST_PAGE_SIZE = 6;
 
 function getEndUserTabFilters(
-  tab: EndUserCourseTab,
+  tab: EndUserCourseTab
 ): Pick<CourseListFilters, "hasPrice" | "isPurchased"> {
   switch (tab) {
     case "FREE":
@@ -155,8 +174,7 @@ const CoursesIndex = (): ReactElement => {
 
   const courseFormPath = stripOverlayRoutePathname(location.pathname);
   const isCreateDialogOpen = courseFormPath === `${APP_SHELL_ROUTES.courses}/new`;
-  const editTargetId =
-    /^\/courses\/edit\/([^/]+)$/.exec(courseFormPath)?.[1] ?? null;
+  const editTargetId = /^\/courses\/edit\/([^/]+)$/.exec(courseFormPath)?.[1] ?? null;
   const isCourseFormDialogOpen = isCreateDialogOpen || editTargetId != null;
 
   const pageSeoOverride = useMemo(() => {
@@ -246,11 +264,10 @@ const CoursesIndex = (): ReactElement => {
 
   const setFilterValue = <K extends keyof CourseListFilters>(
     key: K,
-    value: CourseListFilters[K],
+    value: CourseListFilters[K]
   ): void => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
-
 
   const clearSearch = (): void => {
     setSearchQuery(DEFAULT_COURSE_LIST_FILTERS.query);
@@ -264,7 +281,7 @@ const CoursesIndex = (): ReactElement => {
 
   useEffect(() => {
     setFilters((prev) =>
-      prev.query === debouncedSearchQuery ? prev : { ...prev, query: debouncedSearchQuery },
+      prev.query === debouncedSearchQuery ? prev : { ...prev, query: debouncedSearchQuery }
     );
   }, [debouncedSearchQuery]);
 
@@ -387,7 +404,7 @@ const CoursesIndex = (): ReactElement => {
 
   const courseListVariables = useMemo(
     () => buildCourseListQueryVariables(filters, sort, COURSE_LIST_PAGE_SIZE, null),
-    [filters, sort],
+    [filters, sort]
   );
 
   const {
@@ -403,7 +420,7 @@ const CoursesIndex = (): ReactElement => {
       variables: courseListVariables,
       fetchPolicy: "network-only",
       notifyOnNetworkStatusChange: true,
-    },
+    }
   );
 
   const isFetchingMore = networkStatus === NetworkStatus.fetchMore;
@@ -483,7 +500,7 @@ const CoursesIndex = (): ReactElement => {
 
           const existingIds = new Set(previous.courseList.items.map((item) => item.id));
           const newItems = fetchMoreResult.courseList.items.filter(
-            (item) => !existingIds.has(item.id),
+            (item) => !existingIds.has(item.id)
           );
 
           return {
@@ -532,7 +549,7 @@ const CoursesIndex = (): ReactElement => {
       },
       skip: !deleteTarget?.id,
       fetchPolicy: "network-only",
-    },
+    }
   );
 
   const canReorderCourses =
@@ -540,7 +557,7 @@ const CoursesIndex = (): ReactElement => {
 
   const calculateSortOrderBetween = (
     previousItem: CourseListRecord | undefined,
-    nextItem: CourseListRecord | undefined,
+    nextItem: CourseListRecord | undefined
   ): number => {
     if (previousItem && nextItem) {
       return (previousItem.sortOrder + nextItem.sortOrder) / 2;
@@ -564,10 +581,7 @@ const CoursesIndex = (): ReactElement => {
     event.dataTransfer.setData("text/plain", courseId);
   };
 
-  const handleCourseDragOver = (
-    event: DragEvent<HTMLDivElement>,
-    targetCourseId: string,
-  ): void => {
+  const handleCourseDragOver = (event: DragEvent<HTMLDivElement>, targetCourseId: string): void => {
     if (!canReorderCourses || !draggedCourseId) {
       return;
     }
@@ -617,7 +631,10 @@ const CoursesIndex = (): ReactElement => {
     setDraggedCourseId(null);
   };
 
-  const handleCourseKeyDown = (event: KeyboardEvent<HTMLElement>, course: CourseListRecord): void => {
+  const handleCourseKeyDown = (
+    event: KeyboardEvent<HTMLElement>,
+    course: CourseListRecord
+  ): void => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       if (isPublicCourseView) {
@@ -683,7 +700,7 @@ const CoursesIndex = (): ReactElement => {
           void loadNextPage();
         }
       },
-      { rootMargin: "480px 0px" },
+      { rootMargin: "480px 0px" }
     );
     observer.observe(node);
 
@@ -758,303 +775,319 @@ const CoursesIndex = (): ReactElement => {
           elevation={0}
         >
           {shouldShowFilterPanelContent ? (
-          <div className={styles.searchSection}>
-            <Box className={styles.searchRow}>
-              <TextField
-                inputRef={searchInputRef}
-                className={`${styles.searchInput}${
-                  searchQuery.trim() ? ` ${styles.searchInputHasValue}` : ""
-                }`}
-                size="small"
-                label="جستجو"
-                placeholder=""
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                InputProps={{
-                  endAdornment: searchQuery ? (
-                    <InputAdornment position="end">
-                      <AppTooltip title="پاک کردن جستجو" arrow>
-                        <IconButton
-                          size="small"
-                          edge="end"
-                          onMouseDown={(event) => event.preventDefault()}
-                          onClick={clearSearch}
-                          aria-label="پاک کردن جستجو"
-                        >
-                          <ClearRoundedIcon fontSize="small" />
-                        </IconButton>
-                      </AppTooltip>
-                    </InputAdornment>
-                  ) : null,
-                }}
-              />
+            <div className={styles.searchSection}>
+              <Box className={styles.searchRow}>
+                <TextField
+                  inputRef={searchInputRef}
+                  className={`${styles.searchInput}${
+                    searchQuery.trim() ? ` ${styles.searchInputHasValue}` : ""
+                  }`}
+                  size="small"
+                  label="جستجو"
+                  placeholder=""
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  InputProps={{
+                    endAdornment: searchQuery ? (
+                      <InputAdornment position="end">
+                        <AppTooltip title="پاک کردن جستجو" arrow>
+                          <IconButton
+                            size="small"
+                            edge="end"
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={clearSearch}
+                            aria-label="پاک کردن جستجو"
+                          >
+                            <ClearRoundedIcon fontSize="small" />
+                          </IconButton>
+                        </AppTooltip>
+                      </InputAdornment>
+                    ) : null,
+                  }}
+                />
 
-              <div className={styles.searchActions}>
-                <AppTooltip title="پاک کردن فیلترها" arrow>
-                  <span>
+                <div className={styles.searchActions}>
+                  <AppTooltip title="پاک کردن فیلترها" arrow>
+                    <span>
+                      <IconButton
+                        size="small"
+                        color="default"
+                        disabled={!hasActiveFilters}
+                        onClick={clearAllFilters}
+                        aria-label="پاک کردن فیلترها"
+                      >
+                        <FilterAltOffRoundedIcon />
+                      </IconButton>
+                    </span>
+                  </AppTooltip>
+
+                  <AppTooltip
+                    title={
+                      showFilterSections ? "بستن فیلترها و مرتب‌سازی" : "نمایش فیلترها و مرتب‌سازی"
+                    }
+                    arrow
+                  >
+                    <IconButton
+                      size="small"
+                      color={showFilterSections ? "primary" : "default"}
+                      onClick={toggleFilterSections}
+                      aria-label={
+                        showFilterSections
+                          ? "بستن فیلترها و مرتب‌سازی"
+                          : "نمایش فیلترها و مرتب‌سازی"
+                      }
+                    >
+                      <FilterListRoundedIcon />
+                    </IconButton>
+                  </AppTooltip>
+
+                  <AppTooltip title="بروزرسانی" arrow>
                     <IconButton
                       size="small"
                       color="default"
-                      disabled={!hasActiveFilters}
-                      onClick={clearAllFilters}
-                      aria-label="پاک کردن فیلترها"
+                      onClick={onRefresh}
+                      aria-label="بروزرسانی"
                     >
-                      <FilterAltOffRoundedIcon />
+                      <RefreshRoundedIcon />
                     </IconButton>
-                  </span>
-                </AppTooltip>
+                  </AppTooltip>
+                </div>
+              </Box>
+            </div>
+          ) : (
+            <AppTooltip title="جستجو و فیلتر" arrow>
+              <IconButton
+                className={styles.mobileFilterTrigger}
+                color="primary"
+                onClick={openMobileFilter}
+                aria-label="جستجو و فیلتر"
+              >
+                <SearchRoundedIcon />
+              </IconButton>
+            </AppTooltip>
+          )}
 
-                <AppTooltip
-                  title={
-                    showFilterSections ? "بستن فیلترها و مرتب‌سازی" : "نمایش فیلترها و مرتب‌سازی"
-                  }
-                  arrow
-                >
-                  <IconButton
-                    size="small"
-                    color={showFilterSections ? "primary" : "default"}
-                    onClick={toggleFilterSections}
-                    aria-label={
-                      showFilterSections ? "بستن فیلترها و مرتب‌سازی" : "نمایش فیلترها و مرتب‌سازی"
-                    }
-                  >
-                    <FilterListRoundedIcon />
-                  </IconButton>
-                </AppTooltip>
+          {!isEndUser && shouldShowFilterPanelContent && showFilterSections ? (
+            <Divider className={styles.sectionDivider} />
+          ) : null}
 
-                <AppTooltip title="بروزرسانی" arrow>
-                  <IconButton size="small" color="default" onClick={onRefresh} aria-label="بروزرسانی">
-                    <RefreshRoundedIcon />
-                  </IconButton>
-                </AppTooltip>
-              </div>
-            </Box>
-          </div>
-        ) : (
-          <AppTooltip title="جستجو و فیلتر" arrow>
-            <IconButton
-              className={styles.mobileFilterTrigger}
-              color="primary"
-              onClick={openMobileFilter}
-              aria-label="جستجو و فیلتر"
-            >
-              <SearchRoundedIcon />
-            </IconButton>
-          </AppTooltip>
-        )}
-
-        {!isEndUser && shouldShowFilterPanelContent && showFilterSections ? (
-          <Divider className={styles.sectionDivider} />
-        ) : null}
-
-        {!isEndUser && shouldShowFilterPanelContent && showFilterSections ? (
-          <div className={styles.filtersSection}>
-            <Grid container spacing={1.25}>
-              {!isPublicCourseView ? (
+          {!isEndUser && shouldShowFilterPanelContent && showFilterSections ? (
+            <div className={styles.filtersSection}>
+              <Grid container spacing={1.25}>
+                {!isPublicCourseView ? (
+                  <Grid item xs={6} md={2}>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>وضعیت</InputLabel>
+                      <Select
+                        value={filters.isActive}
+                        label="وضعیت"
+                        onChange={(event) =>
+                          setFilterValue(
+                            "isActive",
+                            event.target.value as CourseListFilters["isActive"]
+                          )
+                        }
+                      >
+                        <MenuItem value="ALL">همه</MenuItem>
+                        <MenuItem value="ACTIVE">فعال</MenuItem>
+                        <MenuItem value="INACTIVE">غیرفعال</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                ) : null}
                 <Grid item xs={6} md={2}>
                   <FormControl fullWidth size="small">
-                    <InputLabel>وضعیت</InputLabel>
+                    <InputLabel>انتشار</InputLabel>
                     <Select
-                      value={filters.isActive}
-                      label="وضعیت"
+                      value={filters.releaseType}
+                      label="انتشار"
                       onChange={(event) =>
-                        setFilterValue("isActive", event.target.value as CourseListFilters["isActive"])
+                        setFilterValue(
+                          "releaseType",
+                          event.target.value as CourseListFilters["releaseType"]
+                        )
                       }
                     >
                       <MenuItem value="ALL">همه</MenuItem>
-                      <MenuItem value="ACTIVE">فعال</MenuItem>
-                      <MenuItem value="INACTIVE">غیرفعال</MenuItem>
+                      <MenuItem value="IMMEDIATE">فوری</MenuItem>
+                      <MenuItem value="GRADUAL">تدریجی</MenuItem>
                     </Select>
                   </FormControl>
                 </Grid>
-              ) : null}
-              <Grid item xs={6} md={2}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>انتشار</InputLabel>
-                  <Select
-                    value={filters.releaseType}
-                    label="انتشار"
-                    onChange={(event) =>
-                      setFilterValue(
-                        "releaseType",
-                        event.target.value as CourseListFilters["releaseType"],
-                      )
-                    }
-                  >
-                    <MenuItem value="ALL">همه</MenuItem>
-                    <MenuItem value="IMMEDIATE">فوری</MenuItem>
-                    <MenuItem value="GRADUAL">تدریجی</MenuItem>
-                  </Select>
-                </FormControl>
+                <Grid item xs={6} md={2}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>نوع محتوا</InputLabel>
+                    <Select
+                      value={filters.itemType}
+                      label="نوع محتوا"
+                      onChange={(event) =>
+                        setFilterValue(
+                          "itemType",
+                          event.target.value as CourseListFilters["itemType"]
+                        )
+                      }
+                    >
+                      <MenuItem value="ALL">همه</MenuItem>
+                      <MenuItem value="ARTICLE">مقاله</MenuItem>
+                      <MenuItem value="VIDEO">ویدیو</MenuItem>
+                      <MenuItem value="VOICE">صوت</MenuItem>
+                      <MenuItem value="IMAGE">تصویر</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={6} md={2}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>قیمت</InputLabel>
+                    <Select
+                      value={filters.hasPrice}
+                      label="قیمت"
+                      onChange={(event) =>
+                        setFilterValue(
+                          "hasPrice",
+                          event.target.value as CourseListFilters["hasPrice"]
+                        )
+                      }
+                    >
+                      <MenuItem value="ALL">همه</MenuItem>
+                      <MenuItem value="WITH_PRICE">دارای قیمت</MenuItem>
+                      <MenuItem value="FREE_OR_UNSET">رایگان/بدون قیمت</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={6} md={2}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>فصل رایگان</InputLabel>
+                    <Select
+                      value={filters.hasFreeChapter}
+                      label="فصل رایگان"
+                      onChange={(event) =>
+                        setFilterValue(
+                          "hasFreeChapter",
+                          event.target.value as CourseListFilters["hasFreeChapter"]
+                        )
+                      }
+                    >
+                      <MenuItem value="ALL">همه</MenuItem>
+                      <MenuItem value="YES">دارد</MenuItem>
+                      <MenuItem value="NO">ندارد</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={6} md={2}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="حداقل قیمت"
+                    value={filters.minPriceIrt}
+                    onChange={(event) => setFilterValue("minPriceIrt", event.target.value)}
+                    inputProps={{ inputMode: "numeric" }}
+                  />
+                </Grid>
+                <Grid item xs={6} md={2}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="حداکثر قیمت"
+                    value={filters.maxPriceIrt}
+                    onChange={(event) => setFilterValue("maxPriceIrt", event.target.value)}
+                    inputProps={{ inputMode: "numeric" }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="برچسب‌ها"
+                    placeholder="مثال: react,typescript,ui"
+                    value={filters.tagsAny}
+                    onChange={(event) => setFilterValue("tagsAny", event.target.value)}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <AppTooltip title="برای چند برچسب از , استفاده کنید." arrow>
+                            <InfoOutlinedIcon className={styles.inputInfoIcon} fontSize="small" />
+                          </AppTooltip>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
               </Grid>
-              <Grid item xs={6} md={2}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>نوع محتوا</InputLabel>
-                  <Select
-                    value={filters.itemType}
-                    label="نوع محتوا"
-                    onChange={(event) =>
-                      setFilterValue("itemType", event.target.value as CourseListFilters["itemType"])
-                    }
-                  >
-                    <MenuItem value="ALL">همه</MenuItem>
-                    <MenuItem value="ARTICLE">مقاله</MenuItem>
-                    <MenuItem value="VIDEO">ویدیو</MenuItem>
-                    <MenuItem value="VOICE">صوت</MenuItem>
-                    <MenuItem value="IMAGE">تصویر</MenuItem>
-                  </Select>
-                </FormControl>
+            </div>
+          ) : null}
+
+          {!isEndUser && shouldShowFilterPanelContent && showFilterSections ? (
+            <Divider className={styles.sectionDivider} />
+          ) : null}
+
+          {!isEndUser && shouldShowFilterPanelContent && showFilterSections ? (
+            <div className={styles.sortSection}>
+              <Grid container spacing={1.25}>
+                <Grid item xs={12} md={3}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>مرتب‌سازی</InputLabel>
+                    <Select
+                      value={sort.field}
+                      label="مرتب‌سازی"
+                      onChange={(event) =>
+                        setSort((prev) => {
+                          const nextField = event.target.value as CourseSortField;
+                          return {
+                            ...prev,
+                            field: nextField,
+                            order: nextField === "sortOrder" ? "DESC" : prev.order,
+                          };
+                        })
+                      }
+                    >
+                      {(Object.keys(SORT_FIELD_LABEL) as CourseSortField[])
+                        .filter((field) => !isPublicCourseView || field !== "isActive")
+                        .map((field) => (
+                          <MenuItem key={field} value={field}>
+                            {SORT_FIELD_LABEL[field]}
+                          </MenuItem>
+                        ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} md={3}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>ترتیب</InputLabel>
+                    <Select
+                      value={sort.order}
+                      label="ترتیب"
+                      onChange={(event) =>
+                        setSort((prev) => ({
+                          ...prev,
+                          order: event.target.value as "ASC" | "DESC",
+                        }))
+                      }
+                    >
+                      <MenuItem value="ASC">{SORT_ORDER_LABEL.ASC}</MenuItem>
+                      <MenuItem value="DESC">{SORT_ORDER_LABEL.DESC}</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
               </Grid>
-              <Grid item xs={6} md={2}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>قیمت</InputLabel>
-                  <Select
-                    value={filters.hasPrice}
-                    label="قیمت"
-                    onChange={(event) =>
-                      setFilterValue("hasPrice", event.target.value as CourseListFilters["hasPrice"])
-                    }
-                  >
-                    <MenuItem value="ALL">همه</MenuItem>
-                    <MenuItem value="WITH_PRICE">دارای قیمت</MenuItem>
-                    <MenuItem value="FREE_OR_UNSET">رایگان/بدون قیمت</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={6} md={2}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>فصل رایگان</InputLabel>
-                  <Select
-                    value={filters.hasFreeChapter}
-                    label="فصل رایگان"
-                    onChange={(event) =>
-                      setFilterValue(
-                        "hasFreeChapter",
-                        event.target.value as CourseListFilters["hasFreeChapter"],
-                      )
-                    }
-                  >
-                    <MenuItem value="ALL">همه</MenuItem>
-                    <MenuItem value="YES">دارد</MenuItem>
-                    <MenuItem value="NO">ندارد</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={6} md={2}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="حداقل قیمت"
-                  value={filters.minPriceIrt}
-                  onChange={(event) => setFilterValue("minPriceIrt", event.target.value)}
-                  inputProps={{ inputMode: "numeric" }}
-                />
-              </Grid>
-              <Grid item xs={6} md={2}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="حداکثر قیمت"
-                  value={filters.maxPriceIrt}
-                  onChange={(event) => setFilterValue("maxPriceIrt", event.target.value)}
-                  inputProps={{ inputMode: "numeric" }}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="برچسب‌ها"
-                  placeholder="مثال: react,typescript,ui"
-                  value={filters.tagsAny}
-                  onChange={(event) => setFilterValue("tagsAny", event.target.value)}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <AppTooltip title="برای چند برچسب از , استفاده کنید." arrow>
-                          <InfoOutlinedIcon className={styles.inputInfoIcon} fontSize="small" />
-                        </AppTooltip>
-                      </InputAdornment>
-                    ),
+            </div>
+          ) : null}
+
+          {!isEndUser && shouldShowFilterPanelContent && appliedFilterChips.length > 0 ? (
+            <Stack direction="row" spacing={0.75} className={styles.appliedFilters} flexWrap="wrap">
+              {appliedFilterChips.map((chip) => (
+                <Chip
+                  key={`course-filter-${chip.key}`}
+                  label={chip.label}
+                  onDelete={() => {
+                    setFilters((prev) => ({
+                      ...prev,
+                      [chip.key]: DEFAULT_COURSE_LIST_FILTERS[chip.key],
+                    }));
                   }}
                 />
-              </Grid>
-            </Grid>
-          </div>
-        ) : null}
-
-        {!isEndUser && shouldShowFilterPanelContent && showFilterSections ? (
-          <Divider className={styles.sectionDivider} />
-        ) : null}
-
-        {!isEndUser && shouldShowFilterPanelContent && showFilterSections ? (
-          <div className={styles.sortSection}>
-            <Grid container spacing={1.25}>
-              <Grid item xs={12} md={3}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>مرتب‌سازی</InputLabel>
-                  <Select
-                    value={sort.field}
-                    label="مرتب‌سازی"
-                    onChange={(event) =>
-                      setSort((prev) => {
-                        const nextField = event.target.value as CourseSortField;
-                        return {
-                          ...prev,
-                          field: nextField,
-                          order: nextField === "sortOrder" ? "DESC" : prev.order,
-                        };
-                      })
-                    }
-                  >
-                    {(Object.keys(SORT_FIELD_LABEL) as CourseSortField[])
-                      .filter((field) => !isPublicCourseView || field !== "isActive")
-                      .map((field) => (
-                        <MenuItem key={field} value={field}>
-                          {SORT_FIELD_LABEL[field]}
-                        </MenuItem>
-                      ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>ترتیب</InputLabel>
-                  <Select
-                    value={sort.order}
-                    label="ترتیب"
-                    onChange={(event) =>
-                      setSort((prev) => ({
-                        ...prev,
-                        order: event.target.value as "ASC" | "DESC",
-                      }))
-                    }
-                  >
-                    <MenuItem value="ASC">{SORT_ORDER_LABEL.ASC}</MenuItem>
-                    <MenuItem value="DESC">{SORT_ORDER_LABEL.DESC}</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-            </Grid>
-          </div>
-        ) : null}
-
-        {!isEndUser && shouldShowFilterPanelContent && appliedFilterChips.length > 0 ? (
-          <Stack direction="row" spacing={0.75} className={styles.appliedFilters} flexWrap="wrap">
-            {appliedFilterChips.map((chip) => (
-              <Chip
-                key={`course-filter-${chip.key}`}
-                label={chip.label}
-                onDelete={() => {
-                  setFilters((prev) => ({
-                    ...prev,
-                    [chip.key]: DEFAULT_COURSE_LIST_FILTERS[chip.key],
-                  }));
-                }}
-              />
-            ))}
-          </Stack>
-        ) : null}
+              ))}
+            </Stack>
+          ) : null}
         </Paper>
       )}
 
@@ -1070,62 +1103,66 @@ const CoursesIndex = (): ReactElement => {
         style={isEndUser && courseFeedMinHeight ? { minHeight: courseFeedMinHeight } : undefined}
       >
         <div className={styles.courseGrid}>
-        {isInitialLoading
-          ? Array.from({ length: 8 }).map((_, index) => (
-            <Paper key={`course-skeleton-${index}`} className={styles.skeletonCard} elevation={0}>
-              <Skeleton variant="rectangular" height={148} />
-              <div className={styles.skeletonBody}>
-                <Skeleton height={28} />
-                <Skeleton height={20} />
-                <Skeleton height={20} />
-                <Skeleton height={26} width="70%" />
-              </div>
-            </Paper>
-          ))
-          : items.map((item) => (
-            <div
-              key={item.id}
-              className={`${styles.courseCardShell}${
-                canReorderCourses ? ` ${styles.courseCardShellDraggable}` : ""
-              }${draggedCourseId === item.id ? ` ${styles.courseCardShellDragging}` : ""}`}
-              draggable={canReorderCourses}
-              onDragStart={(event) => handleCourseDragStart(event, item.id)}
-              onDragOver={(event) => handleCourseDragOver(event, item.id)}
-              onDrop={handleCourseDrop}
-              onDragEnd={() => setDraggedCourseId(null)}
-            >
-              <CourseCard
-                item={item}
-                coverImageUrl={resolveFileAccessUrl(item.coverImageAccessUrl) ?? undefined}
-                variant={isPublicCourseView ? "public" : "management"}
-                onOpen={() => navigate(`/courses/${item.id}`)}
-                onKeyDown={(event) => handleCourseKeyDown(event, item)}
-                onEdit={openEditCourseDialog}
-              />
-            </div>
-          ))}
-      </div>
-
-      {!isInitialLoading && items.length === 0 ? (
-        <div className={styles.emptyState}>
-          <Typography variant="h6">دوره‌ای پیدا نشد.</Typography>
-          <Typography variant="body2" color="text.secondary">
-            {isEndUser
-              ? "دوره‌ای در این دسته وجود ندارد. دسته دیگری را امتحان کنید."
-              : "فیلترها را تغییر دهید یا پاک کنید تا نتایج بیشتری ببینید."}
-          </Typography>
+          {isInitialLoading
+            ? Array.from({ length: 8 }).map((_, index) => (
+                <Paper
+                  key={`course-skeleton-${index}`}
+                  className={styles.skeletonCard}
+                  elevation={0}
+                >
+                  <Skeleton variant="rectangular" height={148} />
+                  <div className={styles.skeletonBody}>
+                    <Skeleton height={28} />
+                    <Skeleton height={20} />
+                    <Skeleton height={20} />
+                    <Skeleton height={26} width="70%" />
+                  </div>
+                </Paper>
+              ))
+            : items.map((item) => (
+                <div
+                  key={item.id}
+                  className={`${styles.courseCardShell}${
+                    canReorderCourses ? ` ${styles.courseCardShellDraggable}` : ""
+                  }${draggedCourseId === item.id ? ` ${styles.courseCardShellDragging}` : ""}`}
+                  draggable={canReorderCourses}
+                  onDragStart={(event) => handleCourseDragStart(event, item.id)}
+                  onDragOver={(event) => handleCourseDragOver(event, item.id)}
+                  onDrop={handleCourseDrop}
+                  onDragEnd={() => setDraggedCourseId(null)}
+                >
+                  <CourseCard
+                    item={item}
+                    coverImageUrl={resolveFileAccessUrl(item.coverImageAccessUrl) ?? undefined}
+                    variant={isPublicCourseView ? "public" : "management"}
+                    onOpen={() => navigate(`/courses/${item.id}`)}
+                    onKeyDown={(event) => handleCourseKeyDown(event, item)}
+                    onEdit={openEditCourseDialog}
+                  />
+                </div>
+              ))}
         </div>
-      ) : null}
 
-      {items.length > 0 || (isEndUser && pagination.hasNextPage) ? (
-        <div
-          ref={loadMoreRef}
-          className={styles.infiniteScrollSentinel}
-          aria-hidden={!isFetchingMore}
-        >
-          {isFetchingMore && pagination.hasNextPage ? "در حال بارگذاری دوره‌های بیشتر..." : null}
-        </div>
-      ) : null}
+        {!isInitialLoading && items.length === 0 ? (
+          <div className={styles.emptyState}>
+            <Typography variant="h6">دوره‌ای پیدا نشد.</Typography>
+            <Typography variant="body2" color="text.secondary">
+              {isEndUser
+                ? "دوره‌ای در این دسته وجود ندارد. دسته دیگری را امتحان کنید."
+                : "فیلترها را تغییر دهید یا پاک کنید تا نتایج بیشتری ببینید."}
+            </Typography>
+          </div>
+        ) : null}
+
+        {items.length > 0 || (isEndUser && pagination.hasNextPage) ? (
+          <div
+            ref={loadMoreRef}
+            className={styles.infiniteScrollSentinel}
+            aria-hidden={!isFetchingMore}
+          >
+            {isFetchingMore && pagination.hasNextPage ? "در حال بارگذاری دوره‌های بیشتر..." : null}
+          </div>
+        ) : null}
       </div>
 
       <EntityDeleteDialog
@@ -1149,9 +1186,7 @@ const CoursesIndex = (): ReactElement => {
           onClose={closeCourseFormDialog}
           onSaved={onRefresh}
           onDelete={
-            editTargetId != null
-              ? () => openDeleteDialogForCourseId(editTargetId)
-              : undefined
+            editTargetId != null ? () => openDeleteDialogForCourseId(editTargetId) : undefined
           }
         />
       ) : null}

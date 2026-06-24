@@ -559,8 +559,7 @@ const DEFAULT_APP_SETTINGS: readonly DefaultAppSettingSeed[] = [
     label: "بستن خودکار تیکت پاسخ‌داده‌شده",
     value: 24,
     valueType: AppSettingValueType.NUMBER,
-    description:
-      "مدت زمان (به ساعت) پس از پاسخ پشتیبانی تا بستن خودکار تیکت",
+    description: "مدت زمان (به ساعت) پس از پاسخ پشتیبانی تا بستن خودکار تیکت",
     isActive: true,
   },
   {
@@ -662,7 +661,10 @@ export class Migration002_SeedDefaultAppSettings extends BaseMigration {
               ? this.parseJsonSettingValue(existingSetting.value)
               : existingSetting.value;
 
-          if (this.isPlainObject(existingValue) && this.isPlainObject(setting.value)) {
+          if (
+            this.isPlainObject(existingValue) &&
+            this.isPlainObject(setting.value)
+          ) {
             const mergedValue = this.mergeMissingJsonKeys(
               existingValue as Record<string, unknown>,
               setting.value as Record<string, unknown>,
@@ -680,7 +682,9 @@ export class Migration002_SeedDefaultAppSettings extends BaseMigration {
                   },
                 },
               );
-              console.log(`🔁 Upgraded app setting ${setting.key} with missing defaults`);
+              console.log(
+                `🔁 Upgraded app setting ${setting.key} with missing defaults`,
+              );
             }
           } else if (
             typeof existingSetting.value === "string" &&
@@ -769,7 +773,10 @@ export class Migration002_SeedDefaultAppSettings extends BaseMigration {
         this.isPlainObject(currentEntry) &&
         this.isPlainObject(defaultEntry)
       ) {
-        mergedValue[key] = this.mergeMissingJsonKeys(currentEntry, defaultEntry);
+        mergedValue[key] = this.mergeMissingJsonKeys(
+          currentEntry,
+          defaultEntry,
+        );
       }
     }
 
@@ -866,8 +873,7 @@ export class Migration002_SeedDefaultAppSettings extends BaseMigration {
 
     if (
       !nextTemplates.some(
-        (entry) =>
-          this.isPlainObject(entry) && entry.name === "PASSWORD_RESET",
+        (entry) => this.isPlainObject(entry) && entry.name === "PASSWORD_RESET",
       )
     ) {
       nextTemplates.push({ ...passwordResetDefault });
@@ -885,8 +891,7 @@ export class Migration002_SeedDefaultAppSettings extends BaseMigration {
 
     if (
       !nextTemplates.some(
-        (entry) =>
-          this.isPlainObject(entry) && entry.name === "VERIFY_EMAIL",
+        (entry) => this.isPlainObject(entry) && entry.name === "VERIFY_EMAIL",
       )
     ) {
       nextTemplates.push({ ...verifyEmailDefault });

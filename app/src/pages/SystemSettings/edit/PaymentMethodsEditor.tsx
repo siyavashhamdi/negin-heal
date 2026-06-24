@@ -12,18 +12,10 @@ import {
   Typography,
 } from "@mui/material";
 
-import type {
-  JsonFormState,
-  PaymentMethodForm,
-  UpdateJsonFormState,
-} from "./types";
+import type { JsonFormState, PaymentMethodForm, UpdateJsonFormState } from "./types";
 import { removeAt, replaceAt } from "./shared";
 import SectionPaper from "./SectionPaper";
-import {
-  PAYMENT_METHOD_LABEL,
-  PAYMENT_METHOD_OPTIONS,
-  createEmptyPaymentMethod,
-} from "./utils";
+import { PAYMENT_METHOD_LABEL, PAYMENT_METHOD_OPTIONS, createEmptyPaymentMethod } from "./utils";
 
 interface PaymentMethodsEditorProps {
   readonly jsonValue: Extract<JsonFormState, { kind: "paymentMethods" }>;
@@ -51,10 +43,10 @@ const PaymentMethodsEditor = ({
               updateJson((current) =>
                 current.kind === "paymentMethods"
                   ? {
-                    ...current,
-                    methods: removeAt(current.methods, index, createEmptyPaymentMethod()),
-                  }
-                  : current,
+                      ...current,
+                      methods: removeAt(current.methods, index, createEmptyPaymentMethod()),
+                    }
+                  : current
               )
             }
           >
@@ -119,7 +111,7 @@ const PaymentMethodsEditor = ({
         updateJson((current) =>
           current.kind === "paymentMethods"
             ? { ...current, methods: [...current.methods, createEmptyPaymentMethod()] }
-            : current,
+            : current
         )
       }
     >

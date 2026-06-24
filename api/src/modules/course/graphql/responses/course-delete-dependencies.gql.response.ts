@@ -5,7 +5,8 @@ import { CourseDeleteDependencyImpact } from "../../../../enums";
 
 registerEnumType(CourseDeleteDependencyImpact, {
   name: "CourseDeleteDependencyImpact",
-  description: "Whether a dependency group is removed or retained when deleting a course",
+  description:
+    "Whether a dependency group is removed or retained when deleting a course",
 });
 
 @ObjectType()

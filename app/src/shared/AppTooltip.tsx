@@ -84,11 +84,7 @@ export default function AppTooltip({
     };
   }, [closeMobileTooltip, isTooltipOpen, useMobileBehavior]);
 
-  const resolvedOpen = useMobileBehavior
-    ? isControlled
-      ? openProp
-      : mobileOpen
-    : openProp;
+  const resolvedOpen = useMobileBehavior ? (isControlled ? openProp : mobileOpen) : openProp;
 
   const enhancedChild = childElement
     ? cloneElement(childElement as ReactElement<TriggerChildProps>, {

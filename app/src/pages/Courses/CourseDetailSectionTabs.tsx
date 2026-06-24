@@ -1,10 +1,7 @@
 import { type ReactElement } from "react";
 
 import SegmentFilterTabs from "../../shared/tabs/SegmentFilterTabs";
-import {
-  COURSE_SECTION_TABS,
-  type CourseSectionTab,
-} from "./course-section-tabs.shared";
+import { COURSE_SECTION_TABS, type CourseSectionTab } from "./course-section-tabs.shared";
 
 export type CourseDetailSectionTab = CourseSectionTab;
 

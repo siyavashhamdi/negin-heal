@@ -4,9 +4,7 @@ type GeneralUpdateListener = (event: GeneralUpdateEvent) => void;
 
 const listeners = new Set<GeneralUpdateListener>();
 
-export const subscribeGeneralUpdates = (
-  listener: GeneralUpdateListener,
-): (() => void) => {
+export const subscribeGeneralUpdates = (listener: GeneralUpdateListener): (() => void) => {
   listeners.add(listener);
 
   return () => {

@@ -9,10 +9,7 @@ export class OptionalGqlAuthGuard extends AuthGuard("jwt") {
     return ctx.getContext().req;
   }
 
-  handleRequest<TUser = unknown>(
-    _err: unknown,
-    user: TUser,
-  ): TUser | null {
+  handleRequest<TUser = unknown>(_err: unknown, user: TUser): TUser | null {
     return user ?? null;
   }
 }

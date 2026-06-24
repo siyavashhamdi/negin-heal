@@ -6,7 +6,10 @@ import { InjectConnection, InjectModel } from "@nestjs/mongoose";
 import { MigrationStatus } from "../../enums";
 import { MigrationClass } from "../../migrations/core";
 import { Migration, MigrationDocument } from "../../database/schemas";
-import { formatInfrastructureConnectionError, resolveInfrastructureConnectionFailure } from "../../utils/infrastructure-connection-error.util";
+import {
+  formatInfrastructureConnectionError,
+  resolveInfrastructureConnectionFailure,
+} from "../../utils/infrastructure-connection-error.util";
 
 /**
  * Service responsible for discovering and executing database migrations.
@@ -171,7 +174,8 @@ export class MigrationService implements OnModuleInit {
         `✅ Migration process completed successfully! Database updated from version ${currentDbVersion} to ${finalVersion} (${executedCount} migration(s) executed)`,
       );
     } catch (error) {
-      const infrastructureMessage = resolveInfrastructureConnectionFailure(error);
+      const infrastructureMessage =
+        resolveInfrastructureConnectionFailure(error);
 
       if (infrastructureMessage) {
         this.logger.error(infrastructureMessage);

@@ -13,7 +13,7 @@ const KNOWN_SUCCESS_CODES = new Set([
 
 export function resolveSuccessMessage(
   message: string | null | undefined,
-  fallbackKey: string,
+  fallbackKey: string
 ): string {
   const normalized = message?.trim();
   if (!normalized) {

@@ -71,7 +71,10 @@ export function getFileExtension(fileName: string): string {
   return trimmed.slice(dotIndex + 1).toLowerCase();
 }
 
-export function isExecutableFileType(mimeType: string, fileName: string): boolean {
+export function isExecutableFileType(
+  mimeType: string,
+  fileName: string,
+): boolean {
   const normalizedMime = mimeType.trim().toLowerCase();
   if (EXECUTABLE_MIME_TYPES.has(normalizedMime)) {
     return true;

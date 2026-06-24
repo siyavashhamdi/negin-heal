@@ -71,8 +71,14 @@ const DashboardAppRoutesContent = (): ReactElement => {
       <Route path={`${APP_SHELL_ROUTES.profile}/*`} element={wrapProtected(<Profile />)} />
       <Route path={APP_SHELL_ROUTES.support} element={wrapProtected(<Support />)} />
       <Route path={APP_SHELL_ROUTES.supportFaq} element={wrapProtected(<SupportFaq />)} />
-      <Route path={`${APP_SHELL_ROUTES.supportTickets}/new`} element={wrapProtected(<SupportTicketsIndex />)} />
-      <Route path={`${APP_SHELL_ROUTES.supportTickets}/:ticketId`} element={wrapProtected(<SupportTicketsIndex />)} />
+      <Route
+        path={`${APP_SHELL_ROUTES.supportTickets}/new`}
+        element={wrapProtected(<SupportTicketsIndex />)}
+      />
+      <Route
+        path={`${APP_SHELL_ROUTES.supportTickets}/:ticketId`}
+        element={wrapProtected(<SupportTicketsIndex />)}
+      />
       <Route
         path={APP_SHELL_ROUTES.supportTickets}
         element={wrapProtected(<SupportTicketsIndex />)}
@@ -81,7 +87,10 @@ const DashboardAppRoutesContent = (): ReactElement => {
       <Route path={`${APP_SHELL_ROUTES.courses}/new/max`} element={<CoursesIndex />} />
       <Route path={`${APP_SHELL_ROUTES.courses}/edit/:courseId/max`} element={<CoursesIndex />} />
       <Route path={`${APP_SHELL_ROUTES.courses}/:courseId/max`} element={<CourseDetail />} />
-      <Route path={`${APP_SHELL_ROUTES.users}/*`} element={wrapProtected(<UsersManagementIndex />)} />
+      <Route
+        path={`${APP_SHELL_ROUTES.users}/*`}
+        element={wrapProtected(<UsersManagementIndex />)}
+      />
       <Route path={APP_SHELL_ROUTES.landing} element={<Landing />} />
       <Route
         path={APP_SHELL_ROUTES.home}

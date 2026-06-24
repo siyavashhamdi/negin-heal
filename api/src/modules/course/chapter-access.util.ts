@@ -32,9 +32,7 @@ export function resolveChapterUnlocksAt(
     return undefined;
   }
 
-  return new Date(
-    normalizedPaidAt.getTime() + visibleAfterMinutes * 60_000,
-  );
+  return new Date(normalizedPaidAt.getTime() + visibleAfterMinutes * 60_000);
 }
 
 export function canAccessChapter(

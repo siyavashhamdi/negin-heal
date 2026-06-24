@@ -102,11 +102,12 @@ export class FileService implements OnModuleInit {
     }
 
     if (isExecutableFileType(params.mimeType, params.name)) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.EXECUTABLE_FILE_NOT_ALLOWED);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.EXECUTABLE_FILE_NOT_ALLOWED,
+      );
     }
 
-    const uploadPolicy =
-      params.uploadPolicy ?? FILE_UPLOAD_POLICIES.ANY;
+    const uploadPolicy = params.uploadPolicy ?? FILE_UPLOAD_POLICIES.ANY;
 
     assertFileAllowedByPolicy({
       mimeType: params.mimeType,
@@ -334,7 +335,10 @@ export class FileService implements OnModuleInit {
     ids: Types.ObjectId[],
     referencedFileIds: Set<string>,
   ): Promise<number> {
-    const unreferencedIds = this.excludeReferencedFileIds(ids, referencedFileIds);
+    const unreferencedIds = this.excludeReferencedFileIds(
+      ids,
+      referencedFileIds,
+    );
     if (unreferencedIds.length === 0) {
       return 0;
     }
@@ -529,7 +533,10 @@ export class FileService implements OnModuleInit {
     ids: Types.ObjectId[],
     referencedFileIds: Set<string>,
   ): Promise<number> {
-    const unreferencedIds = this.excludeReferencedFileIds(ids, referencedFileIds);
+    const unreferencedIds = this.excludeReferencedFileIds(
+      ids,
+      referencedFileIds,
+    );
     if (unreferencedIds.length === 0) {
       return 0;
     }
@@ -823,7 +830,9 @@ export class FileService implements OnModuleInit {
 
     const slashIndex = storedFile.path?.indexOf("/") ?? -1;
     if (slashIndex <= 0 || !storedFile.path) {
-      throw new InternalServerErrorException(EXCEPTION_CONSTANT.FILE_PATH_INVALID);
+      throw new InternalServerErrorException(
+        EXCEPTION_CONSTANT.FILE_PATH_INVALID,
+      );
     }
 
     return {
@@ -938,7 +947,9 @@ export class FileService implements OnModuleInit {
         await this.minioClient.makeBucket(env.MINIO_BUCKET);
       }
     } catch (error) {
-      throw new InternalServerErrorException(EXCEPTION_CONSTANT.FILE_UPLOAD_BUCKET_ERROR);
+      throw new InternalServerErrorException(
+        EXCEPTION_CONSTANT.FILE_UPLOAD_BUCKET_ERROR,
+      );
     }
   }
 

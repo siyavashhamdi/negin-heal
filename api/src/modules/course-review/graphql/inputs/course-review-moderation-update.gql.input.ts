@@ -18,7 +18,8 @@ export class CourseReviewModerationUpdateGqlInput {
   reviewId: Types.ObjectId;
 
   @Field(() => CourseReviewModerationTarget, {
-    description: "Which moderation scope to update: review thread, rating, or message",
+    description:
+      "Which moderation scope to update: review thread, rating, or message",
   })
   @IsEnum(CourseReviewModerationTarget, {
     message: "Moderation target must be REVIEW, RATING, or MESSAGE",
@@ -47,6 +48,8 @@ export class CourseReviewModerationUpdateGqlInput {
   })
   @IsOptional()
   @IsString({ message: "Hidden reason must be a string" })
-  @MaxLength(500, { message: "Hidden reason cannot be longer than 500 characters" })
+  @MaxLength(500, {
+    message: "Hidden reason cannot be longer than 500 characters",
+  })
   hiddenReason?: string;
 }

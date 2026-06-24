@@ -9,7 +9,11 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 
-import { APP_SETTING_KEY, PAGINATION_CONSTANT, EXCEPTION_CONSTANT } from "../../constants";
+import {
+  APP_SETTING_KEY,
+  PAGINATION_CONSTANT,
+  EXCEPTION_CONSTANT,
+} from "../../constants";
 import {
   BadgeCountTriggerAction,
   BadgeCountTriggerSource,
@@ -398,7 +402,9 @@ export class CourseService {
     ]);
 
     if (!course) {
-      throw new NotFoundException(EXCEPTION_CONSTANT.COURSE_NOT_FOUND_OR_INACTIVE);
+      throw new NotFoundException(
+        EXCEPTION_CONSTANT.COURSE_NOT_FOUND_OR_INACTIVE,
+      );
     }
 
     if (!user) {
@@ -529,7 +535,10 @@ export class CourseService {
     const normalizedAuthority = this.normalizeOptionalText(authority);
 
     if (!normalizedAuthority) {
-      return { status: "failed", reason: EXCEPTION_CONSTANT.ZARINPAL_MISSING_AUTHORITY };
+      return {
+        status: "failed",
+        reason: EXCEPTION_CONSTANT.ZARINPAL_MISSING_AUTHORITY,
+      };
     }
 
     const userCourse = await this.userCourseModel
@@ -540,7 +549,10 @@ export class CourseService {
       .exec();
 
     if (!userCourse) {
-      return { status: "failed", reason: EXCEPTION_CONSTANT.ZARINPAL_PURCHASE_NOT_FOUND };
+      return {
+        status: "failed",
+        reason: EXCEPTION_CONSTANT.ZARINPAL_PURCHASE_NOT_FOUND,
+      };
     }
 
     const courseId = userCourse.courseId.toString();
@@ -755,15 +767,21 @@ export class CourseService {
     ]);
 
     if (!course) {
-      throw new NotFoundException(EXCEPTION_CONSTANT.COURSE_NOT_FOUND_OR_INACTIVE);
+      throw new NotFoundException(
+        EXCEPTION_CONSTANT.COURSE_NOT_FOUND_OR_INACTIVE,
+      );
     }
 
     if (this.isCourseFree(course)) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.MANUAL_PAYMENT_PAID_COURSE_ONLY);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.MANUAL_PAYMENT_PAID_COURSE_ONLY,
+      );
     }
 
     if (!user) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.MANUAL_PAYMENT_END_USER_ONLY);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.MANUAL_PAYMENT_END_USER_ONLY,
+      );
     }
 
     if (existingUserCourse?.purchase.status === UserCoursePurchaseStatus.PAID) {
@@ -771,7 +789,9 @@ export class CourseService {
     }
 
     if (existingUserCourse) {
-      throw new ConflictException(EXCEPTION_CONSTANT.USER_COURSE_PURCHASE_EXISTS);
+      throw new ConflictException(
+        EXCEPTION_CONSTANT.USER_COURSE_PURCHASE_EXISTS,
+      );
     }
 
     const priceSummary = await this.resolvePurchasePriceSummary(
@@ -1072,11 +1092,15 @@ export class CourseService {
       })
       .exec();
     if (!userCourse) {
-      throw new NotFoundException(EXCEPTION_CONSTANT.COURSE_ENROLLMENT_NOT_FOUND);
+      throw new NotFoundException(
+        EXCEPTION_CONSTANT.COURSE_ENROLLMENT_NOT_FOUND,
+      );
     }
 
     if (userCourse.purchase.status !== UserCoursePurchaseStatus.PAID) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.CHAPTER_COMPLETION_REQUIRES_PURCHASE);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.CHAPTER_COMPLETION_REQUIRES_PURCHASE,
+      );
     }
 
     const chapters = this.sortChaptersForDisplay(
@@ -1150,7 +1174,9 @@ export class CourseService {
         (entry) => entry.key === chapter.key,
       );
       if (!latestProgress) {
-        throw new ConflictException(EXCEPTION_CONSTANT.CHAPTER_COMPLETION_FAILED);
+        throw new ConflictException(
+          EXCEPTION_CONSTANT.CHAPTER_COMPLETION_FAILED,
+        );
       }
 
       const latestCounts = this.calculateChapterProgressCounts(
@@ -1512,18 +1538,24 @@ export class CourseService {
 
   private validateCreateInput(input: CourseCreateGqlInput): void {
     if (!input.title?.trim()) {
-      this.failCourseValidation(EXCEPTION_CONSTANT.COURSE_VALIDATION_TITLE_REQUIRED);
+      this.failCourseValidation(
+        EXCEPTION_CONSTANT.COURSE_VALIDATION_TITLE_REQUIRED,
+      );
     }
 
     if (input.priceIrt != null && input.priceIrt < 0) {
-      this.failCourseValidation(EXCEPTION_CONSTANT.COURSE_VALIDATION_PRICE_NEGATIVE);
+      this.failCourseValidation(
+        EXCEPTION_CONSTANT.COURSE_VALIDATION_PRICE_NEGATIVE,
+      );
     }
 
     if (input.discount) {
       const priceIrt = input.priceIrt ?? 0;
       if (priceIrt > 0) {
         if (input.discount.value <= 0) {
-          this.failCourseValidation(EXCEPTION_CONSTANT.COURSE_VALIDATION_DISCOUNT_POSITIVE);
+          this.failCourseValidation(
+            EXCEPTION_CONSTANT.COURSE_VALIDATION_DISCOUNT_POSITIVE,
+          );
         }
         if (
           input.discount.type === CourseDiscountType.PERCENTAGE &&
@@ -1713,7 +1745,9 @@ export class CourseService {
       .exec();
 
     if (existingFileIds.length !== fileIds.length) {
-      throw new NotFoundException(EXCEPTION_CONSTANT.COURSE_REFERENCED_FILE_NOT_FOUND);
+      throw new NotFoundException(
+        EXCEPTION_CONSTANT.COURSE_REFERENCED_FILE_NOT_FOUND,
+      );
     }
   }
 
@@ -2657,7 +2691,9 @@ export class CourseService {
         UserCoursePaymentMethod.FREE,
       ].includes(input.paymentMethod)
     ) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.PAYMENT_METHOD_NOT_SUPPORTED);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.PAYMENT_METHOD_NOT_SUPPORTED,
+      );
     }
 
     if (input.paymentMethod === UserCoursePaymentMethod.CARD_TO_CARD) {
@@ -2669,7 +2705,9 @@ export class CourseService {
         Types.ObjectId.isValid(input.uploadedReceiptFileId);
 
       if (!hasPaymentReference && !hasReceiptFile) {
-        throw new BadRequestException(EXCEPTION_CONSTANT.CARD_TO_CARD_EVIDENCE_REQUIRED);
+        throw new BadRequestException(
+          EXCEPTION_CONSTANT.CARD_TO_CARD_EVIDENCE_REQUIRED,
+        );
       }
     }
 
@@ -2686,7 +2724,9 @@ export class CourseService {
         this.normalizeOptionalText(input.transactionId) ||
         input.uploadedReceiptFileId
       ) {
-        throw new BadRequestException(EXCEPTION_CONSTANT.FREE_PURCHASE_NO_EVIDENCE);
+        throw new BadRequestException(
+          EXCEPTION_CONSTANT.FREE_PURCHASE_NO_EVIDENCE,
+        );
       }
     }
 
@@ -2696,7 +2736,9 @@ export class CourseService {
         this.normalizeOptionalText(input.transactionId) ||
         input.uploadedReceiptFileId
       ) {
-        throw new BadRequestException(EXCEPTION_CONSTANT.GATEWAY_PURCHASE_NO_EVIDENCE);
+        throw new BadRequestException(
+          EXCEPTION_CONSTANT.GATEWAY_PURCHASE_NO_EVIDENCE,
+        );
       }
     }
   }
@@ -2713,11 +2755,15 @@ export class CourseService {
     }
 
     if (!Object.values(UserCoursePaymentMethod).includes(input.paymentMethod)) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.PAYMENT_METHOD_NOT_SUPPORTED);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.PAYMENT_METHOD_NOT_SUPPORTED,
+      );
     }
 
     if (!Object.values(UserCoursePurchaseStatus).includes(input.status)) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.PURCHASE_STATUS_NOT_SUPPORTED);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.PURCHASE_STATUS_NOT_SUPPORTED,
+      );
     }
   }
 
@@ -2752,7 +2798,9 @@ export class CourseService {
         },
       ));
     } catch (error) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.ZARINPAL_CONNECTION_FAILED);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.ZARINPAL_CONNECTION_FAILED,
+      );
     }
 
     const payment = data.data;
@@ -2908,7 +2956,10 @@ export class CourseService {
       );
 
       if (!couponResult.isValid) {
-        throw new BadRequestException(couponResult.message || EXCEPTION_CONSTANT.COUPON_INVALID_FOR_PURCHASE);
+        throw new BadRequestException(
+          couponResult.message ||
+            EXCEPTION_CONSTANT.COUPON_INVALID_FOR_PURCHASE,
+        );
       }
 
       if (
@@ -2920,7 +2971,9 @@ export class CourseService {
         couponResult.couponDiscountAmountIrt == null ||
         couponResult.finalAmountIrt == null
       ) {
-        throw new BadRequestException(EXCEPTION_CONSTANT.COUPON_VALIDATION_INCOMPLETE);
+        throw new BadRequestException(
+          EXCEPTION_CONSTANT.COUPON_VALIDATION_INCOMPLETE,
+        );
       }
 
       return {
@@ -2990,14 +3043,18 @@ export class CourseService {
   ): void {
     if (input.paymentMethod === UserCoursePaymentMethod.FREE) {
       if (finalAmountIrt > 0) {
-        throw new BadRequestException(EXCEPTION_CONSTANT.FREE_PURCHASE_AMOUNT_MISMATCH);
+        throw new BadRequestException(
+          EXCEPTION_CONSTANT.FREE_PURCHASE_AMOUNT_MISMATCH,
+        );
       }
 
       return;
     }
 
     if (finalAmountIrt <= 0) {
-      throw new BadRequestException(EXCEPTION_CONSTANT.FREE_PAYMENT_METHOD_REQUIRED);
+      throw new BadRequestException(
+        EXCEPTION_CONSTANT.FREE_PAYMENT_METHOD_REQUIRED,
+      );
     }
   }
 
@@ -3036,7 +3093,9 @@ export class CourseService {
       .exec();
 
     if (!receiptFile) {
-      throw new NotFoundException(EXCEPTION_CONSTANT.PAYMENT_EVIDENCE_NOT_FOUND);
+      throw new NotFoundException(
+        EXCEPTION_CONSTANT.PAYMENT_EVIDENCE_NOT_FOUND,
+      );
     }
 
     return receiptFile._id;
@@ -3693,14 +3752,12 @@ export class CourseService {
     courseTitle: string,
     status: UserCoursePurchaseStatus,
     changedByInvestigationTeam: boolean,
-  ):
-    | {
-        title: string;
-        message: string;
-        mode: NotificationMode;
-        payload: Record<string, unknown>;
-      }
-    | null {
+  ): {
+    title: string;
+    message: string;
+    mode: NotificationMode;
+    payload: Record<string, unknown>;
+  } | null {
     switch (status) {
       case UserCoursePurchaseStatus.PAID:
         return {
@@ -3790,11 +3847,12 @@ export class CourseService {
     const courseId = userCourse.courseId.toString();
     const courseTitle =
       this.normalizeOptionalText(userCourse.courseSnapshot?.title) || "دوره";
-    const notificationContent = this.resolveCoursePurchaseStatusNotificationContent(
-      courseTitle,
-      nextStatus,
-      changedByInvestigationTeam,
-    );
+    const notificationContent =
+      this.resolveCoursePurchaseStatusNotificationContent(
+        courseTitle,
+        nextStatus,
+        changedByInvestigationTeam,
+      );
 
     if (!notificationContent) {
       return;

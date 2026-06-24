@@ -7,11 +7,7 @@ import {
   type FileAccessUrl,
 } from "../../utils/fileAccessUrl.util";
 
-export type UserCoursePaymentMethod =
-  | "GATEWAY"
-  | "CARD_TO_CARD"
-  | "CRYPTOCURRENCY"
-  | "FREE";
+export type UserCoursePaymentMethod = "GATEWAY" | "CARD_TO_CARD" | "CRYPTOCURRENCY" | "FREE";
 
 export type UserCoursePurchaseStatus = "PENDING" | "PAID" | "FAILED" | "REFUNDED" | "CANCELLED";
 
@@ -365,7 +361,7 @@ export function isPaymentReceiptFilePresent(record: CoursePaymentRecord): boolea
 }
 
 export function buildPaymentReceiptExistingFile(
-  record: CoursePaymentRecord,
+  record: CoursePaymentRecord
 ): ExistingFilePreview | null {
   if (!isPaymentReceiptFilePresent(record)) {
     return null;
@@ -442,7 +438,9 @@ function dateFilterToIsoDate(value: string): string | null {
   return `${year}-${month}-${day}`;
 }
 
-export function mapCoursePaymentListRowToRecord(row: CoursePaymentListItemRow): CoursePaymentRecord {
+export function mapCoursePaymentListRowToRecord(
+  row: CoursePaymentListItemRow
+): CoursePaymentRecord {
   const receiptAccessUrl = row.uploadedReceiptFile?.accessUrl;
 
   return {
@@ -498,7 +496,9 @@ export function mapCoursePaymentListRowToRecord(row: CoursePaymentListItemRow): 
   };
 }
 
-export function mapCoursePaymentDetailRowToRecord(row: CoursePaymentDetailRow): CoursePaymentRecord {
+export function mapCoursePaymentDetailRowToRecord(
+  row: CoursePaymentDetailRow
+): CoursePaymentRecord {
   const receiptFile = row.uploadedReceiptFile;
   const receiptAccessUrl = receiptFile?.accessUrl;
 
@@ -528,14 +528,11 @@ export function mapCoursePaymentDetailRowToRecord(row: CoursePaymentDetailRow): 
     couponDiscountValue: row.coupon?.discountValue ?? null,
     uploadedReceiptFileId: display(getFileIdFromAccessUrl(receiptAccessUrl)),
     uploadedReceiptFileTitle: display(
-      receiptFile?.title ?? receiptFile?.name ?? receiptAccessUrl?.name,
+      receiptFile?.title ?? receiptFile?.name ?? receiptAccessUrl?.name
     ),
     uploadedReceiptFileName: display(receiptFile?.name ?? receiptAccessUrl?.name),
-    uploadedReceiptFileMimeType: display(
-      receiptFile?.mimeType ?? receiptAccessUrl?.mimeType,
-    ),
-    uploadedReceiptFileSizeBytes:
-      receiptFile?.sizeBytes ?? receiptAccessUrl?.sizeBytes ?? null,
+    uploadedReceiptFileMimeType: display(receiptFile?.mimeType ?? receiptAccessUrl?.mimeType),
+    uploadedReceiptFileSizeBytes: receiptFile?.sizeBytes ?? receiptAccessUrl?.sizeBytes ?? null,
     uploadedReceiptFilePath: display(receiptFile?.path),
     uploadedReceiptFileAccessUrl: resolveFileAccessUrl(receiptAccessUrl) ?? "",
     receiptUploadedBy: display(row.receiptUploadedBy),
@@ -548,7 +545,7 @@ export function mapCoursePaymentDetailRowToRecord(row: CoursePaymentDetailRow): 
     createdByUsername: display(row.createdByUser?.username),
     manualStatusChangedBy: display(row.manualStatusChangedBy),
     manualStatusChangerName: display(
-      row.manualStatusChanger?.fullName ?? row.manualStatusChanger?.username,
+      row.manualStatusChanger?.fullName ?? row.manualStatusChanger?.username
     ),
     manualStatusChangerUsername: display(row.manualStatusChanger?.username),
     manualStatusChangedDescription: display(row.manualStatusChangedDescription),

@@ -10,7 +10,15 @@ import {
   type KeyboardEvent,
   type ReactElement,
 } from "react";
-import { Box, Divider, IconButton, MenuItem, Select, useMediaQuery, type SelectChangeEvent } from "@mui/material";
+import {
+  Box,
+  Divider,
+  IconButton,
+  MenuItem,
+  Select,
+  useMediaQuery,
+  type SelectChangeEvent,
+} from "@mui/material";
 import CodeRoundedIcon from "@mui/icons-material/CodeRounded";
 import FormatAlignCenterRoundedIcon from "@mui/icons-material/FormatAlignCenterRounded";
 import FormatAlignLeftRoundedIcon from "@mui/icons-material/FormatAlignLeftRounded";
@@ -87,7 +95,6 @@ const fontSizeOptions = [
   { label: "خیلی بزرگ", value: "24px" },
 ];
 
-
 function getClosestBlock(node: Node | null, editable: HTMLElement): HTMLElement | null {
   const element = node instanceof HTMLElement ? node : node?.parentElement;
   const block = element?.closest<HTMLElement>(blockSelector);
@@ -141,12 +148,11 @@ function RichTextBoxRender({
     <>
       <Box className={styles.root}>
         <div className={styles.inputFrame}>
-          {!hideLabel && label.trim() ? (
-            <span className={styles.label}>
-              {label}
-            </span>
-          ) : null}
-          <div className={`${styles.modeSwitch} ${styles.modeSwitchSingle}`} aria-label="عملیات نمایش">
+          {!hideLabel && label.trim() ? <span className={styles.label}>{label}</span> : null}
+          <div
+            className={`${styles.modeSwitch} ${styles.modeSwitchSingle}`}
+            aria-label="عملیات نمایش"
+          >
             <AppTooltip title={maximizeLabel} arrow>
               <IconButton
                 size="small"
@@ -287,7 +293,7 @@ const RichTextBoxEditor = ({
         editable.innerHTML = nextHtml;
       }
     },
-    [mode, value],
+    [mode, value]
   );
 
   const setEditableRef = useCallback(
@@ -297,7 +303,7 @@ const RichTextBoxEditor = ({
         syncEditableHtml(node);
       }
     },
-    [syncEditableHtml],
+    [syncEditableHtml]
   );
 
   useLayoutEffect(() => {
@@ -405,7 +411,9 @@ const RichTextBoxEditor = ({
       alignCenter: queryState("justifyCenter"),
       alignLeft: queryState("justifyLeft"),
       indented: selectedBlocks.some(
-        (block) => block.tagName === "LI" || (Number.parseFloat(block.style.getPropertyValue("margin-inline-start")) || 0) > 0,
+        (block) =>
+          block.tagName === "LI" ||
+          (Number.parseFloat(block.style.getPropertyValue("margin-inline-start")) || 0) > 0
       ),
     });
   }, [getSelectedBlocks, mode]);
@@ -429,7 +437,7 @@ const RichTextBoxEditor = ({
       | "indent"
       | "outdent"
       | "removeFormat",
-    value?: string,
+    value?: string
   ): void => {
     const editable = editableRef.current;
     if (!editable) {
@@ -463,7 +471,8 @@ const RichTextBoxEditor = ({
     }
 
     selectedBlocks.forEach((block) => {
-      const currentIndent = Number.parseFloat(block.style.getPropertyValue("margin-inline-start")) || 0;
+      const currentIndent =
+        Number.parseFloat(block.style.getPropertyValue("margin-inline-start")) || 0;
       const nextIndent = Math.max(0, currentIndent + direction * indentStepPx);
 
       if (nextIndent === 0) {
@@ -705,17 +714,12 @@ const RichTextBoxEditor = ({
 
   const renderEditorSurface = (variant: "inline" | "modal"): ReactElement => {
     const editorClassName =
-      variant === "modal"
-        ? `${styles.editor} ${styles.editorMax}`
-        : styles.editor;
+      variant === "modal" ? `${styles.editor} ${styles.editorMax}` : styles.editor;
     const markupClassName =
       variant === "modal"
         ? `${styles.markupEditor} ${styles.markupEditorMax}`
         : styles.markupEditor;
-    const editorStyle =
-      variant === "modal"
-        ? { minHeight: "100%" }
-        : fieldHeightStyle;
+    const editorStyle = variant === "modal" ? { minHeight: "100%" } : fieldHeightStyle;
 
     return (
       <>
@@ -773,7 +777,7 @@ const RichTextBoxEditor = ({
               role="textbox"
               aria-multiline
               suppressContentEditableWarning
-              data-placeholder={isFocused ? placeholder ?? "" : ""}
+              data-placeholder={isFocused ? (placeholder ?? "") : ""}
               style={editorStyle}
               onFocus={() => setIsFocused(true)}
               onInput={handleInput}

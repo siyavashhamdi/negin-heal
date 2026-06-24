@@ -25,7 +25,7 @@ function getFallbackOrigin(): string {
 
 export function resolveFileAccessUrl(
   access: FileAccessUrl | null | undefined,
-  fallbackOrigin?: string,
+  fallbackOrigin?: string
 ): string | null {
   const fileId = access?.fileId?.trim();
   const token = access?.token?.trim();
@@ -33,27 +33,19 @@ export function resolveFileAccessUrl(
     return null;
   }
 
-  const base = (access.baseUrl?.trim() || fallbackOrigin || getFallbackOrigin()).replace(
-    /\/$/,
-    "",
-  );
-  const apiPath = access.apiPath.startsWith("/")
-    ? access.apiPath
-    : `/${access.apiPath}`;
+  const base = (access.baseUrl?.trim() || fallbackOrigin || getFallbackOrigin()).replace(/\/$/, "");
+  const apiPath = access.apiPath.startsWith("/") ? access.apiPath : `/${access.apiPath}`;
 
   return `${base}${apiPath}/${fileId}/content?token=${encodeURIComponent(token)}`;
 }
 
-export function getFileIdFromAccessUrl(
-  access: FileAccessUrl | null | undefined,
-): string | null {
+export function getFileIdFromAccessUrl(access: FileAccessUrl | null | undefined): string | null {
   const rawFileId = access?.fileId;
   if (rawFileId == null) {
     return null;
   }
 
-  const fileId =
-    typeof rawFileId === "string" ? rawFileId.trim() : String(rawFileId).trim();
+  const fileId = typeof rawFileId === "string" ? rawFileId.trim() : String(rawFileId).trim();
   return fileId || null;
 }
 
@@ -196,7 +188,7 @@ export function isViewableFileType(mimeType: string, fileName: string): boolean 
 
 export function getViewableMediaKind(
   mimeType: string,
-  fileName: string,
+  fileName: string
 ): "image" | "video" | "audio" | "pdf" | "text" | null {
   if (isExecutableFileType(mimeType, fileName)) {
     return null;
@@ -260,7 +252,7 @@ export function buildExistingFilePreview(
   overrides?: {
     readonly mimeType?: string | null;
     readonly sizeBytes?: number | null;
-  },
+  }
 ): ExistingFilePreview | null {
   const resolved = resolveFileAccessUrl(accessUrl);
   if (!resolved) {
@@ -269,9 +261,7 @@ export function buildExistingFilePreview(
 
   const name = accessUrl?.name?.trim() || fallbackName?.trim() || "فایل";
   const mimeType =
-    overrides?.mimeType?.trim() ||
-    accessUrl?.mimeType?.trim() ||
-    "application/octet-stream";
+    overrides?.mimeType?.trim() || accessUrl?.mimeType?.trim() || "application/octet-stream";
   if (isExecutableFileType(mimeType, name)) {
     return null;
   }

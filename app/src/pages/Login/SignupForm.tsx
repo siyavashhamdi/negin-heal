@@ -40,7 +40,10 @@ import {
   sanitizeAuthIdentityInput,
   sanitizeLatinEmailInput,
 } from "./password-reset-form.util";
-import { sanitizeMobilePhoneInput, normalizeAuthIdentityMobileForSubmit } from "../../utilities/mobile-phone.util";
+import {
+  sanitizeMobilePhoneInput,
+  normalizeAuthIdentityMobileForSubmit,
+} from "../../utilities/mobile-phone.util";
 import { isValidUsernameLength } from "../../utils/usernamePolicy.util";
 import { arePasswordRulesPassed } from "../../utils/passwordPolicy.util";
 import formStyles from "./styles/LoginFormShared.module.scss";
@@ -62,10 +65,7 @@ const persianFieldInputProps = {
 
 const VERIFICATION_CODE_LENGTH = 6;
 const VERIFICATION_CODE_REGEX = /^\d{4,6}$/;
-const EMPTY_DIGITS: readonly string[] = Array.from(
-  { length: VERIFICATION_CODE_LENGTH },
-  () => "",
-);
+const EMPTY_DIGITS: readonly string[] = Array.from({ length: VERIFICATION_CODE_LENGTH }, () => "");
 
 type SignupCredentialMode = "password" | "otp";
 
@@ -88,7 +88,9 @@ export const SignupForm = ({
   const [mode, setMode] = useState<SignupCredentialMode>("password");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [username, setUsername] = useState(identity.identityKind === "username" ? identity.identity : "");
+  const [username, setUsername] = useState(
+    identity.identityKind === "username" ? identity.identity : ""
+  );
   const [email, setEmail] = useState(identity.identityKind === "email" ? identity.identity : "");
   const [mobile, setMobile] = useState(identity.identityKind === "mobile" ? identity.identity : "");
   const [password, setPassword] = useState("");
@@ -106,16 +108,13 @@ export const SignupForm = ({
 
   const verificationCode = verificationDigits.join("");
   const captchaEnabled = API_CONFIG.CAPTCHA_ENABLED;
-  const lockedIdentityKind = identity.identity.trim()
-    ? identity.identityKind
-    : null;
+  const lockedIdentityKind = identity.identity.trim() ? identity.identityKind : null;
   const hasAnyIdentity = useMemo(
     () => Boolean(username.trim() || email.trim() || mobile.trim()),
-    [email, mobile, username],
+    [email, mobile, username]
   );
   const passwordRulesPassed = arePasswordRulesPassed(password);
-  const passwordsMatch =
-    confirmPassword.trim().length > 0 && password === confirmPassword;
+  const passwordsMatch = confirmPassword.trim().length > 0 && password === confirmPassword;
   const passwordReady =
     password.trim().length > 0 &&
     confirmPassword.trim().length > 0 &&
@@ -129,9 +128,7 @@ export const SignupForm = ({
     (mode === "password" ? passwordReady : otpReady) &&
     (!captchaEnabled || captchaValid);
 
-  const isIdentityFieldRequired = (
-    kind: NonNullable<LoginNavState["identityKind"]>,
-  ): boolean => {
+  const isIdentityFieldRequired = (kind: NonNullable<LoginNavState["identityKind"]>): boolean => {
     if (lockedIdentityKind === kind) {
       return true;
     }
@@ -371,7 +368,7 @@ export const SignupForm = ({
       setCaptchaValue(value);
       setCaptchaValid(isValid);
     },
-    [],
+    []
   );
 
   return (
@@ -482,9 +479,7 @@ export const SignupForm = ({
           }}
           disabled={loading || lockedIdentityKind === "mobile"}
           error={hasError && mobileInvalid}
-          helperText={
-            hasError && mobileInvalid ? t("auth.login.errors.invalidMobile") : undefined
-          }
+          helperText={hasError && mobileInvalid ? t("auth.login.errors.invalidMobile") : undefined}
           required={isIdentityFieldRequired("mobile")}
         />
 

@@ -12,9 +12,7 @@ function resetScrollContainer(element: HTMLElement | null | undefined): void {
   element.scrollLeft = 0;
 }
 
-export function resetDialogScrollContainers(
-  contentElement: HTMLElement | null | undefined,
-): void {
+export function resetDialogScrollContainers(contentElement: HTMLElement | null | undefined): void {
   resetScrollContainer(contentElement);
 
   if (contentElement) {
@@ -37,9 +35,7 @@ export function resetDialogScrollContainers(
   }
 }
 
-function scheduleScrollReset(
-  getContainer: () => HTMLElement | null,
-): () => void {
+function scheduleScrollReset(getContainer: () => HTMLElement | null): () => void {
   resetDialogScrollContainers(getContainer());
 
   const rafId = requestAnimationFrame(() => {
@@ -70,7 +66,7 @@ type DialogScrollTransitionProps = {
 export function useScrollContainerToTopOnOpen(
   open: boolean,
   containerRef: RefObject<HTMLElement | null>,
-  resetKey?: unknown,
+  resetKey?: unknown
 ): DialogScrollTransitionProps {
   const resetScroll = useCallback(() => {
     resetDialogScrollContainers(containerRef.current);

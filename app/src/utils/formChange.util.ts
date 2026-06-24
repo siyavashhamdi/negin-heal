@@ -4,7 +4,7 @@ export function areFormValuesEqual<T>(left: T, right: T): boolean {
 
 export function hasFormChanges<T>(
   initial: T | null | undefined,
-  current: T | null | undefined,
+  current: T | null | undefined
 ): boolean {
   if (initial == null || current == null) {
     return false;
