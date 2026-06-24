@@ -1,0 +1,26 @@
+@use "../../styles/variables" as variables;
+
+.app-shell-nav__profile-status-wrap {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.app-shell-nav__profile-status-dot {
+  position: absolute;
+  bottom: -0.02rem;
+  inset-inline-end: -0.02rem;
+  inline-size: 0.48rem;
+  block-size: 0.48rem;
+  border-radius: 999rem;
+  border: 0.12rem solid var(--app-surface-bg, #fff);
+  pointer-events: none;
+}
+
+.app-shell-nav__profile-status-dot--online {
+  background: variables.$color-success-main;
+}
+
+.app-shell-nav__profile-status-dot--offline {
+  background: variables.$color-grey-400;
+}

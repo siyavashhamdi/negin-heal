@@ -27,6 +27,7 @@ export interface SideMenuNavProps {
   readonly showCollapseToggle?: boolean;
   readonly badgeCounts?: AppShellNavBadgeCounts;
   readonly profileAvatar?: { readonly src: string; readonly alt: string } | null;
+  readonly profileSubscriptionOnline?: boolean;
 }
 
 const DEFAULT_BADGE_COUNTS: AppShellNavBadgeCounts = {
@@ -42,6 +43,7 @@ export function SideMenuNav({
   showCollapseToggle = false,
   badgeCounts = DEFAULT_BADGE_COUNTS,
   profileAvatar = null,
+  profileSubscriptionOnline,
 }: SideMenuNavProps): ReactElement {
   const { user } = useAuth();
   const roles = user?.roles ?? [];
@@ -92,6 +94,7 @@ export function SideMenuNav({
                 variant="side"
                 badgeCounts={badgeCounts}
                 profileAvatar={profileAvatar}
+                profileSubscriptionOnline={profileSubscriptionOnline}
               />
               <OverflowTooltip className="side-menu-nav__item-label" title={item.title}>
                 {item.title}

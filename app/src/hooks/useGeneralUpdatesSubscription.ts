@@ -1,15 +1,14 @@
 import { useSubscription } from "@apollo/client/react";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   GENERAL_SUBSCRIPTION_UPDATE_TYPES,
   type GeneralSubscriptionUpdateType,
 } from "../constants";
 import { useAuth } from "../contexts/AuthContext";
 import { GENERAL_UPDATES_SUBSCRIPTION } from "../graphql/subscriptions/generalUpdates.subscription";
-import { WS_SUBSCRIPTION_RETRY_ATTEMPTS } from "../lib/graphql-ws-client";
+import { subscribeGraphqlWsConnection } from "../lib/graphql-ws-client";
+import { resolveSubscriptionRetryDelayMs } from "../lib/subscription-retry.util";
 import { isRecoverableSubscriptionError } from "../lib/subscription-error.util";
-
-const WS_SUBSCRIPTION_RESTART_BASE_DELAY_MS = 1_000;
 
 export interface GeneralUpdateEvent {
   readonly updateType: GeneralSubscriptionUpdateType;
@@ -49,14 +48,17 @@ export const useGeneralUpdatesSubscription = ({
   onBadgeCounts,
   onVerificationStatus,
   onAnyUpdate,
-}: UseGeneralUpdatesSubscriptionProps): void => {
+}: UseGeneralUpdatesSubscriptionProps): { readonly isOnline: boolean } => {
   const { isAuthenticated } = useAuth();
   const subscriptionActive = enabled && isAuthenticated;
+  const [wsConnected, setWsConnected] = useState(false);
+  const [subscriptionBroken, setSubscriptionBroken] = useState(false);
+  const isOnline = subscriptionActive && wsConnected && !subscriptionBroken;
   const enabledRef = useRef(subscriptionActive);
   const restartRef = useRef<(() => void) | null>(null);
   const restartAttemptRef = useRef(0);
   const restartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const subscriptionAliveRef = useRef(subscriptionActive);
+  const subscriptionAliveRef = useRef(false);
   const callbacksRef = useRef<SubscriptionCallbacks>({
     onNotification,
     onBadgeCounts,
@@ -74,6 +76,22 @@ export const useGeneralUpdatesSubscription = ({
     };
   }, [subscriptionActive, onNotification, onBadgeCounts, onVerificationStatus, onAnyUpdate]);
 
+  useEffect(() => {
+    if (isOnline) {
+      restartAttemptRef.current = 0;
+    }
+  }, [isOnline]);
+
+  useEffect(() => {
+    return subscribeGraphqlWsConnection((connected) => {
+      setWsConnected(connected);
+
+      if (!connected) {
+        subscriptionAliveRef.current = false;
+      }
+    });
+  }, []);
+
   const clearRestartTimer = useCallback(() => {
     if (restartTimerRef.current) {
       clearTimeout(restartTimerRef.current);
@@ -86,13 +104,9 @@ export const useGeneralUpdatesSubscription = ({
       return;
     }
 
-    if (restartAttemptRef.current >= WS_SUBSCRIPTION_RETRY_ATTEMPTS) {
-      return;
-    }
-
     clearRestartTimer();
 
-    const delayMs = WS_SUBSCRIPTION_RESTART_BASE_DELAY_MS * 2 ** restartAttemptRef.current;
+    const delayMs = resolveSubscriptionRetryDelayMs(restartAttemptRef.current);
     restartAttemptRef.current += 1;
 
     restartTimerRef.current = setTimeout(() => {
@@ -102,6 +116,7 @@ export const useGeneralUpdatesSubscription = ({
         return;
       }
 
+      setSubscriptionBroken(false);
       restartRef.current?.();
     }, delayMs);
   }, [clearRestartTimer]);
@@ -117,7 +132,7 @@ export const useGeneralUpdatesSubscription = ({
     },
     onData: ({ data }) => {
       subscriptionAliveRef.current = true;
-      restartAttemptRef.current = 0;
+      setSubscriptionBroken(false);
 
       const update = data.data?.generalUpdates;
       if (!update) {
@@ -143,6 +158,7 @@ export const useGeneralUpdatesSubscription = ({
     },
     onError: (error) => {
       subscriptionAliveRef.current = false;
+      setSubscriptionBroken(true);
 
       if (!enabledRef.current || !isRecoverableSubscriptionError(error)) {
         return;
@@ -152,6 +168,7 @@ export const useGeneralUpdatesSubscription = ({
     },
     onComplete: () => {
       subscriptionAliveRef.current = false;
+      setSubscriptionBroken(true);
 
       if (enabledRef.current) {
         scheduleSubscriptionRestart();
@@ -164,7 +181,8 @@ export const useGeneralUpdatesSubscription = ({
   }, [restart]);
 
   useEffect(() => {
-    subscriptionAliveRef.current = subscriptionActive;
+    setSubscriptionBroken(false);
+    subscriptionAliveRef.current = false;
 
     if (!subscriptionActive) {
       clearRestartTimer();
@@ -183,6 +201,7 @@ export const useGeneralUpdatesSubscription = ({
       }
 
       restartAttemptRef.current = 0;
+      setSubscriptionBroken(false);
       restartRef.current?.();
     };
 
@@ -195,4 +214,6 @@ export const useGeneralUpdatesSubscription = ({
       clearRestartTimer();
     };
   }, [subscriptionActive, clearRestartTimer]);
+
+  return { isOnline };
 };

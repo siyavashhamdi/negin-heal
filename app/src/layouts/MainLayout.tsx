@@ -376,7 +376,7 @@ export function MainLayout({
     [showSnackbar, upsertLiveHeaderNotification],
   );
 
-  useGeneralUpdatesSubscription({
+  const { isOnline: isProfileSubscriptionOnline } = useGeneralUpdatesSubscription({
     enabled: Boolean(authUser),
     updateTypes: [
       GENERAL_SUBSCRIPTION_UPDATE_TYPES.NOTIFICATION,
@@ -444,6 +444,7 @@ export function MainLayout({
   }, [authUser, fallbackUser, user, userLoading]);
 
   const profileAvatar = authUser && avatarUrl ? { src: avatarUrl, alt: userDisplayName } : null;
+  const profileSubscriptionOnline = authUser ? isProfileSubscriptionOnline : undefined;
 
   const themeToggleLabel =
     mode === "light"
@@ -930,6 +931,7 @@ export function MainLayout({
                 onToggleCollapsed={() => setIsSideMenuCollapsed((previous) => !previous)}
                 badgeCounts={appShellNavBadgeCounts}
                 profileAvatar={profileAvatar}
+                profileSubscriptionOnline={profileSubscriptionOnline}
               />
             </div>
           </aside>
@@ -958,6 +960,7 @@ export function MainLayout({
                 variant="bottom"
                 badgeCounts={appShellNavBadgeCounts}
                 profileAvatar={profileAvatar}
+                profileSubscriptionOnline={profileSubscriptionOnline}
               />
               <span>{item.title}</span>
             </NavLink>

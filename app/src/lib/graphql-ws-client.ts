@@ -1,21 +1,30 @@
 import { createClient, type Client } from "graphql-ws";
 import { LOCAL_STORAGE_KEYS } from "../constants";
+import { resolveSubscriptionRetryDelayMs } from "./subscription-retry.util";
 
-export const WS_SUBSCRIPTION_RETRY_ATTEMPTS = 10;
-
-const WS_SUBSCRIPTION_BASE_RETRY_DELAY_MS = 1_000;
+export {
+  WS_SUBSCRIPTION_POLL_INTERVAL_MS,
+  WS_SUBSCRIPTION_RETRY_ATTEMPTS,
+} from "./subscription-retry.util";
 
 let isBrowserUnloading = false;
 let graphqlWsClient: Client | null = null;
 let lifecycleListenersRegistered = false;
 let isWsConnected = false;
+const wsConnectionListeners = new Set<(connected: boolean) => void>();
+
+function notifyWsConnectionListeners(connected: boolean): void {
+  for (const listener of wsConnectionListeners) {
+    listener(connected);
+  }
+}
 
 function isBrowserOpenForSubscriptionRetry(): boolean {
   return typeof window !== "undefined" && !isBrowserUnloading;
 }
 
 async function waitForWsSubscriptionRetry(retries: number): Promise<void> {
-  const delayMs = WS_SUBSCRIPTION_BASE_RETRY_DELAY_MS * 2 ** retries;
+  const delayMs = resolveSubscriptionRetryDelayMs(retries);
   await new Promise((resolve) => setTimeout(resolve, delayMs));
 }
 
@@ -56,7 +65,7 @@ function createGraphqlWsClient(): Client {
   return createClient({
     url: buildGraphqlWsUrl(),
     lazy: true,
-    retryAttempts: WS_SUBSCRIPTION_RETRY_ATTEMPTS,
+    retryAttempts: Number.POSITIVE_INFINITY,
     retryWait: waitForWsSubscriptionRetry,
     shouldRetry: shouldRetryWsSubscriptionConnection,
     connectionParams: () => {
@@ -68,9 +77,11 @@ function createGraphqlWsClient(): Client {
     on: {
       connected: () => {
         isWsConnected = true;
+        notifyWsConnectionListeners(true);
       },
       closed: () => {
         isWsConnected = false;
+        notifyWsConnectionListeners(false);
       },
     },
   });
@@ -94,10 +105,22 @@ export function isGraphqlWsConnected(): boolean {
   return isWsConnected;
 }
 
+export function subscribeGraphqlWsConnection(
+  listener: (connected: boolean) => void
+): () => void {
+  wsConnectionListeners.add(listener);
+  listener(isWsConnected);
+
+  return () => {
+    wsConnectionListeners.delete(listener);
+  };
+}
+
 export async function disposeGraphqlWsClient(): Promise<void> {
   const client = graphqlWsClient;
   graphqlWsClient = null;
   isWsConnected = false;
+  notifyWsConnectionListeners(false);
 
   if (client) {
     await client.dispose();

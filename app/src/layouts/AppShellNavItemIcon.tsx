@@ -5,12 +5,15 @@ import {
   type AppShellNavBadgeCounts,
   type AppShellNavItemDefinition,
 } from "./app-shell-nav-items";
+import "./styles/AppShellNavItemIcon.scss";
 
 type AppShellNavItemIconProps = {
   readonly item: AppShellNavItemDefinition;
   readonly variant: "side" | "bottom";
   readonly badgeCounts: AppShellNavBadgeCounts;
   readonly profileAvatar?: { readonly src: string; readonly alt: string } | null;
+  /** When set, profile icon shows a green/gray subscription status dot. */
+  readonly profileSubscriptionOnline?: boolean;
 };
 
 const BADGE_COLORS = {
@@ -24,12 +27,13 @@ export function AppShellNavItemIcon({
   variant,
   badgeCounts,
   profileAvatar,
+  profileSubscriptionOnline,
 }: AppShellNavItemIconProps): ReactElement {
   const ItemIcon = item.Icon;
   const badgeCount = resolveAppShellNavBadgeCount(item, badgeCounts);
 
-  if (item.id === "profile" && profileAvatar) {
-    return (
+  if (item.id === "profile") {
+    const profileIcon = profileAvatar ? (
       <Avatar
         className={
           variant === "bottom" ? "main-layout__mobile-bottom-avatar" : "side-menu-nav__item-avatar"
@@ -37,6 +41,24 @@ export function AppShellNavItemIcon({
         src={profileAvatar.src}
         alt={profileAvatar.alt}
       />
+    ) : (
+      <ItemIcon className={variant === "bottom" ? undefined : "side-menu-nav__item-icon"} />
+    );
+
+    if (profileSubscriptionOnline === undefined) {
+      return profileIcon;
+    }
+
+    return (
+      <span className="app-shell-nav__profile-status-wrap">
+        {profileIcon}
+        <span
+          className={`app-shell-nav__profile-status-dot app-shell-nav__profile-status-dot--${
+            profileSubscriptionOnline ? "online" : "offline"
+          }`}
+          aria-hidden
+        />
+      </span>
     );
   }
 
