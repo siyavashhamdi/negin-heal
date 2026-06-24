@@ -213,6 +213,7 @@ export class BackupService {
         text: [
           "⏱ پشتیبان‌گیری Negin Heal — اتمام زمان",
           "",
+          this.formatBackupEnvironmentTelegramLine(),
           `اهداف درخواستی: ${targetLabels}`,
           `حداکثر زمان مجاز: ${timeoutMinutes} دقیقه`,
           `زمان: ${this.formatDateTime(new Date())}`,
@@ -458,10 +459,11 @@ export class BackupService {
     createdAt: Date,
   ): BackupArchivePaths {
     const timestamp = this.formatBackupTimestamp(createdAt);
-    const archiveFileName = `negin-heal-${kind}-backup_${timestamp}.rar`;
+    const nodeEnv = this.getBackupEnvironmentLabel();
+    const archiveFileName = `negin-heal-${kind}-backup_${nodeEnv}_${timestamp}.rar`;
     const stagingDir = join(
       BACKUP_CONSTANT.DIR,
-      `negin-heal-${kind}-backup-staging_${timestamp}`,
+      `negin-heal-${kind}-backup-staging_${nodeEnv}_${timestamp}`,
     );
 
     return {
@@ -469,6 +471,14 @@ export class BackupService {
       archivePath: join(BACKUP_CONSTANT.DIR, archiveFileName),
       stagingDir,
     };
+  }
+
+  private getBackupEnvironmentLabel(): string {
+    return env.NODE_ENV?.trim() || "unknown";
+  }
+
+  private formatBackupEnvironmentTelegramLine(): string {
+    return `🌐 محیط (NODE_ENV): ${this.getBackupEnvironmentLabel()}`;
   }
 
   private formatBackupTimestamp(date: Date): string {
@@ -548,6 +558,7 @@ export class BackupService {
             ? `${input.caption}\n\n📦 قسمت ${index + 1} از ${totalParts}`
             : [
                 `📦 پشتیبان‌گیری ${input.targetLabel} — Negin Heal`,
+                this.formatBackupEnvironmentTelegramLine(),
                 `📁 ${partName}`,
                 `📦 قسمت ${index + 1} از ${totalParts}`,
               ].join("\n");
@@ -581,6 +592,7 @@ export class BackupService {
     return [
       "📦 پشتیبان‌گیری MinIO — Negin Heal",
       "",
+      this.formatBackupEnvironmentTelegramLine(),
       `🪣 باکت: ${env.MINIO_BUCKET}`,
       `📁 فایل: ${archiveFileName}`,
       `🗜 فرمت آرشیو: ${BACKUP_ARCHIVE_FORMAT} (رمزدار)`,
@@ -608,6 +620,7 @@ export class BackupService {
     return [
       "📦 پشتیبان‌گیری MongoDB — Negin Heal",
       "",
+      this.formatBackupEnvironmentTelegramLine(),
       `🗄 پایگاه داده: ${backupResult.database}`,
       `📁 فایل: ${archiveFileName}`,
       `🗜 فرمت آرشیو: ${BACKUP_ARCHIVE_FORMAT} (رمزدار)`,
@@ -915,6 +928,7 @@ export class BackupService {
         text: [
           "❌ پشتیبان‌گیری Negin Heal — خطا",
           "",
+          this.formatBackupEnvironmentTelegramLine(),
           `هدف: ${targetLabel}`,
           "حداقل یک قسمت آرشیو از حد مجاز تلگرام (۵۰ مگابایت) بزرگ‌تر است.",
           "فایل‌ها از سرور حذف شدند. لطفاً با مدیر سیستم تماس بگیرید.",
@@ -944,6 +958,7 @@ export class BackupService {
         text: [
           "❌ پشتیبان‌گیری Negin Heal — خطا",
           "",
+          this.formatBackupEnvironmentTelegramLine(),
           "ابزار rar روی سرور نصب نیست.",
           "لطفاً RAR را نصب کنید و دوباره تلاش کنید.",
           `زمان: ${this.formatDateTime(new Date())}`,
@@ -968,6 +983,7 @@ export class BackupService {
         text: [
           "❌ پشتیبان‌گیری Negin Heal — خطا",
           "",
+          this.formatBackupEnvironmentTelegramLine(),
           "رمز آرشیو پشتیبان (BACKUP_RAR_PASSWORD) در تنظیمات API تعریف نشده است.",
           "لطفاً متغیر محیطی را تنظیم کنید و دوباره تلاش کنید.",
           `زمان: ${this.formatDateTime(new Date())}`,
