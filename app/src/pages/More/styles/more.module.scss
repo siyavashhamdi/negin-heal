@@ -1026,6 +1026,28 @@ a.linkCard {
   color: #d97706;
 }
 
+.backupCard {
+  background:
+    linear-gradient(145deg, rgba(15, 118, 110, 0.12), rgba(255, 255, 255, 0.98)),
+    #ffffff;
+  border-color: rgba(15, 118, 110, 0.22);
+}
+
+.backupCard svg {
+  color: #0f766e;
+}
+
+.backupIcon {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 3rem;
+  block-size: 3rem;
+  border-radius: 1rem;
+  background: color-mix(in srgb, #0f766e 12%, transparent);
+  color: #0f766e;
+  flex-shrink: 0;
+}
+
 .globalAnouncementPanel {
   display: grid;
   gap: 1rem;
@@ -1349,6 +1371,20 @@ body[data-theme="dark"] {
 
   .couponsCard svg {
     color: #fcd34d;
+  }
+
+  .backupCard {
+    border-color: color-mix(in srgb, #2dd4bf 30%, var(--app-surface-border));
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, #0f766e 18%, #1e293b) 0%,
+      color-mix(in srgb, var(--app-surface-bg) 86%, #0f172a) 100%
+    );
+  }
+
+  .backupCard svg,
+  .backupIcon {
+    color: #5eead4;
   }
 
   .globalAnouncementPreview {

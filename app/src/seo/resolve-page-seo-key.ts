@@ -6,6 +6,7 @@ const STATIC_ROUTE_SEO_KEYS: Readonly<Record<string, string>> = {
   "/more/terms-of-use": "moreTermsOfUse",
   "/more/system-settings": "moreSystemSettings",
   "/more/global-anouncement": "moreGlobalAnouncement",
+  "/more/backup": "moreBackup",
   "/more/coupons": "moreCoupons",
   "/notifications": "notifications",
   "/payments": "payments",

@@ -28,6 +28,8 @@ import { NotificationModule } from "./notification";
 import { EmailModule } from "./email";
 import { TicketModule } from "./ticket";
 import { BadgeModule } from "./badge";
+import { BackupModule } from "./backup";
+import { TelegramModule } from "./telegram";
 import { AuthenticatedRequest } from "../types/graphql-context.types";
 import {
   AuditInterceptor,
@@ -226,6 +228,8 @@ const graphQLErrorLogger = new Logger("GraphQLError");
     EmailModule,
     TicketModule,
     BadgeModule,
+    BackupModule,
+    TelegramModule,
     CourseModule,
     CourseReviewModule,
     UserModule,

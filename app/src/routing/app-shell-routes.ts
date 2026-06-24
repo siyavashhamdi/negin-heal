@@ -10,6 +10,7 @@ export const APP_SHELL_ROUTES = {
   moreTermsOfUse: "/more/terms-of-use",
   moreSystemSettings: "/more/system-settings",
   moreGlobalAnouncement: "/more/global-anouncement",
+  moreBackup: "/more/backup",
   moreCoupons: "/more/coupons",
   notifications: "/notifications",
   payments: "/payments",

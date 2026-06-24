@@ -1,6 +1,7 @@
 import BugReportRoundedIcon from "@mui/icons-material/BugReportRounded";
 import CachedRoundedIcon from "@mui/icons-material/CachedRounded";
 import CampaignRoundedIcon from "@mui/icons-material/CampaignRounded";
+import BackupRoundedIcon from "@mui/icons-material/BackupRounded";
 import ConfirmationNumberRoundedIcon from "@mui/icons-material/ConfirmationNumberRounded";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
@@ -321,6 +322,15 @@ const More = (): ReactElement => {
             >
               <ConfirmationNumberRoundedIcon />
               <span>کدهای تخفیف</span>
+            </button>
+            <button
+              type="button"
+              className={`${styles.linkCard} ${styles.backupCard}`}
+              {...opaqueShellProps}
+              onClick={() => navigate(APP_SHELL_ROUTES.moreBackup)}
+            >
+              <BackupRoundedIcon />
+              <span>پشتیبان‌گیری</span>
             </button>
           </>
         ) : null}

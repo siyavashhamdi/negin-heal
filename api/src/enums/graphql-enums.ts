@@ -5,6 +5,7 @@
 
 import { registerEnumType } from "@nestjs/graphql";
 
+import { BackupTarget } from "./backup-target.enum";
 import { GlobalAnouncementMessageType } from "./global-anouncement-message-type.enum";
 import { AppSettingValueType } from "./app-setting-value-type.enum";
 import { CourseDiscountType } from "./course-discount-type.enum";
@@ -29,6 +30,11 @@ import { UserCoursePurchaseStatus } from "./user-course-purchase-status.enum";
 import { SortingOrder } from "../common/pagination/input/sorting-order.enum";
 
 // Register SortingOrder as GraphQL enum
+registerEnumType(BackupTarget, {
+  name: "BackupTarget",
+  description: "Backup source to archive and deliver",
+});
+
 registerEnumType(SortingOrder, {
   name: "SortingOrder",
   description: "Sorting order",

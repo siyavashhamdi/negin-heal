@@ -1,3 +1,4 @@
+export * from "./backup-target.enum";
 export * from "./app-setting-value-type.enum";
 export * from "./badge-count-trigger-action.enum";
 export * from "./badge-count-trigger-source.enum";

@@ -8,6 +8,7 @@ import CoursesIndex from "../pages/Courses/Index";
 import LoginRoute from "../pages/Login/LoginRoute";
 import AboutPage from "../pages/More/About";
 import GlobalAnouncementPage from "../pages/More/GlobalAnouncement";
+import BackupPage from "../pages/More/Backup";
 import More from "../pages/More/Index";
 import CouponsIndex from "../pages/Coupons/Index";
 import PrivacyPolicyPage from "../pages/More/PrivacyPolicy";
@@ -64,6 +65,7 @@ const DashboardAppRoutesContent = (): ReactElement => {
         path={APP_SHELL_ROUTES.moreGlobalAnouncement}
         element={wrapProtected(<GlobalAnouncementPage />)}
       />
+      <Route path={APP_SHELL_ROUTES.moreBackup} element={wrapProtected(<BackupPage />)} />
       <Route path={`${APP_SHELL_ROUTES.moreCoupons}/*`} element={wrapProtected(<CouponsIndex />)} />
       <Route path={APP_SHELL_ROUTES.notifications} element={wrapProtected(<Notifications />)} />
       <Route path={`${APP_SHELL_ROUTES.payments}/*`} element={wrapProtected(<PaymentsIndex />)} />

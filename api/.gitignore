@@ -141,6 +141,7 @@ storybook-static
 
 # Temporary folders
 tmp/
+tmp/backups/
 temp/
 
 # Editor directories and files
@@ -253,6 +254,7 @@ storybook-static
 
 # Temporary folders
 tmp/
+tmp/backups/
 temp/
 
 # Editor directories and files
