@@ -445,12 +445,9 @@ export function CoursePurchaseDialog({
         showError("شماره کارت پرداخت هنوز تنظیم نشده است.");
         return;
       }
-      if (!receiptFile) {
-        showError("لطفاً تصویر رسید پرداخت را بارگذاری کنید.");
-        return;
-      }
-      if (!paymentReference.trim()) {
-        showError("شماره رسید یا ۴ رقم آخر کارت مبدا را وارد کنید.");
+      const trimmedPaymentReference = paymentReference.trim();
+      if (!trimmedPaymentReference && !receiptFile) {
+        showError("شماره رسید یا فایل رسید پرداخت — حداقل یکی الزامی است.");
         return;
       }
     }
@@ -485,7 +482,7 @@ export function CoursePurchaseDialog({
             couponCode: couponCodeValue,
             uploadedReceiptFileId,
             paymentReference:
-              selectedPaymentMethod === "CARD_TO_CARD"
+              selectedPaymentMethod === "CARD_TO_CARD" && paymentReference.trim()
                 ? paymentReference.trim()
                 : undefined,
             transactionId:
@@ -811,7 +808,6 @@ export function CoursePurchaseDialog({
                         dropHint="یا برای انتخاب فایل کلیک کنید"
                         removeLabel="حذف رسید"
                         invalidLabel="فرمت یا حجم فایل معتبر نیست"
-                        required
                       />
                     </div>
                   ) : null}

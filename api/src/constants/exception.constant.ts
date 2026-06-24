@@ -421,6 +421,11 @@ export const EXCEPTION_CONSTANT = {
     message: "Receipt file is required!",
   },
 
+  CARD_TO_CARD_EVIDENCE_REQUIRED: {
+    code: "CARD_TO_CARD_EVIDENCE_REQUIRED",
+    message: "Payment reference or receipt file is required!",
+  },
+
   TRANSACTION_ID_REQUIRED: {
     code: "TRANSACTION_ID_REQUIRED",
     message: "Transaction ID is required!",

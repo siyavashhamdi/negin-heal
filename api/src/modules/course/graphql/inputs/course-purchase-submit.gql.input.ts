@@ -44,7 +44,8 @@ export class CoursePurchaseSubmitGqlInput {
 
   @Field(() => ID, {
     nullable: true,
-    description: "Uploaded receipt file ID. Required for CARD_TO_CARD.",
+    description:
+      "Uploaded receipt file ID. Required for CARD_TO_CARD when paymentReference is omitted.",
   })
   @IsOptional()
   @IsObjectId({ message: "Receipt file ID must be a valid MongoDB ObjectId" })
@@ -53,7 +54,8 @@ export class CoursePurchaseSubmitGqlInput {
 
   @Field({
     nullable: true,
-    description: "Receipt number or last card digits. Required for CARD_TO_CARD.",
+    description:
+      "Receipt number or last card digits. Required for CARD_TO_CARD when uploadedReceiptFileId is omitted.",
   })
   @IsOptional()
   @IsString({ message: "Payment reference must be a string" })

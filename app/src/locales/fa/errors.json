@@ -103,6 +103,7 @@
             "PAYMENT_METHOD_NOT_SUPPORTED": "روش پرداخت پشتیبانی نمی‌شود.",
             "PAYMENT_REFERENCE_REQUIRED": "شماره پیگیری پرداخت کارت به کارت الزامی است.",
             "RECEIPT_FILE_REQUIRED": "بارگذاری رسید پرداخت الزامی است.",
+            "CARD_TO_CARD_EVIDENCE_REQUIRED": "شماره رسید یا فایل رسید پرداخت — حداقل یکی الزامی است.",
             "TRANSACTION_ID_REQUIRED": "شناسه تراکنش رمزارز الزامی است.",
             "FREE_PURCHASE_NO_EVIDENCE": "خرید رایگان نباید شامل مدرک پرداخت دستی باشد.",
             "GATEWAY_PURCHASE_NO_EVIDENCE": "خرید درگاهی نباید شامل مدرک پرداخت دستی باشد.",

@@ -150,13 +150,23 @@ export class BadgeService {
 
     return this.notificationModel
       .countDocuments({
-        userId: user.userId,
-        isGlobalAnnouncement: false,
-        isRead: false,
-        $or: [
-          { visibleUntil: null },
-          { visibleUntil: { $exists: false } },
-          { visibleUntil: { $gte: now } },
+        $and: [
+          {
+            $or: [
+              { "audit.deletedAt": null },
+              { "audit.deletedAt": { $exists: false } },
+            ],
+          },
+          {
+            userId: user.userId,
+            isGlobalAnnouncement: false,
+            isRead: false,
+            $or: [
+              { visibleUntil: null },
+              { visibleUntil: { $exists: false } },
+              { visibleUntil: { $gte: now } },
+            ],
+          },
         ],
       })
       .exec();

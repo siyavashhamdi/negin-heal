@@ -1,7 +1,9 @@
 import { parseJalaliParamDate } from "../../utilities/jalali-date-param.util";
 import {
   getFileIdFromAccessUrl,
+  isExecutableFileType,
   resolveFileAccessUrl,
+  type ExistingFilePreview,
   type FileAccessUrl,
 } from "../../utils/fileAccessUrl.util";
 
@@ -357,6 +359,45 @@ export type CoursePaymentRecord = {
 };
 
 const EMPTY_DISPLAY = "-";
+
+export function isPaymentReceiptFilePresent(record: CoursePaymentRecord): boolean {
+  return record.uploadedReceiptFileId !== "-" || record.uploadedReceiptFileTitle !== "-";
+}
+
+export function buildPaymentReceiptExistingFile(
+  record: CoursePaymentRecord,
+): ExistingFilePreview | null {
+  if (!isPaymentReceiptFilePresent(record)) {
+    return null;
+  }
+
+  const accessUrl = record.uploadedReceiptFileAccessUrl.trim();
+  if (!accessUrl) {
+    return null;
+  }
+
+  const name =
+    record.uploadedReceiptFileTitle !== "-"
+      ? record.uploadedReceiptFileTitle
+      : record.uploadedReceiptFileName !== "-"
+        ? record.uploadedReceiptFileName
+        : "رسید پرداخت";
+  const mimeType =
+    record.uploadedReceiptFileMimeType !== "-"
+      ? record.uploadedReceiptFileMimeType
+      : "application/octet-stream";
+
+  if (isExecutableFileType(mimeType, name)) {
+    return null;
+  }
+
+  return {
+    accessUrl,
+    name,
+    mimeType,
+    sizeBytes: record.uploadedReceiptFileSizeBytes ?? 0,
+  };
+}
 
 function trimToNull(value: string): string | null {
   const trimmed = value.trim();

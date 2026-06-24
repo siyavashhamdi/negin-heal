@@ -10,8 +10,6 @@ import {
 import {
   ArticleRounded as ArticleRoundedIcon,
   ClearRounded as ClearRoundedIcon,
-  CloseFullscreenRounded as CloseFullscreenRoundedIcon,
-  FullscreenRounded as FullscreenRoundedIcon,
   ImageRounded as ImageRoundedIcon,
   InsertDriveFileRounded as InsertDriveFileRoundedIcon,
   PictureAsPdfRounded as PictureAsPdfRoundedIcon,
@@ -70,7 +68,7 @@ import CoursePickerField from "../../shared/forms/CoursePickerField";
 import type { CoursePickerOption } from "../../shared/forms/course-picker.util";
 import FileUploadField from "../../shared/forms/FileUploadField";
 import AppTooltip from "../../shared/AppTooltip";
-import { getFileIdFromAccessUrl, resolveFileAccessUrl } from "../../utils/fileAccessUrl.util";
+import { getFileIdFromAccessUrl } from "../../utils/fileAccessUrl.util";
 import { hasFormChanges } from "../../utils/formChange.util";
 import { MULTILINE_TEXTAREA_MIN_ROWS, MULTILINE_TEXTAREA_MAX_ROWS } from "../../constants/multilineTextarea.constants";
 import { uploadFile } from "../../utils/fileUpload.util";
@@ -82,7 +80,9 @@ import JalaliDateFilterField from "../../shared/table/JalaliDateFilterField";
 import {
   EMPTY_COURSE_PAYMENT_LIST_FILTERS,
   buildCoursePaymentListQueryVariables,
+  buildPaymentReceiptExistingFile,
   hasCoursePaymentFiltersApplied,
+  isPaymentReceiptFilePresent,
   mapCoursePaymentListRowToRecord,
   type CoursePaymentListFilters,
   type CoursePaymentListItemRow,
@@ -269,10 +269,6 @@ function formatFileSize(value: number | null | undefined): string {
   })} مگابایت`;
 }
 
-function isUploadedReceiptPresent(record: CoursePaymentRecord): boolean {
-  return record.uploadedReceiptFileId !== "-" || record.uploadedReceiptFileTitle !== "-";
-}
-
 function isImageMimeType(mimeType: string): boolean {
   return mimeType.startsWith("image/");
 }
@@ -290,21 +286,18 @@ function getReceiptFileIcon(mimeType: string): ReactElement {
   return <InsertDriveFileRoundedIcon fontSize="large" />;
 }
 
-function renderReceiptFileCard(
-  record: CoursePaymentRecord,
-  isExpanded: boolean,
-  onToggleExpanded: () => void
-): ReactElement | null {
-  if (!isUploadedReceiptPresent(record)) {
+function renderReceiptFileSection(record: CoursePaymentRecord): ReactElement | null {
+  if (!isPaymentReceiptFilePresent(record)) {
     return null;
   }
 
+  const existingFile = buildPaymentReceiptExistingFile(record);
+  const canUseReadOnlyUploader =
+    existingFile != null && isImageMimeType(existingFile.mimeType);
   const title =
     record.uploadedReceiptFileTitle !== "-" ? record.uploadedReceiptFileTitle : "رسید پرداخت";
   const mimeType =
     record.uploadedReceiptFileMimeType !== "-" ? record.uploadedReceiptFileMimeType : "";
-  const accessUrl = record.uploadedReceiptFileAccessUrl;
-  const canPreviewImage = accessUrl !== "" && isImageMimeType(mimeType);
 
   return (
     <Paper
@@ -325,91 +318,80 @@ function renderReceiptFileCard(
             فایل بارگذاری‌شده توسط پرداخت‌کننده
           </Typography>
         </Box>
-        <Stack
-          direction={{ xs: "column", sm: isExpanded ? "column" : "row" }}
-          spacing={2}
-          alignItems={{ xs: "stretch", sm: isExpanded ? "stretch" : "center" }}
-        >
-          <Box
-            sx={{
-              display: "grid",
-              placeItems: "center",
-              position: "relative",
-              flexShrink: 0,
-              inlineSize: "100%",
-              maxInlineSize: { xs: "100%", sm: isExpanded ? "100%" : "9rem" },
-              blockSize: {
-                xs: isExpanded ? "min(68vh, 32rem)" : "12rem",
-                sm: isExpanded ? "min(70vh, 36rem)" : "9rem",
-              },
-              overflow: "hidden",
-              borderRadius: 2,
-              bgcolor: "action.hover",
-              color: "text.secondary",
-            }}
-          >
-            {canPreviewImage ? (
-              <>
-                <Box
-                  component="img"
-                  src={accessUrl}
-                  alt={title}
-                  sx={{
-                    display: "block",
-                    inlineSize: "100%",
-                    blockSize: "100%",
-                    objectFit: "contain",
-                  }}
-                />
-                <IconButton
-                  size="small"
-                  aria-label={isExpanded ? "کوچک کردن تصویر رسید" : "بزرگ کردن تصویر رسید"}
-                  onClick={onToggleExpanded}
-                  sx={{
-                    position: "absolute",
-                    top: 8,
-                    left: 8,
-                    bgcolor: APP_SURFACE_BG,
-                    border: 1,
-                    borderColor: "divider",
-                    boxShadow: 2,
-                    "&:hover": {
-                      bgcolor: APP_SURFACE_BG,
-                    },
-                  }}
-                >
-                  {isExpanded ? (
-                    <CloseFullscreenRoundedIcon fontSize="small" />
-                  ) : (
-                    <FullscreenRoundedIcon fontSize="small" />
-                  )}
-                </IconButton>
-              </>
-            ) : (
-              getReceiptFileIcon(mimeType)
-            )}
-          </Box>
-          <Stack spacing={0.75} minWidth={0} flex={1}>
-            <Typography
-              variant="body1"
-              fontWeight={800}
-              className={styles.latinText}
-              sx={{ overflowWrap: "anywhere" }}
-            >
-              {title}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              <span className={styles.latinText}>{mimeType || "نوع فایل نامشخص"}</span>
-              {" | "}
-              {formatFileSize(record.uploadedReceiptFileSizeBytes)}
-            </Typography>
-            {record.receiptUploaderName !== "-" ? (
-              <Typography variant="body2" color="text.secondary">
-                آپلودکننده: {record.receiptUploaderName}
+
+        {canUseReadOnlyUploader ? (
+          <Stack spacing={1}>
+            <FileUploadField
+              previewId={`payment-receipt-${record.id}`}
+              readOnly
+              fullWidth
+              label="رسید پرداخت"
+              file={null}
+              onChange={() => undefined}
+              existingFile={existingFile}
+              accept="image/*,.pdf"
+              allowedFormatsLabel=""
+              maxSizeLabel=""
+              dropTitle=""
+              dropHint=""
+              removeLabel=""
+              invalidLabel=""
+            />
+            <Stack spacing={0.75}>
+              <Typography
+                variant="body1"
+                fontWeight={800}
+                className={styles.latinText}
+                sx={{ overflowWrap: "anywhere" }}
+              >
+                {existingFile.name}
               </Typography>
-            ) : null}
+              <Typography variant="body2" color="text.secondary">
+                {formatFileSize(existingFile.sizeBytes)}
+              </Typography>
+            </Stack>
           </Stack>
-        </Stack>
+        ) : (
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems="center">
+            <Box
+              sx={{
+                display: "grid",
+                placeItems: "center",
+                flexShrink: 0,
+                inlineSize: "100%",
+                maxInlineSize: { xs: "100%", sm: "9rem" },
+                blockSize: { xs: "12rem", sm: "9rem" },
+                overflow: "hidden",
+                borderRadius: 2,
+                bgcolor: "action.hover",
+                color: "text.secondary",
+              }}
+            >
+              {getReceiptFileIcon(mimeType)}
+            </Box>
+            <Stack spacing={0.75} minWidth={0} flex={1}>
+              <Typography
+                variant="body1"
+                fontWeight={800}
+                className={styles.latinText}
+                sx={{ overflowWrap: "anywhere" }}
+              >
+                {title}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                <span className={styles.latinText}>{mimeType || "نوع فایل نامشخص"}</span>
+                {" | "}
+                {formatFileSize(record.uploadedReceiptFileSizeBytes)}
+              </Typography>
+            </Stack>
+          </Stack>
+        )}
+
+        {record.receiptUploaderName !== "-" ? (
+          <Typography variant="body2" color="text.secondary">
+            آپلودکننده: {record.receiptUploaderName}
+          </Typography>
+        ) : null}
       </Stack>
     </Paper>
   );
@@ -571,7 +553,6 @@ const PaymentsList = (): ReactElement => {
     status: UserCoursePurchaseStatus;
     description: string;
   } | null>(null);
-  const [isReceiptPreviewExpanded, setIsReceiptPreviewExpanded] = useState(false);
   const [pendingPaidStatusChange, setPendingPaidStatusChange] =
     useState<UserCoursePurchaseStatus | null>(null);
   const manualPaymentRouteOpen = location.pathname === `${APP_SHELL_ROUTES.payments}/new`;
@@ -667,7 +648,6 @@ const PaymentsList = (): ReactElement => {
     successMessage: "وضعیت پرداخت با موفقیت ثبت شد.",
     errorMessage: "ثبت وضعیت پرداخت انجام نشد.",
     onSuccess: () => {
-      setIsReceiptPreviewExpanded(false);
       setPendingPaidStatusChange(null);
       navigate(APP_SHELL_ROUTES.payments);
       onRefresh();
@@ -728,7 +708,6 @@ const PaymentsList = (): ReactElement => {
       status: reviewPayment.status,
       description: nextDescription,
     });
-    setIsReceiptPreviewExpanded(false);
   }, [reviewPayment]);
 
   const textCell = (value: unknown, options: boolean | TextCellOptions = false): ReactElement => {
@@ -978,7 +957,6 @@ const PaymentsList = (): ReactElement => {
   };
 
   const closeReviewDialog = (): void => {
-    setIsReceiptPreviewExpanded(false);
     setPendingPaidStatusChange(null);
     navigate(APP_SHELL_ROUTES.payments);
   };
@@ -1667,9 +1645,7 @@ const PaymentsList = (): ReactElement => {
               ]}
             />
 
-            {renderReceiptFileCard(reviewPayment, isReceiptPreviewExpanded, () =>
-              setIsReceiptPreviewExpanded((previous) => !previous)
-            )}
+            {renderReceiptFileSection(reviewPayment)}
 
             <Paper
               variant="outlined"

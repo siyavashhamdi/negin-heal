@@ -43,7 +43,7 @@ import PageBackNavigation from "../../shared/PageBackNavigation";
 import { applyBlankTargetToRichTextLinks } from "../../utils/richTextHtml.util";
 import { USER_COURSE_DETAIL_QUERY } from "../../graphql/queries/userCourseDetail.query";
 import { COURSE_CHAPTER_COMPLETE_MUTATION } from "../../graphql/mutations/courseChapterComplete.mutation";
-import { useCoursePaymentPaidNotificationRefetch } from "../../hooks/useCoursePaymentPaidNotificationRefetch";
+import { useCoursePaymentStatusNotificationRefetch } from "../../hooks/useCoursePaymentStatusNotificationRefetch";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { usePageSeoOverride } from "../../hooks/usePageSeoOverride";
 import { useTranslation } from "../../hooks/useTranslation";
@@ -325,8 +325,8 @@ const CourseDetail = (): ReactElement => {
     await refetch();
   }, [refetch]);
 
-  useCoursePaymentPaidNotificationRefetch({
-    enabled: Boolean(courseId),
+  useCoursePaymentStatusNotificationRefetch({
+    enabled: isAuthenticated && Boolean(courseId),
     courseId,
     refetch: () => {
       void refetchCourseDetail();

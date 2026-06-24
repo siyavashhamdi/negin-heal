@@ -306,7 +306,9 @@ const FileUploadField = ({
 
   const closePreviewDialog = useCallback((): void => {
     if (usesUrlMaxRoute) {
-      maxRoutePreview.close();
+      if (maxRoutePreview.isOpen) {
+        maxRoutePreview.close();
+      }
       return;
     }
     if (isPreviewControlled) {
@@ -315,7 +317,12 @@ const FileUploadField = ({
     }
     setIsMaximized(false);
     setIsViewOpen(false);
-  }, [isPreviewControlled, maxRoutePreview, onPreviewDialogClose, usesUrlMaxRoute]);
+  }, [
+    isPreviewControlled,
+    maxRoutePreview,
+    onPreviewDialogClose,
+    usesUrlMaxRoute,
+  ]);
 
   const isPreviewActionEnabled = useCallback(
     (action: FileUploadPreviewAction): boolean => {

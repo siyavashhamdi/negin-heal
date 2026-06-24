@@ -120,6 +120,10 @@ const EXACT_MESSAGE_TO_CODE = new Map<string, ErrorCode>([
     "RECEIPT_FILE_REQUIRED",
   ],
   [
+    "Payment reference or uploaded receipt file is required for card-to-card purchases",
+    "CARD_TO_CARD_EVIDENCE_REQUIRED",
+  ],
+  [
     "Transaction ID is required for cryptocurrency purchases",
     "TRANSACTION_ID_REQUIRED",
   ],

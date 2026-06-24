@@ -54,5 +54,10 @@ export function closeMaxRoute(
   navigate: (to: { pathname: string; search: string }) => void,
 ): void {
   clearMaxRouteOwner(ownerId);
+
+  if (!isMaxRoutePathname(pathname)) {
+    return;
+  }
+
   navigate(buildCloseMaxRouteLocation(pathname, searchParams));
 }

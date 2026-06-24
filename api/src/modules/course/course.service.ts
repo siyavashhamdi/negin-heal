@@ -488,6 +488,8 @@ export class CourseService {
       progress: { chapters: [] },
     };
 
+    const previousStatus = existingUserCourse?.purchase.status;
+
     const userCourse =
       existingUserCourse ??
       new this.userCourseModel({
@@ -509,24 +511,19 @@ export class CourseService {
       throw error;
     }
 
-    const previousStatus = existingUserCourse?.purchase.status;
     const nextStatus = userCourse.purchase.status;
 
-    if (existingUserCourse && previousStatus !== nextStatus) {
-      await this.publishPaymentStatusChangeBadgeCountSignal({
-        userCourseId: userCourse._id,
-        courseId: userCourse.courseId,
-        previousStatus,
-        nextStatus,
-      });
-    } else if (!existingUserCourse) {
-      await this.publishPaymentBadgeCountSignal({
-        userCourseId: userCourse._id,
-        courseId: course._id,
-        action: BadgeCountTriggerAction.CREATED,
-        includeStaffUsersWhenPendingPaymentsExist: true,
-      });
-    }
+    await this.publishPaymentBadgeCountSignal({
+      userCourseId: userCourse._id,
+      courseId: userCourse.courseId,
+      action:
+        previousStatus != null && previousStatus !== nextStatus
+          ? BadgeCountTriggerAction.UPDATED
+          : BadgeCountTriggerAction.CREATED,
+      includeStaffUsersWhenPendingPaymentsExist: true,
+      previousStatus,
+      nextStatus,
+    });
 
     return this.toCoursePurchaseSubmitResponse(
       userCourse,
@@ -624,7 +621,7 @@ export class CourseService {
         previousStatus,
         nextStatus: UserCoursePurchaseStatus.PAID,
       });
-      await this.notifyCoursePurchasePaid(userCourse, previousStatus);
+      await this.notifyCoursePurchaseStatusChanged(userCourse, previousStatus);
 
       return {
         status: "success",
@@ -728,8 +725,8 @@ export class CourseService {
       previousStatus,
       nextStatus: input.status,
     });
-    await this.notifyCoursePurchasePaid(userCourse, previousStatus, {
-      approvedByInvestigationTeam: true,
+    await this.notifyCoursePurchaseStatusChanged(userCourse, previousStatus, {
+      changedByInvestigationTeam: true,
     });
 
     const relatedLookups = await this.buildCoursePaymentRelatedLookups([
@@ -858,6 +855,7 @@ export class CourseService {
       courseId: course._id,
       action: BadgeCountTriggerAction.CREATED,
       includeStaffUsersWhenPendingPaymentsExist: true,
+      nextStatus: input.status,
     });
 
     const relatedLookups = await this.buildCoursePaymentRelatedLookups([
@@ -1428,12 +1426,14 @@ export class CourseService {
     includeStaffUsers?: boolean;
     includeStaffUsersWhenPendingPaymentsExist?: boolean;
     previousStatus?: UserCoursePurchaseStatus;
+    nextStatus?: UserCoursePurchaseStatus;
   }): Promise<void> {
     let includeStaffUsers = params.includeStaffUsers ?? false;
 
     if (params.includeStaffUsersWhenPendingPaymentsExist) {
       includeStaffUsers = await this.shouldPublishStaffPaymentBadgeCountSignal(
         params.previousStatus,
+        params.nextStatus,
       );
     }
 
@@ -1468,12 +1468,18 @@ export class CourseService {
       action: BadgeCountTriggerAction.UPDATED,
       includeStaffUsersWhenPendingPaymentsExist: true,
       previousStatus: params.previousStatus,
+      nextStatus: params.nextStatus,
     });
   }
 
   private async shouldPublishStaffPaymentBadgeCountSignal(
     previousStatus?: UserCoursePurchaseStatus,
+    nextStatus?: UserCoursePurchaseStatus,
   ): Promise<boolean> {
+    if (nextStatus === UserCoursePurchaseStatus.PENDING) {
+      return true;
+    }
+
     if (await this.hasAnyPendingPayments()) {
       return true;
     }
@@ -2663,18 +2669,16 @@ export class CourseService {
     }
 
     if (input.paymentMethod === UserCoursePaymentMethod.CARD_TO_CARD) {
-      if (!this.normalizeOptionalText(input.paymentReference)) {
-        throw new BadRequestException(
-          "Payment reference is required for card-to-card purchases",
-        );
-      }
+      const hasPaymentReference = Boolean(
+        this.normalizeOptionalText(input.paymentReference),
+      );
+      const hasReceiptFile =
+        Boolean(input.uploadedReceiptFileId) &&
+        Types.ObjectId.isValid(input.uploadedReceiptFileId);
 
-      if (
-        !input.uploadedReceiptFileId ||
-        !Types.ObjectId.isValid(input.uploadedReceiptFileId)
-      ) {
+      if (!hasPaymentReference && !hasReceiptFile) {
         throw new BadRequestException(
-          "Uploaded receipt file ID is required for card-to-card purchases",
+          "Payment reference or uploaded receipt file is required for card-to-card purchases",
         );
       }
     }
@@ -3026,7 +3030,10 @@ export class CourseService {
   private async resolveReceiptFileId(
     input: CoursePurchaseSubmitGqlInput,
   ): Promise<Types.ObjectId | undefined> {
-    if (input.paymentMethod !== UserCoursePaymentMethod.CARD_TO_CARD) {
+    if (
+      input.paymentMethod !== UserCoursePaymentMethod.CARD_TO_CARD ||
+      !input.uploadedReceiptFileId
+    ) {
       return undefined;
     }
 
@@ -3708,49 +3715,134 @@ export class CourseService {
     }
   }
 
-  private async notifyCoursePurchasePaid(
+  private resolveCoursePurchaseStatusNotificationContent(
+    courseTitle: string,
+    status: UserCoursePurchaseStatus,
+    changedByInvestigationTeam: boolean,
+  ):
+    | {
+        title: string;
+        message: string;
+        mode: NotificationMode;
+        payload: Record<string, unknown>;
+      }
+    | null {
+    switch (status) {
+      case UserCoursePurchaseStatus.PAID:
+        return {
+          title: "دسترسی به دوره فعال شد",
+          message: changedByInvestigationTeam
+            ? `پرداخت دوره «${courseTitle}» توسط تیم بررسی تأیید شد و اکنون می‌توانید به محتوای دوره دسترسی داشته باشید.`
+            : `خرید دوره «${courseTitle}» با موفقیت انجام شد.`,
+          mode: NotificationMode.SUCCESS,
+          payload: {
+            purchaseStatus: status,
+            ...(changedByInvestigationTeam
+              ? {
+                  approvedByInvestigationTeam: true,
+                  changedByInvestigationTeam: true,
+                }
+              : {}),
+          },
+        };
+      case UserCoursePurchaseStatus.FAILED:
+        return {
+          title: "پرداخت دوره تأیید نشد",
+          message: `پرداخت دوره «${courseTitle}» تأیید نشد.`,
+          mode: NotificationMode.ERROR,
+          payload: {
+            purchaseStatus: status,
+            changedByInvestigationTeam: true,
+          },
+        };
+      case UserCoursePurchaseStatus.REFUNDED:
+        return {
+          title: "بازپرداخت دوره ثبت شد",
+          message: `بازپرداخت دوره «${courseTitle}» ثبت شد.`,
+          mode: NotificationMode.WARNING,
+          payload: {
+            purchaseStatus: status,
+            changedByInvestigationTeam: true,
+          },
+        };
+      case UserCoursePurchaseStatus.CANCELLED:
+        return {
+          title: "پرداخت دوره لغو شد",
+          message: `پرداخت دوره «${courseTitle}» لغو شد.`,
+          mode: NotificationMode.WARNING,
+          payload: {
+            purchaseStatus: status,
+            changedByInvestigationTeam: true,
+          },
+        };
+      default:
+        return null;
+    }
+  }
+
+  private async notifyCoursePurchaseStatusChanged(
     userCourse: UserCourseDocument,
     previousStatus: UserCoursePurchaseStatus,
-    options?: { approvedByInvestigationTeam?: boolean },
+    options?: { changedByInvestigationTeam?: boolean },
   ): Promise<void> {
-    if (userCourse.purchase.status !== UserCoursePurchaseStatus.PAID) {
+    const nextStatus = userCourse.purchase.status;
+
+    if (previousStatus === nextStatus) {
       return;
     }
 
-    const approvedByInvestigationTeam =
-      options?.approvedByInvestigationTeam === true;
+    if (nextStatus === UserCoursePurchaseStatus.PENDING) {
+      return;
+    }
 
-    if (approvedByInvestigationTeam) {
-      if (previousStatus === UserCoursePurchaseStatus.PAID) {
-        return;
-      }
-    } else if (previousStatus !== UserCoursePurchaseStatus.PENDING) {
+    const changedByInvestigationTeam =
+      options?.changedByInvestigationTeam === true;
+
+    if (
+      nextStatus !== UserCoursePurchaseStatus.PAID &&
+      !changedByInvestigationTeam
+    ) {
+      return;
+    }
+
+    if (
+      !changedByInvestigationTeam &&
+      nextStatus === UserCoursePurchaseStatus.PAID &&
+      previousStatus !== UserCoursePurchaseStatus.PENDING
+    ) {
       return;
     }
 
     const courseId = userCourse.courseId.toString();
     const courseTitle =
       this.normalizeOptionalText(userCourse.courseSnapshot?.title) || "دوره";
-    const title = "دسترسی به دوره فعال شد";
-    const message = approvedByInvestigationTeam
-      ? `پرداخت دوره «${courseTitle}» توسط تیم بررسی تأیید شد و اکنون می‌توانید به محتوای دوره دسترسی داشته باشید.`
-      : `خرید دوره «${courseTitle}» با موفقیت انجام شد.`;
+    const notificationContent = this.resolveCoursePurchaseStatusNotificationContent(
+      courseTitle,
+      nextStatus,
+      changedByInvestigationTeam,
+    );
+
+    if (!notificationContent) {
+      return;
+    }
+
+    const { title, message, mode, payload } = notificationContent;
     const notificationPayload: Record<string, unknown> = {
       courseId,
-      approvedByInvestigationTeam,
+      ...payload,
     };
     const subscriptionPayload: Record<string, unknown> = {
       ...notificationPayload,
       title,
       description: message,
-      mode: NotificationMode.SUCCESS,
+      mode,
       isPushNotification: true,
     };
 
     const notification = await this.notificationService.createForEndUser({
       userId: userCourse.userId,
       source: NotificationSource.PAYMENT,
-      mode: NotificationMode.SUCCESS,
+      mode,
       title,
       message,
       payload: notificationPayload,
