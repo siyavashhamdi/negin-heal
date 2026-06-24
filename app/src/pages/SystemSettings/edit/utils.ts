@@ -2,6 +2,7 @@ import type {
   AppSettingDetail,
   AppSettingEditFormState,
   AppSettingUpdateMutationVariables,
+  BackupConfigForm,
   EmailSmtpConfigForm,
   EmailTemplateForm,
   JsonFormState,
@@ -12,6 +13,7 @@ import type {
   SupportFaqItemForm,
   SupportFaqPageForm,
   SupportFaqSectionForm,
+  TelegramConfigForm,
   UsdtIrtRateForm,
   UsdtWalletForm,
   ZarinpalConfigForm,
@@ -204,6 +206,22 @@ function normalizeEmailSmtpConfig(value: unknown): EmailSmtpConfigForm {
   };
 }
 
+function normalizeBackupConfig(value: unknown): BackupConfigForm {
+  const config = isRecord(value) ? value : {};
+  return {
+    rarPassword: text(config.rarPassword),
+  };
+}
+
+function normalizeTelegramConfig(value: unknown): TelegramConfigForm {
+  const config = isRecord(value) ? value : {};
+  return {
+    botToken: text(config.botToken),
+    chatId: text(config.chatId),
+    apiBaseUrl: text(config.apiBaseUrl) || "https://api.telegram.org",
+  };
+}
+
 function normalizeEmailTemplates(value: unknown): EmailTemplateForm[] {
   if (!Array.isArray(value)) {
     return [createEmptyEmailTemplate()];
@@ -312,6 +330,10 @@ function normalizeJsonForm(key: string, value: unknown): JsonFormState {
       return { kind: "zarinpalConfig", config: normalizeZarinpalConfig(value) };
     case "EMAIL_SMTP_CONFIG":
       return { kind: "emailSmtpConfig", config: normalizeEmailSmtpConfig(value) };
+    case "BACKUP_CONFIG":
+      return { kind: "backupConfig", config: normalizeBackupConfig(value) };
+    case "TELEGRAM_CONFIG":
+      return { kind: "telegramConfig", config: normalizeTelegramConfig(value) };
     case "EMAIL_TEMPLATES":
       return { kind: "emailTemplates", templates: normalizeEmailTemplates(value) };
     case "SUPPORT_CONTACT":
@@ -408,6 +430,16 @@ function serializeJsonForm(jsonForm: JsonFormState): JsonValue {
         password: requiredText(jsonForm.config.password, "گذرواژه ایمیل"),
         fromName: requiredText(jsonForm.config.fromName, "نام فرستنده"),
         fromEmail: requiredText(jsonForm.config.fromEmail, "ایمیل فرستنده"),
+      };
+    case "backupConfig":
+      return {
+        rarPassword: requiredText(jsonForm.config.rarPassword, "رمز آرشیو RAR"),
+      };
+    case "telegramConfig":
+      return {
+        botToken: requiredText(jsonForm.config.botToken, "توکن ربات تلگرام"),
+        chatId: requiredText(jsonForm.config.chatId, "شناسه چت تلگرام"),
+        apiBaseUrl: requiredText(jsonForm.config.apiBaseUrl, "آدرس API تلگرام"),
       };
     case "emailTemplates":
       return jsonForm.templates.map((template) => ({

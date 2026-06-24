@@ -34,6 +34,16 @@ const smtpFields = [
   { key: "fromEmail", label: "ایمیل فرستنده", type: "email" },
 ] as const;
 
+const backupFields = [
+  { key: "rarPassword", label: "رمز آرشیو RAR", type: "password" },
+] as const;
+
+const telegramFields = [
+  { key: "botToken", label: "توکن ربات", type: "password" },
+  { key: "chatId", label: "شناسه چت" },
+  { key: "apiBaseUrl", label: "آدرس API", type: "url" },
+] as const;
+
 interface JsonValueEditorProps {
   readonly jsonValue: JsonFormState;
   readonly updateJson: UpdateJsonFormState;
@@ -102,6 +112,30 @@ const JsonValueEditor = ({ jsonValue, updateJson }: JsonValueEditorProps): React
             label="اتصال امن SMTP فعال باشد"
           />
         </Stack>
+      );
+    case "backupConfig":
+      return (
+        <ObjectFieldsEditor
+          value={jsonValue.config}
+          fields={backupFields}
+          onChange={(config) =>
+            updateJson((current) =>
+              current.kind === "backupConfig" ? { ...current, config } : current
+            )
+          }
+        />
+      );
+    case "telegramConfig":
+      return (
+        <ObjectFieldsEditor
+          value={jsonValue.config}
+          fields={telegramFields}
+          onChange={(config) =>
+            updateJson((current) =>
+              current.kind === "telegramConfig" ? { ...current, config } : current
+            )
+          }
+        />
       );
     case "emailTemplates":
       return <EmailTemplatesEditor jsonValue={jsonValue} updateJson={updateJson} />;

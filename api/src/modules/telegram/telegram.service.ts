@@ -9,8 +9,9 @@ import {
   Logger,
 } from "@nestjs/common";
 
-import { env } from "../../config";
 import { EXCEPTION_CONSTANT } from "../../constants/exception.constant";
+import { AppSettingsService } from "../app-settings/app-settings.service";
+import { TelegramConfig } from "../app-settings/app-settings.types";
 import {
   TelegramApiResponse,
   TelegramCallApiOptions,
@@ -31,8 +32,11 @@ type TelegramRequestParams = Record<string, unknown>;
 export class TelegramService {
   private readonly logger = new Logger(TelegramService.name);
 
-  isConfigured(): boolean {
-    return Boolean(env.TELEGRAM_BOT_TOKEN?.trim());
+  constructor(private readonly appSettingsService: AppSettingsService) {}
+
+  async isConfigured(): Promise<boolean> {
+    const config = await this.appSettingsService.getTelegramConfig();
+    return config != null;
   }
 
   async sendMessage(
@@ -40,7 +44,7 @@ export class TelegramService {
   ): Promise<TelegramSendMessageResult> {
     return this.mapMessageResult(
       await this.callApi("sendMessage", {
-        chat_id: this.resolveChatId(input.chatId),
+        chat_id: await this.resolveChatId(input.chatId),
         text: input.text,
         ...(input.messageThreadId !== undefined
           ? { message_thread_id: input.messageThreadId }
@@ -100,7 +104,7 @@ export class TelegramService {
   ): Promise<TelegramSendMessageResult> {
     return this.mapMessageResult(
       await this.callApi("sendLocation", {
-        chat_id: this.resolveChatId(input.chatId),
+        chat_id: await this.resolveChatId(input.chatId),
         latitude: input.latitude,
         longitude: input.longitude,
         ...(input.messageThreadId !== undefined
@@ -121,7 +125,7 @@ export class TelegramService {
   ): Promise<TelegramSendMessageResult> {
     return this.mapMessageResult(
       await this.callApi("sendContact", {
-        chat_id: this.resolveChatId(input.chatId),
+        chat_id: await this.resolveChatId(input.chatId),
         phone_number: input.phoneNumber,
         first_name: input.firstName,
         ...(input.lastName ? { last_name: input.lastName } : {}),
@@ -140,7 +144,7 @@ export class TelegramService {
 
   async sendChatAction(input: TelegramSendChatActionInput): Promise<boolean> {
     return this.callApi("sendChatAction", {
-      chat_id: this.resolveChatId(input.chatId),
+      chat_id: await this.resolveChatId(input.chatId),
       action: input.action,
       ...(input.messageThreadId !== undefined
         ? { message_thread_id: input.messageThreadId }
@@ -162,7 +166,7 @@ export class TelegramService {
 
     const requestParams = { ...params };
     if (options.chatId !== undefined && requestParams.chat_id === undefined) {
-      requestParams.chat_id = this.resolveChatId(options.chatId);
+      requestParams.chat_id = await this.resolveChatId(options.chatId);
     }
     if (
       options.messageThreadId !== undefined &&
@@ -198,7 +202,7 @@ export class TelegramService {
     input: TelegramSendMediaInput,
   ): Promise<TelegramSendMessageResult> {
     const params: TelegramRequestParams = {
-      chat_id: this.resolveChatId(input.chatId),
+      chat_id: await this.resolveChatId(input.chatId),
       [mediaField]: input.media,
       ...(input.caption ? { caption: input.caption } : {}),
       ...(input.parseMode ? { parse_mode: input.parseMode } : {}),
@@ -227,7 +231,7 @@ export class TelegramService {
     params: TelegramRequestParams,
   ): Promise<TelegramApiResponse<TResult>> {
     const { data } = await axios.post<TelegramApiResponse<TResult>>(
-      this.buildApiUrl(method),
+      await this.buildApiUrl(method),
       params,
       {
         timeout: 30_000,
@@ -244,7 +248,7 @@ export class TelegramService {
     const form = this.buildMultipartForm(params);
 
     const { data } = await axios.post<TelegramApiResponse<TResult>>(
-      this.buildApiUrl(method),
+      await this.buildApiUrl(method),
       form,
       {
         headers: form.getHeaders(),
@@ -371,31 +375,31 @@ export class TelegramService {
     };
   }
 
-  private buildApiUrl(method: string): string {
-    return `${env.TELEGRAM_API_BASE_URL}/bot${this.getBotTokenOrThrow()}/${method}`;
+  private async buildApiUrl(method: string): Promise<string> {
+    const config = await this.getActiveTelegramConfigOrThrow();
+    return `${config.apiBaseUrl}/bot${config.botToken}/${method}`;
   }
 
-  private getBotTokenOrThrow(): string {
-    const token = env.TELEGRAM_BOT_TOKEN?.trim();
-    if (!token) {
+  private async getActiveTelegramConfigOrThrow(): Promise<TelegramConfig> {
+    const config = await this.appSettingsService.getTelegramConfig();
+    if (!config) {
       throw new InternalServerErrorException(
         EXCEPTION_CONSTANT.TELEGRAM_NOT_CONFIGURED,
       );
     }
 
-    return token;
+    return config;
   }
 
-  private resolveChatId(chatId?: string | number): string {
-    const resolved = chatId ?? env.TELEGRAM_CHAT_ID;
-    const normalized = resolved?.toString().trim();
-
-    if (!normalized) {
-      throw new InternalServerErrorException(
-        EXCEPTION_CONSTANT.TELEGRAM_CHAT_ID_REQUIRED,
-      );
+  private async resolveChatId(chatId?: string | number): Promise<string> {
+    if (chatId !== undefined) {
+      const normalizedOverride = chatId.toString().trim();
+      if (normalizedOverride) {
+        return normalizedOverride;
+      }
     }
 
-    return normalized;
+    const config = await this.getActiveTelegramConfigOrThrow();
+    return config.chatId;
   }
 }

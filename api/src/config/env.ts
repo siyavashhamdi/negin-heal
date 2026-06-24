@@ -51,12 +51,4 @@ export const env = {
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
   MINIO_BUCKET: process.env.MINIO_BUCKET,
-
-  // Backup Configuration
-  BACKUP_RAR_PASSWORD: process.env.BACKUP_RAR_PASSWORD,
-
-  // Telegram Configuration
-  TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN,
-  TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID,
-  TELEGRAM_API_BASE_URL: process.env.TELEGRAM_API_BASE_URL,
 } as const;

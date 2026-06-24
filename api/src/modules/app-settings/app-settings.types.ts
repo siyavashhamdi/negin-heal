@@ -134,6 +134,26 @@ export type StoredUsdtIrtRateValue = {
   coefficient?: number;
 };
 
+export type StoredBackupConfigValue = {
+  rarPassword?: string;
+};
+
+export type StoredTelegramConfigValue = {
+  botToken?: string;
+  chatId?: string;
+  apiBaseUrl?: string;
+};
+
+export type BackupConfig = {
+  rarPassword: string;
+};
+
+export type TelegramConfig = {
+  botToken: string;
+  chatId: string;
+  apiBaseUrl: string;
+};
+
 export type StoredSupportContactConfigValue = {
   eyebrow?: unknown;
   heading?: unknown;

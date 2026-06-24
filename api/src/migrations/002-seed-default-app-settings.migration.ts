@@ -76,6 +76,16 @@ const DEFAULT_EMAIL_SMTP_CONFIG_VALUE = {
   fromEmail: "neginheal.manager@gmail.com",
 };
 
+const DEFAULT_BACKUP_CONFIG_VALUE = {
+  rarPassword: "example-backup-rar-password",
+};
+
+const DEFAULT_TELEGRAM_CONFIG_VALUE = {
+  botToken: "1234567890:AAExampleBotTokenReplaceInAppSettings",
+  chatId: "-1001234567890",
+  apiBaseUrl: "https://api.telegram.org",
+};
+
 const DEFAULT_EMAIL_TEMPLATES_VALUE = [
   {
     name: "PASSWORD_RESET",
@@ -535,6 +545,23 @@ const DEFAULT_APP_SETTINGS: readonly DefaultAppSettingSeed[] = [
     value: DEFAULT_EMAIL_SMTP_CONFIG_VALUE,
     valueType: AppSettingValueType.JSON,
     description: "تنظیمات ارسال ایمیل شامل SMTP، نام فرستنده و ایمیل فرستنده",
+    isActive: true,
+  },
+  {
+    key: APP_SETTING_KEY.BACKUP_CONFIG,
+    label: "تنظیمات پشتیبان‌گیری",
+    value: DEFAULT_BACKUP_CONFIG_VALUE,
+    valueType: AppSettingValueType.JSON,
+    description: "تنظیمات پشتیبان‌گیری شامل رمز آرشیو RAR",
+    isActive: true,
+  },
+  {
+    key: APP_SETTING_KEY.TELEGRAM_CONFIG,
+    label: "تنظیمات ربات تلگرام پشتیبان",
+    value: DEFAULT_TELEGRAM_CONFIG_VALUE,
+    valueType: AppSettingValueType.JSON,
+    description:
+      "تنظیمات ارسال پشتیبان و اعلان‌ها به تلگرام شامل توکن ربات، شناسه چت و آدرس API",
     isActive: true,
   },
   {

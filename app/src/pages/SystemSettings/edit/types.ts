@@ -82,6 +82,16 @@ export type EmailSmtpConfigForm = {
   fromEmail: string;
 };
 
+export type BackupConfigForm = {
+  rarPassword: string;
+};
+
+export type TelegramConfigForm = {
+  botToken: string;
+  chatId: string;
+  apiBaseUrl: string;
+};
+
 export type EmailTemplateForm = {
   name: string;
   subject: string;
@@ -146,6 +156,8 @@ export type JsonFormState =
   | { kind: "usdtIrtRate"; rate: UsdtIrtRateForm }
   | { kind: "zarinpalConfig"; config: ZarinpalConfigForm }
   | { kind: "emailSmtpConfig"; config: EmailSmtpConfigForm }
+  | { kind: "backupConfig"; config: BackupConfigForm }
+  | { kind: "telegramConfig"; config: TelegramConfigForm }
   | { kind: "emailTemplates"; templates: EmailTemplateForm[] }
   | { kind: "supportContact"; config: SupportContactForm }
   | { kind: "rawJson"; value: string };

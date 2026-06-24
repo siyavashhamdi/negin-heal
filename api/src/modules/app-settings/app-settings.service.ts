@@ -51,6 +51,10 @@ import {
   SupportFaqItemConfig,
   SupportFaqPageConfig,
   SupportFaqSectionConfig,
+  BackupConfig,
+  StoredBackupConfigValue,
+  StoredTelegramConfigValue,
+  TelegramConfig,
   UsdtIrtRateConfig,
 } from "./app-settings.types";
 
@@ -359,6 +363,51 @@ export class AppSettingsService {
 
     return {
       html: this.normalizeOptionalText(value),
+    };
+  }
+
+  async getBackupConfig(): Promise<BackupConfig | null> {
+    const storedConfig =
+      await this.getActiveJsonSettingValue<StoredBackupConfigValue>(
+        APP_SETTING_KEY.BACKUP_CONFIG,
+      );
+
+    if (!this.isPlainObject<StoredBackupConfigValue>(storedConfig)) {
+      return null;
+    }
+
+    const rarPassword = this.normalizeOptionalText(storedConfig.rarPassword);
+    if (!rarPassword) {
+      return null;
+    }
+
+    return { rarPassword };
+  }
+
+  async getTelegramConfig(): Promise<TelegramConfig | null> {
+    const storedConfig =
+      await this.getActiveJsonSettingValue<StoredTelegramConfigValue>(
+        APP_SETTING_KEY.TELEGRAM_CONFIG,
+      );
+
+    if (!this.isPlainObject<StoredTelegramConfigValue>(storedConfig)) {
+      return null;
+    }
+
+    const botToken = this.normalizeOptionalText(storedConfig.botToken);
+    const chatId = this.normalizeOptionalText(storedConfig.chatId);
+    const apiBaseUrl =
+      this.normalizeOptionalText(storedConfig.apiBaseUrl) ||
+      "https://api.telegram.org";
+
+    if (!botToken || !chatId) {
+      return null;
+    }
+
+    return {
+      botToken,
+      chatId,
+      apiBaseUrl,
     };
   }
 

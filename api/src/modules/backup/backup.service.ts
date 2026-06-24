@@ -20,8 +20,10 @@ import {
 import { BackupTarget } from "../../enums";
 import { env } from "../../config";
 import { BACKUP_CONSTANT } from "../../constants/backup.constant";
+import { APP_SETTING_KEY } from "../../constants/app-setting.constant";
 import { EXCEPTION_CONSTANT } from "../../constants/exception.constant";
 import { StoredFile, StoredFileDocument } from "../../database/schemas";
+import { AppSettingsService } from "../app-settings/app-settings.service";
 import { TelegramService } from "../telegram";
 import {
   BACKUP_ARCHIVE_FORMAT,
@@ -56,6 +58,7 @@ export class BackupService {
     @InjectModel(StoredFile.name)
     private readonly storedFileModel: Model<StoredFileDocument>,
     private readonly telegramService: TelegramService,
+    private readonly appSettingsService: AppSettingsService,
   ) {
     this.minioClient = new MinioClient({
       endPoint: env.MINIO_ENDPOINT,
@@ -882,13 +885,7 @@ export class BackupService {
   }
 
   private async ensureRarReadyForBackup(): Promise<void> {
-    const password = env.BACKUP_RAR_PASSWORD?.trim();
-    if (!password) {
-      await this.notifyRarPasswordNotConfigured();
-      throw new InternalServerErrorException(
-        EXCEPTION_CONSTANT.BACKUP_RAR_PASSWORD_NOT_CONFIGURED,
-      );
-    }
+    await this.getRarPasswordOrThrow();
 
     const isInstalled = await this.isRarInstalled();
     if (!isInstalled) {
@@ -900,7 +897,8 @@ export class BackupService {
   }
 
   private async getRarPasswordOrThrow(): Promise<string> {
-    const password = env.BACKUP_RAR_PASSWORD?.trim();
+    const backupConfig = await this.appSettingsService.getBackupConfig();
+    const password = backupConfig?.rarPassword?.trim();
     if (password) {
       return password;
     }
@@ -975,7 +973,7 @@ export class BackupService {
 
   private async notifyRarPasswordNotConfigured(): Promise<void> {
     this.logger.error(
-      "BACKUP_RAR_PASSWORD is not configured. Set it in the API environment and retry backup.",
+      "Backup RAR password is not configured in system settings (BACKUP_CONFIG).",
     );
 
     try {
@@ -984,8 +982,8 @@ export class BackupService {
           "❌ پشتیبان‌گیری Negin Heal — خطا",
           "",
           this.formatBackupEnvironmentTelegramLine(),
-          "رمز آرشیو پشتیبان (BACKUP_RAR_PASSWORD) در تنظیمات API تعریف نشده است.",
-          "لطفاً متغیر محیطی را تنظیم کنید و دوباره تلاش کنید.",
+          `رمز آرشیو پشتیبان (${APP_SETTING_KEY.BACKUP_CONFIG}) در تنظیمات سامانه تعریف نشده است.`,
+          "لطفاً از بخش تنظیمات سامانه مقدار را تنظیم کنید و دوباره تلاش کنید.",
           `زمان: ${this.formatDateTime(new Date())}`,
         ].join("\n"),
         disableWebPagePreview: true,

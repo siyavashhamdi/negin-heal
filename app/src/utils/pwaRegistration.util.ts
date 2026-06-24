@@ -1,5 +1,7 @@
 import { registerSW } from "virtual:pwa-register";
 
+import { emptyCacheAndHardReload } from "./hardReload.util";
+
 const LEGACY_PUSH_SW_FILENAME = "push-sw.js";
 
 type NeedRefreshListener = () => void;
@@ -62,9 +64,11 @@ export function applyAppUpdate(): void {
   void (async () => {
     try {
       await applyServiceWorkerUpdate?.(true);
-    } finally {
-      window.location.reload();
+    } catch {
+      // Best effort before hard reload.
     }
+
+    await emptyCacheAndHardReload();
   })();
 }
 
