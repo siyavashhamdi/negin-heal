@@ -1,5 +1,7 @@
 import { Schema } from "mongoose";
 
+import { addNotDeletedCondition } from "../utils/not-deleted-query.util";
+
 /**
  * Mongoose plugin that automatically manages timestamp fields in the audit object:
  * - audit.createdAt: Set when document is created
@@ -38,41 +40,6 @@ export function timestampablePlugin(schema: Schema) {
       }
       update.audit.updatedAt = now;
     }
-  };
-
-  // Helper: Add condition to query to exclude already soft-deleted records from updates
-  const addNotDeletedCondition = (query: any): any => {
-    // Only update records that are not already soft-deleted
-    // Check if query already has audit.deletedAt condition
-    if ("audit.deletedAt" in query) {
-      // Query already has deletedAt condition, respect it
-      return query;
-    }
-
-    // Check if query already has $or condition
-    if (query.$or) {
-      // Merge with existing $or using $and
-      return {
-        $and: [
-          query,
-          {
-            $or: [
-              { "audit.deletedAt": null },
-              { "audit.deletedAt": { $exists: false } },
-            ],
-          },
-        ],
-      };
-    }
-
-    // Add $or condition to exclude already soft-deleted records
-    return {
-      ...query,
-      $or: [
-        { "audit.deletedAt": null },
-        { "audit.deletedAt": { $exists: false } },
-      ],
-    };
   };
 
   // Pre-save hook: sets audit.createdAt for new documents, audit.updatedAt for existing documents
@@ -117,14 +84,11 @@ export function timestampablePlugin(schema: Schema) {
 
   // Modify find queries to exclude soft-deleted documents by default
   const findHook = function (this: any, next: () => void) {
-    const query = this.getQuery();
+    const options = this.getOptions?.() ?? {};
 
-    // Only add audit.deletedAt filter if not explicitly set in query
-    if (!("audit.deletedAt" in query) && !query.$or) {
-      query.$or = [
-        { "audit.deletedAt": null },
-        { "audit.deletedAt": { $exists: false } },
-      ];
+    if (!options.includeDeleted) {
+      const query = this.getQuery();
+      this.setQuery(addNotDeletedCondition(query));
     }
 
     next();

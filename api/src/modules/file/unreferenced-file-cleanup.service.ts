@@ -14,6 +14,7 @@ import {
   UserCourseDocument,
   UserDocument,
 } from "../../database/schemas";
+import { addNotDeletedCondition } from "../../database/utils/not-deleted-query.util";
 import { FileService } from "./file.service";
 
 export type UnreferencedFileCleanupRunResult = {
@@ -56,39 +57,51 @@ export class UnreferencedFileCleanupService {
       {
         label: "courses.coverImageFileId",
         collect: () =>
-          this.courseModel.collection.distinct("coverImageFileId", {
-            coverImageFileId: { $exists: true, $ne: null },
-          }),
+          this.courseModel.collection.distinct(
+            "coverImageFileId",
+            addNotDeletedCondition({
+              coverImageFileId: { $exists: true, $ne: null },
+            }),
+          ),
       },
       {
         label: "courses.chapters.items.fileId",
         collect: () =>
-          this.courseModel.collection.distinct("chapters.items.fileId", {
-            "chapters.items.fileId": { $exists: true, $ne: null },
-          }),
+          this.courseModel.collection.distinct(
+            "chapters.items.fileId",
+            addNotDeletedCondition({
+              "chapters.items.fileId": { $exists: true, $ne: null },
+            }),
+          ),
       },
       {
         label: "users.profile.avatarFileId",
         collect: () =>
-          this.userModel.collection.distinct("profile.avatarFileId", {
-            "profile.avatarFileId": { $exists: true, $ne: null },
-          }),
+          this.userModel.collection.distinct(
+            "profile.avatarFileId",
+            addNotDeletedCondition({
+              "profile.avatarFileId": { $exists: true, $ne: null },
+            }),
+          ),
       },
       {
         label: "tickets.messages.attachmentFileIds",
         collect: () =>
-          this.ticketModel.collection.distinct("messages.attachmentFileIds", {
-            "messages.attachmentFileIds.0": { $exists: true },
-          }),
+          this.ticketModel.collection.distinct(
+            "messages.attachmentFileIds",
+            addNotDeletedCondition({
+              "messages.attachmentFileIds.0": { $exists: true },
+            }),
+          ),
       },
       {
         label: "user_courses.purchase.uploadedReceiptFileId",
         collect: () =>
           this.userCourseModel.collection.distinct(
             "purchase.uploadedReceiptFileId",
-            {
+            addNotDeletedCondition({
               "purchase.uploadedReceiptFileId": { $exists: true, $ne: null },
-            },
+            }),
           ),
       },
     ];
@@ -233,12 +246,12 @@ export class UnreferencedFileCleanupService {
     updatedAt: Date,
   ): Promise<number> {
     const result = await this.courseModel.collection.updateMany(
-      {
+      addNotDeletedCondition({
         $or: [
           { coverImageFileId: { $in: unavailableObjectIds } },
           { "chapters.items.fileId": { $in: unavailableObjectIds } },
         ],
-      },
+      }),
       [
         {
           $set: {
@@ -301,7 +314,9 @@ export class UnreferencedFileCleanupService {
     updatedAt: Date,
   ): Promise<number> {
     const result = await this.userModel.collection.updateMany(
-      { "profile.avatarFileId": { $in: unavailableObjectIds } },
+      addNotDeletedCondition({
+        "profile.avatarFileId": { $in: unavailableObjectIds },
+      }),
       {
         $set: {
           "profile.avatarFileId": null,
@@ -318,7 +333,9 @@ export class UnreferencedFileCleanupService {
     updatedAt: Date,
   ): Promise<number> {
     const result = await this.ticketModel.collection.updateMany(
-      { "messages.attachmentFileIds": { $in: unavailableObjectIds } },
+      addNotDeletedCondition({
+        "messages.attachmentFileIds": { $in: unavailableObjectIds },
+      }),
       [
         {
           $set: {
@@ -362,7 +379,9 @@ export class UnreferencedFileCleanupService {
     updatedAt: Date,
   ): Promise<number> {
     const result = await this.userCourseModel.collection.updateMany(
-      { "purchase.uploadedReceiptFileId": { $in: unavailableObjectIds } },
+      addNotDeletedCondition({
+        "purchase.uploadedReceiptFileId": { $in: unavailableObjectIds },
+      }),
       {
         $set: {
           "purchase.uploadedReceiptFileId": null,
@@ -414,14 +433,14 @@ export class UnreferencedFileCleanupService {
 
     while (true) {
       const referencedFileIds = await this.collectReferencedFileIds();
-      const query: Record<string, unknown> = {};
-
-      if (lastId) {
-        query._id = { $gt: lastId };
-      }
 
       const batch = await this.storedFileModel.collection
-        .find(query, { projection: { _id: 1 } })
+        .find(
+          addNotDeletedCondition(
+            lastId ? { _id: { $gt: lastId } } : {},
+          ),
+          { projection: { _id: 1 } },
+        )
         .sort({ _id: 1 })
         .limit(this.fileScanBatchSize)
         .toArray();

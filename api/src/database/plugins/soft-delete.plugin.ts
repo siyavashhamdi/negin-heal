@@ -1,4 +1,6 @@
 import { Schema, Types } from "mongoose";
+
+import { addNotDeletedCondition } from "../utils/not-deleted-query.util";
 import { getBlameableContext } from "./blameable.plugin";
 
 /**
@@ -39,41 +41,6 @@ export function softDeletePlugin(schema: Schema) {
     }
 
     return update;
-  };
-
-  // Helper: Add condition to query to exclude already soft-deleted records
-  const addNotDeletedCondition = (query: any): any => {
-    // Only update records that are not already soft-deleted
-    // Check if query already has audit.deletedAt condition
-    if ("audit.deletedAt" in query) {
-      // Query already has deletedAt condition, respect it
-      return query;
-    }
-
-    // Check if query already has $or condition
-    if (query.$or) {
-      // Merge with existing $or using $and
-      return {
-        $and: [
-          query,
-          {
-            $or: [
-              { "audit.deletedAt": null },
-              { "audit.deletedAt": { $exists: false } },
-            ],
-          },
-        ],
-      };
-    }
-
-    // Add $or condition to exclude already soft-deleted records
-    return {
-      ...query,
-      $or: [
-        { "audit.deletedAt": null },
-        { "audit.deletedAt": { $exists: false } },
-      ],
-    };
   };
 
   // Intercept deleteOne operation

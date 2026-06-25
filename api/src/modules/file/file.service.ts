@@ -18,6 +18,7 @@ import { env } from "../../config";
 import { EXCEPTION_CONSTANT } from "../../constants/exception.constant";
 import { formatInfrastructureConnectionError } from "../../utils/infrastructure-connection-error.util";
 import { StoredFile, StoredFileDocument } from "../../database/schemas";
+import { addNotDeletedCondition } from "../../database/utils/not-deleted-query.util";
 import {
   createFileAccessUrlDescriptor,
   FileAccessUrlDescriptor,
@@ -322,13 +323,9 @@ export class FileService implements OnModuleInit {
 
     const storedFiles = await this.storedFileModel.collection
       .find(
-        {
+        addNotDeletedCondition({
           _id: { $in: ids },
-          $or: [
-            { "audit.deletedAt": null },
-            { "audit.deletedAt": { $exists: false } },
-          ],
-        },
+        }),
         { projection: { bucket: 1, objectKey: 1, path: 1 } },
       )
       .toArray();
@@ -390,13 +387,9 @@ export class FileService implements OnModuleInit {
     );
     const activeStoredFiles = await this.storedFileModel.collection
       .find(
-        {
+        addNotDeletedCondition({
           _id: { $in: referencedObjectIds },
-          $or: [
-            { "audit.deletedAt": null },
-            { "audit.deletedAt": { $exists: false } },
-          ],
-        },
+        }),
         { projection: { bucket: 1, objectKey: 1, path: 1 } },
       )
       .toArray();
@@ -488,16 +481,16 @@ export class FileService implements OnModuleInit {
 
     while (true) {
       const referencedFileIds = await params.getReferencedFileIds();
-      const query: Record<string, unknown> = {};
-
-      if (lastId) {
-        query._id = { $gt: lastId };
-      }
 
       const batch = await this.storedFileModel.collection
-        .find(query, {
-          projection: { _id: 1, bucket: 1, objectKey: 1, path: 1 },
-        })
+        .find(
+          addNotDeletedCondition(
+            lastId ? { _id: { $gt: lastId } } : {},
+          ),
+          {
+            projection: { _id: 1, bucket: 1, objectKey: 1, path: 1 },
+          },
+        )
         .sort({ _id: 1 })
         .limit(params.scanBatchSize)
         .toArray();
@@ -597,13 +590,9 @@ export class FileService implements OnModuleInit {
     }
 
     const result = await this.storedFileModel.collection.updateMany(
-      {
+      addNotDeletedCondition({
         _id: { $in: ids },
-        $or: [
-          { "audit.deletedAt": null },
-          { "audit.deletedAt": { $exists: false } },
-        ],
-      },
+      }),
       {
         $set: {
           "audit.deletedAt": new Date(),
@@ -653,20 +642,10 @@ export class FileService implements OnModuleInit {
       (fileId) => new Types.ObjectId(fileId),
     );
     const referencedStoredFile = await this.storedFileModel.collection.findOne(
-      {
+      addNotDeletedCondition({
         _id: { $in: referencedObjectIds },
-        $and: [
-          {
-            $or: [{ bucket, objectKey }, { path: `${bucket}/${objectKey}` }],
-          },
-          {
-            $or: [
-              { "audit.deletedAt": null },
-              { "audit.deletedAt": { $exists: false } },
-            ],
-          },
-        ],
-      },
+        $or: [{ bucket, objectKey }, { path: `${bucket}/${objectKey}` }],
+      }),
       { projection: { _id: 1 } },
     );
 
@@ -694,15 +673,9 @@ export class FileService implements OnModuleInit {
 
   private async collectKnownMinioObjectKeys(): Promise<Set<string>> {
     const storedFiles = await this.storedFileModel.collection
-      .find(
-        {
-          $or: [
-            { "audit.deletedAt": null },
-            { "audit.deletedAt": { $exists: false } },
-          ],
-        },
-        { projection: { bucket: 1, objectKey: 1, path: 1 } },
-      )
+      .find(addNotDeletedCondition({}), {
+        projection: { bucket: 1, objectKey: 1, path: 1 },
+      })
       .toArray();
 
     const knownObjectKeys = new Set<string>();
@@ -750,19 +723,9 @@ export class FileService implements OnModuleInit {
     objectKey: string,
   ): Promise<{ _id: Types.ObjectId } | null> {
     const storedFileRecord = await this.storedFileModel.collection.findOne(
-      {
-        $and: [
-          {
-            $or: [{ bucket, objectKey }, { path: `${bucket}/${objectKey}` }],
-          },
-          {
-            $or: [
-              { "audit.deletedAt": null },
-              { "audit.deletedAt": { $exists: false } },
-            ],
-          },
-        ],
-      },
+      addNotDeletedCondition({
+        $or: [{ bucket, objectKey }, { path: `${bucket}/${objectKey}` }],
+      }),
       { projection: { _id: 1 } },
     );
 
