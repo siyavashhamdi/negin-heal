@@ -7,6 +7,15 @@ async function clearCacheStorage(): Promise<void> {
   await Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
 }
 
+async function clearOfflineApolloCache(): Promise<void> {
+  try {
+    const { clearPersistedApolloCache } = await import("../lib/apollo-cache-persist");
+    await clearPersistedApolloCache();
+  } catch {
+    // Best effort before reload.
+  }
+}
+
 async function unregisterServiceWorkers(): Promise<void> {
   if (!("serviceWorker" in navigator)) {
     return;
@@ -34,6 +43,12 @@ export async function emptyCacheAndHardReload(): Promise<void> {
 
   try {
     await clearCacheStorage();
+  } catch {
+    // Best effort before reload.
+  }
+
+  try {
+    await clearOfflineApolloCache();
   } catch {
     // Best effort before reload.
   }

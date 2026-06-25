@@ -5,7 +5,7 @@ import {
   type GeneralSubscriptionUpdateType,
 } from "../constants";
 import { GENERAL_UPDATES_SUBSCRIPTION } from "../graphql/subscriptions/generalUpdates.subscription";
-import { setGeneralUpdatesOnline } from "../lib/general-updates-online-listeners";
+import { setGeneralUpdatesOnline } from "../lib/general-updates-listeners";
 import { subscribeGraphqlWsConnection } from "../lib/graphql-ws-client";
 import { resolveSubscriptionRetryDelayMs } from "../lib/subscription-retry.util";
 import { isRecoverableSubscriptionError } from "../lib/subscription-error.util";
@@ -48,7 +48,7 @@ export const useGeneralUpdatesSubscription = ({
   onBadgeCounts,
   onVerificationStatus,
   onAnyUpdate,
-}: UseGeneralUpdatesSubscriptionProps): { readonly isOnline: boolean } => {
+}: UseGeneralUpdatesSubscriptionProps): void => {
   const subscriptionActive = enabled;
   const [wsConnected, setWsConnected] = useState(false);
   const [subscriptionBroken, setSubscriptionBroken] = useState(false);
@@ -225,6 +225,4 @@ export const useGeneralUpdatesSubscription = ({
       clearRestartTimer();
     };
   }, [subscriptionActive, clearRestartTimer]);
-
-  return { isOnline };
 };

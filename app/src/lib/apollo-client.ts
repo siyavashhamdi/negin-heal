@@ -16,6 +16,19 @@ import {
   type GraphQLErrorExtensions,
 } from "../utilities/graphql-error.util";
 import { isLandingRoute, isStandaloneShellRoute } from "../routing/app-shell-routes";
+import {
+  clearPersistedApolloCache,
+  hydrateApolloCache,
+  registerApolloCacheUnloadPersist,
+} from "./apollo-cache-persist";
+import { createCacheFallbackLink } from "./apollo-offline-link";
+import {
+  getIsBrowserOffline,
+  getIsOfflineMode,
+  markBackendReachable,
+  markBackendUnreachable,
+  probeBackendReachability,
+} from "./offline-state";
 
 function shouldBypassApolloErrorUx(): boolean {
   if (typeof window === "undefined") {
@@ -31,6 +44,10 @@ function shouldIgnoreAuthSessionExpiry(): boolean {
   }
 
   return isStandaloneShellRoute(window.location.pathname);
+}
+
+function shouldSuppressNetworkErrorUx(operationContext: Record<string, unknown>): boolean {
+  return getIsOfflineMode() || operationContext.offlineCacheFallback === true;
 }
 
 const httpLink = new HttpLink({
@@ -89,10 +106,12 @@ function isIgnorableSocketClosedError(error: unknown): boolean {
   );
 }
 
-const errorLink = new ErrorLink(({ error }) => {
+const errorLink = new ErrorLink(({ error, operation }) => {
   if (isIgnorableSocketClosedError(error)) {
     return;
   }
+
+  const operationContext = operation.getContext() as Record<string, unknown>;
 
   if (shouldBypassApolloErrorUx()) {
     if (CombinedGraphQLErrors.is(error)) {
@@ -155,6 +174,10 @@ const errorLink = new ErrorLink(({ error }) => {
   }
 
   if (ServerError.is(error)) {
+    if (shouldSuppressNetworkErrorUx(operationContext)) {
+      return;
+    }
+
     const rawMessage = error.message || "Network error";
     console.error(`[Network error]: ${rawMessage}`);
 
@@ -171,6 +194,10 @@ const errorLink = new ErrorLink(({ error }) => {
   }
 
   if (error) {
+    if (shouldSuppressNetworkErrorUx(operationContext)) {
+      return;
+    }
+
     const rawMessage = error.message || "An error occurred";
     console.error(`[Error]: ${rawMessage}`);
     queueApolloError(
@@ -179,35 +206,81 @@ const errorLink = new ErrorLink(({ error }) => {
   }
 });
 
-export const apolloClient = new ApolloClient({
-  link: ApolloLink.from([
-    errorLink,
-    authLink,
-    wsLink
-      ? split(
-          ({ query }) => {
-            const definition = getMainDefinition(query);
-            return (
-              definition.kind === "OperationDefinition" && definition.operation === "subscription"
-            );
-          },
-          wsLink,
-          httpLink
-        )
-      : httpLink,
-  ]),
-  cache: new InMemoryCache({
+function createTransportLink(): ApolloLink {
+  return wsLink
+    ? split(
+        ({ query }) => {
+          const definition = getMainDefinition(query);
+          return (
+            definition.kind === "OperationDefinition" && definition.operation === "subscription"
+          );
+        },
+        wsLink,
+        httpLink
+      )
+    : httpLink;
+}
+
+function createApolloLink(cache: InMemoryCache): ApolloLink {
+  return ApolloLink.from([errorLink, createCacheFallbackLink(cache), authLink, createTransportLink()]);
+}
+
+export let apolloClient!: ApolloClient;
+
+export async function initApolloClient(): Promise<ApolloClient> {
+  const cache = new InMemoryCache({
     typePolicies: paginatedQueryTypePolicies,
-  }),
-  defaultOptions: {
-    watchQuery: {
-      errorPolicy: "all",
+  });
+
+  const hadPersistedCache = await hydrateApolloCache(cache);
+
+  if (hadPersistedCache || getIsBrowserOffline()) {
+    markBackendUnreachable();
+  }
+
+  const offlineMode = getIsOfflineMode();
+  const defaultFetchPolicy = offlineMode ? "cache-only" : "cache-and-network";
+
+  const client = new ApolloClient({
+    link: createApolloLink(cache),
+    cache,
+    defaultOptions: {
+      watchQuery: {
+        errorPolicy: "all",
+        fetchPolicy: defaultFetchPolicy,
+      },
+      query: {
+        errorPolicy: "all",
+        fetchPolicy: defaultFetchPolicy,
+      },
+      mutate: {
+        errorPolicy: "all",
+      },
     },
-    query: {
-      errorPolicy: "all",
-    },
-    mutate: {
-      errorPolicy: "all",
-    },
-  },
-});
+  });
+
+  apolloClient = client;
+  registerApolloCacheUnloadPersist(cache);
+
+  if (!getIsBrowserOffline()) {
+    void probeBackendReachability().then((reachable) => {
+      if (reachable) {
+        markBackendReachable();
+      } else {
+        markBackendUnreachable();
+      }
+    });
+  }
+
+  return client;
+}
+
+export async function resetApolloClientCache(): Promise<void> {
+  if (!apolloClient) {
+    await clearPersistedApolloCache();
+    return;
+  }
+
+  await apolloClient.clearStore();
+  await clearPersistedApolloCache();
+}

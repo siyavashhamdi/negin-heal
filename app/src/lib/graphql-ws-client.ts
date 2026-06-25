@@ -2,11 +2,6 @@ import { createClient, type Client } from "graphql-ws";
 import { LOCAL_STORAGE_KEYS } from "../constants";
 import { resolveSubscriptionRetryDelayMs } from "./subscription-retry.util";
 
-export {
-  WS_SUBSCRIPTION_POLL_INTERVAL_MS,
-  WS_SUBSCRIPTION_RETRY_ATTEMPTS,
-} from "./subscription-retry.util";
-
 let isBrowserUnloading = false;
 let graphqlWsClient: Client | null = null;
 let lifecycleListenersRegistered = false;
@@ -97,10 +92,6 @@ export function getGraphqlWsClient(): Client {
   }
 
   return graphqlWsClient;
-}
-
-export function isGraphqlWsConnected(): boolean {
-  return isWsConnected;
 }
 
 export function subscribeGraphqlWsConnection(

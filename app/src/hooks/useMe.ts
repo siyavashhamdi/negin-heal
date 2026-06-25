@@ -1,6 +1,7 @@
 import { useQuery, type QueryResult } from "@apollo/client/react";
 import { LOCAL_STORAGE_KEYS } from "../constants";
 import { USER_ME_QUERY } from "../graphql/queries/userMe.query";
+import { resolveQueryFetchPolicy } from "../lib/offline-fetch-policy.util";
 import { resolveFileAccessUrl, type FileAccessUrl } from "../utils/fileAccessUrl.util";
 
 export type UserMeGqlResponse = {
@@ -44,7 +45,7 @@ export const useMe = (): UseMeResult => {
   const hasAccessToken = Boolean(localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN));
   const { data, loading, error, refetch } = useQuery<UserMeResponse>(USER_ME_QUERY, {
     errorPolicy: "all",
-    fetchPolicy: "cache-and-network",
+    fetchPolicy: resolveQueryFetchPolicy("cache-and-network"),
     skip: !hasAccessToken,
   });
 

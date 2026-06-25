@@ -45,7 +45,7 @@ import {
 import { useVerificationStatusSubscription } from "../hooks/useVerificationStatusSubscription";
 import { notifyBadgeCountUpdateListeners } from "../lib/badge-count-update-listeners";
 import { subscribeGeneralUpdates } from "../lib/general-updates-listeners";
-import { subscribeGeneralUpdatesOnline } from "../lib/general-updates-online-listeners";
+import { useGeneralUpdatesOnline } from "../hooks/useGeneralUpdatesOnline";
 import { APP_SHELL_ROUTES, isCourseDetailRoute } from "../routing/app-shell-routes";
 import { resolveNotificationActionPayload } from "../utilities/notification-action.util";
 import { deliverNotificationPushIfEnabled } from "../utils/browserNotification.util";
@@ -233,7 +233,7 @@ export function MainLayout({
   const [userAnchorEl, setUserAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [isSideMenuCollapsed, setIsSideMenuCollapsed] = useState(false);
   const [generalUpdatePopup, setGeneralUpdatePopup] = useState<GeneralUpdatePopup | null>(null);
-  const [profileSubscriptionOnline, setProfileSubscriptionOnline] = useState(false);
+  const profileSubscriptionOnline = useGeneralUpdatesOnline();
 
   const isNotificationOpen = Boolean(notificationAnchorEl);
   const isSettingsOpen = Boolean(settingsAnchorEl);
@@ -376,10 +376,6 @@ export function MainLayout({
     },
     [showSnackbar, upsertLiveHeaderNotification],
   );
-
-  useEffect(() => {
-    return subscribeGeneralUpdatesOnline(setProfileSubscriptionOnline);
-  }, []);
 
   useEffect(() => {
     return subscribeGeneralUpdates((event) => {

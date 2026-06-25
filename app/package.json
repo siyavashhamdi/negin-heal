@@ -19,7 +19,7 @@
         "generate:pwa-icons": "node scripts/generate-pwa-icons.mjs",
         "generate:sitemap": "node scripts/generate-sitemap.mjs",
         "typecheck": "tsc --noEmit",
-        "preview": "vite preview --host 0.0.0.0 --strictPort --port ${PORT:-5700}",
+        "preview": "vite preview",
         "start": "serve dist --no-clipboard --single --listen tcp://0.0.0.0:${PORT:-5700}",
         "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
         "lint:fix": "eslint . --fix",

@@ -3,6 +3,8 @@ import { useQuery } from "@apollo/client/react";
 import type { DocumentNode, OperationVariables } from "@apollo/client";
 
 import { useTableRefresh } from "./useTableRefresh";
+import { resolveQueryFetchPolicy } from "../lib/offline-fetch-policy.util";
+import { getIsOfflineMode } from "../lib/offline-state";
 
 /** Shape returned by paginated GraphQL list fields (items + meta). */
 export interface ServerPageResult<TItem> {
@@ -106,7 +108,7 @@ export function useServerPaginatedQuery<
 
   const { data, loading, error, refetch } = useQuery<TData, TVariables>(query, {
     variables,
-    fetchPolicy: "network-only",
+    fetchPolicy: resolveQueryFetchPolicy("network-only"),
     notifyOnNetworkStatusChange: true,
     skip,
   });
@@ -161,7 +163,7 @@ export function useServerPaginatedQuery<
     ? Math.max(1, pageResult?.totalPages ?? 1)
     : lastTotalsRef.current.totalPages;
 
-  const isPageTransition = loading && !isMatchingPage;
+  const isPageTransition = !getIsOfflineMode() && loading && !isMatchingPage;
 
   const onRefresh = useTableRefresh(refetch);
   const hasNextPage = page < displayTotalPages;
@@ -178,7 +180,7 @@ export function useServerPaginatedQuery<
     setPage,
     setPageSize,
     items,
-    loading: !skip && (loading || isPageTransition),
+    loading: !skip && !getIsOfflineMode() && (loading || isPageTransition) && items.length === 0,
     isPageTransition,
     error,
     refetch: () => {

@@ -7,17 +7,29 @@ import "./i18n/config";
 import { bootstrapCapacitorNativeShell } from "./native/capacitorBootstrap";
 import { registerPwaServiceWorker } from "./utils/pwaRegistration.util";
 
-void bootstrapCapacitorNativeShell();
-registerPwaServiceWorker();
-
 const rootElement = document.getElementById("root");
 
 if (!rootElement) {
   throw new Error('Root element not found. Ensure index.html contains <div id="root"></div>.');
 }
 
-ReactDOM.createRoot(rootElement).render(
-  <StrictMode>
-    <App />
-  </StrictMode>
-);
+async function bootstrap(): Promise<void> {
+  void bootstrapCapacitorNativeShell();
+  registerPwaServiceWorker();
+
+  if (!navigator.onLine && "serviceWorker" in navigator) {
+    try {
+      await navigator.serviceWorker.ready;
+    } catch {
+      // Best effort before rendering the offline shell.
+    }
+  }
+
+  ReactDOM.createRoot(rootElement as HTMLElement).render(
+    <StrictMode>
+      <App />
+    </StrictMode>
+  );
+}
+
+void bootstrap();

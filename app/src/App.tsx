@@ -4,7 +4,7 @@ import { BrowserRouter, useLocation } from "react-router-dom";
 import { CacheProvider } from "@emotion/react";
 import createCache from "@emotion/cache";
 import rtlPlugin from "stylis-plugin-rtl";
-import { ApolloProvider } from "@apollo/client/react";
+import { ApolloBootstrap } from "./components/ApolloBootstrap";
 import { createAppTheme } from "./theme";
 import { ThemeProvider, useThemeMode } from "./contexts/ThemeContext";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -14,8 +14,8 @@ import { ApolloErrorHandler } from "./components/ApolloErrorHandler";
 import { GeneralUpdatesSubscriptionHost } from "./components/GeneralUpdatesSubscriptionHost";
 import { AppUpdatePrompt } from "./components/AppUpdatePrompt";
 import { LoadingBar } from "./components/LoadingBar";
+import { OfflineModeBanner } from "./components/OfflineModeBanner";
 import { UserPreferencesSync } from "./components/UserPreferencesSync";
-import { apolloClient } from "./lib/apollo-client";
 import { MainLayout } from "./layouts/MainLayout";
 import { LOCAL_STORAGE_KEYS } from "./constants";
 import { DashboardAppRoutes } from "./routing/DashboardAppRoutes";
@@ -58,6 +58,7 @@ const ThemedAppTree = (): ReactElement => {
       <SnackbarProvider>
         <ApolloErrorHandler />
         <AppUpdatePrompt />
+        <OfflineModeBanner />
         <LoadingBar />
         <AppShell />
       </SnackbarProvider>
@@ -67,7 +68,7 @@ const ThemedAppTree = (): ReactElement => {
 
 const App = (): ReactElement => (
   <CacheProvider value={emotionRtlCache}>
-    <ApolloProvider client={apolloClient}>
+    <ApolloBootstrap>
       <ThemeProvider>
         <BrowserRouter
           future={{
@@ -83,7 +84,7 @@ const App = (): ReactElement => (
           </AuthProvider>
         </BrowserRouter>
       </ThemeProvider>
-    </ApolloProvider>
+    </ApolloBootstrap>
   </CacheProvider>
 );
 

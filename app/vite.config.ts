@@ -68,7 +68,7 @@ export default defineConfig(({ mode }) => {
       react(),
       VitePWA({
         registerType: "prompt",
-        includeAssets: ["logo.png", "icons/*.png"],
+        includeAssets: ["logo.png", "icons/*.png", "fonts/byekan.ttf"],
         manifest: {
           id: "/",
           name: "Negin Heal",
@@ -108,10 +108,10 @@ export default defineConfig(({ mode }) => {
         srcDir: "src",
         filename: "sw.ts",
         injectManifest: {
-          globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,webmanifest}"],
+          globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2,ttf,webmanifest}"],
         },
         devOptions: {
-          enabled: false,
+          enabled: env.VITE_PWA_DEV !== "false",
           type: "module",
           navigateFallback: "index.html",
         },

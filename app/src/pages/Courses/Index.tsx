@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -74,6 +75,8 @@ import type {
   CourseDeleteDependenciesQueryVariables,
 } from "./course-delete-dependencies.api";
 import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
+import { resolveQueryFetchPolicy } from "../../lib/offline-fetch-policy.util";
+import { getIsOfflineMode } from "../../lib/offline-state";
 import { stripOverlayRoutePathname } from "../../routing/max-route.util";
 import {
   buildCourseListStructuredData,
@@ -418,26 +421,41 @@ const CoursesIndex = (): ReactElement => {
     isPublicCourseView ? USER_COURSE_LIST_QUERY : COURSE_LIST_QUERY,
     {
       variables: courseListVariables,
-      fetchPolicy: "network-only",
+      fetchPolicy: resolveQueryFetchPolicy("network-only"),
       notifyOnNetworkStatusChange: true,
     }
   );
 
   const isFetchingMore = networkStatus === NetworkStatus.fetchMore;
 
+  const queryPageItems = useMemo(() => {
+    const page = courseListData?.courseList;
+    if (!page) {
+      return [];
+    }
+
+    return page.items.map(mapCourseListRowToRecord);
+  }, [courseListData]);
+
+  const displayItems = items.length > 0 ? items : queryPageItems;
+
   const isInitialLoading =
+    !getIsOfflineMode() &&
     (loading ||
       networkStatus === NetworkStatus.loading ||
       networkStatus === NetworkStatus.setVariables) &&
-    items.length === 0;
+    displayItems.length === 0;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const page = courseListData?.courseList;
     if (!page) {
       return;
     }
 
-    if (networkStatus === NetworkStatus.loading || networkStatus === NetworkStatus.setVariables) {
+    if (
+      !getIsOfflineMode() &&
+      (networkStatus === NetworkStatus.loading || networkStatus === NetworkStatus.setVariables)
+    ) {
       return;
     }
 
@@ -548,7 +566,7 @@ const CoursesIndex = (): ReactElement => {
         input: { id: deleteTarget?.id ?? "" },
       },
       skip: !deleteTarget?.id,
-      fetchPolicy: "network-only",
+      fetchPolicy: resolveQueryFetchPolicy("network-only"),
     }
   );
 
@@ -1091,7 +1109,7 @@ const CoursesIndex = (): ReactElement => {
         </Paper>
       )}
 
-      {error ? (
+      {error && !getIsOfflineMode() && displayItems.length === 0 ? (
         <Alert severity="error" className={styles.errorAlert}>
           دریافت لیست دوره‌ها با خطا مواجه شد.
         </Alert>
@@ -1119,7 +1137,7 @@ const CoursesIndex = (): ReactElement => {
                   </div>
                 </Paper>
               ))
-            : items.map((item) => (
+            : displayItems.map((item) => (
                 <div
                   key={item.id}
                   className={`${styles.courseCardShell}${
@@ -1143,7 +1161,7 @@ const CoursesIndex = (): ReactElement => {
               ))}
         </div>
 
-        {!isInitialLoading && items.length === 0 ? (
+        {!isInitialLoading && displayItems.length === 0 ? (
           <div className={styles.emptyState}>
             <Typography variant="h6">دوره‌ای پیدا نشد.</Typography>
             <Typography variant="body2" color="text.secondary">
@@ -1154,7 +1172,7 @@ const CoursesIndex = (): ReactElement => {
           </div>
         ) : null}
 
-        {items.length > 0 || (isEndUser && pagination.hasNextPage) ? (
+        {displayItems.length > 0 || (isEndUser && pagination.hasNextPage) ? (
           <div
             ref={loadMoreRef}
             className={styles.infiniteScrollSentinel}

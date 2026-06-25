@@ -112,6 +112,18 @@ export const paginatedQueryTypePolicies: TypePolicies = {
       userCourseDetail: {
         keyArgs: ["input"],
       },
+      courseList: {
+        keyArgs: paginatedInputKey,
+        merge(_existing, incoming) {
+          return incoming;
+        },
+      },
+      userCourseList: {
+        keyArgs: paginatedInputKey,
+        merge(_existing, incoming) {
+          return incoming;
+        },
+      },
     },
   },
   JobClassListPageGqlResponse: {
