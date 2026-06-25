@@ -1,3 +1,4 @@
+import { isGeneralUpdatesSubscriptionOffline } from "./general-updates-listeners";
 import { resetSubscriptionRetryFromStart } from "./subscription-retry.util";
 
 let isBrowserOffline = typeof navigator !== "undefined" ? !navigator.onLine : false;
@@ -30,10 +31,16 @@ export function getIsOfflineMode(): boolean {
 export function markBackendReachable(): void {
   isBackendReachabilityKnown = true;
 
-  if (!isBackendReachable) {
-    isBackendReachable = true;
-    resetSubscriptionRetryFromStart();
+  const wasBackendUnreachable = !isBackendReachable;
+  isBackendReachable = true;
+
+  if (wasBackendUnreachable) {
     notifyOfflineStatusListeners();
+  }
+
+  // HTTP is back while the profile subscription dot is offline — retry WS from attempt 0.
+  if (wasBackendUnreachable || isGeneralUpdatesSubscriptionOffline()) {
+    resetSubscriptionRetryFromStart();
   }
 }
 

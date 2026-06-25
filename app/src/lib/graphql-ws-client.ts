@@ -1,7 +1,6 @@
 import { createClient, type Client } from "graphql-ws";
 import { LOCAL_STORAGE_KEYS } from "../constants";
 import {
-  installSubscriptionRetryDebugResetHook,
   resolveSubscriptionRetryDelayMs,
   waitForSubscriptionRetryDelayMs,
 } from "./subscription-retry.util";
@@ -90,7 +89,6 @@ export function getGraphqlWsClient(): Client {
   }
 
   registerLifecycleListeners();
-  installSubscriptionRetryDebugResetHook();
 
   if (!graphqlWsClient) {
     graphqlWsClient = createGraphqlWsClient();

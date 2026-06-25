@@ -8,8 +8,6 @@ import { GENERAL_UPDATES_SUBSCRIPTION } from "../graphql/subscriptions/generalUp
 import { setGeneralUpdatesOnline } from "../lib/general-updates-listeners";
 import { disposeGraphqlWsClient, subscribeGraphqlWsConnection } from "../lib/graphql-ws-client";
 import {
-  abortAllSubscriptionRetryWaits,
-  installSubscriptionRetryDebugResetHook,
   resolveSubscriptionRetryDelayMs,
   subscribeSubscriptionRetryReset,
   waitForSubscriptionRetryDelayMs,
@@ -75,7 +73,7 @@ export const useGeneralUpdatesSubscription = ({
     onAnyUpdate,
   });
 
-  const clearRestartTimer = useCallback(() => {
+  const clearScheduledRestart = useCallback(() => {
     restartWaitAbortRef.current?.abort();
     restartWaitAbortRef.current = null;
   }, []);
@@ -150,17 +148,9 @@ export const useGeneralUpdatesSubscription = ({
     });
   }, []);
 
-  const resetInFlightRef = useRef(false);
-
-  const resetSubscriptionFromStart = useCallback(() => {
-    if (resetInFlightRef.current) {
-      return;
-    }
-
-    resetInFlightRef.current = true;
+  const restartSubscriptionFromStart = useCallback(() => {
     restartAttemptRef.current = 0;
-    abortAllSubscriptionRetryWaits();
-    clearRestartTimer();
+    clearScheduledRestart();
     setSubscriptionBroken(false);
     subscriptionAliveRef.current = false;
 
@@ -169,16 +159,14 @@ export const useGeneralUpdatesSubscription = ({
     if (enabledRef.current) {
       restartRef.current?.();
     }
-
-    resetInFlightRef.current = false;
-  }, [clearRestartTimer]);
+  }, [clearScheduledRestart]);
 
   const scheduleSubscriptionRestart = useCallback(() => {
     if (!enabledRef.current || subscriptionAliveRef.current) {
       return;
     }
 
-    clearRestartTimer();
+    clearScheduledRestart();
 
     const delayMs = resolveSubscriptionRetryDelayMs(restartAttemptRef.current);
     restartAttemptRef.current += 1;
@@ -193,7 +181,7 @@ export const useGeneralUpdatesSubscription = ({
 
       restartWaitAbortRef.current = null;
 
-      if (result === "aborted" || result === "debug-reset") {
+      if (result === "aborted") {
         return;
       }
 
@@ -204,15 +192,11 @@ export const useGeneralUpdatesSubscription = ({
       setSubscriptionBroken(false);
       restartRef.current?.();
     });
-  }, [clearRestartTimer, resetSubscriptionFromStart]);
+  }, [clearScheduledRestart]);
 
   useEffect(() => {
-    installSubscriptionRetryDebugResetHook();
-
-    return subscribeSubscriptionRetryReset(() => {
-      resetSubscriptionFromStart();
-    });
-  }, [resetSubscriptionFromStart]);
+    return subscribeSubscriptionRetryReset(restartSubscriptionFromStart);
+  }, [restartSubscriptionFromStart]);
 
   const { restart } = useSubscription<
     GeneralUpdatesSubscriptionData,
@@ -286,7 +270,7 @@ export const useGeneralUpdatesSubscription = ({
     subscriptionAliveRef.current = false;
 
     if (!subscriptionActive) {
-      clearRestartTimer();
+      clearScheduledRestart();
       restartAttemptRef.current = 0;
       return;
     }
@@ -301,9 +285,7 @@ export const useGeneralUpdatesSubscription = ({
         return;
       }
 
-      restartAttemptRef.current = 0;
-      setSubscriptionBroken(false);
-      restartRef.current?.();
+      restartSubscriptionFromStart();
     };
 
     window.addEventListener("online", recoverDeadSubscription);
@@ -312,7 +294,7 @@ export const useGeneralUpdatesSubscription = ({
     return () => {
       window.removeEventListener("online", recoverDeadSubscription);
       document.removeEventListener("visibilitychange", recoverDeadSubscription);
-      clearRestartTimer();
+      clearScheduledRestart();
     };
-  }, [subscriptionActive, clearRestartTimer]);
+  }, [subscriptionActive, clearScheduledRestart, restartSubscriptionFromStart]);
 };

@@ -45,3 +45,5 @@ export const setGeneralUpdatesOnline = (isOnline: boolean | null): void => {
 };
 
 export const getGeneralUpdatesOnline = (): boolean | null => subscriptionOnline;
+
+export const isGeneralUpdatesSubscriptionOffline = (): boolean => subscriptionOnline === false;
