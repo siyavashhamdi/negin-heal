@@ -17,6 +17,7 @@ import {
   AudiotrackRounded,
   CloseFullscreenOutlined,
   CloudUploadOutlined,
+  CompressRounded,
   DeleteOutline,
   FileDownloadOutlined,
   ImageRounded,
@@ -33,8 +34,10 @@ import {
   isExecutableFileType,
   buildPdfEmbedUrl,
   type ExistingFilePreview,
+  type FileAccessUrl,
 } from "../../utils/fileAccessUrl.util";
 import {
+  formatTruncatedFileName,
   formatUploadFileSize,
   validateSelectedUploadFile,
 } from "../../utils/fileUploadValidation.util";
@@ -42,8 +45,11 @@ import { isEndUserRole } from "../../utils/authRole.util";
 import { useAuth } from "../../contexts/AuthContext";
 import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
 import { useMaxRoutePreview } from "../../hooks/useMaxRoutePreview";
+import { useCompressMediaRoute } from "../../hooks/useCompressMediaRoute";
 import EntityModalShell from "../crud/EntityModalShell";
 import ModalFooterActions from "../crud/ModalFooterActions";
+import MediaCompressDialog from "./MediaCompressDialog";
+import type { MediaCompressDialogSource } from "./media-compression.api";
 import styles from "./FileUploadField.module.scss";
 
 export type FileUploadPreviewAction = "play" | "view" | "download" | "maximize" | "remove";
@@ -99,6 +105,10 @@ interface FileUploadFieldProps {
   uploading?: boolean;
   uploadProgress?: number | null;
   uploadingLabel?: string;
+  enableMediaCompress?: boolean;
+  mediaCompressFileId?: string | null;
+  onMediaCompressSuccess?: (fileAccessUrl: FileAccessUrl) => void;
+  mediaCompressLabel?: string;
 }
 
 function isImageMimeType(mimeType: string): boolean {
@@ -181,6 +191,10 @@ const FileUploadField = ({
   uploading = false,
   uploadProgress = null,
   uploadingLabel = "در حال آپلود...",
+  enableMediaCompress = false,
+  mediaCompressFileId = null,
+  onMediaCompressSuccess,
+  mediaCompressLabel = "فشرده‌سازی",
 }: FileUploadFieldProps): ReactElement => {
   const { user } = useAuth();
   const restrictDownloadForEndUser = useMemo(
@@ -278,6 +292,34 @@ const FileUploadField = ({
     : isPreviewControlled
       ? Boolean(previewDialogOpen && supportsViewPopup)
       : isViewOpen;
+  const canShowMediaCompressAction =
+    enableMediaCompress &&
+    Boolean(mediaCompressFileId?.trim()) &&
+    file == null &&
+    existingFile != null &&
+    (previewMediaKind === "video" || previewMediaKind === "audio") &&
+    Boolean(onMediaCompressSuccess);
+  const mediaCompressSource = useMemo((): MediaCompressDialogSource | null => {
+    if (!canShowMediaCompressAction || !existingFile || !mediaCompressFileId) {
+      return null;
+    }
+
+    return {
+      fileId: mediaCompressFileId.trim(),
+      fileName: existingFile.name,
+      mimeType: existingFile.mimeType,
+      mediaKind: previewMediaKind === "audio" ? "audio" : "video",
+      previewUrl: existingFile.accessUrl,
+      sizeBytes: existingFile.sizeBytes,
+    };
+  }, [
+    canShowMediaCompressAction,
+    existingFile,
+    mediaCompressFileId,
+    previewMediaKind,
+  ]);
+  const compressMediaRoute = useCompressMediaRoute(maxRouteOwnerId, canShowMediaCompressAction);
+  const isMediaCompressOpen = compressMediaRoute.isOpen;
 
   const openPreviewDialog = useCallback((): void => {
     if (usesUrlMaxRoute) {
@@ -585,6 +627,21 @@ const FileUploadField = ({
     triggerFileDownload(previewUrl, previewSource.name);
   };
 
+  const handleOpenMediaCompress = (event: SyntheticEvent): void => {
+    stopActionEvent(event);
+    if (!canShowMediaCompressAction) {
+      return;
+    }
+    if (isPreviewDialogOpen) {
+      closePreviewDialog();
+    }
+    compressMediaRoute.open();
+  };
+
+  const handleCloseMediaCompress = (): void => {
+    compressMediaRoute.close();
+  };
+
   const handleInlinePlay = (): void => {
     setIsPlayingInline(true);
   };
@@ -765,8 +822,12 @@ const FileUploadField = ({
                 >
                   {!readOnly ? (
                     <Box className={styles.fileInfo}>
-                      <Typography variant="body2" className={styles.fileName}>
-                        {previewSource.name}
+                      <Typography
+                        variant="body2"
+                        className={styles.fileName}
+                        title={previewSource.name}
+                      >
+                        {formatTruncatedFileName(previewSource.name)}
                       </Typography>
                       <Typography variant="caption" className={styles.meta}>
                         {formatUploadFileSize(previewSource.sizeBytes)}
@@ -822,6 +883,17 @@ const FileUploadField = ({
                         )}
                       </IconButton>
                     ) : null}
+                    {canShowMediaCompressAction ? (
+                      <IconButton
+                        size="small"
+                        color="secondary"
+                        aria-label={mediaCompressLabel}
+                        onClick={handleOpenMediaCompress}
+                        disabled={uploading}
+                      >
+                        <CompressRounded fontSize="small" />
+                      </IconButton>
+                    ) : null}
                     {isPreviewActionEnabled("remove") && !uploading ? (
                       <IconButton
                         size="small"
@@ -871,6 +943,7 @@ const FileUploadField = ({
         open={isPreviewDialogOpen && previewUrl != null}
         onClose={handleClosePreviewDialog}
         title={previewSource?.name ?? ""}
+        titleClassName={styles.previewDialogLatinTitle}
         subtitle="پیش‌نمایش فایل انتخاب‌شده"
         maxWidth="lg"
         showVisibleScrollbar
@@ -1015,6 +1088,14 @@ const FileUploadField = ({
           </Box>
         ) : null}
       </EntityModalShell>
+      <MediaCompressDialog
+        open={isMediaCompressOpen}
+        source={mediaCompressSource}
+        onClose={handleCloseMediaCompress}
+        onSuccess={(fileAccessUrl) => {
+          onMediaCompressSuccess?.(fileAccessUrl);
+        }}
+      />
     </Box>
   );
 };

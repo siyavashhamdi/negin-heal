@@ -59,6 +59,7 @@ type ChaptersSectionProps = {
   readonly onRemoveItem: (chapterId: string, itemId: string) => void;
   readonly stripNumberSeparators: (value: string) => string;
   readonly uploadProgressByFieldId?: Readonly<Record<string, UploadProgressEntry>>;
+  readonly enableMediaCompress?: boolean;
 };
 
 type VisibleAfterOrderWarningHintProps = {
@@ -150,6 +151,7 @@ const ChaptersSection = ({
   onRemoveItem,
   stripNumberSeparators,
   uploadProgressByFieldId = {},
+  enableMediaCompress = false,
 }: ChaptersSectionProps): ReactElement => {
   const chapterStepsRailRef = useRef<HTMLDivElement>(null);
   const visibleAfterOrderWarnings = useMemo(
@@ -366,6 +368,7 @@ const ChaptersSection = ({
             onAddItem={onAddItem}
             onRemoveItem={onRemoveItem}
             uploadProgressByFieldId={uploadProgressByFieldId}
+            enableMediaCompress={enableMediaCompress}
           />
         </Paper>
       ) : null}

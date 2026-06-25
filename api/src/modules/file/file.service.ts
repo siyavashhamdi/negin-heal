@@ -227,7 +227,38 @@ export class FileService implements OnModuleInit {
       throw new NotFoundException(EXCEPTION_CONSTANT.FILE_NOT_FOUND);
     }
 
+    return this.toUploadGqlResponse(storedFile);
+  }
+
+  toUploadGqlResponse(storedFile: StoredFileDocument): FileUploadGqlResponse {
     return this.toUploadResult(storedFile);
+  }
+
+  async downloadBufferById(id: string): Promise<{
+    storedFile: StoredFileDocument;
+    buffer: Buffer;
+  }> {
+    const { storedFile, stream } = await this.getDownloadStreamById(id);
+    const buffer = await this.readStreamToBuffer(
+      stream,
+      SecurityConfig.getMaxRequestSize(),
+    );
+
+    return { storedFile, buffer };
+  }
+
+  async uploadFromBuffer(params: {
+    name: string;
+    mimeType: string;
+    buffer: Buffer;
+  }): Promise<FileUploadGqlResponse> {
+    return this.uploadFromStream({
+      name: params.name,
+      mimeType: params.mimeType,
+      sizeBytes: params.buffer.length,
+      stream: Readable.from(params.buffer),
+      uploadPolicy: FILE_UPLOAD_POLICIES.ANY,
+    });
   }
 
   async getDownloadStreamById(id: string): Promise<{

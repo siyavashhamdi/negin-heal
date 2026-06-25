@@ -1,12 +1,16 @@
 import { clearMaxRouteOwner, setMaxRouteOwner } from "./max-route-owner.store";
+import { clearCompressMediaRouteOwner } from "./compress-media-route-owner.store";
 
 export function isMaxRoutePathname(pathname: string): boolean {
   return /\/max$/.test(pathname);
 }
 
-/** Base pathname without overlay segments (/max, /purchase). */
+/** Base pathname without overlay segments (/max, /purchase, /compress-media). */
 export function stripOverlayRoutePathname(pathname: string): string {
-  return pathname.replace(/\/max$/, "").replace(/\/purchase$/, "");
+  return pathname
+    .replace(/\/compress-media$/, "")
+    .replace(/\/max$/, "")
+    .replace(/\/purchase$/, "");
 }
 
 export function buildMaxRoutePathname(pathname: string): string {
@@ -43,6 +47,7 @@ export function openMaxRoute(
   searchParams: URLSearchParams,
   navigate: (to: { pathname: string; search: string }) => void
 ): void {
+  clearCompressMediaRouteOwner();
   setMaxRouteOwner(ownerId);
   navigate(buildMaxRouteLocation(pathname, searchParams));
 }

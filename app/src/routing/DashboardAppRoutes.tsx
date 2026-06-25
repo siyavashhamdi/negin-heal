@@ -88,6 +88,14 @@ const DashboardAppRoutesContent = (): ReactElement => {
       <Route path={`${APP_SHELL_ROUTES.courses}/:courseId/purchase`} element={<CourseDetail />} />
       <Route path={`${APP_SHELL_ROUTES.courses}/new/max`} element={<CoursesIndex />} />
       <Route path={`${APP_SHELL_ROUTES.courses}/edit/:courseId/max`} element={<CoursesIndex />} />
+      <Route
+        path={`${APP_SHELL_ROUTES.courses}/new/compress-media`}
+        element={<CoursesIndex />}
+      />
+      <Route
+        path={`${APP_SHELL_ROUTES.courses}/edit/:courseId/compress-media`}
+        element={<CoursesIndex />}
+      />
       <Route path={`${APP_SHELL_ROUTES.courses}/:courseId/max`} element={<CourseDetail />} />
       <Route
         path={`${APP_SHELL_ROUTES.users}/*`}

@@ -6,7 +6,9 @@ import { DatabaseModule } from "../database";
 import { FileController } from "./api/file.controller";
 import { FileService } from "./file.service";
 import { ImageCompressionService } from "./image-compression.service";
+import { MediaCompressionService } from "./media-compression.service";
 import { UnreferencedFileCleanupService } from "./unreferenced-file-cleanup.service";
+import { FileCompressMediaMutation } from "./graphql/mutations";
 
 @Module({
   imports: [DatabaseModule, forwardRef(() => AuthModule)],
@@ -14,8 +16,10 @@ import { UnreferencedFileCleanupService } from "./unreferenced-file-cleanup.serv
   providers: [
     FileService,
     ImageCompressionService,
+    MediaCompressionService,
     UnreferencedFileCleanupCron,
     UnreferencedFileCleanupService,
+    FileCompressMediaMutation,
   ],
   exports: [FileService],
 })

@@ -20,7 +20,7 @@ import PlaylistAddRoundedIcon from "@mui/icons-material/PlaylistAddRounded";
 import { OverflowTooltip } from "../../../shared/OverflowTooltip";
 import FileUploadField from "../../../shared/forms/FileUploadField";
 import { FILE_UPLOAD_POLICY_MAX_SIZE_BYTES } from "../../../constants/fileUploadPolicies";
-import { buildExistingFilePreview } from "../../../utils/fileAccessUrl.util";
+import { buildExistingFilePreview, getFileIdFromAccessUrl } from "../../../utils/fileAccessUrl.util";
 import {
   getFieldUploadPercent,
   type UploadProgressEntry,
@@ -45,6 +45,7 @@ type ItemsSectionProps = {
   readonly onAddItem: (chapterId: string) => void;
   readonly onRemoveItem: (chapterId: string, itemId: string) => void;
   readonly uploadProgressByFieldId?: Readonly<Record<string, UploadProgressEntry>>;
+  readonly enableMediaCompress?: boolean;
 };
 
 function getContentTypePatch(nextContentType: DraftItemContentType): Partial<DraftItem> {
@@ -70,6 +71,7 @@ const ItemsSection = ({
   onAddItem,
   onRemoveItem,
   uploadProgressByFieldId = {},
+  enableMediaCompress = false,
 }: ItemsSectionProps): ReactElement => {
   return (
     <>
@@ -213,6 +215,15 @@ const ItemsSection = ({
                           uploadProgress={getFieldUploadPercent(
                             uploadProgressByFieldId[`course-item-file-${item.id}`]
                           )}
+                          enableMediaCompress={enableMediaCompress}
+                          mediaCompressFileId={getFileIdFromAccessUrl(item.fileAccessUrl)}
+                          onMediaCompressSuccess={(fileAccessUrl) =>
+                            updateCurrentItem({
+                              fileAccessUrl,
+                              file: null,
+                            })
+                          }
+                          mediaCompressLabel="فشرده‌سازی رسانه"
                         />
                       </div>
                     </Grid>

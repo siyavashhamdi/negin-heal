@@ -17,6 +17,23 @@ export type FileUploadValidationOptions = {
   readonly allowedFormatsLabel?: string;
 };
 
+export const FILE_NAME_TRUNCATE_EDGE_LENGTH = 12;
+
+export function formatTruncatedFileName(
+  fileName: string,
+  edgeLength: number = FILE_NAME_TRUNCATE_EDGE_LENGTH
+): string {
+  const trimmed = fileName.trim();
+  const ellipsis = "...";
+  const maxLengthBeforeTruncate = edgeLength * 2 + ellipsis.length;
+
+  if (trimmed.length <= maxLengthBeforeTruncate) {
+    return trimmed;
+  }
+
+  return `${trimmed.slice(0, edgeLength)}${ellipsis}${trimmed.slice(-edgeLength)}`;
+}
+
 export function formatUploadFileSize(bytes: number): string {
   if (bytes < 1024) {
     return `${bytes.toLocaleString("fa-IR")} بایت`;

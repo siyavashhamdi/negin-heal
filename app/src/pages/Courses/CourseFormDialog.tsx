@@ -1208,6 +1208,7 @@ const CourseFormDialog = ({
                         expandedItemByChapter={expandedItemByChapter}
                         hasPositivePrice={hasPositivePrice}
                         uploadProgressByFieldId={uploadProgressByFieldId}
+                        enableMediaCompress={isSuperAdmin}
                         onAddChapter={addChapter}
                         onSelectChapterIndex={handleSelectChapterIndex}
                         onSetDraggedChapterId={handleSetDraggedChapterId}

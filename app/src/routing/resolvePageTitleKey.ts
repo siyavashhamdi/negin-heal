@@ -33,6 +33,7 @@ type RouteTitleRule = {
 
 /** Most specific routes first — popup overlays and nested paths before list pages. */
 const ROUTE_TITLE_RULES: readonly RouteTitleRule[] = [
+  { match: (p) => /\/compress-media$/.test(p), key: "app.pageTitles.mediaCompress" },
   { match: (p) => /\/max$/.test(p), key: "app.pageTitles.contentViewer" },
   { match: (p) => /\/purchase$/.test(p), key: "app.pageTitles.coursePurchase" },
   { match: (p) => p === "/courses/new", key: "app.pageTitles.courseCreate" },

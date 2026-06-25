@@ -28,6 +28,12 @@ import { UserCoursePaymentMethod } from "./user-course-payment-method.enum";
 import { UserCoursePurchaseCurrency } from "./user-course-purchase-currency.enum";
 import { UserCoursePurchaseStatus } from "./user-course-purchase-status.enum";
 import { SortingOrder } from "../common/pagination/input/sorting-order.enum";
+import { MediaCompressionQuality } from "./media-compression-quality.enum";
+import { VideoOutputExtension } from "./video-output-extension.enum";
+import { AudioOutputExtension } from "./audio-output-extension.enum";
+import { MediaType } from "./media-type.enum";
+import { MediaCompressionSkipReason } from "./media-compression-skip-reason.enum";
+import { MediaCodecFamily } from "./media-codec-family.enum";
 
 // Register SortingOrder as GraphQL enum
 registerEnumType(BackupTarget, {
@@ -145,4 +151,34 @@ registerEnumType(UserCoursePurchaseCurrency, {
 registerEnumType(UserCoursePurchaseStatus, {
   name: "UserCoursePurchaseStatus",
   description: "Course purchase lifecycle status",
+});
+
+registerEnumType(MediaCompressionQuality, {
+  name: "MediaCompressionQuality",
+  description: "Detected or requested media compression quality tier",
+});
+
+registerEnumType(VideoOutputExtension, {
+  name: "VideoOutputExtension",
+  description: "Supported video output container formats",
+});
+
+registerEnumType(AudioOutputExtension, {
+  name: "AudioOutputExtension",
+  description: "Supported audio output container formats",
+});
+
+registerEnumType(MediaType, {
+  name: "MediaType",
+  description: "Stored media type",
+});
+
+registerEnumType(MediaCompressionSkipReason, {
+  name: "MediaCompressionSkipReason",
+  description: "Reason media compression was skipped",
+});
+
+registerEnumType(MediaCodecFamily, {
+  name: "MediaCodecFamily",
+  description: "Normalized codec family detected from media probes",
 });
