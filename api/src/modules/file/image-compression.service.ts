@@ -19,6 +19,7 @@ export type ImageCompressionOutcome = {
 };
 
 type OutputFormat = "jpeg" | "png" | "webp";
+type SharpImage = ReturnType<typeof sharp>;
 
 @Injectable()
 export class ImageCompressionService {
@@ -202,7 +203,7 @@ export class ImageCompressionService {
   }
 
   private async encodeImage(
-    image: sharp.Sharp,
+    image: SharpImage,
     format: OutputFormat,
     quality: number,
   ): Promise<Buffer> {
@@ -229,7 +230,7 @@ export class ImageCompressionService {
   }
 
   private async compressToTargetSize(
-    image: sharp.Sharp,
+    image: SharpImage,
     format: OutputFormat,
     initialOutput: Buffer,
   ): Promise<Buffer> {
