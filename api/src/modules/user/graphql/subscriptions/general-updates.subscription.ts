@@ -1,9 +1,9 @@
 import { randomUUID } from "crypto";
 
-import { UseGuards } from "@nestjs/common";
+import { BadRequestException, UseGuards } from "@nestjs/common";
 import { Args, Context, Resolver, Subscription } from "@nestjs/graphql";
 
-import { GqlAuthGuard } from "../../../auth";
+import { OptionalGqlAuthGuard } from "../../../auth";
 import { GeneralSubscriptionUpdateType } from "../../../../enums";
 import { GraphQLContext } from "../../../../types/graphql-context.types";
 import { GraphQLContextUtil } from "../../../../utils/graphql-context.util";
@@ -17,6 +17,15 @@ interface GeneralUpdatesTopicPayload {
   };
 }
 
+function resolveSubscriberId(context: GraphQLContext): string | null {
+  const user = GraphQLContextUtil.getUser(context, false);
+  if (user?.userId) {
+    return user.userId.toString();
+  }
+
+  return context?.req?.subscriptionConnectionId ?? null;
+}
+
 @Resolver(() => GeneralSubscriptionGqlResponse)
 export class GeneralUpdatesSubscription {
   constructor(
@@ -25,16 +34,16 @@ export class GeneralUpdatesSubscription {
 
   @Subscription(() => GeneralSubscriptionGqlResponse, {
     name: "generalUpdates",
-    description: "General typed app updates for logged-in users",
+    description: "General typed app updates for connected clients",
     filter: (
       payload: GeneralUpdatesTopicPayload,
       variables: { updateTypes?: GeneralSubscriptionUpdateType[] },
       context: GraphQLContext,
     ) => {
-      const userId = GraphQLContextUtil.getUser(context).userId.toString();
+      const subscriberId = resolveSubscriberId(context);
       const update = payload.generalUpdates;
 
-      if (update.targetUserId !== userId) {
+      if (!subscriberId || update.targetUserId !== subscriberId) {
         return false;
       }
 
@@ -48,7 +57,7 @@ export class GeneralUpdatesSubscription {
     resolve: (payload: GeneralUpdatesTopicPayload) =>
       payload.generalUpdates.data,
   })
-  @UseGuards(GqlAuthGuard)
+  @UseGuards(OptionalGqlAuthGuard)
   subscribe(
     @Args("updateTypes", {
       type: () => [GeneralSubscriptionUpdateType],
@@ -59,17 +68,22 @@ export class GeneralUpdatesSubscription {
     updateTypes?: GeneralSubscriptionUpdateType[],
     @Context() context?: GraphQLContext,
   ): AsyncIterator<GeneralUpdatesTopicPayload> {
-    const user = GraphQLContextUtil.getUser(context);
-    const userId = user.userId.toString();
+    const user = GraphQLContextUtil.getUser(context, false);
+    const subscriberId = resolveSubscriberId(context);
+    if (!subscriberId) {
+      throw new BadRequestException("Subscription connection is not available");
+    }
+
+    const sessionId = user?.sessionId ?? subscriberId;
     const connectionId =
-      context?.req?.subscriptionConnectionId || `${userId}:${user.sessionId}`;
+      context?.req?.subscriptionConnectionId ?? `${subscriberId}:${sessionId}`;
     const operationId = randomUUID();
 
     this.userSubscriptionService.registerSubscription({
       connectionId,
       operationId,
-      userId,
-      sessionId: user.sessionId,
+      userId: subscriberId,
+      sessionId,
       updateTypes,
     });
 

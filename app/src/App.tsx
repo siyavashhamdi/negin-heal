@@ -11,6 +11,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { SnackbarProvider } from "./contexts/SnackbarContext";
 import { LoadingProvider } from "./contexts/LoadingContext";
 import { ApolloErrorHandler } from "./components/ApolloErrorHandler";
+import { GeneralUpdatesSubscriptionHost } from "./components/GeneralUpdatesSubscriptionHost";
 import { AppUpdatePrompt } from "./components/AppUpdatePrompt";
 import { LoadingBar } from "./components/LoadingBar";
 import { UserPreferencesSync } from "./components/UserPreferencesSync";
@@ -38,9 +39,12 @@ const AppShell = (): ReactElement => {
   const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
 
   return (
-    <MainLayout showSessionTools={Boolean(token)}>
-      <DashboardAppRoutes />
-    </MainLayout>
+    <>
+      <GeneralUpdatesSubscriptionHost />
+      <MainLayout showSessionTools={Boolean(token)}>
+        <DashboardAppRoutes />
+      </MainLayout>
+    </>
   );
 };
 

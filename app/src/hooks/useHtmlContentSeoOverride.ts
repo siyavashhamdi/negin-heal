@@ -32,6 +32,8 @@ export const useHtmlContentSeoOverride = ({
   pageTitle,
 }: UseHtmlContentSeoOverrideInput): void => {
   const { t } = useTranslation();
+  const breadcrumbKey =
+    breadcrumbs?.map((item) => `${item.path}\u0000${item.name}`).join("\u0001") ?? "";
 
   const override = useMemo((): PageSeoOverride | null => {
     const plainText = html?.trim() ? htmlToPlainText(html) : "";
@@ -69,7 +71,7 @@ export const useHtmlContentSeoOverride = ({
         ...breadcrumbJsonLd,
       ],
     };
-  }, [breadcrumbs, canonicalPath, fallbackDescriptionKey, html, pageTitle, t]);
+  }, [breadcrumbKey, canonicalPath, fallbackDescriptionKey, html, pageTitle, t]);
 
   usePageSeoOverride(override);
 };

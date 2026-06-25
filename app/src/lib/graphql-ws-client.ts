@@ -70,9 +70,7 @@ function createGraphqlWsClient(): Client {
     shouldRetry: shouldRetryWsSubscriptionConnection,
     connectionParams: () => {
       const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
-      return {
-        authorization: token ? `Bearer ${token}` : "",
-      };
+      return token ? { authorization: `Bearer ${token}` } : {};
     },
     on: {
       connected: () => {

@@ -28,6 +28,7 @@ import { TelegramService } from "../telegram";
 import {
   BACKUP_ARCHIVE_FORMAT,
   BackupRunResult,
+  BackupRunTrigger,
   BackupTelegramDeliveryResult,
   MinioBackupManifest,
   MinioBackupResult,
@@ -52,6 +53,7 @@ export class BackupService {
   private isBackupRunInProgress = false;
   private isMinioBackupRunning = false;
   private isMongoDbBackupRunning = false;
+  private currentBackupRunTrigger: BackupRunTrigger = "manual";
 
   constructor(
     @InjectConnection() private readonly connection: Connection,
@@ -75,6 +77,7 @@ export class BackupService {
 
   async runBackupAndSendToTelegram(
     targets: BackupTarget[],
+    trigger: BackupRunTrigger = "manual",
   ): Promise<BackupRunResult[]> {
     if (this.isBackupRunInProgress) {
       throw new ConflictException(
@@ -86,6 +89,7 @@ export class BackupService {
     let runTimedOut = false;
     let timeoutId: NodeJS.Timeout | undefined;
 
+    this.currentBackupRunTrigger = trigger;
     await this.ensureRarReadyForBackup();
     await this.clearBackupTempDir("before");
     this.isBackupRunInProgress = true;
@@ -217,6 +221,7 @@ export class BackupService {
           "⏱ پشتیبان‌گیری Negin Heal — اتمام زمان",
           "",
           this.formatBackupEnvironmentTelegramLine(),
+          this.formatBackupTriggerTelegramLine(),
           `اهداف درخواستی: ${targetLabels}`,
           `حداکثر زمان مجاز: ${timeoutMinutes} دقیقه`,
           `زمان: ${this.formatDateTime(new Date())}`,
@@ -484,6 +489,12 @@ export class BackupService {
     return `🌐 محیط (NODE_ENV): ${this.getBackupEnvironmentLabel()}`;
   }
 
+  private formatBackupTriggerTelegramLine(): string {
+    return this.currentBackupRunTrigger === "cron"
+      ? "⚙️ نحوه اجرا: خودکار (زمان‌بندی‌شده)"
+      : "⚙️ نحوه اجرا: دستی";
+  }
+
   private formatBackupTimestamp(date: Date): string {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -562,6 +573,7 @@ export class BackupService {
             : [
                 `📦 پشتیبان‌گیری ${input.targetLabel} — Negin Heal`,
                 this.formatBackupEnvironmentTelegramLine(),
+                this.formatBackupTriggerTelegramLine(),
                 `📁 ${partName}`,
                 `📦 قسمت ${index + 1} از ${totalParts}`,
               ].join("\n");
@@ -596,6 +608,7 @@ export class BackupService {
       "📦 پشتیبان‌گیری MinIO — Negin Heal",
       "",
       this.formatBackupEnvironmentTelegramLine(),
+      this.formatBackupTriggerTelegramLine(),
       `🪣 باکت: ${env.MINIO_BUCKET}`,
       `📁 فایل: ${archiveFileName}`,
       `🗜 فرمت آرشیو: ${BACKUP_ARCHIVE_FORMAT} (رمزدار)`,
@@ -624,6 +637,7 @@ export class BackupService {
       "📦 پشتیبان‌گیری MongoDB — Negin Heal",
       "",
       this.formatBackupEnvironmentTelegramLine(),
+      this.formatBackupTriggerTelegramLine(),
       `🗄 پایگاه داده: ${backupResult.database}`,
       `📁 فایل: ${archiveFileName}`,
       `🗜 فرمت آرشیو: ${BACKUP_ARCHIVE_FORMAT} (رمزدار)`,
@@ -927,6 +941,7 @@ export class BackupService {
           "❌ پشتیبان‌گیری Negin Heal — خطا",
           "",
           this.formatBackupEnvironmentTelegramLine(),
+          this.formatBackupTriggerTelegramLine(),
           `هدف: ${targetLabel}`,
           "حداقل یک قسمت آرشیو از حد مجاز تلگرام (۵۰ مگابایت) بزرگ‌تر است.",
           "فایل‌ها از سرور حذف شدند. لطفاً با مدیر سیستم تماس بگیرید.",
@@ -957,6 +972,7 @@ export class BackupService {
           "❌ پشتیبان‌گیری Negin Heal — خطا",
           "",
           this.formatBackupEnvironmentTelegramLine(),
+          this.formatBackupTriggerTelegramLine(),
           "ابزار rar روی سرور نصب نیست.",
           "لطفاً RAR را نصب کنید و دوباره تلاش کنید.",
           `زمان: ${this.formatDateTime(new Date())}`,
@@ -982,6 +998,7 @@ export class BackupService {
           "❌ پشتیبان‌گیری Negin Heal — خطا",
           "",
           this.formatBackupEnvironmentTelegramLine(),
+          this.formatBackupTriggerTelegramLine(),
           `رمز آرشیو پشتیبان (${APP_SETTING_KEY.BACKUP_CONFIG}) در تنظیمات سامانه تعریف نشده است.`,
           "لطفاً از بخش تنظیمات سامانه مقدار را تنظیم کنید و دوباره تلاش کنید.",
           `زمان: ${this.formatDateTime(new Date())}`,

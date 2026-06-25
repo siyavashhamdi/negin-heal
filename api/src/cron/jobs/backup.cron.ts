@@ -77,9 +77,10 @@ export class BackupCron {
     input.setRunning(true);
 
     try {
-      const results = await this.backupService.runBackupAndSendToTelegram([
-        input.target,
-      ]);
+      const results = await this.backupService.runBackupAndSendToTelegram(
+        [input.target],
+        "cron",
+      );
       const result = results[0];
 
       this.logger.log(

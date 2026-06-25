@@ -40,12 +40,12 @@ import {
   type GeneralNotificationMessageType,
 } from "../constants";
 import {
-  useGeneralUpdatesSubscription,
   type GeneralUpdateEvent,
 } from "../hooks/useGeneralUpdatesSubscription";
 import { useVerificationStatusSubscription } from "../hooks/useVerificationStatusSubscription";
 import { notifyBadgeCountUpdateListeners } from "../lib/badge-count-update-listeners";
-import { notifyGeneralUpdateListeners } from "../lib/general-updates-listeners";
+import { subscribeGeneralUpdates } from "../lib/general-updates-listeners";
+import { subscribeGeneralUpdatesOnline } from "../lib/general-updates-online-listeners";
 import { APP_SHELL_ROUTES, isCourseDetailRoute } from "../routing/app-shell-routes";
 import { resolveNotificationActionPayload } from "../utilities/notification-action.util";
 import { deliverNotificationPushIfEnabled } from "../utils/browserNotification.util";
@@ -233,6 +233,7 @@ export function MainLayout({
   const [userAnchorEl, setUserAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [isSideMenuCollapsed, setIsSideMenuCollapsed] = useState(false);
   const [generalUpdatePopup, setGeneralUpdatePopup] = useState<GeneralUpdatePopup | null>(null);
+  const [profileSubscriptionOnline, setProfileSubscriptionOnline] = useState(false);
 
   const isNotificationOpen = Boolean(notificationAnchorEl);
   const isSettingsOpen = Boolean(settingsAnchorEl);
@@ -376,17 +377,24 @@ export function MainLayout({
     [showSnackbar, upsertLiveHeaderNotification],
   );
 
-  const { isOnline: isProfileSubscriptionOnline } = useGeneralUpdatesSubscription({
-    enabled: Boolean(authUser),
-    updateTypes: [
-      GENERAL_SUBSCRIPTION_UPDATE_TYPES.NOTIFICATION,
-      GENERAL_SUBSCRIPTION_UPDATE_TYPES.BADGE_COUNTS,
-      GENERAL_SUBSCRIPTION_UPDATE_TYPES.VERIFICATION_STATUS,
-    ],
-    onAnyUpdate: notifyGeneralUpdateListeners,
-    onNotification: handleNotificationUpdate,
-    onBadgeCounts: handleBadgeCountsUpdate,
-  });
+  useEffect(() => {
+    return subscribeGeneralUpdatesOnline(setProfileSubscriptionOnline);
+  }, []);
+
+  useEffect(() => {
+    return subscribeGeneralUpdates((event) => {
+      switch (event.updateType) {
+        case GENERAL_SUBSCRIPTION_UPDATE_TYPES.NOTIFICATION:
+          handleNotificationUpdate(event);
+          break;
+        case GENERAL_SUBSCRIPTION_UPDATE_TYPES.BADGE_COUNTS:
+          handleBadgeCountsUpdate();
+          break;
+        default:
+          break;
+      }
+    });
+  }, [handleBadgeCountsUpdate, handleNotificationUpdate]);
 
   useVerificationStatusSubscription({
     enabled: Boolean(authUser),
@@ -444,7 +452,6 @@ export function MainLayout({
   }, [authUser, fallbackUser, user, userLoading]);
 
   const profileAvatar = authUser && avatarUrl ? { src: avatarUrl, alt: userDisplayName } : null;
-  const profileSubscriptionOnline = authUser ? isProfileSubscriptionOnline : undefined;
 
   const themeToggleLabel =
     mode === "light"

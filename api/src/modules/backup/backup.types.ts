@@ -1,5 +1,7 @@
 export const BACKUP_ARCHIVE_FORMAT = "rar" as const;
 
+export type BackupRunTrigger = "cron" | "manual";
+
 export type MinioBackupManifest = {
   version: 1;
   createdAt: string;

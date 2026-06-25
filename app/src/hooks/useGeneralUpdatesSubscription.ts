@@ -4,8 +4,8 @@ import {
   GENERAL_SUBSCRIPTION_UPDATE_TYPES,
   type GeneralSubscriptionUpdateType,
 } from "../constants";
-import { useAuth } from "../contexts/AuthContext";
 import { GENERAL_UPDATES_SUBSCRIPTION } from "../graphql/subscriptions/generalUpdates.subscription";
+import { setGeneralUpdatesOnline } from "../lib/general-updates-online-listeners";
 import { subscribeGraphqlWsConnection } from "../lib/graphql-ws-client";
 import { resolveSubscriptionRetryDelayMs } from "../lib/subscription-retry.util";
 import { isRecoverableSubscriptionError } from "../lib/subscription-error.util";
@@ -49,8 +49,7 @@ export const useGeneralUpdatesSubscription = ({
   onVerificationStatus,
   onAnyUpdate,
 }: UseGeneralUpdatesSubscriptionProps): { readonly isOnline: boolean } => {
-  const { isAuthenticated } = useAuth();
-  const subscriptionActive = enabled && isAuthenticated;
+  const subscriptionActive = enabled;
   const [wsConnected, setWsConnected] = useState(false);
   const [subscriptionBroken, setSubscriptionBroken] = useState(false);
   const isOnline = subscriptionActive && wsConnected && !subscriptionBroken;
@@ -80,6 +79,10 @@ export const useGeneralUpdatesSubscription = ({
     if (isOnline) {
       restartAttemptRef.current = 0;
     }
+  }, [isOnline]);
+
+  useEffect(() => {
+    setGeneralUpdatesOnline(isOnline);
   }, [isOnline]);
 
   useEffect(() => {
@@ -178,6 +181,14 @@ export const useGeneralUpdatesSubscription = ({
 
   useEffect(() => {
     restartRef.current = restart;
+
+    if (!enabledRef.current) {
+      return;
+    }
+
+    restartAttemptRef.current = 0;
+    setSubscriptionBroken(false);
+    restart();
   }, [restart]);
 
   useEffect(() => {
