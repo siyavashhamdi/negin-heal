@@ -65,6 +65,7 @@ import {
   HEADER_USER_ITEMS,
   resolveHeaderSettingsDestination,
 } from "./header-panel-items";
+import { useAppShellNavPrefetch } from "../hooks/useAppShellNavPrefetch";
 import { useHeaderNotificationPreview } from "./useHeaderNotificationPreview";
 import "./styles/MainLayout.scss";
 import AppTooltip from "../shared/AppTooltip";
@@ -224,7 +225,7 @@ export function MainLayout({
   const { showSnackbar } = useSnackbar();
   const { t } = useTranslation();
   const { mode, toggleTheme } = useThemeMode();
-  const { logout, user: authUser } = useAuth();
+  const { logout, user: authUser, isLoading: authLoading } = useAuth();
   const { user, avatarUrl, loading: userLoading } = useMe();
 
   const [notificationAnchorEl, setNotificationAnchorEl] = useState<HTMLButtonElement | null>(null);
@@ -261,6 +262,14 @@ export function MainLayout({
     () => filterAppShellNavItems(APP_SHELL_NAV_ITEMS, appShellNavContext),
     [appShellNavContext]
   );
+
+  useAppShellNavPrefetch({
+    authLoading,
+    roles,
+    isAuthenticated,
+    userId: authUser?.id ?? null,
+    isEndUser,
+  });
   const brandTagline = usesPublicCourseList
     ? t("layout.header.brand.publicTagline")
     : t("layout.header.brand.tagline");

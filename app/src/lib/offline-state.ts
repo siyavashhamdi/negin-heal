@@ -7,6 +7,34 @@ let isBackendReachabilityKnown = typeof window === "undefined";
 let offlineListenersRegistered = false;
 
 const offlineStatusListeners = new Set<(offline: boolean) => void>();
+const offlineBannerDismissListeners = new Set<() => void>();
+let offlineBannerDismissed = false;
+
+function notifyOfflineBannerDismissListeners(): void {
+  for (const listener of offlineBannerDismissListeners) {
+    listener();
+  }
+}
+
+export function dismissOfflineBanner(): void {
+  if (!offlineBannerDismissed) {
+    offlineBannerDismissed = true;
+    notifyOfflineBannerDismissListeners();
+  }
+}
+
+export function isOfflineBannerDismissed(): boolean {
+  return offlineBannerDismissed;
+}
+
+export function subscribeOfflineBannerDismiss(listener: () => void): () => void {
+  offlineBannerDismissListeners.add(listener);
+  listener();
+
+  return () => {
+    offlineBannerDismissListeners.delete(listener);
+  };
+}
 
 function notifyOfflineStatusListeners(): void {
   const offline = getIsOfflineMode();
@@ -49,6 +77,8 @@ export function markBackendUnreachable(): void {
 
   if (isBackendReachable) {
     isBackendReachable = false;
+    offlineBannerDismissed = false;
+    notifyOfflineBannerDismissListeners();
     notifyOfflineStatusListeners();
   }
 }

@@ -1,12 +1,12 @@
 import CloudOffRoundedIcon from "@mui/icons-material/CloudOffRounded";
 import { Alert, Box, Button, Snackbar } from "@mui/material";
-import { useCallback, useEffect, useRef, useState, type ReactElement } from "react";
+import { useEffect, useRef, type ReactElement } from "react";
 
 import { useBrowserOffline } from "../hooks/useBrowserOffline";
 import { useGeneralUpdatesOnline } from "../hooks/useGeneralUpdatesOnline";
+import { useOfflineBannerDismissed } from "../hooks/useOfflineBannerDismissed";
 import { useMobileAppLayout } from "../hooks/useMobileAppLayout";
 import { useMobileSnackbarDismiss } from "../hooks/useMobileSnackbarDismiss";
-import { useSnackbar } from "../hooks/useSnackbar";
 import { useTranslation } from "../hooks/useTranslation";
 import { getSnackbarFilledAlertSx, getSnackbarFilledAlertTone, SNACKBAR_ALERT_CLASS } from "../theme";
 
@@ -35,40 +35,29 @@ const dismissButtonSx = {
 
 export function OfflineModeBanner(): ReactElement | null {
   const { t } = useTranslation();
-  const { showSuccess } = useSnackbar();
   const isMobileAppLayout = useMobileAppLayout();
   const isOfflineMode = useBrowserOffline();
   const generalUpdatesOnline = useGeneralUpdatesOnline();
   const isOffline = isOfflineMode && generalUpdatesOnline !== true;
-  const [dismissed, setDismissed] = useState(false);
+  const { dismissed, dismiss } = useOfflineBannerDismissed();
   const wasOfflineRef = useRef(isOffline);
   const isOpen = isOffline && !dismissed;
-
-  const handleDismiss = useCallback(() => {
-    setDismissed(true);
-  }, []);
 
   const { handlePointerDown, dragStyle, resetDrag } = useMobileSnackbarDismiss(
     isMobileAppLayout,
     isOpen,
-    handleDismiss
+    dismiss
   );
 
   useEffect(() => {
-    const enteredOffline = isOffline && !wasOfflineRef.current;
     const enteredOnline = !isOffline && wasOfflineRef.current;
 
-    if (enteredOffline || enteredOnline) {
-      setDismissed(false);
+    if (enteredOnline) {
       resetDrag();
     }
 
-    if (enteredOnline) {
-      showSuccess(t("layout.offlineMode.backOnlineMessage"), 1_000);
-    }
-
     wasOfflineRef.current = isOffline;
-  }, [isOffline, resetDrag, showSuccess, t]);
+  }, [isOffline, resetDrag]);
 
   if (!isOffline) {
     return null;
@@ -156,7 +145,7 @@ export function OfflineModeBanner(): ReactElement | null {
           color="inherit"
           size="small"
           variant="outlined"
-          onClick={handleDismiss}
+          onClick={dismiss}
           sx={{
             ...dismissButtonSx,
             marginInlineEnd: BANNER_INSET_MARGIN,

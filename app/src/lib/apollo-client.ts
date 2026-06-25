@@ -23,6 +23,7 @@ import {
   hydrateApolloCache,
   registerApolloCacheUnloadPersist,
 } from "./apollo-cache-persist";
+import { resetAppShellNavPrefetchState } from "./app-shell-nav-prefetch";
 import { createCacheFallbackLink } from "./apollo-offline-link";
 import {
   getIsBrowserOffline,
@@ -291,6 +292,8 @@ export async function initApolloClient(): Promise<ApolloClient> {
 }
 
 export async function resetApolloClientCache(): Promise<void> {
+  resetAppShellNavPrefetchState();
+
   if (!apolloClient) {
     await clearPersistedApolloCache();
     return;

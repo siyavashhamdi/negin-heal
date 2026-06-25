@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { LOCAL_STORAGE_KEYS } from "../constants";
 import { isMobileAppLayoutViewport } from "../hooks/useMobileAppLayout";
 import { apolloClient, resetApolloClientCache } from "../lib/apollo-client";
+import { scheduleAppShellNavPrefetch } from "../lib/app-shell-nav-prefetch";
 import { APP_SHELL_ROUTES, isStandaloneShellRoute } from "../routing/app-shell-routes";
 import { consumePostLoginRedirect } from "../routing/post-login-redirect";
 import { USER_LOGOUT_MUTATION } from "../graphql/mutations/userLogout.mutation";
@@ -130,6 +131,26 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
     localStorage.removeItem("user");
   }, []);
 
+  const prefetchLoggedOutNavData = useCallback((): void => {
+    scheduleAppShellNavPrefetch({
+      roles: [],
+      isAuthenticated: false,
+      userId: null,
+      isEndUser: false,
+    });
+  }, []);
+
+  const finishAuthSessionClear = useCallback(
+    (afterClear?: () => void): void => {
+      void resetApolloClientCache().finally(() => {
+        clearLocalAuthSession();
+        prefetchLoggedOutNavData();
+        afterClear?.();
+      });
+    },
+    [clearLocalAuthSession, prefetchLoggedOutNavData]
+  );
+
   const redirectToLoginAfterLogout = useCallback((): void => {
     navigate(isMobileAppLayoutViewport() ? APP_SHELL_ROUTES.profileLogin : APP_SHELL_ROUTES.login);
   }, [navigate]);
@@ -139,8 +160,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
     const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
 
     const finishLogout = (): void => {
-      void resetApolloClientCache().finally(() => {
-        clearLocalAuthSession();
+      finishAuthSessionClear(() => {
         if (!stayOnPage) {
           navigate(APP_SHELL_ROUTES.profile, { replace: true });
         }
@@ -153,7 +173,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
     }
 
     void apolloClient.mutate({ mutation: USER_LOGOUT_MUTATION }).finally(finishLogout);
-  }, [clearLocalAuthSession, navigate]);
+  }, [finishAuthSessionClear, navigate]);
 
   useEffect(() => {
     return subscribeAuthSessionExpired(forceLogoutToProfile);
@@ -167,10 +187,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
     const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
 
     const finishLogout = (): void => {
-      void resetApolloClientCache().finally(() => {
-        clearLocalAuthSession();
-        redirectToLoginAfterLogout();
-      });
+      finishAuthSessionClear(redirectToLoginAfterLogout);
     };
 
     if (!token) {
@@ -181,7 +198,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
     void apolloClient.mutate({ mutation: USER_LOGOUT_MUTATION }).finally(() => {
       finishLogout();
     });
-  }, [clearLocalAuthSession, redirectToLoginAfterLogout]);
+  }, [finishAuthSessionClear, redirectToLoginAfterLogout]);
 
   const value: AuthContextValue = {
     user,
