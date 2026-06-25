@@ -4,10 +4,12 @@ import {
   subscribeGeneralUpdatesOnline,
 } from "../lib/general-updates-listeners";
 
-export function useGeneralUpdatesOnline(): boolean {
-  return useSyncExternalStore(
+export function useGeneralUpdatesOnline(): boolean | undefined {
+  const value = useSyncExternalStore(
     subscribeGeneralUpdatesOnline,
     getGeneralUpdatesOnline,
-    () => false
+    () => null
   );
+
+  return value === null ? undefined : value;
 }

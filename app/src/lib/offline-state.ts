@@ -1,5 +1,8 @@
+import { resetSubscriptionRetryFromStart } from "./subscription-retry.util";
+
 let isBrowserOffline = typeof navigator !== "undefined" ? !navigator.onLine : false;
 let isBackendReachable = true;
+let isBackendReachabilityKnown = typeof window === "undefined";
 let offlineListenersRegistered = false;
 
 const offlineStatusListeners = new Set<(offline: boolean) => void>();
@@ -15,19 +18,28 @@ export function getIsBrowserOffline(): boolean {
   return isBrowserOffline;
 }
 
-/** True when the browser is offline or the API is unreachable — use cached data only. */
+/** True when the browser is offline or the API is confirmed unreachable — use cached data only. */
 export function getIsOfflineMode(): boolean {
-  return isBrowserOffline || !isBackendReachable;
+  if (isBrowserOffline) {
+    return true;
+  }
+
+  return isBackendReachabilityKnown && !isBackendReachable;
 }
 
 export function markBackendReachable(): void {
+  isBackendReachabilityKnown = true;
+
   if (!isBackendReachable) {
     isBackendReachable = true;
+    resetSubscriptionRetryFromStart();
     notifyOfflineStatusListeners();
   }
 }
 
 export function markBackendUnreachable(): void {
+  isBackendReachabilityKnown = true;
+
   if (isBackendReachable) {
     isBackendReachable = false;
     notifyOfflineStatusListeners();

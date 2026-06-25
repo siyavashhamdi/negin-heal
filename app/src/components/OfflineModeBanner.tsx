@@ -1,8 +1,9 @@
 import CloudOffRoundedIcon from "@mui/icons-material/CloudOffRounded";
-import { Alert, Button, Snackbar } from "@mui/material";
-import { useCallback, useEffect, useState, type ReactElement } from "react";
+import { Alert, Box, Button, Snackbar } from "@mui/material";
+import { useCallback, useEffect, useRef, useState, type ReactElement } from "react";
 
 import { useBrowserOffline } from "../hooks/useBrowserOffline";
+import { useGeneralUpdatesOnline } from "../hooks/useGeneralUpdatesOnline";
 import { useMobileAppLayout } from "../hooks/useMobileAppLayout";
 import { useMobileSnackbarDismiss } from "../hooks/useMobileSnackbarDismiss";
 import { useTranslation } from "../hooks/useTranslation";
@@ -13,12 +14,32 @@ const MOBILE_BOTTOM_NAV_SNACKBAR_OFFSET =
   "calc(4.75rem + max(0.7rem, env(safe-area-inset-bottom, 0px)))";
 
 const DISMISS_BUTTON_BORDER_COLOR = "rgba(255, 236, 179, 0.95)";
+const BANNER_INSET_MARGIN = "0.5rem";
+
+const dismissButtonSx = {
+  flexShrink: 0,
+  minWidth: 0,
+  px: 0.65,
+  py: 0.125,
+  fontSize: "0.75rem",
+  lineHeight: 1.3,
+  fontWeight: 500,
+  borderColor: DISMISS_BUTTON_BORDER_COLOR,
+  color: "inherit",
+  "&:hover": {
+    borderColor: "#fff7ed",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+  },
+} as const;
 
 export function OfflineModeBanner(): ReactElement | null {
   const { t } = useTranslation();
   const isMobileAppLayout = useMobileAppLayout();
-  const isOffline = useBrowserOffline();
+  const isOfflineMode = useBrowserOffline();
+  const generalUpdatesOnline = useGeneralUpdatesOnline();
+  const isOffline = isOfflineMode && generalUpdatesOnline !== true;
   const [dismissed, setDismissed] = useState(false);
+  const wasOfflineRef = useRef(isOffline);
   const isOpen = isOffline && !dismissed;
 
   const handleDismiss = useCallback(() => {
@@ -32,10 +53,15 @@ export function OfflineModeBanner(): ReactElement | null {
   );
 
   useEffect(() => {
-    if (!isOffline) {
+    const enteredOffline = isOffline && !wasOfflineRef.current;
+    const enteredOnline = !isOffline && wasOfflineRef.current;
+
+    if (enteredOffline || enteredOnline) {
       setDismissed(false);
       resetDrag();
     }
+
+    wasOfflineRef.current = isOffline;
   }, [isOffline, resetDrag]);
 
   if (!isOffline) {
@@ -82,12 +108,13 @@ export function OfflineModeBanner(): ReactElement | null {
         onPointerDown={handlePointerDown}
         sx={{
           ...alertSx,
+          position: "relative",
           width: "100%",
           maxWidth: isMobileAppLayout ? "100%" : 400,
           backgroundColor: alertTone.backgroundColor,
           backgroundImage: "none",
           color: alertTone.color,
-          alignItems: "center",
+          alignItems: "flex-start",
           py: 0.5,
           ...(isMobileAppLayout
             ? {
@@ -101,48 +128,37 @@ export function OfflineModeBanner(): ReactElement | null {
               }
             : {}),
           "& .MuiAlert-message": {
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-end",
+            gap: "0.5rem",
+            width: "100%",
             py: 0.25,
+            pe: 0.5,
             fontSize: "0.8125rem",
             lineHeight: 1.45,
-          },
-          "& .MuiAlert-action": {
-            alignItems: "center",
-            pt: 0,
-            pb: 0,
-            m: 0,
-            paddingInlineStart: 0.5,
           },
         }}
         style={{
           ...dragStyle,
         }}
-        action={
-          <Button
-            color="inherit"
-            size="small"
-            variant="outlined"
-            onClick={handleDismiss}
-            sx={{
-              flexShrink: 0,
-              minWidth: 0,
-              px: 0.65,
-              py: 0.125,
-              fontSize: "0.75rem",
-              lineHeight: 1.3,
-              fontWeight: 500,
-              borderColor: DISMISS_BUTTON_BORDER_COLOR,
-              color: "inherit",
-              "&:hover": {
-                borderColor: "#fff7ed",
-                backgroundColor: "rgba(255, 255, 255, 0.1)",
-              },
-            }}
-          >
-            {t("layout.offlineMode.dismissButton")}
-          </Button>
-        }
       >
-        {t("layout.offlineMode.message")}
+        <Box component="span" sx={{ width: "100%" }}>
+          {t("layout.offlineMode.message")}
+        </Box>
+        <Button
+          color="inherit"
+          size="small"
+          variant="outlined"
+          onClick={handleDismiss}
+          sx={{
+            ...dismissButtonSx,
+            marginInlineEnd: BANNER_INSET_MARGIN,
+            marginBlockEnd: BANNER_INSET_MARGIN,
+          }}
+        >
+          {t("layout.offlineMode.dismissButton")}
+        </Button>
       </Alert>
     </Snackbar>
   );

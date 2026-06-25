@@ -6,8 +6,14 @@ import {
 } from "../constants";
 import { GENERAL_UPDATES_SUBSCRIPTION } from "../graphql/subscriptions/generalUpdates.subscription";
 import { setGeneralUpdatesOnline } from "../lib/general-updates-listeners";
-import { subscribeGraphqlWsConnection } from "../lib/graphql-ws-client";
-import { resolveSubscriptionRetryDelayMs } from "../lib/subscription-retry.util";
+import { disposeGraphqlWsClient, subscribeGraphqlWsConnection } from "../lib/graphql-ws-client";
+import {
+  abortAllSubscriptionRetryWaits,
+  installSubscriptionRetryDebugResetHook,
+  resolveSubscriptionRetryDelayMs,
+  subscribeSubscriptionRetryReset,
+  waitForSubscriptionRetryDelayMs,
+} from "../lib/subscription-retry.util";
 import { isRecoverableSubscriptionError } from "../lib/subscription-error.util";
 
 export interface GeneralUpdateEvent {
@@ -41,6 +47,8 @@ interface SubscriptionCallbacks {
   readonly onAnyUpdate?: (event: GeneralUpdateEvent) => void;
 }
 
+const INITIAL_SUBSCRIPTION_ONLINE_TIMEOUT_MS = 3000;
+
 export const useGeneralUpdatesSubscription = ({
   enabled,
   updateTypes,
@@ -56,14 +64,28 @@ export const useGeneralUpdatesSubscription = ({
   const enabledRef = useRef(subscriptionActive);
   const restartRef = useRef<(() => void) | null>(null);
   const restartAttemptRef = useRef(0);
-  const restartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const restartWaitAbortRef = useRef<AbortController | null>(null);
+  const initialOnlineTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const subscriptionAliveRef = useRef(false);
+  const hasEstablishedConnectionRef = useRef(false);
   const callbacksRef = useRef<SubscriptionCallbacks>({
     onNotification,
     onBadgeCounts,
     onVerificationStatus,
     onAnyUpdate,
   });
+
+  const clearRestartTimer = useCallback(() => {
+    restartWaitAbortRef.current?.abort();
+    restartWaitAbortRef.current = null;
+  }, []);
+
+  const clearInitialOnlineTimeout = useCallback(() => {
+    if (initialOnlineTimeoutRef.current) {
+      clearTimeout(initialOnlineTimeoutRef.current);
+      initialOnlineTimeoutRef.current = null;
+    }
+  }, []);
 
   useEffect(() => {
     enabledRef.current = subscriptionActive;
@@ -82,8 +104,41 @@ export const useGeneralUpdatesSubscription = ({
   }, [isOnline]);
 
   useEffect(() => {
-    setGeneralUpdatesOnline(isOnline);
-  }, [isOnline]);
+    if (!subscriptionActive) {
+      clearInitialOnlineTimeout();
+      hasEstablishedConnectionRef.current = false;
+      setGeneralUpdatesOnline(null);
+      return;
+    }
+
+    if (isOnline) {
+      clearInitialOnlineTimeout();
+      hasEstablishedConnectionRef.current = true;
+      setGeneralUpdatesOnline(true);
+      return;
+    }
+
+    if (hasEstablishedConnectionRef.current) {
+      setGeneralUpdatesOnline(false);
+    }
+  }, [isOnline, subscriptionActive, clearInitialOnlineTimeout]);
+
+  useEffect(() => {
+    if (!subscriptionActive) {
+      return;
+    }
+
+    clearInitialOnlineTimeout();
+    initialOnlineTimeoutRef.current = setTimeout(() => {
+      initialOnlineTimeoutRef.current = null;
+
+      if (enabledRef.current && !hasEstablishedConnectionRef.current) {
+        setGeneralUpdatesOnline(false);
+      }
+    }, INITIAL_SUBSCRIPTION_ONLINE_TIMEOUT_MS);
+
+    return clearInitialOnlineTimeout;
+  }, [subscriptionActive, clearInitialOnlineTimeout]);
 
   useEffect(() => {
     return subscribeGraphqlWsConnection((connected) => {
@@ -95,12 +150,28 @@ export const useGeneralUpdatesSubscription = ({
     });
   }, []);
 
-  const clearRestartTimer = useCallback(() => {
-    if (restartTimerRef.current) {
-      clearTimeout(restartTimerRef.current);
-      restartTimerRef.current = null;
+  const resetInFlightRef = useRef(false);
+
+  const resetSubscriptionFromStart = useCallback(() => {
+    if (resetInFlightRef.current) {
+      return;
     }
-  }, []);
+
+    resetInFlightRef.current = true;
+    restartAttemptRef.current = 0;
+    abortAllSubscriptionRetryWaits();
+    clearRestartTimer();
+    setSubscriptionBroken(false);
+    subscriptionAliveRef.current = false;
+
+    void disposeGraphqlWsClient();
+
+    if (enabledRef.current) {
+      restartRef.current?.();
+    }
+
+    resetInFlightRef.current = false;
+  }, [clearRestartTimer]);
 
   const scheduleSubscriptionRestart = useCallback(() => {
     if (!enabledRef.current || subscriptionAliveRef.current) {
@@ -112,8 +183,19 @@ export const useGeneralUpdatesSubscription = ({
     const delayMs = resolveSubscriptionRetryDelayMs(restartAttemptRef.current);
     restartAttemptRef.current += 1;
 
-    restartTimerRef.current = setTimeout(() => {
-      restartTimerRef.current = null;
+    const abortController = new AbortController();
+    restartWaitAbortRef.current = abortController;
+
+    void waitForSubscriptionRetryDelayMs(delayMs, abortController.signal).then((result) => {
+      if (restartWaitAbortRef.current !== abortController) {
+        return;
+      }
+
+      restartWaitAbortRef.current = null;
+
+      if (result === "aborted" || result === "debug-reset") {
+        return;
+      }
 
       if (!enabledRef.current || subscriptionAliveRef.current) {
         return;
@@ -121,8 +203,16 @@ export const useGeneralUpdatesSubscription = ({
 
       setSubscriptionBroken(false);
       restartRef.current?.();
-    }, delayMs);
-  }, [clearRestartTimer]);
+    });
+  }, [clearRestartTimer, resetSubscriptionFromStart]);
+
+  useEffect(() => {
+    installSubscriptionRetryDebugResetHook();
+
+    return subscribeSubscriptionRetryReset(() => {
+      resetSubscriptionFromStart();
+    });
+  }, [resetSubscriptionFromStart]);
 
   const { restart } = useSubscription<
     GeneralUpdatesSubscriptionData,

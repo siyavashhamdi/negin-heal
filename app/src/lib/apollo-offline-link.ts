@@ -4,7 +4,7 @@ import { getMainDefinition } from "@apollo/client/utilities";
 import { of, throwError } from "rxjs";
 import { catchError, tap } from "rxjs/operators";
 import { persistApolloCache } from "./apollo-cache-persist";
-import { getIsOfflineMode, markBackendReachable, markBackendUnreachable } from "./offline-state";
+import { getIsOfflineMode, markBackendUnreachable } from "./offline-state";
 
 function isQueryOperation(query: DocumentNode): boolean {
   const definition = getMainDefinition(query);
@@ -41,11 +41,8 @@ export function createCacheFallbackLink(cache: ApolloCache): ApolloLink {
 
     return forward(operation).pipe(
       tap((result) => {
-        if (result.data) {
-          markBackendReachable();
-          if (!getIsOfflineMode()) {
-            persistApolloCache(cache);
-          }
+        if (result.data && !getIsOfflineMode()) {
+          persistApolloCache(cache);
         }
       }),
       catchError((error: unknown) => {

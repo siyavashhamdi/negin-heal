@@ -1,9 +1,11 @@
 import { ApolloClient, ApolloLink, HttpLink, InMemoryCache, split } from "@apollo/client";
+import type { WatchQueryFetchPolicy } from "@apollo/client";
 import { CombinedGraphQLErrors, ServerError } from "@apollo/client/errors";
 import { SetContextLink } from "@apollo/client/link/context";
 import { ErrorLink } from "@apollo/client/link/error";
 import { GraphqlWsLink } from "./graphql-ws-link";
 import { getMainDefinition } from "@apollo/client/utilities";
+import { tap } from "rxjs/operators";
 import { LOCAL_STORAGE_KEYS } from "../constants";
 import { paginatedQueryTypePolicies } from "./apollo/paginated-query-cache.policy";
 import { queueApolloError } from "../components/apollo-error-queue";
@@ -206,7 +208,23 @@ const errorLink = new ErrorLink(({ error, operation }) => {
   }
 });
 
+function createNetworkReachabilityLink(): ApolloLink {
+  return new ApolloLink((operation, forward) => {
+    return forward(operation).pipe(
+      tap(() => {
+        markBackendReachable();
+      })
+    );
+  });
+}
+
+function createHttpTransportLink(): ApolloLink {
+  return ApolloLink.from([createNetworkReachabilityLink(), httpLink]);
+}
+
 function createTransportLink(): ApolloLink {
+  const httpTransport = createHttpTransportLink();
+
   return wsLink
     ? split(
         ({ query }) => {
@@ -216,9 +234,9 @@ function createTransportLink(): ApolloLink {
           );
         },
         wsLink,
-        httpLink
+        httpTransport
       )
-    : httpLink;
+    : httpTransport;
 }
 
 function createApolloLink(cache: InMemoryCache): ApolloLink {
@@ -232,14 +250,11 @@ export async function initApolloClient(): Promise<ApolloClient> {
     typePolicies: paginatedQueryTypePolicies,
   });
 
-  const hadPersistedCache = await hydrateApolloCache(cache);
+  await hydrateApolloCache(cache);
 
-  if (hadPersistedCache || getIsBrowserOffline()) {
-    markBackendUnreachable();
-  }
-
-  const offlineMode = getIsOfflineMode();
-  const defaultFetchPolicy = offlineMode ? "cache-only" : "cache-and-network";
+  const defaultWatchQueryFetchPolicy: WatchQueryFetchPolicy = getIsBrowserOffline()
+    ? "cache-only"
+    : "cache-and-network";
 
   const client = new ApolloClient({
     link: createApolloLink(cache),
@@ -247,11 +262,11 @@ export async function initApolloClient(): Promise<ApolloClient> {
     defaultOptions: {
       watchQuery: {
         errorPolicy: "all",
-        fetchPolicy: defaultFetchPolicy,
+        fetchPolicy: defaultWatchQueryFetchPolicy,
       },
       query: {
         errorPolicy: "all",
-        fetchPolicy: defaultFetchPolicy,
+        fetchPolicy: getIsBrowserOffline() ? "cache-only" : "cache-first",
       },
       mutate: {
         errorPolicy: "all",

@@ -1,11 +1,11 @@
 import type { GeneralUpdateEvent } from "../hooks/useGeneralUpdatesSubscription";
 
 type GeneralUpdateListener = (event: GeneralUpdateEvent) => void;
-type GeneralUpdatesOnlineListener = (isOnline: boolean) => void;
+type GeneralUpdatesOnlineListener = (isOnline: boolean | null) => void;
 
 const updateListeners = new Set<GeneralUpdateListener>();
 const onlineListeners = new Set<GeneralUpdatesOnlineListener>();
-let subscriptionOnline = false;
+let subscriptionOnline: boolean | null = null;
 
 export const subscribeGeneralUpdates = (listener: GeneralUpdateListener): (() => void) => {
   updateListeners.add(listener);
@@ -32,7 +32,7 @@ export const subscribeGeneralUpdatesOnline = (
   };
 };
 
-export const setGeneralUpdatesOnline = (isOnline: boolean): void => {
+export const setGeneralUpdatesOnline = (isOnline: boolean | null): void => {
   if (subscriptionOnline === isOnline) {
     return;
   }
@@ -44,4 +44,4 @@ export const setGeneralUpdatesOnline = (isOnline: boolean): void => {
   }
 };
 
-export const getGeneralUpdatesOnline = (): boolean => subscriptionOnline;
+export const getGeneralUpdatesOnline = (): boolean | null => subscriptionOnline;

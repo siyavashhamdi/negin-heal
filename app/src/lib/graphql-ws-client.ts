@@ -1,6 +1,10 @@
 import { createClient, type Client } from "graphql-ws";
 import { LOCAL_STORAGE_KEYS } from "../constants";
-import { resolveSubscriptionRetryDelayMs } from "./subscription-retry.util";
+import {
+  installSubscriptionRetryDebugResetHook,
+  resolveSubscriptionRetryDelayMs,
+  waitForSubscriptionRetryDelayMs,
+} from "./subscription-retry.util";
 
 let isBrowserUnloading = false;
 let graphqlWsClient: Client | null = null;
@@ -20,7 +24,7 @@ function isBrowserOpenForSubscriptionRetry(): boolean {
 
 async function waitForWsSubscriptionRetry(retries: number): Promise<void> {
   const delayMs = resolveSubscriptionRetryDelayMs(retries);
-  await new Promise((resolve) => setTimeout(resolve, delayMs));
+  await waitForSubscriptionRetryDelayMs(delayMs);
 }
 
 function shouldRetryWsSubscriptionConnection(_errOrCloseEvent: unknown): boolean {
@@ -86,6 +90,7 @@ export function getGraphqlWsClient(): Client {
   }
 
   registerLifecycleListeners();
+  installSubscriptionRetryDebugResetHook();
 
   if (!graphqlWsClient) {
     graphqlWsClient = createGraphqlWsClient();
