@@ -6,6 +6,7 @@ import {
   createHandlerBoundToURL,
   precacheAndRoute,
 } from "workbox-precaching";
+import { CacheFirst } from "workbox-strategies";
 import { NavigationRoute, registerRoute } from "workbox-routing";
 
 declare const self: ServiceWorkerGlobalScope & {
@@ -31,6 +32,13 @@ type PushPayload = {
 
 precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();
+
+registerRoute(
+  ({ request, url }) => request.destination === "wasm" || url.pathname.endsWith(".wasm"),
+  new CacheFirst({
+    cacheName: "wasm-runtime-cache",
+  })
+);
 
 self.addEventListener("install", (event: ExtendableEvent) => {
   event.waitUntil(self.skipWaiting());

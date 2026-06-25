@@ -43,6 +43,7 @@ import {
 } from "../../utils/fileUploadValidation.util";
 import { isEndUserRole } from "../../utils/authRole.util";
 import { useAuth } from "../../contexts/AuthContext";
+import { useCachedFileUrl } from "../../hooks/useCachedFileAccessUrl";
 import { useMobileDialogProps } from "../../hooks/useMobileDialogProps";
 import { useMaxRoutePreview } from "../../hooks/useMaxRoutePreview";
 import { useCompressMediaRoute } from "../../hooks/useCompressMediaRoute";
@@ -221,6 +222,13 @@ const FileUploadField = ({
   const [hasPickError, setHasPickError] = useState(false);
   const [pickErrorMessage, setPickErrorMessage] = useState<string | null>(null);
   const selectedPreviewUrl = useMemo(() => (file ? URL.createObjectURL(file) : undefined), [file]);
+  const { url: cachedExistingPreviewUrl } = useCachedFileUrl({
+    fileId: existingFile?.fileId,
+    networkUrl: existingFile?.accessUrl,
+    mimeType: existingFile?.mimeType,
+    fileName: existingFile?.name,
+    enabled: file == null && existingFile != null,
+  });
   const effectiveDropTitle = isMobile ? mobileDropTitle : dropTitle;
   const effectiveDropHint = isMobile ? mobileDropHint : dropHint;
 
@@ -247,7 +255,7 @@ const FileUploadField = ({
           name: existingFile.name,
           mimeType: existingFile.mimeType,
           sizeBytes: existingFile.sizeBytes,
-          previewUrl: existingFile.accessUrl,
+          previewUrl: cachedExistingPreviewUrl ?? existingFile.accessUrl,
         }
       : undefined;
   const previewSource = selectedFileSource ?? existingFileSource;
@@ -309,11 +317,12 @@ const FileUploadField = ({
       fileName: existingFile.name,
       mimeType: existingFile.mimeType,
       mediaKind: previewMediaKind === "audio" ? "audio" : "video",
-      previewUrl: existingFile.accessUrl,
+      previewUrl: cachedExistingPreviewUrl ?? existingFile.accessUrl,
       sizeBytes: existingFile.sizeBytes,
     };
   }, [
     canShowMediaCompressAction,
+    cachedExistingPreviewUrl,
     existingFile,
     mediaCompressFileId,
     previewMediaKind,

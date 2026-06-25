@@ -108,7 +108,7 @@ export default defineConfig(({ mode }) => {
         srcDir: "src",
         filename: "sw.ts",
         injectManifest: {
-          globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2,ttf,webmanifest}"],
+          globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2,ttf,wasm,webmanifest}"],
         },
         devOptions: {
           enabled: env.VITE_PWA_DEV !== "false",
@@ -141,7 +141,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     optimizeDeps: {
-      include: ["@apollo/client", "@apollo/client/react"],
+      include: ["@apollo/client", "@apollo/client/react", "sql.js"],
       esbuildOptions: {
         target: "esnext",
       },
@@ -162,6 +162,7 @@ export default defineConfig(({ mode }) => {
       reportCompressedSize: false,
       cssMinify: "esbuild",
       minify: "esbuild",
+      assetsInclude: ["**/*.wasm"],
       rollupOptions: {
         // Lower parallelism reduces peak memory during production builds.
         maxParallelFileOps: 1,

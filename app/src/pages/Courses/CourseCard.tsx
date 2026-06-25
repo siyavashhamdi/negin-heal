@@ -9,6 +9,8 @@ import PhotoRoundedIcon from "@mui/icons-material/PhotoRounded";
 import VolumeUpRoundedIcon from "@mui/icons-material/VolumeUpRounded";
 import { Chip } from "@mui/material";
 import { OverflowTooltip } from "../../shared/OverflowTooltip";
+import { CachedFileImage } from "../../shared/display/CachedFileImage";
+import type { FileAccessUrl } from "../../utils/fileAccessUrl.util";
 import type { CourseItemType, CourseListRecord, CourseReleaseType } from "./courses-list.api";
 import { getCourseTagChipSx } from "./course-tag-colors.util";
 import styles from "./styles/CourseCard.module.scss";
@@ -17,6 +19,7 @@ import AppTooltip from "../../shared/AppTooltip";
 interface CourseCardProps {
   readonly item: CourseListRecord;
   readonly coverImageUrl?: string;
+  readonly coverImageAccessUrl?: FileAccessUrl | null;
   readonly variant?: "management" | "public";
   readonly onOpen: () => void;
   readonly onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
@@ -84,6 +87,7 @@ function formatDiscountLabel(item: CourseListRecord): string | null {
 const CourseCard = ({
   item,
   coverImageUrl,
+  coverImageAccessUrl,
   variant = "management",
   onOpen,
   onKeyDown,
@@ -202,8 +206,15 @@ const CourseCard = ({
       aria-label={item.title}
     >
       <div className={styles.coverWrap}>
-        {coverImageUrl ? (
-          <img src={coverImageUrl} alt={item.title} className={styles.coverImage} loading="lazy" />
+        {(coverImageAccessUrl || coverImageUrl) ? (
+          <CachedFileImage
+            accessUrl={coverImageAccessUrl}
+            networkUrl={coverImageUrl}
+            fileId={coverImageAccessUrl?.fileId}
+            alt={item.title}
+            className={styles.coverImage}
+            loading="lazy"
+          />
         ) : (
           <>
             <div className={styles.defaultCoverGlow} aria-hidden="true" />
@@ -316,9 +327,11 @@ const CourseCard = ({
 
         <div className={styles.priceFooter}>
           <div className={styles.priceBarBackdrop} aria-hidden="true">
-            {coverImageUrl ? (
-              <img
-                src={coverImageUrl}
+            {(coverImageAccessUrl || coverImageUrl) ? (
+              <CachedFileImage
+                accessUrl={coverImageAccessUrl}
+                networkUrl={coverImageUrl}
+                fileId={coverImageAccessUrl?.fileId}
                 alt=""
                 className={styles.priceBarCoverImage}
                 loading="eager"

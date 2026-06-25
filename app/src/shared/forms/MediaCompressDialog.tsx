@@ -27,6 +27,7 @@ import {
 } from "../../constants/mediaCompression.constants";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
 import { formatUploadFileSize } from "../../utils/fileUploadValidation.util";
+import { useCachedFileUrl } from "../../hooks/useCachedFileAccessUrl";
 import { resolveFileAccessUrl, type FileAccessUrl } from "../../utils/fileAccessUrl.util";
 import EntityModalShell from "../crud/EntityModalShell";
 import ModalFooterActions from "../crud/ModalFooterActions";
@@ -129,13 +130,20 @@ function MediaCompressPreview({
 }: {
   readonly source: MediaCompressDialogSource;
 }): ReactElement {
+  const { url: previewUrl } = useCachedFileUrl({
+    fileId: source.fileId,
+    networkUrl: source.previewUrl,
+    mimeType: source.mimeType,
+    fileName: source.fileName,
+  });
+
   return (
     <div className={styles.previewPanel}>
       <div className={styles.previewFrame}>
         {source.mediaKind === "video" ? (
           <video
             className={styles.previewVideo}
-            src={source.previewUrl}
+            src={previewUrl ?? source.previewUrl}
             controls
             playsInline
             preload="metadata"
@@ -145,7 +153,7 @@ function MediaCompressPreview({
             <AudiotrackRoundedIcon sx={{ fontSize: "3.5rem", color: "text.secondary" }} />
             <audio
               className={styles.previewAudio}
-              src={source.previewUrl}
+              src={previewUrl ?? source.previewUrl}
               controls
               preload="metadata"
             />

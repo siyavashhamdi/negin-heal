@@ -1,11 +1,11 @@
 import { type UserListItemRow } from "../../pages/UsersManagement/users-management-list.api";
-import { resolveFileAccessUrl } from "../../utils/fileAccessUrl.util";
+import type { FileAccessUrl } from "../../utils/fileAccessUrl.util";
 
 export type ActiveEndUserOption = {
   readonly id: string;
   readonly label: string;
   readonly subtitle: string;
-  readonly imageUrl?: string | null;
+  readonly imageAccessUrl?: FileAccessUrl | null;
   readonly row: UserListItemRow;
 };
 
@@ -29,7 +29,7 @@ export function userToActiveEndUserOption(row: UserListItemRow): ActiveEndUserOp
     id: row.id,
     label: getUserFullName(row),
     subtitle: [row.username, email].filter(Boolean).join(" | "),
-    imageUrl: resolveFileAccessUrl(row.profile?.avatarAccessUrl),
+    imageAccessUrl: row.profile?.avatarAccessUrl as FileAccessUrl | null | undefined,
     row,
   };
 }

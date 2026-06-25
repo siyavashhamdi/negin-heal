@@ -2,6 +2,7 @@ import { ApolloProvider } from "@apollo/client/react";
 import { Box, CircularProgress, Typography } from "@mui/material";
 import { useEffect, useState, type ReactElement, type ReactNode } from "react";
 import { initApolloClient } from "../lib/apollo-client";
+import { initFileContentCache } from "../lib/file-content-cache";
 import { initBrowserOfflineListeners } from "../lib/offline-state";
 import type { ApolloClient } from "@apollo/client";
 
@@ -15,7 +16,11 @@ export function ApolloBootstrap({ children }: ApolloBootstrapProps): ReactElemen
   useEffect(() => {
     initBrowserOfflineListeners();
 
-    void initApolloClient()
+    void initFileContentCache()
+      .catch((error: unknown) => {
+        console.warn("[File cache] SQLite cache unavailable; continuing without local cache.", error);
+      })
+      .then(() => initApolloClient())
       .then(setClient)
       .catch((error: unknown) => {
         console.error("[Apollo] Failed to initialize client.", error);

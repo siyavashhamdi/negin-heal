@@ -1,8 +1,9 @@
 import { useQuery, type QueryResult } from "@apollo/client/react";
 import { LOCAL_STORAGE_KEYS } from "../constants";
 import { USER_ME_QUERY } from "../graphql/queries/userMe.query";
+import { useCachedFileAccessUrl } from "./useCachedFileAccessUrl";
 import { resolveQueryFetchPolicy } from "../lib/offline-fetch-policy.util";
-import { resolveFileAccessUrl, type FileAccessUrl } from "../utils/fileAccessUrl.util";
+import { type FileAccessUrl } from "../utils/fileAccessUrl.util";
 
 export type UserMeGqlResponse = {
   readonly id: string;
@@ -48,10 +49,13 @@ export const useMe = (): UseMeResult => {
     fetchPolicy: resolveQueryFetchPolicy("cache-and-network"),
     skip: !hasAccessToken,
   });
+  const { url: avatarUrl } = useCachedFileAccessUrl(data?.me?.profile?.avatarAccessUrl, {
+    enabled: hasAccessToken,
+  });
 
   return {
     user: data?.me ?? null,
-    avatarUrl: resolveFileAccessUrl(data?.me?.profile?.avatarAccessUrl),
+    avatarUrl,
     loading: hasAccessToken ? loading : false,
     error,
     refetch,

@@ -1,9 +1,9 @@
-import { Avatar, Chip, Typography } from "@mui/material";
+import { Chip, Typography } from "@mui/material";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 
 import { AvatarInitial } from "../../shared/display/AvatarInitial";
 import StarRating from "../../shared/rating/StarRating";
-import { resolveFileAccessUrl } from "../../utils/fileAccessUrl.util";
+import { CachedFileAvatar } from "../../shared/display/CachedFileAvatar";
 import { resolveAvatarInitial } from "../../utils/storedUser.util";
 import CourseReviewThreadBubble from "./CourseReviewThreadBubble";
 import {
@@ -74,7 +74,6 @@ const CourseReviewAdminCard = ({
   onModerationUpdated,
 }: CourseReviewAdminCardProps): ReactElement => {
   const authorLabel = resolveAdminReviewAuthorLabel(review);
-  const avatarUrl = resolveFileAccessUrl(review.user?.profile?.avatarAccessUrl);
   const [commentsExpanded, setCommentsExpanded] = useState(false);
   const boxEndRef = useRef<HTMLDivElement | null>(null);
   const pendingScrollToEndRef = useRef(false);
@@ -182,9 +181,12 @@ const CourseReviewAdminCard = ({
     <article className={styles.reviewUserBoxPlain} aria-label={`نظر ${authorLabel}`}>
       <div className={styles.reviewCardHeader}>
         <div className={styles.reviewCardTitleBlock}>
-          <Avatar src={avatarUrl ?? undefined} className={styles.reviewAdminAvatar}>
+          <CachedFileAvatar
+            accessUrl={review.user?.profile?.avatarAccessUrl}
+            className={styles.reviewAdminAvatar}
+          >
             <AvatarInitial initial={resolveAvatarInitial(authorLabel)} />
-          </Avatar>
+          </CachedFileAvatar>
           <div className={styles.reviewAdminIdentity}>
             <div className={styles.reviewAdminNameRow}>
               <Typography component="h3" className={styles.reviewCardAuthor}>

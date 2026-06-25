@@ -1,7 +1,12 @@
 import type { ApolloCache, NormalizedCacheObject } from "@apollo/client";
-import { getIsOfflineMode } from "./offline-state";
 
-const APOLLO_CACHE_STORAGE_KEY = "negin-heal:apollo-cache";
+import {
+  getPersistedApolloCacheJson,
+  setPersistedApolloCacheJson,
+  clearPersistedApolloCacheInSqlite,
+} from "./file-content-cache";
+import { sanitizePersistedApolloSnapshot } from "./gql-cache-policy";
+import { getIsOfflineMode } from "./offline-state";
 
 function hasCacheEntries(snapshot: NormalizedCacheObject | null | undefined): boolean {
   if (!snapshot) {
@@ -16,40 +21,28 @@ function hasCacheEntries(snapshot: NormalizedCacheObject | null | undefined): bo
   return Object.keys(snapshot).some((key) => key !== "__META" && key !== "ROOT_QUERY");
 }
 
-function readSnapshot(): NormalizedCacheObject | null {
-  if (typeof window === "undefined") {
+function parseSnapshot(raw: string): NormalizedCacheObject | null {
+  try {
+    const parsed = JSON.parse(raw) as NormalizedCacheObject;
+    return hasCacheEntries(parsed) ? parsed : null;
+  } catch {
     return null;
   }
-
-  const keys = [APOLLO_CACHE_STORAGE_KEY, "negin-heal:apollo-cache-sync"];
-
-  for (const key of keys) {
-    try {
-      const raw = window.localStorage.getItem(key);
-      if (!raw) {
-        continue;
-      }
-
-      const parsed = JSON.parse(raw) as NormalizedCacheObject;
-      if (hasCacheEntries(parsed)) {
-        return parsed;
-      }
-    } catch {
-      // Try the next storage key.
-    }
-  }
-
-  return null;
 }
 
 export async function hydrateApolloCache(cache: ApolloCache): Promise<boolean> {
   try {
-    const snapshot = readSnapshot();
+    const raw = await getPersistedApolloCacheJson();
+    if (!raw) {
+      return false;
+    }
+
+    const snapshot = parseSnapshot(raw);
     if (!snapshot) {
       return false;
     }
 
-    cache.restore(snapshot);
+    cache.restore(sanitizePersistedApolloSnapshot(snapshot));
     return true;
   } catch (error) {
     console.warn("[Offline cache] Failed to restore Apollo cache.", error);
@@ -63,21 +56,21 @@ export function persistApolloCache(cache: ApolloCache): void {
   }
 
   try {
-    const snapshot = cache.extract();
+    const snapshot = sanitizePersistedApolloSnapshot(cache.extract() as NormalizedCacheObject);
     if (!hasCacheEntries(snapshot)) {
       return;
     }
 
-    window.localStorage.setItem(APOLLO_CACHE_STORAGE_KEY, JSON.stringify(snapshot));
+    void setPersistedApolloCacheJson(JSON.stringify(snapshot)).catch((error: unknown) => {
+      console.warn("[Offline cache] Failed to persist Apollo cache.", error);
+    });
   } catch (error) {
     console.warn("[Offline cache] Failed to persist Apollo cache.", error);
   }
 }
 
 export async function clearPersistedApolloCache(): Promise<void> {
-  if (typeof window !== "undefined") {
-    window.localStorage.removeItem(APOLLO_CACHE_STORAGE_KEY);
-  }
+  await clearPersistedApolloCacheInSqlite();
 }
 
 export function registerApolloCacheUnloadPersist(cache: ApolloCache): void {

@@ -50,11 +50,11 @@ import { USER_UPDATE_MUTATION } from "../../graphql/mutations/userUpdate.mutatio
 import {
   buildExistingFilePreview,
   getFileIdFromAccessUrl,
-  resolveFileAccessUrl,
   type FileAccessUrl,
 } from "../../utils/fileAccessUrl.util";
 import { resolveAvatarInitial } from "../../utils/storedUser.util";
 import { AvatarInitial } from "../../shared/display/AvatarInitial";
+import { CachedFileAvatar } from "../../shared/display/CachedFileAvatar";
 import { hasFormChanges } from "../../utils/formChange.util";
 import {
   MULTILINE_TEXTAREA_MIN_ROWS,
@@ -330,17 +330,16 @@ function UserAvatarCell({
   readonly avatarAccessUrl?: FileAccessUrl | null;
   readonly displayName: string;
 }): ReactElement {
-  const resolvedUrl = resolveFileAccessUrl(avatarAccessUrl);
   const initial = resolveAvatarInitial(displayName);
 
   return (
-    <Avatar
-      src={resolvedUrl ?? undefined}
+    <CachedFileAvatar
+      accessUrl={avatarAccessUrl}
       alt=""
       sx={{ width: 32, height: 32, bgcolor: "action.hover", mx: "auto" }}
     >
       <AvatarInitial initial={initial} />
-    </Avatar>
+    </CachedFileAvatar>
   );
 }
 

@@ -142,11 +142,15 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
 
   const finishAuthSessionClear = useCallback(
     (afterClear?: () => void): void => {
-      void resetApolloClientCache().finally(() => {
-        clearLocalAuthSession();
-        prefetchLoggedOutNavData();
-        afterClear?.();
-      });
+      void resetApolloClientCache()
+        .catch((error: unknown) => {
+          console.warn("[Auth] Failed to reset client cache during logout.", error);
+        })
+        .finally(() => {
+          clearLocalAuthSession();
+          prefetchLoggedOutNavData();
+          afterClear?.();
+        });
     },
     [clearLocalAuthSession, prefetchLoggedOutNavData]
   );

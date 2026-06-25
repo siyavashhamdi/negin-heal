@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactElement } from "react";
 import SupportAgentRoundedIcon from "@mui/icons-material/SupportAgentRounded";
 import {
-  Avatar,
   Box,
   Chip,
   CircularProgress,
@@ -18,6 +17,7 @@ import { alpha, type Theme, useTheme } from "@mui/material/styles";
 
 import { resolveAvatarInitial, resolveMeUserDisplayName } from "../../utils/storedUser.util";
 import { AvatarInitial } from "../../shared/display/AvatarInitial";
+import { CachedFileAvatar } from "../../shared/display/CachedFileAvatar";
 import { useAuth } from "../../contexts/AuthContext";
 import { SUPER_ADMIN_TICKET_SEND_MUTATION } from "../../graphql/mutations/superAdminTicketSend.mutation";
 import { TICKET_CLOSE_MUTATION } from "../../graphql/mutations/ticketClose.mutation";
@@ -41,7 +41,7 @@ import FileUploadField from "../../shared/forms/FileUploadField";
 import {
   buildExistingFilePreview,
   getFileIdFromAccessUrl,
-  resolveFileAccessUrl,
+  type FileAccessUrl,
 } from "../../utils/fileAccessUrl.util";
 import { uploadFile as uploadFileToApi } from "../../utils/fileUpload.util";
 import {
@@ -274,23 +274,23 @@ function sortMessagesBySentAt(messages: readonly SupportTicketMessage[]): Suppor
   });
 }
 
-function resolveMessageAvatarUrl(
+function resolveMessageAvatarAccessUrl(
   message: SupportTicketMessage,
   tone: "own" | "support" | "user",
-  currentUserAvatarUrl: string | null,
-  ticketOwnerAvatarUrl: string | null
-): string | null {
-  const senderAvatarUrl = resolveFileAccessUrl(message.senderUser?.profile?.avatarAccessUrl);
-  if (senderAvatarUrl) {
-    return senderAvatarUrl;
+  currentUserAvatarAccessUrl: FileAccessUrl | null | undefined,
+  ticketOwnerAvatarAccessUrl: FileAccessUrl | null | undefined
+): FileAccessUrl | null | undefined {
+  const senderAvatarAccessUrl = message.senderUser?.profile?.avatarAccessUrl;
+  if (senderAvatarAccessUrl?.fileId && senderAvatarAccessUrl.token) {
+    return senderAvatarAccessUrl;
   }
 
   if (tone === "own") {
-    return currentUserAvatarUrl;
+    return currentUserAvatarAccessUrl;
   }
 
   if (tone === "user") {
-    return ticketOwnerAvatarUrl;
+    return ticketOwnerAvatarAccessUrl;
   }
 
   return null;
@@ -300,20 +300,20 @@ function MessageSenderAvatar({
   tone,
   toneStyle,
   displayName,
-  avatarUrl,
+  avatarAccessUrl,
 }: {
   readonly tone: "own" | "support" | "user";
   readonly toneStyle: { border: string; background: string };
   readonly displayName: string;
-  readonly avatarUrl: string | null;
+  readonly avatarAccessUrl?: FileAccessUrl | null;
 }): ReactElement {
   const theme = useTheme();
   const initials = resolveAvatarInitial(displayName);
-  const showSupportIcon = tone === "support" && !avatarUrl;
+  const showSupportIcon = tone === "support" && !avatarAccessUrl;
 
   return (
-    <Avatar
-      src={avatarUrl ?? undefined}
+    <CachedFileAvatar
+      accessUrl={avatarAccessUrl}
       alt={displayName}
       sx={{
         width: { xs: 34, sm: 38 },
@@ -337,7 +337,7 @@ function MessageSenderAvatar({
       ) : (
         <AvatarInitial initial={initials} />
       )}
-    </Avatar>
+    </CachedFileAvatar>
   );
 }
 
@@ -414,19 +414,19 @@ function MessageBubble({
   message,
   messageIndex,
   currentUserId,
-  currentUserAvatarUrl,
+  currentUserAvatarAccessUrl,
   currentUserDisplayName,
   ticketCreatorUserId,
-  ticketOwnerAvatarUrl,
+  ticketOwnerAvatarAccessUrl,
   isEndUserView,
 }: {
   readonly message: SupportTicketMessage;
   readonly messageIndex: number;
   readonly currentUserId?: string;
-  readonly currentUserAvatarUrl: string | null;
+  readonly currentUserAvatarAccessUrl?: FileAccessUrl | null;
   readonly currentUserDisplayName: string;
   readonly ticketCreatorUserId?: string;
-  readonly ticketOwnerAvatarUrl: string | null;
+  readonly ticketOwnerAvatarAccessUrl?: FileAccessUrl | null;
   readonly isEndUserView: boolean;
 }): ReactElement {
   const theme = useTheme();
@@ -437,11 +437,11 @@ function MessageBubble({
     isEndUserView && isOwnMessage ? "شما" : formatUserDisplayName(message.senderUser);
   const avatarDisplayName = isOwnMessage ? currentUserDisplayName : senderName;
   const messageNumber = `#${(messageIndex + 1).toLocaleString("fa-IR")}`;
-  const avatarUrl = resolveMessageAvatarUrl(
+  const avatarAccessUrl = resolveMessageAvatarAccessUrl(
     message,
     tone,
-    currentUserAvatarUrl,
-    ticketOwnerAvatarUrl
+    currentUserAvatarAccessUrl,
+    ticketOwnerAvatarAccessUrl
   );
 
   return (
@@ -459,7 +459,7 @@ function MessageBubble({
               tone={tone}
               toneStyle={toneStyle}
               displayName={avatarDisplayName}
-              avatarUrl={avatarUrl}
+              avatarAccessUrl={avatarAccessUrl}
             />
             <Typography
               variant="body2"
@@ -521,7 +521,7 @@ const TicketDialog = ({
     returnPartialData: true,
   });
   const meUser = meData?.me ?? null;
-  const currentUserAvatarUrl = resolveFileAccessUrl(meUser?.profile?.avatarAccessUrl);
+  const currentUserAvatarAccessUrl = meUser?.profile?.avatarAccessUrl;
   const isMobile = useMediaQuery((muiTheme: Theme) => muiTheme.breakpoints.down("md"));
   const currentUserId = user?.id?.trim();
   const currentUserDisplayName = useMemo(
@@ -718,10 +718,7 @@ const TicketDialog = ({
     [record]
   );
 
-  const ticketOwnerAvatarUrl = useMemo(
-    () => resolveFileAccessUrl(record?.createdByUser?.profile?.avatarAccessUrl) ?? null,
-    [record?.createdByUser?.profile?.avatarAccessUrl]
-  );
+  const ticketOwnerAvatarAccessUrl = record?.createdByUser?.profile?.avatarAccessUrl;
 
   const handleCloseTicket = (): void => {
     if (!record || record.status === "CLOSED") {
@@ -941,10 +938,10 @@ const TicketDialog = ({
                     message={message}
                     messageIndex={index}
                     currentUserId={currentUserId}
-                    currentUserAvatarUrl={currentUserAvatarUrl}
+                    currentUserAvatarAccessUrl={currentUserAvatarAccessUrl}
                     currentUserDisplayName={currentUserDisplayName}
                     ticketCreatorUserId={record.createdByUserId}
-                    ticketOwnerAvatarUrl={ticketOwnerAvatarUrl}
+                    ticketOwnerAvatarAccessUrl={ticketOwnerAvatarAccessUrl}
                     isEndUserView={isEndUserView}
                   />
                 ))}

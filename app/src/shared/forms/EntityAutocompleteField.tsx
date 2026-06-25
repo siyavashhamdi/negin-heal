@@ -14,6 +14,8 @@ import {
 import type { AutocompleteRenderInputParams } from "@mui/material/Autocomplete";
 import { resolveAvatarInitial } from "../../utils/storedUser.util";
 import { AvatarInitial } from "../display/AvatarInitial";
+import { CachedFileAvatar } from "../display/CachedFileAvatar";
+import type { FileAccessUrl } from "../../utils/fileAccessUrl.util";
 
 import styles from "./EntityAutocompleteField.module.scss";
 
@@ -22,6 +24,7 @@ export type EntityAutocompleteOption = {
   readonly label: string;
   readonly subtitle?: string;
   readonly imageUrl?: string | null;
+  readonly imageAccessUrl?: FileAccessUrl | null;
 };
 
 type EntityAutocompleteImageVariant = "circular" | "rounded";
@@ -57,12 +60,14 @@ export type EntityAutocompleteFieldProps<TOption extends EntityAutocompleteOptio
 
 function EntityOptionThumbnail({
   imageUrl,
+  imageAccessUrl,
   label,
   variant,
   size = "small",
   context = "input",
 }: {
   readonly imageUrl?: string | null;
+  readonly imageAccessUrl?: FileAccessUrl | null;
   readonly label: string;
   readonly variant: EntityAutocompleteImageVariant;
   readonly size?: TextFieldProps["size"];
@@ -106,8 +111,17 @@ function EntityOptionThumbnail({
           ? "0.875rem"
           : "1rem";
 
-  if (imageUrl) {
-    return <Avatar src={imageUrl} alt="" variant={avatarVariant} sx={avatarSx} />;
+  if (imageAccessUrl || imageUrl) {
+    return (
+      <CachedFileAvatar
+        accessUrl={imageAccessUrl}
+        networkUrl={imageUrl}
+        fileId={imageAccessUrl?.fileId}
+        alt=""
+        variant={avatarVariant}
+        sx={avatarSx}
+      />
+    );
   }
 
   if (variant === "rounded") {
@@ -160,6 +174,7 @@ function renderEntityOption<TOption extends EntityAutocompleteOption>(
       <Stack direction="row" spacing={1.5} alignItems="center" sx={{ width: "100%", minWidth: 0 }}>
         <EntityOptionThumbnail
           imageUrl={option.imageUrl}
+          imageAccessUrl={option.imageAccessUrl}
           label={option.label}
           variant={imageVariant}
           size={size}
@@ -259,8 +274,14 @@ function EntityAutocompleteField<TOption extends EntityAutocompleteOption>(
                 size="small"
                 label={option.label}
                 avatar={
-                  option.imageUrl ? (
-                    <Avatar src={option.imageUrl} alt="" variant="rounded" />
+                  option.imageAccessUrl || option.imageUrl ? (
+                    <CachedFileAvatar
+                      accessUrl={option.imageAccessUrl}
+                      networkUrl={option.imageUrl}
+                      fileId={option.imageAccessUrl?.fileId}
+                      alt=""
+                      variant="rounded"
+                    />
                   ) : (
                     <Avatar variant="rounded" sx={{ color: "text.secondary" }}>
                       <ImageNotSupportedRoundedIcon sx={{ fontSize: 14 }} />
@@ -333,6 +354,7 @@ function EntityAutocompleteField<TOption extends EntityAutocompleteOption>(
                 <Box sx={{ display: "flex", alignItems: "center", alignSelf: "center", mr: 0.5 }}>
                   <EntityOptionThumbnail
                     imageUrl={props.value.imageUrl}
+                    imageAccessUrl={props.value.imageAccessUrl}
                     label={props.value.label}
                     variant={imageVariant}
                     size={size}

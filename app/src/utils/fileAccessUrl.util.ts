@@ -10,6 +10,7 @@ export type FileAccessUrl = {
 
 export type ExistingFilePreview = {
   readonly accessUrl: string;
+  readonly fileId?: string;
   readonly name: string;
   readonly mimeType: string;
   readonly sizeBytes: number;
@@ -266,8 +267,11 @@ export function buildExistingFilePreview(
     return null;
   }
 
+  const fileId = getFileIdFromAccessUrl(accessUrl) ?? undefined;
+
   return {
     accessUrl: resolved,
+    fileId,
     name,
     mimeType,
     sizeBytes: overrides?.sizeBytes ?? accessUrl?.sizeBytes ?? 0,

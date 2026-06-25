@@ -1147,7 +1147,7 @@ const CoursesIndex = (): ReactElement => {
                 >
                   <CourseCard
                     item={item}
-                    coverImageUrl={resolveFileAccessUrl(item.coverImageAccessUrl) ?? undefined}
+                    coverImageAccessUrl={item.coverImageAccessUrl}
                     variant={isPublicCourseView ? "public" : "management"}
                     onOpen={() => navigate(`/courses/${item.id}`)}
                     onKeyDown={(event) => handleCourseKeyDown(event, item)}

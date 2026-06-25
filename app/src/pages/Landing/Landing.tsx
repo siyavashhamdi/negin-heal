@@ -58,7 +58,6 @@ import {
   resolveStoredUserDisplayName,
 } from "../../utils/storedUser.util";
 import CourseCard from "../Courses/CourseCard";
-import { resolveFileAccessUrl } from "../../utils/fileAccessUrl.util";
 import { useLandingFeaturedCourses } from "./useLandingFeaturedCourses";
 import styles from "./styles/landing.module.scss";
 
@@ -639,7 +638,7 @@ const Landing = (): ReactElement => {
                     key={course.id}
                     item={course}
                     variant="public"
-                    coverImageUrl={resolveFileAccessUrl(course.coverImageAccessUrl)}
+                    coverImageAccessUrl={course.coverImageAccessUrl}
                     onOpen={() => handleCourseOpen(course.id)}
                     onKeyDown={(event) => handleCourseKeyDown(course.id, event)}
                   />

@@ -34,6 +34,8 @@ import {
 import { setMaxRouteOwner, clearMaxRouteOwner } from "../../routing/max-route-owner.store";
 import { setPostLoginRedirect } from "../../routing/post-login-redirect";
 import { resolveFileAccessUrl, buildExistingFilePreview } from "../../utils/fileAccessUrl.util";
+import { CachedFileImage } from "../../shared/display/CachedFileImage";
+import { useCachedFileAccessUrl } from "../../hooks/useCachedFileAccessUrl";
 import PageBackNavigation from "../../shared/PageBackNavigation";
 import { applyBlankTargetToRichTextLinks } from "../../utils/richTextHtml.util";
 import { USER_COURSE_DETAIL_QUERY } from "../../graphql/queries/userCourseDetail.query";
@@ -331,7 +333,8 @@ const CourseDetail = (): ReactElement => {
     scrollRoot: "parent",
   });
 
-  const coverImageUrl = resolveFileAccessUrl(course?.coverImageAccessUrl);
+  const coverImageNetworkUrl = resolveFileAccessUrl(course?.coverImageAccessUrl);
+  const { url: coverImageUrl } = useCachedFileAccessUrl(course?.coverImageAccessUrl);
   const discountedPrice = course ? getDiscountedPrice(course.priceIrt, course.discount) : null;
   const displayPrice = discountedPrice ?? course?.priceIrt ?? null;
   const discountLabel =
@@ -412,7 +415,7 @@ const CourseDetail = (): ReactElement => {
       title: isPurchaseDialogOpen ? `${course.title} — تکمیل خرید` : course.title,
       description: seoDescription,
       keywords: [course.title, ...course.tags, "Negin Heal", "دوره آموزشی"].join(", "),
-      image: coverImageUrl ?? undefined,
+      image: coverImageNetworkUrl ?? undefined,
       imageAlt: course.title,
       canonicalPath,
       ogType: "product",
@@ -424,7 +427,7 @@ const CourseDetail = (): ReactElement => {
           courseId: course.id,
           title: course.title,
           description: seoDescription,
-          imageUrl: coverImageUrl ?? undefined,
+          imageUrl: coverImageNetworkUrl ?? undefined,
           keywords: course.tags.join(", "),
           isFree: course.isFree,
           priceIrt: displayPrice,
@@ -444,7 +447,7 @@ const CourseDetail = (): ReactElement => {
         }),
       ],
     };
-  }, [course, coverImageUrl, displayPrice, isMaxRouteOpen, isPurchaseDialogOpen, t]);
+  }, [course, coverImageNetworkUrl, displayPrice, isMaxRouteOpen, isPurchaseDialogOpen, t]);
 
   usePageSeoOverride(pageSeoOverride);
 
@@ -907,7 +910,12 @@ const CourseDetail = (): ReactElement => {
 
         <div className={styles.heroMedia}>
           {coverImageUrl ? (
-            <img src={coverImageUrl} alt={course.title} className={styles.heroCoverImage} />
+            <CachedFileImage
+              accessUrl={course?.coverImageAccessUrl}
+              networkUrl={coverImageNetworkUrl}
+              alt={course.title}
+              className={styles.heroCoverImage}
+            />
           ) : (
             <>
               <div className={styles.heroGlow} />

@@ -1,5 +1,5 @@
 import type { CourseListItemRow } from "../../pages/Courses/courses-list.api";
-import { resolveFileAccessUrl } from "../../utils/fileAccessUrl.util";
+import type { FileAccessUrl } from "../../utils/fileAccessUrl.util";
 import type { EntityAutocompleteOption } from "./EntityAutocompleteField";
 
 export type CoursePickerOption = EntityAutocompleteOption & {
@@ -33,7 +33,7 @@ export function mapCourseRowToPickerOption(row: CourseListItemRow): CoursePicker
     id: row.id,
     label: row.title,
     subtitle: formatCoursePickerPrice(finalPrice),
-    imageUrl: resolveFileAccessUrl(row.coverImageAccessUrl),
+    imageAccessUrl: row.coverImageAccessUrl as FileAccessUrl | null | undefined,
     row,
   };
 }
