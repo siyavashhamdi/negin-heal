@@ -7,6 +7,7 @@ import { USER_NOTIFICATION_UPDATE_MUTATION } from "../../graphql/mutations/userN
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { useTranslation } from "../../hooks/useTranslation";
 import { useBadgeCountFirstPageReload } from "../../hooks/useBadgeCountFirstPageReload";
+import { useCursorScrollLoadMore } from "../../hooks/useCursorScrollLoadMore";
 import { showErrorIfNotQueued } from "../../utilities/graphql-error.util";
 import {
   buildNotificationListQueryVariables,
@@ -114,7 +115,7 @@ export const useNotificationList = (): UseNotificationListResult => {
     });
   }, [data, networkStatus]);
 
-  const loadNextPage = useCallback(async (): Promise<void> => {
+  const loadNextPage = useCallback(async (): Promise<boolean> => {
     const nextCursor = pagination.endCursor ?? items[items.length - 1]?.id ?? null;
     if (
       fetchingMoreRef.current ||
@@ -123,12 +124,12 @@ export const useNotificationList = (): UseNotificationListResult => {
       !pagination.hasNextPage ||
       !nextCursor
     ) {
-      return;
+      return false;
     }
 
     fetchingMoreRef.current = true;
     try {
-      await fetchMore({
+      const result = await fetchMore({
         variables: {
           input: {
             ...listVariables.input,
@@ -156,7 +157,15 @@ export const useNotificationList = (): UseNotificationListResult => {
           };
         },
       });
+
+      if (!result.data?.userNotificationList) {
+        return false;
+      }
+
       setIsOnFirstPage(false);
+      return true;
+    } catch {
+      return false;
     } finally {
       fetchingMoreRef.current = false;
     }
@@ -170,26 +179,11 @@ export const useNotificationList = (): UseNotificationListResult => {
     pagination.hasNextPage,
   ]);
 
-  useEffect(() => {
-    const node = loadMoreRef.current;
-    if (!node || !pagination.hasNextPage) {
-      return undefined;
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting) {
-          void loadNextPage();
-        }
-      },
-      { rootMargin: "320px 0px" }
-    );
-    observer.observe(node);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [items.length, loadNextPage, pagination.hasNextPage]);
+  useCursorScrollLoadMore({
+    loadMoreRef,
+    hasNextPage: pagination.hasNextPage,
+    loadMore: loadNextPage,
+  });
 
   const refetchList = useCallback((): void => {
     void refetch();

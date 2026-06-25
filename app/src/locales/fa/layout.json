@@ -102,6 +102,7 @@
         },
         "offlineMode": {
             "message": "شما آفلاین هستید. در حال مشاهده آخرین اطلاعات نمایش داده هستید.",
+            "backOnlineMessage": "اتصال برقرار شد.",
             "dismissButton": "متوجه شدم"
         },
         "appUpdate": {

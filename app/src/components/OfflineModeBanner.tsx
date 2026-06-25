@@ -6,6 +6,7 @@ import { useBrowserOffline } from "../hooks/useBrowserOffline";
 import { useGeneralUpdatesOnline } from "../hooks/useGeneralUpdatesOnline";
 import { useMobileAppLayout } from "../hooks/useMobileAppLayout";
 import { useMobileSnackbarDismiss } from "../hooks/useMobileSnackbarDismiss";
+import { useSnackbar } from "../hooks/useSnackbar";
 import { useTranslation } from "../hooks/useTranslation";
 import { getSnackbarFilledAlertSx, getSnackbarFilledAlertTone, SNACKBAR_ALERT_CLASS } from "../theme";
 
@@ -34,6 +35,7 @@ const dismissButtonSx = {
 
 export function OfflineModeBanner(): ReactElement | null {
   const { t } = useTranslation();
+  const { showSuccess } = useSnackbar();
   const isMobileAppLayout = useMobileAppLayout();
   const isOfflineMode = useBrowserOffline();
   const generalUpdatesOnline = useGeneralUpdatesOnline();
@@ -61,8 +63,12 @@ export function OfflineModeBanner(): ReactElement | null {
       resetDrag();
     }
 
+    if (enteredOnline) {
+      showSuccess(t("layout.offlineMode.backOnlineMessage"), 1_000);
+    }
+
     wasOfflineRef.current = isOffline;
-  }, [isOffline, resetDrag]);
+  }, [isOffline, resetDrag, showSuccess, t]);
 
   if (!isOffline) {
     return null;

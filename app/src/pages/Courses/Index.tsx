@@ -43,6 +43,7 @@ import { useDebounce } from "../../hooks/useDebounce";
 import { usePageSeoOverride } from "../../hooks/usePageSeoOverride";
 import { useBadgeCountFirstPageReload } from "../../hooks/useBadgeCountFirstPageReload";
 import { useCoursePaymentStatusNotificationRefetch } from "../../hooks/useCoursePaymentStatusNotificationRefetch";
+import { useCursorScrollLoadMore } from "../../hooks/useCursorScrollLoadMore";
 import { useAuth } from "../../contexts/AuthContext";
 import { API_CONFIG } from "../../config";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
@@ -487,7 +488,7 @@ const CoursesIndex = (): ReactElement => {
     refetch: onRefresh,
   });
 
-  const loadNextPage = useCallback(async (): Promise<void> => {
+  const loadNextPage = useCallback(async (): Promise<boolean> => {
     const nextCursor = pagination.endCursor ?? items[items.length - 1]?.id ?? null;
     if (
       fetchingMoreRef.current ||
@@ -496,12 +497,12 @@ const CoursesIndex = (): ReactElement => {
       !pagination.hasNextPage ||
       !nextCursor
     ) {
-      return;
+      return false;
     }
 
     fetchingMoreRef.current = true;
     try {
-      await fetchMore({
+      const result = await fetchMore({
         variables: {
           input: {
             ...courseListVariables.input,
@@ -529,7 +530,15 @@ const CoursesIndex = (): ReactElement => {
           };
         },
       });
+
+      if (!result.data?.courseList) {
+        return false;
+      }
+
       setIsOnFirstPage(false);
+      return true;
+    } catch {
+      return false;
     } finally {
       fetchingMoreRef.current = false;
     }
@@ -542,6 +551,14 @@ const CoursesIndex = (): ReactElement => {
     pagination.endCursor,
     pagination.hasNextPage,
   ]);
+
+  useCursorScrollLoadMore({
+    loadMoreRef,
+    hasNextPage: pagination.hasNextPage,
+    rootMargin: "480px 0px",
+    observeDeps: [items.length],
+    loadMore: loadNextPage,
+  });
 
   const [deleteCourse, deleteCourseResult] = useMutationWithSnackbar<
     CourseDeleteMutationResult,
@@ -705,27 +722,6 @@ const CoursesIndex = (): ReactElement => {
 
     return chips;
   }, [filters]);
-
-  useEffect(() => {
-    const node = loadMoreRef.current;
-    if (!node || !pagination.hasNextPage) {
-      return undefined;
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting) {
-          void loadNextPage();
-        }
-      },
-      { rootMargin: "480px 0px" }
-    );
-    observer.observe(node);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [items.length, loadNextPage, pagination.hasNextPage]);
 
   const handleDeleteConfirm = (): void => {
     if (!deleteTarget) {

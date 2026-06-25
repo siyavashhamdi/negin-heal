@@ -2,6 +2,8 @@ import { NetworkStatus } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 
+import { useCursorScrollLoadMore } from "../../hooks/useCursorScrollLoadMore";
+
 import { COURSE_REVIEW_LIST_QUERY } from "../../graphql/queries/courseReviewList.query";
 import { USER_COURSE_REVIEW_LIST_QUERY } from "../../graphql/queries/userCourseReviewList.query";
 import {
@@ -184,10 +186,10 @@ export function useCourseReviewList({
       networkStatus === NetworkStatus.loading ||
       networkStatus === NetworkStatus.setVariables);
 
-  const loadNextPage = useCallback(async (): Promise<void> => {
+  const loadNextPage = useCallback(async (): Promise<boolean> => {
     const nextCursor = endCursor ?? items[items.length - 1]?.id ?? null;
     if (fetchingMoreRef.current || loading || isFetchingMore || !hasNextPage || !nextCursor) {
-      return;
+      return false;
     }
 
     fetchingMoreRef.current = true;
@@ -230,7 +232,7 @@ export function useCourseReviewList({
         | undefined;
 
       if (!nextPage) {
-        return;
+        return false;
       }
 
       hasPaginatedRef.current = true;
@@ -238,6 +240,9 @@ export function useCourseReviewList({
       setTotalCount(nextPage.pagination.total);
       setHasNextPage(nextPage.pagination.hasNextPage);
       setEndCursor(nextPage.pagination.endCursor ?? null);
+      return true;
+    } catch {
+      return false;
     } finally {
       fetchingMoreRef.current = false;
     }
@@ -252,37 +257,18 @@ export function useCourseReviewList({
     queryField,
   ]);
 
-  useEffect(() => {
-    const sentinel = loadMoreRef.current;
-    if (!sentinel || !hasNextPage || isInitialLoading) {
-      return undefined;
-    }
-
-    const observerRoot =
-      scrollRoot === "parent" ? findScrollableAncestor(sentinel) : scrollContainerRef.current;
-
-    if (!observerRoot && scrollRoot === "list") {
-      return undefined;
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting && !fetchingMoreRef.current) {
-          void loadNextPage();
-        }
-      },
-      {
-        root: observerRoot,
-        rootMargin: "120px 0px",
-      }
-    );
-
-    observer.observe(sentinel);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [hasNextPage, isInitialLoading, items.length, loadNextPage, scrollRoot]);
+  useCursorScrollLoadMore({
+    loadMoreRef,
+    hasNextPage,
+    enabled: !isInitialLoading && (scrollRoot !== "list" || scrollContainerRef.current !== null),
+    rootMargin: "120px 0px",
+    getRoot: () =>
+      scrollRoot === "parent"
+        ? findScrollableAncestor(loadMoreRef.current)
+        : scrollContainerRef.current,
+    observeDeps: [items.length, scrollRoot, isInitialLoading],
+    loadMore: loadNextPage,
+  });
 
   const refetchList = useCallback(async (): Promise<void> => {
     hasPaginatedRef.current = false;
