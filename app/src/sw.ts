@@ -59,10 +59,6 @@ registerRoute(
   })
 );
 
-self.addEventListener("install", (event: ExtendableEvent) => {
-  event.waitUntil(self.skipWaiting());
-});
-
 const navigationHandler = createHandlerBoundToURL("/index.html");
 registerRoute(new NavigationRoute(navigationHandler, { denylist: NAVIGATION_DENYLIST }));
 

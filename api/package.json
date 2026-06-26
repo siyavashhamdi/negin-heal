@@ -1,6 +1,6 @@
 {
   "name": "negin-heal-api",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Professional NestJS API for Negin Heal Application",
   "author": "Negin Heal Team",
   "private": true,

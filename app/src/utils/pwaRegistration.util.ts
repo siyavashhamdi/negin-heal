@@ -130,6 +130,25 @@ export function applyAppUpdate(): void {
   })();
 }
 
+function watchForWaitingServiceWorker(registration: ServiceWorkerRegistration): void {
+  const notifyIfWaiting = (): void => {
+    if (registration.waiting) {
+      notifyNeedRefresh();
+    }
+  };
+
+  notifyIfWaiting();
+
+  registration.addEventListener("updatefound", () => {
+    const installingWorker = registration.installing;
+    if (!installingWorker) {
+      return;
+    }
+
+    installingWorker.addEventListener("statechange", notifyIfWaiting);
+  });
+}
+
 export function registerPwaServiceWorker(): void {
   if (!("serviceWorker" in navigator)) {
     return;
@@ -144,6 +163,7 @@ export function registerPwaServiceWorker(): void {
       onRegistered(registration) {
         if (registration) {
           activeRegistration = registration;
+          watchForWaitingServiceWorker(registration);
           window.dispatchEvent(new Event("negin-heal:sw-ready"));
         }
       },
