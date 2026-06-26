@@ -113,6 +113,12 @@ function scrollElementIntoVisibleArea(element: HTMLElement): void {
     return;
   }
 
+  const scrollingElement = document.scrollingElement;
+  if (scrollingElement instanceof HTMLElement) {
+    scrollWithinContainer(scrollingElement, deltaY);
+    return;
+  }
+
   window.scrollBy({ top: deltaY, behavior: "smooth" });
 }
 

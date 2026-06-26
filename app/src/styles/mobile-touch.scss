@@ -31,16 +31,6 @@ body[data-theme="dark"] .MuiAutocomplete-paper {
   background-color: #1a2840 !important;
 }
 
-html[data-native-android-shell="true"],
-html[data-native-android-shell="true"] body,
-html[data-native-android-shell="true"] #root {
-  height: auto;
-  min-height: 100%;
-  overflow-x: hidden;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
 html[data-native-android-shell="true"].keyboard-open {
   --app-mobile-bottom-reserve: calc(1rem + env(safe-area-inset-bottom, 0px));
 
@@ -70,8 +60,8 @@ html[data-native-android-shell="true"] .modalDialogContentScrollMobile {
 
 // iOS auto-zooms focused inputs smaller than 16px, which can reflow the page and drop focus.
 @media (max-width: (variables.$breakpoint-sm - 0.0625rem)) {
-  html,
-  body {
+  html:not([data-native-android-shell="true"]),
+  html:not([data-native-android-shell="true"]) body {
     overscroll-behavior: none;
   }
 
