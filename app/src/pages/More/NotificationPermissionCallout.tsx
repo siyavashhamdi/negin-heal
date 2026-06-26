@@ -18,6 +18,7 @@ import {
 } from "../../utils/browserNotification.util";
 import { syncWebPushSubscriptionWithServer } from "../../utils/pushSubscription.util";
 import { syncNativePushRegistrationWithServer } from "../../native/nativePushRegistration";
+import { isNativeAndroidShell } from "../../utils/nativePlatform.util";
 import styles from "./styles/more.module.scss";
 
 type NotificationPermissionCalloutProps = {
@@ -52,6 +53,10 @@ const NotificationPermissionCallout = ({
   const { permission, refreshPermission } = useBrowserNotificationPermission();
   const [isRequesting, setIsRequesting] = useState(false);
   const [isBlockedDetailsExpanded, setIsBlockedDetailsExpanded] = useState(false);
+
+  if (isNativeAndroidShell()) {
+    return null;
+  }
 
   if (!isSecureBrowserContext()) {
     return (
