@@ -4,6 +4,7 @@ import { PWA_THEME_COLOR } from "../constants/pwa.constants";
 import { bootstrapNativePushAndBadge } from "./nativePushRegistration";
 import { registerNativeBackButtonListener } from "./nativeBackButton";
 import { applyNativeSafeAreaInsets } from "./nativeSafeArea";
+import { registerNativeKeyboardScrollBehavior } from "./nativeKeyboardScroll";
 import { isNativeAndroidShell } from "../utils/nativePlatform.util";
 
 async function configureAndroidChrome(): Promise<void> {
@@ -22,6 +23,7 @@ export async function bootstrapCapacitorNativeShell(): Promise<void> {
   }
 
   registerNativeBackButtonListener();
+  registerNativeKeyboardScrollBehavior();
 
   try {
     void configureAndroidChrome();

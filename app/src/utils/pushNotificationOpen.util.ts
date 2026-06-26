@@ -122,6 +122,54 @@ function dispatchPushNotificationOpenPayload(payload: PushNotificationOpenPayloa
   notifyBadgeCountUpdateListeners();
 }
 
+export function handleNativeNotificationDeepLink(url: string): void {
+  const trimmedUrl = url.trim();
+  if (!trimmedUrl) {
+    return;
+  }
+
+  dispatchPushNotificationOpenPayload({
+    type: PUSH_NOTIFICATION_OPEN_MESSAGE_TYPE,
+    description: "اعلان جدید",
+  });
+}
+
+export function handleNativePushNotificationTap(notification: {
+  readonly title?: string;
+  readonly body?: string;
+  readonly data?: Record<string, unknown>;
+}): void {
+  const data = notification.data ?? {};
+  const description =
+    typeof notification.body === "string" && notification.body.trim().length > 0
+      ? notification.body.trim()
+      : typeof notification.title === "string" && notification.title.trim().length > 0
+        ? notification.title.trim()
+        : "اعلان جدید";
+
+  const payload =
+    normalizePushNotificationOpenPayload({
+      type: PUSH_NOTIFICATION_OPEN_MESSAGE_TYPE,
+      title: notification.title,
+      body: notification.body,
+      description,
+      notificationId:
+        typeof data.notificationId === "string" ? data.notificationId : undefined,
+      messageType: typeof data.messageType === "string" ? data.messageType : undefined,
+      mode: typeof data.mode === "string" ? data.mode : undefined,
+      courseId: typeof data.courseId === "string" ? data.courseId : undefined,
+      chapterKey: typeof data.chapterKey === "string" ? data.chapterKey : undefined,
+      actionLabel: typeof data.actionLabel === "string" ? data.actionLabel : undefined,
+      actionUrl: typeof data.actionUrl === "string" ? data.actionUrl : undefined,
+    }) ??
+    ({
+      type: PUSH_NOTIFICATION_OPEN_MESSAGE_TYPE,
+      description,
+    } satisfies PushNotificationOpenPayload);
+
+  dispatchPushNotificationOpenPayload(payload);
+}
+
 export function handlePushNotificationOpenMessage(event: MessageEvent): void {
   const payload = normalizePushNotificationOpenPayload(event.data);
   if (!payload) {

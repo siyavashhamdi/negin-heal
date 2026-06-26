@@ -9,7 +9,7 @@ import {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import { LOCAL_STORAGE_KEYS } from "../constants";
-import { isMobileAppLayoutViewport } from "../hooks/useMobileAppLayout";
+import { shouldUseProfileAuthShell } from "../hooks/useMobileAppLayout";
 import { apolloClient, resetApolloClientCache } from "../lib/apollo-client";
 import { scheduleAppShellNavPrefetch } from "../lib/app-shell-nav-prefetch";
 import { APP_SHELL_ROUTES, isStandaloneShellRoute } from "../routing/app-shell-routes";
@@ -17,6 +17,7 @@ import { consumePostLoginRedirect } from "../routing/post-login-redirect";
 import { USER_LOGOUT_MUTATION } from "../graphql/mutations/userLogout.mutation";
 import { subscribeAuthSessionExpired } from "../lib/auth-session-expired-listeners";
 import { unregisterWebPushSubscriptionFromServer } from "../utils/pushSubscription.util";
+import { isNativeCapacitorShell } from "../utils/apiBaseUrl.util";
 import {
   unregisterNativePushFromServer,
 } from "../native/nativePushRegistration";
@@ -107,7 +108,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
       return;
     }
 
-    if (isMobileAppLayoutViewport()) {
+    if (shouldUseProfileAuthShell()) {
       if (window.location.pathname !== APP_SHELL_ROUTES.profile) {
         navigate(APP_SHELL_ROUTES.profile);
       }
@@ -144,56 +145,63 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
     });
   }, []);
 
-  const finishAuthSessionClear = useCallback(
-    (afterClear?: () => void): void => {
-      void resetApolloClientCache()
-        .catch((error: unknown) => {
-          console.warn("[Auth] Failed to reset client cache during logout.", error);
-        })
-        .finally(() => {
-          clearLocalAuthSession();
-          prefetchLoggedOutNavData();
-          afterClear?.();
+  const runBackgroundLogoutCleanup = useCallback(async (token: string | null): Promise<void> => {
+    try {
+      if (!isNativeCapacitorShell()) {
+        await unregisterWebPushSubscriptionFromServer({ clearStoredEndpoint: true });
+      }
+    } catch (error: unknown) {
+      console.warn("[Auth] Failed to unregister Web Push subscription during logout.", error);
+    }
+
+    try {
+      await unregisterNativePushFromServer({ clearStoredToken: true });
+    } catch (error: unknown) {
+      console.warn("[Auth] Failed to unregister native push token during logout.", error);
+    }
+
+    if (token) {
+      try {
+        await apolloClient.mutate({
+          mutation: USER_LOGOUT_MUTATION,
+          context: {
+            headers: {
+              authorization: `Bearer ${token}`,
+            },
+          },
         });
-    },
-    [clearLocalAuthSession, prefetchLoggedOutNavData]
-  );
+      } catch (error: unknown) {
+        console.warn("[Auth] userLogout mutation failed.", error);
+      }
+    }
+  }, []);
 
   const runServerLogout = useCallback(
     (afterLogout: () => void): void => {
       const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
 
-      const finishLogout = (): void => {
-        finishAuthSessionClear(afterLogout);
-      };
+      clearLocalAuthSession();
+      afterLogout();
 
-      if (!token) {
-        finishLogout();
-        return;
-      }
-
-      void unregisterWebPushSubscriptionFromServer({ clearStoredEndpoint: true })
+      void runBackgroundLogoutCleanup(token)
         .catch((error: unknown) => {
-          console.warn("[Auth] Failed to unregister Web Push subscription during logout.", error);
+          console.warn("[Auth] Background logout cleanup failed.", error);
         })
         .finally(() => {
-          void unregisterNativePushFromServer({ clearStoredToken: true })
+          void resetApolloClientCache()
             .catch((error: unknown) => {
-              console.warn(
-                "[Auth] Failed to unregister native push token during logout.",
-                error,
-              );
+              console.warn("[Auth] Failed to reset client cache during logout.", error);
             })
             .finally(() => {
-              void apolloClient.mutate({ mutation: USER_LOGOUT_MUTATION }).finally(finishLogout);
+              prefetchLoggedOutNavData();
             });
         });
     },
-    [finishAuthSessionClear]
+    [clearLocalAuthSession, prefetchLoggedOutNavData, runBackgroundLogoutCleanup]
   );
 
   const redirectToLoginAfterLogout = useCallback((): void => {
-    navigate(isMobileAppLayoutViewport() ? APP_SHELL_ROUTES.profileLogin : APP_SHELL_ROUTES.login);
+    navigate(shouldUseProfileAuthShell() ? APP_SHELL_ROUTES.profileLogin : APP_SHELL_ROUTES.login);
   }, [navigate]);
 
   const forceLogoutToProfile = useCallback((): void => {

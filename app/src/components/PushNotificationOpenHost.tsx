@@ -1,4 +1,6 @@
+import { App } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
+import { PushNotifications } from "@capacitor/push-notifications";
 import { useEffect, type ReactElement } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -6,18 +8,44 @@ import { subscribePushNotificationOpen } from "../lib/push-open-listeners";
 import { APP_SHELL_ROUTES } from "../routing/app-shell-routes";
 import {
   consumePendingPushNotificationOpen,
+  handleNativeNotificationDeepLink,
+  handleNativePushNotificationTap,
   handlePushNotificationOpenMessage,
 } from "../utils/pushNotificationOpen.util";
 
+function isNotificationDeepLink(url: string): boolean {
+  const trimmed = url.trim();
+  if (!trimmed) {
+    return false;
+  }
+
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.pathname.startsWith("/notifications") || parsed.pathname.startsWith("/courses/");
+  } catch {
+    return trimmed.startsWith("/notifications") || trimmed.startsWith("/courses/");
+  }
+}
+
 /**
- * Listens for service-worker push-click payloads, navigates to the notifications
- * page, and replays any pending open notification after a cold start.
+ * Listens for push-click payloads (web service worker and native Android), navigates
+ * to the notifications page, and replays any pending open notification after a cold start.
  */
 export function PushNotificationOpenHost(): ReactElement | null {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (Capacitor.isNativePlatform() || !("serviceWorker" in navigator)) {
+    return subscribePushNotificationOpen(() => {
+      navigate(APP_SHELL_ROUTES.notifications);
+    });
+  }, [navigate]);
+
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      return;
+    }
+
+    if (!("serviceWorker" in navigator)) {
       return;
     }
 
@@ -34,14 +62,47 @@ export function PushNotificationOpenHost(): ReactElement | null {
   }, []);
 
   useEffect(() => {
-    if (Capacitor.isNativePlatform()) {
+    if (!Capacitor.isNativePlatform()) {
       return;
     }
 
-    return subscribePushNotificationOpen(() => {
-      navigate(APP_SHELL_ROUTES.notifications);
+    const handleDeepLink = (url: string): void => {
+      if (!isNotificationDeepLink(url)) {
+        return;
+      }
+
+      handleNativeNotificationDeepLink(url);
+    };
+
+    void App.getLaunchUrl().then((result) => {
+      if (result?.url) {
+        handleDeepLink(result.url);
+      }
     });
-  }, [navigate]);
+
+    let removeAppUrlOpen: (() => void) | undefined;
+    void App.addListener("appUrlOpen", (event) => {
+      handleDeepLink(event.url);
+    }).then((handle) => {
+      removeAppUrlOpen = () => {
+        void handle.remove();
+      };
+    });
+
+    let removePushAction: (() => void) | undefined;
+    void PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
+      handleNativePushNotificationTap(action.notification);
+    }).then((handle) => {
+      removePushAction = () => {
+        void handle.remove();
+      };
+    });
+
+    return () => {
+      removeAppUrlOpen?.();
+      removePushAction?.();
+    };
+  }, []);
 
   return null;
 }

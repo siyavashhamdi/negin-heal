@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
@@ -48,7 +49,7 @@ final class LauncherBadgeHelper {
         Intent launchIntent = new Intent(context, MainActivity.class);
         launchIntent.setAction(Intent.ACTION_VIEW);
         launchIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        launchIntent.putExtra("url", resolvedUrl);
+        launchIntent.setData(Uri.parse(resolvedUrl));
 
         int requestCode = resolvedTag.hashCode();
         PendingIntent pendingIntent = PendingIntent.getActivity(

@@ -192,7 +192,11 @@ function joinMessageParts(value: string | string[]): string {
 
 const GENERIC_EXCEPTION_CODES = new Set(["INTERNAL_SERVER_ERROR", "UNKNOWN_ERROR_OCCURRED"]);
 
-const SUPPRESSED_USER_FACING_EXCEPTION_CODES = new Set(["INTERNAL_SERVER_ERROR"]);
+const SUPPRESSED_USER_FACING_EXCEPTION_CODES = new Set([
+  "INTERNAL_SERVER_ERROR",
+  "FORBIDDEN",
+  "UNAUTHENTICATED",
+]);
 
 const GENERIC_BACKEND_ERROR_MESSAGES = new Set([
   "An internal server error occurred!",
@@ -357,7 +361,7 @@ function resolveGraphQLErrorFieldMessage(error?: RawGraphQLErrorItem): string {
       extensions: error?.extensions,
     })
   ) {
-    return i18n.t("errors.network.accessDenied");
+    return "";
   }
 
   if (shouldPreferExceptionTranslation(exceptionCode)) {
@@ -438,7 +442,7 @@ export const extractGraphQLErrorMessage = (error: unknown): string => {
   if (isRawGraphQLErrorResponse(error)) {
     const first = error.errors?.[0];
     const resolvedMessage = resolveGraphQLErrorFieldMessage(first);
-    return resolvedMessage || i18n.t("errors.graphql.generalMessage");
+    return resolvedMessage;
   }
 
   if (ServerError.is(error)) {
@@ -467,7 +471,7 @@ export const extractGraphQLErrorMessage = (error: unknown): string => {
           return i18n.t("errors.network.authenticationFailed");
         }
         if (statusCode === 403) {
-          return i18n.t("errors.network.accessDenied");
+          return "";
         }
         if (statusCode === 404) {
           return i18n.t("errors.network.notFound");
@@ -487,7 +491,7 @@ export const extractGraphQLErrorMessage = (error: unknown): string => {
       }
     }
 
-    return i18n.t("errors.graphql.generalMessage");
+    return "";
   }
 
   let errorMessage = "";

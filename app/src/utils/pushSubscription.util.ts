@@ -12,6 +12,7 @@ import {
 } from "./browserNotification.util";
 import { readStoredNotificationsEnabled } from "./userPreferences.util";
 import { getPwaServiceWorkerRegistration } from "./pwaRegistration.util";
+import { isNativeCapacitorShell } from "./apiBaseUrl.util";
 
 type PushNotificationConfigQueryResult = {
   readonly pushNotificationConfig: {
@@ -163,6 +164,10 @@ export function canSyncWebPushSubscription(): boolean {
 }
 
 export async function getBrowserPushSubscription(): Promise<PushSubscription | null> {
+  if (isNativeCapacitorShell()) {
+    return null;
+  }
+
   const registration = await waitForPushServiceWorkerRegistration();
   if (!registration?.pushManager) {
     return null;
@@ -316,6 +321,13 @@ export async function syncWebPushSubscriptionWithServer(): Promise<boolean> {
 export async function unregisterWebPushSubscriptionFromServer(options?: {
   readonly clearStoredEndpoint?: boolean;
 }): Promise<void> {
+  if (isNativeCapacitorShell()) {
+    clearStoredPushSubscriptionMetadata({
+      clearEndpoint: options?.clearStoredEndpoint ?? false,
+    });
+    return;
+  }
+
   if (unregisterInFlight) {
     return unregisterInFlight;
   }

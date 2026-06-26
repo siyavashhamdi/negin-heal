@@ -61,11 +61,15 @@ const httpLink = new HttpLink({
 });
 
 const authLink = new SetContextLink((prevContext) => {
+  const explicitAuthorization =
+    typeof prevContext.headers?.authorization === "string"
+      ? prevContext.headers.authorization
+      : undefined;
   const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
   return {
     headers: {
       ...prevContext.headers,
-      authorization: token ? `Bearer ${token}` : "",
+      authorization: explicitAuthorization ?? (token ? `Bearer ${token}` : ""),
       "content-type": "application/json",
     },
   };

@@ -7,7 +7,7 @@ import rtlPlugin from "stylis-plugin-rtl";
 import { ApolloBootstrap } from "./components/ApolloBootstrap";
 import { createAppTheme } from "./theme";
 import { ThemeProvider, useThemeMode } from "./contexts/ThemeContext";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { SnackbarProvider } from "./contexts/SnackbarContext";
 import { LoadingProvider } from "./contexts/LoadingContext";
 import { ApolloErrorHandler } from "./components/ApolloErrorHandler";
@@ -22,7 +22,6 @@ import { LauncherBadgeSync } from "./components/LauncherBadgeSync";
 import { NativeBackButtonBridge } from "./components/NativeBackButtonBridge";
 import { PushNotificationOpenHost } from "./components/PushNotificationOpenHost";
 import { MainLayout } from "./layouts/MainLayout";
-import { LOCAL_STORAGE_KEYS } from "./constants";
 import { DashboardAppRoutes } from "./routing/DashboardAppRoutes";
 import { APP_SHELL_ROUTES, isStandaloneShellRoute } from "./routing/app-shell-routes";
 import { API_CONFIG } from "./config";
@@ -34,6 +33,7 @@ const emotionRtlCache = createCache({
 
 const AppShell = (): ReactElement => {
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
   const isUnderConstructionHome =
     API_CONFIG.UNDER_CONSTRUCTION && location.pathname === APP_SHELL_ROUTES.home;
 
@@ -41,10 +41,8 @@ const AppShell = (): ReactElement => {
     return <DashboardAppRoutes />;
   }
 
-  const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
-
   return (
-    <MainLayout showSessionTools={Boolean(token)}>
+    <MainLayout showSessionTools={isAuthenticated}>
       <DashboardAppRoutes />
     </MainLayout>
   );

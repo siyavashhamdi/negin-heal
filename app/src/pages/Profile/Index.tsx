@@ -34,7 +34,7 @@ import {
 } from "react";
 import { Link as RouterLink, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import { useMobileAppLayout } from "../../hooks/useMobileAppLayout";
+import { shouldUseProfileAuthShell } from "../../hooks/useMobileAppLayout";
 import { useMe, type UserMeGqlResponse } from "../../hooks/useMe";
 import { subscribeGeneralUpdates } from "../../lib/general-updates-listeners";
 import { GENERAL_SUBSCRIPTION_UPDATE_TYPES } from "../../constants";
@@ -1125,7 +1125,7 @@ const AuthenticatedProfile = (): ReactElement => {
 
 const Profile = (): ReactElement => {
   const { isAuthenticated } = useAuth();
-  const isMobileAppLayout = useMobileAppLayout();
+  const useProfileAuthShell = shouldUseProfileAuthShell();
   const location = useLocation();
 
   if (isAuthenticated && isProfileAuthRoute(location.pathname)) {
@@ -1133,7 +1133,7 @@ const Profile = (): ReactElement => {
   }
 
   if (!isAuthenticated) {
-    if (isMobileAppLayout) {
+    if (useProfileAuthShell) {
       return (
         <section className={styles.page}>
           <ProfileAuthRoutes />
