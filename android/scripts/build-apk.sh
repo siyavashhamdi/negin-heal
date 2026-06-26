@@ -33,6 +33,21 @@ fi
 echo "Generating Android launcher icons from app/public/logo.png..."
 (cd "${APP_DIR}" && npm run generate:pwa-icons)
 
+# The downloadable APK lives in public/app for the website. Vite copies public/ into
+# dist/, so cap sync would embed the previous release APK inside the new one (~50MB+).
+APK_STAGING_BACKUP=""
+if [[ -f "${PUBLIC_APK_PATH}" ]]; then
+  APK_STAGING_BACKUP="$(mktemp)"
+  mv "${PUBLIC_APK_PATH}" "${APK_STAGING_BACKUP}"
+fi
+
+cleanup_apk_staging_backup() {
+  if [[ -n "${APK_STAGING_BACKUP}" && -f "${APK_STAGING_BACKUP}" ]]; then
+    rm -f "${APK_STAGING_BACKUP}"
+  fi
+}
+trap cleanup_apk_staging_backup EXIT
+
 echo "Building web app..."
 (cd "${APP_DIR}" && \
   VITE_API_BASE_URL=https://neginheal.ir \

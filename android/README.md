@@ -22,9 +22,10 @@ npm run build
 
 This will:
 
-1. Build the web app (`app/`)
-2. Run `cap sync android`
-3. Produce signed release APK and AAB
+1. Generate launcher icons from `app/public/logo.png`
+2. Build the web app (`app/`) — the previous release APK is temporarily moved aside so it is not bundled into the new APK
+3. Run `cap sync android`
+4. Produce signed release APK and AAB
 
 Output:
 
