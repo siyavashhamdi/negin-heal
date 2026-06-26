@@ -16,6 +16,7 @@ import { APP_SHELL_ROUTES, isStandaloneShellRoute } from "../routing/app-shell-r
 import { consumePostLoginRedirect } from "../routing/post-login-redirect";
 import { USER_LOGOUT_MUTATION } from "../graphql/mutations/userLogout.mutation";
 import { subscribeAuthSessionExpired } from "../lib/auth-session-expired-listeners";
+import { unregisterWebPushSubscriptionFromServer } from "../utils/pushSubscription.util";
 
 /**
  * User data structure
@@ -155,29 +156,43 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
     [clearLocalAuthSession, prefetchLoggedOutNavData]
   );
 
+  const runServerLogout = useCallback(
+    (afterLogout: () => void): void => {
+      const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+
+      const finishLogout = (): void => {
+        finishAuthSessionClear(afterLogout);
+      };
+
+      if (!token) {
+        finishLogout();
+        return;
+      }
+
+      void unregisterWebPushSubscriptionFromServer({ clearStoredEndpoint: true })
+        .catch((error: unknown) => {
+          console.warn("[Auth] Failed to unregister Web Push subscription during logout.", error);
+        })
+        .finally(() => {
+          void apolloClient.mutate({ mutation: USER_LOGOUT_MUTATION }).finally(finishLogout);
+        });
+    },
+    [finishAuthSessionClear]
+  );
+
   const redirectToLoginAfterLogout = useCallback((): void => {
     navigate(isMobileAppLayoutViewport() ? APP_SHELL_ROUTES.profileLogin : APP_SHELL_ROUTES.login);
   }, [navigate]);
 
   const forceLogoutToProfile = useCallback((): void => {
     const stayOnPage = isStandaloneShellRoute(window.location.pathname);
-    const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
 
-    const finishLogout = (): void => {
-      finishAuthSessionClear(() => {
-        if (!stayOnPage) {
-          navigate(APP_SHELL_ROUTES.profile, { replace: true });
-        }
-      });
-    };
-
-    if (!token) {
-      finishLogout();
-      return;
-    }
-
-    void apolloClient.mutate({ mutation: USER_LOGOUT_MUTATION }).finally(finishLogout);
-  }, [finishAuthSessionClear, navigate]);
+    runServerLogout(() => {
+      if (!stayOnPage) {
+        navigate(APP_SHELL_ROUTES.profile, { replace: true });
+      }
+    });
+  }, [navigate, runServerLogout]);
 
   useEffect(() => {
     return subscribeAuthSessionExpired(forceLogoutToProfile);
@@ -188,21 +203,8 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
    * Clears auth state and redirects to login
    */
   const logout = useCallback((): void => {
-    const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
-
-    const finishLogout = (): void => {
-      finishAuthSessionClear(redirectToLoginAfterLogout);
-    };
-
-    if (!token) {
-      finishLogout();
-      return;
-    }
-
-    void apolloClient.mutate({ mutation: USER_LOGOUT_MUTATION }).finally(() => {
-      finishLogout();
-    });
-  }, [finishAuthSessionClear, redirectToLoginAfterLogout]);
+    runServerLogout(redirectToLoginAfterLogout);
+  }, [redirectToLoginAfterLogout, runServerLogout]);
 
   const value: AuthContextValue = {
     user,

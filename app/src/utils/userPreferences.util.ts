@@ -4,6 +4,7 @@ import {
   getBrowserNotificationPermission,
   registerNotificationServiceWorker,
 } from "./browserNotification.util";
+import { syncWebPushSubscriptionWithServer, unregisterWebPushSubscriptionFromServer } from "./pushSubscription.util";
 
 export type ThemePreference = "dark" | "light";
 
@@ -56,6 +57,9 @@ export function applyUserPreferences(preferences: UserPreferencesLike | null | u
 
     if (preferences.notificationsEnabled && getBrowserNotificationPermission() === "granted") {
       void registerNotificationServiceWorker();
+      void syncWebPushSubscriptionWithServer();
+    } else if (!preferences.notificationsEnabled) {
+      void unregisterWebPushSubscriptionFromServer();
     }
   }
 

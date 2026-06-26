@@ -20,6 +20,9 @@ export const API_CONFIG = {
   /** When false, login captcha UI is hidden and a bypass token is sent. */
   CAPTCHA_ENABLED: import.meta.env.VITE_CAPTCHA_ENABLED !== "false",
 
+  /** Optional VAPID public key override for Web Push subscription setup. */
+  VAPID_PUBLIC_KEY: import.meta.env.VITE_VAPID_PUBLIC_KEY ?? "",
+
   /** When true, the root route shows a full-screen under-construction page. */
   UNDER_CONSTRUCTION: import.meta.env.VITE_UNDER_CONSTRUCTION === "true",
 } as const;

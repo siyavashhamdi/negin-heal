@@ -6,6 +6,7 @@ import { DatabaseModule } from "../database";
 import { FileModule } from "../file";
 import { CouponModule } from "../coupon";
 import { NotificationModule } from "../notification";
+import { PushNotificationModule } from "../push-notification";
 import { UserModule } from "../user";
 import { ChapterReleaseNotificationCron } from "../../cron/jobs";
 import { CoursePaymentController } from "./api/course-payment.controller";
@@ -38,6 +39,7 @@ import {
     FileModule,
     CouponModule,
     NotificationModule,
+    PushNotificationModule,
     UserModule,
   ],
   controllers: [CoursePaymentController],

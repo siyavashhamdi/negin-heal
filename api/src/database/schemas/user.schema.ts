@@ -96,6 +96,24 @@ export const UserPreferencesSchema = new MongooseSchema(
   { _id: false },
 );
 
+export const UserPushSubscriptionKeysSchema = new MongooseSchema(
+  {
+    p256dh: { required: true, trim: true, type: String },
+    auth: { required: true, trim: true, type: String },
+  },
+  { _id: false },
+);
+
+export const UserPushSubscriptionSchema = new MongooseSchema(
+  {
+    endpoint: { required: true, trim: true, type: String },
+    keys: { required: true, type: UserPushSubscriptionKeysSchema },
+    registeredAt: { required: true, type: Date },
+    updatedAt: { type: Date },
+  },
+  { _id: false },
+);
+
 /**
  * TypeScript Types (derived from Mongoose schemas)
  * These provide compile-time type checking and IntelliSense
@@ -145,6 +163,18 @@ export type UserPreferences = {
   theme?: string;
 };
 
+export type UserPushSubscriptionKeys = {
+  p256dh: string;
+  auth: string;
+};
+
+export type UserPushSubscription = {
+  endpoint: string;
+  keys: UserPushSubscriptionKeys;
+  registeredAt: Date;
+  updatedAt?: Date;
+};
+
 export type UserDocument = User & Document;
 
 @Schema()
@@ -185,6 +215,12 @@ export class User extends BaseIdTimestampableBlameableSchema {
   })
   preferences: UserPreferences;
 
+  @Prop({
+    type: [UserPushSubscriptionSchema],
+    default: [],
+  })
+  pushSubscriptions: UserPushSubscription[];
+
   // Roles & Status
   @Prop({
     default: [],
@@ -202,6 +238,36 @@ export class User extends BaseIdTimestampableBlameableSchema {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+function disablePushSubscriptionSubdocumentIds(
+  schema: typeof UserSchema,
+): void {
+  const pushSubscriptionsPath = schema.path("pushSubscriptions");
+  const elementSchema =
+    pushSubscriptionsPath &&
+    "schema" in pushSubscriptionsPath &&
+    pushSubscriptionsPath.schema
+      ? pushSubscriptionsPath.schema
+      : undefined;
+
+  if (!elementSchema) {
+    return;
+  }
+
+  elementSchema.set("_id", false);
+
+  const keysPath = elementSchema.path("keys");
+  const keysSchema =
+    keysPath && "schema" in keysPath && keysPath.schema
+      ? keysPath.schema
+      : undefined;
+
+  if (keysSchema) {
+    keysSchema.set("_id", false);
+  }
+}
+
+disablePushSubscriptionSubdocumentIds(UserSchema);
 
 // Apply timestampable, blameable, and soft-delete plugins
 UserSchema.plugin(timestampablePlugin);
@@ -255,6 +321,16 @@ UserSchema.index(
         $exists: true,
         $type: "string",
       },
+    },
+  },
+);
+UserSchema.index(
+  { "pushSubscriptions.endpoint": 1 },
+  {
+    name: "uniq_push_subscription_endpoint",
+    unique: true,
+    partialFilterExpression: {
+      "pushSubscriptions.endpoint": { $exists: true, $type: "string" },
     },
   },
 );

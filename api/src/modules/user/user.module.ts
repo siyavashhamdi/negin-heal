@@ -8,6 +8,7 @@ import { UserSubscriptionService } from "./user-subscription.service";
 import { AuthModule } from "../auth";
 import { AppSettingsModule } from "../app-settings";
 import { DatabaseModule } from "../database";
+import { PushNotificationModule } from "../push-notification";
 import { EmailModule } from "../email";
 import { FileModule } from "../file";
 import { SecurityConfig } from "../../config/security.config";
@@ -36,6 +37,7 @@ import * as UserSubscriptions from "./graphql/subscriptions";
   imports: [
     AppSettingsModule,
     DatabaseModule,
+    PushNotificationModule,
     EmailModule,
     forwardRef(() => FileModule),
     forwardRef(() => AuthModule),

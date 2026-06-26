@@ -13,6 +13,7 @@ interface ImportMetaEnv {
   readonly VITE_EXPOSE_VIA_NETWORK?: string;
   readonly VITE_ALLOWED_HOSTS?: string;
   readonly VITE_PWA_DEV?: string;
+  readonly VITE_VAPID_PUBLIC_KEY?: string;
 }
 
 interface ImportMeta {

@@ -16,6 +16,7 @@ import {
   registerNotificationServiceWorker,
   requestBrowserNotificationPermission,
 } from "../../utils/browserNotification.util";
+import { syncWebPushSubscriptionWithServer } from "../../utils/pushSubscription.util";
 import styles from "./styles/more.module.scss";
 
 type NotificationPermissionCalloutProps = {
@@ -109,6 +110,7 @@ const NotificationPermissionCallout = ({
 
       if (result === "granted") {
         await registerNotificationServiceWorker();
+        await syncWebPushSubscriptionWithServer();
         showSuccess(t("pages.more.notifications.enabledSuccess"));
         return;
       }

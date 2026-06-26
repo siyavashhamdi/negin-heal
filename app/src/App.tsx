@@ -16,6 +16,7 @@ import { AppUpdatePrompt } from "./components/AppUpdatePrompt";
 import { LoadingBar } from "./components/LoadingBar";
 import { OfflineModeBanner } from "./components/OfflineModeBanner";
 import { UserPreferencesSync } from "./components/UserPreferencesSync";
+import { PushSubscriptionSync } from "./components/PushSubscriptionSync";
 import { MainLayout } from "./layouts/MainLayout";
 import { LOCAL_STORAGE_KEYS } from "./constants";
 import { DashboardAppRoutes } from "./routing/DashboardAppRoutes";
@@ -79,6 +80,7 @@ const App = (): ReactElement => (
           <AuthProvider>
             <LoadingProvider>
               <UserPreferencesSync />
+              <PushSubscriptionSync />
               <ThemedAppTree />
             </LoadingProvider>
           </AuthProvider>

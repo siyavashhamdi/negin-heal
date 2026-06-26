@@ -19,6 +19,11 @@ import {
 } from "../../enums";
 import { UserSubscriptionService } from "../user";
 import { NotificationService } from "../notification";
+import { PushNotificationService } from "../push-notification";
+import {
+  resolveWebPushBody,
+  resolveWebPushTitle,
+} from "../push-notification/utils/resolve-web-push-content.util";
 import { coercePaidAt } from "./chapter-access.util";
 import {
   buildChapterReleasePushClaimFilter,
@@ -59,6 +64,7 @@ export class ChapterReleaseNotificationService {
     private readonly userCourseModel: Model<UserCourseDocument>,
     private readonly notificationService: NotificationService,
     private readonly userSubscriptionService: UserSubscriptionService,
+    private readonly pushNotificationService: PushNotificationService,
   ) {}
 
   async processPendingNotifications(): Promise<ChapterReleaseNotificationRunResult> {
@@ -323,6 +329,17 @@ export class ChapterReleaseNotificationService {
       targetId: notification._id.toString(),
       payload: subscriptionPayload,
     });
+
+    void this.pushNotificationService.deliverToUser(
+      userCourse.userId.toString(),
+      {
+        title: resolveWebPushTitle(subscriptionPayload, title),
+        body: resolveWebPushBody(subscriptionPayload, message),
+        notificationId: notification._id.toString(),
+        payload: subscriptionPayload,
+        tag: notification._id.toString(),
+      },
+    );
 
     return true;
   }

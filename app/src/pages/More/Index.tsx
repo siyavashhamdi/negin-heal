@@ -46,6 +46,11 @@ import {
   resolveThemePreference,
   type ThemePreference,
 } from "../../utils/userPreferences.util";
+import { getBrowserNotificationPermission } from "../../utils/browserNotification.util";
+import {
+  syncWebPushSubscriptionWithServer,
+  unregisterWebPushSubscriptionFromServer,
+} from "../../utils/pushSubscription.util";
 import styles from "./styles/more.module.scss";
 
 const hasText = (value: string): boolean => value.trim().length > 0;
@@ -200,6 +205,12 @@ const More = (): ReactElement => {
 
     if (result?.data?.userProfileUpdate) {
       lastSyncedNotificationsEnabledRef.current = nextValue;
+      if (nextValue && getBrowserNotificationPermission() === "granted") {
+        void syncWebPushSubscriptionWithServer();
+      }
+      if (!nextValue) {
+        void unregisterWebPushSubscriptionFromServer();
+      }
       return;
     }
 

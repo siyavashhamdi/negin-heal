@@ -17,9 +17,14 @@ import {
   NotificationDocument,
 } from "../../../../database/schemas";
 import { GqlAuthGuard, Roles, RolesGuard } from "../../../auth";
+import { PushNotificationService } from "../../../push-notification";
 import { UserSubscriptionService } from "../../user-subscription.service";
 import { GlobalAnouncementSendGqlInput } from "../inputs";
 import { GlobalAnouncementSendGqlResponse } from "../responses";
+import {
+  resolveWebPushBody,
+  resolveWebPushTitle,
+} from "../../../push-notification/utils/resolve-web-push-content.util";
 
 @Resolver(() => GlobalAnouncementSendGqlResponse)
 @UseGuards(GqlAuthGuard, RolesGuard)
@@ -29,6 +34,7 @@ export class GlobalAnouncementSendMutation {
     @InjectModel(Notification.name)
     private readonly notificationModel: Model<NotificationDocument>,
     private readonly userSubscriptionService: UserSubscriptionService,
+    private readonly pushNotificationService: PushNotificationService,
   ) {}
 
   @Mutation(() => GlobalAnouncementSendGqlResponse, {
@@ -89,6 +95,18 @@ export class GlobalAnouncementSendMutation {
         updateType: GeneralSubscriptionUpdateType.NOTIFICATION,
         targetId: notification._id.toString(),
         payload: subscriptionPayload,
+      });
+
+    void this.pushNotificationService
+      .deliverToAllUsers({
+        title: resolveWebPushTitle(subscriptionPayload, title),
+        body: resolveWebPushBody(subscriptionPayload, description),
+        notificationId: notification._id.toString(),
+        payload: subscriptionPayload,
+        tag: notification._id.toString(),
+      })
+      .catch((error: unknown) => {
+        console.error("[GlobalAnouncement] Web Push delivery failed:", error);
       });
 
     notification.payload = {

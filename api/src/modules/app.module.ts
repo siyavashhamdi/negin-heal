@@ -25,6 +25,7 @@ import { DatabaseModule } from "./database";
 import { AppSettingsModule } from "./app-settings";
 import { CouponModule } from "./coupon";
 import { NotificationModule } from "./notification";
+import { PushNotificationModule } from "./push-notification";
 import { EmailModule } from "./email";
 import { TicketModule } from "./ticket";
 import { BadgeModule } from "./badge";
@@ -225,6 +226,7 @@ const graphQLErrorLogger = new Logger("GraphQLError");
     AppSettingsModule,
     CouponModule,
     NotificationModule,
+    PushNotificationModule,
     EmailModule,
     TicketModule,
     BadgeModule,

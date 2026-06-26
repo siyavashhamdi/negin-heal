@@ -103,6 +103,11 @@ import { AppSettingsService } from "../app-settings";
 import { BadgeService } from "../badge";
 import { CouponService } from "../coupon";
 import { NotificationService } from "../notification";
+import { PushNotificationService } from "../push-notification";
+import {
+  resolveWebPushBody,
+  resolveWebPushTitle,
+} from "../push-notification/utils/resolve-web-push-content.util";
 import { UserSubscriptionService } from "../user";
 import {
   canAccessChapter,
@@ -249,6 +254,7 @@ export class CourseService {
     private readonly couponService: CouponService,
     private readonly notificationService: NotificationService,
     private readonly userSubscriptionService: UserSubscriptionService,
+    private readonly pushNotificationService: PushNotificationService,
   ) {}
 
   async create(input: CourseCreateGqlInput): Promise<CourseListGqlResponse> {
@@ -3886,6 +3892,17 @@ export class CourseService {
       targetId: notification._id.toString(),
       payload: subscriptionPayload,
     });
+
+    void this.pushNotificationService.deliverToUser(
+      userCourse.userId.toString(),
+      {
+        title: resolveWebPushTitle(subscriptionPayload, title),
+        body: resolveWebPushBody(subscriptionPayload, message),
+        notificationId: notification._id.toString(),
+        payload: subscriptionPayload,
+        tag: notification._id.toString(),
+      },
+    );
   }
 
   private toCoursePurchaseSubmitResponse(

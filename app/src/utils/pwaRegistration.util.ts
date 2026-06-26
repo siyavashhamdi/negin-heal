@@ -144,6 +144,7 @@ export function registerPwaServiceWorker(): void {
       onRegistered(registration) {
         if (registration) {
           activeRegistration = registration;
+          window.dispatchEvent(new Event("negin-heal:sw-ready"));
         }
       },
       onRegisterError(error) {
