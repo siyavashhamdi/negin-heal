@@ -9,6 +9,7 @@ import { useTranslation } from "../../hooks/useTranslation";
 import { useBadgeCountFirstPageReload } from "../../hooks/useBadgeCountFirstPageReload";
 import { useCursorScrollLoadMore } from "../../hooks/useCursorScrollLoadMore";
 import { showErrorIfNotQueued } from "../../utilities/graphql-error.util";
+import { notifyBadgeCountUpdateListeners } from "../../lib/badge-count-update-listeners";
 import {
   buildNotificationListQueryVariables,
   mapNotificationListRowToRecord,
@@ -228,6 +229,12 @@ export const useNotificationList = (): UseNotificationListResult => {
       });
 
       applyMutationResult(result.data);
+      if (
+        (action === "SET_AS_READ" || action === "SET_AS_UNREAD") &&
+        (result.data?.userNotificationUpdate.modifiedCount ?? 0) > 0
+      ) {
+        notifyBadgeCountUpdateListeners();
+      }
       if (successMessage) {
         showSuccess(successMessage);
       }

@@ -12,6 +12,8 @@ const iconsDir = path.join(publicDir, "icons");
 const androidResDir = path.join(repoRoot, "android/app/src/main/res");
 
 const THEME_COLOR = { r: 202, g: 184, b: 222, alpha: 1 };
+const LAUNCHER_BACKGROUND = { r: 255, g: 255, b: 255, alpha: 1 };
+const PNG_OPTIONS = { compressionLevel: 9 };
 
 const ANDROID_LAUNCHER_SIZES = {
   "mipmap-mdpi": 48,
@@ -19,6 +21,15 @@ const ANDROID_LAUNCHER_SIZES = {
   "mipmap-xhdpi": 96,
   "mipmap-xxhdpi": 144,
   "mipmap-xxxhdpi": 192,
+};
+
+/** Adaptive-icon foreground layer sizes (108dp at each density). */
+const ANDROID_ADAPTIVE_FOREGROUND_SIZES = {
+  "mipmap-mdpi": 108,
+  "mipmap-hdpi": 162,
+  "mipmap-xhdpi": 216,
+  "mipmap-xxhdpi": 324,
+  "mipmap-xxxhdpi": 432,
 };
 
 const ANDROID_NOTIFICATION_SIZES = {
@@ -37,13 +48,13 @@ const ANDROID_SPLASH_SIZES = {
   "drawable-xxxhdpi": 1200,
 };
 
-async function writeSquareIcon(outputPath, size, { maskable = false } = {}) {
-  if (!maskable) {
-    await sharp(logoPath).resize(size, size, { fit: "contain" }).png().toFile(outputPath);
+async function writeSquareIcon(outputPath, size, { maskable = false, launcher = false } = {}) {
+  if (!maskable && !launcher) {
+    await sharp(logoPath).resize(size, size, { fit: "contain" }).png(PNG_OPTIONS).toFile(outputPath);
     return;
   }
 
-  const iconSize = Math.round(size * 0.8);
+  const iconSize = Math.round(size * (launcher ? 0.72 : 0.8));
   const logo = await sharp(logoPath).resize(iconSize, iconSize, { fit: "contain" }).png().toBuffer();
 
   await sharp({
@@ -51,11 +62,28 @@ async function writeSquareIcon(outputPath, size, { maskable = false } = {}) {
       width: size,
       height: size,
       channels: 4,
-      background: THEME_COLOR,
+      background: launcher ? LAUNCHER_BACKGROUND : THEME_COLOR,
     },
   })
     .composite([{ input: logo, gravity: "center" }])
-    .png()
+    .png(PNG_OPTIONS)
+    .toFile(outputPath);
+}
+
+async function writeAdaptiveForeground(outputPath, size) {
+  const iconSize = Math.round(size * 0.66);
+  const logo = await sharp(logoPath).resize(iconSize, iconSize, { fit: "contain" }).png().toBuffer();
+
+  await sharp({
+    create: {
+      width: size,
+      height: size,
+      channels: 4,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    },
+  })
+    .composite([{ input: logo, gravity: "center" }])
+    .png(PNG_OPTIONS)
     .toFile(outputPath);
 }
 
@@ -78,12 +106,19 @@ async function writeAndroidIcons() {
       const launcherPath = path.join(androidResDir, folder, "ic_launcher.png");
       return [
         mkdir(path.join(androidResDir, folder), { recursive: true }).then(async () => {
-          await writeSquareIcon(launcherPath, size);
-          await writeSquareIcon(path.join(androidResDir, folder, "ic_launcher_round.png"), size);
+          await writeSquareIcon(launcherPath, size, { launcher: true });
+          await writeSquareIcon(path.join(androidResDir, folder, "ic_launcher_round.png"), size, {
+            launcher: true,
+          });
         }),
         writeSquareIcon(path.join(androidResDir, folder, "ic_maskable.png"), maskableSize),
       ];
     }),
+    ...Object.entries(ANDROID_ADAPTIVE_FOREGROUND_SIZES).map(([folder, size]) =>
+      mkdir(path.join(androidResDir, folder), { recursive: true }).then(() =>
+        writeAdaptiveForeground(path.join(androidResDir, folder, "ic_launcher_foreground.png"), size),
+      ),
+    ),
     ...Object.entries(ANDROID_NOTIFICATION_SIZES).map(([folder, size]) =>
       mkdir(path.join(androidResDir, folder), { recursive: true }).then(() =>
         writeSquareIcon(path.join(androidResDir, folder, "ic_notification_icon.png"), size),

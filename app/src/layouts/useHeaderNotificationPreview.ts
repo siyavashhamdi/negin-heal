@@ -13,6 +13,7 @@ import {
   type NotificationUpdateMutationVariables,
 } from "../pages/Notifications/notifications-list.api";
 import { showErrorIfNotQueued } from "../utilities/graphql-error.util";
+import { notifyBadgeCountUpdateListeners } from "../lib/badge-count-update-listeners";
 
 const HEADER_NOTIFICATION_PREVIEW_LIMIT = 5;
 
@@ -135,6 +136,7 @@ export function useHeaderNotificationPreview(enabled: boolean): UseHeaderNotific
     if (modifiedCount > 0) {
       showSuccess(t("pages.notifications.markAllReadSuccess"));
       setLiveItems([]);
+      notifyBadgeCountUpdateListeners();
       void refetch();
     }
   }, [items, refetch, showSuccess, t, updateNotifications]);
