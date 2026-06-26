@@ -15,9 +15,10 @@ if [[ ! -f app/.env ]]; then
   exit 1
 fi
 
-# Frontend build needs ~768MB+ Node heap. Set SKIP_APP_BUILD=1 only if the VPS OOMs
-# and you upload app/dist separately.
+# API/frontend builds need ~768MB+ Node heap on small VPS hosts. Set SKIP_APP_BUILD=1
+# only if the VPS OOMs and you upload app/dist separately.
 SKIP_APP_BUILD="${SKIP_APP_BUILD:-0}"
+API_BUILD_HEAP_MB="${API_BUILD_HEAP_MB:-768}"
 APP_BUILD_HEAP_MB="${APP_BUILD_HEAP_MB:-768}"
 STAGING_DIR="dist.next"
 
@@ -44,7 +45,9 @@ promote_staging_build() {
 
 build_api_staging() {
   rm -rf "api/${STAGING_DIR}"
+  export NODE_OPTIONS="--max-old-space-size=${API_BUILD_HEAP_MB}"
   npm run build --prefix api -- -p tsconfig.deploy.json
+  unset NODE_OPTIONS
   promote_staging_build "api" "main.js"
 }
 
@@ -68,7 +71,7 @@ fi
 echo "Installing API dependencies..."
 npm ci --prefix api
 
-echo "Building API into staging directory..."
+echo "Building API into staging directory (heap limit: ${API_BUILD_HEAP_MB}MB)..."
 build_api_staging
 
 if [[ "$SKIP_APP_BUILD" == "1" ]]; then
