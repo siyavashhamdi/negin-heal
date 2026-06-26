@@ -7,8 +7,9 @@ cd "$ROOT_DIR"
 DEPLOY_HOST="${DEPLOY_HOST:-}"
 DEPLOY_PATH="${DEPLOY_PATH:-/siya/negin-heal}"
 
-echo "Writing app deploy metadata..."
+echo "Writing app deploy metadata and build versions..."
 bash "${ROOT_DIR}/scripts/write-app-deploy-metadata.sh"
+node "${ROOT_DIR}/scripts/generate-build-versions.mjs"
 
 echo "Building frontend..."
 npm run build:app

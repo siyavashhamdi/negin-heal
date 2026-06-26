@@ -15,7 +15,13 @@ export {
   LOGIN_CAPTCHA_MAX_AUTO_REFRESHES,
 } from "./captcha.constants";
 export { SNACKBAR_AUTO_HIDE_DURATION_MS } from "./snackbar.constants";
-export { APP_VERSION, APP_VERSION_DEPLOY_TOOLTIP_DELAY_MS } from "./app-version.constants";
+export {
+  ANDROID_APP_VERSION,
+  API_VERSION,
+  APP_VERSION,
+  APP_VERSION_DEPLOY_TOOLTIP_DELAY_MS,
+  WEB_VERSION,
+} from "./app-version.constants";
 export {
   MULTILINE_TEXTAREA_MIN_ROWS,
   MULTILINE_TEXTAREA_MAX_ROWS,

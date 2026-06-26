@@ -1,6 +1,6 @@
 {
     "name": "negin-heal",
-    "version": "1.0.2",
+    "version": "1.0.4",
     "description": "Negin Heal administration dashboard with RTL support",
     "private": true,
     "author": "Siya",
@@ -15,7 +15,7 @@
     "scripts": {
         "dev": "vite",
         "build": "vite build",
-        "prebuild": "npm run generate:pwa-icons && npm run generate:sitemap",
+        "prebuild": "node ../scripts/generate-build-versions.mjs && npm run generate:pwa-icons && npm run generate:sitemap",
         "generate:pwa-icons": "node scripts/generate-pwa-icons.mjs",
         "generate:sitemap": "node scripts/generate-sitemap.mjs",
         "typecheck": "tsc --noEmit",

@@ -4,7 +4,7 @@ Capacitor WebView shell for [https://neginheal.ir/](https://neginheal.ir/). The 
 
 - **Package ID:** `neginheal.app` (new Cafe Bazaar listing; legacy `ir.neginheal.app` is retired)
 - **Config:** `app/capacitor.config.ts`
-- **Version:** `android/app-version.json`
+- **Version:** `android/package.json` (`versionName` in the APK) and `android/app-version.json` (`versionCode`)
 - **Signing fingerprint:** `android/.signing-fingerprint` (committed; public certificate hash)
 
 ## Prerequisites
@@ -74,7 +74,7 @@ From `app/`:
 
 ## Release a new version
 
-1. Bump `versionCode` and `versionName` in `android/app-version.json`
+1. Bump `version` in `android/package.json` and `versionCode` in `android/app-version.json`
 2. Run `npm run build` in `android/`
 3. Run `npm run verify:release`
 4. Upload **`app-release-signed.apk`** or **`app-release-bundle.aab`** to Cafe Bazaar

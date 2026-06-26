@@ -1,4 +1,4 @@
-import { type ReactElement } from "react";
+import { type ReactElement, useMemo } from "react";
 import { ThemeProvider as MuiThemeProvider, CssBaseline } from "@mui/material";
 import { BrowserRouter, useLocation } from "react-router-dom";
 import { CacheProvider } from "@emotion/react";
@@ -19,6 +19,7 @@ import { UserPreferencesSync } from "./components/UserPreferencesSync";
 import { PushSubscriptionSync } from "./components/PushSubscriptionSync";
 import { NativePushSubscriptionSync } from "./components/NativePushSubscriptionSync";
 import { LauncherBadgeSync } from "./components/LauncherBadgeSync";
+import { NativeBackButtonBridge } from "./components/NativeBackButtonBridge";
 import { PushNotificationOpenHost } from "./components/PushNotificationOpenHost";
 import { MainLayout } from "./layouts/MainLayout";
 import { LOCAL_STORAGE_KEYS } from "./constants";
@@ -43,18 +44,15 @@ const AppShell = (): ReactElement => {
   const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
 
   return (
-    <>
-      <GeneralUpdatesSubscriptionHost />
-      <MainLayout showSessionTools={Boolean(token)}>
-        <DashboardAppRoutes />
-      </MainLayout>
-    </>
+    <MainLayout showSessionTools={Boolean(token)}>
+      <DashboardAppRoutes />
+    </MainLayout>
   );
 };
 
 const ThemedAppTree = (): ReactElement => {
   const { mode } = useThemeMode();
-  const theme = createAppTheme(mode);
+  const theme = useMemo(() => createAppTheme(mode), [mode]);
 
   return (
     <MuiThemeProvider theme={theme}>
@@ -80,8 +78,10 @@ const App = (): ReactElement => (
             v7_relativeSplatPath: true,
           }}
         >
+          <NativeBackButtonBridge />
           <AuthProvider>
             <LoadingProvider>
+              <GeneralUpdatesSubscriptionHost />
               <UserPreferencesSync />
               <PushSubscriptionSync />
               <NativePushSubscriptionSync />

@@ -2,10 +2,14 @@ import type { ReactElement } from "react";
 
 import { API_CONFIG } from "../../config/env";
 import {
-  APP_VERSION,
+  ANDROID_APP_VERSION,
+  API_VERSION,
   APP_VERSION_DEPLOY_TOOLTIP_DELAY_MS,
+  WEB_VERSION,
 } from "../../constants/app-version.constants";
 import AppTooltip from "../../shared/AppTooltip";
+import { toPersianDigits } from "../../utilities/persian-digits.util";
+import { isAndroidApp } from "../../utils/androidAppDownload.util";
 import styles from "./styles/more.module.scss";
 
 function buildDeployTooltipTitle(): string {
@@ -16,9 +20,11 @@ function buildDeployTooltipTitle(): string {
 }
 
 const AppVersionBlock = (): ReactElement => {
+  const showAndroidVersion = isAndroidApp();
+
   return (
     <div className={styles.versionBlock}>
-      <span />
+      <span className={styles.versionDivider} />
       <AppTooltip
         title={buildDeployTooltipTitle()}
         arrow
@@ -32,7 +38,30 @@ const AppVersionBlock = (): ReactElement => {
           },
         }}
       >
-        <p className={styles.versionLabel}>نسخه {APP_VERSION}</p>
+        <p className={styles.versionLine}>
+          <span className={styles.versionItem}>
+            <span className={styles.versionLabel}>نسخه وب:</span>{" "}
+            <span className={styles.versionValue}>{toPersianDigits(WEB_VERSION)}</span>
+          </span>
+          <span className={styles.versionSeparator} aria-hidden>
+            |
+          </span>
+          <span className={styles.versionItem}>
+            <span className={styles.versionLabel}>نسخه اِی‌پی‌آی:</span>{" "}
+            <span className={styles.versionValue}>{toPersianDigits(API_VERSION)}</span>
+          </span>
+          {showAndroidVersion ? (
+            <>
+              <span className={styles.versionSeparator} aria-hidden>
+                |
+              </span>
+              <span className={styles.versionItem}>
+                <span className={styles.versionLabel}>نسخه اپ:</span>{" "}
+                <span className={styles.versionValue}>{toPersianDigits(ANDROID_APP_VERSION)}</span>
+              </span>
+            </>
+          ) : null}
+        </p>
       </AppTooltip>
     </div>
   );

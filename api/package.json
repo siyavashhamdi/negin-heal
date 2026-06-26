@@ -1,11 +1,12 @@
 {
   "name": "negin-heal-api",
-  "version": "1.0.2",
+  "version": "1.0.5",
   "description": "Professional NestJS API for Negin Heal Application",
   "author": "Negin Heal Team",
   "private": true,
   "license": "MIT",
   "scripts": {
+    "prebuild": "node ../scripts/generate-build-versions.mjs",
     "build": "NODE_OPTIONS=--max-old-space-size=768 nest build",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:write": "prettier --write \"src/**/*.ts\"",

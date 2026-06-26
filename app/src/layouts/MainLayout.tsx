@@ -55,8 +55,6 @@ import { useGeneralUpdatesOnline } from "../hooks/useGeneralUpdatesOnline";
 import { APP_SHELL_ROUTES, isCourseDetailRoute } from "../routing/app-shell-routes";
 import { resolveNotificationActionPayload } from "../utilities/notification-action.util";
 import { deliverNotificationPushIfEnabled } from "../utils/browserNotification.util";
-import { isAndroidApp } from "../utils/androidAppDownload.util";
-import { syncLauncherBadgeCount } from "../native/launcherBadge";
 import { scrollToTopOnMobile } from "../utils/scrollToTopOnMobile.util";
 import { AppShellNavItemIcon } from "./AppShellNavItemIcon";
 import {
@@ -450,14 +448,6 @@ export function MainLayout({
     }),
     [coursesBadgeCount, notificationBadgeCount, paymentBadgeCount, supportBadgeCount]
   );
-
-  useEffect(() => {
-    if (!isAndroidApp() || !authUser) {
-      return;
-    }
-
-    void syncLauncherBadgeCount(notificationBadgeCount);
-  }, [authUser, notificationBadgeCount]);
 
   const headerSettingsItems = useMemo(
     () => filterHeaderPanelNavItems(HEADER_SETTINGS_ITEMS, roles, isAuthenticated),

@@ -1,7 +1,9 @@
-import { useMemo, type ReactElement } from "react";
+import { useCallback, useMemo, type ReactElement } from "react";
 import { GENERAL_SUBSCRIPTION_UPDATE_TYPES } from "../constants";
 import { useAuth } from "../contexts/AuthContext";
 import { useGeneralUpdatesSubscription } from "../hooks/useGeneralUpdatesSubscription";
+import type { GeneralUpdateEvent } from "../hooks/useGeneralUpdatesSubscription";
+import { notifyBadgeCountUpdateListeners } from "../lib/badge-count-update-listeners";
 import { notifyGeneralUpdateListeners } from "../lib/general-updates-listeners";
 
 /**
@@ -22,10 +24,18 @@ export function GeneralUpdatesSubscriptionHost(): ReactElement | null {
     [user],
   );
 
+  const handleGeneralUpdate = useCallback((event: GeneralUpdateEvent): void => {
+    notifyGeneralUpdateListeners(event);
+
+    if (event.updateType === GENERAL_SUBSCRIPTION_UPDATE_TYPES.BADGE_COUNTS) {
+      notifyBadgeCountUpdateListeners();
+    }
+  }, []);
+
   useGeneralUpdatesSubscription({
     enabled: true,
     updateTypes,
-    onAnyUpdate: notifyGeneralUpdateListeners,
+    onAnyUpdate: handleGeneralUpdate,
   });
 
   return null;

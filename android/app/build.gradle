@@ -1,5 +1,7 @@
 apply plugin: 'com.android.application'
 
+def packageJsonFile = file("${rootDir}/package.json")
+def packageJson = new groovy.json.JsonSlurper().parse(packageJsonFile)
 def appVersionFile = file("${rootDir}/app-version.json")
 def appVersion = new groovy.json.JsonSlurper().parse(appVersionFile)
 
@@ -11,7 +13,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode appVersion.versionCode as Integer
-        versionName appVersion.versionName as String
+        versionName packageJson.version as String
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

@@ -45,6 +45,7 @@ promote_staging_build() {
 
 build_api_staging() {
   rm -rf "api/${STAGING_DIR}"
+  node "${ROOT_DIR}/scripts/generate-build-versions.mjs"
   export NODE_OPTIONS="--max-old-space-size=${API_BUILD_HEAP_MB}"
   npm run build --prefix api -- -p tsconfig.deploy.json
   unset NODE_OPTIONS

@@ -38,6 +38,13 @@ body[data-theme="dark"] .MuiAutocomplete-paper {
     overscroll-behavior: none;
   }
 
+  html[data-native-android-shell="true"] button,
+  html[data-native-android-shell="true"] a,
+  html[data-native-android-shell="true"] [role="button"],
+  html[data-native-android-shell="true"] .MuiButtonBase-root {
+    touch-action: manipulation;
+  }
+
   .MuiInputBase-input,
   .MuiInputBase-inputMultiline,
   .MuiSelect-select,

@@ -1,5 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 
+import { BuildVersionsApiResponse } from "./build-versions.api.response";
+
 /**
  * Health Check Response for REST API
  * Used for GET /health endpoint
@@ -46,9 +48,15 @@ export class HealthCheckApiResponse {
   };
 
   @ApiProperty({
-    description: "Application version",
+    description: "API application version",
     example: "1.0.0",
     type: String,
   })
   version: string;
+
+  @ApiProperty({
+    description: "Build versions for web, API, and Android app shell",
+    type: BuildVersionsApiResponse,
+  })
+  versions: BuildVersionsApiResponse;
 }

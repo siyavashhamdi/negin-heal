@@ -1,6 +1,11 @@
 import { Injectable } from "@nestjs/common";
 
 import {
+  ANDROID_APP_VERSION,
+  API_VERSION,
+  WEB_VERSION,
+} from "../../constants/app-version.constants";
+import {
   HealthCheckApiResponse,
   HealthReadinessApiResponse,
   HealthLivenessApiResponse,
@@ -14,7 +19,12 @@ export class HealthService {
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       memory: process.memoryUsage(),
-      version: process.env.npm_package_version || "N/A",
+      version: API_VERSION,
+      versions: {
+        web: WEB_VERSION,
+        api: API_VERSION,
+        android: ANDROID_APP_VERSION,
+      },
     };
   }
 

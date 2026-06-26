@@ -26,6 +26,11 @@ describe("HealthService", () => {
     expect(result.uptime).toBeDefined();
     expect(result.memory).toBeDefined();
     expect(result.version).toBeDefined();
+    expect(result.versions).toEqual({
+      web: expect.any(String),
+      api: expect.any(String),
+      android: expect.any(String),
+    });
   });
 
   it("should return readiness status", async () => {

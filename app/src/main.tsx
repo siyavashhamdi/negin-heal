@@ -6,6 +6,7 @@ import "./index.scss";
 import "./i18n/config";
 import { bootstrapCapacitorNativeShell } from "./native/capacitorBootstrap";
 import { registerPwaServiceWorker } from "./utils/pwaRegistration.util";
+import { isNativeAndroidShell } from "./utils/nativePlatform.util";
 
 const rootElement = document.getElementById("root");
 
@@ -15,9 +16,12 @@ if (!rootElement) {
 
 async function bootstrap(): Promise<void> {
   void bootstrapCapacitorNativeShell();
-  registerPwaServiceWorker();
 
-  if (!navigator.onLine && "serviceWorker" in navigator) {
+  if (!isNativeAndroidShell()) {
+    registerPwaServiceWorker();
+  }
+
+  if (!navigator.onLine && "serviceWorker" in navigator && !isNativeAndroidShell()) {
     try {
       await navigator.serviceWorker.ready;
     } catch {

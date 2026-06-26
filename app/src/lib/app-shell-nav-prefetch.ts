@@ -32,6 +32,7 @@ import { buildTicketListQueryVariables } from "../pages/Support/support-list.api
 import { EMPTY_SUPPORT_TICKET_LIST_FILTERS } from "../pages/Support/support.types";
 import { apolloClient } from "./apollo-client";
 import { getIsOfflineMode } from "./offline-state";
+import { isNativeAndroidShell } from "../utils/nativePlatform.util";
 
 const COURSE_LIST_PAGE_SIZE = 6;
 const SERVER_PAGINATED_PAGE_SIZE = 10;
@@ -170,7 +171,7 @@ export function buildAppShellNavPrefetchOperations(
 }
 
 export function scheduleAppShellNavPrefetch(context: AppShellNavPrefetchContext): void {
-  if (getIsOfflineMode()) {
+  if (getIsOfflineMode() || isNativeAndroidShell()) {
     return;
   }
 

@@ -253,12 +253,18 @@ function createApolloLink(cache: InMemoryCache): ApolloLink {
 
 export let apolloClient!: ApolloClient;
 
-export async function initApolloClient(): Promise<ApolloClient> {
+type InitApolloClientOptions = {
+  readonly deferCacheHydrate?: boolean;
+};
+
+export async function initApolloClient(options?: InitApolloClientOptions): Promise<ApolloClient> {
   const cache = new InMemoryCache({
     typePolicies: paginatedQueryTypePolicies,
   });
 
-  await hydrateApolloCache(cache);
+  if (!options?.deferCacheHydrate) {
+    await hydrateApolloCache(cache);
+  }
 
   const defaultWatchQueryFetchPolicy: WatchQueryFetchPolicy = getIsBrowserOffline()
     ? "cache-only"

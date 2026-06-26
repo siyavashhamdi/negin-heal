@@ -48,6 +48,9 @@ cleanup_apk_staging_backup() {
 }
 trap cleanup_apk_staging_backup EXIT
 
+echo "Syncing build versions from package.json files..."
+node "${ROOT_DIR}/../scripts/generate-build-versions.mjs"
+
 echo "Building web app..."
 (cd "${APP_DIR}" && \
   VITE_API_BASE_URL=https://neginheal.ir \

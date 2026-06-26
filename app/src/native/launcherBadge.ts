@@ -13,19 +13,6 @@ export async function syncLauncherBadgeCount(count: number): Promise<void> {
   }
 
   try {
-    const { isSupported } = await Badge.isSupported();
-    if (!isSupported) {
-      return;
-    }
-
-    const permission = await Badge.checkPermissions();
-    if (permission.display !== "granted") {
-      const requested = await Badge.requestPermissions();
-      if (requested.display !== "granted") {
-        return;
-      }
-    }
-
     const normalizedCount = Math.max(0, Math.floor(count));
 
     if (normalizedCount <= 0) {
@@ -45,11 +32,6 @@ export async function clearLauncherBadgeCount(): Promise<void> {
   }
 
   try {
-    const { isSupported } = await Badge.isSupported();
-    if (!isSupported) {
-      return;
-    }
-
     await Badge.clear();
   } catch (error) {
     console.warn("[LauncherBadge] Failed to clear launcher badge count.", error);
