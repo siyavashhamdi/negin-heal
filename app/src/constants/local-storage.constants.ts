@@ -8,6 +8,7 @@ export const LOCAL_STORAGE_KEYS = {
   ACCESS_TOKEN: "access-token",
   VAPID_PUBLIC_KEY: "vapid-public-key",
   PUSH_SUBSCRIPTION_ENDPOINT: "push-subscription-endpoint",
+  NATIVE_PUSH_TOKEN: "native-push-token",
 } as const;
 
 export type LocalStorageKey = (typeof LOCAL_STORAGE_KEYS)[keyof typeof LOCAL_STORAGE_KEYS];

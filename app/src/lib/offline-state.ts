@@ -1,3 +1,6 @@
+import { Capacitor } from "@capacitor/core";
+import { Network } from "@capacitor/network";
+import { resolveGraphqlHttpUrl } from "../utils/apiBaseUrl.util";
 import { isGeneralUpdatesSubscriptionOffline } from "./general-updates-listeners";
 import { resetSubscriptionRetryFromStart } from "./subscription-retry.util";
 
@@ -92,6 +95,42 @@ export function subscribeOfflineModeStatus(listener: (offline: boolean) => void)
   };
 }
 
+function syncBrowserOfflineStatus(nextOffline: boolean): void {
+  if (nextOffline !== isBrowserOffline) {
+    isBrowserOffline = nextOffline;
+    notifyOfflineStatusListeners();
+  }
+}
+
+function handleNetworkBackOnline(): void {
+  void probeBackendReachability().then((reachable) => {
+    if (reachable) {
+      markBackendReachable();
+    }
+  });
+}
+
+function registerNativeNetworkListeners(): void {
+  if (!Capacitor.isNativePlatform()) {
+    return;
+  }
+
+  void Network.getStatus()
+    .then((status) => {
+      syncBrowserOfflineStatus(!status.connected);
+    })
+    .catch((error: unknown) => {
+      console.warn("[Offline] Failed to read native network status.", error);
+    });
+
+  void Network.addListener("networkStatusChange", (status) => {
+    syncBrowserOfflineStatus(!status.connected);
+    if (status.connected) {
+      handleNetworkBackOnline();
+    }
+  });
+}
+
 export function initBrowserOfflineListeners(): void {
   if (offlineListenersRegistered || typeof window === "undefined") {
     return;
@@ -99,23 +138,16 @@ export function initBrowserOfflineListeners(): void {
 
   offlineListenersRegistered = true;
 
-  const syncBrowserOfflineStatus = (): void => {
-    const nextOffline = !navigator.onLine;
-    if (nextOffline !== isBrowserOffline) {
-      isBrowserOffline = nextOffline;
-      notifyOfflineStatusListeners();
-    }
+  const syncFromNavigator = (): void => {
+    syncBrowserOfflineStatus(!navigator.onLine);
   };
 
   window.addEventListener("online", () => {
-    syncBrowserOfflineStatus();
-    void probeBackendReachability().then((reachable) => {
-      if (reachable) {
-        markBackendReachable();
-      }
-    });
+    syncFromNavigator();
+    handleNetworkBackOnline();
   });
-  window.addEventListener("offline", syncBrowserOfflineStatus);
+  window.addEventListener("offline", syncFromNavigator);
+  registerNativeNetworkListeners();
 }
 
 const BACKEND_PROBE_TIMEOUT_MS = 800;
@@ -131,7 +163,7 @@ export async function probeBackendReachability(
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
 
-    const response = await fetch("/graphql", {
+    const response = await fetch(resolveGraphqlHttpUrl(), {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ query: "query OfflineProbe { __typename }" }),

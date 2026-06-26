@@ -28,6 +28,7 @@ type PushPayload = {
   url: string;
   tag: string;
   notificationId?: string;
+  badgeCount?: number;
 };
 
 precacheAndRoute(self.__WB_MANIFEST);
@@ -68,16 +69,23 @@ self.addEventListener("push", (event: PushEvent) => {
 
   if (event.data) {
     try {
+      const parsed = event.data.json() as Partial<PushPayload>;
       payload = {
         ...payload,
-        ...event.data.json(),
+        ...parsed,
+        badgeCount:
+          typeof parsed.badgeCount === "number"
+            ? parsed.badgeCount
+            : typeof parsed.badgeCount === "string"
+              ? Number.parseInt(parsed.badgeCount, 10)
+              : payload.badgeCount,
       };
     } catch {
       payload.body = event.data.text();
     }
   }
 
-  const options: NotificationOptions = {
+  const showNotificationPromise = self.registration.showNotification(payload.title, {
     body: payload.body,
     icon: NOTIFICATION_ICON,
     badge: NOTIFICATION_ICON,
@@ -85,13 +93,29 @@ self.addEventListener("push", (event: PushEvent) => {
     data: {
       url: payload.url || "/",
       notificationId: payload.notificationId,
+      badgeCount: payload.badgeCount,
     },
     dir: "rtl",
     lang: "fa",
     renotify: true,
-  };
+  });
 
-  event.waitUntil(self.registration.showNotification(payload.title, options));
+  const notifyClientsPromise = self.clients
+    .matchAll({ type: "window", includeUncontrolled: true })
+    .then((clients) => {
+      if (typeof payload.badgeCount !== "number" || Number.isNaN(payload.badgeCount)) {
+        return;
+      }
+
+      clients.forEach((client) => {
+        client.postMessage({
+          type: "launcher-badge-sync",
+          badgeCount: payload.badgeCount,
+        });
+      });
+    });
+
+  event.waitUntil(Promise.all([showNotificationPromise, notifyClientsPromise]));
 });
 
 self.addEventListener("notificationclick", (event: NotificationEvent) => {

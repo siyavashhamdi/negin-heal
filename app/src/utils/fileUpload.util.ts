@@ -1,4 +1,5 @@
 import { LOCAL_STORAGE_KEYS } from "../constants";
+import { resolveApiUrl } from "./apiBaseUrl.util";
 import type { FileUploadPolicyId } from "../constants/fileUploadPolicies";
 import { FILE_UPLOAD_POLICY_MAX_SIZE_BYTES } from "../constants/fileUploadPolicies";
 import { resolveErrorMessageFromCode } from "../utilities/graphql-error.util";
@@ -9,7 +10,7 @@ import {
   validateSelectedUploadFile,
 } from "./fileUploadValidation.util";
 
-const FILE_UPLOAD_PATH = "/api/v1/files/upload";
+const FILE_UPLOAD_PATH = resolveApiUrl("/api/v1/files/upload");
 
 /** Share of the bar reserved for compression before the network upload starts. */
 const COMPRESSION_PROGRESS_SHARE = 10;

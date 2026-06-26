@@ -1,5 +1,6 @@
 import { createClient, type Client } from "graphql-ws";
 import { LOCAL_STORAGE_KEYS } from "../constants";
+import { resolveGraphqlWsUrl } from "../utils/apiBaseUrl.util";
 import {
   resolveSubscriptionRetryDelayMs,
   waitForSubscriptionRetryDelayMs,
@@ -37,7 +38,7 @@ function shouldRetryWsSubscriptionConnection(_errOrCloseEvent: unknown): boolean
 }
 
 function buildGraphqlWsUrl(): string {
-  return `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/graphql`;
+  return resolveGraphqlWsUrl();
 }
 
 function registerLifecycleListeners(): void {

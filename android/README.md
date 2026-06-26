@@ -1,6 +1,6 @@
 # Negin Heal Android (Capacitor)
 
-Capacitor WebView shell for [https://neginheal.ir/](https://neginheal.ir/). The native APK provides a launcher icon, splash screen, and Android System WebView — **no Chrome dependency** and no “Running in Chrome?” disclosure. App content loads from the live website and updates automatically when you deploy the web app.
+Capacitor WebView shell for [https://neginheal.ir/](https://neginheal.ir/). The native APK provides a launcher icon, splash screen, and Android System WebView — **no Chrome dependency** and no “Running in Chrome?” disclosure. The app shell is bundled in the APK for offline browsing; API calls go to the live backend when online.
 
 - **Package ID:** `neginheal.app` (new Cafe Bazaar listing; legacy `ir.neginheal.app` is retired)
 - **Config:** `app/capacitor.config.ts`
@@ -109,9 +109,107 @@ Ensure your Android SDK has `platforms;android-35` and `build-tools;35.0.1` inst
 ## Architecture notes
 
 - Uses **Android System WebView**, not Chrome Custom Tabs / TWA
-- Loads production content from `https://neginheal.ir` via Capacitor `server.url`
-- Offline fallback page: `app/public/capacitor-offline.html` (Persian)
-- Native shell bootstrap: `app/src/native/capacitorBootstrap.ts` (status bar, back button, splash)
+- Bundles the web app shell in the APK (offline browsing via service worker + SQLite cache)
+- API requests target `https://neginheal.ir` (set at build time via `VITE_API_BASE_URL`)
+- Optional remote-shell dev mode: `CAPACITOR_USE_REMOTE_SERVER=1` loads from `server.url` instead
+- Native shell bootstrap: `app/src/native/capacitorBootstrap.ts` (status bar, back button, splash, FCM registration)
+- Launcher icon badge sync: `@capawesome/capacitor-badge` + FCM data messages from the API
 - Icons are generated into `android/app/src/main/res/` by `app/scripts/generate-pwa-icons.mjs`
+
+## Firebase setup (required for launcher badge + native push while app is closed)
+
+Native Android push and launcher badge sync when the APK is **closed** require Firebase Cloud Messaging (FCM). The free Firebase plan is enough.
+
+### Account and project
+
+1. Go to [Firebase Console](https://console.firebase.google.com/) (use any Google account).
+2. **Create a project** (or open an existing one).
+3. Add an **Android app** with package ID **`neginheal.app`**.
+
+### Files to configure
+
+| File | Purpose |
+|------|---------|
+| `android/app/google-services.json` | Android client config (downloaded from Firebase; **gitignored**) |
+| `api/.env` | Server credentials for sending FCM messages |
+
+No Firebase keys are needed in `app/.env`.
+
+### Where to find each value in Firebase
+
+#### `google-services.json` (Android APK)
+
+1. Firebase Console → **Project settings** (gear icon)
+2. **Your apps** → Android app (`neginheal.app`)
+3. **Download google-services.json**
+4. Save as `android/app/google-services.json`
+
+#### `FIREBASE_PROJECT_ID` (`api/.env`)
+
+1. **Project settings** → **General**
+2. Copy **Project ID** (not “Project name”)
+
+Example: `neginheal`
+
+#### `FIREBASE_CLIENT_EMAIL` and `FIREBASE_PRIVATE_KEY` (`api/.env`)
+
+These come from a **service account JSON**, not from the Android app screen.
+
+1. **Project settings** → **Service accounts**
+2. Click **Generate new private key** → confirm
+3. A `.json` file downloads. Map fields to `.env`:
+
+| `api/.env` key | JSON field |
+|----------------|------------|
+| `FIREBASE_PROJECT_ID` | `project_id` |
+| `FIREBASE_CLIENT_EMAIL` | `client_email` |
+| `FIREBASE_PRIVATE_KEY` | `private_key` |
+
+**Admin SDK language (Node.js / Java / Python / Go):** any choice is fine — the JSON file is identical. Pick **Node.js** if you want sample code that matches this API (`firebase-admin`).
+
+Example `.env` format:
+
+```env
+FIREBASE_PROJECT_ID=neginheal
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@neginheal.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIE...\n-----END PRIVATE KEY-----\n"
+```
+
+Keep `private_key` on one line; preserve `\n` between PEM lines. Wrap in double quotes.
+
+You do **not** need the “Web API Key” or legacy “Server key” from Cloud Messaging for this setup.
+
+### After configuring
+
+1. Restart the API (reads `api/.env`).
+2. Rebuild the APK: `cd android && npm run build` (or `assembleDebug` for local testing).
+3. Confirm `pushNotificationConfig { nativePushEnabled }` is `true` in GraphQL.
+
+### What works with vs without Firebase
+
+| Scenario | Without Firebase | With Firebase |
+|----------|------------------|---------------|
+| In-app badges (app open) | Yes | Yes |
+| Launcher badge (app open) | Yes (device-dependent) | Yes |
+| Launcher badge (app **closed**) | No | Yes (FCM `badge_sync`) |
+| Native push when app closed | No | Yes |
+
+Without Firebase, in-app badges still work while the app is open, but launcher badge counts will not update when the APK is closed.
+
+### Status bar / notch overlap
+
+Samsung and other devices draw the WebView under the system status bar by default. The app handles this via:
+
+- `StatusBar.overlaysWebView: false` in `app/capacitor.config.ts`
+- `WindowCompat.setDecorFitsSystemWindows` in `MainActivity`
+- `android:windowOptOutEdgeToEdgeEnforcement` for Android 15+ (`values-v35/styles.xml`)
+- Native status bar color in `styles.xml` (`statusBarColor`)
+- `app/src/native/nativeSafeArea.ts` — disables WebView overlay (no extra CSS body padding)
+
+### Security
+
+- Never commit `google-services.json`, service account JSON, or `FIREBASE_PRIVATE_KEY` to git.
+- `android/app/google-services.json` is already in `.gitignore`.
+- Store production secrets only in server environment variables.
 
 Keep `android.keystore` out of git (already in `.gitignore`) and back it up safely.

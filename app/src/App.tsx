@@ -17,6 +17,8 @@ import { LoadingBar } from "./components/LoadingBar";
 import { OfflineModeBanner } from "./components/OfflineModeBanner";
 import { UserPreferencesSync } from "./components/UserPreferencesSync";
 import { PushSubscriptionSync } from "./components/PushSubscriptionSync";
+import { NativePushSubscriptionSync } from "./components/NativePushSubscriptionSync";
+import { LauncherBadgeSync } from "./components/LauncherBadgeSync";
 import { MainLayout } from "./layouts/MainLayout";
 import { LOCAL_STORAGE_KEYS } from "./constants";
 import { DashboardAppRoutes } from "./routing/DashboardAppRoutes";
@@ -81,6 +83,8 @@ const App = (): ReactElement => (
             <LoadingProvider>
               <UserPreferencesSync />
               <PushSubscriptionSync />
+              <NativePushSubscriptionSync />
+              <LauncherBadgeSync />
               <ThemedAppTree />
             </LoadingProvider>
           </AuthProvider>

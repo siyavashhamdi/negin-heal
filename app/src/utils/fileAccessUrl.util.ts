@@ -1,3 +1,5 @@
+import { resolveApiBaseUrl } from "./apiBaseUrl.util";
+
 export type FileAccessUrl = {
   readonly baseUrl?: string | null;
   readonly apiPath: string;
@@ -17,11 +19,7 @@ export type ExistingFilePreview = {
 };
 
 function getFallbackOrigin(): string {
-  if (typeof window !== "undefined" && window.location.origin) {
-    return window.location.origin;
-  }
-
-  return "";
+  return resolveApiBaseUrl();
 }
 
 export function resolveFileAccessUrl(

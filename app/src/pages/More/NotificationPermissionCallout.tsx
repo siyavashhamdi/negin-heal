@@ -17,6 +17,7 @@ import {
   requestBrowserNotificationPermission,
 } from "../../utils/browserNotification.util";
 import { syncWebPushSubscriptionWithServer } from "../../utils/pushSubscription.util";
+import { syncNativePushRegistrationWithServer } from "../../native/nativePushRegistration";
 import styles from "./styles/more.module.scss";
 
 type NotificationPermissionCalloutProps = {
@@ -111,6 +112,7 @@ const NotificationPermissionCallout = ({
       if (result === "granted") {
         await registerNotificationServiceWorker();
         await syncWebPushSubscriptionWithServer();
+        await syncNativePushRegistrationWithServer();
         showSuccess(t("pages.more.notifications.enabledSuccess"));
         return;
       }

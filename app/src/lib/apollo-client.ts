@@ -26,6 +26,7 @@ import {
 import { clearFileContentCache } from "./file-content-cache";
 import { resetAppShellNavPrefetchState } from "./app-shell-nav-prefetch";
 import { createCacheFallbackLink } from "./apollo-offline-link";
+import { resolveGraphqlHttpUrl } from "../utils/apiBaseUrl.util";
 import {
   getIsBrowserOffline,
   getIsOfflineMode,
@@ -55,7 +56,7 @@ function shouldSuppressNetworkErrorUx(operationContext: Record<string, unknown>)
 }
 
 const httpLink = new HttpLink({
-  uri: "/graphql",
+  uri: resolveGraphqlHttpUrl(),
   credentials: "include",
 });
 
@@ -156,7 +157,7 @@ const errorLink = new ErrorLink(({ error, operation }) => {
           extensions: graphQLError.extensions as GraphQLErrorExtensions | undefined,
         });
 
-      if (!(shouldIgnoreAuthSessionExpiry() && isRoleForbidden)) {
+      if (!(shouldIgnoreAuthSessionExpiry() && isRoleForbidden) && errorMessage.trim()) {
         queueApolloError(errorMessage);
       }
 
@@ -189,7 +190,9 @@ const errorLink = new ErrorLink(({ error, operation }) => {
       message: rawMessage,
       networkError: error,
     });
-    queueApolloError(userFriendlyMessage);
+    if (userFriendlyMessage.trim()) {
+      queueApolloError(userFriendlyMessage);
+    }
 
     if (error.statusCode === 401 && !shouldIgnoreAuthSessionExpiry()) {
       notifyAuthSessionExpired();
@@ -204,9 +207,12 @@ const errorLink = new ErrorLink(({ error, operation }) => {
 
     const rawMessage = error.message || "An error occurred";
     console.error(`[Error]: ${rawMessage}`);
-    queueApolloError(
-      extractGraphQLErrorMessage(error instanceof Error ? error : new Error(rawMessage))
+    const userFriendlyMessage = extractGraphQLErrorMessage(
+      error instanceof Error ? error : new Error(rawMessage)
     );
+    if (userFriendlyMessage.trim()) {
+      queueApolloError(userFriendlyMessage);
+    }
   }
 });
 

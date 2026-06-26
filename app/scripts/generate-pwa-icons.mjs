@@ -21,6 +21,15 @@ const ANDROID_LAUNCHER_SIZES = {
   "mipmap-xxxhdpi": 192,
 };
 
+/** Adaptive-icon foreground layer sizes (108dp at each density). */
+const ANDROID_ADAPTIVE_FOREGROUND_SIZES = {
+  "mipmap-mdpi": 108,
+  "mipmap-hdpi": 162,
+  "mipmap-xhdpi": 216,
+  "mipmap-xxhdpi": 324,
+  "mipmap-xxxhdpi": 432,
+};
+
 const ANDROID_NOTIFICATION_SIZES = {
   "drawable-mdpi": 24,
   "drawable-hdpi": 36,
@@ -59,6 +68,23 @@ async function writeSquareIcon(outputPath, size, { maskable = false } = {}) {
     .toFile(outputPath);
 }
 
+async function writeAdaptiveForeground(outputPath, size) {
+  const iconSize = Math.round(size * 0.66);
+  const logo = await sharp(logoPath).resize(iconSize, iconSize, { fit: "contain" }).png().toBuffer();
+
+  await sharp({
+    create: {
+      width: size,
+      height: size,
+      channels: 4,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    },
+  })
+    .composite([{ input: logo, gravity: "center" }])
+    .png()
+    .toFile(outputPath);
+}
+
 async function writePwaIcons() {
   await mkdir(iconsDir, { recursive: true });
 
@@ -75,13 +101,20 @@ async function writeAndroidIcons() {
   await Promise.all([
     ...Object.entries(ANDROID_LAUNCHER_SIZES).flatMap(([folder, size]) => {
       const maskableSize = Math.round(size * (512 / 300));
+      const launcherPath = path.join(androidResDir, folder, "ic_launcher.png");
       return [
-        mkdir(path.join(androidResDir, folder), { recursive: true }).then(() =>
-          writeSquareIcon(path.join(androidResDir, folder, "ic_launcher.png"), size),
-        ),
+        mkdir(path.join(androidResDir, folder), { recursive: true }).then(async () => {
+          await writeSquareIcon(launcherPath, size);
+          await writeSquareIcon(path.join(androidResDir, folder, "ic_launcher_round.png"), size);
+        }),
         writeSquareIcon(path.join(androidResDir, folder, "ic_maskable.png"), maskableSize),
       ];
     }),
+    ...Object.entries(ANDROID_ADAPTIVE_FOREGROUND_SIZES).map(([folder, size]) =>
+      mkdir(path.join(androidResDir, folder), { recursive: true }).then(() =>
+        writeAdaptiveForeground(path.join(androidResDir, folder, "ic_launcher_foreground.png"), size),
+      ),
+    ),
     ...Object.entries(ANDROID_NOTIFICATION_SIZES).map(([folder, size]) =>
       mkdir(path.join(androidResDir, folder), { recursive: true }).then(() =>
         writeSquareIcon(path.join(androidResDir, folder, "ic_notification_icon.png"), size),

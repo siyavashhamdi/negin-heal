@@ -1,6 +1,6 @@
 import CloudOffRoundedIcon from "@mui/icons-material/CloudOffRounded";
 import { Alert, Box, Button, Snackbar } from "@mui/material";
-import { useEffect, useRef, type ReactElement } from "react";
+import { useEffect, useRef, useState, type ReactElement } from "react";
 
 import { useBrowserOffline } from "../hooks/useBrowserOffline";
 import { useGeneralUpdatesOnline } from "../hooks/useGeneralUpdatesOnline";
@@ -16,6 +16,7 @@ const MOBILE_BOTTOM_NAV_SNACKBAR_OFFSET =
 
 const DISMISS_BUTTON_BORDER_COLOR = "rgba(255, 236, 179, 0.95)";
 const BANNER_INSET_MARGIN = "0.5rem";
+const INITIAL_GRACE_PERIOD_MS = 5_000;
 
 const dismissButtonSx = {
   flexShrink: 0,
@@ -41,7 +42,18 @@ export function OfflineModeBanner(): ReactElement | null {
   const isOffline = isOfflineMode && generalUpdatesOnline !== true;
   const { dismissed, dismiss } = useOfflineBannerDismissed();
   const wasOfflineRef = useRef(isOffline);
-  const isOpen = isOffline && !dismissed;
+  const [gracePeriodElapsed, setGracePeriodElapsed] = useState(false);
+  const isOpen = isOffline && !dismissed && gracePeriodElapsed;
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setGracePeriodElapsed(true);
+    }, INITIAL_GRACE_PERIOD_MS);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, []);
 
   const { handlePointerDown, dragStyle, resetDrag } = useMobileSnackbarDismiss(
     isMobileAppLayout,
@@ -59,7 +71,7 @@ export function OfflineModeBanner(): ReactElement | null {
     wasOfflineRef.current = isOffline;
   }, [isOffline, resetDrag]);
 
-  if (!isOffline) {
+  if (!isOffline || !gracePeriodElapsed) {
     return null;
   }
 

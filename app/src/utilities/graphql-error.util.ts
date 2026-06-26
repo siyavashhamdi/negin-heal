@@ -192,6 +192,8 @@ function joinMessageParts(value: string | string[]): string {
 
 const GENERIC_EXCEPTION_CODES = new Set(["INTERNAL_SERVER_ERROR", "UNKNOWN_ERROR_OCCURRED"]);
 
+const SUPPRESSED_USER_FACING_EXCEPTION_CODES = new Set(["INTERNAL_SERVER_ERROR"]);
+
 const GENERIC_BACKEND_ERROR_MESSAGES = new Set([
   "An internal server error occurred!",
   "An internal server error occurred",
@@ -366,6 +368,10 @@ function resolveGraphQLErrorFieldMessage(error?: RawGraphQLErrorItem): string {
   }
 
   if (exceptionCode && GENERIC_EXCEPTION_CODES.has(exceptionCode)) {
+    if (SUPPRESSED_USER_FACING_EXCEPTION_CODES.has(exceptionCode)) {
+      return "";
+    }
+
     const translatedMessage = getExceptionTranslation(exceptionCode, params);
     if (translatedMessage) {
       return translatedMessage;
@@ -510,7 +516,12 @@ export function resolveErrorMessageFromCode(
     return i18n.t("errors.unknown");
   }
 
-  const translatedMessage = getExceptionTranslation(code.trim(), params);
+  const normalizedCode = code.trim();
+  if (SUPPRESSED_USER_FACING_EXCEPTION_CODES.has(normalizedCode)) {
+    return "";
+  }
+
+  const translatedMessage = getExceptionTranslation(normalizedCode, params);
   return translatedMessage || i18n.t("errors.unknown");
 }
 
@@ -519,6 +530,9 @@ export function showErrorIfNotQueued(
   error: unknown
 ): void {
   if (!isApolloHandledError(error)) {
-    showError(extractGraphQLErrorMessage(error));
+    const message = extractGraphQLErrorMessage(error);
+    if (message.trim()) {
+      showError(message);
+    }
   }
 }

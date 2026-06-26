@@ -3,12 +3,15 @@ import { Capacitor } from "@capacitor/core";
 import { SplashScreen } from "@capacitor/splash-screen";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { PWA_THEME_COLOR } from "../constants/pwa.constants";
+import { bootstrapNativePushAndBadge } from "./nativePushRegistration";
+import { applyNativeSafeAreaInsets } from "./nativeSafeArea";
 
 function isNativeAndroidShell(): boolean {
   return Capacitor.isNativePlatform() && Capacitor.getPlatform() === "android";
 }
 
 async function configureAndroidChrome(): Promise<void> {
+  await applyNativeSafeAreaInsets();
   await StatusBar.setStyle({ style: Style.Light });
   await StatusBar.setBackgroundColor({ color: PWA_THEME_COLOR });
 }
@@ -36,6 +39,7 @@ export async function bootstrapCapacitorNativeShell(): Promise<void> {
   try {
     await configureAndroidChrome();
     registerAndroidBackButtonHandler();
+    await bootstrapNativePushAndBadge();
     await SplashScreen.hide();
   } catch (error) {
     console.error("[Capacitor] Native shell bootstrap failed:", error);

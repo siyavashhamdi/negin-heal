@@ -19,6 +19,7 @@ export class PushNotificationConfigQuery {
     return {
       enabled: this.pushNotificationService.isEnabled(),
       publicKey,
+      nativePushEnabled: this.pushNotificationService.isNativePushEnabled(),
     };
   }
 }

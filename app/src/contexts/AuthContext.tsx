@@ -17,6 +17,9 @@ import { consumePostLoginRedirect } from "../routing/post-login-redirect";
 import { USER_LOGOUT_MUTATION } from "../graphql/mutations/userLogout.mutation";
 import { subscribeAuthSessionExpired } from "../lib/auth-session-expired-listeners";
 import { unregisterWebPushSubscriptionFromServer } from "../utils/pushSubscription.util";
+import {
+  unregisterNativePushFromServer,
+} from "../native/nativePushRegistration";
 
 /**
  * User data structure
@@ -174,7 +177,16 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
           console.warn("[Auth] Failed to unregister Web Push subscription during logout.", error);
         })
         .finally(() => {
-          void apolloClient.mutate({ mutation: USER_LOGOUT_MUTATION }).finally(finishLogout);
+          void unregisterNativePushFromServer({ clearStoredToken: true })
+            .catch((error: unknown) => {
+              console.warn(
+                "[Auth] Failed to unregister native push token during logout.",
+                error,
+              );
+            })
+            .finally(() => {
+              void apolloClient.mutate({ mutation: USER_LOGOUT_MUTATION }).finally(finishLogout);
+            });
         });
     },
     [finishAuthSessionClear]

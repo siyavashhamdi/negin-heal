@@ -5,6 +5,10 @@ import {
   registerNotificationServiceWorker,
 } from "./browserNotification.util";
 import { syncWebPushSubscriptionWithServer, unregisterWebPushSubscriptionFromServer } from "./pushSubscription.util";
+import {
+  syncNativePushRegistrationWithServer,
+  unregisterNativePushFromServer,
+} from "../native/nativePushRegistration";
 
 export type ThemePreference = "dark" | "light";
 
@@ -58,8 +62,10 @@ export function applyUserPreferences(preferences: UserPreferencesLike | null | u
     if (preferences.notificationsEnabled && getBrowserNotificationPermission() === "granted") {
       void registerNotificationServiceWorker();
       void syncWebPushSubscriptionWithServer();
+      void syncNativePushRegistrationWithServer();
     } else if (!preferences.notificationsEnabled) {
       void unregisterWebPushSubscriptionFromServer();
+      void unregisterNativePushFromServer();
     }
   }
 

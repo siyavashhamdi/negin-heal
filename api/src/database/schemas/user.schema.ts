@@ -1,6 +1,6 @@
 import { Document, Schema as MongooseSchema, Types } from "mongoose";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { UserRole, UserStatus } from "../../enums";
+import { NativePushPlatform, UserRole, UserStatus } from "../../enums";
 import { normalizeMobilePhone } from "../../utils/contact-validation.util";
 import { BaseIdTimestampableBlameableSchema } from "./base.schema";
 import { timestampablePlugin } from "../plugins/timestampable.plugin";
@@ -114,6 +114,20 @@ export const UserPushSubscriptionSchema = new MongooseSchema(
   { _id: false },
 );
 
+export const UserNativePushTokenSchema = new MongooseSchema(
+  {
+    token: { required: true, trim: true, type: String },
+    platform: {
+      required: true,
+      enum: Object.values(NativePushPlatform),
+      type: String,
+    },
+    registeredAt: { required: true, type: Date },
+    updatedAt: { type: Date },
+  },
+  { _id: false },
+);
+
 /**
  * TypeScript Types (derived from Mongoose schemas)
  * These provide compile-time type checking and IntelliSense
@@ -175,6 +189,13 @@ export type UserPushSubscription = {
   updatedAt?: Date;
 };
 
+export type UserNativePushToken = {
+  token: string;
+  platform: NativePushPlatform;
+  registeredAt: Date;
+  updatedAt?: Date;
+};
+
 export type UserDocument = User & Document;
 
 @Schema()
@@ -220,6 +241,12 @@ export class User extends BaseIdTimestampableBlameableSchema {
     default: [],
   })
   pushSubscriptions: UserPushSubscription[];
+
+  @Prop({
+    type: [UserNativePushTokenSchema],
+    default: [],
+  })
+  nativePushTokens: UserNativePushToken[];
 
   // Roles & Status
   @Prop({
@@ -268,6 +295,22 @@ function disablePushSubscriptionSubdocumentIds(
 }
 
 disablePushSubscriptionSubdocumentIds(UserSchema);
+
+function disableNativePushTokenSubdocumentIds(schema: typeof UserSchema): void {
+  const nativePushTokensPath = schema.path("nativePushTokens");
+  const nativePushTokenSchema =
+    nativePushTokensPath &&
+    "schema" in nativePushTokensPath &&
+    nativePushTokensPath.schema
+      ? nativePushTokensPath.schema
+      : undefined;
+
+  if (nativePushTokenSchema) {
+    nativePushTokenSchema.set("_id", false);
+  }
+}
+
+disableNativePushTokenSubdocumentIds(UserSchema);
 
 // Apply timestampable, blameable, and soft-delete plugins
 UserSchema.plugin(timestampablePlugin);
@@ -331,6 +374,16 @@ UserSchema.index(
     unique: true,
     partialFilterExpression: {
       "pushSubscriptions.endpoint": { $exists: true, $type: "string" },
+    },
+  },
+);
+UserSchema.index(
+  { "nativePushTokens.token": 1 },
+  {
+    name: "uniq_native_push_token",
+    unique: true,
+    partialFilterExpression: {
+      "nativePushTokens.token": { $exists: true, $type: "string" },
     },
   },
 );

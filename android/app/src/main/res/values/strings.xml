@@ -4,4 +4,5 @@
     <string name="title_activity_main">Negin Heal</string>
     <string name="package_name">neginheal.app</string>
     <string name="custom_url_scheme">neginheal.app</string>
+    <string name="default_notification_channel_id">negin_heal_default</string>
 </resources>

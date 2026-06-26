@@ -20,4 +20,10 @@ export class PushNotificationConfigGqlResponse {
     description: "VAPID public key used by clients for PushManager.subscribe()",
   })
   publicKey?: string | null;
+
+  @Field(() => Boolean, {
+    description:
+      "Whether server-side native mobile push (FCM) delivery is configured",
+  })
+  nativePushEnabled: boolean;
 }

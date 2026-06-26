@@ -30,8 +30,14 @@ else
   echo "warning: SKIP_KEYSTORE_VERIFY=1 — building with unverified keystore" >&2
 fi
 
+echo "Generating Android launcher icons from app/public/logo.png..."
+(cd "${APP_DIR}" && npm run generate:pwa-icons)
+
 echo "Building web app..."
-(cd "${APP_DIR}" && npm run build)
+(cd "${APP_DIR}" && \
+  VITE_API_BASE_URL=https://neginheal.ir \
+  VITE_APP_URL=https://neginheal.ir \
+  npm run build)
 
 echo "Syncing Capacitor Android project..."
 (cd "${APP_DIR}" && npx cap sync android)

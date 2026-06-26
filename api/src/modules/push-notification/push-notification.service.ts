@@ -1,16 +1,31 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+import { cert, getApps, initializeApp } from "firebase-admin/app";
+import { getMessaging } from "firebase-admin/messaging";
 import { FilterQuery, Model, Types } from "mongoose";
 import * as webpush from "web-push";
 
 import { env } from "../../config";
 import {
+  Notification,
+  NotificationDocument,
   User,
   UserDocument,
+  UserNativePushToken,
   UserPushSubscription,
 } from "../../database/schemas";
+import { NativePushPlatform } from "../../enums";
+import {
+  buildFcmBadgeSyncData,
+  buildFcmNotificationData,
+} from "./utils/build-fcm-data-message.util";
 import { buildPushNotificationUrl } from "./utils/build-push-notification-url.util";
+import { countUnreadUserNotifications } from "./utils/count-unread-user-notifications.util";
 import { shouldSendWebPush } from "./utils/should-send-web-push.util";
+import {
+  buildUserNativePushTokenDocument,
+  normalizeStoredNativePushToken,
+} from "./utils/user-native-push-token-document.util";
 import {
   buildUserPushSubscriptionDocument,
   normalizeStoredPushSubscription,
@@ -26,6 +41,12 @@ export type RegisterPushSubscriptionInput = {
   replacesEndpoint?: string | null;
 };
 
+export type RegisterNativePushTokenInput = {
+  userId: Types.ObjectId;
+  token: string;
+  platform: NativePushPlatform;
+};
+
 export type DeliverWebPushInput = {
   title: string;
   body: string;
@@ -35,6 +56,10 @@ export type DeliverWebPushInput = {
 };
 
 type DeliverableUserPushSubscription = UserPushSubscription & {
+  userId: Types.ObjectId;
+};
+
+type DeliverableNativePushToken = UserNativePushToken & {
   userId: Types.ObjectId;
 };
 
@@ -49,17 +74,25 @@ type WebPushSubscriptionPayload = {
 @Injectable()
 export class PushNotificationService {
   private readonly logger = new Logger(PushNotificationService.name);
-  private configured = false;
+  private webPushConfigured = false;
+  private fcmConfigured = false;
 
   constructor(
     @InjectModel(User.name)
     private readonly userModel: Model<UserDocument>,
+    @InjectModel(Notification.name)
+    private readonly notificationModel: Model<NotificationDocument>,
   ) {
     this.configureWebPush();
+    this.configureFirebase();
   }
 
   isEnabled(): boolean {
-    return this.configured;
+    return this.webPushConfigured;
+  }
+
+  isNativePushEnabled(): boolean {
+    return this.fcmConfigured;
   }
 
   getPublicKey(): string | null {
@@ -190,62 +223,209 @@ export class PushNotificationService {
     return result.modifiedCount > 0;
   }
 
+  async registerNativeToken(
+    input: RegisterNativePushTokenInput,
+  ): Promise<UserNativePushToken> {
+    const token = input.token.trim();
+    const now = new Date();
+
+    await this.userModel
+      .updateMany(
+        {
+          _id: { $ne: input.userId },
+          "nativePushTokens.token": token,
+        },
+        {
+          $pull: {
+            nativePushTokens: { token },
+          },
+        },
+      )
+      .exec();
+
+    const existingOwner = await this.userModel
+      .findOne({
+        _id: input.userId,
+        "nativePushTokens.token": token,
+      })
+      .select({ nativePushTokens: 1 })
+      .lean()
+      .exec();
+
+    const existingToken = normalizeStoredNativePushToken(
+      existingOwner?.nativePushTokens?.find(
+        (nativeToken) => nativeToken.token === token,
+      ),
+    );
+
+    if (existingToken) {
+      await this.userModel
+        .updateOne(
+          {
+            _id: input.userId,
+            "nativePushTokens.token": token,
+          },
+          {
+            $set: {
+              "nativePushTokens.$.platform": input.platform,
+              "nativePushTokens.$.updatedAt": now,
+            },
+          },
+        )
+        .exec();
+
+      this.logger.log(
+        `Updated native push token for user=${input.userId.toString()} platform=${input.platform}`,
+      );
+
+      return buildUserNativePushTokenDocument({
+        token,
+        platform: input.platform,
+        registeredAt: existingToken.registeredAt,
+        updatedAt: now,
+      });
+    }
+
+    const createdToken = buildUserNativePushTokenDocument({
+      token,
+      platform: input.platform,
+      registeredAt: now,
+      updatedAt: now,
+    });
+
+    await this.userModel
+      .updateOne(
+        { _id: input.userId },
+        {
+          $push: {
+            nativePushTokens: createdToken,
+          },
+        },
+      )
+      .exec();
+
+    this.logger.log(
+      `Registered native push token for user=${input.userId.toString()} platform=${input.platform}`,
+    );
+
+    return createdToken;
+  }
+
+  async unregisterNativeToken(
+    userId: Types.ObjectId,
+    token: string,
+  ): Promise<boolean> {
+    const result = await this.userModel
+      .updateOne(
+        { _id: userId },
+        {
+          $pull: {
+            nativePushTokens: { token: token.trim() },
+          },
+        },
+      )
+      .exec();
+
+    return result.modifiedCount > 0;
+  }
+
+  async syncLauncherBadgeCountsForUsers(userIds: string[]): Promise<void> {
+    if (!this.fcmConfigured || userIds.length === 0) {
+      return;
+    }
+
+    const uniqueUserIds = [
+      ...new Set(userIds.map((userId) => userId.trim())),
+    ].filter(Boolean);
+
+    await Promise.all(
+      uniqueUserIds.map(async (userId) => {
+        const badgeCount = await countUnreadUserNotifications(
+          this.notificationModel,
+          userId,
+        );
+        await this.deliverNativeBadgeSyncToUser(userId, badgeCount);
+      }),
+    );
+  }
+
   async deliverToUser(
     userId: string,
     input: DeliverWebPushInput,
   ): Promise<number> {
-    if (!this.configured) {
+    let deliveredCount = 0;
+
+    if (shouldSendWebPush(input.payload)) {
+      const badgeCount = await countUnreadUserNotifications(
+        this.notificationModel,
+        userId,
+      );
+
+      if (this.webPushConfigured) {
+        const subscriptions = await this.findDeliverableWebPushSubscriptions([
+          userId,
+        ]);
+
+        if (subscriptions.length) {
+          deliveredCount = await this.sendToWebPushSubscriptions(
+            subscriptions,
+            input,
+            badgeCount,
+          );
+          this.logger.log(
+            `Web Push delivered ${deliveredCount}/${subscriptions.length} subscription(s) for user=${userId} title="${input.title}"`,
+          );
+        } else {
+          this.logger.log(
+            `No deliverable Web Push subscriptions for user=${userId} title="${input.title}"`,
+          );
+        }
+      } else {
+        this.logger.debug(
+          `Skipped Web Push for user=${userId}: VAPID not configured.`,
+        );
+      }
+
+      void this.deliverNativeNotificationToUser(userId, input, badgeCount);
+    } else {
       this.logger.debug(
-        `Skipped Web Push for user=${userId}: VAPID not configured.`,
+        `Skipped push delivery for user=${userId}: payload opted out.`,
       );
-      return 0;
     }
 
-    if (!shouldSendWebPush(input.payload)) {
-      this.logger.debug(
-        `Skipped Web Push for user=${userId}: payload opted out.`,
-      );
-      return 0;
-    }
-
-    const subscriptions = await this.findDeliverableSubscriptions([userId]);
-    if (!subscriptions.length) {
-      this.logger.log(
-        `No deliverable push subscriptions for user=${userId} title="${input.title}"`,
-      );
-      return 0;
-    }
-
-    const deliveredCount = await this.sendToSubscriptions(subscriptions, input);
-    this.logger.log(
-      `Web Push delivered ${deliveredCount}/${subscriptions.length} subscription(s) for user=${userId} title="${input.title}"`,
-    );
     return deliveredCount;
   }
 
   async deliverToAllUsers(input: DeliverWebPushInput): Promise<number> {
-    if (!this.configured) {
-      this.logger.debug("Skipped broadcast Web Push: VAPID not configured.");
-      return 0;
-    }
-
     if (!shouldSendWebPush(input.payload)) {
-      this.logger.debug("Skipped broadcast Web Push: payload opted out.");
+      this.logger.debug("Skipped broadcast push delivery: payload opted out.");
       return 0;
     }
 
-    const subscriptions = await this.findDeliverableSubscriptions();
-    if (!subscriptions.length) {
-      this.logger.log(
-        `No deliverable push subscriptions for broadcast title="${input.title}"`,
-      );
-      return 0;
+    let deliveredCount = 0;
+
+    if (this.webPushConfigured) {
+      const subscriptions = await this.findDeliverableWebPushSubscriptions();
+
+      if (subscriptions.length) {
+        deliveredCount = await this.sendToWebPushSubscriptions(
+          subscriptions,
+          input,
+        );
+        this.logger.log(
+          `Web Push broadcast delivered ${deliveredCount}/${subscriptions.length} subscription(s) title="${input.title}"`,
+        );
+      } else {
+        this.logger.log(
+          `No deliverable Web Push subscriptions for broadcast title="${input.title}"`,
+        );
+      }
+    } else {
+      this.logger.debug("Skipped broadcast Web Push: VAPID not configured.");
     }
 
-    const deliveredCount = await this.sendToSubscriptions(subscriptions, input);
-    this.logger.log(
-      `Web Push broadcast delivered ${deliveredCount}/${subscriptions.length} subscription(s) title="${input.title}"`,
-    );
+    void this.deliverNativeNotificationToAllUsers(input);
+
     return deliveredCount;
   }
 
@@ -262,10 +442,158 @@ export class PushNotificationService {
     }
 
     webpush.setVapidDetails(subject, publicKey, privateKey);
-    this.configured = true;
+    this.webPushConfigured = true;
   }
 
-  private async findDeliverableSubscriptions(
+  private configureFirebase(): void {
+    const projectId = env.FIREBASE_PROJECT_ID?.trim();
+    const clientEmail = env.FIREBASE_CLIENT_EMAIL?.trim();
+    const privateKey = env.FIREBASE_PRIVATE_KEY?.trim()?.replace(/\\n/g, "\n");
+
+    if (!projectId || !clientEmail || !privateKey) {
+      this.logger.warn(
+        "Native push is disabled because FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, or FIREBASE_PRIVATE_KEY is missing.",
+      );
+      return;
+    }
+
+    if (!getApps().length) {
+      initializeApp({
+        credential: cert({
+          projectId,
+          clientEmail,
+          privateKey,
+        }),
+      });
+    }
+
+    this.fcmConfigured = true;
+  }
+
+  private async deliverNativeBadgeSyncToUser(
+    userId: string,
+    badgeCount: number,
+  ): Promise<number> {
+    if (!this.fcmConfigured) {
+      return 0;
+    }
+
+    const tokens = await this.findDeliverableNativeTokens([userId]);
+    if (!tokens.length) {
+      return 0;
+    }
+
+    const data = buildFcmBadgeSyncData(badgeCount);
+    let deliveredCount = 0;
+
+    await Promise.all(
+      tokens.map(async (tokenRecord) => {
+        const didDeliver = await this.sendFcmDataMessage(tokenRecord, data);
+        if (didDeliver) {
+          deliveredCount += 1;
+        }
+      }),
+    );
+
+    if (deliveredCount > 0) {
+      this.logger.log(
+        `FCM badge sync delivered ${deliveredCount}/${tokens.length} token(s) for user=${userId} count=${badgeCount}`,
+      );
+    }
+
+    return deliveredCount;
+  }
+
+  private async deliverNativeNotificationToUser(
+    userId: string,
+    input: DeliverWebPushInput,
+    badgeCount: number,
+  ): Promise<number> {
+    if (!this.fcmConfigured) {
+      return 0;
+    }
+
+    const tokens = await this.findDeliverableNativeTokens([userId]);
+    if (!tokens.length) {
+      return 0;
+    }
+
+    const data = buildFcmNotificationData({
+      title: input.title,
+      body: input.body,
+      url: buildPushNotificationUrl(input.payload),
+      tag: input.tag ?? input.notificationId ?? "negin-heal-push",
+      notificationId: input.notificationId,
+      badgeCount,
+      payload: input.payload,
+    });
+
+    let deliveredCount = 0;
+
+    await Promise.all(
+      tokens.map(async (tokenRecord) => {
+        const didDeliver = await this.sendFcmDataMessage(tokenRecord, data);
+        if (didDeliver) {
+          deliveredCount += 1;
+        }
+      }),
+    );
+
+    if (deliveredCount > 0) {
+      this.logger.log(
+        `FCM notification delivered ${deliveredCount}/${tokens.length} token(s) for user=${userId} title="${input.title}"`,
+      );
+    }
+
+    return deliveredCount;
+  }
+
+  private async deliverNativeNotificationToAllUsers(
+    input: DeliverWebPushInput,
+  ): Promise<number> {
+    if (!this.fcmConfigured) {
+      return 0;
+    }
+
+    const tokens = await this.findDeliverableNativeTokens();
+    if (!tokens.length) {
+      return 0;
+    }
+
+    let deliveredCount = 0;
+
+    await Promise.all(
+      tokens.map(async (tokenRecord) => {
+        const badgeCount = await countUnreadUserNotifications(
+          this.notificationModel,
+          tokenRecord.userId.toString(),
+        );
+        const data = buildFcmNotificationData({
+          title: input.title,
+          body: input.body,
+          url: buildPushNotificationUrl(input.payload),
+          tag: input.tag ?? input.notificationId ?? "negin-heal-push",
+          notificationId: input.notificationId,
+          badgeCount,
+          payload: input.payload,
+        });
+        const didDeliver = await this.sendFcmDataMessage(tokenRecord, data);
+        if (didDeliver) {
+          deliveredCount += 1;
+        }
+      }),
+    );
+
+    if (deliveredCount > 0) {
+      this.logger.log(
+        `FCM broadcast delivered ${deliveredCount}/${tokens.length} token(s) title="${input.title}"`,
+      );
+    }
+
+    return deliveredCount;
+  }
+
+  private async findDeliverableWebPushSubscriptions(
     userIds?: string[],
   ): Promise<DeliverableUserPushSubscription[]> {
     const userFilter: FilterQuery<UserDocument> = {
@@ -304,13 +632,61 @@ export class PushNotificationService {
     return subscriptions;
   }
 
-  private async sendToSubscriptions(
+  private async findDeliverableNativeTokens(
+    userIds?: string[],
+  ): Promise<DeliverableNativePushToken[]> {
+    const userFilter: FilterQuery<UserDocument> = {
+      "preferences.notificationsEnabled": { $ne: false },
+      nativePushTokens: { $exists: true, $not: { $size: 0 } },
+    };
+
+    if (userIds?.length) {
+      userFilter._id = {
+        $in: userIds.map((userId) => new Types.ObjectId(userId)),
+      };
+    }
+
+    const users = await this.userModel
+      .find(userFilter)
+      .select({ _id: 1, nativePushTokens: 1 })
+      .lean()
+      .exec();
+
+    const tokens: DeliverableNativePushToken[] = [];
+
+    for (const user of users) {
+      for (const rawToken of user.nativePushTokens ?? []) {
+        const token = normalizeStoredNativePushToken(rawToken);
+        if (!token) {
+          continue;
+        }
+
+        tokens.push({
+          userId: user._id,
+          ...token,
+        });
+      }
+    }
+
+    return tokens;
+  }
+
+  private async sendToWebPushSubscriptions(
     subscriptions: DeliverableUserPushSubscription[],
     input: DeliverWebPushInput,
+    badgeCount?: number,
   ): Promise<number> {
     if (!subscriptions.length) {
       return 0;
     }
+
+    const resolvedBadgeCount =
+      typeof badgeCount === "number"
+        ? badgeCount
+        : await countUnreadUserNotifications(
+            this.notificationModel,
+            subscriptions[0].userId.toString(),
+          );
 
     const payload = JSON.stringify({
       title: input.title,
@@ -318,13 +694,17 @@ export class PushNotificationService {
       url: buildPushNotificationUrl(input.payload),
       tag: input.tag ?? input.notificationId ?? "negin-heal-push",
       notificationId: input.notificationId,
+      badgeCount: resolvedBadgeCount,
     });
 
     let deliveredCount = 0;
 
     await Promise.all(
       subscriptions.map(async (subscription) => {
-        const didDeliver = await this.sendToSubscription(subscription, payload);
+        const didDeliver = await this.sendWebPushToSubscription(
+          subscription,
+          payload,
+        );
         if (didDeliver) {
           deliveredCount += 1;
         }
@@ -334,7 +714,7 @@ export class PushNotificationService {
     return deliveredCount;
   }
 
-  private async sendToSubscription(
+  private async sendWebPushToSubscription(
     subscription: DeliverableUserPushSubscription,
     payload: string,
   ): Promise<boolean> {
@@ -374,6 +754,56 @@ export class PushNotificationService {
       );
       return false;
     }
+  }
+
+  private async sendFcmDataMessage(
+    tokenRecord: DeliverableNativePushToken,
+    data: Record<string, string>,
+  ): Promise<boolean> {
+    try {
+      await getMessaging().send({
+        token: tokenRecord.token,
+        data,
+        android: {
+          priority: "high",
+        },
+      });
+      return true;
+    } catch (error) {
+      if (this.isInvalidFcmTokenError(error)) {
+        await this.userModel
+          .updateOne(
+            { _id: tokenRecord.userId },
+            {
+              $pull: {
+                nativePushTokens: { token: tokenRecord.token },
+              },
+            },
+          )
+          .exec();
+        this.logger.debug(
+          `Removed expired native push token token=${tokenRecord.token}`,
+        );
+        return false;
+      }
+
+      this.logger.warn(
+        `Failed to deliver FCM message to token=${tokenRecord.token}: ${this.extractErrorMessage(error)}`,
+      );
+      return false;
+    }
+  }
+
+  private isInvalidFcmTokenError(error: unknown): boolean {
+    if (!error || typeof error !== "object") {
+      return false;
+    }
+
+    const code = (error as { code?: unknown }).code;
+    return (
+      code === "messaging/registration-token-not-registered" ||
+      code === "messaging/invalid-registration-token"
+    );
   }
 
   private extractPushErrorStatusCode(error: unknown): number | undefined {

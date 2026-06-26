@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "201689409566",
+    "project_id": "neginheal",
+    "storage_bucket": "neginheal.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:201689409566:android:e3e871d638d7427ffb260f",
+        "android_client_info": {
+          "package_name": "neginheal.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA5moTT7TYlA_wHi4xMEvmNo9aDEgwSr5k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

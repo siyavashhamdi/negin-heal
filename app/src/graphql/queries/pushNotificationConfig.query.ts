@@ -5,6 +5,7 @@ export const PUSH_NOTIFICATION_CONFIG_QUERY = gql`
     pushNotificationConfig {
       enabled
       publicKey
+      nativePushEnabled
     }
   }
 `;

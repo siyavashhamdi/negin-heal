@@ -21,6 +21,7 @@ import {
   UserRole,
 } from "../../enums";
 import { AuthenticatedUser } from "../../types/graphql-context.types";
+import { PushNotificationService } from "../push-notification";
 import { UserService, UserSubscriptionService } from "../user";
 import { BadgeCountGqlResponse } from "./graphql/responses";
 
@@ -52,6 +53,7 @@ export class BadgeService {
     private readonly ticketModel: Model<TicketDocument>,
     private readonly userService: UserService,
     private readonly userSubscriptionService: UserSubscriptionService,
+    private readonly pushNotificationService: PushNotificationService,
   ) {}
 
   async getCount(
@@ -111,10 +113,21 @@ export class BadgeService {
       staffUserIds.forEach((userId) => targetUserIds.delete(userId));
     }
 
-    return this.userSubscriptionService.publishToUsers([...targetUserIds], {
-      updateType: GeneralSubscriptionUpdateType.BADGE_COUNTS,
-      payload: input.payload,
-    });
+    const published = await this.userSubscriptionService.publishToUsers(
+      [...targetUserIds],
+      {
+        updateType: GeneralSubscriptionUpdateType.BADGE_COUNTS,
+        payload: input.payload,
+      },
+    );
+
+    if (input.payload.source === BadgeCountTriggerSource.NOTIFICATION) {
+      void this.pushNotificationService.syncLauncherBadgeCountsForUsers([
+        ...targetUserIds,
+      ]);
+    }
+
+    return published;
   }
 
   private normalizeTargetUserIds(
