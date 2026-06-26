@@ -77,7 +77,7 @@ import type {
 } from "./course-delete-dependencies.api";
 import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
 import { resolveQueryFetchPolicy } from "../../lib/offline-fetch-policy.util";
-import { getIsOfflineMode } from "../../lib/offline-state";
+import { getIsBrowserOffline, getIsOfflineMode } from "../../lib/offline-state";
 import { stripOverlayRoutePathname } from "../../routing/max-route.util";
 import {
   buildCourseListStructuredData,
@@ -441,11 +441,11 @@ const CoursesIndex = (): ReactElement => {
   const displayItems = items.length > 0 ? items : queryPageItems;
 
   const isInitialLoading =
-    !getIsOfflineMode() &&
     (loading ||
       networkStatus === NetworkStatus.loading ||
       networkStatus === NetworkStatus.setVariables) &&
-    displayItems.length === 0;
+    displayItems.length === 0 &&
+    !getIsBrowserOffline();
 
   useLayoutEffect(() => {
     const page = courseListData?.courseList;
@@ -454,8 +454,8 @@ const CoursesIndex = (): ReactElement => {
     }
 
     if (
-      !getIsOfflineMode() &&
-      (networkStatus === NetworkStatus.loading || networkStatus === NetworkStatus.setVariables)
+      networkStatus === NetworkStatus.loading ||
+      networkStatus === NetworkStatus.setVariables
     ) {
       return;
     }

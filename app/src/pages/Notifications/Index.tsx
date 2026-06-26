@@ -7,6 +7,10 @@ import { type ReactElement, useCallback, useEffect, useRef, useState } from "rea
 import { GENERAL_SUBSCRIPTION_UPDATE_TYPES } from "../../constants";
 import { useAuth } from "../../contexts/AuthContext";
 import { subscribeGeneralUpdates } from "../../lib/general-updates-listeners";
+import {
+  consumePendingNotificationListRefetch,
+  subscribeNotificationListRefetch,
+} from "../../lib/notification-list-refetch-listeners";
 import { useTranslation } from "../../hooks/useTranslation";
 import { LoginRequiredState } from "../../shared/auth/LoginRequiredState";
 import NotificationCard from "./NotificationCard";
@@ -58,6 +62,18 @@ const NotificationsContent = (): ReactElement => {
       if (update.updateType === GENERAL_SUBSCRIPTION_UPDATE_TYPES.NOTIFICATION) {
         void refetch();
       }
+    });
+  }, [refetch]);
+
+  useEffect(() => {
+    if (consumePendingNotificationListRefetch()) {
+      void refetch();
+    }
+  }, [refetch]);
+
+  useEffect(() => {
+    return subscribeNotificationListRefetch(() => {
+      void refetch();
     });
   }, [refetch]);
 

@@ -19,6 +19,7 @@ import { UserPreferencesSync } from "./components/UserPreferencesSync";
 import { PushSubscriptionSync } from "./components/PushSubscriptionSync";
 import { NativePushSubscriptionSync } from "./components/NativePushSubscriptionSync";
 import { LauncherBadgeSync } from "./components/LauncherBadgeSync";
+import { PushNotificationOpenHost } from "./components/PushNotificationOpenHost";
 import { MainLayout } from "./layouts/MainLayout";
 import { LOCAL_STORAGE_KEYS } from "./constants";
 import { DashboardAppRoutes } from "./routing/DashboardAppRoutes";
@@ -85,6 +86,7 @@ const App = (): ReactElement => (
               <PushSubscriptionSync />
               <NativePushSubscriptionSync />
               <LauncherBadgeSync />
+              <PushNotificationOpenHost />
               <ThemedAppTree />
             </LoadingProvider>
           </AuthProvider>

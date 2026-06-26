@@ -11,6 +11,7 @@ import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import { Avatar, Badge, Box, Button, Container, Divider, IconButton, Popover } from "@mui/material";
 import { useQuery } from "@apollo/client/react";
+import { Capacitor } from "@capacitor/core";
 import {
   useCallback,
   useEffect,
@@ -32,6 +33,7 @@ import {
   resolveMeUserDisplayName,
   resolveStoredUserDisplayName,
 } from "../utils/storedUser.util";
+import { usePushNotificationOpenPresentation } from "../hooks/usePushNotificationOpenPresentation";
 import { useSnackbar } from "../hooks/useSnackbar";
 import { useTranslation } from "../hooks/useTranslation";
 import {
@@ -43,8 +45,12 @@ import {
   type GeneralUpdateEvent,
 } from "../hooks/useGeneralUpdatesSubscription";
 import { useVerificationStatusSubscription } from "../hooks/useVerificationStatusSubscription";
-import { notifyBadgeCountUpdateListeners } from "../lib/badge-count-update-listeners";
+import {
+  notifyBadgeCountUpdateListeners,
+  subscribeBadgeCountUpdates,
+} from "../lib/badge-count-update-listeners";
 import { subscribeGeneralUpdates } from "../lib/general-updates-listeners";
+import { subscribePushNotificationOpen } from "../lib/push-open-listeners";
 import { useGeneralUpdatesOnline } from "../hooks/useGeneralUpdatesOnline";
 import { APP_SHELL_ROUTES, isCourseDetailRoute } from "../routing/app-shell-routes";
 import { resolveNotificationActionPayload } from "../utilities/notification-action.util";
@@ -236,6 +242,16 @@ export function MainLayout({
   const [userAnchorEl, setUserAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [isSideMenuCollapsed, setIsSideMenuCollapsed] = useState(false);
   const [generalUpdatePopup, setGeneralUpdatePopup] = useState<GeneralUpdatePopup | null>(null);
+
+  const handleShowGeneralUpdatePopup = useCallback((popup: GeneralUpdatePopup): void => {
+    setGeneralUpdatePopup(popup);
+  }, []);
+
+  usePushNotificationOpenPresentation({
+    enabled: !Capacitor.isNativePlatform(),
+    onShowPopup: handleShowGeneralUpdatePopup,
+  });
+
   const profileSubscriptionOnline = useGeneralUpdatesOnline();
 
   const isNotificationOpen = Boolean(notificationAnchorEl);
@@ -321,6 +337,13 @@ export function MainLayout({
     notifyBadgeCountUpdateListeners();
   }, [refetchBadgeCount]);
 
+  useEffect(() => {
+    return subscribeBadgeCountUpdates(() => {
+      setLiveCounts({});
+      void refetchBadgeCount();
+    });
+  }, [refetchBadgeCount]);
+
   const handleNotificationUpdate = useCallback(
     (event: GeneralUpdateEvent): void => {
       const payload = asNotificationPayload(event.payload);
@@ -402,6 +425,12 @@ export function MainLayout({
       }
     });
   }, [handleBadgeCountsUpdate, handleNotificationUpdate]);
+
+  useEffect(() => {
+    return subscribePushNotificationOpen(() => {
+      handleBadgeCountsUpdate();
+    });
+  }, [handleBadgeCountsUpdate]);
 
   useVerificationStatusSubscription({
     enabled: Boolean(authUser),

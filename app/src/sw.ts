@@ -9,6 +9,13 @@ import {
 import { CacheFirst } from "workbox-strategies";
 import { NavigationRoute, registerRoute } from "workbox-routing";
 
+import {
+  CONSUME_PUSH_OPEN_MESSAGE_TYPE,
+  PUSH_NOTIFICATION_OPEN_MESSAGE_TYPE,
+  PUSH_OPEN_CACHE_KEY,
+  PUSH_OPEN_CACHE_NAME,
+} from "./constants/push-notification-open.constants";
+
 declare const self: ServiceWorkerGlobalScope & {
   __WB_MANIFEST: Array<{ url: string; revision: string | null }>;
 };
@@ -29,7 +36,18 @@ type PushPayload = {
   tag: string;
   notificationId?: string;
   badgeCount?: number;
+  inAppTitle?: string;
+  description?: string;
+  messageType?: string;
+  mode?: string;
+  courseId?: string;
+  chapterKey?: string;
+  action?: Record<string, unknown>;
+  actionLabel?: string;
+  actionUrl?: string;
 };
+
+const NOTIFICATIONS_PAGE_PATH = "/notifications";
 
 precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();
@@ -48,9 +66,129 @@ self.addEventListener("install", (event: ExtendableEvent) => {
 const navigationHandler = createHandlerBoundToURL("/index.html");
 registerRoute(new NavigationRoute(navigationHandler, { denylist: NAVIGATION_DENYLIST }));
 
+async function storePendingPushOpen(payload: Record<string, unknown>): Promise<void> {
+  const cache = await caches.open(PUSH_OPEN_CACHE_NAME);
+  await cache.put(
+    PUSH_OPEN_CACHE_KEY,
+    new Response(JSON.stringify(payload), {
+      headers: { "Content-Type": "application/json" },
+    }),
+  );
+}
+
+async function takePendingPushOpen(): Promise<Record<string, unknown> | null> {
+  try {
+    const cache = await caches.open(PUSH_OPEN_CACHE_NAME);
+    const response = await cache.match(PUSH_OPEN_CACHE_KEY);
+    if (!response) {
+      return null;
+    }
+
+    await cache.delete(PUSH_OPEN_CACHE_KEY);
+    return (await response.json()) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+function buildPushOpenPayload(
+  notification: Notification,
+  data: PushPayload | null | undefined,
+): Record<string, unknown> | null {
+  const description =
+    (typeof data?.description === "string" && data.description.trim()) ||
+    (typeof data?.body === "string" && data.body.trim()) ||
+    (typeof notification.body === "string" && notification.body.trim()) ||
+    "";
+
+  if (!description) {
+    return null;
+  }
+
+  const inAppTitle =
+    typeof data?.inAppTitle === "string" && data.inAppTitle.trim()
+      ? data.inAppTitle.trim()
+      : undefined;
+  const title =
+    inAppTitle ||
+    (typeof data?.title === "string" && data.title.trim()) ||
+    (typeof notification.title === "string" && notification.title.trim()) ||
+    undefined;
+
+  const payload: Record<string, unknown> = {
+    type: PUSH_NOTIFICATION_OPEN_MESSAGE_TYPE,
+    description,
+  };
+
+  if (title) {
+    payload.title = title;
+  }
+
+  if (inAppTitle) {
+    payload.inAppTitle = inAppTitle;
+  }
+
+  if (typeof data?.notificationId === "string") {
+    payload.notificationId = data.notificationId;
+  }
+
+  if (typeof data?.messageType === "string") {
+    payload.messageType = data.messageType;
+  }
+
+  if (typeof data?.mode === "string") {
+    payload.mode = data.mode;
+  }
+
+  if (typeof data?.courseId === "string") {
+    payload.courseId = data.courseId;
+  }
+
+  if (typeof data?.chapterKey === "string") {
+    payload.chapterKey = data.chapterKey;
+  }
+
+  if (data?.action) {
+    payload.action = data.action;
+  }
+
+  if (typeof data?.actionLabel === "string") {
+    payload.actionLabel = data.actionLabel;
+  }
+
+  if (typeof data?.actionUrl === "string") {
+    payload.actionUrl = data.actionUrl;
+  }
+
+  return payload;
+}
+
+function deliverPushOpenToClient(client: Client, payload: Record<string, unknown>): void {
+  client.postMessage(payload);
+}
+
 self.addEventListener("message", (event: ExtendableMessageEvent) => {
   if (event.data?.type === "SKIP_WAITING") {
     self.skipWaiting();
+  }
+
+  if (event.data?.type === CONSUME_PUSH_OPEN_MESSAGE_TYPE) {
+    event.waitUntil(
+      takePendingPushOpen().then(async (payload) => {
+        if (!payload) {
+          return;
+        }
+
+        const clients = await self.clients.matchAll({
+          type: "window",
+          includeUncontrolled: true,
+        });
+
+        for (const client of clients) {
+          deliverPushOpenToClient(client, payload);
+        }
+      }),
+    );
   }
 });
 
@@ -92,8 +230,19 @@ self.addEventListener("push", (event: PushEvent) => {
     tag: payload.tag || "negin-heal-push",
     data: {
       url: payload.url || "/",
+      title: payload.title,
+      body: payload.body,
+      inAppTitle: payload.inAppTitle,
+      description: payload.description ?? payload.body,
       notificationId: payload.notificationId,
       badgeCount: payload.badgeCount,
+      messageType: payload.messageType,
+      mode: payload.mode,
+      courseId: payload.courseId,
+      chapterKey: payload.chapterKey,
+      action: payload.action,
+      actionLabel: payload.actionLabel,
+      actionUrl: payload.actionUrl,
     },
     dir: "rtl",
     lang: "fa",
@@ -121,8 +270,9 @@ self.addEventListener("push", (event: PushEvent) => {
 self.addEventListener("notificationclick", (event: NotificationEvent) => {
   event.notification.close();
 
-  const targetUrl = event.notification?.data?.url || "/";
-  const absoluteUrl = new URL(targetUrl, self.location.origin).href;
+  const notificationData = event.notification?.data as PushPayload | undefined;
+  const absoluteUrl = new URL(NOTIFICATIONS_PAGE_PATH, self.location.origin).href;
+  const pushOpenPayload = buildPushOpenPayload(event.notification, notificationData);
 
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(async (clients) => {
@@ -137,12 +287,20 @@ self.addEventListener("notificationclick", (event: NotificationEvent) => {
           await client.navigate(absoluteUrl);
         }
 
+        if (pushOpenPayload) {
+          deliverPushOpenToClient(client, pushOpenPayload);
+        }
+
         return;
+      }
+
+      if (pushOpenPayload) {
+        await storePendingPushOpen(pushOpenPayload);
       }
 
       if (self.clients.openWindow) {
         await self.clients.openWindow(absoluteUrl);
       }
-    })
+    }),
   );
 });

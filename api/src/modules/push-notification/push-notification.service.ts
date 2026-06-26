@@ -19,6 +19,7 @@ import {
   buildFcmBadgeSyncData,
   buildFcmNotificationData,
 } from "./utils/build-fcm-data-message.util";
+import { buildWebPushPayloadJson } from "./utils/build-web-push-payload.util";
 import { buildPushNotificationUrl } from "./utils/build-push-notification-url.util";
 import { countUnreadUserNotifications } from "./utils/count-unread-user-notifications.util";
 import { shouldSendWebPush } from "./utils/should-send-web-push.util";
@@ -688,13 +689,13 @@ export class PushNotificationService {
             subscriptions[0].userId.toString(),
           );
 
-    const payload = JSON.stringify({
+    const payload = buildWebPushPayloadJson({
       title: input.title,
       body: input.body,
-      url: buildPushNotificationUrl(input.payload),
-      tag: input.tag ?? input.notificationId ?? "negin-heal-push",
       notificationId: input.notificationId,
+      tag: input.tag,
       badgeCount: resolvedBadgeCount,
+      payload: input.payload,
     });
 
     let deliveredCount = 0;
