@@ -1,4 +1,4 @@
-import { createContext } from "react";
+import { createContext, type ReactNode } from "react";
 import type { AlertColor } from "@mui/material";
 
 /**
@@ -6,15 +6,21 @@ import type { AlertColor } from "@mui/material";
  */
 export type SnackbarSeverity = AlertColor;
 
+export type SnackbarMessageContent = string | ReactNode;
+
 /**
  * Snackbar context value
  */
 export interface SnackbarContextValue {
-  showSnackbar: (message: string, severity?: SnackbarSeverity, duration?: number) => void;
-  showSuccess: (message: string, duration?: number) => void;
-  showError: (message: string, duration?: number) => void;
-  showWarning: (message: string, duration?: number) => void;
-  showInfo: (message: string, duration?: number) => void;
+  showSnackbar: (
+    message: SnackbarMessageContent,
+    severity?: SnackbarSeverity,
+    duration?: number
+  ) => void;
+  showSuccess: (message: SnackbarMessageContent, duration?: number) => void;
+  showError: (message: SnackbarMessageContent, duration?: number) => void;
+  showWarning: (message: SnackbarMessageContent, duration?: number) => void;
+  showInfo: (message: SnackbarMessageContent, duration?: number) => void;
   updateUploadProgress: (percent: number) => void;
   hideUploadProgress: () => void;
 }

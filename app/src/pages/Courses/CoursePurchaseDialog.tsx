@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, type ReactElement } from "react";
-import { Button, IconButton, InputAdornment, TextField, Typography } from "@mui/material";
+import { useEffect, useMemo, useState, type ReactElement, type ReactNode } from "react";
+import { Button, IconButton, InputAdornment, Link, TextField, Typography } from "@mui/material";
 import { useLazyQuery, useQuery } from "@apollo/client/react";
 import AccountBalanceRoundedIcon from "@mui/icons-material/AccountBalanceRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
@@ -144,6 +144,26 @@ function formatCouponDiscountLabel(coupon: CouponValidateRecord): string {
   }
 
   return "تخفیف";
+}
+
+const GATEWAY_PAYMENT_BLOCKED_SNACKBAR_DURATION_MS = 20_000;
+
+function buildGatewayPaymentBlockedSnackbarMessage(paymentUrl: string): ReactNode {
+  return (
+    <>
+      مرورگر اجازه باز کردن درگاه پرداخت در تب جدید را نداد.
+      <br />
+      <Link
+        href={paymentUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        underline="always"
+        sx={{ color: "inherit", fontWeight: 700, wordBreak: "break-all" }}
+      >
+        {paymentUrl}
+      </Link>
+    </>
+  );
 }
 
 async function copyToClipboard(value: string): Promise<boolean> {
@@ -513,9 +533,17 @@ export function CoursePurchaseDialog({
           return;
         }
 
-        if (!openExternalUrlTab(purchase.paymentUrl, gatewayPaymentWindow)) {
+        const gatewayOpened = await openExternalUrlTab(
+          purchase.paymentUrl,
+          gatewayPaymentWindow
+        );
+        if (!gatewayOpened) {
           gatewayPaymentWindow?.close();
-          showError("مرورگر اجازه باز کردن درگاه پرداخت در تب جدید را نداد.");
+          showError(
+            buildGatewayPaymentBlockedSnackbarMessage(purchase.paymentUrl),
+            GATEWAY_PAYMENT_BLOCKED_SNACKBAR_DURATION_MS
+          );
+          onPurchaseSuccess?.();
           return;
         }
 

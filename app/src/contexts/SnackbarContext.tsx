@@ -29,6 +29,7 @@ import {
   SnackbarContext,
   type SnackbarSeverity,
   type SnackbarContextValue,
+  type SnackbarMessageContent,
 } from "./snackbar-context";
 import styles from "./styles/SnackbarContext.module.scss";
 
@@ -36,7 +37,7 @@ import styles from "./styles/SnackbarContext.module.scss";
  * Snackbar message data
  */
 interface SnackbarMessage {
-  message: string;
+  message: SnackbarMessageContent;
   severity: SnackbarSeverity;
   duration?: number;
 }
@@ -101,7 +102,7 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
    */
   const showSnackbar = useCallback(
     (
-      message: string,
+      message: SnackbarMessageContent,
       severity: SnackbarSeverity = "info",
       duration: number = SNACKBAR_AUTO_HIDE_DURATION_MS
     ) => {
@@ -116,7 +117,7 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
    * Show success snackbar
    */
   const showSuccess = useCallback(
-    (message: string, duration: number = SNACKBAR_AUTO_HIDE_DURATION_MS) => {
+    (message: SnackbarMessageContent, duration: number = SNACKBAR_AUTO_HIDE_DURATION_MS) => {
       showSnackbar(message, "success", duration);
     },
     [showSnackbar]
@@ -126,7 +127,7 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
    * Show error snackbar
    */
   const showError = useCallback(
-    (message: string, duration: number = SNACKBAR_AUTO_HIDE_DURATION_MS) => {
+    (message: SnackbarMessageContent, duration: number = SNACKBAR_AUTO_HIDE_DURATION_MS) => {
       showSnackbar(message, "error", duration);
     },
     [showSnackbar]
@@ -136,7 +137,7 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
    * Show warning snackbar
    */
   const showWarning = useCallback(
-    (message: string, duration: number = SNACKBAR_AUTO_HIDE_DURATION_MS) => {
+    (message: SnackbarMessageContent, duration: number = SNACKBAR_AUTO_HIDE_DURATION_MS) => {
       showSnackbar(message, "warning", duration);
     },
     [showSnackbar]
@@ -146,7 +147,7 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
    * Show info snackbar
    */
   const showInfo = useCallback(
-    (message: string, duration: number = SNACKBAR_AUTO_HIDE_DURATION_MS) => {
+    (message: SnackbarMessageContent, duration: number = SNACKBAR_AUTO_HIDE_DURATION_MS) => {
       showSnackbar(message, "info", duration);
     },
     [showSnackbar]

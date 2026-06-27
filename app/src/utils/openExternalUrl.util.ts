@@ -14,10 +14,17 @@ export function prepareExternalUrlTab(): Window | null {
   return window.open("about:blank", "_blank");
 }
 
-export function openExternalUrlTab(url: string, preparedWindow?: Window | null): boolean {
+export async function openExternalUrlTab(
+  url: string,
+  preparedWindow?: Window | null
+): Promise<boolean> {
   if (isNativeAndroidShell()) {
-    void Browser.open({ url });
-    return true;
+    try {
+      await Browser.open({ url });
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   if (preparedWindow && !preparedWindow.closed) {
