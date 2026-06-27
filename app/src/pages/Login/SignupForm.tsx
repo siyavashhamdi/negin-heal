@@ -116,10 +116,7 @@ export const SignupForm = ({
   const passwordRulesPassed = arePasswordRulesPassed(password);
   const passwordsMatch = confirmPassword.trim().length > 0 && password === confirmPassword;
   const passwordReady =
-    password.trim().length > 0 &&
-    confirmPassword.trim().length > 0 &&
-    passwordsMatch &&
-    passwordRulesPassed;
+    password.trim().length > 0 && confirmPassword.trim().length > 0;
   const mobileInvalid = Boolean(mobile.trim()) && !isValidMobilePhone(mobile);
   const otpReady = signupCodeRequested && VERIFICATION_CODE_REGEX.test(verificationCode.trim());
   const formReady =
@@ -538,6 +535,11 @@ export const SignupForm = ({
               autoComplete="new-password"
               disabled={loading}
               error={hasError && Boolean(confirmPassword) && !passwordsMatch}
+              helperText={
+                confirmPassword && !passwordsMatch
+                  ? t("auth.login.errors.passwordMismatch")
+                  : undefined
+              }
               required
             />
           </>

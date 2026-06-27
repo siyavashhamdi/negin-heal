@@ -24,7 +24,6 @@ import {
   registerApolloCacheUnloadPersist,
 } from "./apollo-cache-persist";
 import { clearFileContentCache } from "./file-content-cache";
-import { resetAppShellNavPrefetchState } from "./app-shell-nav-prefetch";
 import { createCacheFallbackLink } from "./apollo-offline-link";
 import { resolveGraphqlHttpUrl } from "../utils/apiBaseUrl.util";
 import {
@@ -309,14 +308,10 @@ export async function initApolloClient(options?: InitApolloClientOptions): Promi
 }
 
 export async function resetApolloClientCache(): Promise<void> {
-  resetAppShellNavPrefetchState();
-  await clearFileContentCache();
-
-  if (!apolloClient) {
-    await clearPersistedApolloCache();
-    return;
+  if (apolloClient) {
+    await apolloClient.clearStore();
   }
 
-  await apolloClient.clearStore();
+  await clearFileContentCache();
   await clearPersistedApolloCache();
 }

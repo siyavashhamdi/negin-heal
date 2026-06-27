@@ -72,6 +72,8 @@ import {
   resolveHeaderSettingsDestination,
 } from "./header-panel-items";
 import { useAppShellNavPrefetch } from "../hooks/useAppShellNavPrefetch";
+import { useAfterLogoutCacheCleanup } from "../hooks/useAfterLogoutCacheCleanup";
+import { isLogoutCacheCleanupInProgress } from "../lib/app-shell-nav-prefetch";
 import { useHeaderNotificationPreview } from "./useHeaderNotificationPreview";
 import "./styles/MainLayout.scss";
 import AppTooltip from "../shared/AppTooltip";
@@ -316,12 +318,20 @@ export function MainLayout({
     isMarkingAllAsRead: isMarkingAllHeaderNotificationsAsRead,
   } = useHeaderNotificationPreview(shouldLoadHeaderNotificationPreview);
 
+  useAfterLogoutCacheCleanup(() => {
+    void refetchBadgeCount();
+  });
+
   useEffect(() => {
     const currentAuthUserId = authUser?.id ?? null;
     const previousAuthUserId = previousAuthUserIdRef.current;
     previousAuthUserIdRef.current = currentAuthUserId;
 
     if (currentAuthUserId === previousAuthUserId) {
+      return;
+    }
+
+    if (isLogoutCacheCleanupInProgress()) {
       return;
     }
 

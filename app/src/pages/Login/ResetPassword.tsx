@@ -64,9 +64,7 @@ export const ResetPasswordForm = ({
   const canSubmit =
     otpReady &&
     newPassword.trim().length > 0 &&
-    confirmPassword.trim().length > 0 &&
-    passwordsMatch &&
-    passwordRulesPassed;
+    confirmPassword.trim().length > 0;
 
   useEffect(() => {
     queueMicrotask(() => {

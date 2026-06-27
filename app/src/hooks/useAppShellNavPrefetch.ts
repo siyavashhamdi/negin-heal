@@ -1,8 +1,5 @@
 import { useEffect } from "react";
-import {
-  scheduleAppShellNavPrefetch,
-  type AppShellNavPrefetchContext,
-} from "../lib/app-shell-nav-prefetch";
+import { scheduleAppShellNavPrefetch, type AppShellNavPrefetchContext } from "../lib/app-shell-nav-prefetch";
 
 type UseAppShellNavPrefetchOptions = AppShellNavPrefetchContext & {
   readonly authLoading: boolean;
@@ -10,7 +7,7 @@ type UseAppShellNavPrefetchOptions = AppShellNavPrefetchContext & {
 
 /**
  * Warms Apollo cache for visible bottom-nav pages once per auth snapshot
- * (initial load, login, or after logout cache clear), deferred to idle time.
+ * (initial load or login), deferred to idle time.
  */
 export function useAppShellNavPrefetch({
   authLoading,

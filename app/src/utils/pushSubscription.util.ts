@@ -320,6 +320,7 @@ export async function syncWebPushSubscriptionWithServer(): Promise<boolean> {
 
 export async function unregisterWebPushSubscriptionFromServer(options?: {
   readonly clearStoredEndpoint?: boolean;
+  readonly authToken?: string | null;
 }): Promise<void> {
   if (isNativeCapacitorShell()) {
     clearStoredPushSubscriptionMetadata({
@@ -343,12 +344,14 @@ export async function unregisterWebPushSubscriptionFromServer(options?: {
 
 async function unregisterWebPushSubscriptionFromServerInternal(options?: {
   readonly clearStoredEndpoint?: boolean;
+  readonly authToken?: string | null;
 }): Promise<void> {
   const subscription = await getBrowserPushSubscription();
   const endpoint =
     subscription?.endpoint?.trim() ?? readStoredPushSubscriptionEndpoint();
 
   if (endpoint) {
+    const authToken = options?.authToken?.trim();
     await apolloClient
       .mutate<
         { readonly unregisterPushSubscription: { readonly success: boolean } },
@@ -358,6 +361,13 @@ async function unregisterWebPushSubscriptionFromServerInternal(options?: {
         variables: {
           input: { endpoint },
         },
+        context: authToken
+          ? {
+              headers: {
+                authorization: `Bearer ${authToken}`,
+              },
+            }
+          : {},
       })
       .catch((error: unknown) => {
         logPushWarning("unregisterPushSubscription mutation failed.", error);

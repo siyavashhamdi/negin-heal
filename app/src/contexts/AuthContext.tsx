@@ -11,7 +11,12 @@ import { useNavigate } from "react-router-dom";
 import { LOCAL_STORAGE_KEYS } from "../constants";
 import { shouldUseProfileAuthShell } from "../hooks/useMobileAppLayout";
 import { apolloClient, resetApolloClientCache } from "../lib/apollo-client";
-import { scheduleAppShellNavPrefetch } from "../lib/app-shell-nav-prefetch";
+import {
+  beginLogoutCacheCleanup,
+  endLogoutCacheCleanup,
+  LOGGED_OUT_NAV_PREFETCH_CONTEXT,
+  runAppShellNavPrefetchNow,
+} from "../lib/app-shell-nav-prefetch";
 import { APP_SHELL_ROUTES, isStandaloneShellRoute } from "../routing/app-shell-routes";
 import { consumePostLoginRedirect } from "../routing/post-login-redirect";
 import { USER_LOGOUT_MUTATION } from "../graphql/mutations/userLogout.mutation";
@@ -136,19 +141,13 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
     localStorage.removeItem("user");
   }, []);
 
-  const prefetchLoggedOutNavData = useCallback((): void => {
-    scheduleAppShellNavPrefetch({
-      roles: [],
-      isAuthenticated: false,
-      userId: null,
-      isEndUser: false,
-    });
-  }, []);
-
   const runBackgroundLogoutCleanup = useCallback(async (token: string | null): Promise<void> => {
     try {
       if (!isNativeCapacitorShell()) {
-        await unregisterWebPushSubscriptionFromServer({ clearStoredEndpoint: true });
+        await unregisterWebPushSubscriptionFromServer({
+          clearStoredEndpoint: true,
+          authToken: token,
+        });
       }
     } catch (error: unknown) {
       console.warn("[Auth] Failed to unregister Web Push subscription during logout.", error);
@@ -180,6 +179,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
     (afterLogout: () => void): void => {
       const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
 
+      beginLogoutCacheCleanup();
       clearLocalAuthSession();
       afterLogout();
 
@@ -188,16 +188,23 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
           console.warn("[Auth] Background logout cleanup failed.", error);
         })
         .finally(() => {
-          void resetApolloClientCache()
-            .catch((error: unknown) => {
+          void (async () => {
+            try {
+              await resetApolloClientCache();
+            } catch (error: unknown) {
               console.warn("[Auth] Failed to reset client cache during logout.", error);
-            })
-            .finally(() => {
-              prefetchLoggedOutNavData();
-            });
+            } finally {
+              endLogoutCacheCleanup();
+              try {
+                await runAppShellNavPrefetchNow(LOGGED_OUT_NAV_PREFETCH_CONTEXT);
+              } catch (error: unknown) {
+                console.warn("[Auth] Failed to prefetch logged-out nav data.", error);
+              }
+            }
+          })();
         });
     },
-    [clearLocalAuthSession, prefetchLoggedOutNavData, runBackgroundLogoutCleanup]
+    [clearLocalAuthSession, runBackgroundLogoutCleanup]
   );
 
   const redirectToLoginAfterLogout = useCallback((): void => {

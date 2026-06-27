@@ -77,6 +77,7 @@ import type {
 } from "./course-delete-dependencies.api";
 import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
 import { resolveQueryFetchPolicy } from "../../lib/offline-fetch-policy.util";
+import { useAfterLogoutCacheCleanup } from "../../hooks/useAfterLogoutCacheCleanup";
 import { getIsBrowserOffline, getIsOfflineMode } from "../../lib/offline-state";
 import { stripOverlayRoutePathname } from "../../routing/max-route.util";
 import {
@@ -445,6 +446,7 @@ const CoursesIndex = (): ReactElement => {
       networkStatus === NetworkStatus.loading ||
       networkStatus === NetworkStatus.setVariables) &&
     displayItems.length === 0 &&
+    !error &&
     !getIsBrowserOffline();
 
   useLayoutEffect(() => {
@@ -477,6 +479,8 @@ const CoursesIndex = (): ReactElement => {
   const onRefresh = useCallback((): void => {
     void refetchCourseList();
   }, [refetchCourseList]);
+
+  useAfterLogoutCacheCleanup(onRefresh);
 
   useBadgeCountFirstPageReload({
     isOnFirstPage,
