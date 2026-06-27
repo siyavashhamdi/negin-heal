@@ -51,6 +51,7 @@ export class ZarinPalProxyService {
         {
           headers: this.buildHeaders(proxyConfig.apiKey),
           timeout: 30_000,
+          validateStatus: () => true,
         },
       );
 
@@ -64,7 +65,9 @@ export class ZarinPalProxyService {
         this.logger.warn(
           `ZarinPal proxy payment request failed: ${this.extractProxyErrorMessage(data) || "invalid response"}`,
         );
-        throw new BadRequestException(EXCEPTION_CONSTANT.ZARINPAL_PAYMENT_FAILED);
+        throw new BadRequestException(
+          EXCEPTION_CONSTANT.ZARINPAL_PAYMENT_FAILED,
+        );
       }
 
       return {
@@ -109,8 +112,7 @@ export class ZarinPalProxyService {
       if (data?.status === "cancelled") {
         return {
           status: "cancelled",
-          message:
-            typeof data.message === "string" ? data.message : undefined,
+          message: typeof data.message === "string" ? data.message : undefined,
         };
       }
 
@@ -123,8 +125,7 @@ export class ZarinPalProxyService {
         return {
           status: "success",
           refId,
-          message:
-            typeof data.message === "string" ? data.message : undefined,
+          message: typeof data.message === "string" ? data.message : undefined,
           zarinpalCode:
             typeof data.zarinpalCode === "number"
               ? data.zarinpalCode
@@ -136,7 +137,9 @@ export class ZarinPalProxyService {
         status: "failed",
         message: this.extractProxyErrorMessage(data),
         zarinpalCode:
-          typeof data?.zarinpalCode === "number" ? data.zarinpalCode : undefined,
+          typeof data?.zarinpalCode === "number"
+            ? data.zarinpalCode
+            : undefined,
       };
     } catch (error) {
       this.logger.error(
@@ -201,17 +204,21 @@ export class ZarinPalProxyService {
   }
 
   private extractProxyErrorMessage(error: unknown): string | undefined {
-    if (typeof error === "object" && error !== null) {
-      const axiosError = error as ZarinPalProxyHttpError;
-      const responseData = axiosError.response?.data;
-
-      if (responseData?.message) {
-        return responseData.message;
-      }
-
-      return axiosError.response?.statusText || axiosError.message;
+    if (typeof error !== "object" || error === null) {
+      return error instanceof Error ? error.message : undefined;
     }
 
-    return error instanceof Error ? error.message : undefined;
+    const axiosError = error as ZarinPalProxyHttpError;
+    const responseData = axiosError.response?.data ?? error;
+    const payload =
+      typeof responseData === "object" && responseData !== null
+        ? (responseData as ZarinPalProxyRequestBody)
+        : undefined;
+
+    if (payload?.message) {
+      return payload.message;
+    }
+
+    return axiosError.response?.statusText || axiosError.message;
   }
 }

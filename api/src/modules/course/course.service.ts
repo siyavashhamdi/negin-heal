@@ -593,7 +593,6 @@ export class CourseService {
             normalizedAuthority,
             amountIrt,
           );
-
       if (verification.status === "cancelled") {
         const previousStatus = userCourse.purchase.status;
         userCourse.purchase.status = UserCoursePurchaseStatus.CANCELLED;
