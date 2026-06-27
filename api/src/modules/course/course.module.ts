@@ -9,9 +9,10 @@ import { NotificationModule } from "../notification";
 import { PushNotificationModule } from "../push-notification";
 import { UserModule } from "../user";
 import { ZarinPalProxyModule } from "../zarinpal-proxy";
-import { ChapterReleaseNotificationCron } from "../../cron/jobs";
+import { ChapterReleaseNotificationCron, GatewayPaymentExpiryCron } from "../../cron/jobs";
 import { CoursePaymentController } from "./api/course-payment.controller";
 import { ChapterReleaseNotificationService } from "./chapter-release-notification.service";
+import { GatewayPaymentExpiryService } from "./gateway-payment-expiry.service";
 import { CourseService } from "./course.service";
 import {
   CourseChapterCompleteMutation,
@@ -48,6 +49,8 @@ import {
   providers: [
     ChapterReleaseNotificationCron,
     ChapterReleaseNotificationService,
+    GatewayPaymentExpiryCron,
+    GatewayPaymentExpiryService,
     CourseService,
     CourseChapterCompleteMutation,
     CourseCreateMutation,

@@ -6,30 +6,55 @@ import { PageSeoProvider } from "../contexts/PageSeoProvider";
 import { useScrollToTop } from "../hooks/useScrollToTop";
 import { APP_SHELL_ROUTES } from "./app-shell-routes";
 import { API_CONFIG } from "../config";
+import {
+  importAboutPage,
+  importActivateAccount,
+  importBackupPage,
+  importCouponsIndex,
+  importCourseDetail,
+  importCoursesIndex,
+  importGlobalAnouncementPage,
+  importLanding,
+  importLoginRoute,
+  importMoreIndex,
+  importNotificationsIndex,
+  importPaymentsIndex,
+  importPrivacyPolicyPage,
+  importProfileIndex,
+  importResetPassword,
+  importSupportFaq,
+  importSupportIndex,
+  importSupportTicketsIndex,
+  importSystemSettingsIndex,
+  importTermsOfUsePage,
+  importUnderConstruction,
+  importUsersManagementIndex,
+  importZarinPalCallback,
+} from "./lazy-route-imports";
 
-const CourseDetail = lazy(() => import("../pages/Courses/CourseDetail"));
-const CoursesIndex = lazy(() => import("../pages/Courses/Index"));
-const LoginRoute = lazy(() => import("../pages/Login/LoginRoute"));
-const AboutPage = lazy(() => import("../pages/More/About"));
-const GlobalAnouncementPage = lazy(() => import("../pages/More/GlobalAnouncement"));
-const BackupPage = lazy(() => import("../pages/More/Backup"));
-const More = lazy(() => import("../pages/More/Index"));
-const CouponsIndex = lazy(() => import("../pages/Coupons/Index"));
-const PrivacyPolicyPage = lazy(() => import("../pages/More/PrivacyPolicy"));
-const TermsOfUsePage = lazy(() => import("../pages/More/TermsOfUse"));
-const SystemSettingsIndex = lazy(() => import("../pages/SystemSettings/Index"));
-const Notifications = lazy(() => import("../pages/Notifications/Index"));
-const PaymentsIndex = lazy(() => import("../pages/Payments/Index"));
-const ZarinPalCallback = lazy(() => import("../pages/Payments/ZarinPalCallback"));
-const Profile = lazy(() => import("../pages/Profile/Index"));
-const ResetPassword = lazy(() => import("../pages/Login/ResetPassword"));
-const ActivateAccount = lazy(() => import("../pages/Login/ActivateAccount"));
-const SupportFaq = lazy(() => import("../pages/Support/Faq"));
-const Support = lazy(() => import("../pages/Support/Index"));
-const SupportTicketsIndex = lazy(() => import("../pages/Support/TicketsIndex"));
-const UsersManagementIndex = lazy(() => import("../pages/UsersManagement/Index"));
-const UnderConstruction = lazy(() => import("../pages/UnderConstruction/UnderConstruction"));
-const Landing = lazy(() => import("../pages/Landing/Landing"));
+const CourseDetail = lazy(importCourseDetail);
+const CoursesIndex = lazy(importCoursesIndex);
+const LoginRoute = lazy(importLoginRoute);
+const AboutPage = lazy(importAboutPage);
+const GlobalAnouncementPage = lazy(importGlobalAnouncementPage);
+const BackupPage = lazy(importBackupPage);
+const More = lazy(importMoreIndex);
+const CouponsIndex = lazy(importCouponsIndex);
+const PrivacyPolicyPage = lazy(importPrivacyPolicyPage);
+const TermsOfUsePage = lazy(importTermsOfUsePage);
+const SystemSettingsIndex = lazy(importSystemSettingsIndex);
+const Notifications = lazy(importNotificationsIndex);
+const PaymentsIndex = lazy(importPaymentsIndex);
+const ZarinPalCallback = lazy(importZarinPalCallback);
+const Profile = lazy(importProfileIndex);
+const ResetPassword = lazy(importResetPassword);
+const ActivateAccount = lazy(importActivateAccount);
+const SupportFaq = lazy(importSupportFaq);
+const Support = lazy(importSupportIndex);
+const SupportTicketsIndex = lazy(importSupportTicketsIndex);
+const UsersManagementIndex = lazy(importUsersManagementIndex);
+const UnderConstruction = lazy(importUnderConstruction);
+const Landing = lazy(importLanding);
 
 const wrapProtected = (element: ReactElement): ReactElement => (
   <ProtectedRoute>{element}</ProtectedRoute>

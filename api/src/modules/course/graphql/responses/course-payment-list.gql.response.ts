@@ -8,6 +8,7 @@ import {
   UserCoursePaymentMethod,
   UserCoursePurchaseCurrency,
   UserCoursePurchaseStatus,
+  PurchaseStatusChangedBy,
 } from "../../../../enums";
 
 @ObjectType()
@@ -251,6 +252,12 @@ export class CoursePaymentListSummaryGqlResponse {
   @Field({ description: "Whether the payment status was changed manually" })
   isManualStatusChange: boolean;
 
+  @Field(() => PurchaseStatusChangedBy, {
+    nullable: true,
+    description: "Actor that changed the payment status",
+  })
+  statusChangedBy?: PurchaseStatusChangedBy;
+
   @Field(() => ID, {
     nullable: true,
     description: "User ID that manually changed the status",
@@ -271,6 +278,9 @@ export class CoursePaymentListSummaryGqlResponse {
 
   @Field({ nullable: true, description: "Pending status date" })
   pendingAt?: Date;
+
+  @Field({ nullable: true, description: "Gateway pending status date" })
+  gatewayPendingAt?: Date;
 
   @Field({ nullable: true, description: "Paid status date" })
   paidAt?: Date;
@@ -372,6 +382,12 @@ export class CoursePaymentListGqlResponse {
   @Field({ description: "Whether the payment status was changed manually" })
   isManualStatusChange: boolean;
 
+  @Field(() => PurchaseStatusChangedBy, {
+    nullable: true,
+    description: "Actor that changed the payment status",
+  })
+  statusChangedBy?: PurchaseStatusChangedBy;
+
   @Field({
     description:
       "Whether this payment record was initially submitted by an admin",
@@ -416,6 +432,9 @@ export class CoursePaymentListGqlResponse {
 
   @Field({ nullable: true, description: "Pending status date" })
   pendingAt?: Date;
+
+  @Field({ nullable: true, description: "Gateway pending status date" })
+  gatewayPendingAt?: Date;
 
   @Field({ nullable: true, description: "Paid status date" })
   paidAt?: Date;

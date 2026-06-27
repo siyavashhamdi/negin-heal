@@ -26,6 +26,10 @@ import {
 import { getFileIdFromAccessUrl } from "../../utils/fileAccessUrl.util";
 import { uploadFile } from "../../utils/fileUpload.util";
 import {
+  openExternalUrlTab,
+  prepareExternalUrlTab,
+} from "../../utils/openExternalUrl.util";
+import {
   FILE_UPLOAD_POLICY,
   FILE_UPLOAD_POLICY_MAX_SIZE_BYTES,
 } from "../../constants/fileUploadPolicies";
@@ -460,11 +464,14 @@ export function CoursePurchaseDialog({
     }
 
     setIsSubmitting(true);
+    const gatewayPaymentWindow =
+      selectedPaymentMethod === "GATEWAY" ? prepareExternalUrlTab() : null;
     try {
       let uploadedReceiptFileId: string | undefined;
       if (selectedPaymentMethod === "CARD_TO_CARD" && receiptFile) {
         const receiptFileId = await uploadReceiptFile(receiptFile);
         if (!receiptFileId) {
+          gatewayPaymentWindow?.close();
           return;
         }
         uploadedReceiptFileId = receiptFileId;
@@ -488,22 +495,33 @@ export function CoursePurchaseDialog({
       });
 
       if (error) {
+        gatewayPaymentWindow?.close();
         return;
       }
 
       const purchase = data?.coursePurchaseSubmit;
       if (!purchase) {
+        gatewayPaymentWindow?.close();
         showError("ثبت خرید با خطا مواجه شد.");
         return;
       }
 
       if (selectedPaymentMethod === "GATEWAY") {
         if (!purchase.paymentUrl) {
+          gatewayPaymentWindow?.close();
           showError("لینک پرداخت از درگاه دریافت نشد.");
           return;
         }
 
-        window.location.assign(purchase.paymentUrl);
+        if (!openExternalUrlTab(purchase.paymentUrl, gatewayPaymentWindow)) {
+          gatewayPaymentWindow?.close();
+          showError("مرورگر اجازه باز کردن درگاه پرداخت در تب جدید را نداد.");
+          return;
+        }
+
+        showSuccess("درگاه پرداخت در تب جدید باز شد. پس از تکمیل پرداخت، به این صفحه برگردید.");
+        onPurchaseSuccess?.();
+        onClose();
         return;
       }
 

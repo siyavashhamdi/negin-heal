@@ -27,6 +27,7 @@ import { UserStatus } from "./user-status.enum";
 import { UserCoursePaymentMethod } from "./user-course-payment-method.enum";
 import { UserCoursePurchaseCurrency } from "./user-course-purchase-currency.enum";
 import { UserCoursePurchaseStatus } from "./user-course-purchase-status.enum";
+import { PurchaseStatusChangedBy } from "./purchase-status-changed-by.enum";
 import { SortingOrder } from "../common/pagination/input/sorting-order.enum";
 import { MediaCompressionQuality } from "./media-compression-quality.enum";
 import { VideoOutputExtension } from "./video-output-extension.enum";
@@ -151,6 +152,11 @@ registerEnumType(UserCoursePurchaseCurrency, {
 registerEnumType(UserCoursePurchaseStatus, {
   name: "UserCoursePurchaseStatus",
   description: "Course purchase lifecycle status",
+});
+
+registerEnumType(PurchaseStatusChangedBy, {
+  name: "PurchaseStatusChangedBy",
+  description: "Actor that changed a course purchase status",
 });
 
 registerEnumType(MediaCompressionQuality, {

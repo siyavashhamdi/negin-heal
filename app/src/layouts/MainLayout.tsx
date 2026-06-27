@@ -72,8 +72,10 @@ import {
   resolveHeaderSettingsDestination,
 } from "./header-panel-items";
 import { useAppShellNavPrefetch } from "../hooks/useAppShellNavPrefetch";
+import { useAppShellRoutePrefetch } from "../hooks/useAppShellRoutePrefetch";
 import { useAfterLogoutCacheCleanup } from "../hooks/useAfterLogoutCacheCleanup";
 import { isLogoutCacheCleanupInProgress } from "../lib/app-shell-nav-prefetch";
+import { prefetchAppShellNavRoute } from "../lib/app-shell-route-prefetch";
 import { useHeaderNotificationPreview } from "./useHeaderNotificationPreview";
 import "./styles/MainLayout.scss";
 import AppTooltip from "../shared/AppTooltip";
@@ -287,6 +289,11 @@ export function MainLayout({
     isAuthenticated,
     userId: authUser?.id ?? null,
     isEndUser,
+  });
+  useAppShellRoutePrefetch({
+    authLoading,
+    roles,
+    isAuthenticated,
   });
   const brandTagline = usesPublicCourseList
     ? t("layout.header.brand.publicTagline")
@@ -999,6 +1006,8 @@ export function MainLayout({
             <NavLink
               key={item.id}
               to={resolveAppShellNavPath(item, appShellNavContext)}
+              onMouseEnter={() => prefetchAppShellNavRoute(item, appShellNavContext)}
+              onTouchStart={() => prefetchAppShellNavRoute(item, appShellNavContext)}
               onClick={scrollToTopOnMobile}
               className={({ isActive }) =>
                 `main-layout__mobile-bottom-item${

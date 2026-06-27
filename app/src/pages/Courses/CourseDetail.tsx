@@ -32,7 +32,11 @@ import {
   isMaxRoutePathname,
 } from "../../routing/max-route.util";
 import { setMaxRouteOwner, clearMaxRouteOwner } from "../../routing/max-route-owner.store";
-import { setPostLoginRedirect } from "../../routing/post-login-redirect";
+import {
+  buildCourseLoginReturnState,
+  buildCoursePostLoginRedirect,
+  setPostLoginRedirect,
+} from "../../routing/post-login-redirect";
 import { resolveFileAccessUrl, buildExistingFilePreview } from "../../utils/fileAccessUrl.util";
 import { CachedFileImage } from "../../shared/display/CachedFileImage";
 import { useCachedFileAccessUrl } from "../../hooks/useCachedFileAccessUrl";
@@ -344,7 +348,9 @@ const CourseDetail = (): ReactElement => {
         : `${formatCoursePrice(course.discount.value)} تخفیف`
       : null;
   const isPaidPurchase = course?.purchaseStatus === "PAID" || course?.isPurchased === true;
-  const hasPendingPurchase = course?.isFree !== true && course?.purchaseStatus === "PENDING";
+  const hasPendingManualReview =
+    course?.isFree !== true && course?.purchaseStatus === "PENDING";
+  const hasPendingPurchase = hasPendingManualReview;
   const canAccessCourse = course?.isFree === true || isPaidPurchase;
   const shouldShowPrice = !isPaidPurchase;
   const shouldShowMobilePinnedPriceBar = !canAccessCourse && !hasPendingPurchase;
@@ -490,6 +496,19 @@ const CourseDetail = (): ReactElement => {
     purchaseIntentHandledRef.current = false;
   }, [courseId]);
 
+  const redirectToLoginForPurchase = useCallback((): void => {
+    if (!courseId) {
+      return;
+    }
+
+    const redirect = buildCoursePostLoginRedirect(courseId);
+    setPostLoginRedirect(redirect);
+    const loginPath = isMobileAppLayoutViewport()
+      ? APP_SHELL_ROUTES.profileLogin
+      : APP_SHELL_ROUTES.login;
+    navigate(loginPath, { state: buildCourseLoginReturnState(courseId) });
+  }, [courseId, navigate]);
+
   const [completeChapter] = useMutation<
     CourseChapterCompleteMutation,
     CourseChapterCompleteMutationVariables
@@ -521,10 +540,11 @@ const CourseDetail = (): ReactElement => {
     }
 
     purchaseIntentHandledRef.current = true;
-    navigate(`${APP_SHELL_ROUTES.courses}/${courseId}/purchase`, { replace: true });
+    navigate(`${APP_SHELL_ROUTES.courses}/${courseId}/purchase`, { replace: true, state: null });
   }, [
     canAccessCourse,
     course,
+    courseId,
     hasPendingPurchase,
     isAuthenticated,
     loading,
@@ -533,6 +553,14 @@ const CourseDetail = (): ReactElement => {
     location.state,
     navigate,
   ]);
+
+  useEffect(() => {
+    if (isAuthenticated || !isPurchaseDialogOpen || !courseId) {
+      return;
+    }
+
+    redirectToLoginForPurchase();
+  }, [courseId, isAuthenticated, isPurchaseDialogOpen, redirectToLoginForPurchase]);
 
   useEffect(() => {
     if (!course) {
@@ -733,12 +761,7 @@ const CourseDetail = (): ReactElement => {
     }
 
     if (!isAuthenticated) {
-      const coursePath = `${APP_SHELL_ROUTES.courses}/${courseId}`;
-      setPostLoginRedirect({ pathname: coursePath, openCoursePurchase: true });
-      const loginPath = isMobileAppLayoutViewport()
-        ? APP_SHELL_ROUTES.profileLogin
-        : APP_SHELL_ROUTES.login;
-      navigate(loginPath, { state: { from: coursePath } });
+      redirectToLoginForPurchase();
       return;
     }
 
@@ -982,11 +1005,11 @@ const CourseDetail = (): ReactElement => {
               ? hasCourseProgress
                 ? "ادامه دوره"
                 : "شروع دوره"
-              : hasPendingPurchase
+              : hasPendingManualReview
                 ? "در انتظار تایید پرداخت"
                 : "خرید دوره"}
           </Button>
-          {hasPendingPurchase ? (
+          {hasPendingManualReview ? (
             <Typography variant="caption" color="text.secondary">
               درخواست پرداخت شما ثبت شده و در حال بررسی است. پس از تایید، دسترسی دوره فعال می‌شود.
             </Typography>

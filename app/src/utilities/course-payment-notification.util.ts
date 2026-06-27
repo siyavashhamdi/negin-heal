@@ -27,7 +27,7 @@ export function parseCoursePaymentStatusNotificationCourseId(payload: unknown): 
 
   const purchaseStatus =
     typeof payload.purchaseStatus === "string" ? payload.purchaseStatus.trim() : "";
-  if (purchaseStatus === "PENDING") {
+  if (purchaseStatus === "PENDING" || purchaseStatus === "PENDING_GATEWAY") {
     return null;
   }
 

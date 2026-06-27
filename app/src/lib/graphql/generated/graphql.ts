@@ -1005,6 +1005,8 @@ export type CoursePaymentListGqlResponse = {
   id: Scalars["ID"]["output"];
   /** Whether the payment status was changed manually */
   isManualStatusChange: Scalars["Boolean"]["output"];
+  /** Actor that changed the payment status */
+  statusChangedBy?: Maybe<PurchaseStatusChangedBy>;
   /** User ID that manually changed the status */
   manualStatusChangedBy?: Maybe<Scalars["ID"]["output"]>;
   /** Manual status-change description */
@@ -1021,6 +1023,8 @@ export type CoursePaymentListGqlResponse = {
   paymentReference?: Maybe<Scalars["String"]["output"]>;
   /** Pending status date */
   pendingAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** Gateway pending status date */
+  gatewayPendingAt?: Maybe<Scalars["DateTime"]["output"]>;
   /** User ID that uploaded the receipt */
   receiptUploadedBy?: Maybe<Scalars["ID"]["output"]>;
   /** User that uploaded the receipt */
@@ -1099,6 +1103,8 @@ export type CoursePaymentListSummaryGqlResponse = {
   paymentReference?: Maybe<Scalars["String"]["output"]>;
   /** Pending status date */
   pendingAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** Gateway pending status date */
+  gatewayPendingAt?: Maybe<Scalars["DateTime"]["output"]>;
   /** User ID that uploaded the receipt */
   receiptUploadedBy?: Maybe<Scalars["ID"]["output"]>;
   /** Refunded status date */
@@ -2764,11 +2770,20 @@ export const UserCoursePurchaseStatus = {
   FAILED: "FAILED",
   PAID: "PAID",
   PENDING: "PENDING",
+  PENDING_GATEWAY: "PENDING_GATEWAY",
   REFUNDED: "REFUNDED",
 } as const;
 
 export type UserCoursePurchaseStatus =
   (typeof UserCoursePurchaseStatus)[keyof typeof UserCoursePurchaseStatus];
+/** Actor that changed a course purchase status */
+export const PurchaseStatusChangedBy = {
+  ADMIN: "ADMIN",
+  SYSTEM: "SYSTEM",
+} as const;
+
+export type PurchaseStatusChangedBy =
+  (typeof PurchaseStatusChangedBy)[keyof typeof PurchaseStatusChangedBy];
 export type UserCourseReviewAuthorGqlResponse = {
   __typename?: "UserCourseReviewAuthorGqlResponse";
   /** Review author's first name only */
@@ -4099,6 +4114,7 @@ export type CoursePaymentListQuery = {
       createdAt?: any | null;
       updatedAt?: any | null;
       pendingAt?: any | null;
+      gatewayPendingAt?: any | null;
       paidAt?: any | null;
       failedAt?: any | null;
       refundedAt?: any | null;
@@ -6277,6 +6293,7 @@ export const CoursePaymentListDocument = {
                       { kind: "Field", name: { kind: "Name", value: "createdAt" } },
                       { kind: "Field", name: { kind: "Name", value: "updatedAt" } },
                       { kind: "Field", name: { kind: "Name", value: "pendingAt" } },
+                      { kind: "Field", name: { kind: "Name", value: "gatewayPendingAt" } },
                       { kind: "Field", name: { kind: "Name", value: "paidAt" } },
                       { kind: "Field", name: { kind: "Name", value: "failedAt" } },
                       { kind: "Field", name: { kind: "Name", value: "refundedAt" } },

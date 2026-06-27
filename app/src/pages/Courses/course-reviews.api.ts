@@ -286,7 +286,8 @@ export function resolveCanSubmitCourseReview(input: {
     return false;
   }
 
-  const hasPendingPurchase = input.isFree !== true && input.purchaseStatus === "PENDING";
+  const hasPendingManualReview = input.isFree !== true && input.purchaseStatus === "PENDING";
+  const hasPendingPurchase = hasPendingManualReview;
   const canAccessCourse =
     input.isFree === true || input.isPurchased === true || input.purchaseStatus === "PAID";
 

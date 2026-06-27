@@ -273,12 +273,12 @@ export function scheduleAppShellNavPrefetch(context: AppShellNavPrefetchContext)
 
   if (typeof window.requestIdleCallback === "function") {
     pendingPrefetchUsesIdleCallback = true;
-    pendingPrefetchHandle = window.requestIdleCallback(run, { timeout: 4_000 });
+    pendingPrefetchHandle = window.requestIdleCallback(run, { timeout: 8_000 });
     return;
   }
 
   pendingPrefetchUsesIdleCallback = false;
-  pendingPrefetchHandle = window.setTimeout(run, 0);
+  pendingPrefetchHandle = window.setTimeout(run, 3_000);
 }
 
 /** Prefetches nav data immediately after logout, using fetch so clearStore cannot abort requests. */

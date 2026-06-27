@@ -12,10 +12,15 @@ import RequestLoginCode from "../Login/RequestLoginCode";
 import { SignupForm } from "../Login/SignupForm";
 import { VerifyLoginCodeForm } from "../Login/VerifyLoginCode";
 import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
+import {
+  extractLoginReturnState,
+  mergeWithLoginReturnState,
+} from "../../routing/post-login-redirect";
 
 const ProfileLogin = (): ReactElement => {
   const navigate = useNavigate();
   const location = useLocation();
+  const returnState = extractLoginReturnState(location.state);
   const verifyState = isProfileLoginVerifyState(location.state) ? location.state : null;
   const prefill = verifyState || !isLoginNavState(location.state) ? null : location.state;
 
@@ -27,12 +32,14 @@ const ProfileLogin = (): ReactElement => {
         onEditIdentity={(identity) =>
           navigate(APP_SHELL_ROUTES.profileLogin, {
             replace: true,
-            state: toLoginNavState(identity),
+            state: mergeWithLoginReturnState(toLoginNavState(identity), returnState),
           })
         }
         onForgotPassword={(identity) =>
           navigate(APP_SHELL_ROUTES.profileForgotPassword, {
-            state: identity ?? undefined,
+            state: identity
+              ? mergeWithLoginReturnState(identity, returnState)
+              : returnState ?? undefined,
           })
         }
       />
@@ -46,13 +53,19 @@ const ProfileLogin = (): ReactElement => {
       initialPrefill={prefill}
       onIdentityResolved={(identity) =>
         navigate(APP_SHELL_ROUTES.profileLogin, {
-          state: createProfileLoginVerifyState(identity),
+          state: mergeWithLoginReturnState(createProfileLoginVerifyState(identity), returnState),
         })
       }
-      onSignupRequired={(identity) => navigate(APP_SHELL_ROUTES.profileSignup, { state: identity })}
+      onSignupRequired={(identity) =>
+        navigate(APP_SHELL_ROUTES.profileSignup, {
+          state: mergeWithLoginReturnState(identity, returnState),
+        })
+      }
       onForgotPassword={(identity) =>
         navigate(APP_SHELL_ROUTES.profileForgotPassword, {
-          state: identity ?? undefined,
+          state: identity
+            ? mergeWithLoginReturnState(identity, returnState)
+            : returnState ?? undefined,
         })
       }
     />
@@ -61,8 +74,9 @@ const ProfileLogin = (): ReactElement => {
 
 const ProfileLoginVerifyRedirect = (): ReactElement => {
   const location = useLocation();
+  const returnState = extractLoginReturnState(location.state);
   const nextState = isLoginNavState(location.state)
-    ? createProfileLoginVerifyState(location.state)
+    ? mergeWithLoginReturnState(createProfileLoginVerifyState(location.state), returnState)
     : undefined;
 
   return <Navigate to={APP_SHELL_ROUTES.profileLogin} replace state={nextState} />;
@@ -71,6 +85,7 @@ const ProfileLoginVerifyRedirect = (): ReactElement => {
 const ProfileSignup = (): ReactElement => {
   const navigate = useNavigate();
   const location = useLocation();
+  const returnState = extractLoginReturnState(location.state);
 
   if (!isLoginNavState(location.state)) {
     return <Navigate to={APP_SHELL_ROUTES.profileLogin} replace />;
@@ -81,7 +96,9 @@ const ProfileSignup = (): ReactElement => {
       embedded
       identity={location.state}
       onEditIdentity={(identity) =>
-        navigate(APP_SHELL_ROUTES.profileLogin, { state: toLoginNavState(identity) })
+        navigate(APP_SHELL_ROUTES.profileLogin, {
+          state: mergeWithLoginReturnState(toLoginNavState(identity), returnState),
+        })
       }
     />
   );
@@ -90,15 +107,23 @@ const ProfileSignup = (): ReactElement => {
 const ProfileForgotPassword = (): ReactElement => {
   const navigate = useNavigate();
   const location = useLocation();
+  const returnState = extractLoginReturnState(location.state);
   const initialIdentity = isLoginNavState(location.state) ? location.state : null;
 
   return (
     <ForgotPasswordForm
       embedded
       initialIdentity={initialIdentity}
-      onBackToLogin={() => navigate(APP_SHELL_ROUTES.profileLogin, { replace: true })}
+      onBackToLogin={() =>
+        navigate(APP_SHELL_ROUTES.profileLogin, {
+          replace: true,
+          state: returnState ?? undefined,
+        })
+      }
       onPasswordResetRequested={(identity) =>
-        navigate(APP_SHELL_ROUTES.profileResetPassword, { state: identity })
+        navigate(APP_SHELL_ROUTES.profileResetPassword, {
+          state: mergeWithLoginReturnState(identity, returnState),
+        })
       }
     />
   );
@@ -107,6 +132,7 @@ const ProfileForgotPassword = (): ReactElement => {
 const ProfileResetPassword = (): ReactElement => {
   const navigate = useNavigate();
   const location = useLocation();
+  const returnState = extractLoginReturnState(location.state);
 
   if (!isLoginNavState(location.state)) {
     return <Navigate to={APP_SHELL_ROUTES.profileForgotPassword} replace />;
@@ -116,7 +142,12 @@ const ProfileResetPassword = (): ReactElement => {
     <ResetPasswordForm
       embedded
       identity={location.state}
-      onBackToLogin={() => navigate(APP_SHELL_ROUTES.profileLogin, { replace: true })}
+      onBackToLogin={() =>
+        navigate(APP_SHELL_ROUTES.profileLogin, {
+          replace: true,
+          state: returnState ?? undefined,
+        })
+      }
     />
   );
 };

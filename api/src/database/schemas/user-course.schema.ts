@@ -4,6 +4,7 @@ import { CourseDiscountType, CouponDiscountType } from "../../enums";
 import { UserCoursePaymentMethod } from "../../enums/user-course-payment-method.enum";
 import { UserCoursePurchaseCurrency } from "../../enums/user-course-purchase-currency.enum";
 import { UserCoursePurchaseStatus } from "../../enums/user-course-purchase-status.enum";
+import { PurchaseStatusChangedBy } from "../../enums/purchase-status-changed-by.enum";
 import { BaseIdTimestampableBlameableSchema } from "./base.schema";
 import { timestampablePlugin } from "../plugins/timestampable.plugin";
 import { blameablePlugin } from "../plugins/blameable.plugin";
@@ -40,12 +41,14 @@ export type UserCoursePurchase = {
   paymentReference?: string;
   transactionId?: string;
   pendingAt?: Date;
+  gatewayPendingAt?: Date;
   paidAt?: Date;
   failedAt?: Date;
   refundedAt?: Date;
   cancelledAt?: Date;
   submittedInitiallyByAdmin: boolean;
   isManualStatusChange: boolean;
+  statusChangedBy?: PurchaseStatusChangedBy;
   manualStatusChangedBy?: Types.ObjectId;
   manualStatusChangedDescription?: string;
   uploadedReceiptFileId?: Types.ObjectId;
@@ -171,6 +174,7 @@ export const UserCoursePurchaseSchema = new MongooseSchema(
     paymentReference: { trim: true, type: String },
     transactionId: { trim: true, type: String },
     pendingAt: { type: Date },
+    gatewayPendingAt: { type: Date },
     paidAt: { type: Date },
     failedAt: { type: Date },
     refundedAt: { type: Date },
@@ -181,6 +185,10 @@ export const UserCoursePurchaseSchema = new MongooseSchema(
       type: Boolean,
     },
     isManualStatusChange: { default: false, required: true, type: Boolean },
+    statusChangedBy: {
+      enum: Object.values(PurchaseStatusChangedBy),
+      type: String,
+    },
     manualStatusChangedBy: { ref: "User", type: Types.ObjectId },
     manualStatusChangedDescription: { trim: true, type: String },
     uploadedReceiptFileId: { ref: "StoredFile", type: Types.ObjectId },

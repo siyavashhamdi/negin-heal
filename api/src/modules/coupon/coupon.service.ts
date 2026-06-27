@@ -42,6 +42,7 @@ import {
 
 const COMMITTED_PURCHASE_STATUSES = [
   UserCoursePurchaseStatus.PENDING,
+  UserCoursePurchaseStatus.PENDING_GATEWAY,
   UserCoursePurchaseStatus.PAID,
 ];
 

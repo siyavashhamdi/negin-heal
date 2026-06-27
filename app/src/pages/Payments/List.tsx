@@ -85,6 +85,7 @@ import {
   buildCoursePaymentListQueryVariables,
   buildPaymentReceiptExistingFile,
   hasCoursePaymentFiltersApplied,
+  formatPurchaseStatusChangedBy,
   isPaymentReceiptFilePresent,
   mapCoursePaymentListRowToRecord,
   type CoursePaymentListFilters,
@@ -195,6 +196,7 @@ const STATUS_COLOR: Record<
   "default" | "primary" | "success" | "warning" | "error" | "info"
 > = {
   PENDING: "warning",
+  PENDING_GATEWAY: "info",
   PAID: "success",
   FAILED: "error",
   REFUNDED: "info",
@@ -203,6 +205,7 @@ const STATUS_COLOR: Record<
 
 const STATUS_LABEL: Record<UserCoursePurchaseStatus, string> = {
   PENDING: "در انتظار",
+  PENDING_GATEWAY: "در انتظار درگاه",
   PAID: "پرداخت‌شده",
   FAILED: "ناموفق",
   REFUNDED: "مرجوع‌شده",
@@ -1639,8 +1642,14 @@ const PaymentsList = (): ReactElement => {
                   value: reviewPayment.isManualStatusChange ? "بله" : "خیر",
                 },
                 {
-                  label: "تغییردهنده دستی",
-                  value: reviewPayment.manualStatusChangerName,
+                  label: "تغییردهنده",
+                  value: formatPurchaseStatusChangedBy(
+                    reviewPayment.statusChangedBy === "SYSTEM" ||
+                      reviewPayment.statusChangedBy === "ADMIN"
+                      ? reviewPayment.statusChangedBy
+                      : null,
+                    reviewPayment.manualStatusChangerName
+                  ),
                 },
               ]}
             />

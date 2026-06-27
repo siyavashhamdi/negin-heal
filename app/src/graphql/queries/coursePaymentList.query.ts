@@ -45,6 +45,7 @@ export const COURSE_PAYMENT_LIST_QUERY = gql`
         createdAt
         updatedAt
         pendingAt
+        gatewayPendingAt
         paidAt
         failedAt
         refundedAt

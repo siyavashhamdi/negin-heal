@@ -67,6 +67,7 @@ export const COURSE_PAYMENT_DETAIL_QUERY = gql`
         email
         phone
       }
+      statusChangedBy
       manualStatusChangedBy
       manualStatusChanger {
         id
@@ -79,6 +80,7 @@ export const COURSE_PAYMENT_DETAIL_QUERY = gql`
       createdAt
       updatedAt
       pendingAt
+      gatewayPendingAt
       paidAt
       failedAt
       refundedAt

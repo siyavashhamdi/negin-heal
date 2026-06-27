@@ -7,9 +7,17 @@ import {
   type FileAccessUrl,
 } from "../../utils/fileAccessUrl.util";
 
+export type PurchaseStatusChangedBy = "ADMIN" | "SYSTEM";
+
 export type UserCoursePaymentMethod = "GATEWAY" | "CARD_TO_CARD" | "CRYPTOCURRENCY" | "FREE";
 
-export type UserCoursePurchaseStatus = "PENDING" | "PAID" | "FAILED" | "REFUNDED" | "CANCELLED";
+export type UserCoursePurchaseStatus =
+  | "PENDING"
+  | "PENDING_GATEWAY"
+  | "PAID"
+  | "FAILED"
+  | "REFUNDED"
+  | "CANCELLED";
 
 export type UserCoursePurchaseCurrency = "IRT" | "USDT";
 
@@ -73,6 +81,7 @@ export type CoursePaymentListItemRow = {
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly pendingAt?: string | null;
+  readonly gatewayPendingAt?: string | null;
   readonly paidAt?: string | null;
   readonly failedAt?: string | null;
   readonly refundedAt?: string | null;
@@ -118,6 +127,7 @@ export type CoursePaymentDetailRow = {
   readonly receiptUploadedBy?: string | null;
   readonly receiptUploader?: CoursePaymentRelatedUser | null;
   readonly isManualStatusChange: boolean;
+  readonly statusChangedBy?: PurchaseStatusChangedBy | null;
   readonly submittedInitiallyByAdmin: boolean;
   readonly createdBy?: string | null;
   readonly createdByUser?: CoursePaymentRelatedUser | null;
@@ -127,6 +137,7 @@ export type CoursePaymentDetailRow = {
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
   readonly pendingAt?: string | null;
+  readonly gatewayPendingAt?: string | null;
   readonly paidAt?: string | null;
   readonly failedAt?: string | null;
   readonly refundedAt?: string | null;
@@ -337,6 +348,7 @@ export type CoursePaymentRecord = {
   readonly receiptUploaderName: string;
   readonly receiptUploaderUsername: string;
   readonly isManualStatusChange: boolean;
+  readonly statusChangedBy: string;
   readonly submittedInitiallyByAdmin: boolean;
   readonly createdBy: string;
   readonly createdByUserName: string;
@@ -348,6 +360,7 @@ export type CoursePaymentRecord = {
   readonly createdAt: string;
   readonly updatedAt: string;
   readonly pendingAt: string;
+  readonly gatewayPendingAt: string;
   readonly paidAt: string;
   readonly failedAt: string;
   readonly refundedAt: string;
@@ -355,6 +368,21 @@ export type CoursePaymentRecord = {
 };
 
 const EMPTY_DISPLAY = "-";
+
+export function formatPurchaseStatusChangedBy(
+  statusChangedBy: PurchaseStatusChangedBy | null | undefined,
+  manualStatusChangerName: string
+): string {
+  if (statusChangedBy === "SYSTEM") {
+    return "سیستم";
+  }
+
+  if (statusChangedBy === "ADMIN") {
+    return manualStatusChangerName !== EMPTY_DISPLAY ? manualStatusChangerName : "پشتیبانی";
+  }
+
+  return manualStatusChangerName;
+}
 
 export function isPaymentReceiptFilePresent(record: CoursePaymentRecord): boolean {
   return record.uploadedReceiptFileId !== "-" || record.uploadedReceiptFileTitle !== "-";
@@ -482,6 +510,7 @@ export function mapCoursePaymentListRowToRecord(
     receiptUploaderName: EMPTY_DISPLAY,
     receiptUploaderUsername: EMPTY_DISPLAY,
     isManualStatusChange: row.isManualStatusChange,
+    statusChangedBy: EMPTY_DISPLAY,
     submittedInitiallyByAdmin: false,
     createdBy: EMPTY_DISPLAY,
     createdByUserName: EMPTY_DISPLAY,
@@ -493,6 +522,7 @@ export function mapCoursePaymentListRowToRecord(
     createdAt: row.createdAt ?? "",
     updatedAt: row.updatedAt ?? "",
     pendingAt: row.pendingAt ?? "",
+    gatewayPendingAt: row.gatewayPendingAt ?? "",
     paidAt: row.paidAt ?? "",
     failedAt: row.failedAt ?? "",
     refundedAt: row.refundedAt ?? "",
@@ -543,6 +573,7 @@ export function mapCoursePaymentDetailRowToRecord(
     receiptUploaderName: display(row.receiptUploader?.fullName ?? row.receiptUploader?.username),
     receiptUploaderUsername: display(row.receiptUploader?.username),
     isManualStatusChange: row.isManualStatusChange,
+    statusChangedBy: display(row.statusChangedBy),
     submittedInitiallyByAdmin: row.submittedInitiallyByAdmin === true,
     createdBy: display(row.createdBy),
     createdByUserName: display(row.createdByUser?.fullName ?? row.createdByUser?.username),
@@ -556,6 +587,7 @@ export function mapCoursePaymentDetailRowToRecord(
     createdAt: row.createdAt ?? "",
     updatedAt: row.updatedAt ?? "",
     pendingAt: row.pendingAt ?? "",
+    gatewayPendingAt: row.gatewayPendingAt ?? "",
     paidAt: row.paidAt ?? "",
     failedAt: row.failedAt ?? "",
     refundedAt: row.refundedAt ?? "",

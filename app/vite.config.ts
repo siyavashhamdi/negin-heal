@@ -166,6 +166,35 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         // Lower parallelism reduces peak memory during production builds.
         maxParallelFileOps: 1,
+        output: {
+          manualChunks(id) {
+            if (!id.includes("node_modules")) {
+              return undefined;
+            }
+
+            if (id.includes("@mui")) {
+              return "vendor-mui";
+            }
+
+            if (id.includes("@apollo/client")) {
+              return "vendor-apollo";
+            }
+
+            if (id.includes("@tanstack/react-table")) {
+              return "vendor-tanstack-table";
+            }
+
+            if (id.includes("react-multi-date-picker")) {
+              return "vendor-date-picker";
+            }
+
+            if (id.includes("sql.js")) {
+              return "vendor-sqljs";
+            }
+
+            return "vendor";
+          },
+        },
       },
     },
   };

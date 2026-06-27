@@ -14,6 +14,7 @@ import {
 } from "./app-shell-nav-items";
 import "./styles/SideMenuNav.scss";
 import AppTooltip from "../shared/AppTooltip";
+import { prefetchAppShellNavRoute } from "../lib/app-shell-route-prefetch";
 
 export type SideMenuIcon = (typeof APP_SHELL_NAV_ITEMS)[number]["Icon"];
 
@@ -85,6 +86,8 @@ export function SideMenuNav({
             <NavLink
               key={item.id}
               to={itemPath}
+              onMouseEnter={() => prefetchAppShellNavRoute(item, navContext)}
+              onTouchStart={() => prefetchAppShellNavRoute(item, navContext)}
               className={({ isActive }) =>
                 `${itemClassName} ${isActive ? "side-menu-nav__item--active" : ""}`
               }

@@ -29,6 +29,7 @@ import {
   UserCoursePaymentMethod,
   UserCoursePurchaseCurrency,
   UserCoursePurchaseStatus,
+  PurchaseStatusChangedBy,
   UserStatus,
 } from "../../enums";
 import { SortingOrder } from "../../common/pagination/input";
@@ -449,7 +450,9 @@ export class CourseService {
     const status =
       input.paymentMethod === UserCoursePaymentMethod.FREE
         ? UserCoursePurchaseStatus.PAID
-        : UserCoursePurchaseStatus.PENDING;
+        : input.paymentMethod === UserCoursePaymentMethod.GATEWAY
+          ? UserCoursePurchaseStatus.PENDING_GATEWAY
+          : UserCoursePurchaseStatus.PENDING;
     const userCoursePayload = {
       userId,
       courseId: course._id,
@@ -486,6 +489,8 @@ export class CourseService {
         transactionId: this.normalizeOptionalText(input.transactionId),
         pendingAt:
           status === UserCoursePurchaseStatus.PENDING ? now : undefined,
+        gatewayPendingAt:
+          status === UserCoursePurchaseStatus.PENDING_GATEWAY ? now : undefined,
         paidAt: status === UserCoursePurchaseStatus.PAID ? now : undefined,
         isManualStatusChange: false,
         uploadedReceiptFileId,
@@ -730,6 +735,7 @@ export class CourseService {
     const now = new Date();
     userCourse.purchase.status = input.status;
     userCourse.purchase.isManualStatusChange = true;
+    userCourse.purchase.statusChangedBy = PurchaseStatusChangedBy.ADMIN;
     userCourse.purchase.manualStatusChangedBy = adminUserId;
     userCourse.purchase.manualStatusChangedDescription =
       this.normalizeOptionalText(input.manualStatusChangedDescription) ??
@@ -1977,6 +1983,7 @@ export class CourseService {
     const orderedStatuses: UserCoursePurchaseStatus[] = [
       UserCoursePurchaseStatus.PAID,
       UserCoursePurchaseStatus.PENDING,
+      UserCoursePurchaseStatus.PENDING_GATEWAY,
       UserCoursePurchaseStatus.FAILED,
       UserCoursePurchaseStatus.REFUNDED,
       UserCoursePurchaseStatus.CANCELLED,
@@ -3701,11 +3708,13 @@ export class CourseService {
       uploadedReceiptFile,
       receiptUploadedBy: purchase.receiptUploadedBy,
       isManualStatusChange: purchase.isManualStatusChange,
+      statusChangedBy: purchase.statusChangedBy,
       manualStatusChangedBy: purchase.manualStatusChangedBy,
       manualStatusChangedDescription: purchase.manualStatusChangedDescription,
       createdAt: userCourse.audit?.createdAt,
       updatedAt: userCourse.audit?.updatedAt,
       pendingAt: purchase.pendingAt,
+      gatewayPendingAt: purchase.gatewayPendingAt,
       paidAt: purchase.paidAt,
       failedAt: purchase.failedAt,
       refundedAt: purchase.refundedAt,
@@ -3791,6 +3800,7 @@ export class CourseService {
       receiptUploadedBy: purchase.receiptUploadedBy,
       receiptUploader,
       isManualStatusChange: purchase.isManualStatusChange,
+      statusChangedBy: purchase.statusChangedBy,
       submittedInitiallyByAdmin: purchase.submittedInitiallyByAdmin === true,
       createdBy: userCourse.audit?.createdBy,
       createdByUser,
@@ -3800,6 +3810,7 @@ export class CourseService {
       createdAt: userCourse.audit?.createdAt,
       updatedAt: userCourse.audit?.updatedAt,
       pendingAt: purchase.pendingAt,
+      gatewayPendingAt: purchase.gatewayPendingAt,
       paidAt: purchase.paidAt,
       failedAt: purchase.failedAt,
       refundedAt: purchase.refundedAt,
@@ -3814,6 +3825,11 @@ export class CourseService {
   ): void {
     if (status === UserCoursePurchaseStatus.PENDING) {
       userCourse.purchase.pendingAt = timestamp;
+      return;
+    }
+
+    if (status === UserCoursePurchaseStatus.PENDING_GATEWAY) {
+      userCourse.purchase.gatewayPendingAt = timestamp;
       return;
     }
 
@@ -3928,7 +3944,8 @@ export class CourseService {
     if (
       !changedByInvestigationTeam &&
       nextStatus === UserCoursePurchaseStatus.PAID &&
-      previousStatus !== UserCoursePurchaseStatus.PENDING
+      previousStatus !== UserCoursePurchaseStatus.PENDING &&
+      previousStatus !== UserCoursePurchaseStatus.PENDING_GATEWAY
     ) {
       return;
     }

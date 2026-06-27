@@ -56,7 +56,13 @@ export type UserCourseDetailQueryVariables = {
 
 export type UserCoursePaymentMethod = "GATEWAY" | "CARD_TO_CARD" | "CRYPTOCURRENCY" | "FREE";
 
-export type UserCoursePurchaseStatus = "PENDING" | "PAID" | "FAILED" | "REFUNDED" | "CANCELLED";
+export type UserCoursePurchaseStatus =
+  | "PENDING"
+  | "PENDING_GATEWAY"
+  | "PAID"
+  | "FAILED"
+  | "REFUNDED"
+  | "CANCELLED";
 
 export type CouponDiscountType = "PERCENTAGE" | "FIXED_AMOUNT";
 

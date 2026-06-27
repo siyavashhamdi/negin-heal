@@ -85,6 +85,7 @@ import { useSnackbar } from "../../hooks/useSnackbar";
 import { resolveSuccessMessage } from "../../utilities/success-message.util";
 import ModalFooterActions from "../../shared/crud/ModalFooterActions";
 import { APP_SHELL_ROUTES, isProfileAuthRoute } from "../../routing/app-shell-routes";
+import { peekPostLoginRedirect } from "../../routing/post-login-redirect";
 import { opaqueShellProps } from "../../shared/opaqueShell";
 import { ProfileAuthRoutes } from "./ProfileAuthRoutes";
 import { LoginAdornedTextField } from "../Login/components/LoginAdornedTextField";
@@ -1124,9 +1125,16 @@ const AuthenticatedProfile = (): ReactElement => {
 };
 
 const Profile = (): ReactElement => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isPostLoginRedirectPending } = useAuth();
   const useProfileAuthShell = shouldUseProfileAuthShell();
   const location = useLocation();
+
+  if (
+    isAuthenticated &&
+    (isPostLoginRedirectPending || peekPostLoginRedirect())
+  ) {
+    return <></>;
+  }
 
   if (isAuthenticated && isProfileAuthRoute(location.pathname)) {
     return <Navigate to={APP_SHELL_ROUTES.profile} replace />;

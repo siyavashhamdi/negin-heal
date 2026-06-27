@@ -7,7 +7,7 @@ import {
   type ReactNode,
   type ReactElement,
 } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { LOCAL_STORAGE_KEYS } from "../constants";
 import { shouldUseProfileAuthShell } from "../hooks/useMobileAppLayout";
 import { apolloClient, resetApolloClientCache } from "../lib/apollo-client";
@@ -17,8 +17,17 @@ import {
   LOGGED_OUT_NAV_PREFETCH_CONTEXT,
   runAppShellNavPrefetchNow,
 } from "../lib/app-shell-nav-prefetch";
-import { APP_SHELL_ROUTES, isStandaloneShellRoute } from "../routing/app-shell-routes";
-import { consumePostLoginRedirect } from "../routing/post-login-redirect";
+import {
+  APP_SHELL_ROUTES,
+  isProfileAuthRoute,
+  isStandaloneShellRoute,
+} from "../routing/app-shell-routes";
+import {
+  clearPostLoginRedirect,
+  consumePostLoginRedirect,
+  type PostLoginRedirect,
+  resolvePendingPostLoginRedirect,
+} from "../routing/post-login-redirect";
 import { USER_LOGOUT_MUTATION } from "../graphql/mutations/userLogout.mutation";
 import { subscribeAuthSessionExpired } from "../lib/auth-session-expired-listeners";
 import { unregisterWebPushSubscriptionFromServer } from "../utils/pushSubscription.util";
@@ -46,6 +55,7 @@ interface AuthContextValue {
   accessToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isPostLoginRedirectPending: boolean;
   login: (token: string, user: User) => void;
   syncUser: (userData: User) => void;
   logout: () => void;
@@ -63,6 +73,17 @@ interface AuthProviderProps {
   readonly children: ReactNode;
 }
 
+function isAuthEntryRoute(pathname: string): boolean {
+  return pathname === APP_SHELL_ROUTES.login || isProfileAuthRoute(pathname);
+}
+
+function hasReachedPostLoginRedirectTarget(
+  pathname: string,
+  redirect: PostLoginRedirect
+): boolean {
+  return pathname === redirect.pathname || pathname.startsWith(`${redirect.pathname}/`);
+}
+
 /**
  * Auth Provider Component
  * Manages authentication state and provides auth methods
@@ -71,7 +92,15 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
   const [user, setUser] = useState<User | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [postLoginRedirectTarget, setPostLoginRedirectTarget] =
+    useState<PostLoginRedirect | null>(null);
+  const location = useLocation();
   const navigate = useNavigate();
+
+  const beginPostLoginRedirect = useCallback((redirect: PostLoginRedirect): void => {
+    consumePostLoginRedirect();
+    setPostLoginRedirectTarget(redirect);
+  }, []);
 
   // Initialize auth state from localStorage
   useEffect(() => {
@@ -94,34 +123,69 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
     setIsLoading(false);
   }, []);
 
+  useEffect(() => {
+    if (!postLoginRedirectTarget) {
+      return;
+    }
+
+    if (hasReachedPostLoginRedirectTarget(location.pathname, postLoginRedirectTarget)) {
+      setPostLoginRedirectTarget(null);
+    }
+  }, [location.pathname, postLoginRedirectTarget]);
+
+  useEffect(() => {
+    if (isLoading || !accessToken || !user || postLoginRedirectTarget) {
+      return;
+    }
+
+    if (!isAuthEntryRoute(location.pathname)) {
+      return;
+    }
+
+    const redirect = resolvePendingPostLoginRedirect(location.state);
+    if (!redirect) {
+      return;
+    }
+
+    beginPostLoginRedirect(redirect);
+  }, [
+    accessToken,
+    beginPostLoginRedirect,
+    isLoading,
+    location.pathname,
+    location.state,
+    postLoginRedirectTarget,
+    user,
+  ]);
+
   /**
    * Login function
    * Stores token and user data, then navigates based on viewport.
    */
-  const login = (token: string, userData: User): void => {
-    setAccessToken(token);
-    setUser(userData);
-    localStorage.setItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN, token);
-    localStorage.setItem("user", JSON.stringify(userData));
+  const login = useCallback(
+    (token: string, userData: User): void => {
+      localStorage.setItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN, token);
+      localStorage.setItem("user", JSON.stringify(userData));
+      setAccessToken(token);
+      setUser(userData);
 
-    const redirect = consumePostLoginRedirect();
-    if (redirect) {
-      navigate(redirect.pathname, {
-        replace: true,
-        state: redirect.openCoursePurchase ? { openCoursePurchase: true } : undefined,
-      });
-      return;
-    }
-
-    if (shouldUseProfileAuthShell()) {
-      if (window.location.pathname !== APP_SHELL_ROUTES.profile) {
-        navigate(APP_SHELL_ROUTES.profile);
+      const redirect = resolvePendingPostLoginRedirect(location.state);
+      if (redirect) {
+        beginPostLoginRedirect(redirect);
+        return;
       }
-      return;
-    }
 
-    navigate(APP_SHELL_ROUTES.courses);
-  };
+      if (shouldUseProfileAuthShell()) {
+        if (window.location.pathname !== APP_SHELL_ROUTES.profile) {
+          navigate(APP_SHELL_ROUTES.profile);
+        }
+        return;
+      }
+
+      navigate(APP_SHELL_ROUTES.courses);
+    },
+    [beginPostLoginRedirect, location.state, navigate]
+  );
 
   const syncUser = useCallback((userData: User): void => {
     setUser((currentUser) => {
@@ -137,8 +201,10 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
   const clearLocalAuthSession = useCallback((): void => {
     setAccessToken(null);
     setUser(null);
+    setPostLoginRedirectTarget(null);
     localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
     localStorage.removeItem("user");
+    clearPostLoginRedirect();
   }, []);
 
   const runBackgroundLogoutCleanup = useCallback(async (token: string | null): Promise<void> => {
@@ -238,12 +304,28 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
     accessToken,
     isAuthenticated: Boolean(accessToken) && Boolean(user),
     isLoading,
+    isPostLoginRedirectPending: postLoginRedirectTarget !== null,
     login,
     syncUser,
     logout,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {postLoginRedirectTarget ? (
+        <Navigate
+          to={postLoginRedirectTarget.pathname}
+          replace
+          state={
+            postLoginRedirectTarget.openCoursePurchase
+              ? { openCoursePurchase: true }
+              : undefined
+          }
+        />
+      ) : null}
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 /**
