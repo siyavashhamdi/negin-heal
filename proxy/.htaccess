@@ -1,0 +1,24 @@
+RewriteEngine On
+
+# Block direct web access to PHP internals (config holds secrets).
+<FilesMatch "^(config|lib)\.php$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+# Pass Authorization header through on some Apache/cPanel setups.
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# Pass X-Proxy-Key through on some Apache/cPanel setups.
+RewriteCond %{HTTP:X-Proxy-Key} .
+RewriteRule .* - [E=HTTP_X_PROXY_KEY:%{HTTP:X-Proxy-Key}]
+
+# Route everything to index.php except real files.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [QSA,L]

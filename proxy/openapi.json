@@ -1,0 +1,431 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Negin Heal ZarinPal Proxy API",
+    "description": "PHP proxy for ZarinPal payment request and verify calls. Used by the Nest API when the main server is outside Iran.\n\nAll `POST` endpoints require the `X-Proxy-Key` header matching `api_key` in `config.php`.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://pay.neginheal.ir",
+      "description": "Production (cPanel)"
+    },
+    {
+      "url": "http://localhost:8090",
+      "description": "Local PHP built-in server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Health",
+      "description": "Service status"
+    },
+    {
+      "name": "Payment",
+      "description": "ZarinPal payment lifecycle"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Health check",
+        "description": "Returns proxy service status. No authentication required.",
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "description": "Service is running",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                },
+                "example": {
+                  "ok": true,
+                  "service": "zarinpal-proxy"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payment/request": {
+      "post": {
+        "tags": ["Payment"],
+        "summary": "Start ZarinPal payment",
+        "description": "Creates a ZarinPal payment session and returns the redirect URL and authority.",
+        "operationId": "createPaymentRequest",
+        "security": [
+          {
+            "ProxyKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentRequestInput"
+              },
+              "example": {
+                "amountIrt": 150000,
+                "callbackUrl": "https://neginheal.ir/payment/zarinpal/callback?courseId=abc123",
+                "description": "Demo purchase: دوره مدیتیشن",
+                "metadata": {
+                  "email": "user@example.com",
+                  "mobile": "09121234567",
+                  "courseId": "abc123",
+                  "userId": "user-uuid",
+                  "username": "sara"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payment session created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentRequestSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error or ZarinPal payment failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Could not reach ZarinPal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payment/verify": {
+      "post": {
+        "tags": ["Payment"],
+        "summary": "Verify ZarinPal payment",
+        "description": "Verifies a payment after the user returns from ZarinPal. If `status` is present and not `OK`, returns `cancelled` without calling ZarinPal.",
+        "operationId": "verifyPayment",
+        "security": [
+          {
+            "ProxyKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentVerifyInput"
+              },
+              "example": {
+                "authority": "A00000000000000000000000000123456789",
+                "amountIrt": 150000,
+                "status": "OK"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Verification result (success, cancelled, or failed)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/PaymentVerifySuccess"
+                    },
+                    {
+                      "$ref": "#/components/schemas/PaymentVerifyCancelled"
+                    },
+                    {
+                      "$ref": "#/components/schemas/PaymentVerifyFailed"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ProxyKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Proxy-Key",
+        "description": "Shared secret from `api_key` in proxy `config.php`"
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "required": ["ok", "service"],
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "example": true
+          },
+          "service": {
+            "type": "string",
+            "example": "zarinpal-proxy"
+          }
+        }
+      },
+      "PaymentMetadata": {
+        "type": "object",
+        "description": "Sent to ZarinPal. Missing or null fields are forwarded as empty strings.",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user@example.com"
+          },
+          "mobile": {
+            "type": "string",
+            "example": "09121234567"
+          },
+          "courseId": {
+            "type": "string",
+            "example": "abc123"
+          },
+          "userId": {
+            "type": "string",
+            "example": "user-uuid"
+          },
+          "username": {
+            "type": "string",
+            "example": "sara"
+          }
+        }
+      },
+      "PaymentRequestInput": {
+        "type": "object",
+        "required": ["amountIrt", "callbackUrl", "description"],
+        "properties": {
+          "amountIrt": {
+            "type": "number",
+            "format": "double",
+            "description": "Final price in Toman",
+            "example": 150000
+          },
+          "callbackUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL ZarinPal redirects the user to after payment",
+            "example": "https://neginheal.ir/payment/zarinpal/callback?courseId=abc123"
+          },
+          "description": {
+            "type": "string",
+            "description": "Payment description shown in ZarinPal",
+            "example": "Demo purchase: دوره مدیتیشن"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/PaymentMetadata"
+          }
+        }
+      },
+      "PaymentRequestSuccess": {
+        "type": "object",
+        "required": ["ok", "authority", "paymentUrl", "amountIrr", "zarinpalCode"],
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "example": true
+          },
+          "authority": {
+            "type": "string",
+            "example": "A00000000000000000000000000123456789"
+          },
+          "paymentUrl": {
+            "type": "string",
+            "format": "uri",
+            "example": "https://www.zarinpal.com/pg/StartPay/A00000000000000000000000000123456789"
+          },
+          "amountIrr": {
+            "type": "integer",
+            "description": "Amount sent to ZarinPal in Rial",
+            "example": 1500000
+          },
+          "zarinpalCode": {
+            "type": "integer",
+            "example": 100
+          },
+          "message": {
+            "type": "string",
+            "example": "Success"
+          }
+        }
+      },
+      "PaymentVerifyInput": {
+        "type": "object",
+        "required": ["authority", "amountIrt"],
+        "properties": {
+          "authority": {
+            "type": "string",
+            "description": "Authority from ZarinPal callback query `Authority`",
+            "example": "A00000000000000000000000000123456789"
+          },
+          "amountIrt": {
+            "type": "number",
+            "format": "double",
+            "description": "Must match the amount used at request time (Toman)",
+            "example": 150000
+          },
+          "status": {
+            "type": "string",
+            "description": "Callback query `Status` from ZarinPal (`OK` or `NOK`)",
+            "example": "OK"
+          }
+        }
+      },
+      "PaymentVerifySuccess": {
+        "type": "object",
+        "required": ["ok", "status"],
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "example": true
+          },
+          "status": {
+            "type": "string",
+            "enum": ["success"],
+            "example": "success"
+          },
+          "refId": {
+            "type": "string",
+            "nullable": true,
+            "example": "123456789"
+          },
+          "zarinpalCode": {
+            "type": "integer",
+            "example": 100
+          },
+          "message": {
+            "type": "string",
+            "example": "Verified"
+          }
+        }
+      },
+      "PaymentVerifyCancelled": {
+        "type": "object",
+        "required": ["ok", "status"],
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "example": true
+          },
+          "status": {
+            "type": "string",
+            "enum": ["cancelled"],
+            "example": "cancelled"
+          },
+          "message": {
+            "type": "string",
+            "example": "Payment cancelled by user."
+          }
+        }
+      },
+      "PaymentVerifyFailed": {
+        "type": "object",
+        "required": ["ok", "status"],
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "example": false
+          },
+          "status": {
+            "type": "string",
+            "enum": ["failed"],
+            "example": "failed"
+          },
+          "error": {
+            "type": "string",
+            "example": "ZARINPAL_VERIFICATION_FAILED"
+          },
+          "zarinpalCode": {
+            "type": "integer",
+            "example": -51
+          },
+          "message": {
+            "type": "string",
+            "example": "Session is not valid"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["ok", "error"],
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "example": false
+          },
+          "error": {
+            "type": "string",
+            "example": "UNAUTHORIZED"
+          },
+          "message": {
+            "type": "string",
+            "example": "Invalid API key."
+          },
+          "zarinpalCode": {
+            "type": "integer"
+          },
+          "httpStatus": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  }
+}

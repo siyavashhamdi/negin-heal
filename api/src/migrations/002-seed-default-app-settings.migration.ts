@@ -59,11 +59,13 @@ const DEFAULT_USDT_IRT_RATE_VALUE = {
 };
 
 const DEFAULT_ZARINPAL_CONFIG_VALUE = {
-  merchantId: "c9da7b93-60c6-41fe-91f0-d7f873d04708",
-  requestUrl: "https://sandbox.zarinpal.com/pg/v4/payment/request.json",
-  verifyUrl: "https://sandbox.zarinpal.com/pg/v4/payment/verify.json",
-  startPayUrl: "https://sandbox.zarinpal.com/pg/StartPay",
+  merchantId: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+  requestUrl: "https://payment.zarinpal.com/pg/v4/payment/request.json",
+  verifyUrl: "https://payment.zarinpal.com/pg/v4/payment/verify.json",
+  startPayUrl: "https://www.zarinpal.com/pg/StartPay",
   minAmountIrr: 10000,
+  proxyBaseUrl: "",
+  proxyApiKey: "",
 };
 
 const DEFAULT_EMAIL_SMTP_CONFIG_VALUE = {
@@ -536,7 +538,7 @@ const DEFAULT_APP_SETTINGS: readonly DefaultAppSettingSeed[] = [
     value: DEFAULT_ZARINPAL_CONFIG_VALUE,
     valueType: AppSettingValueType.JSON,
     description:
-      "تنظیمات اتصال زرین‌پال شامل مرچنت آیدی، آدرس‌های request، verify، StartPay و حداقل مبلغ ریالی",
+      "تنظیمات اتصال زرین‌پال شامل مرچنت آیدی، آدرس‌های request، verify، StartPay، حداقل مبلغ ریالی و (اختیاری) آدرس پروکسی و کلید API پروکسی",
     isActive: true,
   },
   {

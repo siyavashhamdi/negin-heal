@@ -190,6 +190,8 @@ function normalizeZarinpalConfig(value: unknown): ZarinpalConfigForm {
     verifyUrl: text(config.verifyUrl),
     startPayUrl: text(config.startPayUrl),
     minAmountIrr: numberText(config.minAmountIrr),
+    proxyBaseUrl: text(config.proxyBaseUrl),
+    proxyApiKey: text(config.proxyApiKey),
   };
 }
 
@@ -413,14 +415,28 @@ function serializeJsonForm(jsonForm: JsonFormState): JsonValue {
         feeUsdt: finiteNumber(jsonForm.rate.feeUsdt, "کارمزد USDT"),
         coefficient: finiteNumber(jsonForm.rate.coefficient, "ضریب"),
       };
-    case "zarinpalConfig":
+    case "zarinpalConfig": {
+      const proxyBaseUrl = optionalText(jsonForm.config.proxyBaseUrl);
+      const proxyApiKey = optionalText(jsonForm.config.proxyApiKey);
+
+      if (proxyBaseUrl !== "" && proxyApiKey === "") {
+        throw new Error("کلید API پروکسی الزامی است وقتی آدرس پروکسی تنظیم شده باشد.");
+      }
+
+      if (proxyBaseUrl === "" && proxyApiKey !== "") {
+        throw new Error("آدرس پروکسی زرین‌پال الزامی است وقتی کلید API پروکسی تنظیم شده باشد.");
+      }
+
       return {
         merchantId: requiredText(jsonForm.config.merchantId, "مرچنت آیدی"),
         requestUrl: requiredText(jsonForm.config.requestUrl, "آدرس Request"),
         verifyUrl: requiredText(jsonForm.config.verifyUrl, "آدرس Verify"),
         startPayUrl: requiredText(jsonForm.config.startPayUrl, "آدرس StartPay"),
         minAmountIrr: finiteNumber(jsonForm.config.minAmountIrr, "حداقل مبلغ ریالی"),
+        proxyBaseUrl,
+        proxyApiKey,
       };
+    }
     case "emailSmtpConfig":
       return {
         host: requiredText(jsonForm.config.host, "هاست SMTP"),

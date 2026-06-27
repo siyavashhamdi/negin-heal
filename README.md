@@ -60,6 +60,8 @@ MINIO_SECRET_KEY=<your-secret>
 MINIO_BUCKET=negin-heal
 ```
 
+ZarinPal proxy URL and API key are configured in **System Settings → ZarinPal config** (`proxyBaseUrl`, `proxyApiKey`), not in `.env`.
+
 `APP_URL` is used for payment callbacks and email links — set it to your public domain.
 
 #### App — `app/.env`

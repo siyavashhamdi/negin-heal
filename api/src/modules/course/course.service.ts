@@ -109,6 +109,7 @@ import {
   resolveWebPushTitle,
 } from "../push-notification/utils/resolve-web-push-content.util";
 import { UserSubscriptionService } from "../user";
+import { ZarinPalProxyService } from "../zarinpal-proxy";
 import {
   canAccessChapter,
   resolveChapterUnlocksAt,
@@ -255,6 +256,7 @@ export class CourseService {
     private readonly notificationService: NotificationService,
     private readonly userSubscriptionService: UserSubscriptionService,
     private readonly pushNotificationService: PushNotificationService,
+    private readonly zarinPalProxyService: ZarinPalProxyService,
   ) {}
 
   async create(input: CourseCreateGqlInput): Promise<CourseListGqlResponse> {
@@ -577,28 +579,36 @@ export class CourseService {
       return { status: "cancelled", courseId };
     }
 
-    const zarinPalConfig = await this.resolveZarinPalConfig();
-    const amountIrr = this.toZarinPalAmountIrr(
-      userCourse.purchase.finalAmountIrt,
-      zarinPalConfig.minAmountIrr,
-    );
+    const amountIrt = userCourse.purchase.finalAmountIrt;
 
     try {
-      const { data } = await axios.post<ZarinPalVerifyResponse>(
-        zarinPalConfig.verifyUrl,
-        {
-          merchant_id: zarinPalConfig.merchantId,
-          amount: amountIrr,
-          authority: normalizedAuthority,
-        },
-        {
-          headers: { accept: "application/json" },
-          timeout: 15000,
-        },
-      );
+      const verification = (await this.zarinPalProxyService.isEnabled())
+        ? await this.zarinPalProxyService.verifyPayment({
+            authority: normalizedAuthority,
+            amountIrt,
+            status,
+          })
+        : await this.verifyZarinPalPaymentDirect(
+            await this.resolveZarinPalConfig(),
+            normalizedAuthority,
+            amountIrt,
+          );
 
-      const verification = data.data;
-      if (!verification || ![100, 101].includes(verification.code ?? 0)) {
+      if (verification.status === "cancelled") {
+        const previousStatus = userCourse.purchase.status;
+        userCourse.purchase.status = UserCoursePurchaseStatus.CANCELLED;
+        userCourse.purchase.cancelledAt = new Date();
+        await userCourse.save();
+        await this.publishPaymentStatusChangeBadgeCountSignal({
+          userCourseId: userCourse._id,
+          courseId: userCourse.courseId,
+          previousStatus,
+          nextStatus: UserCoursePurchaseStatus.CANCELLED,
+        });
+        return { status: "cancelled", courseId };
+      }
+
+      if (verification.status !== "success") {
         const previousStatus = userCourse.purchase.status;
         userCourse.purchase.status = UserCoursePurchaseStatus.FAILED;
         userCourse.purchase.failedAt = new Date();
@@ -610,7 +620,7 @@ export class CourseService {
           nextStatus: UserCoursePurchaseStatus.FAILED,
         });
         this.logger.warn(
-          `ZarinPal verification failed for authority=${normalizedAuthority}: ${verification?.message ?? "unknown"}`,
+          `ZarinPal verification failed for authority=${normalizedAuthority}: ${verification.message ?? "unknown"}`,
         );
         return {
           status: "failed",
@@ -622,7 +632,7 @@ export class CourseService {
       const previousStatus = userCourse.purchase.status;
       userCourse.purchase.status = UserCoursePurchaseStatus.PAID;
       userCourse.purchase.paidAt = new Date();
-      userCourse.purchase.transactionId = verification.ref_id?.toString();
+      userCourse.purchase.transactionId = verification.refId;
       await userCourse.save();
       await this.publishPaymentStatusChangeBadgeCountSignal({
         userCourseId: userCourse._id,
@@ -635,7 +645,7 @@ export class CourseService {
       return {
         status: "success",
         courseId,
-        refId: verification.ref_id?.toString(),
+        refId: verification.refId,
       };
     } catch (error) {
       this.logger.error(
@@ -2778,6 +2788,19 @@ export class CourseService {
     user: UserDocument,
     finalAmountIrt: number,
   ): Promise<{ authority: string; paymentUrl: string }> {
+    const callbackUrl = `${this.resolveAppUrlForZarinPalCallback()}/payment/zarinpal/callback?courseId=${course._id.toString()}`;
+    const description = `Demo purchase: ${course.title}`;
+    const metadata = this.buildZarinPalMetadata(course, user);
+
+    if (await this.zarinPalProxyService.isEnabled()) {
+      return this.zarinPalProxyService.requestPayment({
+        amountIrt: finalAmountIrt,
+        callbackUrl,
+        description,
+        metadata,
+      });
+    }
+
     const zarinPalConfig = await this.resolveZarinPalConfig();
     const amountIrr = this.toZarinPalAmountIrr(
       finalAmountIrt,
@@ -2791,11 +2814,11 @@ export class CourseService {
         {
           merchant_id: zarinPalConfig.merchantId,
           amount: amountIrr,
-          callback_url: `${zarinPalConfig.callbackBaseUrl}/payment/zarinpal/callback?courseId=${course._id.toString()}`,
-          description: `Demo purchase: ${course.title}`,
+          callback_url: callbackUrl,
+          description,
           metadata: {
-            email: user.profile?.email,
-            mobile: user.profile?.phoneNumber,
+            email: metadata.email || undefined,
+            mobile: metadata.mobile || undefined,
           },
         },
         {
@@ -2817,6 +2840,67 @@ export class CourseService {
     return {
       authority: payment.authority,
       paymentUrl: `${zarinPalConfig.startPayUrl}/${payment.authority}`,
+    };
+  }
+
+  private async verifyZarinPalPaymentDirect(
+    zarinPalConfig: ZarinPalConfig,
+    authority: string,
+    amountIrt: number,
+  ): Promise<{
+    status: "success" | "failed" | "cancelled";
+    refId?: string;
+    message?: string;
+  }> {
+    const amountIrr = this.toZarinPalAmountIrr(
+      amountIrt,
+      zarinPalConfig.minAmountIrr,
+    );
+
+    const { data } = await axios.post<ZarinPalVerifyResponse>(
+      zarinPalConfig.verifyUrl,
+      {
+        merchant_id: zarinPalConfig.merchantId,
+        amount: amountIrr,
+        authority,
+      },
+      {
+        headers: { accept: "application/json" },
+        timeout: 15000,
+      },
+    );
+
+    const verification = data.data;
+    if (!verification || ![100, 101].includes(verification.code ?? 0)) {
+      return {
+        status: "failed",
+        message: verification?.message,
+      };
+    }
+
+    return {
+      status: "success",
+      refId: verification.ref_id?.toString(),
+      message: verification.message,
+    };
+  }
+
+  private buildZarinPalMetadata(
+    course: CourseDocument,
+    user: UserDocument,
+  ): {
+    email: string;
+    mobile: string;
+    courseId: string;
+    userId: string;
+    username: string;
+  } {
+    return {
+      email: this.normalizeOptionalText(user.profile?.email) ?? "",
+      mobile: this.normalizeOptionalText(user.profile?.phoneNumber) ?? "",
+      courseId: course._id.toString(),
+      userId: user._id.toString(),
+      username: this.normalizeOptionalText(user.username) ?? "",
     };
   }
 

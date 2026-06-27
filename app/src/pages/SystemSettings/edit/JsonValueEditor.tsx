@@ -23,6 +23,8 @@ const zarinpalFields = [
   { key: "verifyUrl", label: "آدرس Verify", type: "url" },
   { key: "startPayUrl", label: "آدرس StartPay", type: "url" },
   { key: "minAmountIrr", label: "حداقل مبلغ ریالی", type: "number" },
+  { key: "proxyBaseUrl", label: "آدرس پروکسی زرین‌پال (اختیاری)", type: "url" },
+  { key: "proxyApiKey", label: "کلید API پروکسی (اختیاری)", type: "password" },
 ] as const;
 
 const smtpFields = [

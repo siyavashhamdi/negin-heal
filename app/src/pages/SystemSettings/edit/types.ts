@@ -70,6 +70,8 @@ export type ZarinpalConfigForm = {
   verifyUrl: string;
   startPayUrl: string;
   minAmountIrr: string;
+  proxyBaseUrl: string;
+  proxyApiKey: string;
 };
 
 export type EmailSmtpConfigForm = {
