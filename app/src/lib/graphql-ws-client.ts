@@ -98,9 +98,7 @@ export function getGraphqlWsClient(): Client {
   return graphqlWsClient;
 }
 
-export function subscribeGraphqlWsConnection(
-  listener: (connected: boolean) => void
-): () => void {
+export function subscribeGraphqlWsConnection(listener: (connected: boolean) => void): () => void {
   wsConnectionListeners.add(listener);
   listener(isWsConnected);
 

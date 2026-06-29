@@ -94,9 +94,7 @@ const formatTargetLabel = (target: BackupTarget): string =>
 const Backup = (): ReactElement => {
   const { user } = useAuth();
   const isSuperAdmin = user?.roles?.includes("SUPER_ADMIN") === true;
-  const [selectedTargets, setSelectedTargets] = useState<readonly BackupTarget[]>([
-    "MONGODB",
-  ]);
+  const [selectedTargets, setSelectedTargets] = useState<readonly BackupTarget[]>(["MONGODB"]);
   const [lastResults, setLastResults] = useState<readonly BackupRunItem[]>([]);
   const [runBackup, runResult] = useMutationWithSnackbar<
     BackupRunMutationResult,
@@ -115,9 +113,7 @@ const Backup = (): ReactElement => {
 
   const toggleTarget = (target: BackupTarget): void => {
     setSelectedTargets((current) =>
-      current.includes(target)
-        ? current.filter((value) => value !== target)
-        : [...current, target],
+      current.includes(target) ? current.filter((value) => value !== target) : [...current, target]
     );
   };
 
@@ -190,9 +186,9 @@ const Backup = (): ReactElement => {
           </FormGroup>
 
           <Alert severity="info" icon={<StorageRoundedIcon fontSize="inherit" />}>
-            فرمت آرشیو: <strong>RAR رمزدار</strong>. اگر حجم از ۵۰ مگابایت بیشتر باشد، به چند
-            قسمت تقسیم و هر قسمت جداگانه به تلگرام ارسال می‌شود. پس از ارسال موفق، هیچ فایلی روی
-            سرور باقی نمی‌ماند.
+            فرمت آرشیو: <strong>RAR رمزدار</strong>. اگر حجم از ۵۰ مگابایت بیشتر باشد، به چند قسمت
+            تقسیم و هر قسمت جداگانه به تلگرام ارسال می‌شود. پس از ارسال موفق، هیچ فایلی روی سرور
+            باقی نمی‌ماند.
           </Alert>
 
           {lastResults.length > 0 ? (
@@ -209,16 +205,11 @@ const Backup = (): ReactElement => {
                   <Typography fontWeight={700}>{formatTargetLabel(item.target)}</Typography>
                   <Typography variant="body2">
                     فایل: {item.archiveFileName} ({item.formattedArchiveSize}
-                    {item.archivePartCount > 1
-                      ? ` • ${item.archivePartCount} قسمت`
-                      : ""}
-                    )
+                    {item.archivePartCount > 1 ? ` • ${item.archivePartCount} قسمت` : ""})
                   </Typography>
                   <Typography variant="body2">
                     مدت: {formatDuration(item.durationMs)}
-                    {item.collectionCount != null
-                      ? ` • کالکشن‌ها: ${item.collectionCount}`
-                      : ""}
+                    {item.collectionCount != null ? ` • کالکشن‌ها: ${item.collectionCount}` : ""}
                     {item.documentCount != null ? ` • سندها: ${item.documentCount}` : ""}
                     {item.objectCount != null ? ` • آبجکت‌ها: ${item.objectCount}` : ""}
                     {item.fileRecordCount != null

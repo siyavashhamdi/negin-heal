@@ -69,7 +69,7 @@ async function storePendingPushOpen(payload: Record<string, unknown>): Promise<v
     PUSH_OPEN_CACHE_KEY,
     new Response(JSON.stringify(payload), {
       headers: { "Content-Type": "application/json" },
-    }),
+    })
   );
 }
 
@@ -90,7 +90,7 @@ async function takePendingPushOpen(): Promise<Record<string, unknown> | null> {
 
 function buildPushOpenPayload(
   notification: Notification,
-  data: PushPayload | null | undefined,
+  data: PushPayload | null | undefined
 ): Record<string, unknown> | null {
   const description =
     (typeof data?.description === "string" && data.description.trim()) ||
@@ -184,7 +184,7 @@ self.addEventListener("message", (event: ExtendableMessageEvent) => {
         for (const client of clients) {
           deliverPushOpenToClient(client, payload);
         }
-      }),
+      })
     );
   }
 });
@@ -298,6 +298,6 @@ self.addEventListener("notificationclick", (event: NotificationEvent) => {
       if (self.clients.openWindow) {
         await self.clients.openWindow(absoluteUrl);
       }
-    }),
+    })
   );
 });

@@ -223,7 +223,11 @@ function isGenericBackendErrorMessage(message: string): boolean {
 }
 
 function translateUserFacingError(key: string): string {
-  if (SUPPRESSED_USER_FACING_I18N_KEYS.includes(key as (typeof SUPPRESSED_USER_FACING_I18N_KEYS)[number])) {
+  if (
+    SUPPRESSED_USER_FACING_I18N_KEYS.includes(
+      key as (typeof SUPPRESSED_USER_FACING_I18N_KEYS)[number]
+    )
+  ) {
     return "";
   }
 
@@ -255,10 +259,7 @@ export function isSuppressedUserFacingErrorMessage(message: string): boolean {
     }
   }
 
-  if (
-    normalized.startsWith("ارتباط برقرار نشد") ||
-    normalized.startsWith("خطای داخلی سرور")
-  ) {
+  if (normalized.startsWith("ارتباط برقرار نشد") || normalized.startsWith("خطای داخلی سرور")) {
     return true;
   }
 
@@ -538,7 +539,8 @@ export const extractGraphQLErrorMessage = (error: unknown): string => {
           return translateUserFacingError("errors.network.serverError");
         }
       }
-      const rawNetworkMessage = networkError.message || translateUserFacingError("errors.network.message");
+      const rawNetworkMessage =
+        networkError.message || translateUserFacingError("errors.network.message");
       return isSuppressedUserFacingErrorMessage(rawNetworkMessage) ? "" : rawNetworkMessage;
     }
 

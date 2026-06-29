@@ -483,14 +483,9 @@ export class FileService implements OnModuleInit {
       const referencedFileIds = await params.getReferencedFileIds();
 
       const batch = await this.storedFileModel.collection
-        .find(
-          addNotDeletedCondition(
-            lastId ? { _id: { $gt: lastId } } : {},
-          ),
-          {
-            projection: { _id: 1, bucket: 1, objectKey: 1, path: 1 },
-          },
-        )
+        .find(addNotDeletedCondition(lastId ? { _id: { $gt: lastId } } : {}), {
+          projection: { _id: 1, bucket: 1, objectKey: 1, path: 1 },
+        })
         .sort({ _id: 1 })
         .limit(params.scanBatchSize)
         .toArray();

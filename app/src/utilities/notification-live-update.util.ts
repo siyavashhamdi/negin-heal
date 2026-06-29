@@ -60,7 +60,7 @@ function resolveNotificationDescription(payload: NotificationPayloadShape | null
 
 function resolveNotificationTitle(
   payload: NotificationPayloadShape | null,
-  description: string,
+  description: string
 ): string {
   if (typeof payload?.title === "string" && payload.title.trim().length > 0) {
     return payload.title.trim();
@@ -89,7 +89,7 @@ export function resolveNotificationBannerSeverity(value: unknown): AlertColor {
 }
 
 export function parseNotificationLiveUpdate(
-  event: GeneralUpdateEvent,
+  event: GeneralUpdateEvent
 ): NotificationLiveBannerState | null {
   const payload = asNotificationPayload(event.payload);
   const message = resolveNotificationDescription(payload);
@@ -113,7 +113,7 @@ export function parseNotificationLiveUpdate(
 
 export function shouldShowNotificationLiveBanner(
   banner: NotificationLiveBannerState,
-  isNotificationsPage: boolean,
+  isNotificationsPage: boolean
 ): boolean {
   if (isNotificationsPage) {
     return false;

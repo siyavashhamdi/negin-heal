@@ -598,7 +598,9 @@ const PaymentsList = (): ReactElement => {
   const reviewPaymentId = reviewPaymentRoute?.paymentId ?? null;
   const isPaidStatusChangeConfirmOpen = reviewPaymentRoute?.isConfirmRoute ?? false;
   const [manualPaymentUser, setManualPaymentUser] = useState<ActiveEndUserOption | null>(null);
-  const [manualPaymentProduct, setManualPaymentProduct] = useState<ProductPickerOption | null>(null);
+  const [manualPaymentProduct, setManualPaymentProduct] = useState<ProductPickerOption | null>(
+    null
+  );
   const [manualPaymentMethod, setManualPaymentMethod] =
     useState<UserProductPaymentMethod>("CARD_TO_CARD");
   const [manualPaymentStatus, setManualPaymentStatus] = useState<UserProductPurchaseStatus>("PAID");

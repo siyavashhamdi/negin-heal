@@ -204,7 +204,9 @@ function buildReviewUserSnapshot(user: SeedUser): {
   };
 }
 
-function calculateProductPriceSummary(product: SeedProduct): ProductPriceSummary {
+function calculateProductPriceSummary(
+  product: SeedProduct,
+): ProductPriceSummary {
   const amountIrt = Math.max(product.priceIrt ?? 0, 0);
   const discount = product.discount;
 
@@ -508,7 +510,9 @@ async function cleanupPreviousSeedData(
 
   const [removedReviewsByTag, removedUserProductsByTag] = await Promise.all([
     productReviewsCollection.deleteMany({ "audit.seedTag": SEED_TAG }),
-    userProductsCollection.deleteMany({ "purchase.paymentReference": SEED_TAG }),
+    userProductsCollection.deleteMany({
+      "purchase.paymentReference": SEED_TAG,
+    }),
   ]);
 
   let removedReviewsByUser = { deletedCount: 0 };

@@ -12,9 +12,7 @@ import {
   normalizeOperationName,
   stableStringifyVariables,
 } from "./gql-query-cache.util";
-import {
-  isPersistableGqlQueryName,
-} from "../gql-cache-policy";
+import { isPersistableGqlQueryName } from "../gql-cache-policy";
 
 function readCachedGqlQueryRecord(
   db: Database,
@@ -117,9 +115,7 @@ function writeCachedGqlQueryRecord(
   );
 }
 
-export async function upsertCachedGqlQuery(
-  params: UpsertCachedGqlQueryParams
-): Promise<void> {
+export async function upsertCachedGqlQuery(params: UpsertCachedGqlQueryParams): Promise<void> {
   const operationName = normalizeOperationName(params.operationName);
   if (
     !operationName ||

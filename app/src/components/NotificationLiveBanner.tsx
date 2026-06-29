@@ -22,7 +22,11 @@ import snackbarStyles from "../contexts/styles/SnackbarContext.module.scss";
 import { useMobileSnackbarDismiss } from "../hooks/useMobileSnackbarDismiss";
 import { subscribeGeneralUpdates } from "../lib/general-updates-listeners";
 import { isNotificationsRoute } from "../routing/app-shell-routes";
-import { getSnackbarFilledAlertSx, getSnackbarFilledAlertTone, SNACKBAR_ALERT_CLASS } from "../theme";
+import {
+  getSnackbarFilledAlertSx,
+  getSnackbarFilledAlertTone,
+  SNACKBAR_ALERT_CLASS,
+} from "../theme";
 import {
   parseNotificationLiveUpdate,
   shouldShowNotificationLiveBanner,
@@ -59,7 +63,7 @@ export function NotificationLiveBanner(): ReactElement | null {
   const { handlePointerDown, dragStyle, resetDrag } = useMobileSnackbarDismiss(
     isMobile,
     open,
-    dismiss,
+    dismiss
   );
 
   useEffect(() => {
@@ -112,7 +116,7 @@ export function NotificationLiveBanner(): ReactElement | null {
   const alertTone = banner ? getSnackbarFilledAlertTone(banner.severity) : undefined;
   const ModeIcon = useMemo(
     () => (banner ? (MODE_ICONS[banner.severity] ?? InfoOutlinedIcon) : InfoOutlinedIcon),
-    [banner],
+    [banner]
   );
 
   if (!banner) {
@@ -162,12 +166,7 @@ export function NotificationLiveBanner(): ReactElement | null {
         onPointerDown={handlePointerDown}
         action={
           isMobile ? undefined : (
-            <IconButton
-              aria-label="بستن اعلان"
-              color="inherit"
-              size="small"
-              onClick={dismiss}
-            >
+            <IconButton aria-label="بستن اعلان" color="inherit" size="small" onClick={dismiss}>
               <CloseRoundedIcon fontSize="small" />
             </IconButton>
           )

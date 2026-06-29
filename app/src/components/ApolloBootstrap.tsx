@@ -31,7 +31,7 @@ export function ApolloBootstrap({ children }: ApolloBootstrapProps): ReactElemen
           .catch((error: unknown) => {
             console.warn(
               "[File cache] SQLite cache unavailable; continuing without local cache.",
-              error,
+              error
             );
           })
           .then(() => hydrateApolloCache(fastClient.cache))

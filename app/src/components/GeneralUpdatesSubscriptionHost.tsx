@@ -21,7 +21,7 @@ export function GeneralUpdatesSubscriptionHost(): ReactElement | null {
             GENERAL_SUBSCRIPTION_UPDATE_TYPES.VERIFICATION_STATUS,
           ]
         : [GENERAL_SUBSCRIPTION_UPDATE_TYPES.NOTIFICATION],
-    [user],
+    [user]
   );
 
   const handleGeneralUpdate = useCallback((event: GeneralUpdateEvent): void => {

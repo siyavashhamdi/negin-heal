@@ -21,10 +21,7 @@ export function useCachedGqlQuery<TData = Record<string, unknown>>({
   variables,
   enabled = true,
 }: UseCachedGqlQueryParams): UseCachedGqlQueryState<TData> {
-  const variablesKey = useMemo(
-    () => stableStringifyVariables(variables),
-    [variables]
-  );
+  const variablesKey = useMemo(() => stableStringifyVariables(variables), [variables]);
 
   const [state, setState] = useState<UseCachedGqlQueryState<TData>>({
     record: null,

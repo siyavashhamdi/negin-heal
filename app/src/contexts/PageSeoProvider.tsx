@@ -5,7 +5,7 @@ import type { PageSeoOverride } from "../seo/seo.types";
 
 function samePageSeoOverride(
   current: PageSeoOverride | null,
-  next: PageSeoOverride | null,
+  next: PageSeoOverride | null
 ): boolean {
   return JSON.stringify(current) === JSON.stringify(next);
 }

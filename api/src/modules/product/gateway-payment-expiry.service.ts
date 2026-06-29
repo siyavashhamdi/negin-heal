@@ -29,7 +29,9 @@ export class GatewayPaymentExpiryService {
   ) {}
 
   async expireStaleGatewayPayments(): Promise<GatewayPaymentExpiryRunResult> {
-    const cutoffDate = new Date(Date.now() - GatewayPaymentExpiryService.EXPIRY_MS);
+    const cutoffDate = new Date(
+      Date.now() - GatewayPaymentExpiryService.EXPIRY_MS,
+    );
 
     const staleGatewayPurchases = await this.userProductModel
       .find({

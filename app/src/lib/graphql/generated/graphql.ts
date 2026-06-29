@@ -4660,7 +4660,10 @@ export const ProductChapterCompleteDocument = {
       },
     },
   ],
-} as unknown as DocumentNode<ProductChapterCompleteMutation, ProductChapterCompleteMutationVariables>;
+} as unknown as DocumentNode<
+  ProductChapterCompleteMutation,
+  ProductChapterCompleteMutationVariables
+>;
 export const ProductCreateDocument = {
   kind: "Document",
   definitions: [
@@ -6176,7 +6179,10 @@ export const ProductDeleteDependenciesDocument = {
       },
     },
   ],
-} as unknown as DocumentNode<ProductDeleteDependenciesQuery, ProductDeleteDependenciesQueryVariables>;
+} as unknown as DocumentNode<
+  ProductDeleteDependenciesQuery,
+  ProductDeleteDependenciesQueryVariables
+>;
 export const ProductPaymentListDocument = {
   kind: "Document",
   definitions: [
@@ -6190,7 +6196,10 @@ export const ProductPaymentListDocument = {
           variable: { kind: "Variable", name: { kind: "Name", value: "input" } },
           type: {
             kind: "NonNullType",
-            type: { kind: "NamedType", name: { kind: "Name", value: "ProductPaymentListGqlInput" } },
+            type: {
+              kind: "NamedType",
+              name: { kind: "Name", value: "ProductPaymentListGqlInput" },
+            },
           },
         },
       ],

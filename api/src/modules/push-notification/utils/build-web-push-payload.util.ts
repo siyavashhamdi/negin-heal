@@ -11,7 +11,8 @@ export function buildWebPushPayloadJson(input: {
 }): string {
   const subscriptionPayload = input.payload ?? {};
   const inAppTitle =
-    typeof subscriptionPayload.title === "string" && subscriptionPayload.title.trim().length > 0
+    typeof subscriptionPayload.title === "string" &&
+    subscriptionPayload.title.trim().length > 0
       ? subscriptionPayload.title.trim()
       : input.title;
   const description =

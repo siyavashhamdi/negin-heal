@@ -52,7 +52,10 @@ function isAbortSignalActive(signal: AbortSignal): boolean {
   return signal.aborted;
 }
 
-function sleepUntilAbort(ms: number, signals: readonly AbortSignal[]): Promise<"slept" | "aborted"> {
+function sleepUntilAbort(
+  ms: number,
+  signals: readonly AbortSignal[]
+): Promise<"slept" | "aborted"> {
   if (signals.some(isAbortSignalActive)) {
     return Promise.resolve("aborted");
   }
@@ -83,9 +86,7 @@ export async function waitForSubscriptionRetryDelayMs(
   delayMs: number,
   signal?: AbortSignal
 ): Promise<SubscriptionRetryWaitResult> {
-  const signals = signal
-    ? [getActiveRetryWaitSignal(), signal]
-    : [getActiveRetryWaitSignal()];
+  const signals = signal ? [getActiveRetryWaitSignal(), signal] : [getActiveRetryWaitSignal()];
 
   if (signals.some(isAbortSignalActive)) {
     return "aborted";

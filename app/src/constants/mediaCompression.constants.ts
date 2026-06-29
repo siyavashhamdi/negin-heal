@@ -10,8 +10,7 @@ export const MEDIA_COMPRESSION_TARGET_QUALITIES = [
   "MAX",
 ] as const;
 
-export type MediaCompressionTargetQuality =
-  (typeof MEDIA_COMPRESSION_TARGET_QUALITIES)[number];
+export type MediaCompressionTargetQuality = (typeof MEDIA_COMPRESSION_TARGET_QUALITIES)[number];
 
 export const MEDIA_COMPRESSION_QUALITY_LABELS: Record<
   MediaCompressionTargetQuality | "ORIGINAL",

@@ -297,7 +297,9 @@ export class BackupService {
 
       for (const object of objects) {
         if (isTimedOut()) {
-          throw new RequestTimeoutException(EXCEPTION_CONSTANT.BACKUP_TIMED_OUT);
+          throw new RequestTimeoutException(
+            EXCEPTION_CONSTANT.BACKUP_TIMED_OUT,
+          );
         }
 
         await this.downloadMinioObject(bucket, object.objectKey, objectsDir);
@@ -378,7 +380,9 @@ export class BackupService {
 
       for (const collectionName of collectionNames) {
         if (isTimedOut()) {
-          throw new RequestTimeoutException(EXCEPTION_CONSTANT.BACKUP_TIMED_OUT);
+          throw new RequestTimeoutException(
+            EXCEPTION_CONSTANT.BACKUP_TIMED_OUT,
+          );
         }
 
         const documentCount = await this.exportMongoDbCollection(
@@ -723,7 +727,9 @@ export class BackupService {
     try {
       await mkdir(BACKUP_CONSTANT.DIR, { recursive: true });
 
-      const entries = await readdir(BACKUP_CONSTANT.DIR, { withFileTypes: true });
+      const entries = await readdir(BACKUP_CONSTANT.DIR, {
+        withFileTypes: true,
+      });
       if (entries.length === 0) {
         this.logger.log(
           `Backup temp dir already empty (${phase}): ${BACKUP_CONSTANT.DIR}`,
@@ -819,10 +825,7 @@ export class BackupService {
 
       documentCount += 1;
 
-      if (
-        documentCount % BACKUP_CONSTANT.MONGODB_EXPORT_BATCH_SIZE ===
-        0
-      ) {
+      if (documentCount % BACKUP_CONSTANT.MONGODB_EXPORT_BATCH_SIZE === 0) {
         this.logger.log(
           `Exporting MongoDB collection ${collection.collectionName}: ${documentCount} documents written`,
         );
@@ -1157,10 +1160,7 @@ export class BackupService {
     return oversizedParts;
   }
 
-  private assertRarArchive(
-    archiveFileName: string,
-    archivePath: string,
-  ): void {
+  private assertRarArchive(archiveFileName: string, archivePath: string): void {
     if (!archiveFileName.endsWith(`.${BACKUP_ARCHIVE_FORMAT}`)) {
       throw new InternalServerErrorException(
         EXCEPTION_CONSTANT.BACKUP_CREATE_FAILED,

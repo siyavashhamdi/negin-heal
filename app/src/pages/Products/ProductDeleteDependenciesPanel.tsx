@@ -57,7 +57,9 @@ const ProductDeleteDependenciesPanel = ({
   if (error) {
     return (
       <div className={styles.panel}>
-        <p className={styles.errorState}>{t("pages.products.deleteDialog.dependenciesLoadError")}</p>
+        <p className={styles.errorState}>
+          {t("pages.products.deleteDialog.dependenciesLoadError")}
+        </p>
         <p className={styles.footnote}>{t("pages.products.deleteDialog.footnote")}</p>
       </div>
     );
@@ -98,7 +100,9 @@ const ProductDeleteDependenciesPanel = ({
       </div>
 
       {!hasAnyDependencies ? (
-        <p className={styles.emptyState}>{t("pages.products.deleteDialog.noDependenciesMessage")}</p>
+        <p className={styles.emptyState}>
+          {t("pages.products.deleteDialog.noDependenciesMessage")}
+        </p>
       ) : null}
 
       {retained.length > 0 ? (

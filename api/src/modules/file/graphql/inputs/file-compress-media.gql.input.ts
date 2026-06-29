@@ -1,10 +1,5 @@
 import { Transform, Type } from "class-transformer";
-import {
-  IsIn,
-  IsOptional,
-  ValidateIf,
-  ValidateNested,
-} from "class-validator";
+import { IsIn, IsOptional, ValidateIf, ValidateNested } from "class-validator";
 import { Field, ID, InputType } from "@nestjs/graphql";
 import { Types } from "mongoose";
 

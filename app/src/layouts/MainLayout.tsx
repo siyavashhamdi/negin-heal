@@ -40,9 +40,7 @@ import {
   GENERAL_SUBSCRIPTION_UPDATE_TYPES,
   type GeneralNotificationMessageType,
 } from "../constants";
-import {
-  type GeneralUpdateEvent,
-} from "../hooks/useGeneralUpdatesSubscription";
+import { type GeneralUpdateEvent } from "../hooks/useGeneralUpdatesSubscription";
 import { useVerificationStatusSubscription } from "../hooks/useVerificationStatusSubscription";
 import {
   notifyBadgeCountUpdateListeners,
@@ -426,7 +424,7 @@ export function MainLayout({
         });
       }
     },
-    [upsertLiveHeaderNotification],
+    [upsertLiveHeaderNotification]
   );
 
   useEffect(() => {

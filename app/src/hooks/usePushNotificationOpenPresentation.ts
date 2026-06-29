@@ -55,7 +55,7 @@ export function usePushNotificationOpenPresentation({
           showSnackbar,
           showPopup: onShowPopup,
         },
-        { fallbackToSnackbar: true, includeSnackbarTitle: false },
+        { fallbackToSnackbar: true, includeSnackbarTitle: false }
       );
 
       if (didPresent) {

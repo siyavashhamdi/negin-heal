@@ -34,7 +34,7 @@ let pendingRoutePrefetchUsesIdleCallback = false;
 
 function resolveRouteLoader(
   item: AppShellNavItemDefinition,
-  context: AppShellNavContext,
+  context: AppShellNavContext
 ): RouteLoader {
   if (item.id === "support") {
     const path = resolveAppShellNavPath(item, context);
@@ -48,7 +48,7 @@ function resolveRouteLoader(
 
 function buildRoutePrefetchKey(
   item: AppShellNavItemDefinition,
-  context: AppShellNavContext,
+  context: AppShellNavContext
 ): string {
   if (item.id === "support") {
     return resolveAppShellNavPath(item, context);
@@ -60,7 +60,7 @@ function buildRoutePrefetchKey(
 /** Downloads the JS chunk for a nav target ahead of navigation. */
 export function prefetchAppShellNavRoute(
   item: AppShellNavItemDefinition,
-  context: AppShellNavContext,
+  context: AppShellNavContext
 ): void {
   const key = buildRoutePrefetchKey(item, context);
   if (prefetchedRouteKeys.has(key)) {

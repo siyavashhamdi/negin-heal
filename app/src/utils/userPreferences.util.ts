@@ -4,7 +4,10 @@ import {
   getBrowserNotificationPermission,
   registerNotificationServiceWorker,
 } from "./browserNotification.util";
-import { syncWebPushSubscriptionWithServer, unregisterWebPushSubscriptionFromServer } from "./pushSubscription.util";
+import {
+  syncWebPushSubscriptionWithServer,
+  unregisterWebPushSubscriptionFromServer,
+} from "./pushSubscription.util";
 import {
   syncNativePushRegistrationWithServer,
   unregisterNativePushFromServer,

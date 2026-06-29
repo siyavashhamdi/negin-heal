@@ -277,7 +277,10 @@ UserProductSchema.index(
   { "purchase.couponSnapshot.couponId": 1 },
   { sparse: true },
 );
-UserProductSchema.index({ "purchase.couponSnapshot.code": 1 }, { sparse: true });
+UserProductSchema.index(
+  { "purchase.couponSnapshot.code": 1 },
+  { sparse: true },
+);
 UserProductSchema.index({ "purchase.paidAt": -1 });
 UserProductSchema.index({ "progress.chapters.key": 1 });
 UserProductSchema.index({ "chapterReleaseNotifications.chapters.key": 1 });

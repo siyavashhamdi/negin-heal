@@ -92,7 +92,10 @@ type UploadTask = {
   readonly fieldId: string;
   readonly file: File;
   readonly errorMessage: string;
-  readonly applyFileId: (uploadedFileId: string, files: UploadedProductFiles) => UploadedProductFiles;
+  readonly applyFileId: (
+    uploadedFileId: string,
+    files: UploadedProductFiles
+  ) => UploadedProductFiles;
 };
 
 const PRODUCT_COVER_UPLOAD_FIELD_ID = "product-cover-image";
@@ -654,7 +657,8 @@ const ProductFormDialog = ({
   const [uploadProgressByFieldId, setUploadProgressByFieldId] = useState<
     Record<string, UploadProgressEntry>
   >({});
-  const isSubmitting = createProductResult.loading || updateProductResult.loading || isUploadingFiles;
+  const isSubmitting =
+    createProductResult.loading || updateProductResult.loading || isUploadingFiles;
   const isInitialEditFormLoading = isEditMode && detailProduct == null && detailLoading;
   const isProductDetailTabRefetching = isEditMode && networkStatus === NetworkStatus.refetch;
   const isEditFormReady = !isEditMode || detailProduct != null;

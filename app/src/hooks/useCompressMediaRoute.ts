@@ -38,7 +38,11 @@ export function useCompressMediaRoute(
   }, [location.pathname, navigate, ownerId, searchParams]);
 
   useEffect(() => {
-    if (wasCompressMediaRouteRef.current && !isCompressMediaRoute && isCompressMediaRouteOwner(ownerId)) {
+    if (
+      wasCompressMediaRouteRef.current &&
+      !isCompressMediaRoute &&
+      isCompressMediaRouteOwner(ownerId)
+    ) {
       clearCompressMediaRouteOwner(ownerId);
     }
     wasCompressMediaRouteRef.current = isCompressMediaRoute;

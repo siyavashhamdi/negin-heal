@@ -1,8 +1,4 @@
-import {
-  ANDROID_APP_VERSION,
-  API_VERSION,
-  WEB_VERSION,
-} from "./build-versions.generated";
+import { ANDROID_APP_VERSION, API_VERSION, WEB_VERSION } from "./build-versions.generated";
 
 /** User-facing web app version label shown on the More page. */
 export const APP_VERSION = WEB_VERSION;

@@ -206,7 +206,7 @@ const ProductCard = ({
       aria-label={item.title}
     >
       <div className={styles.coverWrap}>
-        {(coverImageAccessUrl || coverImageUrl) ? (
+        {coverImageAccessUrl || coverImageUrl ? (
           <CachedFileImage
             accessUrl={coverImageAccessUrl}
             networkUrl={coverImageUrl}
@@ -327,7 +327,7 @@ const ProductCard = ({
 
         <div className={styles.priceFooter}>
           <div className={styles.priceBarBackdrop} aria-hidden="true">
-            {(coverImageAccessUrl || coverImageUrl) ? (
+            {coverImageAccessUrl || coverImageUrl ? (
               <CachedFileImage
                 accessUrl={coverImageAccessUrl}
                 networkUrl={coverImageUrl}

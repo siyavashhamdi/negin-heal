@@ -19,9 +19,7 @@ export const PRODUCT_DETAIL_ROUTE_REGEX = new RegExp(
   `^${PRODUCTS_ROUTE_PATH_REGEX}/[^/]+(?:/(?:purchase|max))?$`
 );
 
-export const PRODUCT_DETAIL_PAGE_ROUTE_REGEX = new RegExp(
-  `^${PRODUCTS_ROUTE_PATH_REGEX}/[^/]+$`
-);
+export const PRODUCT_DETAIL_PAGE_ROUTE_REGEX = new RegExp(`^${PRODUCTS_ROUTE_PATH_REGEX}/[^/]+$`);
 
 export const PRODUCTS_EDIT_PAGE_ROUTE_REGEX = new RegExp(
   `^${PRODUCTS_ROUTE_PATH_REGEX}/edit/[^/]+$`

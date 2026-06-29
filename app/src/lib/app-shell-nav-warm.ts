@@ -1,7 +1,4 @@
-import type {
-  AppShellNavContext,
-  AppShellNavItemDefinition,
-} from "../layouts/app-shell-nav-items";
+import type { AppShellNavContext, AppShellNavItemDefinition } from "../layouts/app-shell-nav-items";
 import {
   prefetchAppShellNavItemData,
   type AppShellNavPrefetchContext,

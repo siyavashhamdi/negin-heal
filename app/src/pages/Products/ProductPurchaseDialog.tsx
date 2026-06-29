@@ -26,10 +26,7 @@ import {
 } from "../../utilities/graphql-error.util";
 import { getFileIdFromAccessUrl } from "../../utils/fileAccessUrl.util";
 import { uploadFile } from "../../utils/fileUpload.util";
-import {
-  openExternalUrlTab,
-  prepareExternalUrlTab,
-} from "../../utils/openExternalUrl.util";
+import { openExternalUrlTab, prepareExternalUrlTab } from "../../utils/openExternalUrl.util";
 import {
   FILE_UPLOAD_POLICY,
   FILE_UPLOAD_POLICY_MAX_SIZE_BYTES,
@@ -540,10 +537,7 @@ export function ProductPurchaseDialog({
           return;
         }
 
-        const gatewayOpened = await openExternalUrlTab(
-          purchase.paymentUrl,
-          gatewayPaymentWindow
-        );
+        const gatewayOpened = await openExternalUrlTab(purchase.paymentUrl, gatewayPaymentWindow);
         if (!gatewayOpened) {
           gatewayPaymentWindow?.close();
           showError(

@@ -1129,10 +1129,7 @@ const Profile = (): ReactElement => {
   const useProfileAuthShell = shouldUseProfileAuthShell();
   const location = useLocation();
 
-  if (
-    isAuthenticated &&
-    (isPostLoginRedirectPending || peekPostLoginRedirect())
-  ) {
+  if (isAuthenticated && (isPostLoginRedirectPending || peekPostLoginRedirect())) {
     return <></>;
   }
 

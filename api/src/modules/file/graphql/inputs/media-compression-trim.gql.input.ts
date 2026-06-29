@@ -6,7 +6,8 @@ import { Field, Float, InputType } from "@nestjs/graphql";
 export class MediaCompressionTrimGqlInput {
   @Field(() => Float, {
     nullable: true,
-    description: "Trim start position in seconds. Omit or null to start from the beginning.",
+    description:
+      "Trim start position in seconds. Omit or null to start from the beginning.",
   })
   @IsOptional()
   @IsNumber({}, { message: "Trim start seconds must be a number" })
@@ -15,7 +16,8 @@ export class MediaCompressionTrimGqlInput {
 
   @Field(() => Float, {
     nullable: true,
-    description: "Trim end position in seconds. Omit or null to keep until the end.",
+    description:
+      "Trim end position in seconds. Omit or null to keep until the end.",
   })
   @IsOptional()
   @IsNumber({}, { message: "Trim end seconds must be a number" })

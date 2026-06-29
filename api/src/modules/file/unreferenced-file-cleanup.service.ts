@@ -435,12 +435,9 @@ export class UnreferencedFileCleanupService {
       const referencedFileIds = await this.collectReferencedFileIds();
 
       const batch = await this.storedFileModel.collection
-        .find(
-          addNotDeletedCondition(
-            lastId ? { _id: { $gt: lastId } } : {},
-          ),
-          { projection: { _id: 1 } },
-        )
+        .find(addNotDeletedCondition(lastId ? { _id: { $gt: lastId } } : {}), {
+          projection: { _id: 1 },
+        })
         .sort({ _id: 1 })
         .limit(this.fileScanBatchSize)
         .toArray();

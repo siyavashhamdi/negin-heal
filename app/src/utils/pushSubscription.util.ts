@@ -72,9 +72,7 @@ function storeVapidPublicKey(publicKey: string): void {
   localStorage.setItem(LOCAL_STORAGE_KEYS.VAPID_PUBLIC_KEY, publicKey);
 }
 
-function clearStoredPushSubscriptionMetadata(options?: {
-  readonly clearEndpoint?: boolean;
-}): void {
+function clearStoredPushSubscriptionMetadata(options?: { readonly clearEndpoint?: boolean }): void {
   localStorage.removeItem(LOCAL_STORAGE_KEYS.VAPID_PUBLIC_KEY);
 
   if (options?.clearEndpoint) {
@@ -333,11 +331,9 @@ export async function unregisterWebPushSubscriptionFromServer(options?: {
     return unregisterInFlight;
   }
 
-  unregisterInFlight = unregisterWebPushSubscriptionFromServerInternal(options).finally(
-    () => {
-      unregisterInFlight = null;
-    },
-  );
+  unregisterInFlight = unregisterWebPushSubscriptionFromServerInternal(options).finally(() => {
+    unregisterInFlight = null;
+  });
 
   return unregisterInFlight;
 }
@@ -347,8 +343,7 @@ async function unregisterWebPushSubscriptionFromServerInternal(options?: {
   readonly authToken?: string | null;
 }): Promise<void> {
   const subscription = await getBrowserPushSubscription();
-  const endpoint =
-    subscription?.endpoint?.trim() ?? readStoredPushSubscriptionEndpoint();
+  const endpoint = subscription?.endpoint?.trim() ?? readStoredPushSubscriptionEndpoint();
 
   if (endpoint) {
     const authToken = options?.authToken?.trim();

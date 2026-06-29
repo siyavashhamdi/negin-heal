@@ -26,10 +26,7 @@ import { CHAPTER_UNLOCK_COUNTDOWN_THRESHOLD_MS } from "../../constants/product.c
 import { useAuth } from "../../contexts/AuthContext";
 import { isMobileAppLayoutViewport } from "../../hooks/useMobileAppLayout";
 import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
-import {
-  PRODUCT_ROUTE_ID_PARAM,
-  PRODUCTS_ROUTE_PATH,
-} from "../../routing/product-route-path";
+import { PRODUCT_ROUTE_ID_PARAM, PRODUCTS_ROUTE_PATH } from "../../routing/product-route-path";
 import {
   buildCloseMaxRouteLocation,
   buildMaxRouteLocation,
@@ -353,8 +350,7 @@ const ProductDetail = (): ReactElement => {
         : `${formatProductPrice(product.discount.value)} تخفیف`
       : null;
   const isPaidPurchase = product?.purchaseStatus === "PAID" || product?.isPurchased === true;
-  const hasPendingManualReview =
-    product?.isFree !== true && product?.purchaseStatus === "PENDING";
+  const hasPendingManualReview = product?.isFree !== true && product?.purchaseStatus === "PENDING";
   const hasPendingPurchase = hasPendingManualReview;
   const canAccessProduct = product?.isFree === true || isPaidPurchase;
   const shouldShowPrice = !isPaidPurchase;
@@ -933,7 +929,11 @@ const ProductDetail = (): ReactElement => {
         elevation={0}
       >
         <div className={styles.heroBackNav}>
-          <PageBackNavigation label="بازگشت به دوره‌ها" fallbackTo={PRODUCTS_ROUTE_PATH} mobileOverlay />
+          <PageBackNavigation
+            label="بازگشت به دوره‌ها"
+            fallbackTo={PRODUCTS_ROUTE_PATH}
+            mobileOverlay
+          />
         </div>
 
         <div className={styles.heroMedia}>

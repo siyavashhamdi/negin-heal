@@ -4,7 +4,9 @@ import { DEFAULT_PUSH_TITLE } from "./resolve-web-push-content.util";
 export const FCM_MESSAGE_TYPE_BADGE_SYNC = "badge_sync";
 export const FCM_MESSAGE_TYPE_NOTIFICATION = "notification";
 
-export function buildFcmBadgeSyncData(badgeCount: number): Record<string, string> {
+export function buildFcmBadgeSyncData(
+  badgeCount: number,
+): Record<string, string> {
   return {
     type: FCM_MESSAGE_TYPE_BADGE_SYNC,
     badgeCount: String(Math.max(0, badgeCount)),

@@ -14,7 +14,7 @@ export function NativePushSubscriptionSync(): ReactElement | null {
   const { user } = useMe();
   const { permission } = useBrowserNotificationPermission();
   const notificationsEnabled = readStoredNotificationsEnabled(
-    user?.preferences?.notificationsEnabled ?? true,
+    user?.preferences?.notificationsEnabled ?? true
   );
 
   useEffect(() => {

@@ -1032,7 +1032,9 @@ const CouponsIndex = (): ReactElement => {
               noOptionsText={t("table.filters.noOptions")}
               loadErrorText={t("pages.coupons.form.applicableProductIdsLoadError")}
               value={form.applicableProductIds}
-              onChange={(nextProductIds) => setFormField("applicableProductIds", [...nextProductIds])}
+              onChange={(nextProductIds) =>
+                setFormField("applicableProductIds", [...nextProductIds])
+              }
             />
 
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>

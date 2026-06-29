@@ -8,7 +8,11 @@ import { useOfflineBannerDismissed } from "../hooks/useOfflineBannerDismissed";
 import { useMobileAppLayout } from "../hooks/useMobileAppLayout";
 import { useMobileSnackbarDismiss } from "../hooks/useMobileSnackbarDismiss";
 import { useTranslation } from "../hooks/useTranslation";
-import { getSnackbarFilledAlertSx, getSnackbarFilledAlertTone, SNACKBAR_ALERT_CLASS } from "../theme";
+import {
+  getSnackbarFilledAlertSx,
+  getSnackbarFilledAlertTone,
+  SNACKBAR_ALERT_CLASS,
+} from "../theme";
 
 /** Clears the floating mobile bottom nav (padding + item height + gap). */
 const MOBILE_BOTTOM_NAV_SNACKBAR_OFFSET =

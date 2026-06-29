@@ -22,7 +22,10 @@ function isNotificationDeepLink(url: string): boolean {
 
   try {
     const parsed = new URL(trimmed);
-    return parsed.pathname.startsWith("/notifications") || parsed.pathname.startsWith(PRODUCTS_ROUTE_PATH_PREFIX);
+    return (
+      parsed.pathname.startsWith("/notifications") ||
+      parsed.pathname.startsWith(PRODUCTS_ROUTE_PATH_PREFIX)
+    );
   } catch {
     return trimmed.startsWith("/notifications") || trimmed.startsWith(PRODUCTS_ROUTE_PATH_PREFIX);
   }

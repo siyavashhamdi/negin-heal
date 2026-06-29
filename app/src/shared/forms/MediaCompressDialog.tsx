@@ -83,11 +83,8 @@ function formatBitrate(value: number | null | undefined): string {
   return `${value} kbps`;
 }
 
-function formatAppliedTrim(
-  trim: FileCompressMediaMutationResult["trim"]
-): string {
-  const hasTrim =
-    trim.requested.startSeconds != null || trim.requested.endSeconds != null;
+function formatAppliedTrim(trim: FileCompressMediaMutationResult["trim"]): string {
+  const hasTrim = trim.requested.startSeconds != null || trim.requested.endSeconds != null;
 
   if (!hasTrim) {
     return "—";
@@ -187,9 +184,7 @@ function MediaCompressResultPanel({
   readonly mediaKind: "video" | "audio";
 }): ReactElement {
   const savedPercent =
-    result.previousSizeBytes > 0
-      ? Math.max(0, Math.round((1 - result.compressionRatio) * 100))
-      : 0;
+    result.previousSizeBytes > 0 ? Math.max(0, Math.round((1 - result.compressionRatio) * 100)) : 0;
 
   return (
     <div className={styles.resultPanel}>
@@ -209,8 +204,8 @@ function MediaCompressResultPanel({
       <Alert severity={result.wasCompressed ? "success" : "info"}>
         {result.wasCompressed
           ? "فشرده‌سازی با موفقیت انجام شد و فایل جدید جایگزین فایل قبلی شد."
-          : MEDIA_COMPRESSION_SKIP_REASON_LABELS[result.skipReason] ??
-            "فشرده‌سازی انجام نشد و فایل قبلی بدون تغییر باقی ماند."}
+          : (MEDIA_COMPRESSION_SKIP_REASON_LABELS[result.skipReason] ??
+            "فشرده‌سازی انجام نشد و فایل قبلی بدون تغییر باقی ماند.")}
       </Alert>
 
       <div className={styles.resultSummary}>
@@ -274,19 +269,14 @@ function MediaCompressResultPanel({
         <div className={styles.resultCard}>
           <span className={styles.resultLabel}>رزولوشن</span>
           <span className={`${styles.resultValue} ${styles.latinResultValue}`}>
-            {formatResolution(
-              result.previousResolution.width,
-              result.previousResolution.height
-            )}{" "}
-            →{" "}
+            {formatResolution(result.previousResolution.width, result.previousResolution.height)} →{" "}
             {formatResolution(result.currentResolution.width, result.currentResolution.height)}
           </span>
         </div>
         <div className={styles.resultCard}>
           <span className={styles.resultLabel}>bitrate</span>
           <span className={`${styles.resultValue} ${styles.latinResultValue}`}>
-            {formatBitrate(result.previousBitrateKbps)} →{" "}
-            {formatBitrate(result.currentBitrateKbps)}
+            {formatBitrate(result.previousBitrateKbps)} → {formatBitrate(result.currentBitrateKbps)}
           </span>
         </div>
         <div className={styles.resultCard}>
@@ -493,11 +483,7 @@ const MediaCompressDialog = ({
                       }
                     >
                       <FormControlLabel value="video" control={<Radio />} label="ویدیو" />
-                      <FormControlLabel
-                        value="audio"
-                        control={<Radio />}
-                        label="استخراج صوت"
-                      />
+                      <FormControlLabel value="audio" control={<Radio />} label="استخراج صوت" />
                     </RadioGroup>
                   </FormControl>
                 ) : null}
@@ -511,9 +497,7 @@ const MediaCompressDialog = ({
                       labelId="media-compress-video-extension-label"
                       label="قالب خروجی ویدیو"
                       value={form.videoOutputExtension}
-                      onChange={(event) =>
-                        updateForm({ videoOutputExtension: event.target.value })
-                      }
+                      onChange={(event) => updateForm({ videoOutputExtension: event.target.value })}
                       renderValue={(selected) => (
                         <span className={styles.latinSelectValue}>
                           {VIDEO_OUTPUT_EXTENSION_LABELS[
@@ -541,9 +525,7 @@ const MediaCompressDialog = ({
                       labelId="media-compress-audio-extension-label"
                       label="قالب خروجی صوت"
                       value={form.audioOutputExtension}
-                      onChange={(event) =>
-                        updateForm({ audioOutputExtension: event.target.value })
-                      }
+                      onChange={(event) => updateForm({ audioOutputExtension: event.target.value })}
                       renderValue={(selected) => (
                         <span className={styles.latinSelectValue}>
                           {AUDIO_OUTPUT_EXTENSION_LABELS[

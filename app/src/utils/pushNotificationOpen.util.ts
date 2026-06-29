@@ -14,7 +14,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 export function normalizePushNotificationOpenPayload(
-  value: unknown,
+  value: unknown
 ): PushNotificationOpenPayload | null {
   if (!isRecord(value) || value.type !== PUSH_NOTIFICATION_OPEN_MESSAGE_TYPE) {
     return null;
@@ -40,12 +40,10 @@ export function normalizePushNotificationOpenPayload(
 
   return {
     type: PUSH_NOTIFICATION_OPEN_MESSAGE_TYPE,
-    notificationId:
-      typeof value.notificationId === "string" ? value.notificationId : undefined,
+    notificationId: typeof value.notificationId === "string" ? value.notificationId : undefined,
     title,
     description,
-    messageType:
-      typeof value.messageType === "string" ? value.messageType : undefined,
+    messageType: typeof value.messageType === "string" ? value.messageType : undefined,
     mode: typeof value.mode === "string" ? value.mode : undefined,
     productId: typeof value.productId === "string" ? value.productId : undefined,
     chapterKey: typeof value.chapterKey === "string" ? value.chapterKey : undefined,
@@ -153,8 +151,7 @@ export function handleNativePushNotificationTap(notification: {
       title: notification.title,
       body: notification.body,
       description,
-      notificationId:
-        typeof data.notificationId === "string" ? data.notificationId : undefined,
+      notificationId: typeof data.notificationId === "string" ? data.notificationId : undefined,
       messageType: typeof data.messageType === "string" ? data.messageType : undefined,
       mode: typeof data.mode === "string" ? data.mode : undefined,
       productId: typeof data.productId === "string" ? data.productId : undefined,

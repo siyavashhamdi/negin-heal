@@ -5,7 +5,7 @@ type PushNotificationOpenListener = (payload: PushNotificationOpenPayload) => vo
 const listeners = new Set<PushNotificationOpenListener>();
 
 export const subscribePushNotificationOpen = (
-  listener: PushNotificationOpenListener,
+  listener: PushNotificationOpenListener
 ): (() => void) => {
   listeners.add(listener);
 
@@ -14,9 +14,7 @@ export const subscribePushNotificationOpen = (
   };
 };
 
-export const notifyPushNotificationOpenListeners = (
-  payload: PushNotificationOpenPayload,
-): void => {
+export const notifyPushNotificationOpenListeners = (payload: PushNotificationOpenPayload): void => {
   for (const listener of listeners) {
     listener(payload);
   }

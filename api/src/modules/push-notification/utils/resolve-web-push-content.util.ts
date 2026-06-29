@@ -20,8 +20,7 @@ export function resolveWebPushBody(
     return payloadDescription;
   }
 
-  const fallback =
-    typeof fallbackBody === "string" ? fallbackBody.trim() : "";
+  const fallback = typeof fallbackBody === "string" ? fallbackBody.trim() : "";
 
   return fallback || "اعلان جدیدی برای شما ثبت شد.";
 }

@@ -71,8 +71,14 @@ const DashboardAppRoutesContent = (): ReactElement => {
         <Route path={APP_SHELL_ROUTES.resetPassword} element={<ResetPassword />} />
         <Route path={APP_SHELL_ROUTES.activateAccount} element={<ActivateAccount />} />
         <Route path={`${APP_SHELL_ROUTES.products}/new`} element={<ProductsIndex />} />
-        <Route path={`${APP_SHELL_ROUTES.products}/edit/:${PRODUCT_ROUTE_ID_PARAM}`} element={<ProductsIndex />} />
-        <Route path={`${APP_SHELL_ROUTES.products}/delete/:${PRODUCT_ROUTE_ID_PARAM}`} element={<ProductsIndex />} />
+        <Route
+          path={`${APP_SHELL_ROUTES.products}/edit/:${PRODUCT_ROUTE_ID_PARAM}`}
+          element={<ProductsIndex />}
+        />
+        <Route
+          path={`${APP_SHELL_ROUTES.products}/delete/:${PRODUCT_ROUTE_ID_PARAM}`}
+          element={<ProductsIndex />}
+        />
         <Route path={APP_SHELL_ROUTES.products} element={<ProductsIndex />} />
         <Route path={APP_SHELL_ROUTES.productDetail} element={<ProductDetail />} />
         <Route path={APP_SHELL_ROUTES.more} element={wrapProtected(<More />)} />
@@ -95,7 +101,10 @@ const DashboardAppRoutesContent = (): ReactElement => {
           element={wrapProtected(<GlobalAnouncementPage />)}
         />
         <Route path={APP_SHELL_ROUTES.moreBackup} element={wrapProtected(<BackupPage />)} />
-        <Route path={`${APP_SHELL_ROUTES.moreCoupons}/*`} element={wrapProtected(<CouponsIndex />)} />
+        <Route
+          path={`${APP_SHELL_ROUTES.moreCoupons}/*`}
+          element={wrapProtected(<CouponsIndex />)}
+        />
         <Route path={APP_SHELL_ROUTES.notifications} element={wrapProtected(<Notifications />)} />
         <Route path={`${APP_SHELL_ROUTES.payments}/*`} element={wrapProtected(<PaymentsIndex />)} />
         <Route path={APP_SHELL_ROUTES.paymentZarinPalCallback} element={<ZarinPalCallback />} />
@@ -114,9 +123,15 @@ const DashboardAppRoutesContent = (): ReactElement => {
           path={APP_SHELL_ROUTES.supportTickets}
           element={wrapProtected(<SupportTicketsIndex />)}
         />
-        <Route path={`${APP_SHELL_ROUTES.products}/:${PRODUCT_ROUTE_ID_PARAM}/purchase`} element={<ProductDetail />} />
+        <Route
+          path={`${APP_SHELL_ROUTES.products}/:${PRODUCT_ROUTE_ID_PARAM}/purchase`}
+          element={<ProductDetail />}
+        />
         <Route path={`${APP_SHELL_ROUTES.products}/new/max`} element={<ProductsIndex />} />
-        <Route path={`${APP_SHELL_ROUTES.products}/edit/:${PRODUCT_ROUTE_ID_PARAM}/max`} element={<ProductsIndex />} />
+        <Route
+          path={`${APP_SHELL_ROUTES.products}/edit/:${PRODUCT_ROUTE_ID_PARAM}/max`}
+          element={<ProductsIndex />}
+        />
         <Route
           path={`${APP_SHELL_ROUTES.products}/new/compress-media`}
           element={<ProductsIndex />}
@@ -125,7 +140,10 @@ const DashboardAppRoutesContent = (): ReactElement => {
           path={`${APP_SHELL_ROUTES.products}/edit/:${PRODUCT_ROUTE_ID_PARAM}/compress-media`}
           element={<ProductsIndex />}
         />
-        <Route path={`${APP_SHELL_ROUTES.products}/:${PRODUCT_ROUTE_ID_PARAM}/max`} element={<ProductDetail />} />
+        <Route
+          path={`${APP_SHELL_ROUTES.products}/:${PRODUCT_ROUTE_ID_PARAM}/max`}
+          element={<ProductDetail />}
+        />
         <Route
           path={`${APP_SHELL_ROUTES.users}/*`}
           element={wrapProtected(<UsersManagementIndex />)}

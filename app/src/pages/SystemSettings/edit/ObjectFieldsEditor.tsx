@@ -32,9 +32,7 @@ const ObjectFieldsEditor = <TValue extends object>({
           return <PasswordTextField key={field.key} {...fieldProps} />;
         }
 
-        return (
-          <TextField key={field.key} {...fieldProps} type={field.type ?? "text"} />
-        );
+        return <TextField key={field.key} {...fieldProps} type={field.type ?? "text"} />;
       })}
     </Stack>
   </SectionPaper>

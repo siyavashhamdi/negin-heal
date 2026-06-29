@@ -590,7 +590,9 @@ async function seedRealProducts(): Promise<void> {
   console.log(
     `Seeded ${result.insertedCount} realistic products (${chapterCount} chapters, ${itemCount} article items).`,
   );
-  console.log(`Removed ${existing.deletedCount} previous ${SEED_TAG} products.`);
+  console.log(
+    `Removed ${existing.deletedCount} previous ${SEED_TAG} products.`,
+  );
 }
 
 seedRealProducts()

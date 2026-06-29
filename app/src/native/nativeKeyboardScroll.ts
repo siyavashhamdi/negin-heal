@@ -72,7 +72,7 @@ function readVisibleViewportBounds(): { readonly top: number; readonly bottom: n
   const viewportHeight = viewport?.height ?? window.innerHeight;
   const keyboardInset = Math.max(
     0,
-    window.innerHeight - viewportHeight - (viewport?.offsetTop ?? 0),
+    window.innerHeight - viewportHeight - (viewport?.offsetTop ?? 0)
   );
   const bottomReserve =
     keyboardInset > KEYBOARD_OPEN_THRESHOLD_PX ? SCROLL_PADDING_PX : readMobileBottomReservePx();
@@ -128,15 +128,12 @@ function updateKeyboardViewportState(): void {
     return;
   }
 
-  const keyboardInset = Math.max(
-    0,
-    window.innerHeight - viewport.height - viewport.offsetTop,
-  );
+  const keyboardInset = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
 
   document.documentElement.style.setProperty("--app-keyboard-inset", `${keyboardInset}px`);
   document.documentElement.classList.toggle(
     "keyboard-open",
-    keyboardInset > KEYBOARD_OPEN_THRESHOLD_PX,
+    keyboardInset > KEYBOARD_OPEN_THRESHOLD_PX
   );
 }
 
@@ -169,9 +166,7 @@ function scheduleScrollIntoView(element: HTMLElement): void {
   };
 
   scrollFrameId = window.requestAnimationFrame(run);
-  scrollTimeoutIds = FOCUS_SCROLL_DELAYS_MS.map((delayMs) =>
-    window.setTimeout(run, delayMs),
-  );
+  scrollTimeoutIds = FOCUS_SCROLL_DELAYS_MS.map((delayMs) => window.setTimeout(run, delayMs));
 }
 
 export function registerNativeKeyboardScrollBehavior(): void {

@@ -119,8 +119,6 @@ export function clearPostLoginRedirect(): void {
   localStorage.removeItem(POST_LOGIN_REDIRECT_STORAGE_KEY);
 }
 
-export function resolvePendingPostLoginRedirect(
-  locationState: unknown
-): PostLoginRedirect | null {
+export function resolvePendingPostLoginRedirect(locationState: unknown): PostLoginRedirect | null {
   return peekPostLoginRedirect() ?? postLoginRedirectFromReturnState(locationState);
 }

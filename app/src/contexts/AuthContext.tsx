@@ -32,9 +32,7 @@ import { USER_LOGOUT_MUTATION } from "../graphql/mutations/userLogout.mutation";
 import { subscribeAuthSessionExpired } from "../lib/auth-session-expired-listeners";
 import { unregisterWebPushSubscriptionFromServer } from "../utils/pushSubscription.util";
 import { isNativeCapacitorShell } from "../utils/apiBaseUrl.util";
-import {
-  unregisterNativePushFromServer,
-} from "../native/nativePushRegistration";
+import { unregisterNativePushFromServer } from "../native/nativePushRegistration";
 
 /**
  * User data structure
@@ -77,10 +75,7 @@ function isAuthEntryRoute(pathname: string): boolean {
   return pathname === APP_SHELL_ROUTES.login || isProfileAuthRoute(pathname);
 }
 
-function hasReachedPostLoginRedirectTarget(
-  pathname: string,
-  redirect: PostLoginRedirect
-): boolean {
+function hasReachedPostLoginRedirectTarget(pathname: string, redirect: PostLoginRedirect): boolean {
   return pathname === redirect.pathname || pathname.startsWith(`${redirect.pathname}/`);
 }
 
@@ -92,8 +87,9 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
   const [user, setUser] = useState<User | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [postLoginRedirectTarget, setPostLoginRedirectTarget] =
-    useState<PostLoginRedirect | null>(null);
+  const [postLoginRedirectTarget, setPostLoginRedirectTarget] = useState<PostLoginRedirect | null>(
+    null
+  );
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -317,9 +313,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
           to={postLoginRedirectTarget.pathname}
           replace
           state={
-            postLoginRedirectTarget.openProductPurchase
-              ? { openProductPurchase: true }
-              : undefined
+            postLoginRedirectTarget.openProductPurchase ? { openProductPurchase: true } : undefined
           }
         />
       ) : null}

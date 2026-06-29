@@ -61,10 +61,7 @@ export const ResetPasswordForm = ({
   const passwordRulesPassed = arePasswordRulesPassed(newPassword);
   const passwordsMatch = confirmPassword.trim().length > 0 && newPassword === confirmPassword;
   const otpReady = RESET_CODE_REGEX.test(resetCode.trim());
-  const canSubmit =
-    otpReady &&
-    newPassword.trim().length > 0 &&
-    confirmPassword.trim().length > 0;
+  const canSubmit = otpReady && newPassword.trim().length > 0 && confirmPassword.trim().length > 0;
 
   useEffect(() => {
     queueMicrotask(() => {

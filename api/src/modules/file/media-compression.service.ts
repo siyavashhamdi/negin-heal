@@ -65,9 +65,7 @@ export class MediaCompressionService implements OnModuleInit {
     input: MediaCompressionEncodeRequest,
   ): Promise<MediaCompressionEncodeResult> {
     if (this.isCompressionRunning) {
-      throw new ConflictException(
-        EXCEPTION_CONSTANT.MEDIA_COMPRESSION_BUSY,
-      );
+      throw new ConflictException(EXCEPTION_CONSTANT.MEDIA_COMPRESSION_BUSY);
     }
 
     this.isCompressionRunning = true;
@@ -126,7 +124,8 @@ export class MediaCompressionService implements OnModuleInit {
       const previousQuality = sourceProfile.quality;
       const targetOrdinal =
         MEDIA_COMPRESSION_QUALITY_ORDINAL[input.targetQuality];
-      const previousOrdinal = MEDIA_COMPRESSION_QUALITY_ORDINAL[previousQuality];
+      const previousOrdinal =
+        MEDIA_COMPRESSION_QUALITY_ORDINAL[previousQuality];
 
       const hasTrim =
         trimState.requested.startSeconds !== null ||
@@ -135,11 +134,7 @@ export class MediaCompressionService implements OnModuleInit {
       if (
         storedFile.sizeBytes < MEDIA_COMPRESSION_MIN_FILE_BYTES &&
         !hasTrim &&
-        this.isSameOutputContainer(
-          storedFile.name,
-          sourceProfile,
-          outputMode,
-        )
+        this.isSameOutputContainer(storedFile.name, sourceProfile, outputMode)
       ) {
         return this.buildSkippedResult({
           startedAt,
@@ -155,11 +150,7 @@ export class MediaCompressionService implements OnModuleInit {
       if (
         !hasTrim &&
         targetOrdinal === previousOrdinal &&
-        this.isSameOutputContainer(
-          storedFile.name,
-          sourceProfile,
-          outputMode,
-        )
+        this.isSameOutputContainer(storedFile.name, sourceProfile, outputMode)
       ) {
         return this.buildSkippedResult({
           startedAt,
@@ -195,11 +186,7 @@ export class MediaCompressionService implements OnModuleInit {
       if (
         !hasTrim &&
         outputBuffer.length >= storedFile.sizeBytes &&
-        this.isSameOutputContainer(
-          storedFile.name,
-          sourceProfile,
-          outputMode,
-        )
+        this.isSameOutputContainer(storedFile.name, sourceProfile, outputMode)
       ) {
         return this.buildSkippedResult({
           startedAt,
@@ -319,7 +306,10 @@ export class MediaCompressionService implements OnModuleInit {
     return error.message.includes("not installed or not available on PATH");
   }
 
-  private throwMediaCompressionError(error: unknown, fallbackCode: string): never {
+  private throwMediaCompressionError(
+    error: unknown,
+    fallbackCode: string,
+  ): never {
     if (this.isFfmpegUnavailableError(error)) {
       this.ffmpegToolsAvailable = false;
       throw new InternalServerErrorException(
@@ -347,7 +337,11 @@ export class MediaCompressionService implements OnModuleInit {
     }
 
     const extension = this.extractExtension(fileName);
-    if (["mp4", "mov", "mkv", "webm", "avi", "m4v", "ts", "flv"].includes(extension)) {
+    if (
+      ["mp4", "mov", "mkv", "webm", "avi", "m4v", "ts", "flv"].includes(
+        extension,
+      )
+    ) {
       return MediaType.VIDEO;
     }
 
@@ -517,7 +511,11 @@ export class MediaCompressionService implements OnModuleInit {
     const args = this.buildFfmpegArgs(params);
 
     try {
-      await this.execCommand(this.ffmpegPath, args, MEDIA_COMPRESSION_TIMEOUT_MS);
+      await this.execCommand(
+        this.ffmpegPath,
+        args,
+        MEDIA_COMPRESSION_TIMEOUT_MS,
+      );
     } catch (error) {
       this.logger.error(
         `ffmpeg failed: ${error instanceof Error ? error.message : String(error)}`,
@@ -570,7 +568,8 @@ export class MediaCompressionService implements OnModuleInit {
       return args;
     }
 
-    const format = VIDEO_OUTPUT_FORMATS[params.outputMode.videoOutputExtension!];
+    const format =
+      VIDEO_OUTPUT_FORMATS[params.outputMode.videoOutputExtension!];
     const preset = VIDEO_QUALITY_PRESETS[params.targetQuality];
     const scaleFilter = `scale=-2:min(ih\\,${preset.maxHeight})`;
 
@@ -654,22 +653,25 @@ export class MediaCompressionService implements OnModuleInit {
         return false;
       }
 
-      const targetExtension = AUDIO_OUTPUT_FORMATS[
-        outputMode.audioOutputExtension!
-      ].extension.slice(1);
+      const targetExtension =
+        AUDIO_OUTPUT_FORMATS[outputMode.audioOutputExtension!].extension.slice(
+          1,
+        );
       return currentExtension === targetExtension;
     }
 
-    const targetExtension = VIDEO_OUTPUT_FORMATS[
-      outputMode.videoOutputExtension!
-    ].extension.slice(1);
+    const targetExtension =
+      VIDEO_OUTPUT_FORMATS[outputMode.videoOutputExtension!].extension.slice(1);
     return (
       currentExtension === targetExtension &&
       sourceProfile.mediaType === MediaType.VIDEO
     );
   }
 
-  private buildOutputFileName(fileName: string, outputMode: OutputMode): string {
+  private buildOutputFileName(
+    fileName: string,
+    outputMode: OutputMode,
+  ): string {
     const baseName = basename(fileName, extname(fileName));
     const suffix = randomUUID().slice(0, 8);
     const extension = this.resolveOutputExtension(outputMode);
@@ -770,10 +772,10 @@ export class MediaCompressionService implements OnModuleInit {
     );
 
     return (
-      Object.entries(MEDIA_COMPRESSION_QUALITY_ORDINAL).find(
+      (Object.entries(MEDIA_COMPRESSION_QUALITY_ORDINAL).find(
         ([, value]) => value === boostedOrdinal,
-      )?.[0] as MediaCompressionQuality | undefined
-    ) ?? quality;
+      )?.[0] as MediaCompressionQuality | undefined) ?? quality
+    );
   }
 
   private maxQuality(
@@ -902,9 +904,7 @@ export class MediaCompressionService implements OnModuleInit {
         clearTimeout(timeout);
         if ((error as NodeJS.ErrnoException).code === "ENOENT") {
           reject(
-            new Error(
-              `${command} is not installed or not available on PATH`,
-            ),
+            new Error(`${command} is not installed or not available on PATH`),
           );
           return;
         }

@@ -251,7 +251,12 @@ function createTransportLink(): ApolloLink {
 }
 
 function createApolloLink(cache: InMemoryCache): ApolloLink {
-  return ApolloLink.from([errorLink, createCacheFallbackLink(cache), authLink, createTransportLink()]);
+  return ApolloLink.from([
+    errorLink,
+    createCacheFallbackLink(cache),
+    authLink,
+    createTransportLink(),
+  ]);
 }
 
 export let apolloClient!: ApolloClient;

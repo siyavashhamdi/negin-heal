@@ -13,9 +13,7 @@ export function hasDeletedAtFilter(query: MongoFilter): boolean {
  * Adds a default filter that excludes soft-deleted documents.
  * Respects queries that already target audit.deletedAt explicitly.
  */
-export function addNotDeletedCondition(
-  query: MongoFilter = {},
-): MongoFilter {
+export function addNotDeletedCondition(query: MongoFilter = {}): MongoFilter {
   if (hasDeletedAtFilter(query)) {
     return query;
   }

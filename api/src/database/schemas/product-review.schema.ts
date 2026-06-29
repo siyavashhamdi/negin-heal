@@ -275,7 +275,10 @@ ProductReviewSchema.index(
     unique: true,
   },
 );
-ProductReviewSchema.index({ "messages.key": 1 }, { unique: true, sparse: true });
+ProductReviewSchema.index(
+  { "messages.key": 1 },
+  { unique: true, sparse: true },
+);
 ProductReviewSchema.index(
   { "rating.moderation.visibility": 1, "rating.moderation.hiddenAt": -1 },
   {

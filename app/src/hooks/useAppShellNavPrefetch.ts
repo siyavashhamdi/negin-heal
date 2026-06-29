@@ -1,5 +1,8 @@
 import { useEffect } from "react";
-import { scheduleAppShellNavPrefetch, type AppShellNavPrefetchContext } from "../lib/app-shell-nav-prefetch";
+import {
+  scheduleAppShellNavPrefetch,
+  type AppShellNavPrefetchContext,
+} from "../lib/app-shell-nav-prefetch";
 
 type UseAppShellNavPrefetchOptions = AppShellNavPrefetchContext & {
   readonly authLoading: boolean;

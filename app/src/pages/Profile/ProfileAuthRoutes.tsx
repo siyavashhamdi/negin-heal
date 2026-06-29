@@ -39,7 +39,7 @@ const ProfileLogin = (): ReactElement => {
           navigate(APP_SHELL_ROUTES.profileForgotPassword, {
             state: identity
               ? mergeWithLoginReturnState(identity, returnState)
-              : returnState ?? undefined,
+              : (returnState ?? undefined),
           })
         }
       />
@@ -65,7 +65,7 @@ const ProfileLogin = (): ReactElement => {
         navigate(APP_SHELL_ROUTES.profileForgotPassword, {
           state: identity
             ? mergeWithLoginReturnState(identity, returnState)
-            : returnState ?? undefined,
+            : (returnState ?? undefined),
         })
       }
     />

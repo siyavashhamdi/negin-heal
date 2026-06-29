@@ -417,10 +417,7 @@ export function buildPaymentReceiptExistingFile(
 
   return {
     accessUrl,
-    fileId:
-      record.uploadedReceiptFileId !== "-"
-        ? record.uploadedReceiptFileId
-        : undefined,
+    fileId: record.uploadedReceiptFileId !== "-" ? record.uploadedReceiptFileId : undefined,
     name,
     mimeType,
     sizeBytes: record.uploadedReceiptFileSizeBytes ?? 0,

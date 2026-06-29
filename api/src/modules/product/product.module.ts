@@ -9,7 +9,10 @@ import { NotificationModule } from "../notification";
 import { PushNotificationModule } from "../push-notification";
 import { UserModule } from "../user";
 import { ZarinPalProxyModule } from "../zarinpal-proxy";
-import { ChapterReleaseNotificationCron, GatewayPaymentExpiryCron } from "../../cron/jobs";
+import {
+  ChapterReleaseNotificationCron,
+  GatewayPaymentExpiryCron,
+} from "../../cron/jobs";
 import { ProductPaymentController } from "./api/product-payment.controller";
 import { ChapterReleaseNotificationService } from "./chapter-release-notification.service";
 import { GatewayPaymentExpiryService } from "./gateway-payment-expiry.service";

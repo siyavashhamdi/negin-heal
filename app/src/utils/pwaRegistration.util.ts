@@ -185,7 +185,7 @@ async function waitForRegistrationSettle(registration: ServiceWorkerRegistration
 
 async function waitForInstallingWorker(
   registration: ServiceWorkerRegistration,
-  maxMs: number,
+  maxMs: number
 ): Promise<void> {
   const deadline = Date.now() + maxMs;
   while (registration.installing && Date.now() < deadline) {
@@ -193,9 +193,7 @@ async function waitForInstallingWorker(
   }
 }
 
-async function completeInitialRegistration(
-  registration: ServiceWorkerRegistration,
-): Promise<void> {
+async function completeInitialRegistration(registration: ServiceWorkerRegistration): Promise<void> {
   if (isReturningVisitor) {
     await waitForRegistrationSettle(registration);
 
@@ -243,10 +241,10 @@ async function unregisterLegacyPushServiceWorkers(): Promise<void> {
     registrations
       .filter((registration) =>
         getRegistrationScriptUrls(registration).some((scriptUrl) =>
-          scriptUrl.includes(LEGACY_PUSH_SW_FILENAME),
-        ),
+          scriptUrl.includes(LEGACY_PUSH_SW_FILENAME)
+        )
       )
-      .map((registration) => registration.unregister()),
+      .map((registration) => registration.unregister())
   );
 }
 

@@ -347,7 +347,9 @@ export class ProductService {
     );
     const groups = this.buildProductDeleteDependencyGroups(counts);
     const retainedCount = groups
-      .filter((group) => group.impact === ProductDeleteDependencyImpact.RETAINED)
+      .filter(
+        (group) => group.impact === ProductDeleteDependencyImpact.RETAINED,
+      )
       .reduce((total, group) => total + group.totalCount, 0);
     const removedCount = groups
       .filter((group) => group.impact === ProductDeleteDependencyImpact.REMOVED)
@@ -400,7 +402,9 @@ export class ProductService {
     this.validatePurchaseInputShape(input);
 
     const [product, user, existingUserProduct] = await Promise.all([
-      this.productModel.findOne({ _id: input.productId, isActive: true }).exec(),
+      this.productModel
+        .findOne({ _id: input.productId, isActive: true })
+        .exec(),
       this.userModel.findById(userId).exec(),
       this.userProductModel
         .findOne({
@@ -420,7 +424,9 @@ export class ProductService {
       throw new NotFoundException(EXCEPTION_CONSTANT.USER_NOT_FOUND);
     }
 
-    if (existingUserProduct?.purchase.status === UserProductPurchaseStatus.PAID) {
+    if (
+      existingUserProduct?.purchase.status === UserProductPurchaseStatus.PAID
+    ) {
       throw new ConflictException(EXCEPTION_CONSTANT.PRODUCT_ALREADY_PURCHASED);
     }
 
@@ -490,7 +496,9 @@ export class ProductService {
         pendingAt:
           status === UserProductPurchaseStatus.PENDING ? now : undefined,
         gatewayPendingAt:
-          status === UserProductPurchaseStatus.PENDING_GATEWAY ? now : undefined,
+          status === UserProductPurchaseStatus.PENDING_GATEWAY
+            ? now
+            : undefined,
         paidAt: status === UserProductPurchaseStatus.PAID ? now : undefined,
         isManualStatusChange: false,
         uploadedReceiptFileId,
@@ -644,7 +652,10 @@ export class ProductService {
         previousStatus,
         nextStatus: UserProductPurchaseStatus.PAID,
       });
-      await this.notifyProductPurchaseStatusChanged(userProduct, previousStatus);
+      await this.notifyProductPurchaseStatusChanged(
+        userProduct,
+        previousStatus,
+      );
 
       return {
         status: "success",
@@ -706,7 +717,8 @@ export class ProductService {
         .exec(),
       this.userProductModel.countDocuments(filterQuery).exec(),
     ]);
-    const relatedLookups = await this.buildProductPaymentFileLookup(userProducts);
+    const relatedLookups =
+      await this.buildProductPaymentFileLookup(userProducts);
 
     return {
       items: userProducts.map((userProduct) =>
@@ -767,7 +779,9 @@ export class ProductService {
     this.validateManualPaymentInputShape(input);
 
     const [product, user, existingUserProduct] = await Promise.all([
-      this.productModel.findOne({ _id: input.productId, isActive: true }).exec(),
+      this.productModel
+        .findOne({ _id: input.productId, isActive: true })
+        .exec(),
       this.userModel
         .findOne({
           _id: input.userId,
@@ -805,7 +819,9 @@ export class ProductService {
       );
     }
 
-    if (existingUserProduct?.purchase.status === UserProductPurchaseStatus.PAID) {
+    if (
+      existingUserProduct?.purchase.status === UserProductPurchaseStatus.PAID
+    ) {
       throw new ConflictException(EXCEPTION_CONSTANT.USER_PRODUCT_ALREADY_PAID);
     }
 
@@ -1832,7 +1848,9 @@ export class ProductService {
           },
         ])
         .exec(),
-      this.couponModel.countDocuments({ applicableProductIds: productId }).exec(),
+      this.couponModel
+        .countDocuments({ applicableProductIds: productId })
+        .exec(),
       this.couponModel
         .find({ applicableProductIds: productId })
         .sort({ isActive: -1, code: 1 })
@@ -2776,7 +2794,9 @@ export class ProductService {
       throw new BadRequestException(EXCEPTION_CONSTANT.PRODUCT_ID_INVALID);
     }
 
-    if (!Object.values(UserProductPaymentMethod).includes(input.paymentMethod)) {
+    if (
+      !Object.values(UserProductPaymentMethod).includes(input.paymentMethod)
+    ) {
       throw new BadRequestException(
         EXCEPTION_CONSTANT.PAYMENT_METHOD_NOT_SUPPORTED,
       );

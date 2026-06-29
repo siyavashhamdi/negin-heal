@@ -36,9 +36,7 @@ const smtpFields = [
   { key: "fromEmail", label: "ایمیل فرستنده", type: "email" },
 ] as const;
 
-const backupFields = [
-  { key: "rarPassword", label: "رمز آرشیو RAR", type: "password" },
-] as const;
+const backupFields = [{ key: "rarPassword", label: "رمز آرشیو RAR", type: "password" }] as const;
 
 const telegramFields = [
   { key: "botToken", label: "توکن ربات", type: "password" },

@@ -263,7 +263,9 @@ export class TelegramService {
     return data;
   }
 
-  private buildMultipartForm(params: TelegramRequestParams): TelegramMultipartForm {
+  private buildMultipartForm(
+    params: TelegramRequestParams,
+  ): TelegramMultipartForm {
     const form = new formDataImport();
 
     for (const [key, value] of Object.entries(params)) {

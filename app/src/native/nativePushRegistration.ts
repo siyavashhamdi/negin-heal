@@ -50,9 +50,7 @@ function clearStoredNativePushToken(): void {
   localStorage.removeItem(LOCAL_STORAGE_KEYS.NATIVE_PUSH_TOKEN);
 }
 
-function parseBadgeCountFromPushData(
-  data: Record<string, unknown> | undefined,
-): number | null {
+function parseBadgeCountFromPushData(data: Record<string, unknown> | undefined): number | null {
   const rawValue = data?.badgeCount;
   const parsed =
     typeof rawValue === "string"

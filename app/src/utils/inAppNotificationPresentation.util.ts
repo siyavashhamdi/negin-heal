@@ -38,7 +38,7 @@ export type InAppNotificationPresentationInput = {
 export type InAppNotificationPresentationHandlers = {
   readonly showSnackbar: (
     message: string,
-    severity: "info" | "success" | "warning" | "error",
+    severity: "info" | "success" | "warning" | "error"
   ) => void;
   readonly showPopup: (popup: InAppNotificationPopup) => void;
 };
@@ -63,7 +63,7 @@ export function resolveInAppNotificationPopupMode(value: unknown): InAppNotifica
 }
 
 export function resolveInAppNotificationSnackbarSeverity(
-  value: unknown,
+  value: unknown
 ): "info" | "success" | "warning" | "error" {
   return resolveInAppNotificationPopupMode(value);
 }
@@ -83,7 +83,7 @@ export function presentInAppNotificationMessage(
   options?: {
     readonly fallbackToSnackbar?: boolean;
     readonly includeSnackbarTitle?: boolean;
-  },
+  }
 ): boolean {
   const title =
     typeof input.title === "string" && input.title.trim().length > 0
@@ -106,18 +106,12 @@ export function presentInAppNotificationMessage(
       return false;
     }
 
-    handlers.showSnackbar(
-      snackbarMessage,
-      resolveInAppNotificationSnackbarSeverity(input.mode),
-    );
+    handlers.showSnackbar(snackbarMessage, resolveInAppNotificationSnackbarSeverity(input.mode));
     return true;
   }
 
   if (messageType === GENERAL_NOTIFICATION_MESSAGE_TYPES.SNACKBAR) {
-    handlers.showSnackbar(
-      snackbarMessage,
-      resolveInAppNotificationSnackbarSeverity(input.mode),
-    );
+    handlers.showSnackbar(snackbarMessage, resolveInAppNotificationSnackbarSeverity(input.mode));
     return true;
   }
 
@@ -140,10 +134,7 @@ export function presentInAppNotificationMessage(
   }
 
   if (options?.fallbackToSnackbar !== false) {
-    handlers.showSnackbar(
-      snackbarMessage,
-      resolveInAppNotificationSnackbarSeverity(input.mode),
-    );
+    handlers.showSnackbar(snackbarMessage, resolveInAppNotificationSnackbarSeverity(input.mode));
     return true;
   }
 

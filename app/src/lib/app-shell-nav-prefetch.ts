@@ -229,10 +229,7 @@ function buildPrefetchOperationsForItem(
         return [];
       }
 
-      return [
-        { query: APP_PRIVACY_POLICY_PAGE_QUERY },
-        { query: APP_TERMS_OF_USE_PAGE_QUERY },
-      ];
+      return [{ query: APP_PRIVACY_POLICY_PAGE_QUERY }, { query: APP_TERMS_OF_USE_PAGE_QUERY }];
     case "profile":
       return [];
     default:
@@ -299,7 +296,9 @@ export function scheduleAppShellNavPrefetch(context: AppShellNavPrefetchContext)
 }
 
 /** Prefetches nav data immediately after logout, using fetch so clearStore cannot abort requests. */
-export async function runAppShellNavPrefetchNow(context: AppShellNavPrefetchContext): Promise<void> {
+export async function runAppShellNavPrefetchNow(
+  context: AppShellNavPrefetchContext
+): Promise<void> {
   if (getIsOfflineMode() || isNativeAndroidShell()) {
     return;
   }

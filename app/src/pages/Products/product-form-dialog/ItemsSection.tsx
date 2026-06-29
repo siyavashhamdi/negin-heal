@@ -20,7 +20,10 @@ import PlaylistAddRoundedIcon from "@mui/icons-material/PlaylistAddRounded";
 import { OverflowTooltip } from "../../../shared/OverflowTooltip";
 import FileUploadField from "../../../shared/forms/FileUploadField";
 import { FILE_UPLOAD_POLICY_MAX_SIZE_BYTES } from "../../../constants/fileUploadPolicies";
-import { buildExistingFilePreview, getFileIdFromAccessUrl } from "../../../utils/fileAccessUrl.util";
+import {
+  buildExistingFilePreview,
+  getFileIdFromAccessUrl,
+} from "../../../utils/fileAccessUrl.util";
 import {
   getFieldUploadPercent,
   type UploadProgressEntry,

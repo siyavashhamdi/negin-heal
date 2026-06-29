@@ -38,7 +38,13 @@ export function AppUpdatePrompt(): ReactElement {
         }}
         action={
           <Stack direction="row" spacing={0.5} sx={{ flexShrink: 0 }}>
-            <Button color="inherit" size="small" variant="outlined" onClick={dismissUpdate} disabled={isApplyingUpdate}>
+            <Button
+              color="inherit"
+              size="small"
+              variant="outlined"
+              onClick={dismissUpdate}
+              disabled={isApplyingUpdate}
+            >
               {t("layout.appUpdate.laterButton")}
             </Button>
             <Button

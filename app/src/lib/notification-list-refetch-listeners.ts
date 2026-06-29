@@ -4,7 +4,7 @@ const listeners = new Set<NotificationListRefetchListener>();
 let pendingRefetch = false;
 
 export const subscribeNotificationListRefetch = (
-  listener: NotificationListRefetchListener,
+  listener: NotificationListRefetchListener
 ): (() => void) => {
   listeners.add(listener);
 

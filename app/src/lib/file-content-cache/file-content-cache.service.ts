@@ -258,9 +258,7 @@ function readCachedFileRecord(db: Database, fileId: string): CachedFileRecord | 
 }
 
 function readApolloCachePayload(db: Database, cacheKey: string): string | null {
-  const statement = db.prepare(
-    `SELECT payload FROM ${APOLLO_CACHE_TABLE} WHERE cache_key = ?`
-  );
+  const statement = db.prepare(`SELECT payload FROM ${APOLLO_CACHE_TABLE} WHERE cache_key = ?`);
 
   try {
     statement.bind([cacheKey]);
@@ -356,9 +354,7 @@ export async function initFileContentCache(): Promise<void> {
   await initPromise;
 }
 
-export async function runWithFileContentDatabase<T>(
-  fn: (db: Database) => T
-): Promise<T | null> {
+export async function runWithFileContentDatabase<T>(fn: (db: Database) => T): Promise<T | null> {
   await initFileContentCache();
 
   if (!database) {
@@ -487,8 +483,7 @@ export function fetchAndCacheFileContent(params: FetchCachedFileParams): Promise
     }
 
     const blob = await response.blob();
-    const mimeType =
-      params.mimeType?.trim() || blob.type.trim() || "application/octet-stream";
+    const mimeType = params.mimeType?.trim() || blob.type.trim() || "application/octet-stream";
     const buffer = new Uint8Array(await blob.arrayBuffer());
 
     try {

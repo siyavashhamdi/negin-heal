@@ -6,10 +6,7 @@ import { GqlAuthGuard, Roles, RolesGuard } from "../../../auth";
 import { BACKUP_ARCHIVE_FORMAT } from "../../backup.types";
 import { BackupService } from "../../backup.service";
 import { BackupRunGqlInput } from "../inputs";
-import {
-  BackupRunGqlResponse,
-  BackupRunItemGqlResponse,
-} from "../responses";
+import { BackupRunGqlResponse, BackupRunItemGqlResponse } from "../responses";
 
 @Resolver(() => BackupRunGqlResponse)
 @UseGuards(GqlAuthGuard, RolesGuard)

@@ -10,7 +10,7 @@ const NOTIFICATION_SOURCES = new Set<NotificationSource>([
 ]);
 
 export function inferNotificationSourceFromPayload(
-  payload: Record<string, unknown> | null,
+  payload: Record<string, unknown> | null
 ): NotificationSource | null {
   if (!payload) {
     return null;

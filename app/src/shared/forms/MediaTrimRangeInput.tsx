@@ -101,7 +101,9 @@ function MediaTrimRangeInput({
   return (
     <div className={styles.fieldShell}>
       <span className={styles.fieldLabel}>برش زمانی</span>
-      <div className={[styles.fieldBody, error ? styles.fieldBodyError : ""].filter(Boolean).join(" ")}>
+      <div
+        className={[styles.fieldBody, error ? styles.fieldBodyError : ""].filter(Boolean).join(" ")}
+      >
         <InlineDurationFields
           groupLabel="شروع"
           value={value.start}

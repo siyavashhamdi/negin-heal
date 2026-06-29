@@ -270,7 +270,9 @@ export class CouponService {
 
     const priceSummary = this.calculateProductPriceSummary(product);
     if (priceSummary.payableAmountBeforeCouponIrt <= 0) {
-      return this.invalid(EXCEPTION_CONSTANT.COUPON_NOT_NEEDED_FOR_FREE_PRODUCT);
+      return this.invalid(
+        EXCEPTION_CONSTANT.COUPON_NOT_NEEDED_FOR_FREE_PRODUCT,
+      );
     }
 
     const coupon = await this.couponModel
@@ -398,7 +400,8 @@ export class CouponService {
     payableAmountBeforeCouponIrt: number;
   } {
     const amountIrt = Math.max(0, product.priceIrt ?? 0);
-    const productDiscountAmountIrt = this.calculateProductDiscountAmount(product);
+    const productDiscountAmountIrt =
+      this.calculateProductDiscountAmount(product);
 
     return {
       amountIrt,

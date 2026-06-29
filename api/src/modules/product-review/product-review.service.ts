@@ -405,7 +405,10 @@ export class ProductReviewService {
 
         isNewRating = !review.rating;
         if (userProduct) {
-          await this.assertUserProductIdIsAvailable(userProduct._id, review._id);
+          await this.assertUserProductIdIsAvailable(
+            userProduct._id,
+            review._id,
+          );
         }
         applySubmitChanges(review);
         await review.save();
@@ -652,7 +655,10 @@ export class ProductReviewService {
           input.options,
         ),
         productId
-          ? this.computeProductRatingSummary(new Types.ObjectId(productId), false)
+          ? this.computeProductRatingSummary(
+              new Types.ObjectId(productId),
+              false,
+            )
           : Promise.resolve(this.createEmptyProductRatingSummary()),
       ],
     );
@@ -1392,7 +1398,9 @@ export class ProductReviewService {
         }
 
         if (!isMine) {
-          if (message.moderation.visibility !== ProductReviewVisibility.PUBLIC) {
+          if (
+            message.moderation.visibility !== ProductReviewVisibility.PUBLIC
+          ) {
             return false;
           }
 
