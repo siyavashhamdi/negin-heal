@@ -37,9 +37,11 @@ export function useLandingFeaturedProducts(): UseLandingFeaturedProductsResult {
       buildProductListQueryVariables(
         { ...DEFAULT_PRODUCT_LIST_FILTERS, isActive: "ACTIVE" },
         DEFAULT_PRODUCT_LIST_SORT,
-        FEATURED_PRODUCT_COUNT
+        FEATURED_PRODUCT_COUNT,
+        null,
+        { restrictToFreeOnAndroidApk: usePublicList }
       ),
-    []
+    [usePublicList]
   );
 
   const { data, loading } = useQuery<ProductListQuery, ProductListQueryVariables>(

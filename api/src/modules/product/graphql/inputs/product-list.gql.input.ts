@@ -88,7 +88,8 @@ export class ProductListFilterInput {
 
   @Field(() => Boolean, {
     nullable: true,
-    description: "Filter products by whether a price is set",
+    description:
+      "Filter products by whether a paid price is set. true = priceIrt > 0, false = unset/null or priceIrt <= 0.",
   })
   @IsOptional()
   @IsBoolean({ message: "hasPrice filter must be a boolean" })

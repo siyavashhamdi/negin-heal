@@ -2162,9 +2162,17 @@ export class ProductService {
     }
 
     if (typeof filters.hasPrice === "boolean") {
-      query.priceIrt = filters.hasPrice
-        ? { ...(query.priceIrt as object), $type: "number" }
-        : { $not: { $type: "number" } };
+      if (filters.hasPrice) {
+        query.priceIrt = { ...(query.priceIrt as object), $gt: 0 };
+      } else {
+        this.addAndCondition(query, {
+          $or: [
+            { priceIrt: { $exists: false } },
+            { priceIrt: null },
+            { priceIrt: { $lte: 0 } },
+          ],
+        });
+      }
     }
 
     if (filters.releaseType) {

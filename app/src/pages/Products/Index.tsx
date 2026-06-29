@@ -78,6 +78,7 @@ import type {
 import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
 import { PRODUCTS_EDIT_PATH_REGEX } from "../../routing/product-route-path";
 import { resolveQueryFetchPolicy } from "../../lib/offline-fetch-policy.util";
+import { isNativeAndroidShell } from "../../utils/nativePlatform.util";
 import { useAfterLogoutCacheCleanup } from "../../hooks/useAfterLogoutCacheCleanup";
 import { getIsBrowserOffline, getIsOfflineMode } from "../../lib/offline-state";
 import { stripOverlayRoutePathname } from "../../routing/max-route.util";
@@ -160,7 +161,9 @@ const ProductsIndex = (): ReactElement => {
   const [deleteTarget, setDeleteTarget] = useState<ProductListRecord | null>(null);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [showFilterSections, setShowFilterSections] = useState(false);
-  const [endUserTab, setEndUserTab] = useState<EndUserProductTab>("ALL");
+  const [endUserTab, setEndUserTab] = useState<EndUserProductTab>(() =>
+    isNativeAndroidShell() ? "FREE" : "ALL"
+  );
   const [productFeedMinHeight, setProductFeedMinHeight] = useState<number | undefined>();
   const [draggedProductId, setDraggedProductId] = useState<string | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
@@ -413,8 +416,11 @@ const ProductsIndex = (): ReactElement => {
   }, [filters, sort]);
 
   const productListVariables = useMemo(
-    () => buildProductListQueryVariables(filters, sort, PRODUCT_LIST_PAGE_SIZE, null),
-    [filters, sort]
+    () =>
+      buildProductListQueryVariables(filters, sort, PRODUCT_LIST_PAGE_SIZE, null, {
+        restrictToFreeOnAndroidApk: isPublicProductView,
+      }),
+    [filters, sort, isPublicProductView]
   );
 
   const {
@@ -789,7 +795,11 @@ const ProductsIndex = (): ReactElement => {
       ) : null}
 
       {isEndUser ? (
-        <EndUserProductFilterTabs activeTab={endUserTab} onChange={handleEndUserTabChange} />
+        <EndUserProductFilterTabs
+          activeTab={endUserTab}
+          onChange={handleEndUserTabChange}
+          hiddenTabs={isNativeAndroidShell() ? ["ALL", "PURCHASABLE"] : []}
+        />
       ) : (
         <Paper
           className={`${styles.filterPanel}${

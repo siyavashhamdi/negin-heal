@@ -1,4 +1,5 @@
 import type { FileAccessUrl } from "../../utils/fileAccessUrl.util";
+import { isNativeAndroidShell } from "../../utils/nativePlatform.util";
 
 export type ProductItemType = "ARTICLE" | "VIDEO" | "VOICE" | "IMAGE";
 export type ProductReleaseType = "IMMEDIATE" | "GRADUAL";
@@ -312,27 +313,61 @@ export function mapProductDetailRowToRecord(row: ProductDetailItemRow): ProductE
   };
 }
 
+export type BuildProductListQueryVariablesOptions = {
+  /** Restrict public product lists to free items on the Android APK. */
+  readonly restrictToFreeOnAndroidApk?: boolean;
+};
+
+/** On Android APK, hide paid catalog entries except on the purchased tab. */
+export function applyAndroidApkFreeProductListFilters(
+  filters: ProductListFilters,
+  enabled = true,
+): ProductListFilters {
+  if (!enabled || !isNativeAndroidShell() || filters.isPurchased === "YES") {
+    return filters;
+  }
+
+  return {
+    ...filters,
+    hasPrice: "FREE_OR_UNSET",
+  };
+}
+
 export function buildProductListQueryVariables(
   filters: ProductListFilters,
   sort: ProductListSort,
   pageSize: number,
-  startCursor?: string | null
+  startCursor?: string | null,
+  options?: BuildProductListQueryVariablesOptions,
 ): ProductListQueryVariables {
-  const query = trimToNull(filters.query);
-  const tagsAny = parseTags(filters.tagsAny);
-  const minPriceIrt = parseNumber(filters.minPriceIrt);
-  const maxPriceIrt = parseNumber(filters.maxPriceIrt);
+  const resolvedFilters = applyAndroidApkFreeProductListFilters(
+    filters,
+    options?.restrictToFreeOnAndroidApk ?? false,
+  );
+  const query = trimToNull(resolvedFilters.query);
+  const tagsAny = parseTags(resolvedFilters.tagsAny);
+  const minPriceIrt = parseNumber(resolvedFilters.minPriceIrt);
+  const maxPriceIrt = parseNumber(resolvedFilters.maxPriceIrt);
 
   return {
     input: {
       filters: {
         query,
-        isActive: filters.isActive === "ALL" ? null : filters.isActive === "ACTIVE",
-        releaseType: filters.releaseType === "ALL" ? null : filters.releaseType,
-        itemType: filters.itemType === "ALL" ? null : filters.itemType,
-        hasPrice: filters.hasPrice === "ALL" ? null : filters.hasPrice === "WITH_PRICE",
-        hasFreeChapter: filters.hasFreeChapter === "ALL" ? null : filters.hasFreeChapter === "YES",
-        isPurchased: filters.isPurchased === "ALL" ? null : filters.isPurchased === "YES",
+        isActive:
+          resolvedFilters.isActive === "ALL" ? null : resolvedFilters.isActive === "ACTIVE",
+        releaseType:
+          resolvedFilters.releaseType === "ALL" ? null : resolvedFilters.releaseType,
+        itemType: resolvedFilters.itemType === "ALL" ? null : resolvedFilters.itemType,
+        hasPrice:
+          resolvedFilters.hasPrice === "ALL"
+            ? null
+            : resolvedFilters.hasPrice === "WITH_PRICE",
+        hasFreeChapter:
+          resolvedFilters.hasFreeChapter === "ALL"
+            ? null
+            : resolvedFilters.hasFreeChapter === "YES",
+        isPurchased:
+          resolvedFilters.isPurchased === "ALL" ? null : resolvedFilters.isPurchased === "YES",
         minPriceIrt,
         maxPriceIrt,
         tagsAny,

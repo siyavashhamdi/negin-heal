@@ -14,16 +14,21 @@ const END_USER_PRODUCT_TABS: ReadonlyArray<{ value: EndUserProductTab; label: st
 type EndUserProductFilterTabsProps = {
   readonly activeTab: EndUserProductTab;
   readonly onChange: (tab: EndUserProductTab) => void;
+  readonly hiddenTabs?: readonly EndUserProductTab[];
 };
 
 const EndUserProductFilterTabs = ({
   activeTab,
   onChange,
+  hiddenTabs = [],
 }: EndUserProductFilterTabsProps): ReactElement => {
+  const hiddenTabSet = new Set(hiddenTabs);
+  const visibleTabs = END_USER_PRODUCT_TABS.filter((tab) => !hiddenTabSet.has(tab.value));
+
   return (
     <SegmentFilterTabs
       activeTab={activeTab}
-      tabs={END_USER_PRODUCT_TABS}
+      tabs={visibleTabs}
       onChange={onChange}
       ariaLabel="دسته‌بندی دوره‌ها"
       pinned
