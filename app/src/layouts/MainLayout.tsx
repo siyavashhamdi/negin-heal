@@ -75,7 +75,7 @@ import { useAppShellNavPrefetch } from "../hooks/useAppShellNavPrefetch";
 import { useAppShellRoutePrefetch } from "../hooks/useAppShellRoutePrefetch";
 import { useAfterLogoutCacheCleanup } from "../hooks/useAfterLogoutCacheCleanup";
 import { isLogoutCacheCleanupInProgress } from "../lib/app-shell-nav-prefetch";
-import { prefetchAppShellNavRoute } from "../lib/app-shell-route-prefetch";
+import { warmAppShellNavTarget } from "../lib/app-shell-nav-warm";
 import { useHeaderNotificationPreview } from "./useHeaderNotificationPreview";
 import "./styles/MainLayout.scss";
 import AppTooltip from "../shared/AppTooltip";
@@ -282,6 +282,15 @@ export function MainLayout({
     () => filterAppShellNavItems(APP_SHELL_NAV_ITEMS, appShellNavContext),
     [appShellNavContext]
   );
+  const appShellNavDataContext = useMemo(
+    () => ({
+      roles,
+      isAuthenticated,
+      userId: authUser?.id ?? null,
+      isEndUser,
+    }),
+    [authUser?.id, isAuthenticated, isEndUser, roles]
+  );
 
   useAppShellNavPrefetch({
     authLoading,
@@ -295,6 +304,20 @@ export function MainLayout({
     roles,
     isAuthenticated,
   });
+
+  useEffect(() => {
+    if (!isProductDetailRoute(location.pathname)) {
+      return;
+    }
+
+    const productsItem = APP_SHELL_NAV_ITEMS.find((item) => item.id === "products");
+    if (!productsItem) {
+      return;
+    }
+
+    warmAppShellNavTarget(productsItem, appShellNavContext, appShellNavDataContext);
+  }, [appShellNavContext, appShellNavDataContext, location.pathname]);
+
   const brandTagline = usesPublicProductList
     ? t("layout.header.brand.publicTagline")
     : t("layout.header.brand.tagline");
@@ -1006,8 +1029,13 @@ export function MainLayout({
             <NavLink
               key={item.id}
               to={resolveAppShellNavPath(item, appShellNavContext)}
-              onMouseEnter={() => prefetchAppShellNavRoute(item, appShellNavContext)}
-              onTouchStart={() => prefetchAppShellNavRoute(item, appShellNavContext)}
+              end={item.exactPathMatch === true}
+              onMouseEnter={() =>
+                warmAppShellNavTarget(item, appShellNavContext, appShellNavDataContext)
+              }
+              onTouchStart={() =>
+                warmAppShellNavTarget(item, appShellNavContext, appShellNavDataContext)
+              }
               onClick={scrollToTopOnMobile}
               className={({ isActive }) =>
                 `main-layout__mobile-bottom-item${

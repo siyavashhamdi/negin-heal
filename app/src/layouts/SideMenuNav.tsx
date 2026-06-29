@@ -2,7 +2,7 @@ import MenuOpenRoundedIcon from "@mui/icons-material/MenuOpenRounded";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import { IconButton } from "@mui/material";
 import { NavLink } from "react-router-dom";
-import type { ReactElement } from "react";
+import { useMemo, type ReactElement } from "react";
 import { OverflowTooltip } from "../shared/OverflowTooltip";
 import { useAuth } from "../contexts/AuthContext";
 import { AppShellNavItemIcon } from "./AppShellNavItemIcon";
@@ -14,7 +14,7 @@ import {
 } from "./app-shell-nav-items";
 import "./styles/SideMenuNav.scss";
 import AppTooltip from "../shared/AppTooltip";
-import { prefetchAppShellNavRoute } from "../lib/app-shell-route-prefetch";
+import { warmAppShellNavTarget } from "../lib/app-shell-nav-warm";
 
 export type SideMenuIcon = (typeof APP_SHELL_NAV_ITEMS)[number]["Icon"];
 
@@ -48,10 +48,20 @@ export function SideMenuNav({
 }: SideMenuNavProps): ReactElement {
   const { user } = useAuth();
   const roles = user?.roles ?? [];
+  const isEndUser = roles.includes("END_USER");
   const navContext = {
     roles,
     isAuthenticated: Boolean(user),
   };
+  const navDataContext = useMemo(
+    () => ({
+      roles,
+      isAuthenticated: Boolean(user),
+      userId: user?.id ?? null,
+      isEndUser,
+    }),
+    [isEndUser, roles, user]
+  );
   const visibleItems = filterAppShellNavItems(APP_SHELL_NAV_ITEMS, navContext);
 
   return (
@@ -86,8 +96,9 @@ export function SideMenuNav({
             <NavLink
               key={item.id}
               to={itemPath}
-              onMouseEnter={() => prefetchAppShellNavRoute(item, navContext)}
-              onTouchStart={() => prefetchAppShellNavRoute(item, navContext)}
+              end={item.exactPathMatch === true}
+              onMouseEnter={() => warmAppShellNavTarget(item, navContext, navDataContext)}
+              onTouchStart={() => warmAppShellNavTarget(item, navContext, navDataContext)}
               className={({ isActive }) =>
                 `${itemClassName} ${isActive ? "side-menu-nav__item--active" : ""}`
               }

@@ -28,6 +28,8 @@ export type AppShellNavItemDefinition = {
   readonly requiresAuth?: boolean;
   readonly badge?: AppShellNavBadgeKind;
   readonly supportTicketsForSuperAdmin?: boolean;
+  /** Match only the exact nav path, not nested routes (e.g. /products/:id). */
+  readonly exactPathMatch?: boolean;
 };
 
 export const APP_SHELL_NAV_ITEMS: readonly AppShellNavItemDefinition[] = [
@@ -37,6 +39,7 @@ export const APP_SHELL_NAV_ITEMS: readonly AppShellNavItemDefinition[] = [
     path: APP_SHELL_ROUTES.products,
     Icon: MenuBookRoundedIcon,
     badge: "products",
+    exactPathMatch: true,
   },
   {
     id: "payments",

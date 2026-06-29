@@ -428,7 +428,8 @@ const ProductsIndex = (): ReactElement => {
     isPublicProductView ? USER_PRODUCT_LIST_QUERY : PRODUCT_LIST_QUERY,
     {
       variables: productListVariables,
-      fetchPolicy: resolveQueryFetchPolicy("network-only"),
+      fetchPolicy: resolveQueryFetchPolicy("cache-and-network"),
+      nextFetchPolicy: "cache-first",
       notifyOnNetworkStatusChange: true,
     }
   );

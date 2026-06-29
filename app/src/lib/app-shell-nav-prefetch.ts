@@ -248,6 +248,23 @@ export function buildAppShellNavPrefetchOperations(
   return visibleItems.flatMap((item) => buildPrefetchOperationsForItem(item, context));
 }
 
+/** Warms Apollo cache for a single nav target (e.g. on hover/touch before navigation). */
+export function prefetchAppShellNavItemData(
+  item: AppShellNavItemDefinition,
+  context: AppShellNavPrefetchContext
+): void {
+  if (shouldSkipPrefetch()) {
+    return;
+  }
+
+  const operations = buildPrefetchOperationsForItem(item, context);
+  if (operations.length === 0) {
+    return;
+  }
+
+  void Promise.all(operations.map(prefetchQuery));
+}
+
 export function scheduleAppShellNavPrefetch(context: AppShellNavPrefetchContext): void {
   if (shouldSkipPrefetch()) {
     return;
