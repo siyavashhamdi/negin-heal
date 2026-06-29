@@ -1,7 +1,7 @@
 import { useEffect, type ReactElement } from "react";
 import { Card, CardContent, CircularProgress, Stack, Typography } from "@mui/material";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { API_CONFIG } from "../../config/env";
+import { resolveApiBaseUrl } from "../../utils/apiBaseUrl.util";
 import {
   PRODUCT_ROUTE_ID_PARAM,
   PRODUCTS_ROUTE_PATH,
@@ -17,7 +17,7 @@ type ZarinPalVerificationResult = {
 };
 
 function getApiBaseUrl(): string {
-  return API_CONFIG.API_BASE_URL.replace(/\/$/, "");
+  return resolveApiBaseUrl();
 }
 
 function buildPaymentResultUrl(

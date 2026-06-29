@@ -9,24 +9,34 @@ export function isNativeCapacitorShell(): boolean {
 
 /**
  * Resolves the backend origin for HTTP/WebSocket API calls.
- * Native bundled shells use the configured production API host because the
- * WebView origin only serves local assets.
+ *
+ * In the browser, requests go to the current page origin so Vite (dev) or Nginx
+ * (prod) can proxy `/graphql` and `/api`. `VITE_API_BASE_URL` is still used as
+ * the Vite dev proxy target and as the API host in Capacitor native builds.
  */
 export function resolveApiBaseUrl(): string {
-  const configured = API_CONFIG.API_BASE_URL?.trim();
-  if (configured) {
-    return configured.replace(/\/$/, "");
-  }
+  if (isNativeCapacitorShell()) {
+    const configured = API_CONFIG.API_BASE_URL?.trim();
+    if (configured) {
+      return configured.replace(/\/$/, "");
+    }
 
-  const appUrl = resolveAppBaseUrl(API_CONFIG.APP_URL);
-  if (isNativeCapacitorShell() && appUrl) {
-    return appUrl;
+    const appUrl = resolveAppBaseUrl(API_CONFIG.APP_URL);
+    if (appUrl) {
+      return appUrl;
+    }
   }
 
   if (typeof window !== "undefined" && window.location.origin) {
     return window.location.origin;
   }
 
+  const configured = API_CONFIG.API_BASE_URL?.trim();
+  if (configured) {
+    return configured.replace(/\/$/, "");
+  }
+
+  const appUrl = resolveAppBaseUrl(API_CONFIG.APP_URL);
   return appUrl;
 }
 

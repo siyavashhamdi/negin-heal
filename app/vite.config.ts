@@ -36,6 +36,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
 
   const port = Number(env.VITE_PORT) || 8080;
+  const noRefresh = env.VITE_NO_REFRESH === "true";
   const apiTarget = env.VITE_API_BASE_URL || "http://127.0.0.1:5701";
   const allowedHosts = parseAllowedHosts(env.VITE_ALLOWED_HOSTS);
   const enamadReferer = buildEnamadReferer(apiTarget);
@@ -65,7 +66,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [
-      react(),
+      react({ fastRefresh: !noRefresh }),
       VitePWA({
         registerType: "prompt",
         includeAssets: ["logo.png", "icons/*.png", "fonts/byekan.ttf"],
@@ -121,6 +122,7 @@ export default defineConfig(({ mode }) => {
       port,
       strictPort: true,
       allowedHosts,
+      ...(noRefresh ? { hmr: false } : {}),
       ...(env.VITE_EXPOSE_VIA_NETWORK === "true" ? { host: "0.0.0.0" } : {}),
       proxy: {
         ...graphqlProxy,

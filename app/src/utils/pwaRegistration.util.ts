@@ -2,8 +2,19 @@ import { registerSW } from "virtual:pwa-register";
 
 const LEGACY_PUSH_SW_FILENAME = "push-sw.js";
 const SESSION_APP_UPDATE_RELOADING_KEY = "negin-heal:app-update-reloading";
+/**
+ * Marks the tab's initial load window. While unset, a waiting SW update for a
+ * returning visitor is applied silently (cold start). After it ends, updates
+ * show the banner only (mid-session) — never auto-refresh.
+ */
+const SESSION_INITIAL_LOAD_PHASE_KEY = "negin-heal:session-initial-load";
 /** Fallback when skipWaiting/activation does not reload within this window. */
 const APP_UPDATE_RELOAD_FALLBACK_MS = 4_000;
+/**
+ * After SW registration, allow the immediate update check to finish before
+ * ending the initial-load phase or treating a waiting worker as user-facing.
+ */
+const REGISTRATION_SETTLE_MS = 2_500;
 
 type NeedRefreshListener = () => void;
 type ApplyServiceWorkerUpdate = (reloadPage?: boolean) => Promise<void>;
@@ -12,6 +23,9 @@ let activeRegistration: ServiceWorkerRegistration | undefined;
 let applyServiceWorkerUpdate: ApplyServiceWorkerUpdate | undefined;
 let updateAvailablePending = false;
 let updateApplying = false;
+let isReturningVisitor = false;
+let initialRegistrationSettled = false;
+let ignoredWaitingWorker: ServiceWorker | null = null;
 const needRefreshListeners = new Set<NeedRefreshListener>();
 
 function getRegistrationScriptUrls(registration: ServiceWorkerRegistration): string[] {
@@ -40,11 +54,95 @@ function markReloadingForUpdate(): void {
   }
 }
 
-function notifyNeedRefresh(): void {
-  if (updateApplying) {
-    return;
+function isInitialLoadPhase(): boolean {
+  try {
+    return sessionStorage.getItem(SESSION_INITIAL_LOAD_PHASE_KEY) !== "done";
+  } catch {
+    return true;
+  }
+}
+
+function endInitialLoadPhase(): void {
+  try {
+    sessionStorage.setItem(SESSION_INITIAL_LOAD_PHASE_KEY, "done");
+  } catch {
+    // Best effort only.
+  }
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
+async function detectReturningVisitor(): Promise<boolean> {
+  if (!("serviceWorker" in navigator)) {
+    return false;
   }
 
+  if (navigator.serviceWorker.controller) {
+    return true;
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.getRegistration("/");
+    return registration?.active != null;
+  } catch {
+    return false;
+  }
+}
+
+async function resolveActiveRegistration(): Promise<ServiceWorkerRegistration | null> {
+  if (activeRegistration) {
+    return activeRegistration;
+  }
+
+  try {
+    return (await navigator.serviceWorker.getRegistration("/")) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * A real SW update: a newer worker is waiting while an older one is still active,
+ * and first-visit false positives are filtered out.
+ */
+function isEligibleWaitingUpdate(registration: ServiceWorkerRegistration): boolean {
+  if (!registration.waiting || !registration.active) {
+    return false;
+  }
+
+  if (isReturningVisitor) {
+    return true;
+  }
+
+  if (!initialRegistrationSettled) {
+    return false;
+  }
+
+  if (ignoredWaitingWorker && registration.waiting === ignoredWaitingWorker) {
+    return false;
+  }
+
+  return true;
+}
+
+function shouldShowUpdateBanner(registration: ServiceWorkerRegistration): boolean {
+  return isEligibleWaitingUpdate(registration) && !isInitialLoadPhase();
+}
+
+function shouldSilentlyAutoApply(registration: ServiceWorkerRegistration): boolean {
+  return (
+    isReturningVisitor &&
+    (isInitialLoadPhase() || !initialRegistrationSettled) &&
+    isEligibleWaitingUpdate(registration) &&
+    !readJustReloadedForUpdate()
+  );
+}
+
+function dispatchNeedRefresh(): void {
   if (needRefreshListeners.size === 0) {
     updateAvailablePending = true;
     return;
@@ -53,6 +151,85 @@ function notifyNeedRefresh(): void {
   for (const listener of needRefreshListeners) {
     listener();
   }
+}
+
+async function handleServiceWorkerUpdate(): Promise<void> {
+  if (updateApplying) {
+    return;
+  }
+
+  const registration = await resolveActiveRegistration();
+  if (!registration || !isEligibleWaitingUpdate(registration)) {
+    return;
+  }
+
+  if (shouldSilentlyAutoApply(registration)) {
+    endInitialLoadPhase();
+    applyAppUpdate();
+    return;
+  }
+
+  if (shouldShowUpdateBanner(registration)) {
+    dispatchNeedRefresh();
+  }
+}
+
+async function waitForRegistrationSettle(registration: ServiceWorkerRegistration): Promise<void> {
+  await delay(REGISTRATION_SETTLE_MS);
+
+  const installDeadline = Date.now() + REGISTRATION_SETTLE_MS;
+  while (registration.installing && Date.now() < installDeadline) {
+    await delay(250);
+  }
+}
+
+async function waitForInstallingWorker(
+  registration: ServiceWorkerRegistration,
+  maxMs: number,
+): Promise<void> {
+  const deadline = Date.now() + maxMs;
+  while (registration.installing && Date.now() < deadline) {
+    await delay(250);
+  }
+}
+
+async function completeInitialRegistration(
+  registration: ServiceWorkerRegistration,
+): Promise<void> {
+  if (isReturningVisitor) {
+    await waitForRegistrationSettle(registration);
+
+    try {
+      await registration.update();
+    } catch {
+      // Offline or transient errors — continue with any already-waiting worker.
+    }
+
+    await waitForInstallingWorker(registration, REGISTRATION_SETTLE_MS * 2);
+
+    if (!updateApplying && isInitialLoadPhase()) {
+      await handleServiceWorkerUpdate();
+      if (updateApplying) {
+        return;
+      }
+    }
+
+    initialRegistrationSettled = true;
+    endInitialLoadPhase();
+    return;
+  }
+
+  try {
+    await navigator.serviceWorker.ready;
+  } catch {
+    // Continue to the settle window even when ready rejects.
+  }
+
+  await waitForRegistrationSettle(registration);
+
+  ignoredWaitingWorker = registration.waiting ?? null;
+  initialRegistrationSettled = true;
+  endInitialLoadPhase();
 }
 
 async function unregisterLegacyPushServiceWorkers(): Promise<void> {
@@ -66,10 +243,10 @@ async function unregisterLegacyPushServiceWorkers(): Promise<void> {
     registrations
       .filter((registration) =>
         getRegistrationScriptUrls(registration).some((scriptUrl) =>
-          scriptUrl.includes(LEGACY_PUSH_SW_FILENAME)
-        )
+          scriptUrl.includes(LEGACY_PUSH_SW_FILENAME),
+        ),
       )
-      .map((registration) => registration.unregister())
+      .map((registration) => registration.unregister()),
   );
 }
 
@@ -84,8 +261,13 @@ export function subscribeAppUpdateAvailable(listener: NeedRefreshListener): () =
   }
 
   if (updateAvailablePending) {
-    listener();
     updateAvailablePending = false;
+    void (async () => {
+      const registration = await resolveActiveRegistration();
+      if (registration && shouldShowUpdateBanner(registration)) {
+        listener();
+      }
+    })();
   }
 
   return () => {
@@ -131,21 +313,19 @@ export function applyAppUpdate(): void {
 }
 
 function watchForWaitingServiceWorker(registration: ServiceWorkerRegistration): void {
-  const notifyIfWaiting = (): void => {
-    if (registration.waiting) {
-      notifyNeedRefresh();
-    }
-  };
-
-  notifyIfWaiting();
-
   registration.addEventListener("updatefound", () => {
     const installingWorker = registration.installing;
     if (!installingWorker) {
       return;
     }
 
-    installingWorker.addEventListener("statechange", notifyIfWaiting);
+    installingWorker.addEventListener("statechange", () => {
+      if (installingWorker.state !== "installed" || !registration.waiting) {
+        return;
+      }
+
+      void handleServiceWorkerUpdate();
+    });
   });
 }
 
@@ -154,16 +334,20 @@ export function registerPwaServiceWorker(): void {
     return;
   }
 
-  void unregisterLegacyPushServiceWorkers().finally(() => {
+  void (async () => {
+    isReturningVisitor = await detectReturningVisitor();
+    await unregisterLegacyPushServiceWorkers();
+
     applyServiceWorkerUpdate = registerSW({
       immediate: true,
       onNeedRefresh() {
-        notifyNeedRefresh();
+        void handleServiceWorkerUpdate();
       },
       onRegistered(registration) {
         if (registration) {
           activeRegistration = registration;
           watchForWaitingServiceWorker(registration);
+          void completeInitialRegistration(registration);
           window.dispatchEvent(new Event("negin-heal:sw-ready"));
         }
       },
@@ -171,7 +355,7 @@ export function registerPwaServiceWorker(): void {
         console.error("[PWA] Service worker registration failed:", error);
       },
     });
-  });
+  })();
 }
 
 export async function getPwaServiceWorkerRegistration(): Promise<ServiceWorkerRegistration | null> {
