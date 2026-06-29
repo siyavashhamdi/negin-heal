@@ -22,6 +22,7 @@ import {
   showErrorIfNotQueued,
   extractGraphQLErrorMessage,
   resolveErrorMessageFromCode,
+  isSuppressedUserFacingErrorMessage,
 } from "../../utilities/graphql-error.util";
 import { getFileIdFromAccessUrl } from "../../utils/fileAccessUrl.util";
 import { uploadFile } from "../../utils/fileUpload.util";
@@ -353,14 +354,20 @@ export function ProductPurchaseDialog({
 
       if (error) {
         setAppliedCoupon(null);
-        setCouponError(extractGraphQLErrorMessage(error));
+        const message = extractGraphQLErrorMessage(error);
+        setCouponError(
+          message.trim() && !isSuppressedUserFacingErrorMessage(message) ? message : null
+        );
         return;
       }
 
       const result = data?.couponValidate;
       if (!result?.isValid) {
         setAppliedCoupon(null);
-        setCouponError(resolveErrorMessageFromCode(result?.message || "COUPON_INVALID"));
+        const message = resolveErrorMessageFromCode(result?.message || "COUPON_INVALID");
+        setCouponError(
+          message.trim() && !isSuppressedUserFacingErrorMessage(message) ? message : null
+        );
         return;
       }
 

@@ -20,6 +20,7 @@ import {
 } from "@mui/material";
 import type { SlideProps } from "@mui/material/Slide";
 import { SNACKBAR_AUTO_HIDE_DURATION_MS } from "../constants/snackbar.constants";
+import { isSuppressedUserFacingErrorMessage } from "../utilities/graphql-error.util";
 import {
   getSnackbarFilledAlertSx,
   getSnackbarFilledAlertTone,
@@ -128,6 +129,10 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps): ReactElem
    */
   const showError = useCallback(
     (message: SnackbarMessageContent, duration: number = SNACKBAR_AUTO_HIDE_DURATION_MS) => {
+      if (typeof message === "string" && isSuppressedUserFacingErrorMessage(message)) {
+        return;
+      }
+
       showSnackbar(message, "error", duration);
     },
     [showSnackbar]

@@ -194,9 +194,15 @@ const GENERIC_EXCEPTION_CODES = new Set(["INTERNAL_SERVER_ERROR", "UNKNOWN_ERROR
 
 const SUPPRESSED_USER_FACING_EXCEPTION_CODES = new Set([
   "INTERNAL_SERVER_ERROR",
+  "UNKNOWN_ERROR_OCCURRED",
   "FORBIDDEN",
   "UNAUTHENTICATED",
 ]);
+
+const SUPPRESSED_USER_FACING_I18N_KEYS = [
+  "errors.network.failedToFetch",
+  "errors.network.serverError",
+] as const;
 
 const GENERIC_BACKEND_ERROR_MESSAGES = new Set([
   "An internal server error occurred!",
@@ -216,11 +222,58 @@ function isGenericBackendErrorMessage(message: string): boolean {
   return GENERIC_BACKEND_ERROR_MESSAGES.has(normalized);
 }
 
+function translateUserFacingError(key: string): string {
+  if (SUPPRESSED_USER_FACING_I18N_KEYS.includes(key as (typeof SUPPRESSED_USER_FACING_I18N_KEYS)[number])) {
+    return "";
+  }
+
+  return i18n.t(key);
+}
+
+/** True when an error message should be logged/handled but not shown in the UI. */
+export function isSuppressedUserFacingErrorMessage(message: string): boolean {
+  const normalized = message.trim();
+  if (!normalized) {
+    return true;
+  }
+
+  if (isGenericBackendErrorMessage(normalized) || looksLikeUnreachableNetwork(normalized)) {
+    return true;
+  }
+
+  for (const key of SUPPRESSED_USER_FACING_I18N_KEYS) {
+    const translated = i18n.t(key, { defaultValue: "" }).trim();
+    if (translated && normalized === translated) {
+      return true;
+    }
+  }
+
+  for (const code of SUPPRESSED_USER_FACING_EXCEPTION_CODES) {
+    const translated = i18n.t(`errors.exceptions.${code}`, { defaultValue: "" }).trim();
+    if (translated && normalized === translated) {
+      return true;
+    }
+  }
+
+  if (
+    normalized.startsWith("ارتباط برقرار نشد") ||
+    normalized.startsWith("خطای داخلی سرور")
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 function getExceptionTranslation(
   code: string | undefined,
   params?: Record<string, unknown>
 ): string {
   if (!code) {
+    return "";
+  }
+
+  if (SUPPRESSED_USER_FACING_EXCEPTION_CODES.has(code)) {
     return "";
   }
 
@@ -382,6 +435,10 @@ function resolveGraphQLErrorFieldMessage(error?: RawGraphQLErrorItem): string {
     }
   }
 
+  if (isGenericBackendErrorMessage(backendMessage)) {
+    return "";
+  }
+
   return i18n.t("errors.unknown");
 }
 
@@ -421,7 +478,8 @@ export const extractGraphQLErrorMessage = (error: unknown): string => {
   if (CombinedGraphQLErrors.is(error)) {
     const first = error.errors[0];
     if (!first) {
-      return error.message || i18n.t("errors.unknown");
+      const fallback = error.message || i18n.t("errors.unknown");
+      return isSuppressedUserFacingErrorMessage(fallback) ? "" : fallback;
     }
     const ge = first as {
       readonly message: string;
@@ -455,14 +513,14 @@ export const extractGraphQLErrorMessage = (error: unknown): string => {
   if (isLegacyApolloErrorShape(error)) {
     const topLevelMessage = error.message || "";
     if (looksLikeUnreachableNetwork(topLevelMessage)) {
-      return i18n.t("errors.network.failedToFetch");
+      return translateUserFacingError("errors.network.failedToFetch");
     }
 
     if (error.networkError) {
       const networkError = error.networkError;
       const networkMessage = networkError.message || "";
       if (looksLikeUnreachableNetwork(networkMessage)) {
-        return i18n.t("errors.network.failedToFetch");
+        return translateUserFacingError("errors.network.failedToFetch");
       }
 
       if ("statusCode" in networkError) {
@@ -477,10 +535,11 @@ export const extractGraphQLErrorMessage = (error: unknown): string => {
           return i18n.t("errors.network.notFound");
         }
         if (statusCode === 500) {
-          return i18n.t("errors.network.serverError");
+          return translateUserFacingError("errors.network.serverError");
         }
       }
-      return networkError.message || i18n.t("errors.network.message");
+      const rawNetworkMessage = networkError.message || translateUserFacingError("errors.network.message");
+      return isSuppressedUserFacingErrorMessage(rawNetworkMessage) ? "" : rawNetworkMessage;
     }
 
     const first = error.graphQLErrors?.[0];
@@ -506,10 +565,11 @@ export const extractGraphQLErrorMessage = (error: unknown): string => {
     errorMessage = (error as { message: string }).message;
   }
   if (looksLikeUnreachableNetwork(errorMessage)) {
-    return i18n.t("errors.network.failedToFetch");
+    return translateUserFacingError("errors.network.failedToFetch");
   }
 
-  return i18n.t("errors.unknown");
+  const unknownMessage = i18n.t("errors.unknown");
+  return isSuppressedUserFacingErrorMessage(unknownMessage) ? "" : unknownMessage;
 };
 
 export function resolveErrorMessageFromCode(
@@ -535,7 +595,7 @@ export function showErrorIfNotQueued(
 ): void {
   if (!isApolloHandledError(error)) {
     const message = extractGraphQLErrorMessage(error);
-    if (message.trim()) {
+    if (message.trim() && !isSuppressedUserFacingErrorMessage(message)) {
       showError(message);
     }
   }

@@ -3,6 +3,8 @@
  * for {@link ApolloErrorHandler} to drain on an interval.
  */
 
+import { isSuppressedUserFacingErrorMessage } from "../utilities/graphql-error.util";
+
 export interface QueuedApolloError {
   readonly message: string;
   readonly timestamp: number;
@@ -11,6 +13,10 @@ export interface QueuedApolloError {
 const errorQueue: QueuedApolloError[] = [];
 
 export const queueApolloError = (message: string): void => {
+  if (!message.trim() || isSuppressedUserFacingErrorMessage(message)) {
+    return;
+  }
+
   errorQueue.push({ message, timestamp: Date.now() });
 };
 
