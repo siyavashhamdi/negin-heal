@@ -36,8 +36,7 @@ final class LauncherBadgeHelper {
     ) {
         ensureNotificationChannel(context);
 
-        String resolvedTitle =
-            title == null || title.trim().isEmpty() ? "نگین هیل" : title.trim();
+        String resolvedTitle = "نگین هیل";
         String resolvedBody =
             body == null || body.trim().isEmpty()
                 ? "اعلان جدیدی برای شما ثبت شد."

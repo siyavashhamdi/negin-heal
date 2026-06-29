@@ -61,3 +61,6 @@ export const isLandingRoute = (pathname: string): boolean =>
 
 export const isProductDetailRoute = (pathname: string): boolean =>
   isProductDetailRoutePathname(normalizeShellPathname(pathname));
+
+export const isNotificationsRoute = (pathname: string): boolean =>
+  normalizeShellPathname(pathname) === APP_SHELL_ROUTES.notifications;

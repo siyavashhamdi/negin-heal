@@ -1,22 +1,10 @@
-const DEFAULT_PUSH_TITLE = "نگین هیل";
+export const DEFAULT_PUSH_TITLE = "نگین هیل";
 
 export function resolveWebPushTitle(
-  subscriptionPayload: Record<string, unknown> | null | undefined,
-  fallbackTitle?: string | null,
+  _subscriptionPayload?: Record<string, unknown> | null,
+  _fallbackTitle?: string | null,
 ): string {
-  const payloadTitle =
-    typeof subscriptionPayload?.title === "string"
-      ? subscriptionPayload.title.trim()
-      : "";
-
-  if (payloadTitle) {
-    return payloadTitle;
-  }
-
-  const fallback =
-    typeof fallbackTitle === "string" ? fallbackTitle.trim() : "";
-
-  return fallback || DEFAULT_PUSH_TITLE;
+  return DEFAULT_PUSH_TITLE;
 }
 
 export function resolveWebPushBody(

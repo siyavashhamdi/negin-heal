@@ -220,6 +220,19 @@ const REVIEW_STATUS_OPTIONS: readonly UserProductPurchaseStatus[] = [
   "CANCELLED",
 ];
 
+const ALL_REVIEW_STATUS_OPTIONS: readonly UserProductPurchaseStatus[] = [
+  "PENDING",
+  "PENDING_GATEWAY",
+  "PAID",
+  "FAILED",
+  "REFUNDED",
+  "CANCELLED",
+];
+
+const NON_SELECTABLE_REVIEW_STATUS_OPTIONS: ReadonlySet<UserProductPurchaseStatus> = new Set([
+  "PENDING_GATEWAY",
+]);
+
 const PAYMENT_METHOD_LABEL: Record<UserProductPaymentMethod, string> = {
   GATEWAY: "درگاه",
   CARD_TO_CARD: "کارت به کارت",
@@ -988,6 +1001,10 @@ const PaymentsList = (): ReactElement => {
       return;
     }
 
+    if (NON_SELECTABLE_REVIEW_STATUS_OPTIONS.has(nextStatus)) {
+      return;
+    }
+
     if (reviewStatus === "PAID" && nextStatus !== "PAID") {
       setPendingPaidStatusChange(nextStatus);
       navigate(`${APP_SHELL_ROUTES.payments}/${reviewPaymentId}/confirm`);
@@ -1685,8 +1702,12 @@ const PaymentsList = (): ReactElement => {
                       handleReviewStatusChange(event.target.value as UserProductPurchaseStatus)
                     }
                   >
-                    {REVIEW_STATUS_OPTIONS.map((value) => (
-                      <MenuItem key={value} value={value}>
+                    {ALL_REVIEW_STATUS_OPTIONS.map((value) => (
+                      <MenuItem
+                        key={value}
+                        value={value}
+                        disabled={NON_SELECTABLE_REVIEW_STATUS_OPTIONS.has(value)}
+                      >
                         {STATUS_LABEL[value]}
                       </MenuItem>
                     ))}

@@ -1,4 +1,5 @@
 import { buildPushNotificationUrl } from "./build-push-notification-url.util";
+import { DEFAULT_PUSH_TITLE } from "./resolve-web-push-content.util";
 
 export function buildWebPushPayloadJson(input: {
   title: string;
@@ -20,7 +21,7 @@ export function buildWebPushPayloadJson(input: {
       : input.body;
 
   const record: Record<string, unknown> = {
-    title: input.title,
+    title: DEFAULT_PUSH_TITLE,
     body: input.body,
     inAppTitle,
     description,

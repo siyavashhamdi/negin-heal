@@ -34,7 +34,6 @@ import {
   resolveStoredUserDisplayName,
 } from "../utils/storedUser.util";
 import { usePushNotificationOpenPresentation } from "../hooks/usePushNotificationOpenPresentation";
-import { useSnackbar } from "../hooks/useSnackbar";
 import { useTranslation } from "../hooks/useTranslation";
 import {
   GENERAL_NOTIFICATION_MESSAGE_TYPES,
@@ -79,6 +78,7 @@ import { warmAppShellNavTarget } from "../lib/app-shell-nav-warm";
 import { useHeaderNotificationPreview } from "./useHeaderNotificationPreview";
 import "./styles/MainLayout.scss";
 import AppTooltip from "../shared/AppTooltip";
+import { PUSH_NOTIFICATION_TITLE } from "../constants/push-notification-open.constants";
 
 const POPOVER_ANCHOR_ORIGIN = { vertical: "bottom", horizontal: "left" } as const;
 const POPOVER_TRANSFORM_ORIGIN = { vertical: "top", horizontal: "left" } as const;
@@ -104,9 +104,18 @@ type NotificationPayload = Partial<TitleDescItem> & {
   readonly messageType?: GeneralNotificationMessageType;
   readonly isPushNotification?: boolean;
   readonly mode?: string;
+  readonly source?: string;
   readonly productId?: string;
   readonly chapterKey?: string;
   readonly purchaseStatus?: string;
+  readonly action?: {
+    readonly label?: string;
+    readonly href?: string;
+    readonly url?: string;
+    readonly to?: string;
+  };
+  readonly actionLabel?: string;
+  readonly actionUrl?: string;
 };
 type GeneralUpdatePopupMode = "info" | "success" | "warning" | "error";
 type GeneralUpdatePopupAction = {
@@ -145,25 +154,6 @@ function asNotificationPayload(value: unknown): NotificationPayload | null {
 }
 
 function resolvePopupMode(value: unknown): GeneralUpdatePopupMode {
-  if (typeof value !== "string") {
-    return "info";
-  }
-
-  switch (value.toUpperCase()) {
-    case "SUCCESS":
-      return "success";
-    case "WARN":
-    case "WARNING":
-      return "warning";
-    case "ERROR":
-      return "error";
-    case "INFO":
-    default:
-      return "info";
-  }
-}
-
-function resolveSnackbarSeverity(value: unknown): "info" | "success" | "warning" | "error" {
   if (typeof value !== "string") {
     return "info";
   }
@@ -232,7 +222,6 @@ export function MainLayout({
   showFooter = true,
 }: MainLayoutProps): ReactElement {
   const location = useLocation();
-  const { showSnackbar } = useSnackbar();
   const { t } = useTranslation();
   const { mode, toggleTheme } = useThemeMode();
   const { logout, user: authUser, isLoading: authLoading } = useAuth();
@@ -387,12 +376,13 @@ export function MainLayout({
       const payload = asNotificationPayload(event.payload);
       const incomingTitle =
         typeof payload?.title === "string" && payload.title.trim().length > 0
-          ? payload.title
+          ? payload.title.trim()
           : undefined;
       const incomingDescription =
         typeof payload?.description === "string" && payload.description.trim().length > 0
-          ? payload.description
+          ? payload.description.trim()
           : "رویداد جدیدی برای حساب شما ثبت شد.";
+      const displayTitle = incomingTitle ?? incomingDescription;
       const incomingTimeLabel = formatGeneralUpdateTimeLabel(event.createdAt);
       const popupId = event.targetId || `${event.updateType}-${event.createdAt}`;
       const popupMode = resolvePopupMode(payload?.mode);
@@ -402,7 +392,7 @@ export function MainLayout({
 
       upsertLiveHeaderNotification({
         id: popupId,
-        title: incomingTitle ?? "اعلان جدید",
+        title: displayTitle,
         description: incomingDescription,
         timeLabel: incomingTimeLabel,
       });
@@ -419,34 +409,24 @@ export function MainLayout({
 
       void deliverNotificationPushIfEnabled(
         {
-          title: incomingTitle ?? "اعلان جدید",
+          title: PUSH_NOTIFICATION_TITLE,
           body: incomingDescription,
           tag: popupId,
         },
         payload
       );
 
-      if (!messageType) {
-        return;
+      if (messageType === GENERAL_NOTIFICATION_MESSAGE_TYPES.POPUP) {
+        setGeneralUpdatePopup({
+          id: popupId,
+          title: incomingTitle,
+          description: incomingDescription,
+          mode: popupMode,
+          action,
+        });
       }
-
-      if (messageType === GENERAL_NOTIFICATION_MESSAGE_TYPES.SNACKBAR) {
-        showSnackbar(
-          incomingTitle ? `${incomingTitle}: ${incomingDescription}` : incomingDescription,
-          resolveSnackbarSeverity(payload?.mode)
-        );
-        return;
-      }
-
-      setGeneralUpdatePopup({
-        id: popupId,
-        title: incomingTitle,
-        description: incomingDescription,
-        mode: popupMode,
-        action,
-      });
     },
-    [showSnackbar, upsertLiveHeaderNotification],
+    [upsertLiveHeaderNotification],
   );
 
   useEffect(() => {

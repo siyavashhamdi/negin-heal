@@ -1,4 +1,5 @@
 import { buildPushNotificationUrl } from "./build-push-notification-url.util";
+import { DEFAULT_PUSH_TITLE } from "./resolve-web-push-content.util";
 
 export const FCM_MESSAGE_TYPE_BADGE_SYNC = "badge_sync";
 export const FCM_MESSAGE_TYPE_NOTIFICATION = "notification";
@@ -21,7 +22,7 @@ export function buildFcmNotificationData(input: {
 }): Record<string, string> {
   const data: Record<string, string> = {
     type: FCM_MESSAGE_TYPE_NOTIFICATION,
-    title: input.title,
+    title: DEFAULT_PUSH_TITLE,
     body: input.body,
     url: input.url ?? buildPushNotificationUrl(input.payload),
     tag: input.tag ?? input.notificationId ?? "negin-heal-push",

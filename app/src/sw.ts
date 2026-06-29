@@ -12,6 +12,7 @@ import { NavigationRoute, registerRoute } from "workbox-routing";
 import {
   CONSUME_PUSH_OPEN_MESSAGE_TYPE,
   PUSH_NOTIFICATION_OPEN_MESSAGE_TYPE,
+  PUSH_NOTIFICATION_TITLE,
   PUSH_OPEN_CACHE_KEY,
   PUSH_OPEN_CACHE_NAME,
 } from "./constants/push-notification-open.constants";
@@ -194,7 +195,7 @@ self.addEventListener("activate", (event: ExtendableEvent) => {
 
 self.addEventListener("push", (event: PushEvent) => {
   let payload: PushPayload = {
-    title: "نگین هیل",
+    title: PUSH_NOTIFICATION_TITLE,
     body: "اعلان جدیدی برای شما ثبت شد.",
     url: "/",
     tag: "negin-heal-push",
@@ -219,14 +220,14 @@ self.addEventListener("push", (event: PushEvent) => {
     }
   }
 
-  const showNotificationPromise = self.registration.showNotification(payload.title, {
+  const showNotificationPromise = self.registration.showNotification(PUSH_NOTIFICATION_TITLE, {
     body: payload.body,
     icon: NOTIFICATION_ICON,
     badge: NOTIFICATION_ICON,
     tag: payload.tag || "negin-heal-push",
     data: {
       url: payload.url || "/",
-      title: payload.title,
+      title: PUSH_NOTIFICATION_TITLE,
       body: payload.body,
       inAppTitle: payload.inAppTitle,
       description: payload.description ?? payload.body,

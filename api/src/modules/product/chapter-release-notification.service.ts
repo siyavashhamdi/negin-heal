@@ -257,9 +257,9 @@ export class ChapterReleaseNotificationService {
       ...notificationPayload,
       messageType: GlobalAnouncementMessageType.SNACKBAR,
       isPushNotification: true,
-      title: null,
+      title,
       description: message,
-      mode: NotificationMode.INFO,
+      mode: NotificationMode.SUCCESS,
     };
 
     const claimed = await this.claimChapterNotificationSlot(

@@ -21,6 +21,7 @@ import { NativePushSubscriptionSync } from "./components/NativePushSubscriptionS
 import { LauncherBadgeSync } from "./components/LauncherBadgeSync";
 import { NativeBackButtonBridge } from "./components/NativeBackButtonBridge";
 import { PushNotificationOpenHost } from "./components/PushNotificationOpenHost";
+import { NotificationLiveBanner } from "./components/NotificationLiveBanner";
 import { MainLayout } from "./layouts/MainLayout";
 import { DashboardAppRoutes } from "./routing/DashboardAppRoutes";
 import { APP_SHELL_ROUTES, isStandaloneShellRoute } from "./routing/app-shell-routes";
@@ -59,6 +60,7 @@ const ThemedAppTree = (): ReactElement => {
         <ApolloErrorHandler />
         <AppUpdatePrompt />
         <OfflineModeBanner />
+        <NotificationLiveBanner />
         <LoadingBar />
         <AppShell />
       </SnackbarProvider>
