@@ -1,6 +1,6 @@
 {
   "name": "negin-heal-android",
-  "version": "1.0.15",
+  "version": "2.0.15",
   "private": true,
   "description": "Capacitor Android shell for https://neginheal.ir/",
   "scripts": {

@@ -19,6 +19,7 @@ build
 *.mjs
 !scripts/generate-pwa-icons.mjs
 !scripts/generate-sitemap.mjs
+!src/routing/product-route-path.constants.mjs
 
 # Logs
 logs
