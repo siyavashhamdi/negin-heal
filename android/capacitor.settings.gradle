@@ -5,9 +5,6 @@ project(':capacitor-android').projectDir = new File('../app/node_modules/@capaci
 include ':capacitor-app'
 project(':capacitor-app').projectDir = new File('../app/node_modules/@capacitor/app/android')
 
-include ':capacitor-browser'
-project(':capacitor-browser').projectDir = new File('../app/node_modules/@capacitor/browser/android')
-
 include ':capacitor-network'
 project(':capacitor-network').projectDir = new File('../app/node_modules/@capacitor/network/android')
 
@@ -19,6 +16,3 @@ project(':capacitor-splash-screen').projectDir = new File('../app/node_modules/@
 
 include ':capacitor-status-bar'
 project(':capacitor-status-bar').projectDir = new File('../app/node_modules/@capacitor/status-bar/android')
-
-include ':capawesome-capacitor-badge'
-project(':capawesome-capacitor-badge').projectDir = new File('../app/node_modules/@capawesome/capacitor-badge/android')

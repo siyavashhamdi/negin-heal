@@ -1,6 +1,12 @@
-import { Browser } from "@capacitor/browser";
+import { registerPlugin } from "@capacitor/core";
 
 import { isNativeAndroidShell } from "./nativePlatform.util";
+
+interface ExternalUrlPlugin {
+  open(options: { url: string }): Promise<void>;
+}
+
+const ExternalUrl = registerPlugin<ExternalUrlPlugin>("ExternalUrl");
 
 /**
  * Opens a blank tab while the user gesture is still active.
@@ -20,7 +26,7 @@ export async function openExternalUrlTab(
 ): Promise<boolean> {
   if (isNativeAndroidShell()) {
     try {
-      await Browser.open({ url });
+      await ExternalUrl.open({ url });
       return true;
     } catch {
       return false;

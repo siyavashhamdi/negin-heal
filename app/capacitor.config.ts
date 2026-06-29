@@ -42,10 +42,6 @@ const config: CapacitorConfig = {
       backgroundColor: PWA_THEME_COLOR,
       overlaysWebView: false,
     },
-    Badge: {
-      persist: true,
-      autoClear: false,
-    },
     PushNotifications: {
       presentationOptions: ["badge", "sound", "alert"],
     },

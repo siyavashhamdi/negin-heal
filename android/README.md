@@ -78,6 +78,7 @@ From `app/`:
 2. Run `npm run build` in `android/`
 3. Run `npm run verify:release`
 4. Upload **`app-release-signed.apk`** or **`app-release-bundle.aab`** to Cafe Bazaar
+5. Upload **`store_icon.png`** (512×512 PNG) in the Bazaar developer panel under app details
 
 ## Cafe Bazaar requirements
 
@@ -86,7 +87,7 @@ From `app/`:
 | `targetSdkVersion` | **35** (pinned in `variables.gradle`) |
 | `minSdkVersion` | **23** |
 | `compileSdkVersion` | **35** |
-| Permissions | `INTERNET` only |
+| Permissions | `INTERNET`, `POST_NOTIFICATIONS`, plus standard FCM/network permissions only (no SMS, Accessibility, or launcher badge permissions) |
 | Launcher activity | `neginheal.app.MainActivity` |
 
 Before upload:
@@ -94,6 +95,8 @@ Before upload:
 ```bash
 npm run verify:release
 ```
+
+`verify:release` also checks for patterns that trigger Bazaar antivirus **HiddenApp** flags (translucent browser activity, profile-install receiver, nested APK assets).
 
 Confirm target SDK:
 
@@ -114,7 +117,7 @@ Ensure your Android SDK has `platforms;android-35` and `build-tools;35.0.1` inst
 - API requests target `https://neginheal.ir` (set at build time via `VITE_API_BASE_URL`)
 - Optional remote-shell dev mode: `CAPACITOR_USE_REMOTE_SERVER=1` loads from `server.url` instead
 - Native shell bootstrap: `app/src/native/capacitorBootstrap.ts` (status bar, back button, splash, FCM registration)
-- Launcher icon badge sync: `@capawesome/capacitor-badge` + FCM data messages from the API
+- Launcher icon badge sync: native notification badge channel + FCM data messages from the API
 - Icons are generated into `android/app/src/main/res/` by `app/scripts/generate-pwa-icons.mjs`
 
 ## Firebase setup (required for launcher badge + native push while app is closed)

@@ -19,6 +19,77 @@ fail() {
   exit 1
 }
 
+check_sensitive_permissions() {
+  local file="$1"
+  local badging
+  badging="$("${AAPT2}" dump badging "${file}")"
+
+  local blocked_permissions=(
+    "android.permission.READ_SMS"
+    "android.permission.RECEIVE_SMS"
+    "android.permission.SEND_SMS"
+    "android.permission.BIND_ACCESSIBILITY_SERVICE"
+    "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+    "com.sec.android.provider.badge.permission.READ"
+    "com.huawei.android.launcher.permission.READ_SETTINGS"
+    "com.huawei.android.launcher.permission.WRITE_SETTINGS"
+    "com.oppo.launcher.permission.READ_SETTINGS"
+    "com.oppo.launcher.permission.WRITE_SETTINGS"
+    "com.htc.launcher.permission.READ_SETTINGS"
+  )
+
+  local permission
+  for permission in "${blocked_permissions[@]}"; do
+    if printf '%s\n' "${badging}" | grep -q "uses-permission: name='${permission}'"; then
+      fail "Sensitive permission declared in ${file}: ${permission}"
+    fi
+  done
+
+  echo "  sensitive permissions: PASS"
+}
+
+check_launcher_icons() {
+  local file="$1"
+  local resources
+  resources="$("${AAPT2}" dump resources "${file}" 2>&1)"
+
+  printf '%s\n' "${resources}" | grep -q "mipmap/ic_launcher" || fail "Missing mipmap/ic_launcher in ${file}"
+  printf '%s\n' "${resources}" | grep -q "mipmap/ic_launcher_foreground" || fail "Missing mipmap/ic_launcher_foreground in ${file}"
+  printf '%s\n' "${resources}" | grep -q "color/ic_launcher_background" || fail "Missing color/ic_launcher_background in ${file}"
+
+  if printf '%s\n' "${resources}" | grep -q "drawable/ic_launcher_background"; then
+    fail "Capacitor default drawable/ic_launcher_background is still packaged in ${file}"
+  fi
+
+  echo "  launcher icons: PASS"
+}
+
+check_hidden_app_signals() {
+  local file="$1"
+  local manifest
+  manifest="$("${AAPT2}" dump xmltree --file AndroidManifest.xml "${file}" 2>&1)"
+
+  if printf '%s\n' "${manifest}" | grep -q "BrowserControllerActivity"; then
+    fail "Translucent BrowserControllerActivity still present in ${file}"
+  fi
+
+  if printf '%s\n' "${manifest}" | grep -q "ProfileInstallReceiver"; then
+    fail "ProfileInstallReceiver still present in ${file}"
+  fi
+
+  if unzip -l "${file}" | grep -qE "assets/.*\.apk$"; then
+    fail "Nested APK detected in ${file} assets"
+  fi
+
+  local launcher_count
+  launcher_count="$(printf '%s\n' "${manifest}" | grep -c "android.intent.category.LAUNCHER" || true)"
+  if [ "${launcher_count}" -ne 1 ]; then
+    fail "Expected exactly 1 LAUNCHER intent in ${file}, found ${launcher_count}"
+  fi
+
+  echo "  hidden-app signals: PASS"
+}
+
 check_apk() {
   local file="$1"
   [ -f "${file}" ] || fail "APK not found: ${file}"
@@ -46,6 +117,10 @@ check_apk() {
   if [[ "${launchable_activity}" != "neginheal.app.MainActivity" ]]; then
     fail "Launcher activity is '${launchable_activity:-unknown}'; expected neginheal.app.MainActivity in ${file}"
   fi
+
+  check_sensitive_permissions "${file}"
+  check_launcher_icons "${file}"
+  check_hidden_app_signals "${file}"
 
   echo "  status: PASS"
 }

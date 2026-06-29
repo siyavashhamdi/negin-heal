@@ -12,7 +12,7 @@ const iconsDir = path.join(publicDir, "icons");
 const androidResDir = path.join(repoRoot, "android/app/src/main/res");
 
 const THEME_COLOR = { r: 202, g: 184, b: 222, alpha: 1 };
-const LAUNCHER_BACKGROUND = { r: 255, g: 255, b: 255, alpha: 1 };
+const LAUNCHER_BACKGROUND = THEME_COLOR;
 const PNG_OPTIONS = { compressionLevel: 9 };
 
 const ANDROID_LAUNCHER_SIZES = {
@@ -71,7 +71,7 @@ async function writeSquareIcon(outputPath, size, { maskable = false, launcher = 
 }
 
 async function writeAdaptiveForeground(outputPath, size) {
-  const iconSize = Math.round(size * 0.66);
+  const iconSize = Math.round(size * 0.72);
   const logo = await sharp(logoPath).resize(iconSize, iconSize, { fit: "contain" }).png().toBuffer();
 
   await sharp({
@@ -79,7 +79,7 @@ async function writeAdaptiveForeground(outputPath, size) {
       width: size,
       height: size,
       channels: 4,
-      background: { r: 0, g: 0, b: 0, alpha: 0 },
+      background: LAUNCHER_BACKGROUND,
     },
   })
     .composite([{ input: logo, gravity: "center" }])
