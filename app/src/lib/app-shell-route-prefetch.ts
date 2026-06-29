@@ -7,7 +7,7 @@ import {
   type AppShellNavItemId,
 } from "../layouts/app-shell-nav-items";
 import {
-  importCoursesIndex,
+  importProductsIndex,
   importMoreIndex,
   importNotificationsIndex,
   importPaymentsIndex,
@@ -20,7 +20,7 @@ import { APP_SHELL_ROUTES } from "../routing/app-shell-routes";
 type RouteLoader = () => Promise<unknown>;
 
 const NAV_ITEM_LOADERS: Record<AppShellNavItemId, RouteLoader> = {
-  courses: importCoursesIndex,
+  products: importProductsIndex,
   payments: importPaymentsIndex,
   notifications: importNotificationsIndex,
   support: importSupportIndex,
@@ -79,13 +79,13 @@ export function scheduleAppShellRoutePrefetch(context: AppShellNavContext): void
     return;
   }
 
-  const coursesItem = APP_SHELL_NAV_ITEMS.find((item) => item.id === "courses");
-  if (coursesItem) {
-    prefetchAppShellNavRoute(coursesItem, context);
+  const productsItem = APP_SHELL_NAV_ITEMS.find((item) => item.id === "products");
+  if (productsItem) {
+    prefetchAppShellNavRoute(productsItem, context);
   }
 
   const visibleItems = filterAppShellNavItems(APP_SHELL_NAV_ITEMS, context);
-  const remainingItems = visibleItems.filter((item) => item.id !== "courses");
+  const remainingItems = visibleItems.filter((item) => item.id !== "products");
   if (remainingItems.length === 0) {
     return;
   }

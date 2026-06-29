@@ -33,7 +33,7 @@ export function buildWebPushPayloadJson(input: {
   for (const key of [
     "messageType",
     "mode",
-    "courseId",
+    "productId",
     "chapterKey",
     "action",
     "actionLabel",

@@ -13,7 +13,7 @@ export const COUPON_DETAIL_QUERY = gql`
       expiresAt
       totalUsageLimit
       perUserUsageLimit
-      applicableCourseIds
+      applicableProductIds
       isFirstPurchaseOnly
       isActive
       totalUsageCount

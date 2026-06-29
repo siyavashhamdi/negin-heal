@@ -57,11 +57,11 @@ import {
   resolveMeUserDisplayName,
   resolveStoredUserDisplayName,
 } from "../../utils/storedUser.util";
-import CourseCard from "../Courses/CourseCard";
-import { useLandingFeaturedCourses } from "./useLandingFeaturedCourses";
+import ProductCard from "../Products/ProductCard";
+import { useLandingFeaturedProducts } from "./useLandingFeaturedProducts";
 import styles from "./styles/landing.module.scss";
 
-const FEATURED_COURSE_COUNT = 3;
+const FEATURED_PRODUCT_COUNT = 3;
 
 type RevealSectionProps = {
   readonly children: ReactNode;
@@ -128,7 +128,7 @@ const Landing = (): ReactElement => {
   const [navScrolled, setNavScrolled] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
-  const { courses: featuredCourses, loading: coursesLoading } = useLandingFeaturedCourses();
+  const { products: featuredProducts, loading: productsLoading } = useLandingFeaturedProducts();
 
   const { displayName, avatarLetter } = useMemo(() => {
     const name =
@@ -184,40 +184,40 @@ const Landing = (): ReactElement => {
     element?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
 
-  const handleCourseOpen = useCallback(
-    (courseId: string): void => {
-      navigate(`${APP_SHELL_ROUTES.courses}/${courseId}`);
+  const handleProductOpen = useCallback(
+    (productId: string): void => {
+      navigate(`${APP_SHELL_ROUTES.products}/${productId}`);
     },
     [navigate]
   );
 
-  const handleCourseKeyDown = useCallback(
-    (courseId: string, event: KeyboardEvent<HTMLElement>): void => {
+  const handleProductKeyDown = useCallback(
+    (productId: string, event: KeyboardEvent<HTMLElement>): void => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
-        handleCourseOpen(courseId);
+        handleProductOpen(productId);
       }
     },
-    [handleCourseOpen]
+    [handleProductOpen]
   );
 
   const primaryCtaLabel = isAuthenticated
-    ? t("pages.landing.nav.myCourses")
+    ? t("pages.landing.nav.myProducts")
     : t("pages.landing.hero.ctaPrimary");
 
   const navLinks = [
     { id: "features", label: t("pages.landing.nav.features") },
-    { id: "courses", label: t("pages.landing.nav.courses") },
+    { id: "products", label: t("pages.landing.nav.products") },
     { id: "steps", label: t("pages.landing.nav.howItWorks") },
     { id: "support", label: t("pages.landing.nav.support"), href: APP_SHELL_ROUTES.support },
   ] as const;
 
   const featureItems = [
     {
-      key: "courses",
+      key: "products",
       icon: <SchoolRounded />,
-      title: t("pages.landing.features.items.courses.title"),
-      description: t("pages.landing.features.items.courses.description"),
+      title: t("pages.landing.features.items.products.title"),
+      description: t("pages.landing.features.items.products.description"),
     },
     {
       key: "path",
@@ -413,11 +413,11 @@ const Landing = (): ReactElement => {
             ) : (
               <Button
                 component={Link}
-                to={APP_SHELL_ROUTES.courses}
+                to={APP_SHELL_ROUTES.products}
                 variant="contained"
                 className={styles.navPrimaryButton}
               >
-                {t("pages.landing.nav.viewCourses")}
+                {t("pages.landing.nav.viewProducts")}
               </Button>
             )}
 
@@ -510,7 +510,7 @@ const Landing = (): ReactElement => {
             <Box className={[styles.heroCtas, styles.fadeInUp, styles.fadeInUpDelay3].join(" ")}>
               <Button
                 component={Link}
-                to={APP_SHELL_ROUTES.courses}
+                to={APP_SHELL_ROUTES.products}
                 variant="contained"
                 size="large"
                 className={styles.heroPrimaryButton}
@@ -611,49 +611,49 @@ const Landing = (): ReactElement => {
           </Box>
         </RevealSection>
 
-        <RevealSection id="courses" className={styles.coursesSection} delay={120}>
+        <RevealSection id="products" className={styles.productsSection} delay={120}>
           <SectionHeader
-            eyebrow={t("pages.landing.courses.eyebrow")}
-            title={t("pages.landing.courses.title")}
-            subtitle={t("pages.landing.courses.subtitle")}
+            eyebrow={t("pages.landing.products.eyebrow")}
+            title={t("pages.landing.products.title")}
+            subtitle={t("pages.landing.products.subtitle")}
           />
-          <Box className={styles.courseGrid}>
-            {coursesLoading
-              ? Array.from({ length: FEATURED_COURSE_COUNT }, (_, index) => (
+          <Box className={styles.productGrid}>
+            {productsLoading
+              ? Array.from({ length: FEATURED_PRODUCT_COUNT }, (_, index) => (
                   <Skeleton
-                    key={`course-skeleton-${index}`}
+                    key={`product-skeleton-${index}`}
                     variant="rounded"
-                    className={styles.courseSkeleton}
+                    className={styles.productSkeleton}
                   />
                 ))
               : null}
-            {!coursesLoading && featuredCourses.length === 0 ? (
-              <Typography className={styles.coursesEmpty}>
-                {t("pages.landing.courses.empty")}
+            {!productsLoading && featuredProducts.length === 0 ? (
+              <Typography className={styles.productsEmpty}>
+                {t("pages.landing.products.empty")}
               </Typography>
             ) : null}
-            {!coursesLoading
-              ? featuredCourses.map((course) => (
-                  <CourseCard
-                    key={course.id}
-                    item={course}
+            {!productsLoading
+              ? featuredProducts.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    item={product}
                     variant="public"
-                    coverImageAccessUrl={course.coverImageAccessUrl}
-                    onOpen={() => handleCourseOpen(course.id)}
-                    onKeyDown={(event) => handleCourseKeyDown(course.id, event)}
+                    coverImageAccessUrl={product.coverImageAccessUrl}
+                    onOpen={() => handleProductOpen(product.id)}
+                    onKeyDown={(event) => handleProductKeyDown(product.id, event)}
                   />
                 ))
               : null}
           </Box>
-          <Box className={styles.coursesCta}>
+          <Box className={styles.productsCta}>
             <Button
               component={Link}
-              to={APP_SHELL_ROUTES.courses}
+              to={APP_SHELL_ROUTES.products}
               variant="outlined"
               size="large"
               className={styles.viewAllButton}
             >
-              {t("pages.landing.courses.viewAll")}
+              {t("pages.landing.products.viewAll")}
             </Button>
           </Box>
         </RevealSection>
@@ -696,7 +696,7 @@ const Landing = (): ReactElement => {
             <Box className={styles.ctaButtons}>
               <Button
                 component={Link}
-                to={APP_SHELL_ROUTES.courses}
+                to={APP_SHELL_ROUTES.products}
                 variant="contained"
                 size="large"
                 className={styles.ctaPrimaryButton}
@@ -735,8 +735,8 @@ const Landing = (): ReactElement => {
             className={styles.footerLinks}
             aria-label={t("layout.footer.ariaLabel")}
           >
-            <Link to={APP_SHELL_ROUTES.courses} className={styles.footerLink}>
-              {t("pages.landing.footer.links.courses")}
+            <Link to={APP_SHELL_ROUTES.products} className={styles.footerLink}>
+              {t("pages.landing.footer.links.products")}
             </Link>
             <Link to={APP_SHELL_ROUTES.support} className={styles.footerLink}>
               {t("pages.landing.footer.links.support")}

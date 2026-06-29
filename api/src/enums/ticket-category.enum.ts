@@ -1,6 +1,6 @@
 export enum TicketCategory {
   PAYMENT = "PAYMENT",
-  COURSE = "COURSE",
+  PRODUCT = "PRODUCT",
   ACCOUNT = "ACCOUNT",
   TECHNICAL = "TECHNICAL",
   BUG = "BUG",

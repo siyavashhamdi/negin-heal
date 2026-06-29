@@ -177,8 +177,8 @@ export type AppTermsOfUsePageConfigGqlResponse = {
 
 export type BadgeCountGqlResponse = {
   __typename?: "BadgeCountGqlResponse";
-  /** Course badge count. Staff users receive all courses; end users receive active courses. */
-  courses: Scalars["Int"]["output"];
+  /** Product badge count. Staff users receive all products; end users receive active products. */
+  products: Scalars["Int"]["output"];
   /** Unread direct notification count for the current user. */
   notifications?: Maybe<Scalars["Int"]["output"]>;
   /** Pending payment badge count for staff users. Null for end users. */
@@ -188,8 +188,8 @@ export type BadgeCountGqlResponse = {
 };
 
 export type CouponCreateGqlInput = {
-  /** Course IDs this coupon applies to. Empty means all courses */
-  applicableCourseIds?: InputMaybe<Array<Scalars["ID"]["input"]>>;
+  /** Product IDs this coupon applies to. Empty means all products */
+  applicableProductIds?: InputMaybe<Array<Scalars["ID"]["input"]>>;
   /** Unique coupon code */
   code: Scalars["String"]["input"];
   /** Coupon description */
@@ -232,8 +232,8 @@ export const CouponDiscountType = {
 
 export type CouponDiscountType = (typeof CouponDiscountType)[keyof typeof CouponDiscountType];
 export type CouponListFilterInput = {
-  /** Filter coupons by applicable course ID */
-  applicableCourseId?: InputMaybe<Scalars["ID"]["input"]>;
+  /** Filter coupons by applicable product ID */
+  applicableProductId?: InputMaybe<Scalars["ID"]["input"]>;
   /** Filter coupons by code */
   code?: InputMaybe<Scalars["String"]["input"]>;
   /** Filter coupons created from this ISO date */
@@ -291,8 +291,8 @@ export type CouponListGqlInput = {
 
 export type CouponListGqlResponse = {
   __typename?: "CouponListGqlResponse";
-  /** Course IDs this coupon applies to. Empty means all courses */
-  applicableCourseIds: Array<Scalars["ID"]["output"]>;
+  /** Product IDs this coupon applies to. Empty means all products */
+  applicableProductIds: Array<Scalars["ID"]["output"]>;
   /** Coupon code */
   code: Scalars["String"]["output"];
   /** Date when the coupon was created */
@@ -406,8 +406,8 @@ export type CouponListSummaryGqlResponse = {
 };
 
 export type CouponUpdateGqlInput = {
-  /** Course IDs this coupon applies to. Empty array or null means all courses */
-  applicableCourseIds?: InputMaybe<Array<Scalars["ID"]["input"]>>;
+  /** Product IDs this coupon applies to. Empty array or null means all products */
+  applicableProductIds?: InputMaybe<Array<Scalars["ID"]["input"]>>;
   /** Unique coupon code */
   code?: InputMaybe<Scalars["String"]["input"]>;
   /** Coupon description */
@@ -437,13 +437,13 @@ export type CouponUpdateGqlInput = {
 export type CouponValidateGqlInput = {
   /** Coupon code */
   code: Scalars["String"]["input"];
-  /** Course ID */
-  courseId: Scalars["ID"]["input"];
+  /** Product ID */
+  productId: Scalars["ID"]["input"];
 };
 
 export type CouponValidateGqlResponse = {
   __typename?: "CouponValidateGqlResponse";
-  /** Course amount before any discount */
+  /** Product amount before any discount */
   amountIrt?: Maybe<Scalars["Float"]["output"]>;
   /** Normalized coupon code */
   code?: Maybe<Scalars["String"]["output"]>;
@@ -451,8 +451,8 @@ export type CouponValidateGqlResponse = {
   couponDiscountAmountIrt?: Maybe<Scalars["Float"]["output"]>;
   /** Coupon ID when validation succeeds */
   couponId?: Maybe<Scalars["ID"]["output"]>;
-  /** Built-in course discount amount */
-  courseDiscountAmountIrt?: Maybe<Scalars["Float"]["output"]>;
+  /** Built-in product discount amount */
+  productDiscountAmountIrt?: Maybe<Scalars["Float"]["output"]>;
   /** Coupon discount type */
   discountType?: Maybe<CouponDiscountType>;
   /** Coupon discount value */
@@ -463,24 +463,24 @@ export type CouponValidateGqlResponse = {
   isValid: Scalars["Boolean"]["output"];
   /** Human-readable reason when the coupon is invalid */
   message?: Maybe<Scalars["String"]["output"]>;
-  /** Amount after built-in course discount and before coupon */
+  /** Amount after built-in product discount and before coupon */
   payableAmountBeforeCouponIrt?: Maybe<Scalars["Float"]["output"]>;
   /** Coupon title */
   title?: Maybe<Scalars["String"]["output"]>;
 };
 
-export type CourseChapterCompleteGqlInput = {
+export type ProductChapterCompleteGqlInput = {
   /** Stable chapter key to mark as completed */
   chapterKey: Scalars["String"]["input"];
-  /** Course ID containing the chapter */
-  courseId: Scalars["ID"]["input"];
+  /** Product ID containing the chapter */
+  productId: Scalars["ID"]["input"];
 };
 
-export type CourseChapterCompleteGqlResponse = {
-  __typename?: "CourseChapterCompleteGqlResponse";
-  /** Total unlocked chapters the learner can complete in this course right now */
+export type ProductChapterCompleteGqlResponse = {
+  __typename?: "ProductChapterCompleteGqlResponse";
+  /** Total unlocked chapters the learner can complete in this product right now */
   accessibleChapterCount: Scalars["Int"]["output"];
-  /** Total chapters the learner has marked complete in this course */
+  /** Total chapters the learner has marked complete in this product */
   completedChapterCount: Scalars["Int"]["output"];
   /** Completed chapter key */
   key: Scalars["String"]["output"];
@@ -490,13 +490,13 @@ export type CourseChapterCompleteGqlResponse = {
   userCompletedAt: Scalars["DateTime"]["output"];
 };
 
-export type CourseChapterGqlInput = {
+export type ProductChapterGqlInput = {
   /** Chapter description */
   description?: InputMaybe<Scalars["String"]["input"]>;
   /** Whether the chapter is free to access */
   isFree: Scalars["Boolean"]["input"];
   /** Chapter items */
-  items: Array<CourseItemGqlInput>;
+  items: Array<ProductItemGqlInput>;
   /** Optional chapter sort order */
   sortOrder?: InputMaybe<Scalars["Int"]["input"]>;
   /** Chapter title */
@@ -505,8 +505,8 @@ export type CourseChapterGqlInput = {
   visibleAfterMinutes?: InputMaybe<Scalars["Int"]["input"]>;
 };
 
-export type CourseCouponSnapshotGqlResponse = {
-  __typename?: "CourseCouponSnapshotGqlResponse";
+export type ProductCouponSnapshotGqlResponse = {
+  __typename?: "ProductCouponSnapshotGqlResponse";
   /** Coupon code */
   code: Scalars["String"]["output"];
   /** Coupon ID */
@@ -521,89 +521,89 @@ export type CourseCouponSnapshotGqlResponse = {
   title: Scalars["String"]["output"];
 };
 
-export type CourseCreateGqlInput = {
-  /** Course chapters */
-  chapters: Array<CourseChapterGqlInput>;
-  /** Stored file ID used as the course cover image */
+export type ProductCreateGqlInput = {
+  /** Product chapters */
+  chapters: Array<ProductChapterGqlInput>;
+  /** Stored file ID used as the product cover image */
   coverImageFileId?: InputMaybe<Scalars["ID"]["input"]>;
-  /** Course description */
+  /** Product description */
   description?: InputMaybe<Scalars["String"]["input"]>;
-  /** Optional course discount */
-  discount?: InputMaybe<CourseDiscountGqlInput>;
-  /** Whether the course is active */
+  /** Optional product discount */
+  discount?: InputMaybe<ProductDiscountGqlInput>;
+  /** Whether the product is active */
   isActive?: InputMaybe<Scalars["Boolean"]["input"]>;
-  /** Whether learners can submit reviews for this course */
+  /** Whether learners can submit reviews for this product */
   isReviewSubmissionEnabled?: InputMaybe<Scalars["Boolean"]["input"]>;
-  /** Whether the reviews section is visible on the course detail page */
+  /** Whether the reviews section is visible on the product detail page */
   isReviewsSectionVisible?: InputMaybe<Scalars["Boolean"]["input"]>;
-  /** Course price in IRT */
+  /** Product price in IRT */
   priceIrt?: InputMaybe<Scalars["Float"]["input"]>;
-  /** Course display rank used for manual ordering */
+  /** Product display rank used for manual ordering */
   sortOrder?: InputMaybe<Scalars["Float"]["input"]>;
-  /** Course tags */
+  /** Product tags */
   tags?: InputMaybe<Array<Scalars["String"]["input"]>>;
-  /** Course title */
+  /** Product title */
   title: Scalars["String"]["input"];
 };
 
-export type CourseDeleteDependenciesGqlResponse = {
-  __typename?: "CourseDeleteDependenciesGqlResponse";
-  /** Course ID */
-  courseId: Scalars["ID"]["output"];
-  /** Course title */
-  courseTitle: Scalars["String"]["output"];
+export type ProductDeleteDependenciesGqlResponse = {
+  __typename?: "ProductDeleteDependenciesGqlResponse";
+  /** Product ID */
+  productId: Scalars["ID"]["output"];
+  /** Product title */
+  productTitle: Scalars["String"]["output"];
   /** Detailed dependency groups grouped by impact */
-  groups: Array<CourseDeleteDependencyGroupGqlResponse>;
+  groups: Array<ProductDeleteDependencyGroupGqlResponse>;
   /** High-level delete impact summary */
-  summary: CourseDeleteDependenciesSummaryGqlResponse;
+  summary: ProductDeleteDependenciesSummaryGqlResponse;
 };
 
-export type CourseDeleteDependenciesSummaryGqlResponse = {
-  __typename?: "CourseDeleteDependenciesSummaryGqlResponse";
+export type ProductDeleteDependenciesSummaryGqlResponse = {
+  __typename?: "ProductDeleteDependenciesSummaryGqlResponse";
   /** Whether any removed dependency groups exist */
   hasRemovedDependencies: Scalars["Boolean"]["output"];
   /** Whether any retained dependency groups exist */
   hasRetainedDependencies: Scalars["Boolean"]["output"];
-  /** Total records that will be removed together with the course */
+  /** Total records that will be removed together with the product */
   removedCount: Scalars["Int"]["output"];
-  /** Total records that will remain linked to the deleted course */
+  /** Total records that will remain linked to the deleted product */
   retainedCount: Scalars["Int"]["output"];
 };
 
-export type CourseDeleteDependencyBreakdownGqlResponse = {
-  __typename?: "CourseDeleteDependencyBreakdownGqlResponse";
+export type ProductDeleteDependencyBreakdownGqlResponse = {
+  __typename?: "ProductDeleteDependencyBreakdownGqlResponse";
   /** Count for this breakdown bucket */
   count: Scalars["Int"]["output"];
   /** Stable breakdown key for client-side labels */
   key: Scalars["String"]["output"];
 };
 
-export type CourseDeleteDependencyGroupGqlResponse = {
-  __typename?: "CourseDeleteDependencyGroupGqlResponse";
+export type ProductDeleteDependencyGroupGqlResponse = {
+  __typename?: "ProductDeleteDependencyGroupGqlResponse";
   /** Optional per-bucket counts inside the group */
-  breakdown: Array<CourseDeleteDependencyBreakdownGqlResponse>;
+  breakdown: Array<ProductDeleteDependencyBreakdownGqlResponse>;
   /** Number of additional sample rows not included in samples */
   hiddenSampleCount: Scalars["Int"]["output"];
   /** Whether this group is removed or retained on delete */
-  impact: CourseDeleteDependencyImpact;
+  impact: ProductDeleteDependencyImpact;
   /** Stable group key for client-side labels */
   key: Scalars["String"]["output"];
   /** Representative sample rows for richer UI previews */
-  samples: Array<CourseDeleteDependencySampleGqlResponse>;
+  samples: Array<ProductDeleteDependencySampleGqlResponse>;
   /** Total records in this dependency group */
   totalCount: Scalars["Int"]["output"];
 };
 
-/** Whether a dependency group is removed or retained when deleting a course */
-export const CourseDeleteDependencyImpact = {
+/** Whether a dependency group is removed or retained when deleting a product */
+export const ProductDeleteDependencyImpact = {
   REMOVED: "REMOVED",
   RETAINED: "RETAINED",
 } as const;
 
-export type CourseDeleteDependencyImpact =
-  (typeof CourseDeleteDependencyImpact)[keyof typeof CourseDeleteDependencyImpact];
-export type CourseDeleteDependencySampleGqlResponse = {
-  __typename?: "CourseDeleteDependencySampleGqlResponse";
+export type ProductDeleteDependencyImpact =
+  (typeof ProductDeleteDependencyImpact)[keyof typeof ProductDeleteDependencyImpact];
+export type ProductDeleteDependencySampleGqlResponse = {
+  __typename?: "ProductDeleteDependencySampleGqlResponse";
   /** Optional related entity ID */
   id?: Maybe<Scalars["ID"]["output"]>;
   /** Primary label for the sample row */
@@ -612,58 +612,58 @@ export type CourseDeleteDependencySampleGqlResponse = {
   meta?: Maybe<Scalars["String"]["output"]>;
 };
 
-export type CourseDeleteGqlInput = {
-  /** Course ID */
+export type ProductDeleteGqlInput = {
+  /** Product ID */
   id: Scalars["ID"]["input"];
 };
 
-export type CourseDetailGqlInput = {
-  /** Course ID */
+export type ProductDetailGqlInput = {
+  /** Product ID */
   id: Scalars["ID"]["input"];
 };
 
-export type CourseDiscountGqlInput = {
+export type ProductDiscountGqlInput = {
   /** Discount calculation type */
-  type: CourseDiscountType;
+  type: ProductDiscountType;
   /** Discount value. Percentage for PERCENTAGE, IRT amount for FIXED_AMOUNT_IRT */
   value: Scalars["Float"]["input"];
 };
 
-/** Course discount calculation type */
-export const CourseDiscountType = {
+/** Product discount calculation type */
+export const ProductDiscountType = {
   FIXED_AMOUNT_IRT: "FIXED_AMOUNT_IRT",
   PERCENTAGE: "PERCENTAGE",
 } as const;
 
-export type CourseDiscountType = (typeof CourseDiscountType)[keyof typeof CourseDiscountType];
-export type CourseItemGqlInput = {
+export type ProductDiscountType = (typeof ProductDiscountType)[keyof typeof ProductDiscountType];
+export type ProductItemGqlInput = {
   /** Article body when this item is text-based */
   article?: InputMaybe<Scalars["String"]["input"]>;
   /** Stored file ID attached to this item */
   fileId?: InputMaybe<Scalars["ID"]["input"]>;
   /** Optional item sort order inside its chapter */
   sortOrder?: InputMaybe<Scalars["Int"]["input"]>;
-  /** Course item title */
+  /** Product item title */
   title: Scalars["String"]["input"];
 };
 
-/** Calculated course item content type */
-export const CourseItemType = {
+/** Calculated product item content type */
+export const ProductItemType = {
   ARTICLE: "ARTICLE",
   IMAGE: "IMAGE",
   VIDEO: "VIDEO",
   VOICE: "VOICE",
 } as const;
 
-export type CourseItemType = (typeof CourseItemType)[keyof typeof CourseItemType];
-export type CourseListChapterGqlResponse = {
-  __typename?: "CourseListChapterGqlResponse";
+export type ProductItemType = (typeof ProductItemType)[keyof typeof ProductItemType];
+export type ProductListChapterGqlResponse = {
+  __typename?: "ProductListChapterGqlResponse";
   /** Chapter description */
   description?: Maybe<Scalars["String"]["output"]>;
   /** Whether the chapter is free to access */
   isFree: Scalars["Boolean"]["output"];
   /** Chapter items */
-  items: Array<CourseListItemGqlResponse>;
+  items: Array<ProductListItemGqlResponse>;
   /** Optional chapter sort order */
   sortOrder?: Maybe<Scalars["Int"]["output"]>;
   /** Chapter title */
@@ -672,38 +672,38 @@ export type CourseListChapterGqlResponse = {
   visibleAfterMinutes?: Maybe<Scalars["Int"]["output"]>;
 };
 
-export type CourseListCursorPageOptionsParamsInput = {
+export type ProductListCursorPageOptionsParamsInput = {
   /** Maximum number of records to return */
   limit?: InputMaybe<Scalars["Int"]["input"]>;
   /** Sort options as a map of field names to sort order */
-  sort?: InputMaybe<CourseListSortOptionInput>;
+  sort?: InputMaybe<ProductListSortOptionInput>;
   /** Cursor to start after. Uses the beginning if omitted */
   startCursor?: InputMaybe<Scalars["ID"]["input"]>;
 };
 
-export type CourseListDiscountGqlResponse = {
-  __typename?: "CourseListDiscountGqlResponse";
+export type ProductListDiscountGqlResponse = {
+  __typename?: "ProductListDiscountGqlResponse";
   /** Discount calculation type */
-  type: CourseDiscountType;
+  type: ProductDiscountType;
   /** Discount value. Percentage for PERCENTAGE, IRT amount for FIXED_AMOUNT_IRT */
   value: Scalars["Float"]["output"];
 };
 
-export type CourseListFilterInput = {
-  /** Filter courses by description */
+export type ProductListFilterInput = {
+  /** Filter products by description */
   description?: InputMaybe<Scalars["String"]["input"]>;
-  /** Filter courses that contain at least one free chapter */
+  /** Filter products that contain at least one free chapter */
   hasFreeChapter?: InputMaybe<Scalars["Boolean"]["input"]>;
-  /** Filter courses by whether a price is set */
+  /** Filter products by whether a price is set */
   hasPrice?: InputMaybe<Scalars["Boolean"]["input"]>;
-  /** Scope the course list for a specific user by excluding courses they have already paid for. */
+  /** Scope the product list for a specific user by excluding products they have already paid for. */
   includeUserId?: InputMaybe<Scalars["ID"]["input"]>;
   /** Filter by active state */
   isActive?: InputMaybe<Scalars["Boolean"]["input"]>;
-  /** Filter by whether the current user has purchased the course. Used by userCourseList. */
+  /** Filter by whether the current user has purchased the product. Used by userProductList. */
   isPurchased?: InputMaybe<Scalars["Boolean"]["input"]>;
-  /** Filter courses containing at least one calculated item type. ARTICLE means an item without fileId. */
-  itemType?: InputMaybe<CourseItemType>;
+  /** Filter products containing at least one calculated item type. ARTICLE means an item without fileId. */
+  itemType?: InputMaybe<ProductItemType>;
   /** Maximum price in IRT */
   maxPriceIrt?: InputMaybe<Scalars["Float"]["input"]>;
   /** Minimum price in IRT */
@@ -711,79 +711,79 @@ export type CourseListFilterInput = {
   /** Search query that matches title, description, tags, chapter titles, item titles, and article text */
   query?: InputMaybe<Scalars["String"]["input"]>;
   /** Filter by calculated release type. GRADUAL means at least one chapter has visibleAfterMinutes. */
-  releaseType?: InputMaybe<CourseReleaseType>;
-  /** Return courses that contain every tag in this list */
+  releaseType?: InputMaybe<ProductReleaseType>;
+  /** Return products that contain every tag in this list */
   tagsAll?: InputMaybe<Array<Scalars["String"]["input"]>>;
-  /** Return courses that contain at least one of these tags */
+  /** Return products that contain at least one of these tags */
   tagsAny?: InputMaybe<Array<Scalars["String"]["input"]>>;
-  /** Filter courses by title */
+  /** Filter products by title */
   title?: InputMaybe<Scalars["String"]["input"]>;
 };
 
-export type CourseListGqlInput = {
-  /** Filter options for narrowing down the course list */
-  filters?: InputMaybe<CourseListFilterInput>;
+export type ProductListGqlInput = {
+  /** Filter options for narrowing down the product list */
+  filters?: InputMaybe<ProductListFilterInput>;
   /** Pagination and sorting options */
-  options?: InputMaybe<CourseListCursorPageOptionsParamsInput>;
+  options?: InputMaybe<ProductListCursorPageOptionsParamsInput>;
 };
 
-export type CourseListGqlResponse = {
-  __typename?: "CourseListGqlResponse";
-  /** Course chapters */
-  chapters: Array<CourseListChapterGqlResponse>;
-  /** Signed access descriptor for the course cover image */
+export type ProductListGqlResponse = {
+  __typename?: "ProductListGqlResponse";
+  /** Product chapters */
+  chapters: Array<ProductListChapterGqlResponse>;
+  /** Signed access descriptor for the product cover image */
   coverImageAccessUrl?: Maybe<FileAccessUrlGqlResponse>;
-  /** Date when the course was created */
+  /** Date when the product was created */
   createdAt?: Maybe<Scalars["DateTime"]["output"]>;
-  /** Course description */
+  /** Product description */
   description?: Maybe<Scalars["String"]["output"]>;
-  /** Optional course discount */
-  discount?: Maybe<CourseListDiscountGqlResponse>;
-  /** Course ID */
+  /** Optional product discount */
+  discount?: Maybe<ProductListDiscountGqlResponse>;
+  /** Product ID */
   id: Scalars["ID"]["output"];
-  /** Whether the course is active */
+  /** Whether the product is active */
   isActive: Scalars["Boolean"]["output"];
-  /** Whether learners can submit reviews for this course */
+  /** Whether learners can submit reviews for this product */
   isReviewSubmissionEnabled: Scalars["Boolean"]["output"];
-  /** Whether the reviews section is visible on the course detail page */
+  /** Whether the reviews section is visible on the product detail page */
   isReviewsSectionVisible: Scalars["Boolean"]["output"];
-  /** Course price in IRT */
+  /** Product price in IRT */
   priceIrt?: Maybe<Scalars["Float"]["output"]>;
   /** Calculated release strategy. GRADUAL means at least one chapter has visibleAfterMinutes. */
-  releaseType: CourseReleaseType;
-  /** Course display rank used for manual ordering */
+  releaseType: ProductReleaseType;
+  /** Product display rank used for manual ordering */
   sortOrder?: Maybe<Scalars["Float"]["output"]>;
-  /** Course tags */
+  /** Product tags */
   tags: Array<Scalars["String"]["output"]>;
-  /** Course title */
+  /** Product title */
   title: Scalars["String"]["output"];
-  /** Date when the course was last updated */
+  /** Date when the product was last updated */
   updatedAt?: Maybe<Scalars["DateTime"]["output"]>;
 };
 
-export type CourseListItemGqlResponse = {
-  __typename?: "CourseListItemGqlResponse";
+export type ProductListItemGqlResponse = {
+  __typename?: "ProductListItemGqlResponse";
   /** Article body when this item is text-based */
   article?: Maybe<Scalars["String"]["output"]>;
   /** Signed access descriptor for the file attached to this item */
   fileAccessUrl?: Maybe<FileAccessUrlGqlResponse>;
   /** Optional item sort order inside its chapter */
   sortOrder?: Maybe<Scalars["Int"]["output"]>;
-  /** Course item title */
+  /** Product item title */
   title: Scalars["String"]["output"];
   /** Calculated item type. File-backed items are resolved from stored file MIME type; items without fileId are ARTICLE. */
-  type: CourseItemType;
+  type: ProductItemType;
 };
 
-export type CourseListPaginatedCursorGqlResponse = {
-  __typename?: "CourseListPaginatedCursorGqlResponse";
-  /** List of courses */
-  items: Array<CourseListSummaryGqlResponse>;
+export type ProductListPaginatedCursorGqlResponse = {
+  __typename?: "ProductListPaginatedCursorGqlResponse";
+  /** List of products */
+  items: Array<ProductListSummaryGqlResponse>;
   /** Pagination metadata */
   pagination: PaginationCursorResponse;
 };
 
-export type CourseListSortOptionInput = {
+export type ProductListSortOptionInput = {
   /** Sort by creation date */
   createdAt?: InputMaybe<SortingOrder>;
   /** Sort by active state */
@@ -792,61 +792,61 @@ export type CourseListSortOptionInput = {
   priceIrt?: InputMaybe<SortingOrder>;
   /** Sort by manual display rank */
   sortOrder?: InputMaybe<SortingOrder>;
-  /** Sort by course title */
+  /** Sort by product title */
   title?: InputMaybe<SortingOrder>;
   /** Sort by last update date */
   updatedAt?: InputMaybe<SortingOrder>;
 };
 
-export type CourseListSummaryGqlResponse = {
-  __typename?: "CourseListSummaryGqlResponse";
-  /** Number of chapters in the course */
+export type ProductListSummaryGqlResponse = {
+  __typename?: "ProductListSummaryGqlResponse";
+  /** Number of chapters in the product */
   chapterCount: Scalars["Int"]["output"];
-  /** Signed access descriptor for the course cover image */
+  /** Signed access descriptor for the product cover image */
   coverImageAccessUrl?: Maybe<FileAccessUrlGqlResponse>;
-  /** Course description */
+  /** Product description */
   description?: Maybe<Scalars["String"]["output"]>;
-  /** Optional course discount */
-  discount?: Maybe<CourseListDiscountGqlResponse>;
-  /** Course ID */
+  /** Optional product discount */
+  discount?: Maybe<ProductListDiscountGqlResponse>;
+  /** Product ID */
   id: Scalars["ID"]["output"];
-  /** Whether the course is active */
+  /** Whether the product is active */
   isActive: Scalars["Boolean"]["output"];
-  /** Number of items in the course */
+  /** Number of items in the product */
   itemCount: Scalars["Int"]["output"];
-  /** Calculated content types available in this course */
-  itemTypes: Array<CourseItemType>;
-  /** Course price in IRT */
+  /** Calculated content types available in this product */
+  itemTypes: Array<ProductItemType>;
+  /** Product price in IRT */
   priceIrt?: Maybe<Scalars["Float"]["output"]>;
   /** Calculated release strategy. GRADUAL means at least one chapter has visibleAfterMinutes. */
-  releaseType: CourseReleaseType;
-  /** Course display rank used for manual ordering */
+  releaseType: ProductReleaseType;
+  /** Product display rank used for manual ordering */
   sortOrder?: Maybe<Scalars["Float"]["output"]>;
-  /** Course tags */
+  /** Product tags */
   tags: Array<Scalars["String"]["output"]>;
-  /** Course title */
+  /** Product title */
   title: Scalars["String"]["output"];
 };
 
-export type CoursePaymentCourseSnapshotGqlResponse = {
-  __typename?: "CoursePaymentCourseSnapshotGqlResponse";
-  /** Course description snapshot */
+export type ProductPaymentProductSnapshotGqlResponse = {
+  __typename?: "ProductPaymentProductSnapshotGqlResponse";
+  /** Product description snapshot */
   description?: Maybe<Scalars["String"]["output"]>;
-  /** Course ID */
+  /** Product ID */
   id: Scalars["ID"]["output"];
-  /** Original course price in IRT */
+  /** Original product price in IRT */
   priceIrt: Scalars["Float"]["output"];
-  /** Course title snapshot */
+  /** Product title snapshot */
   title: Scalars["String"]["output"];
 };
 
-export type CoursePaymentDetailGqlInput = {
-  /** User-course purchase record ID */
+export type ProductPaymentDetailGqlInput = {
+  /** User-product purchase record ID */
   id: Scalars["ID"]["input"];
 };
 
-export type CoursePaymentListCouponSummaryGqlResponse = {
-  __typename?: "CoursePaymentListCouponSummaryGqlResponse";
+export type ProductPaymentListCouponSummaryGqlResponse = {
+  __typename?: "ProductPaymentListCouponSummaryGqlResponse";
   /** Coupon code */
   code: Scalars["String"]["output"];
   /** Coupon ID */
@@ -857,13 +857,13 @@ export type CoursePaymentListCouponSummaryGqlResponse = {
   discountValue: Scalars["Float"]["output"];
 };
 
-export type CoursePaymentListCourseSummaryGqlResponse = {
-  __typename?: "CoursePaymentListCourseSummaryGqlResponse";
-  /** Course title snapshot */
+export type ProductPaymentListProductSummaryGqlResponse = {
+  __typename?: "ProductPaymentListProductSummaryGqlResponse";
+  /** Product title snapshot */
   title: Scalars["String"]["output"];
 };
 
-export type CoursePaymentListFilterInput = {
+export type ProductPaymentListFilterInput = {
   /** Maximum original amount in IRT */
   amountIrtMax?: InputMaybe<Scalars["Float"]["input"]>;
   /** Minimum original amount in IRT */
@@ -882,16 +882,16 @@ export type CoursePaymentListFilterInput = {
   couponDiscountValueMin?: InputMaybe<Scalars["Float"]["input"]>;
   /** Filter by coupon ID */
   couponId?: InputMaybe<Scalars["ID"]["input"]>;
-  /** Filter payments by course ID */
-  courseId?: InputMaybe<Scalars["ID"]["input"]>;
-  /** Filter by course title snapshot */
-  courseTitle?: InputMaybe<Scalars["String"]["input"]>;
+  /** Filter payments by product ID */
+  productId?: InputMaybe<Scalars["ID"]["input"]>;
+  /** Filter by product title snapshot */
+  productTitle?: InputMaybe<Scalars["String"]["input"]>;
   /** Filter records created from this ISO date */
   createdAtFrom?: InputMaybe<Scalars["String"]["input"]>;
   /** Filter records created until this ISO date */
   createdAtTo?: InputMaybe<Scalars["String"]["input"]>;
   /** Filter payments by currency */
-  currency?: InputMaybe<UserCoursePurchaseCurrency>;
+  currency?: InputMaybe<UserProductPurchaseCurrency>;
   /** Maximum discount amount in IRT */
   discountAmountIrtMax?: InputMaybe<Scalars["Float"]["input"]>;
   /** Minimum discount amount in IRT */
@@ -912,7 +912,7 @@ export type CoursePaymentListFilterInput = {
   finalAmountIrtMin?: InputMaybe<Scalars["Float"]["input"]>;
   /** Filter by buyer full name snapshot */
   fullName?: InputMaybe<Scalars["String"]["input"]>;
-  /** Filter by user-course purchase record ID */
+  /** Filter by user-product purchase record ID */
   id?: InputMaybe<Scalars["ID"]["input"]>;
   /** Filter by manual status-change flag */
   isManualStatusChange?: InputMaybe<Scalars["Boolean"]["input"]>;
@@ -927,7 +927,7 @@ export type CoursePaymentListFilterInput = {
   /** Filter paid payments until this ISO date */
   paidAtTo?: InputMaybe<Scalars["String"]["input"]>;
   /** Filter payments by method */
-  paymentMethod?: InputMaybe<UserCoursePaymentMethod>;
+  paymentMethod?: InputMaybe<UserProductPaymentMethod>;
   /** Filter by payment provider */
   paymentProvider?: InputMaybe<Scalars["String"]["input"]>;
   /** Filter by payment reference */
@@ -936,7 +936,7 @@ export type CoursePaymentListFilterInput = {
   pendingAtFrom?: InputMaybe<Scalars["String"]["input"]>;
   /** Filter pending payments until this ISO date */
   pendingAtTo?: InputMaybe<Scalars["String"]["input"]>;
-  /** Search query that matches buyer, course, payment reference, or transaction ID */
+  /** Search query that matches buyer, product, payment reference, or transaction ID */
   query?: InputMaybe<Scalars["String"]["input"]>;
   /** Filter by receipt uploader user ID */
   receiptUploadedBy?: InputMaybe<Scalars["ID"]["input"]>;
@@ -945,7 +945,7 @@ export type CoursePaymentListFilterInput = {
   /** Filter refunded payments until this ISO date */
   refundedAtTo?: InputMaybe<Scalars["String"]["input"]>;
   /** Filter payments by purchase status */
-  status?: InputMaybe<UserCoursePurchaseStatus>;
+  status?: InputMaybe<UserProductPurchaseStatus>;
   /** Filter by transaction ID */
   transactionId?: InputMaybe<Scalars["String"]["input"]>;
   /** Filter records updated from this ISO date */
@@ -966,42 +966,42 @@ export type CoursePaymentListFilterInput = {
   username?: InputMaybe<Scalars["String"]["input"]>;
 };
 
-export type CoursePaymentListGqlInput = {
-  /** Filter options for narrowing down the course payment list */
-  filters?: InputMaybe<CoursePaymentListFilterInput>;
+export type ProductPaymentListGqlInput = {
+  /** Filter options for narrowing down the product payment list */
+  filters?: InputMaybe<ProductPaymentListFilterInput>;
   /** Pagination options */
   options?: InputMaybe<OffsetPageOptionsParamsInput>;
 };
 
-export type CoursePaymentListGqlResponse = {
-  __typename?: "CoursePaymentListGqlResponse";
+export type ProductPaymentListGqlResponse = {
+  __typename?: "ProductPaymentListGqlResponse";
   /** Original amount in IRT */
   amountIrt: Scalars["Float"]["output"];
   /** Cancelled status date */
   cancelledAt?: Maybe<Scalars["DateTime"]["output"]>;
   /** Applied coupon snapshot, if any */
-  coupon?: Maybe<CourseCouponSnapshotGqlResponse>;
-  /** Course snapshot captured when the purchase was submitted */
-  course: CoursePaymentCourseSnapshotGqlResponse;
-  /** Course ID */
-  courseId: Scalars["ID"]["output"];
+  coupon?: Maybe<ProductCouponSnapshotGqlResponse>;
+  /** Product snapshot captured when the purchase was submitted */
+  product: ProductPaymentProductSnapshotGqlResponse;
+  /** Product ID */
+  productId: Scalars["ID"]["output"];
   /** Payment submitted date */
   createdAt?: Maybe<Scalars["DateTime"]["output"]>;
   /** User ID that initially created the payment record */
   createdBy?: Maybe<Scalars["ID"]["output"]>;
   /** User that initially created the payment record */
-  createdByUser?: Maybe<CoursePaymentRelatedUserGqlResponse>;
+  createdByUser?: Maybe<ProductPaymentRelatedUserGqlResponse>;
   /** Payment currency */
-  currency: UserCoursePurchaseCurrency;
+  currency: UserProductPurchaseCurrency;
   /** Discount amount in IRT */
   discountAmountIrt?: Maybe<Scalars["Float"]["output"]>;
-  /** Discount percentage applied by course discount */
+  /** Discount percentage applied by product discount */
   discountPercentage?: Maybe<Scalars["Float"]["output"]>;
   /** Failed status date */
   failedAt?: Maybe<Scalars["DateTime"]["output"]>;
   /** Final payable amount in IRT */
   finalAmountIrt: Scalars["Float"]["output"];
-  /** User-course purchase record ID */
+  /** User-product purchase record ID */
   id: Scalars["ID"]["output"];
   /** Whether the payment status was changed manually */
   isManualStatusChange: Scalars["Boolean"]["output"];
@@ -1012,11 +1012,11 @@ export type CoursePaymentListGqlResponse = {
   /** Manual status-change description */
   manualStatusChangedDescription?: Maybe<Scalars["String"]["output"]>;
   /** User that manually changed the status */
-  manualStatusChanger?: Maybe<CoursePaymentRelatedUserGqlResponse>;
+  manualStatusChanger?: Maybe<ProductPaymentRelatedUserGqlResponse>;
   /** Paid status date */
   paidAt?: Maybe<Scalars["DateTime"]["output"]>;
   /** Payment method */
-  paymentMethod: UserCoursePaymentMethod;
+  paymentMethod: UserProductPaymentMethod;
   /** Payment provider, if any */
   paymentProvider?: Maybe<Scalars["String"]["output"]>;
   /** Gateway authority or manual reference */
@@ -1028,11 +1028,11 @@ export type CoursePaymentListGqlResponse = {
   /** User ID that uploaded the receipt */
   receiptUploadedBy?: Maybe<Scalars["ID"]["output"]>;
   /** User that uploaded the receipt */
-  receiptUploader?: Maybe<CoursePaymentRelatedUserGqlResponse>;
+  receiptUploader?: Maybe<ProductPaymentRelatedUserGqlResponse>;
   /** Refunded status date */
   refundedAt?: Maybe<Scalars["DateTime"]["output"]>;
   /** Payment status */
-  status: UserCoursePurchaseStatus;
+  status: UserProductPurchaseStatus;
   /** Whether this payment record was initially submitted by an admin */
   submittedInitiallyByAdmin: Scalars["Boolean"]["output"];
   /** Gateway ref ID or crypto transaction ID */
@@ -1040,52 +1040,52 @@ export type CoursePaymentListGqlResponse = {
   /** Last payment update date */
   updatedAt?: Maybe<Scalars["DateTime"]["output"]>;
   /** Uploaded receipt file metadata */
-  uploadedReceiptFile?: Maybe<CoursePaymentStoredFileGqlResponse>;
+  uploadedReceiptFile?: Maybe<ProductPaymentStoredFileGqlResponse>;
   /** Buyer snapshot captured when the purchase was submitted */
-  user: CoursePaymentUserSnapshotGqlResponse;
+  user: ProductPaymentUserSnapshotGqlResponse;
   /** Buyer user ID */
   userId: Scalars["ID"]["output"];
 };
 
-export type CoursePaymentListPaginatedOffsetGqlResponse = {
-  __typename?: "CoursePaymentListPaginatedOffsetGqlResponse";
-  /** List of course payments */
-  items: Array<CoursePaymentListSummaryGqlResponse>;
+export type ProductPaymentListPaginatedOffsetGqlResponse = {
+  __typename?: "ProductPaymentListPaginatedOffsetGqlResponse";
+  /** List of product payments */
+  items: Array<ProductPaymentListSummaryGqlResponse>;
   /** Pagination metadata */
   pagination: PaginationOffsetResponse;
 };
 
-export type CoursePaymentListReceiptFileSummaryGqlResponse = {
-  __typename?: "CoursePaymentListReceiptFileSummaryGqlResponse";
+export type ProductPaymentListReceiptFileSummaryGqlResponse = {
+  __typename?: "ProductPaymentListReceiptFileSummaryGqlResponse";
   /** Signed access descriptor for reading the stored receipt file */
   accessUrl?: Maybe<FileAccessUrlGqlResponse>;
 };
 
-export type CoursePaymentListSummaryGqlResponse = {
-  __typename?: "CoursePaymentListSummaryGqlResponse";
+export type ProductPaymentListSummaryGqlResponse = {
+  __typename?: "ProductPaymentListSummaryGqlResponse";
   /** Original amount in IRT */
   amountIrt: Scalars["Float"]["output"];
   /** Cancelled status date */
   cancelledAt?: Maybe<Scalars["DateTime"]["output"]>;
   /** Applied coupon snapshot, if any */
-  coupon?: Maybe<CoursePaymentListCouponSummaryGqlResponse>;
-  /** Course snapshot captured when the purchase was submitted */
-  course: CoursePaymentListCourseSummaryGqlResponse;
-  /** Course ID */
-  courseId: Scalars["ID"]["output"];
+  coupon?: Maybe<ProductPaymentListCouponSummaryGqlResponse>;
+  /** Product snapshot captured when the purchase was submitted */
+  product: ProductPaymentListProductSummaryGqlResponse;
+  /** Product ID */
+  productId: Scalars["ID"]["output"];
   /** Payment submitted date */
   createdAt?: Maybe<Scalars["DateTime"]["output"]>;
   /** Payment currency */
-  currency: UserCoursePurchaseCurrency;
+  currency: UserProductPurchaseCurrency;
   /** Discount amount in IRT */
   discountAmountIrt?: Maybe<Scalars["Float"]["output"]>;
-  /** Discount percentage applied by course discount */
+  /** Discount percentage applied by product discount */
   discountPercentage?: Maybe<Scalars["Float"]["output"]>;
   /** Failed status date */
   failedAt?: Maybe<Scalars["DateTime"]["output"]>;
   /** Final payable amount in IRT */
   finalAmountIrt: Scalars["Float"]["output"];
-  /** User-course purchase record ID */
+  /** User-product purchase record ID */
   id: Scalars["ID"]["output"];
   /** Whether the payment status was changed manually */
   isManualStatusChange: Scalars["Boolean"]["output"];
@@ -1096,7 +1096,7 @@ export type CoursePaymentListSummaryGqlResponse = {
   /** Paid status date */
   paidAt?: Maybe<Scalars["DateTime"]["output"]>;
   /** Payment method */
-  paymentMethod: UserCoursePaymentMethod;
+  paymentMethod: UserProductPaymentMethod;
   /** Payment provider, if any */
   paymentProvider?: Maybe<Scalars["String"]["output"]>;
   /** Gateway authority or manual reference */
@@ -1110,21 +1110,21 @@ export type CoursePaymentListSummaryGqlResponse = {
   /** Refunded status date */
   refundedAt?: Maybe<Scalars["DateTime"]["output"]>;
   /** Payment status */
-  status: UserCoursePurchaseStatus;
+  status: UserProductPurchaseStatus;
   /** Gateway ref ID or crypto transaction ID */
   transactionId?: Maybe<Scalars["String"]["output"]>;
   /** Last payment update date */
   updatedAt?: Maybe<Scalars["DateTime"]["output"]>;
   /** Uploaded receipt file metadata */
-  uploadedReceiptFile?: Maybe<CoursePaymentListReceiptFileSummaryGqlResponse>;
+  uploadedReceiptFile?: Maybe<ProductPaymentListReceiptFileSummaryGqlResponse>;
   /** Buyer snapshot captured when the purchase was submitted */
-  user: CoursePaymentListUserSummaryGqlResponse;
+  user: ProductPaymentListUserSummaryGqlResponse;
   /** Buyer user ID */
   userId: Scalars["ID"]["output"];
 };
 
-export type CoursePaymentListUserSummaryGqlResponse = {
-  __typename?: "CoursePaymentListUserSummaryGqlResponse";
+export type ProductPaymentListUserSummaryGqlResponse = {
+  __typename?: "ProductPaymentListUserSummaryGqlResponse";
   /** Buyer email snapshot */
   email: Scalars["String"]["output"];
   /** Buyer full name snapshot */
@@ -1137,25 +1137,25 @@ export type CoursePaymentListUserSummaryGqlResponse = {
   username: Scalars["String"]["output"];
 };
 
-export type CoursePaymentManualCreateGqlInput = {
+export type ProductPaymentManualCreateGqlInput = {
   /** Optional coupon code to apply to this manual payment */
   couponCode?: InputMaybe<Scalars["String"]["input"]>;
-  /** Active paid course ID to register payment for */
-  courseId: Scalars["ID"]["input"];
+  /** Active paid product ID to register payment for */
+  productId: Scalars["ID"]["input"];
   /** Optional manual review description */
   manualStatusChangedDescription?: InputMaybe<Scalars["String"]["input"]>;
   /** Payment method selected by support for this manual record */
-  paymentMethod: UserCoursePaymentMethod;
+  paymentMethod: UserProductPaymentMethod;
   /** Initial manual purchase status */
-  status: UserCoursePurchaseStatus;
+  status: UserProductPurchaseStatus;
   /** Optional uploaded payment evidence file ID */
   uploadedReceiptFileId?: InputMaybe<Scalars["ID"]["input"]>;
   /** User ID that will receive the payment record */
   userId: Scalars["ID"]["input"];
 };
 
-export type CoursePaymentRelatedUserGqlResponse = {
-  __typename?: "CoursePaymentRelatedUserGqlResponse";
+export type ProductPaymentRelatedUserGqlResponse = {
+  __typename?: "ProductPaymentRelatedUserGqlResponse";
   /** Related user email */
   email?: Maybe<Scalars["String"]["output"]>;
   /** Related user display name */
@@ -1168,17 +1168,17 @@ export type CoursePaymentRelatedUserGqlResponse = {
   username?: Maybe<Scalars["String"]["output"]>;
 };
 
-export type CoursePaymentStatusUpdateGqlInput = {
-  /** User-course purchase record ID */
+export type ProductPaymentStatusUpdateGqlInput = {
+  /** User-product purchase record ID */
   id: Scalars["ID"]["input"];
   /** Optional manual status-change description */
   manualStatusChangedDescription?: InputMaybe<Scalars["String"]["input"]>;
   /** New purchase status */
-  status: UserCoursePurchaseStatus;
+  status: UserProductPurchaseStatus;
 };
 
-export type CoursePaymentStoredFileGqlResponse = {
-  __typename?: "CoursePaymentStoredFileGqlResponse";
+export type ProductPaymentStoredFileGqlResponse = {
+  __typename?: "ProductPaymentStoredFileGqlResponse";
   /** Signed access descriptor for reading the stored file */
   accessUrl?: Maybe<FileAccessUrlGqlResponse>;
   /** Stored file MIME type */
@@ -1193,8 +1193,8 @@ export type CoursePaymentStoredFileGqlResponse = {
   title?: Maybe<Scalars["String"]["output"]>;
 };
 
-export type CoursePaymentUserSnapshotGqlResponse = {
-  __typename?: "CoursePaymentUserSnapshotGqlResponse";
+export type ProductPaymentUserSnapshotGqlResponse = {
+  __typename?: "ProductPaymentUserSnapshotGqlResponse";
   /** Buyer email snapshot */
   email: Scalars["String"]["output"];
   /** Buyer full name snapshot */
@@ -1209,13 +1209,13 @@ export type CoursePaymentUserSnapshotGqlResponse = {
   username: Scalars["String"]["output"];
 };
 
-export type CoursePurchaseSubmitGqlInput = {
+export type ProductPurchaseSubmitGqlInput = {
   /** Optional coupon code to apply to this purchase */
   couponCode?: InputMaybe<Scalars["String"]["input"]>;
-  /** Course ID to purchase */
-  courseId: Scalars["ID"]["input"];
+  /** Product ID to purchase */
+  productId: Scalars["ID"]["input"];
   /** Payment method. Supports GATEWAY, CARD_TO_CARD, CRYPTOCURRENCY, and FREE. */
-  paymentMethod: UserCoursePaymentMethod;
+  paymentMethod: UserProductPaymentMethod;
   /** Receipt number or last card digits. Required for CARD_TO_CARD. */
   paymentReference?: InputMaybe<Scalars["String"]["input"]>;
   /** Blockchain transaction ID. Required for CRYPTOCURRENCY. */
@@ -1224,96 +1224,96 @@ export type CoursePurchaseSubmitGqlInput = {
   uploadedReceiptFileId?: InputMaybe<Scalars["ID"]["input"]>;
 };
 
-export type CoursePurchaseSubmitGqlResponse = {
-  __typename?: "CoursePurchaseSubmitGqlResponse";
-  /** Original course price in IRT */
+export type ProductPurchaseSubmitGqlResponse = {
+  __typename?: "ProductPurchaseSubmitGqlResponse";
+  /** Original product price in IRT */
   amountIrt: Scalars["Float"]["output"];
   /** Applied coupon code, if the purchase used a coupon */
   couponCode?: Maybe<Scalars["String"]["output"]>;
-  /** Purchased course ID */
-  courseId: Scalars["ID"]["output"];
+  /** Purchased product ID */
+  productId: Scalars["ID"]["output"];
   /** Currency expected for the payment method */
-  currency: UserCoursePurchaseCurrency;
+  currency: UserProductPurchaseCurrency;
   /** Applied discount amount in IRT */
   discountAmountIrt?: Maybe<Scalars["Float"]["output"]>;
   /** Final payable amount in IRT */
   finalAmountIrt: Scalars["Float"]["output"];
-  /** User course purchase record ID */
+  /** User product purchase record ID */
   id: Scalars["ID"]["output"];
-  /** Whether this purchase grants course access now */
+  /** Whether this purchase grants product access now */
   isPurchased: Scalars["Boolean"]["output"];
   /** Gateway authority/reference for online payments */
   paymentAuthority?: Maybe<Scalars["String"]["output"]>;
   /** Payment method used for this purchase */
-  paymentMethod: UserCoursePaymentMethod;
+  paymentMethod: UserProductPaymentMethod;
   /** Receipt number or last source-card digits */
   paymentReference?: Maybe<Scalars["String"]["output"]>;
   /** Gateway redirect URL for online payments */
   paymentUrl?: Maybe<Scalars["String"]["output"]>;
   /** Purchase status after submission */
-  status: UserCoursePurchaseStatus;
+  status: UserProductPurchaseStatus;
   /** Blockchain transaction ID for crypto purchases */
   transactionId?: Maybe<Scalars["String"]["output"]>;
 };
 
-/** Calculated course release strategy */
-export const CourseReleaseType = {
+/** Calculated product release strategy */
+export const ProductReleaseType = {
   GRADUAL: "GRADUAL",
   IMMEDIATE: "IMMEDIATE",
 } as const;
 
-export type CourseReleaseType = (typeof CourseReleaseType)[keyof typeof CourseReleaseType];
-export type CourseReviewCourseSnapshotGqlResponse = {
-  __typename?: "CourseReviewCourseSnapshotGqlResponse";
-  /** Stored course title snapshot */
+export type ProductReleaseType = (typeof ProductReleaseType)[keyof typeof ProductReleaseType];
+export type ProductReviewProductSnapshotGqlResponse = {
+  __typename?: "ProductReviewProductSnapshotGqlResponse";
+  /** Stored product title snapshot */
   title: Scalars["String"]["output"];
 };
 
-export type CourseReviewListCursorPageOptionsParamsInput = {
+export type ProductReviewListCursorPageOptionsParamsInput = {
   /** Maximum number of records to return */
   limit?: InputMaybe<Scalars["Int"]["input"]>;
   /** Sort options as a map of field names to sort order */
-  sort?: InputMaybe<UserCourseReviewListSortOptionInput>;
+  sort?: InputMaybe<UserProductReviewListSortOptionInput>;
   /** Cursor to start after. Uses the beginning if omitted */
   startCursor?: InputMaybe<Scalars["ID"]["input"]>;
 };
 
-export type CourseReviewListFilterInput = {
-  /** Filter reviews by course ID */
-  courseId?: InputMaybe<Scalars["ID"]["input"]>;
+export type ProductReviewListFilterInput = {
+  /** Filter reviews by product ID */
+  productId?: InputMaybe<Scalars["ID"]["input"]>;
   /** Filter reviews that include at least one message */
   hasMessages?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** Filter reviews that include a rating */
   hasRating?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** Filter reviews containing at least one message with this visibility */
-  messageVisibility?: InputMaybe<CourseReviewVisibility>;
-  /** Search query that matches rating comment, message body, user snapshot, or course title */
+  messageVisibility?: InputMaybe<ProductReviewVisibility>;
+  /** Search query that matches rating comment, message body, user snapshot, or product title */
   query?: InputMaybe<Scalars["String"]["input"]>;
   /** Filter reviews by rating moderation visibility */
-  ratingVisibility?: InputMaybe<CourseReviewVisibility>;
+  ratingVisibility?: InputMaybe<ProductReviewVisibility>;
   /** Filter reviews by review thread moderation visibility */
-  reviewVisibility?: InputMaybe<CourseReviewVisibility>;
+  reviewVisibility?: InputMaybe<ProductReviewVisibility>;
   /** Filter reviews by exact star rating */
   stars?: InputMaybe<Scalars["Int"]["input"]>;
-  /** Filter reviews by linked user course enrollment ID */
-  userCourseId?: InputMaybe<Scalars["ID"]["input"]>;
+  /** Filter reviews by linked user product enrollment ID */
+  userProductId?: InputMaybe<Scalars["ID"]["input"]>;
   /** Filter reviews by review owner user ID */
   userId?: InputMaybe<Scalars["ID"]["input"]>;
 };
 
-export type CourseReviewListGqlInput = {
-  /** Filter options for narrowing down the course review list */
-  filters?: InputMaybe<CourseReviewListFilterInput>;
+export type ProductReviewListGqlInput = {
+  /** Filter options for narrowing down the product review list */
+  filters?: InputMaybe<ProductReviewListFilterInput>;
   /** Cursor pagination and sorting options */
-  options?: InputMaybe<CourseReviewListCursorPageOptionsParamsInput>;
+  options?: InputMaybe<ProductReviewListCursorPageOptionsParamsInput>;
 };
 
-export type CourseReviewListGqlResponse = {
-  __typename?: "CourseReviewListGqlResponse";
-  /** Course ID */
-  courseId: Scalars["ID"]["output"];
-  /** Stored course snapshot */
-  courseSnapshot: CourseReviewCourseSnapshotGqlResponse;
+export type ProductReviewListGqlResponse = {
+  __typename?: "ProductReviewListGqlResponse";
+  /** Product ID */
+  productId: Scalars["ID"]["output"];
+  /** Stored product snapshot */
+  productSnapshot: ProductReviewProductSnapshotGqlResponse;
   /** Date when the review thread was created */
   createdAt?: Maybe<Scalars["DateTime"]["output"]>;
   /** Minimal user that created the review thread */
@@ -1326,14 +1326,14 @@ export type CourseReviewListGqlResponse = {
   deletedByUser?: Maybe<UserMinimalGqlResponse>;
   /** User ID that soft deleted the review thread */
   deletedByUserId?: Maybe<Scalars["ID"]["output"]>;
-  /** Course review thread ID */
+  /** Product review thread ID */
   id: Scalars["ID"]["output"];
   /** Full Q&A message thread */
-  messages: Array<CourseReviewMessageGqlResponse>;
+  messages: Array<ProductReviewMessageGqlResponse>;
   /** Review thread moderation metadata */
-  moderation: CourseReviewModerationGqlResponse;
-  /** Course rating, if submitted */
-  rating?: Maybe<CourseReviewRatingGqlResponse>;
+  moderation: ProductReviewModerationGqlResponse;
+  /** Product rating, if submitted */
+  rating?: Maybe<ProductReviewRatingGqlResponse>;
   /** Date when the review thread was last updated */
   updatedAt?: Maybe<Scalars["DateTime"]["output"]>;
   /** Minimal user that last updated the review thread */
@@ -1342,30 +1342,30 @@ export type CourseReviewListGqlResponse = {
   updatedByUserId?: Maybe<Scalars["ID"]["output"]>;
   /** Minimal review owner information */
   user?: Maybe<UserMinimalGqlResponse>;
-  /** Linked user course enrollment ID, when the reviewer purchased the course */
-  userCourseId?: Maybe<Scalars["ID"]["output"]>;
+  /** Linked user product enrollment ID, when the reviewer purchased the product */
+  userProductId?: Maybe<Scalars["ID"]["output"]>;
   /** Review owner user ID */
   userId: Scalars["ID"]["output"];
   /** Stored review owner snapshot */
-  userSnapshot: CourseReviewUserSnapshotGqlResponse;
+  userSnapshot: ProductReviewUserSnapshotGqlResponse;
 };
 
-export type CourseReviewListPaginatedCursorGqlResponse = {
-  __typename?: "CourseReviewListPaginatedCursorGqlResponse";
-  /** Full course review list for SUPER_ADMIN */
-  items: Array<CourseReviewListGqlResponse>;
+export type ProductReviewListPaginatedCursorGqlResponse = {
+  __typename?: "ProductReviewListPaginatedCursorGqlResponse";
+  /** Full product review list for SUPER_ADMIN */
+  items: Array<ProductReviewListGqlResponse>;
   /** Pagination metadata */
   pagination: PaginationCursorResponse;
 };
 
-export type CourseReviewMessageGqlResponse = {
-  __typename?: "CourseReviewMessageGqlResponse";
+export type ProductReviewMessageGqlResponse = {
+  __typename?: "ProductReviewMessageGqlResponse";
   /** Message body */
   body: Scalars["String"]["output"];
   /** Stable message key generated by the database */
   key: Scalars["String"]["output"];
   /** Message moderation metadata */
-  moderation: CourseReviewModerationGqlResponse;
+  moderation: ProductReviewModerationGqlResponse;
   /** Minimal sender user information */
   senderUser?: Maybe<UserMinimalGqlResponse>;
   /** Sender user ID */
@@ -1374,8 +1374,8 @@ export type CourseReviewMessageGqlResponse = {
   sentAt: Scalars["DateTime"]["output"];
 };
 
-export type CourseReviewModerationGqlResponse = {
-  __typename?: "CourseReviewModerationGqlResponse";
+export type ProductReviewModerationGqlResponse = {
+  __typename?: "ProductReviewModerationGqlResponse";
   /** Date when the content was hidden */
   hiddenAt?: Maybe<Scalars["DateTime"]["output"]>;
   /** Minimal user that hid the content */
@@ -1385,37 +1385,37 @@ export type CourseReviewModerationGqlResponse = {
   /** Internal moderation note */
   hiddenReason?: Maybe<Scalars["String"]["output"]>;
   /** Moderation visibility for this content */
-  visibility: CourseReviewVisibility;
+  visibility: ProductReviewVisibility;
 };
 
-/** Moderation scope for a course review update */
-export const CourseReviewModerationTarget = {
+/** Moderation scope for a product review update */
+export const ProductReviewModerationTarget = {
   MESSAGE: "MESSAGE",
   RATING: "RATING",
   REVIEW: "REVIEW",
 } as const;
 
-export type CourseReviewModerationTarget =
-  (typeof CourseReviewModerationTarget)[keyof typeof CourseReviewModerationTarget];
-export type CourseReviewModerationUpdateGqlInput = {
+export type ProductReviewModerationTarget =
+  (typeof ProductReviewModerationTarget)[keyof typeof ProductReviewModerationTarget];
+export type ProductReviewModerationUpdateGqlInput = {
   /** Optional internal note when hiding content */
   hiddenReason?: InputMaybe<Scalars["String"]["input"]>;
   /** Stable message key; required when target is MESSAGE */
   messageKey?: InputMaybe<Scalars["String"]["input"]>;
-  /** Course review ID */
+  /** Product review ID */
   reviewId: Scalars["ID"]["input"];
   /** Which moderation scope to update: review thread, rating, or message */
-  target: CourseReviewModerationTarget;
+  target: ProductReviewModerationTarget;
   /** New moderation visibility */
-  visibility: CourseReviewVisibility;
+  visibility: ProductReviewVisibility;
 };
 
-export type CourseReviewRatingGqlResponse = {
-  __typename?: "CourseReviewRatingGqlResponse";
+export type ProductReviewRatingGqlResponse = {
+  __typename?: "ProductReviewRatingGqlResponse";
   /** Optional review comment */
   comment?: Maybe<Scalars["String"]["output"]>;
   /** Rating moderation metadata */
-  moderation: CourseReviewModerationGqlResponse;
+  moderation: ProductReviewModerationGqlResponse;
   /** Date when the rating was first submitted */
   ratedAt: Scalars["DateTime"]["output"];
   /** Star rating from 1 to 5 */
@@ -1424,41 +1424,41 @@ export type CourseReviewRatingGqlResponse = {
   updatedAt?: Maybe<Scalars["DateTime"]["output"]>;
 };
 
-export type CourseReviewSubmitGqlInput = {
+export type ProductReviewSubmitGqlInput = {
   /** Captcha challenge identifier issued by the backend */
   captchaId?: InputMaybe<Scalars["String"]["input"]>;
   /** Captcha answer entered by the user */
   captchaValue?: InputMaybe<Scalars["String"]["input"]>;
   /** Optional review comment */
   comment?: InputMaybe<Scalars["String"]["input"]>;
-  /** Course ID to review */
-  courseId: Scalars["ID"]["input"];
+  /** Product ID to review */
+  productId: Scalars["ID"]["input"];
   /** Staff only. Visibility for a support message; PUBLIC or PRIVATE */
-  messageVisibility?: InputMaybe<CourseReviewVisibility>;
+  messageVisibility?: InputMaybe<ProductReviewVisibility>;
   /** Optional star rating from 1 to 5 */
   stars?: InputMaybe<Scalars["Int"]["input"]>;
   /** Review owner user ID; staff only. END_USER accounts always review as themselves */
   userId?: InputMaybe<Scalars["ID"]["input"]>;
 };
 
-export type CourseReviewSubmitGqlResponse = {
-  __typename?: "CourseReviewSubmitGqlResponse";
-  /** Reviewed course ID */
-  courseId: Scalars["ID"]["output"];
-  /** Course review thread ID */
+export type ProductReviewSubmitGqlResponse = {
+  __typename?: "ProductReviewSubmitGqlResponse";
+  /** Reviewed product ID */
+  productId: Scalars["ID"]["output"];
+  /** Product review thread ID */
   id: Scalars["ID"]["output"];
   /** Whether this call created the rating for the first time */
   isNewRating: Scalars["Boolean"]["output"];
   /** Submitted rating, if any */
-  rating?: Maybe<CourseReviewSubmitRatingGqlResponse>;
+  rating?: Maybe<ProductReviewSubmitRatingGqlResponse>;
   /** Minimal review owner information; returned to staff only */
   user?: Maybe<UserMinimalGqlResponse>;
   /** Review owner user ID; returned to staff only */
   userId?: Maybe<Scalars["ID"]["output"]>;
 };
 
-export type CourseReviewSubmitRatingGqlResponse = {
-  __typename?: "CourseReviewSubmitRatingGqlResponse";
+export type ProductReviewSubmitRatingGqlResponse = {
+  __typename?: "ProductReviewSubmitRatingGqlResponse";
   /** Optional review comment */
   comment?: Maybe<Scalars["String"]["output"]>;
   /** Date when the rating was first submitted */
@@ -1469,8 +1469,8 @@ export type CourseReviewSubmitRatingGqlResponse = {
   updatedAt?: Maybe<Scalars["DateTime"]["output"]>;
 };
 
-export type CourseReviewUserSnapshotGqlResponse = {
-  __typename?: "CourseReviewUserSnapshotGqlResponse";
+export type ProductReviewUserSnapshotGqlResponse = {
+  __typename?: "ProductReviewUserSnapshotGqlResponse";
   /** Stored avatar file ID snapshot */
   avatarFileId?: Maybe<Scalars["ID"]["output"]>;
   /** Stored full name snapshot */
@@ -1479,39 +1479,39 @@ export type CourseReviewUserSnapshotGqlResponse = {
   username: Scalars["String"]["output"];
 };
 
-/** Visibility state for course review content */
-export const CourseReviewVisibility = {
+/** Visibility state for product review content */
+export const ProductReviewVisibility = {
   HIDDEN: "HIDDEN",
   PRIVATE: "PRIVATE",
   PUBLIC: "PUBLIC",
 } as const;
 
-export type CourseReviewVisibility =
-  (typeof CourseReviewVisibility)[keyof typeof CourseReviewVisibility];
-export type CourseUpdateGqlInput = {
-  /** Course chapters */
-  chapters: Array<CourseChapterGqlInput>;
-  /** Stored file ID used as the course cover image */
+export type ProductReviewVisibility =
+  (typeof ProductReviewVisibility)[keyof typeof ProductReviewVisibility];
+export type ProductUpdateGqlInput = {
+  /** Product chapters */
+  chapters: Array<ProductChapterGqlInput>;
+  /** Stored file ID used as the product cover image */
   coverImageFileId?: InputMaybe<Scalars["ID"]["input"]>;
-  /** Course description */
+  /** Product description */
   description?: InputMaybe<Scalars["String"]["input"]>;
-  /** Optional course discount */
-  discount?: InputMaybe<CourseDiscountGqlInput>;
-  /** Course ID */
+  /** Optional product discount */
+  discount?: InputMaybe<ProductDiscountGqlInput>;
+  /** Product ID */
   id: Scalars["ID"]["input"];
-  /** Whether the course is active */
+  /** Whether the product is active */
   isActive?: InputMaybe<Scalars["Boolean"]["input"]>;
-  /** Whether learners can submit reviews for this course */
+  /** Whether learners can submit reviews for this product */
   isReviewSubmissionEnabled?: InputMaybe<Scalars["Boolean"]["input"]>;
-  /** Whether the reviews section is visible on the course detail page */
+  /** Whether the reviews section is visible on the product detail page */
   isReviewsSectionVisible?: InputMaybe<Scalars["Boolean"]["input"]>;
-  /** Course price in IRT */
+  /** Product price in IRT */
   priceIrt?: InputMaybe<Scalars["Float"]["input"]>;
-  /** Course display rank used for manual ordering */
+  /** Product display rank used for manual ordering */
   sortOrder?: InputMaybe<Scalars["Float"]["input"]>;
-  /** Course tags */
+  /** Product tags */
   tags?: InputMaybe<Array<Scalars["String"]["input"]>>;
-  /** Course title */
+  /** Product title */
   title: Scalars["String"]["input"];
 };
 
@@ -1539,7 +1539,7 @@ export type GeneralSubscriptionGqlResponse = {
   createdAt: Scalars["DateTime"]["output"];
   /** Type-specific payload object */
   payload?: Maybe<Scalars["JSON"]["output"]>;
-  /** Optional scoped identifier for this update (for example, ticket or course id) */
+  /** Optional scoped identifier for this update (for example, ticket or product id) */
   targetId?: Maybe<Scalars["String"]["output"]>;
   /** General update type emitted by backend */
   updateType: GeneralSubscriptionUpdateType;
@@ -1589,30 +1589,30 @@ export type Mutation = {
   __typename?: "Mutation";
   /** Update a single app setting record, including typed value, metadata, and active status */
   appSettingUpdate: AppSettingMutationGqlResponse;
-  /** Create a coupon with discount rules, usage limits, course applicability, and active status */
+  /** Create a coupon with discount rules, usage limits, product applicability, and active status */
   couponCreate: CouponListGqlResponse;
   /** Delete a coupon */
   couponDelete: Scalars["Boolean"]["output"];
-  /** Update a coupon's discount rules, usage limits, course applicability, or active status */
+  /** Update a coupon's discount rules, usage limits, product applicability, or active status */
   couponUpdate: CouponListGqlResponse;
-  /** Confirm completion of an unlocked course chapter for the authenticated learner */
-  courseChapterComplete: CourseChapterCompleteGqlResponse;
-  /** Create a course with chapters and items, returning calculated release and item types */
-  courseCreate: CourseListGqlResponse;
-  /** Delete a course and remove its detached file attachments */
-  courseDelete: Scalars["Boolean"]["output"];
-  /** Create a manual course payment record for an active paid course as a super admin */
-  coursePaymentManualCreate: CoursePaymentListGqlResponse;
-  /** Manually update a course payment status and optional review description */
-  coursePaymentStatusUpdate: CoursePaymentListGqlResponse;
-  /** Submit a course purchase using gateway, card-to-card, cryptocurrency, or a free coupon */
-  coursePurchaseSubmit: CoursePurchaseSubmitGqlResponse;
-  /** Update course review moderation visibility for the review thread, rating, or a single message */
-  courseReviewModerationUpdate: CourseReviewListGqlResponse;
-  /** Create or update a course star rating and optionally append a follow-up comment */
-  courseReviewSubmit: CourseReviewSubmitGqlResponse;
-  /** Update a course and clean up replaced or removed file attachments */
-  courseUpdate: CourseListGqlResponse;
+  /** Confirm completion of an unlocked product chapter for the authenticated learner */
+  productChapterComplete: ProductChapterCompleteGqlResponse;
+  /** Create a product with chapters and items, returning calculated release and item types */
+  productCreate: ProductListGqlResponse;
+  /** Delete a product and remove its detached file attachments */
+  productDelete: Scalars["Boolean"]["output"];
+  /** Create a manual product payment record for an active paid product as a super admin */
+  productPaymentManualCreate: ProductPaymentListGqlResponse;
+  /** Manually update a product payment status and optional review description */
+  productPaymentStatusUpdate: ProductPaymentListGqlResponse;
+  /** Submit a product purchase using gateway, card-to-card, cryptocurrency, or a free coupon */
+  productPurchaseSubmit: ProductPurchaseSubmitGqlResponse;
+  /** Update product review moderation visibility for the review thread, rating, or a single message */
+  productReviewModerationUpdate: ProductReviewListGqlResponse;
+  /** Create or update a product star rating and optionally append a follow-up comment */
+  productReviewSubmit: ProductReviewSubmitGqlResponse;
+  /** Update a product and clean up replaced or removed file attachments */
+  productUpdate: ProductListGqlResponse;
   /** Broadcast a global anouncement to active users subscribed to general updates */
   globalAnouncementSend: GlobalAnouncementSendGqlResponse;
   /** Request login code using username, email, or phone identity */
@@ -1671,40 +1671,40 @@ export type MutationCouponUpdateArgs = {
   input: CouponUpdateGqlInput;
 };
 
-export type MutationCourseChapterCompleteArgs = {
-  input: CourseChapterCompleteGqlInput;
+export type MutationProductChapterCompleteArgs = {
+  input: ProductChapterCompleteGqlInput;
 };
 
-export type MutationCourseCreateArgs = {
-  input: CourseCreateGqlInput;
+export type MutationProductCreateArgs = {
+  input: ProductCreateGqlInput;
 };
 
-export type MutationCourseDeleteArgs = {
-  input: CourseDeleteGqlInput;
+export type MutationProductDeleteArgs = {
+  input: ProductDeleteGqlInput;
 };
 
-export type MutationCoursePaymentManualCreateArgs = {
-  input: CoursePaymentManualCreateGqlInput;
+export type MutationProductPaymentManualCreateArgs = {
+  input: ProductPaymentManualCreateGqlInput;
 };
 
-export type MutationCoursePaymentStatusUpdateArgs = {
-  input: CoursePaymentStatusUpdateGqlInput;
+export type MutationProductPaymentStatusUpdateArgs = {
+  input: ProductPaymentStatusUpdateGqlInput;
 };
 
-export type MutationCoursePurchaseSubmitArgs = {
-  input: CoursePurchaseSubmitGqlInput;
+export type MutationProductPurchaseSubmitArgs = {
+  input: ProductPurchaseSubmitGqlInput;
 };
 
-export type MutationCourseReviewModerationUpdateArgs = {
-  input: CourseReviewModerationUpdateGqlInput;
+export type MutationProductReviewModerationUpdateArgs = {
+  input: ProductReviewModerationUpdateGqlInput;
 };
 
-export type MutationCourseReviewSubmitArgs = {
-  input: CourseReviewSubmitGqlInput;
+export type MutationProductReviewSubmitArgs = {
+  input: ProductReviewSubmitGqlInput;
 };
 
-export type MutationCourseUpdateArgs = {
-  input: CourseUpdateGqlInput;
+export type MutationProductUpdateArgs = {
+  input: ProductUpdateGqlInput;
 };
 
 export type MutationGlobalAnouncementSendArgs = {
@@ -1908,8 +1908,8 @@ export const NotificationMode = {
 export type NotificationMode = (typeof NotificationMode)[keyof typeof NotificationMode];
 /** Domain source that produced a notification */
 export const NotificationSource = {
-  COURSE: "COURSE",
-  COURSE_CHAPTER: "COURSE_CHAPTER",
+  PRODUCT: "PRODUCT",
+  PRODUCT_CHAPTER: "PRODUCT_CHAPTER",
   OTHER: "OTHER",
   PAYMENT: "PAYMENT",
   TICKET: "TICKET",
@@ -2026,7 +2026,7 @@ export type PaymentCheckoutMethodGqlResponse = {
   /** Whether the method should be shown in checkout */
   isVisible: Scalars["Boolean"]["output"];
   /** Payment method identifier */
-  method: UserCoursePaymentMethod;
+  method: UserProductPaymentMethod;
 };
 
 export type PaymentCheckoutUsdtIrtRateGqlResponse = {
@@ -2051,29 +2051,29 @@ export type Query = {
   appSettingKeyList: AppSettingKeyListPaginatedOffsetGqlResponse;
   /** Get configured terms of use HTML content */
   appTermsOfUsePageConfig: AppTermsOfUsePageConfigGqlResponse;
-  /** Get role-aware sidebar badge counts. Anonymous users receive active course count only. */
+  /** Get role-aware sidebar badge counts. Anonymous users receive active product count only. */
   badgeCount: BadgeCountGqlResponse;
-  /** Get full coupon data for SUPER_ADMIN, including applicable courses for editing */
+  /** Get full coupon data for SUPER_ADMIN, including applicable products for editing */
   couponDetail: CouponListGqlResponse;
   /** Get a paginated, filterable, sortable SUPER_ADMIN list of coupons using offset-based pagination */
   couponList: CouponListPaginatedOffsetGqlResponse;
-  /** Validate a coupon for the current user's course purchase */
+  /** Validate a coupon for the current user's product purchase */
   couponValidate: CouponValidateGqlResponse;
-  /** Inspect related records before deleting a course, including retained and removed dependencies */
-  courseDeleteDependencies: CourseDeleteDependenciesGqlResponse;
-  /** Get full course data for SUPER_ADMIN, including chapters and items for editing */
-  courseDetail: CourseListGqlResponse;
-  /** Get a paginated, filterable, sortable admin list of courses with calculated release and item types */
-  courseList: CourseListPaginatedCursorGqlResponse;
-  /** Get full course payment data for SUPER_ADMIN, including receipt and audit fields for review */
-  coursePaymentDetail: CoursePaymentListGqlResponse;
-  /** Get paginated list of all course payments from user-course purchase records */
-  coursePaymentList: CoursePaymentListPaginatedOffsetGqlResponse;
-  /** Get a cursor-paginated, filterable, sortable staff list of course reviews with full data */
-  courseReviewList: CourseReviewListPaginatedCursorGqlResponse;
+  /** Inspect related records before deleting a product, including retained and removed dependencies */
+  productDeleteDependencies: ProductDeleteDependenciesGqlResponse;
+  /** Get full product data for SUPER_ADMIN, including chapters and items for editing */
+  productDetail: ProductListGqlResponse;
+  /** Get a paginated, filterable, sortable admin list of products with calculated release and item types */
+  productList: ProductListPaginatedCursorGqlResponse;
+  /** Get full product payment data for SUPER_ADMIN, including receipt and audit fields for review */
+  productPaymentDetail: ProductPaymentListGqlResponse;
+  /** Get paginated list of all product payments from user-product purchase records */
+  productPaymentList: ProductPaymentListPaginatedOffsetGqlResponse;
+  /** Get a cursor-paginated, filterable, sortable staff list of product reviews with full data */
+  productReviewList: ProductReviewListPaginatedCursorGqlResponse;
   /** Get the currently authenticated user's information */
   me: UserMeGqlResponse;
-  /** Get payment checkout settings for course purchases */
+  /** Get payment checkout settings for product purchases */
   paymentCheckoutConfig: PaymentCheckoutConfigGqlResponse;
   /** Get configured support contact channels */
   supportContactConfig: SupportContactConfigGqlResponse;
@@ -2081,12 +2081,12 @@ export type Query = {
   ticketDetail: TicketListGqlResponse;
   /** Get a paginated, filterable, sortable super-admin list of support tickets using offset-based pagination */
   ticketList: TicketListPaginatedOffsetGqlResponse;
-  /** Get active course details for anonymous users and END_USER accounts with locked content redacted */
-  userCourseDetail: UserCourseDetailGqlResponse;
-  /** Get active courses for anonymous users and END_USER views with purchase state */
-  userCourseList: UserCourseListPaginatedCursorGqlResponse;
-  /** Get a cursor-paginated list of public course reviews for anonymous users and END_USER accounts */
-  userCourseReviewList: UserCourseReviewListPaginatedCursorGqlResponse;
+  /** Get active product details for anonymous users and END_USER accounts with locked content redacted */
+  userProductDetail: UserProductDetailGqlResponse;
+  /** Get active products for anonymous users and END_USER views with purchase state */
+  userProductList: UserProductListPaginatedCursorGqlResponse;
+  /** Get a cursor-paginated list of public product reviews for anonymous users and END_USER accounts */
+  userProductReviewList: UserProductReviewListPaginatedCursorGqlResponse;
   /** Get full user data for SUPER_ADMIN, including profile fields for editing */
   userDetail: UserListGqlResponse;
   /** Get a paginated, filterable, sortable super-admin list of users using offset-based pagination */
@@ -2121,28 +2121,28 @@ export type QueryCouponValidateArgs = {
   input: CouponValidateGqlInput;
 };
 
-export type QueryCourseDeleteDependenciesArgs = {
-  input: CourseDeleteGqlInput;
+export type QueryProductDeleteDependenciesArgs = {
+  input: ProductDeleteGqlInput;
 };
 
-export type QueryCourseDetailArgs = {
-  input: CourseDetailGqlInput;
+export type QueryProductDetailArgs = {
+  input: ProductDetailGqlInput;
 };
 
-export type QueryCourseListArgs = {
-  input: CourseListGqlInput;
+export type QueryProductListArgs = {
+  input: ProductListGqlInput;
 };
 
-export type QueryCoursePaymentDetailArgs = {
-  input: CoursePaymentDetailGqlInput;
+export type QueryProductPaymentDetailArgs = {
+  input: ProductPaymentDetailGqlInput;
 };
 
-export type QueryCoursePaymentListArgs = {
-  input: CoursePaymentListGqlInput;
+export type QueryProductPaymentListArgs = {
+  input: ProductPaymentListGqlInput;
 };
 
-export type QueryCourseReviewListArgs = {
-  input: CourseReviewListGqlInput;
+export type QueryProductReviewListArgs = {
+  input: ProductReviewListGqlInput;
 };
 
 export type QueryTicketDetailArgs = {
@@ -2153,16 +2153,16 @@ export type QueryTicketListArgs = {
   input: TicketListGqlInput;
 };
 
-export type QueryUserCourseDetailArgs = {
-  input: UserCourseDetailGqlInput;
+export type QueryUserProductDetailArgs = {
+  input: UserProductDetailGqlInput;
 };
 
-export type QueryUserCourseListArgs = {
-  input: CourseListGqlInput;
+export type QueryUserProductListArgs = {
+  input: ProductListGqlInput;
 };
 
-export type QueryUserCourseReviewListArgs = {
-  input: UserCourseReviewListGqlInput;
+export type QueryUserProductReviewListArgs = {
+  input: UserProductReviewListGqlInput;
 };
 
 export type QueryUserDetailArgs = {
@@ -2362,7 +2362,7 @@ export type SupportFaqSectionGqlResponse = {
 export const TicketCategory = {
   ACCOUNT: "ACCOUNT",
   BUG: "BUG",
-  COURSE: "COURSE",
+  PRODUCT: "PRODUCT",
   OTHER: "OTHER",
   PAYMENT: "PAYMENT",
   TECHNICAL: "TECHNICAL",
@@ -2625,8 +2625,8 @@ export type TicketUserProfileMinimalGqlResponse = {
   lastName?: Maybe<Scalars["String"]["output"]>;
 };
 
-export type UserCourseDetailChapterGqlResponse = {
-  __typename?: "UserCourseDetailChapterGqlResponse";
+export type UserProductDetailChapterGqlResponse = {
+  __typename?: "UserProductDetailChapterGqlResponse";
   /** Chapter description */
   description?: Maybe<Scalars["String"]["output"]>;
   /** Whether the authenticated learner has confirmed completion of this chapter */
@@ -2636,7 +2636,7 @@ export type UserCourseDetailChapterGqlResponse = {
   /** Whether this chapter content is hidden from the current viewer */
   isLocked: Scalars["Boolean"]["output"];
   /** Chapter items. Null when the chapter is locked for the current viewer. */
-  items?: Maybe<Array<UserCourseDetailItemGqlResponse>>;
+  items?: Maybe<Array<UserProductDetailItemGqlResponse>>;
   /** Stable chapter key */
   key: Scalars["String"]["output"];
   /** Chapter title */
@@ -2649,123 +2649,123 @@ export type UserCourseDetailChapterGqlResponse = {
   visibleAfterMinutes?: Maybe<Scalars["Int"]["output"]>;
 };
 
-export type UserCourseDetailGqlInput = {
-  /** Course ID */
+export type UserProductDetailGqlInput = {
+  /** Product ID */
   id: Scalars["ID"]["input"];
 };
 
-export type UserCourseDetailGqlResponse = {
-  __typename?: "UserCourseDetailGqlResponse";
+export type UserProductDetailGqlResponse = {
+  __typename?: "UserProductDetailGqlResponse";
   /** Number of chapters currently unlocked and eligible for completion */
   accessibleChapterCount: Scalars["Int"]["output"];
-  /** Course chapters with locked content redacted */
-  chapters: Array<UserCourseDetailChapterGqlResponse>;
+  /** Product chapters with locked content redacted */
+  chapters: Array<UserProductDetailChapterGqlResponse>;
   /** Number of unlocked chapters the learner has confirmed complete */
   completedChapterCount: Scalars["Int"]["output"];
-  /** Signed access descriptor for the course cover image */
+  /** Signed access descriptor for the product cover image */
   coverImageAccessUrl?: Maybe<FileAccessUrlGqlResponse>;
-  /** Course description */
+  /** Product description */
   description?: Maybe<Scalars["String"]["output"]>;
-  /** Optional public course discount */
-  discount?: Maybe<UserCourseListDiscountGqlResponse>;
-  /** Course ID */
+  /** Optional public product discount */
+  discount?: Maybe<UserProductListDiscountGqlResponse>;
+  /** Product ID */
   id: Scalars["ID"]["output"];
-  /** Whether this course is free to access */
+  /** Whether this product is free to access */
   isFree: Scalars["Boolean"]["output"];
-  /** Whether the current END_USER has a paid purchase for this course */
+  /** Whether the current END_USER has a paid purchase for this product */
   isPurchased: Scalars["Boolean"]["output"];
-  /** Whether learners can submit reviews for this course */
+  /** Whether learners can submit reviews for this product */
   isReviewSubmissionEnabled: Scalars["Boolean"]["output"];
-  /** Whether the reviews section is visible on the course detail page */
+  /** Whether the reviews section is visible on the product detail page */
   isReviewsSectionVisible: Scalars["Boolean"]["output"];
-  /** Course price in IRT */
+  /** Product price in IRT */
   priceIrt?: Maybe<Scalars["Float"]["output"]>;
-  /** Current END_USER purchase status for this course, if any */
-  purchaseStatus?: Maybe<UserCoursePurchaseStatus>;
+  /** Current END_USER purchase status for this product, if any */
+  purchaseStatus?: Maybe<UserProductPurchaseStatus>;
   /** Calculated release strategy. GRADUAL means at least one chapter has visibleAfterMinutes. */
-  releaseType: CourseReleaseType;
-  /** Course tags */
+  releaseType: ProductReleaseType;
+  /** Product tags */
   tags: Array<Scalars["String"]["output"]>;
-  /** Course title */
+  /** Product title */
   title: Scalars["String"]["output"];
 };
 
-export type UserCourseDetailItemGqlResponse = {
-  __typename?: "UserCourseDetailItemGqlResponse";
+export type UserProductDetailItemGqlResponse = {
+  __typename?: "UserProductDetailItemGqlResponse";
   /** Article body for unlocked text-based items */
   article?: Maybe<Scalars["String"]["output"]>;
   /** Signed access descriptor for an unlocked file-backed item */
   fileAccessUrl?: Maybe<FileAccessUrlGqlResponse>;
-  /** Course item title */
+  /** Product item title */
   title: Scalars["String"]["output"];
   /** Calculated item content type */
-  type: CourseItemType;
+  type: ProductItemType;
 };
 
-export type UserCourseListDiscountGqlResponse = {
-  __typename?: "UserCourseListDiscountGqlResponse";
+export type UserProductListDiscountGqlResponse = {
+  __typename?: "UserProductListDiscountGqlResponse";
   /** Discount calculation type */
-  type: CourseDiscountType;
+  type: ProductDiscountType;
   /** Discount value. Percentage for PERCENTAGE, IRT amount for FIXED_AMOUNT_IRT */
   value: Scalars["Float"]["output"];
 };
 
-export type UserCourseListGqlResponse = {
-  __typename?: "UserCourseListGqlResponse";
-  /** Number of chapters in the course */
+export type UserProductListGqlResponse = {
+  __typename?: "UserProductListGqlResponse";
+  /** Number of chapters in the product */
   chapterCount: Scalars["Int"]["output"];
-  /** Signed access descriptor for the course cover image */
+  /** Signed access descriptor for the product cover image */
   coverImageAccessUrl?: Maybe<FileAccessUrlGqlResponse>;
-  /** Course description */
+  /** Product description */
   description?: Maybe<Scalars["String"]["output"]>;
-  /** Optional public course discount */
-  discount?: Maybe<UserCourseListDiscountGqlResponse>;
-  /** Course ID */
+  /** Optional public product discount */
+  discount?: Maybe<UserProductListDiscountGqlResponse>;
+  /** Product ID */
   id: Scalars["ID"]["output"];
-  /** Whether the current END_USER has a paid purchase for this course */
+  /** Whether the current END_USER has a paid purchase for this product */
   isPurchased: Scalars["Boolean"]["output"];
-  /** Number of items in the course */
+  /** Number of items in the product */
   itemCount: Scalars["Int"]["output"];
-  /** Calculated content types available in this course */
-  itemTypes: Array<CourseItemType>;
-  /** Course price in IRT */
+  /** Calculated content types available in this product */
+  itemTypes: Array<ProductItemType>;
+  /** Product price in IRT */
   priceIrt?: Maybe<Scalars["Float"]["output"]>;
   /** Calculated release strategy. GRADUAL means at least one chapter has visibleAfterMinutes. */
-  releaseType: CourseReleaseType;
-  /** Course tags */
+  releaseType: ProductReleaseType;
+  /** Product tags */
   tags: Array<Scalars["String"]["output"]>;
-  /** Course title */
+  /** Product title */
   title: Scalars["String"]["output"];
 };
 
-export type UserCourseListPaginatedCursorGqlResponse = {
-  __typename?: "UserCourseListPaginatedCursorGqlResponse";
-  /** List of courses for anonymous and end-user views */
-  items: Array<UserCourseListGqlResponse>;
+export type UserProductListPaginatedCursorGqlResponse = {
+  __typename?: "UserProductListPaginatedCursorGqlResponse";
+  /** List of products for anonymous and end-user views */
+  items: Array<UserProductListGqlResponse>;
   /** Pagination metadata */
   pagination: PaginationCursorResponse;
 };
 
-/** Supported course payment methods */
-export const UserCoursePaymentMethod = {
+/** Supported product payment methods */
+export const UserProductPaymentMethod = {
   CARD_TO_CARD: "CARD_TO_CARD",
   CRYPTOCURRENCY: "CRYPTOCURRENCY",
   FREE: "FREE",
   GATEWAY: "GATEWAY",
 } as const;
 
-export type UserCoursePaymentMethod =
-  (typeof UserCoursePaymentMethod)[keyof typeof UserCoursePaymentMethod];
-/** Currency used for course purchases */
-export const UserCoursePurchaseCurrency = {
+export type UserProductPaymentMethod =
+  (typeof UserProductPaymentMethod)[keyof typeof UserProductPaymentMethod];
+/** Currency used for product purchases */
+export const UserProductPurchaseCurrency = {
   IRT: "IRT",
   USDT: "USDT",
 } as const;
 
-export type UserCoursePurchaseCurrency =
-  (typeof UserCoursePurchaseCurrency)[keyof typeof UserCoursePurchaseCurrency];
-/** Course purchase lifecycle status */
-export const UserCoursePurchaseStatus = {
+export type UserProductPurchaseCurrency =
+  (typeof UserProductPurchaseCurrency)[keyof typeof UserProductPurchaseCurrency];
+/** Product purchase lifecycle status */
+export const UserProductPurchaseStatus = {
   CANCELLED: "CANCELLED",
   FAILED: "FAILED",
   PAID: "PAID",
@@ -2774,9 +2774,9 @@ export const UserCoursePurchaseStatus = {
   REFUNDED: "REFUNDED",
 } as const;
 
-export type UserCoursePurchaseStatus =
-  (typeof UserCoursePurchaseStatus)[keyof typeof UserCoursePurchaseStatus];
-/** Actor that changed a course purchase status */
+export type UserProductPurchaseStatus =
+  (typeof UserProductPurchaseStatus)[keyof typeof UserProductPurchaseStatus];
+/** Actor that changed a product purchase status */
 export const PurchaseStatusChangedBy = {
   ADMIN: "ADMIN",
   SYSTEM: "SYSTEM",
@@ -2784,58 +2784,58 @@ export const PurchaseStatusChangedBy = {
 
 export type PurchaseStatusChangedBy =
   (typeof PurchaseStatusChangedBy)[keyof typeof PurchaseStatusChangedBy];
-export type UserCourseReviewAuthorGqlResponse = {
-  __typename?: "UserCourseReviewAuthorGqlResponse";
+export type UserProductReviewAuthorGqlResponse = {
+  __typename?: "UserProductReviewAuthorGqlResponse";
   /** Review author's first name only */
   firstName: Scalars["String"]["output"];
 };
 
-export type UserCourseReviewListCursorPageOptionsParamsInput = {
+export type UserProductReviewListCursorPageOptionsParamsInput = {
   /** Maximum number of records to return */
   limit?: InputMaybe<Scalars["Int"]["input"]>;
   /** Sort options as a map of field names to sort order */
-  sort?: InputMaybe<UserCourseReviewListSortOptionInput>;
+  sort?: InputMaybe<UserProductReviewListSortOptionInput>;
   /** Cursor to start after. Uses the beginning if omitted */
   startCursor?: InputMaybe<Scalars["ID"]["input"]>;
 };
 
-export type UserCourseReviewListFilterInput = {
-  /** Course ID to list reviews for */
-  courseId: Scalars["ID"]["input"];
+export type UserProductReviewListFilterInput = {
+  /** Product ID to list reviews for */
+  productId: Scalars["ID"]["input"];
   /** Filter reviews by exact star rating */
   stars?: InputMaybe<Scalars["Int"]["input"]>;
 };
 
-export type UserCourseReviewListGqlInput = {
-  /** Filter options for narrowing down the course review list */
-  filters: UserCourseReviewListFilterInput;
+export type UserProductReviewListGqlInput = {
+  /** Filter options for narrowing down the product review list */
+  filters: UserProductReviewListFilterInput;
   /** Cursor pagination and sorting options */
-  options?: InputMaybe<UserCourseReviewListCursorPageOptionsParamsInput>;
+  options?: InputMaybe<UserProductReviewListCursorPageOptionsParamsInput>;
 };
 
-export type UserCourseReviewListGqlResponse = {
-  __typename?: "UserCourseReviewListGqlResponse";
+export type UserProductReviewListGqlResponse = {
+  __typename?: "UserProductReviewListGqlResponse";
   /** Sanitized review author information */
-  author: UserCourseReviewAuthorGqlResponse;
-  /** Course review thread ID */
+  author: UserProductReviewAuthorGqlResponse;
+  /** Product review thread ID */
   id: Scalars["ID"]["output"];
   /** Whether this review thread belongs to the current user */
   isMine: Scalars["Boolean"]["output"];
   /** Public follow-up comments from the review author plus support messages visible only on the current user's own review */
-  messages: Array<UserCourseReviewMessageGqlResponse>;
+  messages: Array<UserProductReviewMessageGqlResponse>;
   /** Visible rating for this review, if any */
-  rating?: Maybe<UserCourseReviewRatingGqlResponse>;
+  rating?: Maybe<UserProductReviewRatingGqlResponse>;
 };
 
-export type UserCourseReviewListPaginatedCursorGqlResponse = {
-  __typename?: "UserCourseReviewListPaginatedCursorGqlResponse";
-  /** Course reviews visible to the current END_USER */
-  items: Array<UserCourseReviewListGqlResponse>;
+export type UserProductReviewListPaginatedCursorGqlResponse = {
+  __typename?: "UserProductReviewListPaginatedCursorGqlResponse";
+  /** Product reviews visible to the current END_USER */
+  items: Array<UserProductReviewListGqlResponse>;
   /** Pagination metadata */
   pagination: PaginationCursorResponse;
 };
 
-export type UserCourseReviewListSortOptionInput = {
+export type UserProductReviewListSortOptionInput = {
   /** Sort by thread creation date */
   createdAt?: InputMaybe<SortingOrder>;
   /** Sort by rating submission date */
@@ -2846,28 +2846,28 @@ export type UserCourseReviewListSortOptionInput = {
   updatedAt?: InputMaybe<SortingOrder>;
 };
 
-export type UserCourseReviewMessageGqlResponse = {
-  __typename?: "UserCourseReviewMessageGqlResponse";
+export type UserProductReviewMessageGqlResponse = {
+  __typename?: "UserProductReviewMessageGqlResponse";
   /** Message body */
   body: Scalars["String"]["output"];
   /** Stable message key generated by the database */
   key: Scalars["String"]["output"];
   /** Sanitized sender information */
-  sender: UserCourseReviewMessageSenderGqlResponse;
+  sender: UserProductReviewMessageSenderGqlResponse;
   /** Date when the message was sent */
   sentAt: Scalars["DateTime"]["output"];
 };
 
-export type UserCourseReviewMessageSenderGqlResponse = {
-  __typename?: "UserCourseReviewMessageSenderGqlResponse";
+export type UserProductReviewMessageSenderGqlResponse = {
+  __typename?: "UserProductReviewMessageSenderGqlResponse";
   /** Message sender first name or support label */
   firstName: Scalars["String"]["output"];
   /** Whether the message was sent by support staff rather than the review author */
   isSupport: Scalars["Boolean"]["output"];
 };
 
-export type UserCourseReviewRatingGqlResponse = {
-  __typename?: "UserCourseReviewRatingGqlResponse";
+export type UserProductReviewRatingGqlResponse = {
+  __typename?: "UserProductReviewRatingGqlResponse";
   /** Optional review comment */
   comment?: Maybe<Scalars["String"]["output"]>;
   /** Date when the rating was first submitted */
@@ -3534,14 +3534,14 @@ export type CouponUpdateMutation = {
   couponUpdate: { __typename?: "CouponListGqlResponse"; id: string };
 };
 
-export type CourseChapterCompleteMutationVariables = Exact<{
-  input: CourseChapterCompleteGqlInput;
+export type ProductChapterCompleteMutationVariables = Exact<{
+  input: ProductChapterCompleteGqlInput;
 }>;
 
-export type CourseChapterCompleteMutation = {
+export type ProductChapterCompleteMutation = {
   __typename?: "Mutation";
-  courseChapterComplete: {
-    __typename?: "CourseChapterCompleteGqlResponse";
+  productChapterComplete: {
+    __typename?: "ProductChapterCompleteGqlResponse";
     key: string;
     titleSnapshot: string;
     userCompletedAt: any;
@@ -3550,34 +3550,34 @@ export type CourseChapterCompleteMutation = {
   };
 };
 
-export type CourseCreateMutationVariables = Exact<{
-  input: CourseCreateGqlInput;
+export type ProductCreateMutationVariables = Exact<{
+  input: ProductCreateGqlInput;
 }>;
 
-export type CourseCreateMutation = {
+export type ProductCreateMutation = {
   __typename?: "Mutation";
-  courseCreate: { __typename?: "CourseListGqlResponse"; id: string };
+  productCreate: { __typename?: "ProductListGqlResponse"; id: string };
 };
 
-export type CourseDeleteMutationVariables = Exact<{
-  input: CourseDeleteGqlInput;
+export type ProductDeleteMutationVariables = Exact<{
+  input: ProductDeleteGqlInput;
 }>;
 
-export type CourseDeleteMutation = { __typename?: "Mutation"; courseDelete: boolean };
+export type ProductDeleteMutation = { __typename?: "Mutation"; productDelete: boolean };
 
-export type CoursePurchaseSubmitMutationVariables = Exact<{
-  input: CoursePurchaseSubmitGqlInput;
+export type ProductPurchaseSubmitMutationVariables = Exact<{
+  input: ProductPurchaseSubmitGqlInput;
 }>;
 
-export type CoursePurchaseSubmitMutation = {
+export type ProductPurchaseSubmitMutation = {
   __typename?: "Mutation";
-  coursePurchaseSubmit: {
-    __typename?: "CoursePurchaseSubmitGqlResponse";
+  productPurchaseSubmit: {
+    __typename?: "ProductPurchaseSubmitGqlResponse";
     id: string;
-    courseId: string;
-    status: UserCoursePurchaseStatus;
-    paymentMethod: UserCoursePaymentMethod;
-    currency: UserCoursePurchaseCurrency;
+    productId: string;
+    status: UserProductPurchaseStatus;
+    paymentMethod: UserProductPaymentMethod;
+    currency: UserProductPurchaseCurrency;
     amountIrt: number;
     discountAmountIrt?: number | null;
     finalAmountIrt: number;
@@ -3590,37 +3590,37 @@ export type CoursePurchaseSubmitMutation = {
   };
 };
 
-export type CourseReviewModerationUpdateMutationVariables = Exact<{
-  input: CourseReviewModerationUpdateGqlInput;
+export type ProductReviewModerationUpdateMutationVariables = Exact<{
+  input: ProductReviewModerationUpdateGqlInput;
 }>;
 
-export type CourseReviewModerationUpdateMutation = {
+export type ProductReviewModerationUpdateMutation = {
   __typename?: "Mutation";
-  courseReviewModerationUpdate: {
-    __typename?: "CourseReviewListGqlResponse";
+  productReviewModerationUpdate: {
+    __typename?: "ProductReviewListGqlResponse";
     id: string;
     moderation: {
-      __typename?: "CourseReviewModerationGqlResponse";
-      visibility: CourseReviewVisibility;
+      __typename?: "ProductReviewModerationGqlResponse";
+      visibility: ProductReviewVisibility;
       hiddenAt?: any | null;
       hiddenReason?: string | null;
     };
     rating?: {
-      __typename?: "CourseReviewRatingGqlResponse";
+      __typename?: "ProductReviewRatingGqlResponse";
       stars: number;
       moderation: {
-        __typename?: "CourseReviewModerationGqlResponse";
-        visibility: CourseReviewVisibility;
+        __typename?: "ProductReviewModerationGqlResponse";
+        visibility: ProductReviewVisibility;
         hiddenAt?: any | null;
         hiddenReason?: string | null;
       };
     } | null;
     messages: Array<{
-      __typename?: "CourseReviewMessageGqlResponse";
+      __typename?: "ProductReviewMessageGqlResponse";
       key: string;
       moderation: {
-        __typename?: "CourseReviewModerationGqlResponse";
-        visibility: CourseReviewVisibility;
+        __typename?: "ProductReviewModerationGqlResponse";
+        visibility: ProductReviewVisibility;
         hiddenAt?: any | null;
         hiddenReason?: string | null;
       };
@@ -3628,19 +3628,19 @@ export type CourseReviewModerationUpdateMutation = {
   };
 };
 
-export type CourseReviewSubmitMutationVariables = Exact<{
-  input: CourseReviewSubmitGqlInput;
+export type ProductReviewSubmitMutationVariables = Exact<{
+  input: ProductReviewSubmitGqlInput;
 }>;
 
-export type CourseReviewSubmitMutation = {
+export type ProductReviewSubmitMutation = {
   __typename?: "Mutation";
-  courseReviewSubmit: {
-    __typename?: "CourseReviewSubmitGqlResponse";
+  productReviewSubmit: {
+    __typename?: "ProductReviewSubmitGqlResponse";
     id: string;
-    courseId: string;
+    productId: string;
     isNewRating: boolean;
     rating?: {
-      __typename?: "CourseReviewSubmitRatingGqlResponse";
+      __typename?: "ProductReviewSubmitRatingGqlResponse";
       stars: number;
       comment?: string | null;
       ratedAt: any;
@@ -3649,13 +3649,13 @@ export type CourseReviewSubmitMutation = {
   };
 };
 
-export type CourseUpdateMutationVariables = Exact<{
-  input: CourseUpdateGqlInput;
+export type ProductUpdateMutationVariables = Exact<{
+  input: ProductUpdateGqlInput;
 }>;
 
-export type CourseUpdateMutation = {
+export type ProductUpdateMutation = {
   __typename?: "Mutation";
-  courseUpdate: { __typename?: "CourseListGqlResponse"; id: string };
+  productUpdate: { __typename?: "ProductListGqlResponse"; id: string };
 };
 
 export type GlobalAnouncementSendMutationVariables = Exact<{
@@ -3952,7 +3952,7 @@ export type BadgeCountQuery = {
   __typename?: "Query";
   badgeCount: {
     __typename?: "BadgeCountGqlResponse";
-    courses: number;
+    products: number;
     payments?: number | null;
     notifications?: number | null;
     tickets?: number | null;
@@ -3977,7 +3977,7 @@ export type CouponDetailQuery = {
     expiresAt?: any | null;
     totalUsageLimit?: number | null;
     perUserUsageLimit?: number | null;
-    applicableCourseIds: Array<string>;
+    applicableProductIds: Array<string>;
     isFirstPurchaseOnly: boolean;
     isActive: boolean;
     totalUsageCount: number;
@@ -4039,43 +4039,43 @@ export type CouponValidateQuery = {
     discountType?: CouponDiscountType | null;
     discountValue?: number | null;
     amountIrt?: number | null;
-    courseDiscountAmountIrt?: number | null;
+    productDiscountAmountIrt?: number | null;
     payableAmountBeforeCouponIrt?: number | null;
     couponDiscountAmountIrt?: number | null;
     finalAmountIrt?: number | null;
   };
 };
 
-export type CourseDeleteDependenciesQueryVariables = Exact<{
-  input: CourseDeleteGqlInput;
+export type ProductDeleteDependenciesQueryVariables = Exact<{
+  input: ProductDeleteGqlInput;
 }>;
 
-export type CourseDeleteDependenciesQuery = {
+export type ProductDeleteDependenciesQuery = {
   __typename?: "Query";
-  courseDeleteDependencies: {
-    __typename?: "CourseDeleteDependenciesGqlResponse";
-    courseId: string;
-    courseTitle: string;
+  productDeleteDependencies: {
+    __typename?: "ProductDeleteDependenciesGqlResponse";
+    productId: string;
+    productTitle: string;
     summary: {
-      __typename?: "CourseDeleteDependenciesSummaryGqlResponse";
+      __typename?: "ProductDeleteDependenciesSummaryGqlResponse";
       retainedCount: number;
       removedCount: number;
       hasRetainedDependencies: boolean;
       hasRemovedDependencies: boolean;
     };
     groups: Array<{
-      __typename?: "CourseDeleteDependencyGroupGqlResponse";
+      __typename?: "ProductDeleteDependencyGroupGqlResponse";
       key: string;
-      impact: CourseDeleteDependencyImpact;
+      impact: ProductDeleteDependencyImpact;
       totalCount: number;
       hiddenSampleCount: number;
       breakdown: Array<{
-        __typename?: "CourseDeleteDependencyBreakdownGqlResponse";
+        __typename?: "ProductDeleteDependencyBreakdownGqlResponse";
         key: string;
         count: number;
       }>;
       samples: Array<{
-        __typename?: "CourseDeleteDependencySampleGqlResponse";
+        __typename?: "ProductDeleteDependencySampleGqlResponse";
         id?: string | null;
         label: string;
         meta?: string | null;
@@ -4084,22 +4084,22 @@ export type CourseDeleteDependenciesQuery = {
   };
 };
 
-export type CoursePaymentListQueryVariables = Exact<{
-  input: CoursePaymentListGqlInput;
+export type ProductPaymentListQueryVariables = Exact<{
+  input: ProductPaymentListGqlInput;
 }>;
 
-export type CoursePaymentListQuery = {
+export type ProductPaymentListQuery = {
   __typename?: "Query";
-  coursePaymentList: {
-    __typename?: "CoursePaymentListPaginatedOffsetGqlResponse";
+  productPaymentList: {
+    __typename?: "ProductPaymentListPaginatedOffsetGqlResponse";
     items: Array<{
-      __typename?: "CoursePaymentListSummaryGqlResponse";
+      __typename?: "ProductPaymentListSummaryGqlResponse";
       id: string;
       userId: string;
-      courseId: string;
-      status: UserCoursePurchaseStatus;
-      paymentMethod: UserCoursePaymentMethod;
-      currency: UserCoursePurchaseCurrency;
+      productId: string;
+      status: UserProductPurchaseStatus;
+      paymentMethod: UserProductPaymentMethod;
+      currency: UserProductPurchaseCurrency;
       paymentProvider?: string | null;
       paymentReference?: string | null;
       transactionId?: string | null;
@@ -4120,23 +4120,23 @@ export type CoursePaymentListQuery = {
       refundedAt?: any | null;
       cancelledAt?: any | null;
       user: {
-        __typename?: "CoursePaymentListUserSummaryGqlResponse";
+        __typename?: "ProductPaymentListUserSummaryGqlResponse";
         fullName: string;
         username: string;
         email: string;
         phone?: string | null;
         mobilePhone?: string | null;
       };
-      course: { __typename?: "CoursePaymentListCourseSummaryGqlResponse"; title: string };
+      product: { __typename?: "ProductPaymentListProductSummaryGqlResponse"; title: string };
       coupon?: {
-        __typename?: "CoursePaymentListCouponSummaryGqlResponse";
+        __typename?: "ProductPaymentListCouponSummaryGqlResponse";
         couponId: string;
         code: string;
         discountType: CouponDiscountType;
         discountValue: number;
       } | null;
       uploadedReceiptFile?: {
-        __typename?: "CoursePaymentListReceiptFileSummaryGqlResponse";
+        __typename?: "ProductPaymentListReceiptFileSummaryGqlResponse";
         accessUrl?: { __typename?: "FileAccessUrlGqlResponse"; fileId: string } | null;
       } | null;
     }>;
@@ -4169,7 +4169,7 @@ export type PaymentCheckoutConfigQuery = {
     }>;
     paymentMethods: Array<{
       __typename?: "PaymentCheckoutMethodGqlResponse";
-      method: UserCoursePaymentMethod;
+      method: UserProductPaymentMethod;
       isVisible: boolean;
       isActive: boolean;
       isRecommended: boolean;
@@ -4303,33 +4303,33 @@ export type TicketListQuery = {
   };
 };
 
-export type UserCourseReviewListQueryVariables = Exact<{
-  input: UserCourseReviewListGqlInput;
+export type UserProductReviewListQueryVariables = Exact<{
+  input: UserProductReviewListGqlInput;
 }>;
 
-export type UserCourseReviewListQuery = {
+export type UserProductReviewListQuery = {
   __typename?: "Query";
-  userCourseReviewList: {
-    __typename?: "UserCourseReviewListPaginatedCursorGqlResponse";
+  userProductReviewList: {
+    __typename?: "UserProductReviewListPaginatedCursorGqlResponse";
     items: Array<{
-      __typename?: "UserCourseReviewListGqlResponse";
+      __typename?: "UserProductReviewListGqlResponse";
       id: string;
       isMine: boolean;
-      author: { __typename?: "UserCourseReviewAuthorGqlResponse"; firstName: string };
+      author: { __typename?: "UserProductReviewAuthorGqlResponse"; firstName: string };
       rating?: {
-        __typename?: "UserCourseReviewRatingGqlResponse";
+        __typename?: "UserProductReviewRatingGqlResponse";
         stars: number;
         comment?: string | null;
         ratedAt: any;
         updatedAt?: any | null;
       } | null;
       messages: Array<{
-        __typename?: "UserCourseReviewMessageGqlResponse";
+        __typename?: "UserProductReviewMessageGqlResponse";
         key: string;
         body: string;
         sentAt: any;
         sender: {
-          __typename?: "UserCourseReviewMessageSenderGqlResponse";
+          __typename?: "UserProductReviewMessageSenderGqlResponse";
           firstName: string;
           isSupport: boolean;
         };
@@ -4612,13 +4612,13 @@ export const CouponUpdateDocument = {
     },
   ],
 } as unknown as DocumentNode<CouponUpdateMutation, CouponUpdateMutationVariables>;
-export const CourseChapterCompleteDocument = {
+export const ProductChapterCompleteDocument = {
   kind: "Document",
   definitions: [
     {
       kind: "OperationDefinition",
       operation: "mutation",
-      name: { kind: "Name", value: "CourseChapterComplete" },
+      name: { kind: "Name", value: "ProductChapterComplete" },
       variableDefinitions: [
         {
           kind: "VariableDefinition",
@@ -4627,7 +4627,7 @@ export const CourseChapterCompleteDocument = {
             kind: "NonNullType",
             type: {
               kind: "NamedType",
-              name: { kind: "Name", value: "CourseChapterCompleteGqlInput" },
+              name: { kind: "Name", value: "ProductChapterCompleteGqlInput" },
             },
           },
         },
@@ -4637,7 +4637,7 @@ export const CourseChapterCompleteDocument = {
         selections: [
           {
             kind: "Field",
-            name: { kind: "Name", value: "courseChapterComplete" },
+            name: { kind: "Name", value: "productChapterComplete" },
             arguments: [
               {
                 kind: "Argument",
@@ -4660,21 +4660,21 @@ export const CourseChapterCompleteDocument = {
       },
     },
   ],
-} as unknown as DocumentNode<CourseChapterCompleteMutation, CourseChapterCompleteMutationVariables>;
-export const CourseCreateDocument = {
+} as unknown as DocumentNode<ProductChapterCompleteMutation, ProductChapterCompleteMutationVariables>;
+export const ProductCreateDocument = {
   kind: "Document",
   definitions: [
     {
       kind: "OperationDefinition",
       operation: "mutation",
-      name: { kind: "Name", value: "CourseCreate" },
+      name: { kind: "Name", value: "ProductCreate" },
       variableDefinitions: [
         {
           kind: "VariableDefinition",
           variable: { kind: "Variable", name: { kind: "Name", value: "input" } },
           type: {
             kind: "NonNullType",
-            type: { kind: "NamedType", name: { kind: "Name", value: "CourseCreateGqlInput" } },
+            type: { kind: "NamedType", name: { kind: "Name", value: "ProductCreateGqlInput" } },
           },
         },
       ],
@@ -4683,7 +4683,7 @@ export const CourseCreateDocument = {
         selections: [
           {
             kind: "Field",
-            name: { kind: "Name", value: "courseCreate" },
+            name: { kind: "Name", value: "productCreate" },
             arguments: [
               {
                 kind: "Argument",
@@ -4700,21 +4700,21 @@ export const CourseCreateDocument = {
       },
     },
   ],
-} as unknown as DocumentNode<CourseCreateMutation, CourseCreateMutationVariables>;
-export const CourseDeleteDocument = {
+} as unknown as DocumentNode<ProductCreateMutation, ProductCreateMutationVariables>;
+export const ProductDeleteDocument = {
   kind: "Document",
   definitions: [
     {
       kind: "OperationDefinition",
       operation: "mutation",
-      name: { kind: "Name", value: "CourseDelete" },
+      name: { kind: "Name", value: "ProductDelete" },
       variableDefinitions: [
         {
           kind: "VariableDefinition",
           variable: { kind: "Variable", name: { kind: "Name", value: "input" } },
           type: {
             kind: "NonNullType",
-            type: { kind: "NamedType", name: { kind: "Name", value: "CourseDeleteGqlInput" } },
+            type: { kind: "NamedType", name: { kind: "Name", value: "ProductDeleteGqlInput" } },
           },
         },
       ],
@@ -4723,7 +4723,7 @@ export const CourseDeleteDocument = {
         selections: [
           {
             kind: "Field",
-            name: { kind: "Name", value: "courseDelete" },
+            name: { kind: "Name", value: "productDelete" },
             arguments: [
               {
                 kind: "Argument",
@@ -4736,14 +4736,14 @@ export const CourseDeleteDocument = {
       },
     },
   ],
-} as unknown as DocumentNode<CourseDeleteMutation, CourseDeleteMutationVariables>;
-export const CoursePurchaseSubmitDocument = {
+} as unknown as DocumentNode<ProductDeleteMutation, ProductDeleteMutationVariables>;
+export const ProductPurchaseSubmitDocument = {
   kind: "Document",
   definitions: [
     {
       kind: "OperationDefinition",
       operation: "mutation",
-      name: { kind: "Name", value: "CoursePurchaseSubmit" },
+      name: { kind: "Name", value: "ProductPurchaseSubmit" },
       variableDefinitions: [
         {
           kind: "VariableDefinition",
@@ -4752,7 +4752,7 @@ export const CoursePurchaseSubmitDocument = {
             kind: "NonNullType",
             type: {
               kind: "NamedType",
-              name: { kind: "Name", value: "CoursePurchaseSubmitGqlInput" },
+              name: { kind: "Name", value: "ProductPurchaseSubmitGqlInput" },
             },
           },
         },
@@ -4762,7 +4762,7 @@ export const CoursePurchaseSubmitDocument = {
         selections: [
           {
             kind: "Field",
-            name: { kind: "Name", value: "coursePurchaseSubmit" },
+            name: { kind: "Name", value: "productPurchaseSubmit" },
             arguments: [
               {
                 kind: "Argument",
@@ -4774,7 +4774,7 @@ export const CoursePurchaseSubmitDocument = {
               kind: "SelectionSet",
               selections: [
                 { kind: "Field", name: { kind: "Name", value: "id" } },
-                { kind: "Field", name: { kind: "Name", value: "courseId" } },
+                { kind: "Field", name: { kind: "Name", value: "productId" } },
                 { kind: "Field", name: { kind: "Name", value: "status" } },
                 { kind: "Field", name: { kind: "Name", value: "paymentMethod" } },
                 { kind: "Field", name: { kind: "Name", value: "currency" } },
@@ -4794,14 +4794,14 @@ export const CoursePurchaseSubmitDocument = {
       },
     },
   ],
-} as unknown as DocumentNode<CoursePurchaseSubmitMutation, CoursePurchaseSubmitMutationVariables>;
-export const CourseReviewModerationUpdateDocument = {
+} as unknown as DocumentNode<ProductPurchaseSubmitMutation, ProductPurchaseSubmitMutationVariables>;
+export const ProductReviewModerationUpdateDocument = {
   kind: "Document",
   definitions: [
     {
       kind: "OperationDefinition",
       operation: "mutation",
-      name: { kind: "Name", value: "CourseReviewModerationUpdate" },
+      name: { kind: "Name", value: "ProductReviewModerationUpdate" },
       variableDefinitions: [
         {
           kind: "VariableDefinition",
@@ -4810,7 +4810,7 @@ export const CourseReviewModerationUpdateDocument = {
             kind: "NonNullType",
             type: {
               kind: "NamedType",
-              name: { kind: "Name", value: "CourseReviewModerationUpdateGqlInput" },
+              name: { kind: "Name", value: "ProductReviewModerationUpdateGqlInput" },
             },
           },
         },
@@ -4820,7 +4820,7 @@ export const CourseReviewModerationUpdateDocument = {
         selections: [
           {
             kind: "Field",
-            name: { kind: "Name", value: "courseReviewModerationUpdate" },
+            name: { kind: "Name", value: "productReviewModerationUpdate" },
             arguments: [
               {
                 kind: "Argument",
@@ -4896,16 +4896,16 @@ export const CourseReviewModerationUpdateDocument = {
     },
   ],
 } as unknown as DocumentNode<
-  CourseReviewModerationUpdateMutation,
-  CourseReviewModerationUpdateMutationVariables
+  ProductReviewModerationUpdateMutation,
+  ProductReviewModerationUpdateMutationVariables
 >;
-export const CourseReviewSubmitDocument = {
+export const ProductReviewSubmitDocument = {
   kind: "Document",
   definitions: [
     {
       kind: "OperationDefinition",
       operation: "mutation",
-      name: { kind: "Name", value: "CourseReviewSubmit" },
+      name: { kind: "Name", value: "ProductReviewSubmit" },
       variableDefinitions: [
         {
           kind: "VariableDefinition",
@@ -4914,7 +4914,7 @@ export const CourseReviewSubmitDocument = {
             kind: "NonNullType",
             type: {
               kind: "NamedType",
-              name: { kind: "Name", value: "CourseReviewSubmitGqlInput" },
+              name: { kind: "Name", value: "ProductReviewSubmitGqlInput" },
             },
           },
         },
@@ -4924,7 +4924,7 @@ export const CourseReviewSubmitDocument = {
         selections: [
           {
             kind: "Field",
-            name: { kind: "Name", value: "courseReviewSubmit" },
+            name: { kind: "Name", value: "productReviewSubmit" },
             arguments: [
               {
                 kind: "Argument",
@@ -4936,7 +4936,7 @@ export const CourseReviewSubmitDocument = {
               kind: "SelectionSet",
               selections: [
                 { kind: "Field", name: { kind: "Name", value: "id" } },
-                { kind: "Field", name: { kind: "Name", value: "courseId" } },
+                { kind: "Field", name: { kind: "Name", value: "productId" } },
                 { kind: "Field", name: { kind: "Name", value: "isNewRating" } },
                 {
                   kind: "Field",
@@ -4958,21 +4958,21 @@ export const CourseReviewSubmitDocument = {
       },
     },
   ],
-} as unknown as DocumentNode<CourseReviewSubmitMutation, CourseReviewSubmitMutationVariables>;
-export const CourseUpdateDocument = {
+} as unknown as DocumentNode<ProductReviewSubmitMutation, ProductReviewSubmitMutationVariables>;
+export const ProductUpdateDocument = {
   kind: "Document",
   definitions: [
     {
       kind: "OperationDefinition",
       operation: "mutation",
-      name: { kind: "Name", value: "CourseUpdate" },
+      name: { kind: "Name", value: "ProductUpdate" },
       variableDefinitions: [
         {
           kind: "VariableDefinition",
           variable: { kind: "Variable", name: { kind: "Name", value: "input" } },
           type: {
             kind: "NonNullType",
-            type: { kind: "NamedType", name: { kind: "Name", value: "CourseUpdateGqlInput" } },
+            type: { kind: "NamedType", name: { kind: "Name", value: "ProductUpdateGqlInput" } },
           },
         },
       ],
@@ -4981,7 +4981,7 @@ export const CourseUpdateDocument = {
         selections: [
           {
             kind: "Field",
-            name: { kind: "Name", value: "courseUpdate" },
+            name: { kind: "Name", value: "productUpdate" },
             arguments: [
               {
                 kind: "Argument",
@@ -4998,7 +4998,7 @@ export const CourseUpdateDocument = {
       },
     },
   ],
-} as unknown as DocumentNode<CourseUpdateMutation, CourseUpdateMutationVariables>;
+} as unknown as DocumentNode<ProductUpdateMutation, ProductUpdateMutationVariables>;
 export const GlobalAnouncementSendDocument = {
   kind: "Document",
   definitions: [
@@ -5884,7 +5884,7 @@ export const BadgeCountDocument = {
             selectionSet: {
               kind: "SelectionSet",
               selections: [
-                { kind: "Field", name: { kind: "Name", value: "courses" } },
+                { kind: "Field", name: { kind: "Name", value: "products" } },
                 { kind: "Field", name: { kind: "Name", value: "payments" } },
                 { kind: "Field", name: { kind: "Name", value: "notifications" } },
                 { kind: "Field", name: { kind: "Name", value: "tickets" } },
@@ -5939,7 +5939,7 @@ export const CouponDetailDocument = {
                 { kind: "Field", name: { kind: "Name", value: "expiresAt" } },
                 { kind: "Field", name: { kind: "Name", value: "totalUsageLimit" } },
                 { kind: "Field", name: { kind: "Name", value: "perUserUsageLimit" } },
-                { kind: "Field", name: { kind: "Name", value: "applicableCourseIds" } },
+                { kind: "Field", name: { kind: "Name", value: "applicableProductIds" } },
                 { kind: "Field", name: { kind: "Name", value: "isFirstPurchaseOnly" } },
                 { kind: "Field", name: { kind: "Name", value: "isActive" } },
                 { kind: "Field", name: { kind: "Name", value: "totalUsageCount" } },
@@ -6073,7 +6073,7 @@ export const CouponValidateDocument = {
                 { kind: "Field", name: { kind: "Name", value: "discountType" } },
                 { kind: "Field", name: { kind: "Name", value: "discountValue" } },
                 { kind: "Field", name: { kind: "Name", value: "amountIrt" } },
-                { kind: "Field", name: { kind: "Name", value: "courseDiscountAmountIrt" } },
+                { kind: "Field", name: { kind: "Name", value: "productDiscountAmountIrt" } },
                 { kind: "Field", name: { kind: "Name", value: "payableAmountBeforeCouponIrt" } },
                 { kind: "Field", name: { kind: "Name", value: "couponDiscountAmountIrt" } },
                 { kind: "Field", name: { kind: "Name", value: "finalAmountIrt" } },
@@ -6085,20 +6085,20 @@ export const CouponValidateDocument = {
     },
   ],
 } as unknown as DocumentNode<CouponValidateQuery, CouponValidateQueryVariables>;
-export const CourseDeleteDependenciesDocument = {
+export const ProductDeleteDependenciesDocument = {
   kind: "Document",
   definitions: [
     {
       kind: "OperationDefinition",
       operation: "query",
-      name: { kind: "Name", value: "CourseDeleteDependencies" },
+      name: { kind: "Name", value: "ProductDeleteDependencies" },
       variableDefinitions: [
         {
           kind: "VariableDefinition",
           variable: { kind: "Variable", name: { kind: "Name", value: "input" } },
           type: {
             kind: "NonNullType",
-            type: { kind: "NamedType", name: { kind: "Name", value: "CourseDeleteGqlInput" } },
+            type: { kind: "NamedType", name: { kind: "Name", value: "ProductDeleteGqlInput" } },
           },
         },
       ],
@@ -6107,7 +6107,7 @@ export const CourseDeleteDependenciesDocument = {
         selections: [
           {
             kind: "Field",
-            name: { kind: "Name", value: "courseDeleteDependencies" },
+            name: { kind: "Name", value: "productDeleteDependencies" },
             arguments: [
               {
                 kind: "Argument",
@@ -6118,8 +6118,8 @@ export const CourseDeleteDependenciesDocument = {
             selectionSet: {
               kind: "SelectionSet",
               selections: [
-                { kind: "Field", name: { kind: "Name", value: "courseId" } },
-                { kind: "Field", name: { kind: "Name", value: "courseTitle" } },
+                { kind: "Field", name: { kind: "Name", value: "productId" } },
+                { kind: "Field", name: { kind: "Name", value: "productTitle" } },
                 {
                   kind: "Field",
                   name: { kind: "Name", value: "summary" },
@@ -6176,21 +6176,21 @@ export const CourseDeleteDependenciesDocument = {
       },
     },
   ],
-} as unknown as DocumentNode<CourseDeleteDependenciesQuery, CourseDeleteDependenciesQueryVariables>;
-export const CoursePaymentListDocument = {
+} as unknown as DocumentNode<ProductDeleteDependenciesQuery, ProductDeleteDependenciesQueryVariables>;
+export const ProductPaymentListDocument = {
   kind: "Document",
   definitions: [
     {
       kind: "OperationDefinition",
       operation: "query",
-      name: { kind: "Name", value: "CoursePaymentList" },
+      name: { kind: "Name", value: "ProductPaymentList" },
       variableDefinitions: [
         {
           kind: "VariableDefinition",
           variable: { kind: "Variable", name: { kind: "Name", value: "input" } },
           type: {
             kind: "NonNullType",
-            type: { kind: "NamedType", name: { kind: "Name", value: "CoursePaymentListGqlInput" } },
+            type: { kind: "NamedType", name: { kind: "Name", value: "ProductPaymentListGqlInput" } },
           },
         },
       ],
@@ -6199,7 +6199,7 @@ export const CoursePaymentListDocument = {
         selections: [
           {
             kind: "Field",
-            name: { kind: "Name", value: "coursePaymentList" },
+            name: { kind: "Name", value: "productPaymentList" },
             arguments: [
               {
                 kind: "Argument",
@@ -6218,7 +6218,7 @@ export const CoursePaymentListDocument = {
                     selections: [
                       { kind: "Field", name: { kind: "Name", value: "id" } },
                       { kind: "Field", name: { kind: "Name", value: "userId" } },
-                      { kind: "Field", name: { kind: "Name", value: "courseId" } },
+                      { kind: "Field", name: { kind: "Name", value: "productId" } },
                       {
                         kind: "Field",
                         name: { kind: "Name", value: "user" },
@@ -6235,7 +6235,7 @@ export const CoursePaymentListDocument = {
                       },
                       {
                         kind: "Field",
-                        name: { kind: "Name", value: "course" },
+                        name: { kind: "Name", value: "product" },
                         selectionSet: {
                           kind: "SelectionSet",
                           selections: [{ kind: "Field", name: { kind: "Name", value: "title" } }],
@@ -6321,7 +6321,7 @@ export const CoursePaymentListDocument = {
       },
     },
   ],
-} as unknown as DocumentNode<CoursePaymentListQuery, CoursePaymentListQueryVariables>;
+} as unknown as DocumentNode<ProductPaymentListQuery, ProductPaymentListQueryVariables>;
 export const PaymentCheckoutConfigDocument = {
   kind: "Document",
   definitions: [
@@ -6631,13 +6631,13 @@ export const TicketListDocument = {
     },
   ],
 } as unknown as DocumentNode<TicketListQuery, TicketListQueryVariables>;
-export const UserCourseReviewListDocument = {
+export const UserProductReviewListDocument = {
   kind: "Document",
   definitions: [
     {
       kind: "OperationDefinition",
       operation: "query",
-      name: { kind: "Name", value: "UserCourseReviewList" },
+      name: { kind: "Name", value: "UserProductReviewList" },
       variableDefinitions: [
         {
           kind: "VariableDefinition",
@@ -6646,7 +6646,7 @@ export const UserCourseReviewListDocument = {
             kind: "NonNullType",
             type: {
               kind: "NamedType",
-              name: { kind: "Name", value: "UserCourseReviewListGqlInput" },
+              name: { kind: "Name", value: "UserProductReviewListGqlInput" },
             },
           },
         },
@@ -6656,7 +6656,7 @@ export const UserCourseReviewListDocument = {
         selections: [
           {
             kind: "Field",
-            name: { kind: "Name", value: "userCourseReviewList" },
+            name: { kind: "Name", value: "userProductReviewList" },
             arguments: [
               {
                 kind: "Argument",
@@ -6747,7 +6747,7 @@ export const UserCourseReviewListDocument = {
       },
     },
   ],
-} as unknown as DocumentNode<UserCourseReviewListQuery, UserCourseReviewListQueryVariables>;
+} as unknown as DocumentNode<UserProductReviewListQuery, UserProductReviewListQueryVariables>;
 export const UserLoginCaptchaDocument = {
   kind: "Document",
   definitions: [

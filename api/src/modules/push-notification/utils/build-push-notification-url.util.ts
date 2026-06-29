@@ -5,18 +5,18 @@ export function buildPushNotificationUrl(
     return "/notifications";
   }
 
-  const courseId =
-    typeof payload.courseId === "string" ? payload.courseId.trim() : "";
+  const productId =
+    typeof payload.productId === "string" ? payload.productId.trim() : "";
   const chapterKey =
     typeof payload.chapterKey === "string" ? payload.chapterKey.trim() : "";
 
-  if (courseId && chapterKey) {
+  if (productId && chapterKey) {
     const params = new URLSearchParams({ chapter: chapterKey });
-    return `/courses/${courseId}?${params.toString()}`;
+    return `/courses/${productId}?${params.toString()}`;
   }
 
-  if (courseId) {
-    return `/courses/${courseId}`;
+  if (productId) {
+    return `/courses/${productId}`;
   }
 
   return "/notifications";

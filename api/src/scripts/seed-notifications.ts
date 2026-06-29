@@ -52,7 +52,7 @@ const NOTIFICATION_TEMPLATES: SeedNotificationTemplate[] = [
     minutesAgo: 5,
   },
   {
-    source: NotificationSource.COURSE,
+    source: NotificationSource.PRODUCT,
     mode: NotificationMode.SUCCESS,
     title: "دسترسی دوره فعال شد",
     message:

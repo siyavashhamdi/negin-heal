@@ -19,7 +19,7 @@
             "ogType": "website"
         },
         "pages": {
-            "courses": {
+            "products": {
                 "description": "فهرست دوره‌های آموزشی Negin Heal — مسیرهای یادگیری تخصصی در حوزه سلامت، مراقبت و سبک زندگی.",
                 "keywords": "دوره آموزشی, دوره سلامت, یادگیری آنلاین, Negin Heal, فهرست دوره‌ها",
                 "robots": "index, follow"
@@ -84,7 +84,7 @@
                 "keywords": "نتیجه پرداخت, درگاه پرداخت, Negin Heal",
                 "robots": "noindex, nofollow"
             },
-            "courseDetail": {
+            "productDetail": {
                 "description": "جزئیات دوره {{title}} در Negin Heal — محتوای آموزشی تخصصی سلامت و مراقبت.",
                 "keywords": "جزئیات دوره, {{title}}, آموزش سلامت, Negin Heal",
                 "robots": "index, follow"

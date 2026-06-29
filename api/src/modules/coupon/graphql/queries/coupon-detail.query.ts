@@ -16,7 +16,7 @@ export class CouponDetailQuery {
   @Query(() => CouponListGqlResponse, {
     name: "couponDetail",
     description:
-      "Get full coupon data for SUPER_ADMIN, including applicable courses for editing",
+      "Get full coupon data for SUPER_ADMIN, including applicable products for editing",
   })
   async findCouponDetail(
     @Args("input") input: CouponDetailGqlInput,

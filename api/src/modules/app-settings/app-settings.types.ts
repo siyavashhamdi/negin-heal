@@ -1,4 +1,4 @@
-import { UserCoursePaymentMethod } from "../../enums";
+import { UserProductPaymentMethod } from "../../enums";
 
 export type StoredAppSettingJsonValue = object | string | number | boolean;
 
@@ -89,7 +89,7 @@ export type CryptoWalletConfig = {
 };
 
 export type PaymentMethodConfig = {
-  method: UserCoursePaymentMethod;
+  method: UserProductPaymentMethod;
   isVisible: boolean;
   isActive: boolean;
   isRecommended: boolean;

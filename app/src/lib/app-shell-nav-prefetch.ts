@@ -1,12 +1,12 @@
 import type { DocumentNode } from "@apollo/client";
 import { print } from "graphql";
-import { COURSE_LIST_QUERY } from "../graphql/queries/courseList.query";
-import { COURSE_PAYMENT_LIST_QUERY } from "../graphql/queries/coursePaymentList.query";
+import { PRODUCT_LIST_QUERY } from "../graphql/queries/productList.query";
+import { PRODUCT_PAYMENT_LIST_QUERY } from "../graphql/queries/productPaymentList.query";
 import { APP_PRIVACY_POLICY_PAGE_QUERY } from "../graphql/queries/appPrivacyPolicyPageConfig.query";
 import { APP_TERMS_OF_USE_PAGE_QUERY } from "../graphql/queries/appTermsOfUsePageConfig.query";
 import { SUPPORT_CONTACT_QUERY } from "../graphql/queries/supportContactConfig.query";
 import { TICKET_LIST_QUERY } from "../graphql/queries/ticketList.query";
-import { USER_COURSE_LIST_QUERY } from "../graphql/queries/userCourseList.query";
+import { USER_PRODUCT_LIST_QUERY } from "../graphql/queries/userProductList.query";
 import { USER_NOTIFICATION_LIST_QUERY } from "../graphql/queries/userNotificationList.query";
 import {
   filterAppShellNavItems,
@@ -16,17 +16,17 @@ import {
   APP_SHELL_NAV_ITEMS,
 } from "../layouts/app-shell-nav-items";
 import {
-  buildCourseListQueryVariables,
-  DEFAULT_COURSE_LIST_FILTERS,
-  DEFAULT_COURSE_LIST_SORT,
-} from "../pages/Courses/courses-list.api";
+  buildProductListQueryVariables,
+  DEFAULT_PRODUCT_LIST_FILTERS,
+  DEFAULT_PRODUCT_LIST_SORT,
+} from "../pages/Products/product-list.api";
 import {
   buildNotificationListQueryVariables,
   NOTIFICATION_LIST_PAGE_SIZE,
 } from "../pages/Notifications/notifications-list.api";
 import {
-  buildCoursePaymentListQueryVariables,
-  EMPTY_COURSE_PAYMENT_LIST_FILTERS,
+  buildProductPaymentListQueryVariables,
+  EMPTY_PRODUCT_PAYMENT_LIST_FILTERS,
 } from "../pages/Payments/payments-list.api";
 import { APP_SHELL_ROUTES } from "../routing/app-shell-routes";
 import { buildTicketListQueryVariables } from "../pages/Support/support-list.api";
@@ -36,7 +36,7 @@ import { getIsOfflineMode } from "./offline-state";
 import { resolveGraphqlHttpUrl } from "../utils/apiBaseUrl.util";
 import { isNativeAndroidShell } from "../utils/nativePlatform.util";
 
-const COURSE_LIST_PAGE_SIZE = 6;
+const PRODUCT_LIST_PAGE_SIZE = 6;
 const SERVER_PAGINATED_PAGE_SIZE = 10;
 
 type PrefetchOperation = {
@@ -167,17 +167,17 @@ function buildPrefetchOperationsForItem(
   context: AppShellNavPrefetchContext
 ): readonly PrefetchOperation[] {
   const isSuperAdmin = context.roles.includes("SUPER_ADMIN");
-  const isPublicCourseView = !context.userId || context.isEndUser;
+  const isPublicProductView = !context.userId || context.isEndUser;
 
   switch (item.id) {
-    case "courses":
+    case "products":
       return [
         {
-          query: isPublicCourseView ? USER_COURSE_LIST_QUERY : COURSE_LIST_QUERY,
-          variables: buildCourseListQueryVariables(
-            DEFAULT_COURSE_LIST_FILTERS,
-            DEFAULT_COURSE_LIST_SORT,
-            COURSE_LIST_PAGE_SIZE,
+          query: isPublicProductView ? USER_PRODUCT_LIST_QUERY : PRODUCT_LIST_QUERY,
+          variables: buildProductListQueryVariables(
+            DEFAULT_PRODUCT_LIST_FILTERS,
+            DEFAULT_PRODUCT_LIST_SORT,
+            PRODUCT_LIST_PAGE_SIZE,
             null
           ),
         },
@@ -185,10 +185,10 @@ function buildPrefetchOperationsForItem(
     case "payments":
       return [
         {
-          query: COURSE_PAYMENT_LIST_QUERY,
-          variables: buildCoursePaymentListQueryVariables(
+          query: PRODUCT_PAYMENT_LIST_QUERY,
+          variables: buildProductPaymentListQueryVariables(
             "",
-            EMPTY_COURSE_PAYMENT_LIST_FILTERS,
+            EMPTY_PRODUCT_PAYMENT_LIST_FILTERS,
             1,
             SERVER_PAGINATED_PAGE_SIZE
           ),

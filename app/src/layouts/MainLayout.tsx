@@ -52,7 +52,7 @@ import {
 import { subscribeGeneralUpdates } from "../lib/general-updates-listeners";
 import { subscribePushNotificationOpen } from "../lib/push-open-listeners";
 import { useGeneralUpdatesOnline } from "../hooks/useGeneralUpdatesOnline";
-import { APP_SHELL_ROUTES, isCourseDetailRoute } from "../routing/app-shell-routes";
+import { APP_SHELL_ROUTES, isProductDetailRoute } from "../routing/app-shell-routes";
 import { resolveNotificationActionPayload } from "../utilities/notification-action.util";
 import { deliverNotificationPushIfEnabled } from "../utils/browserNotification.util";
 import { scrollToTopOnMobile } from "../utils/scrollToTopOnMobile.util";
@@ -104,7 +104,7 @@ type NotificationPayload = Partial<TitleDescItem> & {
   readonly messageType?: GeneralNotificationMessageType;
   readonly isPushNotification?: boolean;
   readonly mode?: string;
-  readonly courseId?: string;
+  readonly productId?: string;
   readonly chapterKey?: string;
   readonly purchaseStatus?: string;
 };
@@ -122,7 +122,7 @@ type GeneralUpdatePopup = {
 };
 type BadgeCountQuery = {
   readonly badgeCount: {
-    readonly courses: number;
+    readonly products: number;
     readonly payments?: number | null;
     readonly notifications?: number | null;
     readonly tickets?: number | null;
@@ -270,7 +270,7 @@ export function MainLayout({
   const roles = authUser?.roles ?? [];
   const isAuthenticated = Boolean(authUser);
   const isEndUser = roles.includes("END_USER");
-  const usesPublicCourseList = !authUser || isEndUser;
+  const usesPublicProductList = !authUser || isEndUser;
   const appShellNavContext = useMemo(
     () => ({
       roles,
@@ -295,7 +295,7 @@ export function MainLayout({
     roles,
     isAuthenticated,
   });
-  const brandTagline = usesPublicCourseList
+  const brandTagline = usesPublicProductList
     ? t("layout.header.brand.publicTagline")
     : t("layout.header.brand.tagline");
 
@@ -307,7 +307,7 @@ export function MainLayout({
   );
   const previousAuthUserIdRef = useRef<string | null>(authUser?.id ?? null);
   const [liveCounts, setLiveCounts] = useState<{
-    readonly courses?: number;
+    readonly products?: number;
     readonly payments?: number | null;
     readonly notifications?: number;
     readonly tickets?: number;
@@ -315,7 +315,7 @@ export function MainLayout({
   }>({});
 
   const shouldLoadHeaderNotificationPreview =
-    isAuthenticated && !isCourseDetailRoute(location.pathname);
+    isAuthenticated && !isProductDetailRoute(location.pathname);
 
   const {
     items: headerNotifications,
@@ -451,19 +451,19 @@ export function MainLayout({
     enabled: Boolean(authUser),
   });
 
-  const coursesBadgeCount = liveCounts.courses ?? badgeCountData?.badgeCount.courses ?? 0;
+  const productsBadgeCount = liveCounts.products ?? badgeCountData?.badgeCount.products ?? 0;
   const paymentBadgeCount = liveCounts.payments ?? badgeCountData?.badgeCount.payments ?? 0;
   const notificationBadgeCount =
     liveCounts.notifications ?? badgeCountData?.badgeCount.notifications ?? 0;
   const supportBadgeCount = liveCounts.tickets ?? badgeCountData?.badgeCount.tickets ?? 0;
   const appShellNavBadgeCounts = useMemo<AppShellNavBadgeCounts>(
     () => ({
-      courses: coursesBadgeCount,
+      products: productsBadgeCount,
       payments: paymentBadgeCount,
       notifications: notificationBadgeCount,
       support: supportBadgeCount,
     }),
-    [coursesBadgeCount, notificationBadgeCount, paymentBadgeCount, supportBadgeCount]
+    [productsBadgeCount, notificationBadgeCount, paymentBadgeCount, supportBadgeCount]
   );
 
   const headerSettingsItems = useMemo(

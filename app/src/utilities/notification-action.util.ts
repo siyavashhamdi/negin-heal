@@ -1,4 +1,4 @@
-import { APP_SHELL_ROUTES } from "../routing/app-shell-routes";
+import { productDetailPath } from "../routing/product-route-path";
 
 export type NotificationActionPayload = {
   readonly label: string;
@@ -23,8 +23,8 @@ export function buildNotificationActionPayload(
   return { label, href };
 }
 
-const buildCourseChapterHref = (courseId: string, chapterKey: string): string => {
-  const baseHref = APP_SHELL_ROUTES.courseDetail.replace(":courseId", courseId);
+const buildProductChapterHref = (productId: string, chapterKey: string): string => {
+  const baseHref = productDetailPath(productId);
   const params = new URLSearchParams({ chapter: chapterKey });
   return `${baseHref}?${params.toString()}`;
 };
@@ -45,7 +45,7 @@ export function resolveNotificationActionPayload(
     } | null;
     readonly actionLabel?: unknown;
     readonly actionUrl?: unknown;
-    readonly courseId?: unknown;
+    readonly productId?: unknown;
     readonly chapterKey?: unknown;
   };
 
@@ -72,13 +72,13 @@ export function resolveNotificationActionPayload(
     return { label, href };
   }
 
-  const courseId = typeof record.courseId === "string" ? record.courseId.trim() : "";
+  const productId = typeof record.productId === "string" ? record.productId.trim() : "";
   const chapterKey = typeof record.chapterKey === "string" ? record.chapterKey.trim() : "";
 
-  if (courseId && chapterKey) {
+  if (productId && chapterKey) {
     return {
       label: "مشاهده فصل",
-      href: buildCourseChapterHref(courseId, chapterKey),
+      href: buildProductChapterHref(productId, chapterKey),
     };
   }
 

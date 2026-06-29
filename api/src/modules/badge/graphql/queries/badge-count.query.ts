@@ -13,7 +13,7 @@ export class BadgeCountQuery {
   @Query(() => BadgeCountGqlResponse, {
     name: "badgeCount",
     description:
-      "Get role-aware sidebar badge counts. Anonymous users receive active course count only.",
+      "Get role-aware sidebar badge counts. Anonymous users receive active product count only.",
   })
   @UseGuards(OptionalGqlAuthGuard)
   async getBadgeCount(

@@ -5,14 +5,15 @@ import { RouteLoadingFallback } from "../components/RouteLoadingFallback";
 import { PageSeoProvider } from "../contexts/PageSeoProvider";
 import { useScrollToTop } from "../hooks/useScrollToTop";
 import { APP_SHELL_ROUTES } from "./app-shell-routes";
+import { PRODUCT_ROUTE_ID_PARAM } from "./product-route-path";
 import { API_CONFIG } from "../config";
 import {
   importAboutPage,
   importActivateAccount,
   importBackupPage,
   importCouponsIndex,
-  importCourseDetail,
-  importCoursesIndex,
+  importProductDetail,
+  importProductsIndex,
   importGlobalAnouncementPage,
   importLanding,
   importLoginRoute,
@@ -32,8 +33,8 @@ import {
   importZarinPalCallback,
 } from "./lazy-route-imports";
 
-const CourseDetail = lazy(importCourseDetail);
-const CoursesIndex = lazy(importCoursesIndex);
+const ProductDetail = lazy(importProductDetail);
+const ProductsIndex = lazy(importProductsIndex);
 const LoginRoute = lazy(importLoginRoute);
 const AboutPage = lazy(importAboutPage);
 const GlobalAnouncementPage = lazy(importGlobalAnouncementPage);
@@ -69,11 +70,11 @@ const DashboardAppRoutesContent = (): ReactElement => {
         <Route path={APP_SHELL_ROUTES.login} element={<LoginRoute />} />
         <Route path={APP_SHELL_ROUTES.resetPassword} element={<ResetPassword />} />
         <Route path={APP_SHELL_ROUTES.activateAccount} element={<ActivateAccount />} />
-        <Route path={`${APP_SHELL_ROUTES.courses}/new`} element={<CoursesIndex />} />
-        <Route path={`${APP_SHELL_ROUTES.courses}/edit/:courseId`} element={<CoursesIndex />} />
-        <Route path={`${APP_SHELL_ROUTES.courses}/delete/:courseId`} element={<CoursesIndex />} />
-        <Route path={APP_SHELL_ROUTES.courses} element={<CoursesIndex />} />
-        <Route path={APP_SHELL_ROUTES.courseDetail} element={<CourseDetail />} />
+        <Route path={`${APP_SHELL_ROUTES.products}/new`} element={<ProductsIndex />} />
+        <Route path={`${APP_SHELL_ROUTES.products}/edit/:${PRODUCT_ROUTE_ID_PARAM}`} element={<ProductsIndex />} />
+        <Route path={`${APP_SHELL_ROUTES.products}/delete/:${PRODUCT_ROUTE_ID_PARAM}`} element={<ProductsIndex />} />
+        <Route path={APP_SHELL_ROUTES.products} element={<ProductsIndex />} />
+        <Route path={APP_SHELL_ROUTES.productDetail} element={<ProductDetail />} />
         <Route path={APP_SHELL_ROUTES.more} element={wrapProtected(<More />)} />
         <Route path={APP_SHELL_ROUTES.moreAbout} element={wrapProtected(<AboutPage />)} />
         <Route
@@ -113,18 +114,18 @@ const DashboardAppRoutesContent = (): ReactElement => {
           path={APP_SHELL_ROUTES.supportTickets}
           element={wrapProtected(<SupportTicketsIndex />)}
         />
-        <Route path={`${APP_SHELL_ROUTES.courses}/:courseId/purchase`} element={<CourseDetail />} />
-        <Route path={`${APP_SHELL_ROUTES.courses}/new/max`} element={<CoursesIndex />} />
-        <Route path={`${APP_SHELL_ROUTES.courses}/edit/:courseId/max`} element={<CoursesIndex />} />
+        <Route path={`${APP_SHELL_ROUTES.products}/:${PRODUCT_ROUTE_ID_PARAM}/purchase`} element={<ProductDetail />} />
+        <Route path={`${APP_SHELL_ROUTES.products}/new/max`} element={<ProductsIndex />} />
+        <Route path={`${APP_SHELL_ROUTES.products}/edit/:${PRODUCT_ROUTE_ID_PARAM}/max`} element={<ProductsIndex />} />
         <Route
-          path={`${APP_SHELL_ROUTES.courses}/new/compress-media`}
-          element={<CoursesIndex />}
+          path={`${APP_SHELL_ROUTES.products}/new/compress-media`}
+          element={<ProductsIndex />}
         />
         <Route
-          path={`${APP_SHELL_ROUTES.courses}/edit/:courseId/compress-media`}
-          element={<CoursesIndex />}
+          path={`${APP_SHELL_ROUTES.products}/edit/:${PRODUCT_ROUTE_ID_PARAM}/compress-media`}
+          element={<ProductsIndex />}
         />
-        <Route path={`${APP_SHELL_ROUTES.courses}/:courseId/max`} element={<CourseDetail />} />
+        <Route path={`${APP_SHELL_ROUTES.products}/:${PRODUCT_ROUTE_ID_PARAM}/max`} element={<ProductDetail />} />
         <Route
           path={`${APP_SHELL_ROUTES.users}/*`}
           element={wrapProtected(<UsersManagementIndex />)}
@@ -136,11 +137,11 @@ const DashboardAppRoutesContent = (): ReactElement => {
             API_CONFIG.UNDER_CONSTRUCTION ? (
               <UnderConstruction />
             ) : (
-              <Navigate to={APP_SHELL_ROUTES.courses} replace />
+              <Navigate to={APP_SHELL_ROUTES.products} replace />
             )
           }
         />
-        <Route path="*" element={<Navigate to={APP_SHELL_ROUTES.courses} replace />} />
+        <Route path="*" element={<Navigate to={APP_SHELL_ROUTES.products} replace />} />
       </Routes>
     </Suspense>
   );

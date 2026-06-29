@@ -125,7 +125,7 @@ const transparentInputChrome = {
   backgroundImage: "none",
 } as const;
 
-/** Default single-line TextField height (course edit dialog reference). */
+/** Default single-line TextField height (product edit dialog reference). */
 const INPUT_MIN_HEIGHT = "3.4375rem";
 
 /** Entity table filters/search — MUI size="small" before global form height (theme @ 234df52^). */

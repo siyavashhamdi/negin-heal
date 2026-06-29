@@ -8,11 +8,11 @@ import { registerEnumType } from "@nestjs/graphql";
 import { BackupTarget } from "./backup-target.enum";
 import { GlobalAnouncementMessageType } from "./global-anouncement-message-type.enum";
 import { AppSettingValueType } from "./app-setting-value-type.enum";
-import { CourseDiscountType } from "./course-discount-type.enum";
-import { CourseReviewVisibility } from "./course-review-visibility.enum";
-import { CourseReviewModerationTarget } from "./course-review-moderation-target.enum";
-import { CourseItemType } from "./course-item-type.enum";
-import { CourseReleaseType } from "./course-release-type.enum";
+import { ProductDiscountType } from "./product-discount-type.enum";
+import { ProductReviewVisibility } from "./product-review-visibility.enum";
+import { ProductReviewModerationTarget } from "./product-review-moderation-target.enum";
+import { ProductItemType } from "./product-item-type.enum";
+import { ProductReleaseType } from "./product-release-type.enum";
 import { NotificationMode } from "./notification-mode.enum";
 import { NotificationSource } from "./notification-source.enum";
 import { NotificationUpdateAction } from "./notification-update-action.enum";
@@ -24,9 +24,9 @@ import { TicketStatus } from "./ticket-status.enum";
 import { GeneralSubscriptionUpdateType } from "./general-subscription-update-type.enum";
 import { UserRole } from "./user-role.enum";
 import { UserStatus } from "./user-status.enum";
-import { UserCoursePaymentMethod } from "./user-course-payment-method.enum";
-import { UserCoursePurchaseCurrency } from "./user-course-purchase-currency.enum";
-import { UserCoursePurchaseStatus } from "./user-course-purchase-status.enum";
+import { UserProductPaymentMethod } from "./user-product-payment-method.enum";
+import { UserProductPurchaseCurrency } from "./user-product-purchase-currency.enum";
+import { UserProductPurchaseStatus } from "./user-product-purchase-status.enum";
 import { PurchaseStatusChangedBy } from "./purchase-status-changed-by.enum";
 import { SortingOrder } from "../common/pagination/input/sorting-order.enum";
 import { MediaCompressionQuality } from "./media-compression-quality.enum";
@@ -72,29 +72,29 @@ registerEnumType(AppSettingValueType, {
   description: "Stored app setting value type",
 });
 
-registerEnumType(CourseItemType, {
-  name: "CourseItemType",
-  description: "Calculated course item content type",
+registerEnumType(ProductItemType, {
+  name: "ProductItemType",
+  description: "Calculated product item content type",
 });
 
-registerEnumType(CourseReleaseType, {
-  name: "CourseReleaseType",
-  description: "Calculated course release strategy",
+registerEnumType(ProductReleaseType, {
+  name: "ProductReleaseType",
+  description: "Calculated product release strategy",
 });
 
-registerEnumType(CourseDiscountType, {
-  name: "CourseDiscountType",
-  description: "Course discount calculation type",
+registerEnumType(ProductDiscountType, {
+  name: "ProductDiscountType",
+  description: "Product discount calculation type",
 });
 
-registerEnumType(CourseReviewVisibility, {
-  name: "CourseReviewVisibility",
-  description: "Visibility state for course review content",
+registerEnumType(ProductReviewVisibility, {
+  name: "ProductReviewVisibility",
+  description: "Visibility state for product review content",
 });
 
-registerEnumType(CourseReviewModerationTarget, {
-  name: "CourseReviewModerationTarget",
-  description: "Moderation scope for a course review update",
+registerEnumType(ProductReviewModerationTarget, {
+  name: "ProductReviewModerationTarget",
+  description: "Moderation scope for a product review update",
 });
 
 registerEnumType(CouponDiscountType, {
@@ -139,24 +139,24 @@ registerEnumType(UserStatus, {
   description: "Status of the user account",
 });
 
-registerEnumType(UserCoursePaymentMethod, {
-  name: "UserCoursePaymentMethod",
-  description: "Supported course payment methods",
+registerEnumType(UserProductPaymentMethod, {
+  name: "UserProductPaymentMethod",
+  description: "Supported product payment methods",
 });
 
-registerEnumType(UserCoursePurchaseCurrency, {
-  name: "UserCoursePurchaseCurrency",
-  description: "Currency used for course purchases",
+registerEnumType(UserProductPurchaseCurrency, {
+  name: "UserProductPurchaseCurrency",
+  description: "Currency used for product purchases",
 });
 
-registerEnumType(UserCoursePurchaseStatus, {
-  name: "UserCoursePurchaseStatus",
-  description: "Course purchase lifecycle status",
+registerEnumType(UserProductPurchaseStatus, {
+  name: "UserProductPurchaseStatus",
+  description: "Product purchase lifecycle status",
 });
 
 registerEnumType(PurchaseStatusChangedBy, {
   name: "PurchaseStatusChangedBy",
-  description: "Actor that changed a course purchase status",
+  description: "Actor that changed a product purchase status",
 });
 
 registerEnumType(MediaCompressionQuality, {

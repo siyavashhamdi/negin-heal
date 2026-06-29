@@ -18,8 +18,8 @@ import { env } from "../config";
 import { AuthModule } from "./auth";
 import { UserModule, UserSubscriptionService } from "./user";
 import { FileModule } from "./file";
-import { CourseModule } from "./course";
-import { CourseReviewModule } from "./course-review";
+import { ProductModule } from "./product";
+import { ProductReviewModule } from "./product-review";
 import { HealthModule } from "./health";
 import { DatabaseModule } from "./database";
 import { AppSettingsModule } from "./app-settings";
@@ -232,8 +232,8 @@ const graphQLErrorLogger = new Logger("GraphQLError");
     BadgeModule,
     BackupModule,
     TelegramModule,
-    CourseModule,
-    CourseReviewModule,
+    ProductModule,
+    ProductReviewModule,
     UserModule,
   ],
   providers: [

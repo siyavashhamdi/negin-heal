@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 
-import { GatewayPaymentExpiryService } from "../../modules/course/gateway-payment-expiry.service";
+import { GatewayPaymentExpiryService } from "../../modules/product/gateway-payment-expiry.service";
 
 @Injectable()
 export class GatewayPaymentExpiryCron {

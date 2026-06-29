@@ -1,5 +1,5 @@
 import { BaseMigration, registerMigration } from "./core";
-import { AppSettingValueType, UserCoursePaymentMethod } from "../enums";
+import { AppSettingValueType, UserProductPaymentMethod } from "../enums";
 import { APP_SETTING_KEY } from "../constants";
 import {
   PASSWORD_RESET_EMAIL_HTML,
@@ -144,7 +144,7 @@ const DEFAULT_SUPPORT_FAQ_PAGE_VALUE = {
             "کد یکبارمصرف برای تایید سریع و امن هویت استفاده می‌شود. اگر ورود با موبایل فعال باشد، کد را در همان مرحله تایید وارد می‌کنید.",
         },
         {
-          id: "account-course-login",
+          id: "account-product-login",
           question: "چرا برای خرید دوره باید وارد حساب شوم؟",
           answer:
             "دسترسی دوره‌ها، رسید پرداخت، وضعیت خرید و تیکت‌های پشتیبانی به حساب شما متصل می‌شوند. برای همین قبل از خرید یا پیگیری پرداخت باید وارد حساب باشید.",
@@ -152,36 +152,36 @@ const DEFAULT_SUPPORT_FAQ_PAGE_VALUE = {
       ],
     },
     {
-      id: "courses",
+      id: "products",
       title: "دوره‌ها و دسترسی به محتوا",
       description: "قفل دوره‌ها، فصل‌های رایگان، شروع دوره و انواع محتوا.",
       items: [
         {
-          id: "courses-public-list",
+          id: "products-public-list",
           question: "آیا می‌توانم دوره‌ها را بدون ورود ببینم؟",
           answer:
             "بله، لیست دوره‌ها و صفحه معرفی هر دوره عمومی است. برای خرید، شروع محتوای پولی یا پیگیری وضعیت دسترسی باید وارد حساب شوید.",
         },
         {
-          id: "courses-locked",
+          id: "products-locked",
           question: "چرا بعضی فصل‌ها یا آیتم‌ها قفل هستند؟",
           answer:
             "اگر دوره پولی باشد، محتوای اصلی بعد از پرداخت موفق باز می‌شود. فصل‌هایی که رایگان تعریف شده‌اند ممکن است قبل از خرید هم قابل مشاهده باشند.",
         },
         {
-          id: "courses-pending",
+          id: "products-pending",
           question: "بعد از پرداخت دستی چرا دوره هنوز باز نشده است؟",
           answer:
             "پرداخت کارت به کارت و رمزارز نیاز به بررسی تیم پشتیبانی دارد. تا زمانی که وضعیت پرداخت تایید نشود، خرید در حالت در انتظار تایید می‌ماند.",
         },
         {
-          id: "courses-content-types",
+          id: "products-content-types",
           question: "چه نوع محتوایی داخل دوره‌ها وجود دارد؟",
           answer:
             "دوره‌ها می‌توانند شامل ویدیو، صوت، تصویر و مقاله باشند. محتوای قابل دسترسی داخل همان صفحه دوره نمایش داده می‌شود.",
         },
         {
-          id: "courses-start",
+          id: "products-start",
           question: "وقتی دوره برایم فعال شد از کجا شروع کنم؟",
           answer:
             "در صفحه دوره، دکمه شروع دوره شما را به بخش فصل‌ها و آیتم‌های آموزشی می‌برد. آیتم‌های باز با توجه به وضعیت خرید یا رایگان بودن نمایش داده می‌شوند.",
@@ -479,19 +479,19 @@ const DEFAULT_APP_TERMS_OF_USE_PAGE_HTML = `
 
 export const DEFAULT_PAYMENT_METHODS_VALUE = [
   {
-    method: UserCoursePaymentMethod.GATEWAY,
+    method: UserProductPaymentMethod.GATEWAY,
     isVisible: true,
     isActive: true,
     isRecommended: true,
   },
   {
-    method: UserCoursePaymentMethod.CARD_TO_CARD,
+    method: UserProductPaymentMethod.CARD_TO_CARD,
     isVisible: true,
     isActive: true,
     isRecommended: false,
   },
   {
-    method: UserCoursePaymentMethod.CRYPTOCURRENCY,
+    method: UserProductPaymentMethod.CRYPTOCURRENCY,
     isVisible: true,
     isActive: true,
     isRecommended: false,

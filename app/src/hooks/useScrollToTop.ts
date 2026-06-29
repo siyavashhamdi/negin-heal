@@ -4,7 +4,7 @@ import { getPathnameForScrollReset } from "../routing/scroll-reset-path.util";
 
 /**
  * Scrolls the window to the top when navigating to a different page, but not
- * when opening same-page overlays (e.g. course purchase or media viewer).
+ * when opening same-page overlays (e.g. product purchase or media viewer).
  */
 export const useScrollToTop = (): void => {
   const { pathname } = useLocation();

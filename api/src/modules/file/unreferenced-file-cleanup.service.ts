@@ -3,15 +3,15 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
 
 import {
-  Course,
-  CourseDocument,
+  Product,
+  ProductDocument,
   StoredFile,
   StoredFileDocument,
   Ticket,
   TicketDocument,
   User,
-  UserCourse,
-  UserCourseDocument,
+  UserProduct,
+  UserProductDocument,
   UserDocument,
 } from "../../database/schemas";
 import { addNotDeletedCondition } from "../../database/utils/not-deleted-query.util";
@@ -41,23 +41,23 @@ export class UnreferencedFileCleanupService {
   private readonly fileReferenceSources: FileReferenceSource[];
 
   constructor(
-    @InjectModel(Course.name)
-    private readonly courseModel: Model<CourseDocument>,
+    @InjectModel(Product.name)
+    private readonly productModel: Model<ProductDocument>,
     @InjectModel(User.name)
     private readonly userModel: Model<UserDocument>,
     @InjectModel(Ticket.name)
     private readonly ticketModel: Model<TicketDocument>,
-    @InjectModel(UserCourse.name)
-    private readonly userCourseModel: Model<UserCourseDocument>,
+    @InjectModel(UserProduct.name)
+    private readonly userProductModel: Model<UserProductDocument>,
     @InjectModel(StoredFile.name)
     private readonly storedFileModel: Model<StoredFileDocument>,
     private readonly fileService: FileService,
   ) {
     this.fileReferenceSources = [
       {
-        label: "courses.coverImageFileId",
+        label: "products.coverImageFileId",
         collect: () =>
-          this.courseModel.collection.distinct(
+          this.productModel.collection.distinct(
             "coverImageFileId",
             addNotDeletedCondition({
               coverImageFileId: { $exists: true, $ne: null },
@@ -65,9 +65,9 @@ export class UnreferencedFileCleanupService {
           ),
       },
       {
-        label: "courses.chapters.items.fileId",
+        label: "products.chapters.items.fileId",
         collect: () =>
-          this.courseModel.collection.distinct(
+          this.productModel.collection.distinct(
             "chapters.items.fileId",
             addNotDeletedCondition({
               "chapters.items.fileId": { $exists: true, $ne: null },
@@ -95,9 +95,9 @@ export class UnreferencedFileCleanupService {
           ),
       },
       {
-        label: "user_courses.purchase.uploadedReceiptFileId",
+        label: "user_products.purchase.uploadedReceiptFileId",
         collect: () =>
-          this.userCourseModel.collection.distinct(
+          this.userProductModel.collection.distinct(
             "purchase.uploadedReceiptFileId",
             addNotDeletedCondition({
               "purchase.uploadedReceiptFileId": { $exists: true, $ne: null },
@@ -188,12 +188,12 @@ export class UnreferencedFileCleanupService {
       );
 
       const [
-        clearedCourseReferences,
+        clearedProductReferences,
         clearedUserReferences,
         clearedTicketReferences,
-        clearedUserCourseReferences,
+        clearedUserProductReferences,
       ] = await Promise.all([
-        this.clearUnavailableCourseFileReferences(
+        this.clearUnavailableProductFileReferences(
           unavailableObjectIds,
           updatedAt,
         ),
@@ -205,17 +205,17 @@ export class UnreferencedFileCleanupService {
           unavailableObjectIds,
           updatedAt,
         ),
-        this.clearUnavailableUserCourseReceiptReferences(
+        this.clearUnavailableUserProductReceiptReferences(
           unavailableObjectIds,
           updatedAt,
         ),
       ]);
 
       clearedCount +=
-        clearedCourseReferences +
+        clearedProductReferences +
         clearedUserReferences +
         clearedTicketReferences +
-        clearedUserCourseReferences;
+        clearedUserProductReferences;
     }
 
     const referencedFileIdsAfterClear = await this.collectReferencedFileIds();
@@ -241,11 +241,11 @@ export class UnreferencedFileCleanupService {
     return clearedCount;
   }
 
-  private async clearUnavailableCourseFileReferences(
+  private async clearUnavailableProductFileReferences(
     unavailableObjectIds: Types.ObjectId[],
     updatedAt: Date,
   ): Promise<number> {
-    const result = await this.courseModel.collection.updateMany(
+    const result = await this.productModel.collection.updateMany(
       addNotDeletedCondition({
         $or: [
           { coverImageFileId: { $in: unavailableObjectIds } },
@@ -374,11 +374,11 @@ export class UnreferencedFileCleanupService {
     return result.modifiedCount ?? 0;
   }
 
-  private async clearUnavailableUserCourseReceiptReferences(
+  private async clearUnavailableUserProductReceiptReferences(
     unavailableObjectIds: Types.ObjectId[],
     updatedAt: Date,
   ): Promise<number> {
-    const result = await this.userCourseModel.collection.updateMany(
+    const result = await this.userProductModel.collection.updateMany(
       addNotDeletedCondition({
         "purchase.uploadedReceiptFileId": { $in: unavailableObjectIds },
       }),

@@ -63,7 +63,7 @@ Starts a ZarinPal payment.
   "metadata": {
     "email": "user@example.com",
     "mobile": "09121234567",
-    "courseId": "abc123",
+    "productId": "abc123",
     "userId": "user-uuid",
     "username": "sara"
   }
@@ -148,7 +148,7 @@ curl -s -X POST http://localhost:8090/payment/request \
     "metadata": {
       "email": "user@example.com",
       "mobile": "09121234567",
-      "courseId": "test",
+      "productId": "test",
       "userId": "user-1",
       "username": "sara"
     }
@@ -159,6 +159,6 @@ curl -s -X POST http://localhost:8090/payment/request \
 
 Request logs are written to `logs/` as one file per UTC day, e.g. `logs/2025-06-27.log`. Each line is a JSON object (JSON Lines format).
 
-Logged fields include route, `http_status`, total `duration_ms`, and `zarinpal_duration_ms` for outbound ZarinPal calls. Payment metadata is limited to `courseId` and `userId`; email, mobile, username, API keys, merchant IDs, and full callback query strings are not stored. Payment authorities are redacted (last 8 characters only).
+Logged fields include route, `http_status`, total `duration_ms`, and `zarinpal_duration_ms` for outbound ZarinPal calls. Payment metadata is limited to `productId` and `userId`; email, mobile, username, API keys, merchant IDs, and full callback query strings are not stored. Payment authorities are redacted (last 8 characters only).
 
 Successful `GET /health` responses are not logged to reduce noise. The `logs/` directory is blocked from web access via `.htaccess`. Ensure `logs/` is writable by PHP on deploy (created automatically if missing).

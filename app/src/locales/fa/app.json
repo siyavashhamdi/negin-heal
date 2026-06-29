@@ -1,7 +1,7 @@
 {
     "app": {
         "pageTitles": {
-            "courses": "دوره‌ها",
+            "products": "دوره‌ها",
             "more": "سایر",
             "moreAbout": "درباره سامانه",
             "morePrivacyPolicy": "سیاست حریم خصوصی",
@@ -24,10 +24,10 @@
             "resetPassword": "تغییر گذرواژه",
             "activateAccount": "فعال‌سازی حساب",
             "paymentCallback": "نتیجه پرداخت",
-            "courseCreate": "دوره جدید",
-            "courseEdit": "ویرایش دوره",
-            "courseDetail": "جزئیات دوره",
-            "coursePurchase": "تکمیل خرید دوره",
+            "productCreate": "دوره جدید",
+            "productEdit": "ویرایش دوره",
+            "productDetail": "جزئیات دوره",
+            "productPurchase": "تکمیل خرید دوره",
             "contentViewer": "نمایش محتوا",
             "mediaCompress": "فشرده‌سازی رسانه",
             "paymentManualCreate": "ثبت دستی پرداخت",

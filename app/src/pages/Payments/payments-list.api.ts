@@ -9,9 +9,9 @@ import {
 
 export type PurchaseStatusChangedBy = "ADMIN" | "SYSTEM";
 
-export type UserCoursePaymentMethod = "GATEWAY" | "CARD_TO_CARD" | "CRYPTOCURRENCY" | "FREE";
+export type UserProductPaymentMethod = "GATEWAY" | "CARD_TO_CARD" | "CRYPTOCURRENCY" | "FREE";
 
-export type UserCoursePurchaseStatus =
+export type UserProductPurchaseStatus =
   | "PENDING"
   | "PENDING_GATEWAY"
   | "PAID"
@@ -19,11 +19,11 @@ export type UserCoursePurchaseStatus =
   | "REFUNDED"
   | "CANCELLED";
 
-export type UserCoursePurchaseCurrency = "IRT" | "USDT";
+export type UserProductPurchaseCurrency = "IRT" | "USDT";
 
 export type CouponDiscountType = "PERCENTAGE" | "FIXED_AMOUNT";
 
-export type CoursePaymentRelatedUser = {
+export type ProductPaymentRelatedUser = {
   readonly id: string;
   readonly fullName?: string | null;
   readonly username?: string | null;
@@ -31,7 +31,7 @@ export type CoursePaymentRelatedUser = {
   readonly phone?: string | null;
 };
 
-export type CoursePaymentStoredFile = {
+export type ProductPaymentStoredFile = {
   readonly id: string;
   readonly name?: string | null;
   readonly title?: string | null;
@@ -41,10 +41,10 @@ export type CoursePaymentStoredFile = {
   readonly accessUrl?: FileAccessUrl | null;
 };
 
-export type CoursePaymentListItemRow = {
+export type ProductPaymentListItemRow = {
   readonly id: string;
   readonly userId: string;
-  readonly courseId: string;
+  readonly productId: string;
   readonly user: {
     readonly fullName: string;
     readonly username: string;
@@ -52,12 +52,12 @@ export type CoursePaymentListItemRow = {
     readonly phone?: string | null;
     readonly mobilePhone?: string | null;
   };
-  readonly course: {
+  readonly product: {
     readonly title: string;
   };
-  readonly status: UserCoursePurchaseStatus;
-  readonly paymentMethod: UserCoursePaymentMethod;
-  readonly currency: UserCoursePurchaseCurrency;
+  readonly status: UserProductPurchaseStatus;
+  readonly paymentMethod: UserProductPaymentMethod;
+  readonly currency: UserProductPurchaseCurrency;
   readonly paymentProvider?: string | null;
   readonly paymentReference?: string | null;
   readonly transactionId?: string | null;
@@ -88,10 +88,10 @@ export type CoursePaymentListItemRow = {
   readonly cancelledAt?: string | null;
 };
 
-export type CoursePaymentDetailRow = {
+export type ProductPaymentDetailRow = {
   readonly id: string;
   readonly userId: string;
-  readonly courseId: string;
+  readonly productId: string;
   readonly user: {
     readonly id: string;
     readonly fullName: string;
@@ -100,14 +100,14 @@ export type CoursePaymentDetailRow = {
     readonly phone?: string | null;
     readonly mobilePhone?: string | null;
   };
-  readonly course: {
+  readonly product: {
     readonly id: string;
     readonly title: string;
     readonly priceIrt: number;
   };
-  readonly status: UserCoursePurchaseStatus;
-  readonly paymentMethod: UserCoursePaymentMethod;
-  readonly currency: UserCoursePurchaseCurrency;
+  readonly status: UserProductPurchaseStatus;
+  readonly paymentMethod: UserProductPaymentMethod;
+  readonly currency: UserProductPurchaseCurrency;
   readonly paymentProvider?: string | null;
   readonly paymentReference?: string | null;
   readonly transactionId?: string | null;
@@ -123,16 +123,16 @@ export type CoursePaymentDetailRow = {
     readonly discountType: CouponDiscountType;
     readonly discountValue: number;
   } | null;
-  readonly uploadedReceiptFile?: CoursePaymentStoredFile | null;
+  readonly uploadedReceiptFile?: ProductPaymentStoredFile | null;
   readonly receiptUploadedBy?: string | null;
-  readonly receiptUploader?: CoursePaymentRelatedUser | null;
+  readonly receiptUploader?: ProductPaymentRelatedUser | null;
   readonly isManualStatusChange: boolean;
   readonly statusChangedBy?: PurchaseStatusChangedBy | null;
   readonly submittedInitiallyByAdmin: boolean;
   readonly createdBy?: string | null;
-  readonly createdByUser?: CoursePaymentRelatedUser | null;
+  readonly createdByUser?: ProductPaymentRelatedUser | null;
   readonly manualStatusChangedBy?: string | null;
-  readonly manualStatusChanger?: CoursePaymentRelatedUser | null;
+  readonly manualStatusChanger?: ProductPaymentRelatedUser | null;
   readonly manualStatusChangedDescription?: string | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
@@ -144,9 +144,9 @@ export type CoursePaymentDetailRow = {
   readonly cancelledAt?: string | null;
 };
 
-export type CoursePaymentListQuery = {
-  coursePaymentList: {
-    items: CoursePaymentListItemRow[];
+export type ProductPaymentListQuery = {
+  productPaymentList: {
+    items: ProductPaymentListItemRow[];
     pagination: {
       limit: number;
       skip: number;
@@ -156,26 +156,26 @@ export type CoursePaymentListQuery = {
   };
 };
 
-export type CoursePaymentDetailQuery = {
-  coursePaymentDetail: CoursePaymentDetailRow;
+export type ProductPaymentDetailQuery = {
+  productPaymentDetail: ProductPaymentDetailRow;
 };
 
-export type CoursePaymentDetailQueryVariables = {
+export type ProductPaymentDetailQueryVariables = {
   input: {
     id: string;
   };
 };
 
-export type CoursePaymentListFilters = {
+export type ProductPaymentListFilters = {
   query: string;
   userFullName: string;
   username: string;
   userEmail: string;
   userPhone: string;
-  courseTitle: string;
-  status: UserCoursePurchaseStatus | "ALL";
-  paymentMethod: UserCoursePaymentMethod | "ALL";
-  currency: UserCoursePurchaseCurrency | "ALL";
+  productTitle: string;
+  status: UserProductPurchaseStatus | "ALL";
+  paymentMethod: UserProductPaymentMethod | "ALL";
+  currency: UserProductPurchaseCurrency | "ALL";
   paymentProvider: string;
   paymentReference: string;
   transactionId: string;
@@ -209,13 +209,13 @@ export type CoursePaymentListFilters = {
   cancelledAtTo: string;
 };
 
-export const EMPTY_COURSE_PAYMENT_LIST_FILTERS: CoursePaymentListFilters = {
+export const EMPTY_PRODUCT_PAYMENT_LIST_FILTERS: ProductPaymentListFilters = {
   query: "",
   userFullName: "",
   username: "",
   userEmail: "",
   userPhone: "",
-  courseTitle: "",
+  productTitle: "",
   status: "ALL",
   paymentMethod: "ALL",
   currency: "ALL",
@@ -252,7 +252,7 @@ export const EMPTY_COURSE_PAYMENT_LIST_FILTERS: CoursePaymentListFilters = {
   cancelledAtTo: "",
 };
 
-export type CoursePaymentListQueryVariables = {
+export type ProductPaymentListQueryVariables = {
   input: {
     filters?: {
       query?: string | null;
@@ -261,15 +261,15 @@ export type CoursePaymentListQueryVariables = {
       mobilePhone?: string | null;
       id?: string | null;
       userId?: string | null;
-      courseId?: string | null;
+      productId?: string | null;
       userFullName?: string | null;
       username?: string | null;
       userEmail?: string | null;
       userPhone?: string | null;
-      courseTitle?: string | null;
-      status?: UserCoursePurchaseStatus | null;
-      paymentMethod?: UserCoursePaymentMethod | null;
-      currency?: UserCoursePurchaseCurrency | null;
+      productTitle?: string | null;
+      status?: UserProductPurchaseStatus | null;
+      paymentMethod?: UserProductPaymentMethod | null;
+      currency?: UserProductPurchaseCurrency | null;
       paymentProvider?: string | null;
       paymentReference?: string | null;
       transactionId?: string | null;
@@ -313,18 +313,18 @@ export type CoursePaymentListQueryVariables = {
   };
 };
 
-export type CoursePaymentRecord = {
+export type ProductPaymentRecord = {
   readonly id: string;
   readonly userId: string;
-  readonly courseId: string;
+  readonly productId: string;
   readonly userFullName: string;
   readonly username: string;
   readonly userEmail: string;
   readonly userPhone: string;
-  readonly courseTitle: string;
-  readonly status: UserCoursePurchaseStatus;
-  readonly paymentMethod: UserCoursePaymentMethod;
-  readonly currency: UserCoursePurchaseCurrency;
+  readonly productTitle: string;
+  readonly status: UserProductPurchaseStatus;
+  readonly paymentMethod: UserProductPaymentMethod;
+  readonly currency: UserProductPurchaseCurrency;
   readonly paymentProvider: string;
   readonly paymentReference: string;
   readonly transactionId: string;
@@ -384,12 +384,12 @@ export function formatPurchaseStatusChangedBy(
   return manualStatusChangerName;
 }
 
-export function isPaymentReceiptFilePresent(record: CoursePaymentRecord): boolean {
+export function isPaymentReceiptFilePresent(record: ProductPaymentRecord): boolean {
   return record.uploadedReceiptFileId !== "-" || record.uploadedReceiptFileTitle !== "-";
 }
 
 export function buildPaymentReceiptExistingFile(
-  record: CoursePaymentRecord
+  record: ProductPaymentRecord
 ): ExistingFilePreview | null {
   if (!isPaymentReceiptFilePresent(record)) {
     return null;
@@ -470,20 +470,20 @@ function dateFilterToIsoDate(value: string): string | null {
   return `${year}-${month}-${day}`;
 }
 
-export function mapCoursePaymentListRowToRecord(
-  row: CoursePaymentListItemRow
-): CoursePaymentRecord {
+export function mapProductPaymentListRowToRecord(
+  row: ProductPaymentListItemRow
+): ProductPaymentRecord {
   const receiptAccessUrl = row.uploadedReceiptFile?.accessUrl;
 
   return {
     id: String(row.id),
     userId: String(row.userId),
-    courseId: String(row.courseId),
+    productId: String(row.productId),
     userFullName: display(row.user.fullName),
     username: display(row.user.username),
     userEmail: display(row.user.email),
     userPhone: display(row.user.mobilePhone ?? row.user.phone),
-    courseTitle: display(row.course.title),
+    productTitle: display(row.product.title),
     status: row.status,
     paymentMethod: row.paymentMethod,
     currency: row.currency,
@@ -530,21 +530,21 @@ export function mapCoursePaymentListRowToRecord(
   };
 }
 
-export function mapCoursePaymentDetailRowToRecord(
-  row: CoursePaymentDetailRow
-): CoursePaymentRecord {
+export function mapProductPaymentDetailRowToRecord(
+  row: ProductPaymentDetailRow
+): ProductPaymentRecord {
   const receiptFile = row.uploadedReceiptFile;
   const receiptAccessUrl = receiptFile?.accessUrl;
 
   return {
     id: String(row.id),
     userId: String(row.userId),
-    courseId: String(row.courseId),
+    productId: String(row.productId),
     userFullName: display(row.user.fullName),
     username: display(row.user.username),
     userEmail: display(row.user.email),
     userPhone: display(row.user.mobilePhone ?? row.user.phone),
-    courseTitle: display(row.course.title),
+    productTitle: display(row.product.title),
     status: row.status,
     paymentMethod: row.paymentMethod,
     currency: row.currency,
@@ -595,12 +595,12 @@ export function mapCoursePaymentDetailRowToRecord(
   };
 }
 
-export function buildCoursePaymentListQueryVariables(
+export function buildProductPaymentListQueryVariables(
   search: string,
-  filters: CoursePaymentListFilters,
+  filters: ProductPaymentListFilters,
   page: number,
   pageSize: number
-): CoursePaymentListQueryVariables {
+): ProductPaymentListQueryVariables {
   return {
     input: {
       filters: {
@@ -612,7 +612,7 @@ export function buildCoursePaymentListQueryVariables(
         username: trimToNull(filters.username),
         userEmail: trimToNull(filters.userEmail),
         userPhone: trimToNull(filters.userPhone),
-        courseTitle: trimToNull(filters.courseTitle),
+        productTitle: trimToNull(filters.productTitle),
         status: enumToNull(filters.status),
         paymentMethod: enumToNull(filters.paymentMethod),
         currency: enumToNull(filters.currency),
@@ -657,7 +657,7 @@ export function buildCoursePaymentListQueryVariables(
   };
 }
 
-export function hasCoursePaymentFiltersApplied(filters: CoursePaymentListFilters): boolean {
+export function hasProductPaymentFiltersApplied(filters: ProductPaymentListFilters): boolean {
   return Object.entries(filters).some(([key, value]) => {
     if (key === "query") {
       return false;

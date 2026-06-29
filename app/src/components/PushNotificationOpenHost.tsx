@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 
 import { subscribePushNotificationOpen } from "../lib/push-open-listeners";
 import { APP_SHELL_ROUTES } from "../routing/app-shell-routes";
+import { PRODUCTS_ROUTE_PATH_PREFIX } from "../routing/product-route-path";
 import {
   consumePendingPushNotificationOpen,
   handleNativeNotificationDeepLink,
@@ -21,9 +22,9 @@ function isNotificationDeepLink(url: string): boolean {
 
   try {
     const parsed = new URL(trimmed);
-    return parsed.pathname.startsWith("/notifications") || parsed.pathname.startsWith("/courses/");
+    return parsed.pathname.startsWith("/notifications") || parsed.pathname.startsWith(PRODUCTS_ROUTE_PATH_PREFIX);
   } catch {
-    return trimmed.startsWith("/notifications") || trimmed.startsWith("/courses/");
+    return trimmed.startsWith("/notifications") || trimmed.startsWith(PRODUCTS_ROUTE_PATH_PREFIX);
   }
 }
 

@@ -8,7 +8,7 @@ export type PushNotificationOpenPayload = {
   readonly description: string;
   readonly messageType?: GeneralNotificationMessageType | string;
   readonly mode?: string;
-  readonly courseId?: string;
+  readonly productId?: string;
   readonly chapterKey?: string;
   readonly action?: {
     readonly label?: string;

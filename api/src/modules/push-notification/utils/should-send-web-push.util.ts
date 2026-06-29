@@ -17,7 +17,7 @@ export function isGlobalAnnouncementPushPayload(
   }
 
   return (
-    !payload.courseId &&
+    !payload.productId &&
     !payload.chapterKey &&
     payload.purchaseStatus === undefined
   );

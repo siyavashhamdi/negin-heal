@@ -8,17 +8,17 @@ import {
 import { InjectModel } from "@nestjs/mongoose";
 
 import {
-  Course,
-  CourseDocument,
+  Product,
+  ProductDocument,
   Coupon,
   CouponDocument,
-  UserCourse,
-  UserCourseDocument,
+  UserProduct,
+  UserProductDocument,
 } from "../../database/schemas";
 import {
-  CourseDiscountType,
+  ProductDiscountType,
   CouponDiscountType,
-  UserCoursePurchaseStatus,
+  UserProductPurchaseStatus,
 } from "../../enums";
 import { PAGINATION_CONSTANT } from "../../constants";
 import { EXCEPTION_CONSTANT } from "../../constants/exception.constant";
@@ -41,12 +41,12 @@ import {
 } from "./graphql/responses";
 
 const COMMITTED_PURCHASE_STATUSES = [
-  UserCoursePurchaseStatus.PENDING,
-  UserCoursePurchaseStatus.PENDING_GATEWAY,
-  UserCoursePurchaseStatus.PAID,
+  UserProductPurchaseStatus.PENDING,
+  UserProductPurchaseStatus.PENDING_GATEWAY,
+  UserProductPurchaseStatus.PAID,
 ];
 
-type CourseWithId = Course & { _id: Types.ObjectId };
+type ProductWithId = Product & { _id: Types.ObjectId };
 type CouponWithId = Coupon & { _id: Types.ObjectId };
 type CouponListRecord = Coupon & { _id: Types.ObjectId };
 type CouponListSortField =
@@ -76,7 +76,7 @@ type CouponCreateData = {
   expiresAt?: Date;
   totalUsageLimit?: number;
   perUserUsageLimit?: number;
-  applicableCourseIds?: Types.ObjectId[];
+  applicableProductIds?: Types.ObjectId[];
   isFirstPurchaseOnly: boolean;
   isActive: boolean;
 };
@@ -90,10 +90,10 @@ export class CouponService {
   constructor(
     @InjectModel(Coupon.name)
     private readonly couponModel: Model<CouponDocument>,
-    @InjectModel(Course.name)
-    private readonly courseModel: Model<CourseDocument>,
-    @InjectModel(UserCourse.name)
-    private readonly userCourseModel: Model<UserCourseDocument>,
+    @InjectModel(Product.name)
+    private readonly productModel: Model<ProductDocument>,
+    @InjectModel(UserProduct.name)
+    private readonly userProductModel: Model<UserProductDocument>,
   ) {}
 
   async list(
@@ -237,7 +237,7 @@ export class CouponService {
     }
   }
 
-  async validateForCoursePurchase(
+  async validateForProductPurchase(
     input: CouponValidateGqlInput,
     userId: Types.ObjectId,
   ): Promise<CouponValidateGqlResponse> {
@@ -246,31 +246,31 @@ export class CouponService {
       return this.invalid(EXCEPTION_CONSTANT.COUPON_CODE_EMPTY);
     }
 
-    const course = await this.courseModel
-      .findOne({ _id: input.courseId, isActive: true })
-      .lean<CourseWithId>()
+    const product = await this.productModel
+      .findOne({ _id: input.productId, isActive: true })
+      .lean<ProductWithId>()
       .exec();
 
-    if (!course) {
-      return this.invalid(EXCEPTION_CONSTANT.COURSE_NOT_FOUND_OR_INACTIVE);
+    if (!product) {
+      return this.invalid(EXCEPTION_CONSTANT.PRODUCT_NOT_FOUND_OR_INACTIVE);
     }
 
-    const existingUserCourse = await this.userCourseModel
+    const existingUserProduct = await this.userProductModel
       .findOne({
-        courseId: course._id,
+        productId: product._id,
         userId,
         "purchase.status": { $in: COMMITTED_PURCHASE_STATUSES },
       })
       .lean()
       .exec();
 
-    if (existingUserCourse) {
-      return this.invalid(EXCEPTION_CONSTANT.COURSE_ALREADY_PURCHASED);
+    if (existingUserProduct) {
+      return this.invalid(EXCEPTION_CONSTANT.PRODUCT_ALREADY_PURCHASED);
     }
 
-    const priceSummary = this.calculateCoursePriceSummary(course);
+    const priceSummary = this.calculateProductPriceSummary(product);
     if (priceSummary.payableAmountBeforeCouponIrt <= 0) {
-      return this.invalid(EXCEPTION_CONSTANT.COUPON_NOT_NEEDED_FOR_FREE_COURSE);
+      return this.invalid(EXCEPTION_CONSTANT.COUPON_NOT_NEEDED_FOR_FREE_PRODUCT);
     }
 
     const coupon = await this.couponModel
@@ -280,7 +280,7 @@ export class CouponService {
 
     const invalidCouponReason = await this.getInvalidCouponReason(
       coupon,
-      course._id,
+      product._id,
       userId,
     );
     if (invalidCouponReason) {
@@ -304,7 +304,7 @@ export class CouponService {
       discountType: coupon.discountType,
       discountValue: coupon.discountValue,
       amountIrt: priceSummary.amountIrt,
-      courseDiscountAmountIrt: priceSummary.courseDiscountAmountIrt,
+      productDiscountAmountIrt: priceSummary.productDiscountAmountIrt,
       payableAmountBeforeCouponIrt: priceSummary.payableAmountBeforeCouponIrt,
       couponDiscountAmountIrt,
       finalAmountIrt: Math.max(
@@ -316,7 +316,7 @@ export class CouponService {
 
   private async getInvalidCouponReason(
     coupon: CouponWithId | null,
-    courseId: Types.ObjectId,
+    productId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<string | null> {
     if (!coupon) {
@@ -336,8 +336,8 @@ export class CouponService {
       return EXCEPTION_CONSTANT.COUPON_EXPIRED;
     }
 
-    if (!this.isCouponApplicableToCourse(coupon, courseId)) {
-      return EXCEPTION_CONSTANT.COUPON_NOT_APPLICABLE_TO_COURSE;
+    if (!this.isCouponApplicableToProduct(coupon, productId)) {
+      return EXCEPTION_CONSTANT.COUPON_NOT_APPLICABLE_TO_PRODUCT;
     }
 
     if (coupon.totalUsageLimit) {
@@ -355,7 +355,7 @@ export class CouponService {
     }
 
     if (coupon.isFirstPurchaseOnly) {
-      const userPurchaseCount = await this.userCourseModel.countDocuments({
+      const userPurchaseCount = await this.userProductModel.countDocuments({
         userId,
         "purchase.status": { $in: COMMITTED_PURCHASE_STATUSES },
       });
@@ -372,53 +372,53 @@ export class CouponService {
     couponId: Types.ObjectId,
     userId?: Types.ObjectId,
   ): Promise<number> {
-    return this.userCourseModel.countDocuments({
+    return this.userProductModel.countDocuments({
       ...(userId ? { userId } : {}),
       "purchase.couponSnapshot.couponId": couponId,
       "purchase.status": { $in: COMMITTED_PURCHASE_STATUSES },
     });
   }
 
-  private isCouponApplicableToCourse(
+  private isCouponApplicableToProduct(
     coupon: CouponWithId,
-    courseId: Types.ObjectId,
+    productId: Types.ObjectId,
   ): boolean {
-    if (!coupon.applicableCourseIds?.length) {
+    if (!coupon.applicableProductIds?.length) {
       return true;
     }
 
-    return coupon.applicableCourseIds.some((applicableCourseId) =>
-      applicableCourseId.equals(courseId),
+    return coupon.applicableProductIds.some((applicableProductId) =>
+      applicableProductId.equals(productId),
     );
   }
 
-  private calculateCoursePriceSummary(course: Course): {
+  private calculateProductPriceSummary(product: Product): {
     amountIrt: number;
-    courseDiscountAmountIrt: number;
+    productDiscountAmountIrt: number;
     payableAmountBeforeCouponIrt: number;
   } {
-    const amountIrt = Math.max(0, course.priceIrt ?? 0);
-    const courseDiscountAmountIrt = this.calculateCourseDiscountAmount(course);
+    const amountIrt = Math.max(0, product.priceIrt ?? 0);
+    const productDiscountAmountIrt = this.calculateProductDiscountAmount(product);
 
     return {
       amountIrt,
-      courseDiscountAmountIrt,
+      productDiscountAmountIrt,
       payableAmountBeforeCouponIrt: Math.max(
         0,
-        amountIrt - courseDiscountAmountIrt,
+        amountIrt - productDiscountAmountIrt,
       ),
     };
   }
 
-  private calculateCourseDiscountAmount(course: Course): number {
-    const priceIrt = Math.max(0, course.priceIrt ?? 0);
-    const discount = course.discount;
+  private calculateProductDiscountAmount(product: Product): number {
+    const priceIrt = Math.max(0, product.priceIrt ?? 0);
+    const discount = product.discount;
 
     if (!discount || discount.value <= 0 || priceIrt <= 0) {
       return 0;
     }
 
-    if (discount.type === CourseDiscountType.PERCENTAGE) {
+    if (discount.type === ProductDiscountType.PERCENTAGE) {
       return Math.round(priceIrt * (Math.min(discount.value, 100) / 100));
     }
 
@@ -458,8 +458,8 @@ export class CouponService {
     const description = this.normalizeOptionalText(input.description);
     const startsAt = this.parseOptionalInputDate(input.startsAt);
     const expiresAt = this.parseOptionalInputDate(input.expiresAt);
-    const applicableCourseIds = this.normalizeObjectIdArray(
-      input.applicableCourseIds,
+    const applicableProductIds = this.normalizeObjectIdArray(
+      input.applicableProductIds,
     );
 
     if (!code) {
@@ -468,7 +468,7 @@ export class CouponService {
 
     this.validateCouponDiscount(input.discountType, input.discountValue);
     this.validateCouponDateRange(startsAt, expiresAt);
-    await this.ensureApplicableCoursesExist(applicableCourseIds);
+    await this.ensureApplicableProductsExist(applicableProductIds);
 
     return {
       code,
@@ -484,7 +484,7 @@ export class CouponService {
       ...(input.perUserUsageLimit
         ? { perUserUsageLimit: input.perUserUsageLimit }
         : {}),
-      ...(applicableCourseIds.length > 0 ? { applicableCourseIds } : {}),
+      ...(applicableProductIds.length > 0 ? { applicableProductIds } : {}),
       isFirstPurchaseOnly: input.isFirstPurchaseOnly ?? false,
       isActive: input.isActive ?? true,
     };
@@ -513,16 +513,16 @@ export class CouponService {
     }
   }
 
-  private async ensureApplicableCoursesExist(
-    applicableCourseIds: Types.ObjectId[],
+  private async ensureApplicableProductsExist(
+    applicableProductIds: Types.ObjectId[],
   ): Promise<void> {
-    if (applicableCourseIds.length === 0) {
+    if (applicableProductIds.length === 0) {
       return;
     }
 
-    const existingCourseCount = await this.courseModel
+    const existingProductCount = await this.productModel
       .countDocuments({
-        _id: { $in: applicableCourseIds },
+        _id: { $in: applicableProductIds },
         $or: [
           { "audit.deletedAt": null },
           { "audit.deletedAt": { $exists: false } },
@@ -530,9 +530,9 @@ export class CouponService {
       })
       .exec();
 
-    if (existingCourseCount !== applicableCourseIds.length) {
+    if (existingProductCount !== applicableProductIds.length) {
       throw new BadRequestException(
-        EXCEPTION_CONSTANT.COUPON_COURSE_IDS_INVALID,
+        EXCEPTION_CONSTANT.COUPON_PRODUCT_IDS_INVALID,
       );
     }
   }
@@ -596,12 +596,12 @@ export class CouponService {
     this.applyNullableNumberUpdate(input, "totalUsageLimit", set, unset);
     this.applyNullableNumberUpdate(input, "perUserUsageLimit", set, unset);
 
-    if (this.hasOwnInputField(input, "applicableCourseIds")) {
-      const applicableCourseIds = this.normalizeObjectIdArray(
-        input.applicableCourseIds,
+    if (this.hasOwnInputField(input, "applicableProductIds")) {
+      const applicableProductIds = this.normalizeObjectIdArray(
+        input.applicableProductIds,
       );
-      await this.ensureApplicableCoursesExist(applicableCourseIds);
-      set.applicableCourseIds = applicableCourseIds;
+      await this.ensureApplicableProductsExist(applicableProductIds);
+      set.applicableProductIds = applicableProductIds;
     }
 
     if (this.hasOwnInputField(input, "isFirstPurchaseOnly")) {
@@ -796,9 +796,9 @@ export class CouponService {
       filters.perUserUsageLimitMax,
     );
 
-    if (filters.applicableCourseId) {
-      query.applicableCourseIds = new Types.ObjectId(
-        filters.applicableCourseId,
+    if (filters.applicableProductId) {
+      query.applicableProductIds = new Types.ObjectId(
+        filters.applicableProductId,
       );
     }
 
@@ -868,7 +868,7 @@ export class CouponService {
       return new Map();
     }
 
-    const usageCounts = await this.userCourseModel
+    const usageCounts = await this.userProductModel
       .aggregate<CouponUsageCountRecord>([
         {
           $match: {
@@ -938,7 +938,7 @@ export class CouponService {
       expiresAt: coupon.expiresAt,
       totalUsageLimit: coupon.totalUsageLimit,
       perUserUsageLimit: coupon.perUserUsageLimit,
-      applicableCourseIds: coupon.applicableCourseIds ?? [],
+      applicableProductIds: coupon.applicableProductIds ?? [],
       isFirstPurchaseOnly: coupon.isFirstPurchaseOnly,
       isActive: coupon.isActive,
       totalUsageCount,

@@ -12,9 +12,9 @@ import { Link as RouterLink } from "react-router-dom";
 
 import { useTranslation } from "../../hooks/useTranslation";
 import {
-  resolveNotificationCourseLink,
-  type NotificationCourseLink,
-} from "../../utilities/notification-course-link.util";
+  resolveNotificationProductLink,
+  type NotificationProductLink,
+} from "../../utilities/notification-product-link.util";
 import { formatRelativeTimeLabel } from "../../utilities/relative-time.util";
 import {
   NOTIFICATION_SOURCE_LABEL,
@@ -47,19 +47,19 @@ const MODE_META: Record<
   ERROR: { icon: ErrorOutlineRoundedIcon, accentClass: styles.cardAccentError ?? "" },
 };
 
-type CourseActionLinkProps = {
-  readonly courseLink: NotificationCourseLink;
+type ProductActionLinkProps = {
+  readonly productLink: NotificationProductLink;
   readonly label: string;
   readonly onNavigate: () => void;
 };
 
-const CourseActionLink = ({
-  courseLink,
+const ProductActionLink = ({
+  productLink,
   label,
   onNavigate,
-}: CourseActionLinkProps): ReactElement => (
+}: ProductActionLinkProps): ReactElement => (
   <span className={styles.cardMessageLinkWrap}>
-    <RouterLink to={courseLink.href} className={styles.cardMessageLink} onClick={onNavigate}>
+    <RouterLink to={productLink.href} className={styles.cardMessageLink} onClick={onNavigate}>
       <span>{label}</span>
       <ArrowBackRoundedIcon fontSize="inherit" />
     </RouterLink>
@@ -80,17 +80,17 @@ const NotificationCard = ({
   const timeLabel = formatRelativeTimeLabel(notification.createdAt ?? notification.updatedAt);
   const isArchived = Boolean(notification.archivedAt);
   const shouldShowMessage = notification.message.trim() !== notification.title.trim();
-  const courseLink = useMemo(
-    () => resolveNotificationCourseLink(notification.source, notification.payload),
+  const productLink = useMemo(
+    () => resolveNotificationProductLink(notification.source, notification.payload),
     [notification.payload, notification.source]
   );
-  const courseLinkActionLabel = courseLink
-    ? t(`pages.notifications.${courseLink.actionLabel}.action`)
+  const productLinkActionLabel = productLink
+    ? t(`pages.notifications.${productLink.actionLabel}.action`)
     : null;
-  const isChapterReleaseNotification = notification.source === "COURSE_CHAPTER";
-  const showChapterAction = isChapterReleaseNotification && courseLink != null;
-  const showPaymentAction = notification.source === "PAYMENT" && courseLink != null;
-  const handleCourseLinkClick = (): void => {
+  const isChapterReleaseNotification = notification.source === "PRODUCT_CHAPTER";
+  const showChapterAction = isChapterReleaseNotification && productLink != null;
+  const showPaymentAction = notification.source === "PAYMENT" && productLink != null;
+  const handleProductLinkClick = (): void => {
     if (!notification.isRead) {
       onMarkRead(notification.id);
     }
@@ -148,15 +148,15 @@ const NotificationCard = ({
           </div>
         </div>
 
-        {showChapterAction && courseLink && courseLinkActionLabel ? (
+        {showChapterAction && productLink && productLinkActionLabel ? (
           <div className={styles.cardSourceRow}>
             <span className={styles.cardSourceBadge}>
-              {NOTIFICATION_SOURCE_LABEL.COURSE_CHAPTER}
+              {NOTIFICATION_SOURCE_LABEL.PRODUCT_CHAPTER}
             </span>
-            <CourseActionLink
-              courseLink={courseLink}
-              label={courseLinkActionLabel}
-              onNavigate={handleCourseLinkClick}
+            <ProductActionLink
+              productLink={productLink}
+              label={productLinkActionLabel}
+              onNavigate={handleProductLinkClick}
             />
           </div>
         ) : null}
@@ -164,11 +164,11 @@ const NotificationCard = ({
         {shouldShowMessage || showPaymentAction ? (
           <p className={styles.cardMessage}>
             {shouldShowMessage ? notification.message : null}
-            {showPaymentAction && courseLink && courseLinkActionLabel ? (
-              <CourseActionLink
-                courseLink={courseLink}
-                label={courseLinkActionLabel}
-                onNavigate={handleCourseLinkClick}
+            {showPaymentAction && productLink && productLinkActionLabel ? (
+              <ProductActionLink
+                productLink={productLink}
+                label={productLinkActionLabel}
+                onNavigate={handleProductLinkClick}
               />
             ) : null}
           </p>

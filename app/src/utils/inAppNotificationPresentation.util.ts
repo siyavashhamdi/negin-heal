@@ -23,7 +23,7 @@ export type InAppNotificationPresentationInput = {
   readonly description: string;
   readonly messageType?: GeneralNotificationMessageType | string;
   readonly mode?: string;
-  readonly courseId?: string;
+  readonly productId?: string;
   readonly chapterKey?: string;
   readonly action?: {
     readonly label?: string;
@@ -132,7 +132,7 @@ export function presentInAppNotificationMessage(
           action: input.action,
           actionLabel: input.actionLabel,
           actionUrl: input.actionUrl,
-          courseId: input.courseId,
+          productId: input.productId,
           chapterKey: input.chapterKey,
         }) ?? undefined,
     });

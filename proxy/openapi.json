@@ -75,7 +75,7 @@
                 "metadata": {
                   "email": "user@example.com",
                   "mobile": "09121234567",
-                  "courseId": "abc123",
+                  "productId": "abc123",
                   "userId": "user-uuid",
                   "username": "sara"
                 }
@@ -234,7 +234,7 @@
             "type": "string",
             "example": "09121234567"
           },
-          "courseId": {
+          "productId": {
             "type": "string",
             "example": "abc123"
           },

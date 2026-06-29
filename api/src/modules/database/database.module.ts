@@ -5,10 +5,10 @@ import { MigrationService } from "./migration.service";
 import {
   AppSetting,
   AppSettingSchema,
-  Course,
-  CourseReview,
-  CourseReviewSchema,
-  CourseSchema,
+  Product,
+  ProductReview,
+  ProductReviewSchema,
+  ProductSchema,
   Migration,
   MigrationSchema,
   Notification,
@@ -22,8 +22,8 @@ import {
   Ticket,
   TicketSchema,
   User,
-  UserCourse,
-  UserCourseSchema,
+  UserProduct,
+  UserProductSchema,
   UserSchema,
 } from "../../database/schemas";
 
@@ -31,8 +31,8 @@ import {
   imports: [
     MongooseModule.forFeature([
       { name: AppSetting.name, schema: AppSettingSchema },
-      { name: Course.name, schema: CourseSchema },
-      { name: CourseReview.name, schema: CourseReviewSchema },
+      { name: Product.name, schema: ProductSchema },
+      { name: ProductReview.name, schema: ProductReviewSchema },
       { name: Migration.name, schema: MigrationSchema },
       { name: Notification.name, schema: NotificationSchema },
       { name: Coupon.name, schema: CouponSchema },
@@ -40,7 +40,7 @@ import {
       { name: StoredFile.name, schema: StoredFileSchema },
       { name: Ticket.name, schema: TicketSchema },
       { name: User.name, schema: UserSchema },
-      { name: UserCourse.name, schema: UserCourseSchema },
+      { name: UserProduct.name, schema: UserProductSchema },
     ]),
   ],
   providers: [MigrationService],

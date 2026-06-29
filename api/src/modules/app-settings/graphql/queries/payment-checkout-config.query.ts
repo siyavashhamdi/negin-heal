@@ -9,7 +9,7 @@ export class PaymentCheckoutConfigQuery {
 
   @Query(() => PaymentCheckoutConfigGqlResponse, {
     name: "paymentCheckoutConfig",
-    description: "Get payment checkout settings for course purchases",
+    description: "Get payment checkout settings for product purchases",
   })
   async getPaymentCheckoutConfig(): Promise<PaymentCheckoutConfigGqlResponse> {
     return this.appSettingsService.getPaymentCheckoutConfig();

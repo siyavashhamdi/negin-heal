@@ -11,7 +11,7 @@ export const COUPON_VALIDATE_QUERY = gql`
       discountType
       discountValue
       amountIrt
-      courseDiscountAmountIrt
+      productDiscountAmountIrt
       payableAmountBeforeCouponIrt
       couponDiscountAmountIrt
       finalAmountIrt

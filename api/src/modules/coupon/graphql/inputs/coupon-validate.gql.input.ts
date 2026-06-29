@@ -8,10 +8,10 @@ import { IsObjectId } from "../../../../validators/is-object-id.validator";
 
 @InputType()
 export class CouponValidateGqlInput {
-  @Field(() => ID, { description: "Course ID" })
-  @IsObjectId({ message: "Course ID must be a valid MongoDB ObjectId" })
+  @Field(() => ID, { description: "Product ID" })
+  @IsObjectId({ message: "Product ID must be a valid MongoDB ObjectId" })
   @Transform(toObjectId)
-  courseId: Types.ObjectId;
+  productId: Types.ObjectId;
 
   @Field({ description: "Coupon code" })
   @IsString({ message: "Coupon code must be a string" })

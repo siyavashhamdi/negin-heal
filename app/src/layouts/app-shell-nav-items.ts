@@ -9,10 +9,10 @@ import { APP_SHELL_ROUTES } from "../routing/app-shell-routes";
 
 export type AppShellNavIcon = ComponentType<{ className?: string }>;
 
-export type AppShellNavBadgeKind = "courses" | "payments" | "notifications" | "support";
+export type AppShellNavBadgeKind = "products" | "payments" | "notifications" | "support";
 
 export type AppShellNavItemId =
-  | "courses"
+  | "products"
   | "payments"
   | "notifications"
   | "support"
@@ -32,11 +32,11 @@ export type AppShellNavItemDefinition = {
 
 export const APP_SHELL_NAV_ITEMS: readonly AppShellNavItemDefinition[] = [
   {
-    id: "courses",
+    id: "products",
     title: "دوره‌ها",
-    path: APP_SHELL_ROUTES.courses,
+    path: APP_SHELL_ROUTES.products,
     Icon: MenuBookRoundedIcon,
-    badge: "courses",
+    badge: "products",
   },
   {
     id: "payments",
@@ -82,7 +82,7 @@ export type AppShellNavContext = {
 };
 
 export type AppShellNavBadgeCounts = {
-  readonly courses: number;
+  readonly products: number;
   readonly payments: number;
   readonly notifications: number;
   readonly support: number;

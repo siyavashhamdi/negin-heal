@@ -1,0 +1,518 @@
+@use "../../../styles/variables" as variables;
+@use "../../../styles/mixins" as mixins;
+
+$layout-lg: 75rem;
+$layout-md: 62rem;
+$layout-sm: variables.$breakpoint-sm;
+
+.page {
+  display: grid;
+  gap: 1rem;
+
+  @include mixins.mobile-page-stack-tight;
+}
+
+.hero {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.heroHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.hero h2 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.5vw, 1.9rem);
+}
+
+.createProductButton {
+  border-radius: 0.75rem !important;
+  font-weight: 900 !important;
+  border: 0.0625rem solid color-mix(in srgb, #ffffff 52%, transparent) !important;
+  color: #ffffff !important;
+  background:
+    radial-gradient(circle at 32% 24%, color-mix(in srgb, #ffffff 30%, transparent), transparent 34%),
+    linear-gradient(135deg, var(--app-layout-glow) 0%, var(--app-layout-glow-2) 100%) !important;
+  box-shadow:
+    0 0.55rem 1.2rem color-mix(in srgb, var(--app-layout-glow) 34%, transparent),
+    inset 0 0.0625rem 0 color-mix(in srgb, #ffffff 48%, transparent);
+}
+
+.createProductButton:hover {
+  background:
+    radial-gradient(circle at 32% 24%, color-mix(in srgb, #ffffff 36%, transparent), transparent 34%),
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--app-layout-glow) 84%, #000) 0%,
+      color-mix(in srgb, var(--app-layout-glow-2) 84%, #000) 100%
+    ) !important;
+}
+
+.createProductIconButton {
+  display: none !important;
+}
+
+.hero p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  max-inline-size: 80ch;
+}
+
+.filterPanel {
+  border: 0.0625rem solid rgba(61, 44, 53, 0.1);
+  border-radius: 1rem !important;
+  padding: 0.85rem;
+  @include mixins.surface-bg(color-mix(in srgb, var(--app-surface-bg) 96%, #ffffff));
+}
+
+.searchSection {
+  margin-bottom: 0.25rem;
+}
+
+.searchRow {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.searchInput {
+  flex: 1 1 18rem;
+  max-width: 32rem;
+}
+
+.searchActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.sectionDivider {
+  margin: 0.6rem 0 0.8rem !important;
+}
+
+.filtersSection,
+.sortSection {
+  margin-bottom: 0.2rem;
+}
+
+.appliedFilters {
+  margin-top: 0.75rem;
+}
+
+.inputInfoIcon {
+  color: var(--text-secondary);
+  cursor: help;
+}
+
+.errorAlert {
+  border-radius: 0.85rem !important;
+}
+
+.productGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.95rem;
+}
+
+.productCardShell {
+  min-width: 0;
+  border-radius: 1.15rem;
+  overflow: hidden;
+  transition:
+    opacity 0.18s ease,
+    outline-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.productCardShellDraggable {
+  cursor: grab;
+}
+
+.productCardShellDraggable:active {
+  cursor: grabbing;
+}
+
+.productCardShellDragging {
+  opacity: 0.72;
+  outline: 0.125rem dashed color-mix(in srgb, variables.$color-info-dark 72%, transparent);
+  outline-offset: 0.28rem;
+  transform: scale(0.985);
+}
+
+@media (max-width: ($layout-lg - 0.0625rem)) {
+  .productGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: ($layout-md - 0.0625rem)) {
+  .productGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: ($layout-sm - 0.0625rem)) {
+  .page {
+    position: relative;
+  }
+
+  .hero {
+    display: contents;
+  }
+
+  .searchRow {
+    justify-content: flex-start;
+    gap: 0.25rem;
+  }
+
+  .heroHead {
+    align-items: center;
+    flex-wrap: nowrap;
+  }
+
+  .hero h2,
+  .hero p {
+    display: none;
+  }
+
+  .heroHead {
+    display: contents;
+  }
+
+  .filterPanel {
+    position: sticky;
+    z-index: 5;
+    top: 0.65rem;
+    padding: 0.68rem;
+    border-radius: 1.35rem !important;
+    @include mixins.mobile-floating-shell;
+  }
+
+  .filterPanel > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .filterPanelCollapsed {
+    z-index: 1285;
+    justify-self: start;
+    inline-size: fit-content;
+    block-size: fit-content;
+    margin-block-end: -2.85rem;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    display: inline-flex;
+  }
+
+  .mobileFilterTrigger {
+    inline-size: 2.85rem;
+    block-size: 2.85rem;
+    flex-shrink: 0;
+    border-radius: 0.82rem !important;
+    border: 0.0625rem solid color-mix(in srgb, #ffffff 64%, transparent) !important;
+    color: #ffffff !important;
+    background:
+      radial-gradient(circle at 32% 24%, color-mix(in srgb, #ffffff 34%, transparent), transparent 34%),
+      linear-gradient(135deg, var(--app-layout-glow) 0%, var(--app-layout-glow-2) 100%) !important;
+    box-shadow:
+      0 0.65rem 1.25rem color-mix(in srgb, var(--app-layout-glow) 34%, transparent),
+      inset 0 0.0625rem 0 color-mix(in srgb, #ffffff 54%, transparent);
+    transition:
+      transform 0.18s ease,
+      box-shadow 0.18s ease,
+      background-position 0.24s ease;
+  }
+
+  .mobileFilterTrigger :global(svg) {
+    font-size: 1.28rem;
+    filter: drop-shadow(0 0.08rem 0.14rem rgba(15, 23, 42, 0.22));
+  }
+
+  .mobileFilterTrigger:hover {
+    background:
+      radial-gradient(circle at 32% 24%, color-mix(in srgb, #ffffff 40%, transparent), transparent 34%),
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--app-layout-glow) 84%, #000) 0%,
+        color-mix(in srgb, var(--app-layout-glow-2) 84%, #000) 100%
+      ) !important;
+    box-shadow:
+      0 0.78rem 1.45rem color-mix(in srgb, var(--app-layout-glow) 38%, transparent),
+      inset 0 0.0625rem 0 color-mix(in srgb, #ffffff 60%, transparent);
+    transform: translateY(-0.08rem) scale(1.02);
+  }
+
+  .mobileFilterTrigger:active {
+    transform: translateY(0) scale(0.97);
+  }
+
+  .createProductButton {
+    display: none !important;
+  }
+
+  .createProductIconButton {
+    position: fixed !important;
+    z-index: 1295;
+    left: max(1rem, env(safe-area-inset-left));
+    bottom: calc(5.65rem + env(safe-area-inset-bottom));
+    display: inline-flex !important;
+    inline-size: 3.35rem !important;
+    block-size: 3.35rem !important;
+    border: 0.0625rem solid color-mix(in srgb, #ffffff 64%, transparent) !important;
+    border-radius: 1.1rem !important;
+    background:
+      radial-gradient(circle at 30% 22%, color-mix(in srgb, #ffffff 38%, transparent), transparent 32%),
+      linear-gradient(135deg, var(--app-layout-glow) 0%, var(--app-layout-glow-2) 100%) !important;
+    color: #ffffff !important;
+    box-shadow:
+      0 1rem 2rem color-mix(in srgb, var(--app-layout-glow) 38%, transparent),
+      0 0.25rem 0.7rem color-mix(in srgb, #0f172a 22%, transparent),
+      inset 0 0.0625rem 0 color-mix(in srgb, #ffffff 58%, transparent);
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease,
+      background-position 0.28s ease;
+  }
+
+  .createProductIconButton::before {
+    content: "";
+    position: absolute;
+    inset: -0.3rem;
+    z-index: -1;
+    border-radius: 1.35rem;
+    background: color-mix(in srgb, var(--app-layout-glow) 22%, transparent);
+    filter: blur(0.55rem);
+    opacity: 0.9;
+  }
+
+  .createProductIconButton :global(svg) {
+    font-size: 1.45rem;
+    filter: drop-shadow(0 0.08rem 0.16rem rgba(15, 23, 42, 0.22));
+  }
+
+  .createProductIconButton:hover {
+    background:
+      radial-gradient(circle at 30% 22%, color-mix(in srgb, #ffffff 42%, transparent), transparent 32%),
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--app-layout-glow) 84%, #000) 0%,
+        color-mix(in srgb, var(--app-layout-glow-2) 84%, #000) 100%
+      ) !important;
+    box-shadow:
+      0 1.15rem 2.35rem color-mix(in srgb, var(--app-layout-glow) 42%, transparent),
+      0 0.32rem 0.8rem color-mix(in srgb, #0f172a 24%, transparent),
+      inset 0 0.0625rem 0 color-mix(in srgb, #ffffff 62%, transparent);
+    transform: translateY(-0.12rem) scale(1.03);
+  }
+
+  .createProductIconButton:active {
+    transform: translateY(0) scale(0.98);
+  }
+
+  .searchInput {
+    flex: 0 1 10.75rem;
+    max-width: 12rem;
+    transition:
+      flex-basis 0.22s ease,
+      max-width 0.22s ease;
+  }
+
+  .searchInput:focus-within,
+  .searchInputHasValue {
+    flex-basis: min(14.25rem, calc(100% - 6.7rem));
+    max-width: min(14.25rem, calc(100% - 6.7rem));
+  }
+
+  .searchActions {
+    gap: 0.05rem;
+  }
+
+  .searchActions :global(.MuiIconButton-root) {
+    padding: 0.28rem;
+  }
+
+  .productGrid {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 1.15rem;
+  }
+
+  .productFeed {
+    margin-block-start: 0.85rem;
+  }
+}
+
+.skeletonCard {
+  border-radius: 1.15rem !important;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 70%, transparent);
+  overflow: hidden;
+}
+
+.skeletonBody {
+  padding: 0.85rem;
+}
+
+.emptyState {
+  border: 0.0625rem dashed color-mix(in srgb, var(--app-surface-border) 70%, transparent);
+  border-radius: 1rem;
+  padding: 1.2rem;
+  text-align: center;
+}
+
+.infiniteScrollSentinel {
+  min-block-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+.deleteDialogPaper {
+  border-radius: 1.15rem !important;
+  overflow: hidden;
+}
+
+.deleteDialogTitle {
+  display: grid;
+  justify-items: center;
+  gap: 0.65rem;
+  padding: 1.35rem 1.35rem 0.75rem !important;
+  text-align: center;
+  font-weight: 900 !important;
+}
+
+.deleteDialogIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 3.2rem;
+  block-size: 3.2rem;
+  border-radius: 999rem;
+  background: color-mix(in srgb, #ef4444 12%, var(--app-surface-bg));
+  color: #dc2626;
+}
+
+.deleteDialogIcon svg {
+  font-size: 1.8rem;
+}
+
+.deleteDialogContent {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.3rem 1.35rem 1.1rem !important;
+  text-align: center;
+}
+
+.deleteDialogMessage {
+  color: var(--text-primary);
+  font-weight: 800 !important;
+}
+
+.deleteDialogProductTitle {
+  padding: 0.7rem 0.85rem;
+  border: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 72%, transparent);
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, var(--app-surface-bg) 86%, #f8fafc);
+  font-weight: 900 !important;
+  line-height: 1.7 !important;
+}
+
+.deleteDialogHint {
+  color: var(--text-secondary);
+  line-height: 1.8 !important;
+}
+
+.deleteDialogActions {
+  gap: 0.65rem;
+  padding: 0.85rem 1.35rem 1.35rem !important;
+}
+
+.deleteDialogActionButton {
+  min-block-size: 2.65rem;
+  border-radius: 0.8rem !important;
+  font-weight: 900 !important;
+}
+
+@media (max-width: ($layout-sm - 0.0625rem)) {
+  .deleteDialogPaper {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    border-radius: 0 !important;
+    background:
+      radial-gradient(
+        circle at 50% 0%,
+        color-mix(in srgb, #ef4444 10%, transparent),
+        transparent 42%
+      ),
+      var(--app-surface-bg) !important;
+  }
+
+  .deleteDialogTitle {
+    align-content: end;
+    padding: 4.5rem 1.25rem 1rem !important;
+  }
+
+  .deleteDialogIcon {
+    inline-size: 4.2rem;
+    block-size: 4.2rem;
+  }
+
+  .deleteDialogIcon svg {
+    font-size: 2.3rem;
+  }
+
+  .deleteDialogContent {
+    align-content: center;
+    padding: 1rem 1.25rem !important;
+  }
+
+  .deleteDialogProductTitle {
+    padding: 0.95rem;
+  }
+
+  .deleteDialogActions {
+    display: grid !important;
+    grid-template-columns: 1fr;
+    padding: 1rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom)) !important;
+    border-top: 0.0625rem solid color-mix(in srgb, var(--app-surface-border) 72%, transparent);
+    background: color-mix(in srgb, var(--app-surface-bg) 96%, #ffffff);
+  }
+
+  .deleteDialogActionButton {
+    inline-size: 100%;
+    min-block-size: 3rem;
+  }
+}
+
+body[data-theme="dark"] {
+  .hero p {
+    color: var(--text-secondary);
+  }
+
+  .filterPanel {
+    @include mixins.dark-floating-shell-gradient;
+  }
+
+  .filterPanelCollapsed {
+    border: none !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+  }
+}

@@ -41,9 +41,9 @@ import {
 } from "@tanstack/react-table";
 import type { Theme } from "@mui/material/styles";
 
-import { COURSE_PAYMENT_MANUAL_CREATE_MUTATION } from "../../graphql/mutations/coursePaymentManualCreate.mutation";
-import { COURSE_PAYMENT_STATUS_UPDATE_MUTATION } from "../../graphql/mutations/coursePaymentStatusUpdate.mutation";
-import { COURSE_PAYMENT_LIST_QUERY } from "../../graphql/queries/coursePaymentList.query";
+import { PRODUCT_PAYMENT_MANUAL_CREATE_MUTATION } from "../../graphql/mutations/productPaymentManualCreate.mutation";
+import { PRODUCT_PAYMENT_STATUS_UPDATE_MUTATION } from "../../graphql/mutations/productPaymentStatusUpdate.mutation";
+import { PRODUCT_PAYMENT_LIST_QUERY } from "../../graphql/queries/productPaymentList.query";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useBadgeCountFirstPageReload } from "../../hooks/useBadgeCountFirstPageReload";
 import { useMutationWithSnackbar } from "../../hooks/useMutationWithSnackbar";
@@ -64,8 +64,8 @@ import crudPrimitives from "../../shared/crud/styles/crudPrimitives.module.scss"
 import ActiveEndUserPickerField, {
   type ActiveEndUserOption,
 } from "../../shared/forms/ActiveEndUserPickerField";
-import CoursePickerField from "../../shared/forms/CoursePickerField";
-import type { CoursePickerOption } from "../../shared/forms/course-picker.util";
+import ProductPickerField from "../../shared/forms/ProductPickerField";
+import type { ProductPickerOption } from "../../shared/forms/product-picker.util";
 import FileUploadField from "../../shared/forms/FileUploadField";
 import AppTooltip from "../../shared/AppTooltip";
 import { getFileIdFromAccessUrl } from "../../utils/fileAccessUrl.util";
@@ -81,66 +81,66 @@ import {
 } from "../../constants/fileUploadPolicies";
 import JalaliDateFilterField from "../../shared/table/JalaliDateFilterField";
 import {
-  EMPTY_COURSE_PAYMENT_LIST_FILTERS,
-  buildCoursePaymentListQueryVariables,
+  EMPTY_PRODUCT_PAYMENT_LIST_FILTERS,
+  buildProductPaymentListQueryVariables,
   buildPaymentReceiptExistingFile,
-  hasCoursePaymentFiltersApplied,
+  hasProductPaymentFiltersApplied,
   formatPurchaseStatusChangedBy,
   isPaymentReceiptFilePresent,
-  mapCoursePaymentListRowToRecord,
-  type CoursePaymentListFilters,
-  type CoursePaymentListItemRow,
-  type CoursePaymentListQuery,
-  type CoursePaymentListQueryVariables,
-  type CoursePaymentRecord,
+  mapProductPaymentListRowToRecord,
+  type ProductPaymentListFilters,
+  type ProductPaymentListItemRow,
+  type ProductPaymentListQuery,
+  type ProductPaymentListQueryVariables,
+  type ProductPaymentRecord,
   type CouponDiscountType,
-  type UserCoursePaymentMethod,
-  type UserCoursePurchaseCurrency,
-  type UserCoursePurchaseStatus,
+  type UserProductPaymentMethod,
+  type UserProductPurchaseCurrency,
+  type UserProductPurchaseStatus,
 } from "./payments-list.api";
 import {
   ManualPaymentDialogActions,
   PaymentRowActions,
   ReviewPaymentDialogActions,
 } from "./PaymentActions";
-import { useCoursePaymentReviewRecord } from "./useCoursePaymentReviewRecord";
+import { useProductPaymentReviewRecord } from "./useProductPaymentReviewRecord";
 import styles from "./styles/payments-list.module.scss";
 import { APP_SHELL_ROUTES } from "../../routing/app-shell-routes";
 
-type CoursePaymentStatusUpdateMutation = {
-  readonly coursePaymentStatusUpdate: {
+type ProductPaymentStatusUpdateMutation = {
+  readonly productPaymentStatusUpdate: {
     readonly id: string;
-    readonly status: UserCoursePurchaseStatus;
+    readonly status: UserProductPurchaseStatus;
   };
 };
 
-type CoursePaymentStatusUpdateMutationVariables = {
+type ProductPaymentStatusUpdateMutationVariables = {
   readonly input: {
     readonly id: string;
-    readonly status: UserCoursePurchaseStatus;
+    readonly status: UserProductPurchaseStatus;
     readonly manualStatusChangedDescription?: string | null;
   };
 };
 
-type CoursePaymentManualCreateMutation = {
-  readonly coursePaymentManualCreate: {
+type ProductPaymentManualCreateMutation = {
+  readonly productPaymentManualCreate: {
     readonly id: string;
   };
 };
 
-type CoursePaymentManualCreateMutationVariables = {
+type ProductPaymentManualCreateMutationVariables = {
   readonly input: {
     readonly userId: string;
-    readonly courseId: string;
-    readonly paymentMethod: UserCoursePaymentMethod;
-    readonly status: UserCoursePurchaseStatus;
+    readonly productId: string;
+    readonly paymentMethod: UserProductPaymentMethod;
+    readonly status: UserProductPurchaseStatus;
     readonly couponCode?: string | null;
     readonly uploadedReceiptFileId?: string | null;
     readonly manualStatusChangedDescription?: string | null;
   };
 };
 
-const LATIN_TEXT_FILTER_KEYS = new Set<keyof CoursePaymentListFilters>([
+const LATIN_TEXT_FILTER_KEYS = new Set<keyof ProductPaymentListFilters>([
   "username",
   "userEmail",
   "userPhone",
@@ -149,14 +149,14 @@ const LATIN_TEXT_FILTER_KEYS = new Set<keyof CoursePaymentListFilters>([
   "couponCode",
 ]);
 
-const MOBILE_PHONE_FILTER_KEYS = new Set<keyof CoursePaymentListFilters>(["userPhone"]);
+const MOBILE_PHONE_FILTER_KEYS = new Set<keyof ProductPaymentListFilters>(["userPhone"]);
 
 const COLUMN_WIDTH_BY_ID: Record<string, string> = {
   userFullName: "13rem",
   username: "11rem",
   userEmail: "14rem",
   userPhone: "10rem",
-  courseTitle: "16rem",
+  productTitle: "16rem",
   status: "8rem",
   paymentMethod: "10rem",
   currency: "8rem",
@@ -192,7 +192,7 @@ const TABLE_TOOLBAR_OPTIONS = {
 const EMPTY_DISPLAY = "—";
 
 const STATUS_COLOR: Record<
-  UserCoursePurchaseStatus,
+  UserProductPurchaseStatus,
   "default" | "primary" | "success" | "warning" | "error" | "info"
 > = {
   PENDING: "warning",
@@ -203,7 +203,7 @@ const STATUS_COLOR: Record<
   CANCELLED: "default",
 };
 
-const STATUS_LABEL: Record<UserCoursePurchaseStatus, string> = {
+const STATUS_LABEL: Record<UserProductPurchaseStatus, string> = {
   PENDING: "در انتظار",
   PENDING_GATEWAY: "در انتظار درگاه",
   PAID: "پرداخت‌شده",
@@ -212,7 +212,7 @@ const STATUS_LABEL: Record<UserCoursePurchaseStatus, string> = {
   CANCELLED: "لغوشده",
 };
 
-const REVIEW_STATUS_OPTIONS: readonly UserCoursePurchaseStatus[] = [
+const REVIEW_STATUS_OPTIONS: readonly UserProductPurchaseStatus[] = [
   "PAID",
   "PENDING",
   "FAILED",
@@ -220,21 +220,21 @@ const REVIEW_STATUS_OPTIONS: readonly UserCoursePurchaseStatus[] = [
   "CANCELLED",
 ];
 
-const PAYMENT_METHOD_LABEL: Record<UserCoursePaymentMethod, string> = {
+const PAYMENT_METHOD_LABEL: Record<UserProductPaymentMethod, string> = {
   GATEWAY: "درگاه",
   CARD_TO_CARD: "کارت به کارت",
   CRYPTOCURRENCY: "رمزارز",
   FREE: "رایگان",
 };
 
-const MANUAL_PAYMENT_METHOD_OPTIONS: readonly UserCoursePaymentMethod[] = [
+const MANUAL_PAYMENT_METHOD_OPTIONS: readonly UserProductPaymentMethod[] = [
   "CARD_TO_CARD",
   "GATEWAY",
   "CRYPTOCURRENCY",
   "FREE",
 ];
 
-const CURRENCY_LABEL: Record<UserCoursePurchaseCurrency, string> = {
+const CURRENCY_LABEL: Record<UserProductPurchaseCurrency, string> = {
   IRT: "تومان",
   USDT: "تتر",
 };
@@ -292,7 +292,7 @@ function getReceiptFileIcon(mimeType: string): ReactElement {
   return <InsertDriveFileRoundedIcon fontSize="large" />;
 }
 
-function renderReceiptFileSection(record: CoursePaymentRecord): ReactElement | null {
+function renderReceiptFileSection(record: ProductPaymentRecord): ReactElement | null {
   if (!isPaymentReceiptFilePresent(record)) {
     return null;
   }
@@ -402,10 +402,10 @@ function renderReceiptFileSection(record: CoursePaymentRecord): ReactElement | n
   );
 }
 
-function selectCoursePaymentListPage(
-  data: CoursePaymentListQuery | undefined
-): ServerPageResult<CoursePaymentListItemRow> | null {
-  const page = data?.coursePaymentList;
+function selectProductPaymentListPage(
+  data: ProductPaymentListQuery | undefined
+): ServerPageResult<ProductPaymentListItemRow> | null {
+  const page = data?.productPaymentList;
   if (!page) {
     return null;
   }
@@ -522,7 +522,7 @@ const PaymentsList = (): ReactElement => {
     username: true,
     userPhone: true,
     userEmail: false,
-    courseTitle: true,
+    productTitle: true,
     status: true,
     paymentMethod: true,
     currency: false,
@@ -549,17 +549,17 @@ const PaymentsList = (): ReactElement => {
   const [showColumnFilters, setShowColumnFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
-  const [filters, setFilters] = useState<CoursePaymentListFilters>(
-    EMPTY_COURSE_PAYMENT_LIST_FILTERS
+  const [filters, setFilters] = useState<ProductPaymentListFilters>(
+    EMPTY_PRODUCT_PAYMENT_LIST_FILTERS
   );
-  const [reviewStatus, setReviewStatus] = useState<UserCoursePurchaseStatus>("PENDING");
+  const [reviewStatus, setReviewStatus] = useState<UserProductPurchaseStatus>("PENDING");
   const [reviewDescription, setReviewDescription] = useState("");
   const [initialReviewForm, setInitialReviewForm] = useState<{
-    status: UserCoursePurchaseStatus;
+    status: UserProductPurchaseStatus;
     description: string;
   } | null>(null);
   const [pendingPaidStatusChange, setPendingPaidStatusChange] =
-    useState<UserCoursePurchaseStatus | null>(null);
+    useState<UserProductPurchaseStatus | null>(null);
   const manualPaymentRouteOpen = location.pathname === `${APP_SHELL_ROUTES.payments}/new`;
   const reviewPaymentRoute = useMemo(() => {
     const paymentRoutePrefix = `${APP_SHELL_ROUTES.payments}/`;
@@ -585,18 +585,18 @@ const PaymentsList = (): ReactElement => {
   const reviewPaymentId = reviewPaymentRoute?.paymentId ?? null;
   const isPaidStatusChangeConfirmOpen = reviewPaymentRoute?.isConfirmRoute ?? false;
   const [manualPaymentUser, setManualPaymentUser] = useState<ActiveEndUserOption | null>(null);
-  const [manualPaymentCourse, setManualPaymentCourse] = useState<CoursePickerOption | null>(null);
+  const [manualPaymentProduct, setManualPaymentProduct] = useState<ProductPickerOption | null>(null);
   const [manualPaymentMethod, setManualPaymentMethod] =
-    useState<UserCoursePaymentMethod>("CARD_TO_CARD");
-  const [manualPaymentStatus, setManualPaymentStatus] = useState<UserCoursePurchaseStatus>("PAID");
+    useState<UserProductPaymentMethod>("CARD_TO_CARD");
+  const [manualPaymentStatus, setManualPaymentStatus] = useState<UserProductPurchaseStatus>("PAID");
   const [manualCouponCode, setManualCouponCode] = useState("");
   const [manualPaymentDescription, setManualPaymentDescription] = useState("");
   const [manualPaymentEvidenceFile, setManualPaymentEvidenceFile] = useState<File | null>(null);
   const debouncedFilters = useDebounce(filters, 500);
   const hasAppliedFilters =
-    debouncedSearchQuery.trim() !== "" || hasCoursePaymentFiltersApplied(debouncedFilters);
+    debouncedSearchQuery.trim() !== "" || hasProductPaymentFiltersApplied(debouncedFilters);
 
-  const manualPaymentCourseFilters = useMemo(
+  const manualPaymentProductFilters = useMemo(
     () => ({
       isActive: true,
       hasPrice: true,
@@ -605,16 +605,16 @@ const PaymentsList = (): ReactElement => {
     [manualPaymentUser?.id]
   );
 
-  const setFilterValue = <K extends keyof CoursePaymentListFilters>(
+  const setFilterValue = <K extends keyof ProductPaymentListFilters>(
     key: K,
-    value: CoursePaymentListFilters[K]
+    value: ProductPaymentListFilters[K]
   ): void => {
     setFilters((previous) => ({ ...previous, [key]: value }));
   };
 
   const buildVariables = useCallback(
     ({ page, pageSize }: { page: number; pageSize: number }) =>
-      buildCoursePaymentListQueryVariables(debouncedSearchQuery, debouncedFilters, page, pageSize),
+      buildProductPaymentListQueryVariables(debouncedSearchQuery, debouncedFilters, page, pageSize),
     [debouncedFilters, debouncedSearchQuery]
   );
 
@@ -626,15 +626,15 @@ const PaymentsList = (): ReactElement => {
     page,
     pagination,
   } = useServerPaginatedQuery<
-    CoursePaymentListQuery,
-    CoursePaymentListQueryVariables,
-    CoursePaymentListItemRow,
-    CoursePaymentRecord
+    ProductPaymentListQuery,
+    ProductPaymentListQueryVariables,
+    ProductPaymentListItemRow,
+    ProductPaymentRecord
   >({
-    query: COURSE_PAYMENT_LIST_QUERY,
+    query: PRODUCT_PAYMENT_LIST_QUERY,
     variables: buildVariables,
-    selectPage: selectCoursePaymentListPage,
-    mapItem: mapCoursePaymentListRowToRecord,
+    selectPage: selectProductPaymentListPage,
+    mapItem: mapProductPaymentListRowToRecord,
     resetPageDeps: [debouncedSearchQuery, debouncedFilters],
   });
 
@@ -644,12 +644,12 @@ const PaymentsList = (): ReactElement => {
   });
 
   const { record: reviewPayment, isInitialLoading: paymentDetailLoading } =
-    useCoursePaymentReviewRecord(reviewPaymentId);
+    useProductPaymentReviewRecord(reviewPaymentId);
 
   const [updatePaymentStatus, updatePaymentStatusResult] = useMutationWithSnackbar<
-    CoursePaymentStatusUpdateMutation,
-    CoursePaymentStatusUpdateMutationVariables
-  >(COURSE_PAYMENT_STATUS_UPDATE_MUTATION, {
+    ProductPaymentStatusUpdateMutation,
+    ProductPaymentStatusUpdateMutationVariables
+  >(PRODUCT_PAYMENT_STATUS_UPDATE_MUTATION, {
     successMessage: "وضعیت پرداخت با موفقیت ثبت شد.",
     errorMessage: "ثبت وضعیت پرداخت انجام نشد.",
     onSuccess: () => {
@@ -660,15 +660,15 @@ const PaymentsList = (): ReactElement => {
   });
 
   const [createManualPayment, createManualPaymentResult] = useMutationWithSnackbar<
-    CoursePaymentManualCreateMutation,
-    CoursePaymentManualCreateMutationVariables
-  >(COURSE_PAYMENT_MANUAL_CREATE_MUTATION, {
+    ProductPaymentManualCreateMutation,
+    ProductPaymentManualCreateMutationVariables
+  >(PRODUCT_PAYMENT_MANUAL_CREATE_MUTATION, {
     successMessage: "پرداخت دستی با موفقیت ثبت شد.",
     errorMessage: "ثبت پرداخت دستی انجام نشد.",
     onSuccess: () => {
       navigate(APP_SHELL_ROUTES.payments);
       setManualPaymentUser(null);
-      setManualPaymentCourse(null);
+      setManualPaymentProduct(null);
       setManualPaymentMethod("CARD_TO_CARD");
       setManualPaymentStatus("PAID");
       setManualCouponCode("");
@@ -693,7 +693,7 @@ const PaymentsList = (): ReactElement => {
   }, [error, showError, t]);
 
   useEffect(() => {
-    setManualPaymentCourse(null);
+    setManualPaymentProduct(null);
   }, [manualPaymentUser?.id]);
 
   useEffect(() => {
@@ -733,7 +733,7 @@ const PaymentsList = (): ReactElement => {
 
   const dateCell = (value: unknown): ReactElement => <DateTimeValue value={String(value || "")} />;
 
-  const columns = useMemo<ColumnDef<CoursePaymentRecord>[]>(
+  const columns = useMemo<ColumnDef<ProductPaymentRecord>[]>(
     () => [
       {
         accessorKey: "userFullName",
@@ -760,15 +760,15 @@ const PaymentsList = (): ReactElement => {
         cell: (info) => textCell(info.getValue(), { tabular: true, latin: true }),
       },
       {
-        accessorKey: "courseTitle",
-        header: t("table.pages.payments.columns.courseTitle"),
+        accessorKey: "productTitle",
+        header: t("table.pages.payments.columns.productTitle"),
         cell: (info) => textCell(info.getValue()),
       },
       {
         accessorKey: "status",
         header: t("table.pages.payments.columns.status"),
         cell: (info) => {
-          const status = info.getValue() as UserCoursePurchaseStatus;
+          const status = info.getValue() as UserProductPurchaseStatus;
           return (
             <Chip
               size="small"
@@ -783,7 +783,7 @@ const PaymentsList = (): ReactElement => {
         accessorKey: "paymentMethod",
         header: t("table.pages.payments.columns.paymentMethod"),
         cell: (info) => {
-          const method = info.getValue() as UserCoursePaymentMethod;
+          const method = info.getValue() as UserProductPaymentMethod;
           return <Chip size="small" label={PAYMENT_METHOD_LABEL[method]} />;
         },
       },
@@ -791,7 +791,7 @@ const PaymentsList = (): ReactElement => {
         accessorKey: "currency",
         header: t("table.pages.payments.columns.currency"),
         cell: (info) => {
-          const currency = info.getValue() as UserCoursePurchaseCurrency;
+          const currency = info.getValue() as UserProductPurchaseCurrency;
           return <Chip size="small" variant="outlined" label={CURRENCY_LABEL[currency]} />;
         },
       },
@@ -940,7 +940,7 @@ const PaymentsList = (): ReactElement => {
 
   const handleClearFilters = (): void => {
     setSearchQuery("");
-    setFilters(EMPTY_COURSE_PAYMENT_LIST_FILTERS);
+    setFilters(EMPTY_PRODUCT_PAYMENT_LIST_FILTERS);
   };
 
   const openManualPaymentDialog = (): void => {
@@ -953,7 +953,7 @@ const PaymentsList = (): ReactElement => {
     }
     navigate(APP_SHELL_ROUTES.payments);
     setManualPaymentUser(null);
-    setManualPaymentCourse(null);
+    setManualPaymentProduct(null);
     setManualPaymentMethod("CARD_TO_CARD");
     setManualPaymentStatus("PAID");
     setManualCouponCode("");
@@ -983,7 +983,7 @@ const PaymentsList = (): ReactElement => {
     }
   };
 
-  const handleReviewStatusChange = (nextStatus: UserCoursePurchaseStatus): void => {
+  const handleReviewStatusChange = (nextStatus: UserProductPurchaseStatus): void => {
     if (!reviewPaymentId) {
       return;
     }
@@ -1047,7 +1047,7 @@ const PaymentsList = (): ReactElement => {
   };
 
   const handleSubmitManualPayment = async (): Promise<void> => {
-    if (!manualPaymentUser || !manualPaymentCourse) {
+    if (!manualPaymentUser || !manualPaymentProduct) {
       return;
     }
 
@@ -1063,7 +1063,7 @@ const PaymentsList = (): ReactElement => {
       variables: {
         input: {
           userId: manualPaymentUser.id,
-          courseId: manualPaymentCourse.id,
+          productId: manualPaymentProduct.id,
           paymentMethod: manualPaymentMethod,
           status: manualPaymentStatus,
           couponCode: manualCouponCode.trim() || null,
@@ -1074,7 +1074,7 @@ const PaymentsList = (): ReactElement => {
     });
   };
 
-  const renderTextFilter = (key: keyof CoursePaymentListFilters, label: string): ReactElement => {
+  const renderTextFilter = (key: keyof ProductPaymentListFilters, label: string): ReactElement => {
     const latin = LATIN_TEXT_FILTER_KEYS.has(key);
     const numericPhone = MOBILE_PHONE_FILTER_KEYS.has(key);
 
@@ -1087,7 +1087,7 @@ const PaymentsList = (): ReactElement => {
         onChange={(event) => {
           const rawValue = event.target.value;
           const nextValue = numericPhone ? sanitizeMobilePhoneInput(rawValue) : rawValue;
-          setFilterValue(key, nextValue as CoursePaymentListFilters[typeof key]);
+          setFilterValue(key, nextValue as ProductPaymentListFilters[typeof key]);
         }}
         inputProps={
           latin
@@ -1103,7 +1103,7 @@ const PaymentsList = (): ReactElement => {
   };
 
   const renderSelectFilter = <TValue extends string>(
-    key: keyof CoursePaymentListFilters,
+    key: keyof ProductPaymentListFilters,
     label: string,
     options: ReadonlyArray<{ value: TValue; label: string }>
   ): ReactElement => (
@@ -1114,7 +1114,7 @@ const PaymentsList = (): ReactElement => {
       aria-label={label}
       value={filters[key]}
       onChange={(event) =>
-        setFilterValue(key, event.target.value as CoursePaymentListFilters[typeof key])
+        setFilterValue(key, event.target.value as ProductPaymentListFilters[typeof key])
       }
     >
       <MenuItem value="ALL">همه</MenuItem>
@@ -1127,8 +1127,8 @@ const PaymentsList = (): ReactElement => {
   );
 
   const renderRangeFilter = (
-    minKey: keyof CoursePaymentListFilters,
-    maxKey: keyof CoursePaymentListFilters,
+    minKey: keyof ProductPaymentListFilters,
+    maxKey: keyof ProductPaymentListFilters,
     minLabel: string,
     maxLabel: string,
     type: "text" | "number" | "date" = "number"
@@ -1141,7 +1141,7 @@ const PaymentsList = (): ReactElement => {
             ariaLabel={minLabel}
             value={String(filters[minKey] || "")}
             onChange={(value) =>
-              setFilterValue(minKey, value as CoursePaymentListFilters[typeof minKey])
+              setFilterValue(minKey, value as ProductPaymentListFilters[typeof minKey])
             }
           />
           <JalaliDateFilterField
@@ -1149,7 +1149,7 @@ const PaymentsList = (): ReactElement => {
             ariaLabel={maxLabel}
             value={String(filters[maxKey] || "")}
             onChange={(value) =>
-              setFilterValue(maxKey, value as CoursePaymentListFilters[typeof maxKey])
+              setFilterValue(maxKey, value as ProductPaymentListFilters[typeof maxKey])
             }
           />
         </Stack>
@@ -1165,7 +1165,7 @@ const PaymentsList = (): ReactElement => {
           aria-label={minLabel}
           value={filters[minKey]}
           onChange={(event) =>
-            setFilterValue(minKey, event.target.value as CoursePaymentListFilters[typeof minKey])
+            setFilterValue(minKey, event.target.value as ProductPaymentListFilters[typeof minKey])
           }
         />
         <TextField
@@ -1175,14 +1175,14 @@ const PaymentsList = (): ReactElement => {
           aria-label={maxLabel}
           value={filters[maxKey]}
           onChange={(event) =>
-            setFilterValue(maxKey, event.target.value as CoursePaymentListFilters[typeof maxKey])
+            setFilterValue(maxKey, event.target.value as ProductPaymentListFilters[typeof maxKey])
           }
         />
       </Stack>
     );
   };
 
-  const renderFilterCell = (column: Column<CoursePaymentRecord, unknown>): ReactElement | null => {
+  const renderFilterCell = (column: Column<ProductPaymentRecord, unknown>): ReactElement | null => {
     const label = String(column.columnDef.header ?? column.id);
 
     switch (column.id) {
@@ -1190,37 +1190,37 @@ const PaymentsList = (): ReactElement => {
       case "username":
       case "userEmail":
       case "userPhone":
-      case "courseTitle":
+      case "productTitle":
       case "paymentProvider":
       case "paymentReference":
       case "transactionId":
       case "manualStatusChangedDescription":
       case "couponCode":
-        return renderTextFilter(column.id as keyof CoursePaymentListFilters, label);
+        return renderTextFilter(column.id as keyof ProductPaymentListFilters, label);
       case "status":
-        return renderSelectFilter<UserCoursePurchaseStatus>(
+        return renderSelectFilter<UserProductPurchaseStatus>(
           "status",
           label,
           Object.entries(STATUS_LABEL).map(([value, optionLabel]) => ({
-            value: value as UserCoursePurchaseStatus,
+            value: value as UserProductPurchaseStatus,
             label: optionLabel,
           }))
         );
       case "paymentMethod":
-        return renderSelectFilter<UserCoursePaymentMethod>(
+        return renderSelectFilter<UserProductPaymentMethod>(
           "paymentMethod",
           label,
           Object.entries(PAYMENT_METHOD_LABEL).map(([value, optionLabel]) => ({
-            value: value as UserCoursePaymentMethod,
+            value: value as UserProductPaymentMethod,
             label: optionLabel,
           }))
         );
       case "currency":
-        return renderSelectFilter<UserCoursePurchaseCurrency>(
+        return renderSelectFilter<UserProductPurchaseCurrency>(
           "currency",
           label,
           Object.entries(CURRENCY_LABEL).map(([value, optionLabel]) => ({
-            value: value as UserCoursePurchaseCurrency,
+            value: value as UserProductPurchaseCurrency,
             label: optionLabel,
           }))
         );
@@ -1271,8 +1271,8 @@ const PaymentsList = (): ReactElement => {
       case "refundedAt":
       case "cancelledAt":
         return renderRangeFilter(
-          `${column.id}From` as keyof CoursePaymentListFilters,
-          `${column.id}To` as keyof CoursePaymentListFilters,
+          `${column.id}From` as keyof ProductPaymentListFilters,
+          `${column.id}To` as keyof ProductPaymentListFilters,
           `از ${label}`,
           `تا ${label}`,
           "date"
@@ -1292,7 +1292,7 @@ const PaymentsList = (): ReactElement => {
   ) : null;
   const canSubmitManualPayment =
     manualPaymentUser != null &&
-    manualPaymentCourse != null &&
+    manualPaymentProduct != null &&
     !createManualPaymentResult.loading &&
     !isManualPaymentFileUploading;
 
@@ -1311,7 +1311,7 @@ const PaymentsList = (): ReactElement => {
 
   return (
     <>
-      <EntityTableShell<CoursePaymentRecord>
+      <EntityTableShell<ProductPaymentRecord>
         table={table}
         pagedRows={table.getRowModel().rows}
         isMobile={isMobile}
@@ -1365,14 +1365,14 @@ const PaymentsList = (): ReactElement => {
               required
             />
 
-            <CoursePickerField
+            <ProductPickerField
               enabled={manualPaymentRouteOpen && manualPaymentUser != null}
-              filters={manualPaymentCourseFilters}
+              filters={manualPaymentProductFilters}
               limit={200}
               sort={{ createdAt: "DESC" }}
               onlyPurchasable
-              value={manualPaymentCourse}
-              onChange={setManualPaymentCourse}
+              value={manualPaymentProduct}
+              onChange={setManualPaymentProduct}
               disabled={!manualPaymentUser}
               noOptionsText={
                 manualPaymentUser
@@ -1399,7 +1399,7 @@ const PaymentsList = (): ReactElement => {
               label="روش پرداخت"
               value={manualPaymentMethod}
               onChange={(event) =>
-                setManualPaymentMethod(event.target.value as UserCoursePaymentMethod)
+                setManualPaymentMethod(event.target.value as UserProductPaymentMethod)
               }
             >
               {MANUAL_PAYMENT_METHOD_OPTIONS.map((method) => (
@@ -1417,7 +1417,7 @@ const PaymentsList = (): ReactElement => {
               label="وضعیت پرداخت"
               value={manualPaymentStatus}
               onChange={(event) =>
-                setManualPaymentStatus(event.target.value as UserCoursePurchaseStatus)
+                setManualPaymentStatus(event.target.value as UserProductPurchaseStatus)
               }
             >
               {REVIEW_STATUS_OPTIONS.map((value) => (
@@ -1499,7 +1499,7 @@ const PaymentsList = (): ReactElement => {
           reviewPaymentId != null ? `${reviewPaymentId}-${Boolean(reviewPayment)}` : undefined
         }
         title="بررسی پرداخت"
-        subtitle={reviewPayment?.courseTitle?.trim() || t("pages.payments.review.subtitle")}
+        subtitle={reviewPayment?.productTitle?.trim() || t("pages.payments.review.subtitle")}
         footer={
           <ReviewPaymentDialogActions
             onCancel={closeReviewDialog}
@@ -1525,7 +1525,7 @@ const PaymentsList = (): ReactElement => {
                 { label: "نام کاربری", value: reviewPayment.username, latin: true },
                 { label: "ایمیل", value: reviewPayment.userEmail, latin: true },
                 { label: "شماره تماس", value: reviewPayment.userPhone, latin: true },
-                { label: "دوره", value: reviewPayment.courseTitle },
+                { label: "دوره", value: reviewPayment.productTitle },
               ]}
             />
 
@@ -1682,7 +1682,7 @@ const PaymentsList = (): ReactElement => {
                     label="وضعیت پرداخت"
                     value={reviewStatus}
                     onChange={(event) =>
-                      handleReviewStatusChange(event.target.value as UserCoursePurchaseStatus)
+                      handleReviewStatusChange(event.target.value as UserProductPurchaseStatus)
                     }
                   >
                     {REVIEW_STATUS_OPTIONS.map((value) => (

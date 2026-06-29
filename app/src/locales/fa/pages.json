@@ -1,6 +1,6 @@
 {
     "pages": {
-        "courses": {
+        "products": {
             "heroTitle": "دوره‌ها",
             "heroDescription": "مدیریت کامل دوره‌ها با نمای کارت، فیلترهای پیشرفته، مرتب‌سازی و صفحه‌بندی.",
             "deleteDialog": {
@@ -43,8 +43,8 @@
                         "description": "اعلان‌های مرتبط با خرید، فصل‌های جدید و رویدادهای این دوره حذف می‌شوند.",
                         "breakdown": {
                             "PAYMENT": "پرداخت",
-                            "COURSE_CHAPTER": "فصل جدید",
-                            "COURSE": "دوره",
+                            "PRODUCT_CHAPTER": "فصل جدید",
+                            "PRODUCT": "دوره",
                             "USER": "کاربر",
                             "TICKET": "تیکت",
                             "OTHER": "سایر"
@@ -240,10 +240,10 @@
             },
             "form": {
                 "requiredError": "کد، عنوان و مقدار تخفیف الزامی است.",
-                "applicableCourseIdsHelp": "برای محدود کردن کد به دوره‌های خاص، دوره‌ها را جستجو و انتخاب کنید. اگر دوره‌ای انتخاب نشود، کد برای همه دوره‌ها قابل استفاده است.",
-                "applicableCourseIdsPlaceholder": "جستجو و انتخاب دوره",
-                "applicableCourseIdsLoadError": "دریافت فهرست دوره‌ها انجام نشد.",
-                "inactiveCourse": "غیرفعال"
+                "applicableProductIdsHelp": "برای محدود کردن کد به دوره‌های خاص، دوره‌ها را جستجو و انتخاب کنید. اگر دوره‌ای انتخاب نشود، کد برای همه دوره‌ها قابل استفاده است.",
+                "applicableProductIdsPlaceholder": "جستجو و انتخاب دوره",
+                "applicableProductIdsLoadError": "دریافت فهرست دوره‌ها انجام نشد.",
+                "inactiveProduct": "غیرفعال"
             },
             "create": {
                 "title": "ایجاد کد تخفیف",
@@ -304,7 +304,7 @@
             "paymentApproved": {
                 "action": "مشاهده دوره"
             },
-            "viewCourse": {
+            "viewProduct": {
                 "action": "مشاهده دوره"
             },
             "viewChapter": {
@@ -410,13 +410,13 @@
             "pageTitle": "نگین هیل — مسیر یادگیری، مراقبت و سلامت",
             "nav": {
                 "features": "ویژگی‌ها",
-                "courses": "دوره‌ها",
+                "products": "دوره‌ها",
                 "howItWorks": "نحوه کار",
                 "support": "پشتیبانی",
                 "login": "ورود",
                 "signup": "ثبت‌نام",
-                "viewCourses": "مشاهده دوره‌ها",
-                "myCourses": "دوره‌های من"
+                "viewProducts": "مشاهده دوره‌ها",
+                "myProducts": "دوره‌های من"
             },
             "hero": {
                 "eyebrow": "نگین هیل · Negin Heal",
@@ -436,7 +436,7 @@
                 "title": "فضایی گرم و حرفه‌ای برای رشد تو",
                 "subtitle": "هر آنچه برای یادگیری عمیق و مراقبت واقعی از خودت نیاز داری، در یک تجربه یکپارچه و زیبا گردآوری شده است.",
                 "items": {
-                    "courses": {
+                    "products": {
                         "title": "دوره‌های تخصصی سلامت",
                         "description": "ویدیو، صوت، مقاله و تصویر — محتوای غنی و ساختارمند برای هر سبک یادگیری."
                     },
@@ -473,7 +473,7 @@
                     }
                 }
             },
-            "courses": {
+            "products": {
                 "eyebrow": "دوره‌های منتخب",
                 "title": "از همین‌جا شروع کن",
                 "subtitle": "نمونه‌ای از دوره‌های آموزشی که در نگین هیل در دسترس تو هستند.",
@@ -509,7 +509,7 @@
             "footer": {
                 "tagline": "مسیر یادگیری، مراقبت و سلامت",
                 "links": {
-                    "courses": "دوره‌ها",
+                    "products": "دوره‌ها",
                     "support": "پشتیبانی",
                     "about": "درباره ما",
                     "privacy": "حریم خصوصی",

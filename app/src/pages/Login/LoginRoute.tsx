@@ -24,7 +24,7 @@ const LoginRoute = (): ReactElement => {
       return <></>;
     }
 
-    return <Navigate to={APP_SHELL_ROUTES.courses} replace />;
+    return <Navigate to={APP_SHELL_ROUTES.products} replace />;
   }
 
   return <Login />;

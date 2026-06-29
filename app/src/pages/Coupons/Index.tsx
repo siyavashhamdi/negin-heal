@@ -65,7 +65,7 @@ import DateTimeValue from "../../shared/display/DateTimeValue";
 import JalaliDateFilterField from "../../shared/table/JalaliDateFilterField";
 import JalaliDateTimeField from "../../shared/table/JalaliDateTimeField";
 import DashboardMenuHeader from "../../shared/DashboardMenuHeader";
-import CoursePickerField from "../../shared/forms/CoursePickerField";
+import ProductPickerField from "../../shared/forms/ProductPickerField";
 import {
   EMPTY_COUPON_LIST_FILTERS,
   buildInitialCouponForm,
@@ -534,7 +534,7 @@ const CouponsIndex = (): ReactElement => {
   const renderTextFilter = (
     key: keyof Pick<
       CouponListFilters,
-      "code" | "title" | "applicableCourseId" | "createdBy" | "updatedBy"
+      "code" | "title" | "applicableProductId" | "createdBy" | "updatedBy"
     >,
     label: string
   ): ReactElement => {
@@ -1022,17 +1022,17 @@ const CouponsIndex = (): ReactElement => {
               />
             </Stack>
 
-            <CoursePickerField
+            <ProductPickerField
               multiple
               enabled={couponDialogOpen}
               limit={500}
-              label={t("table.pages.coupons.columns.applicableCourseIds")}
-              placeholder={t("pages.coupons.form.applicableCourseIdsPlaceholder")}
-              helperText={t("pages.coupons.form.applicableCourseIdsHelp")}
+              label={t("table.pages.coupons.columns.applicableProductIds")}
+              placeholder={t("pages.coupons.form.applicableProductIdsPlaceholder")}
+              helperText={t("pages.coupons.form.applicableProductIdsHelp")}
               noOptionsText={t("table.filters.noOptions")}
-              loadErrorText={t("pages.coupons.form.applicableCourseIdsLoadError")}
-              value={form.applicableCourseIds}
-              onChange={(nextCourseIds) => setFormField("applicableCourseIds", [...nextCourseIds])}
+              loadErrorText={t("pages.coupons.form.applicableProductIdsLoadError")}
+              value={form.applicableProductIds}
+              onChange={(nextProductIds) => setFormField("applicableProductIds", [...nextProductIds])}
             />
 
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>

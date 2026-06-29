@@ -40,19 +40,19 @@ export class CouponValidateGqlResponse {
 
   @Field(() => Float, {
     nullable: true,
-    description: "Course amount before any discount",
+    description: "Product amount before any discount",
   })
   amountIrt?: number;
 
   @Field(() => Float, {
     nullable: true,
-    description: "Built-in course discount amount",
+    description: "Built-in product discount amount",
   })
-  courseDiscountAmountIrt?: number;
+  productDiscountAmountIrt?: number;
 
   @Field(() => Float, {
     nullable: true,
-    description: "Amount after built-in course discount and before coupon",
+    description: "Amount after built-in product discount and before coupon",
   })
   payableAmountBeforeCouponIrt?: number;
 

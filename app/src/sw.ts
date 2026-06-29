@@ -40,7 +40,7 @@ type PushPayload = {
   description?: string;
   messageType?: string;
   mode?: string;
-  courseId?: string;
+  productId?: string;
   chapterKey?: string;
   action?: Record<string, unknown>;
   actionLabel?: string;
@@ -136,8 +136,8 @@ function buildPushOpenPayload(
     payload.mode = data.mode;
   }
 
-  if (typeof data?.courseId === "string") {
-    payload.courseId = data.courseId;
+  if (typeof data?.productId === "string") {
+    payload.productId = data.productId;
   }
 
   if (typeof data?.chapterKey === "string") {
@@ -234,7 +234,7 @@ self.addEventListener("push", (event: PushEvent) => {
       badgeCount: payload.badgeCount,
       messageType: payload.messageType,
       mode: payload.mode,
-      courseId: payload.courseId,
+      productId: payload.productId,
       chapterKey: payload.chapterKey,
       action: payload.action,
       actionLabel: payload.actionLabel,

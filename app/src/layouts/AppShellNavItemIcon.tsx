@@ -17,7 +17,7 @@ type AppShellNavItemIconProps = {
 };
 
 const BADGE_COLORS = {
-  courses: "primary",
+  products: "primary",
   payments: "warning",
   notifications: "error",
 } as const;

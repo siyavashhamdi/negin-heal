@@ -47,7 +47,7 @@ export function normalizePushNotificationOpenPayload(
     messageType:
       typeof value.messageType === "string" ? value.messageType : undefined,
     mode: typeof value.mode === "string" ? value.mode : undefined,
-    courseId: typeof value.courseId === "string" ? value.courseId : undefined,
+    productId: typeof value.productId === "string" ? value.productId : undefined,
     chapterKey: typeof value.chapterKey === "string" ? value.chapterKey : undefined,
     action: isRecord(value.action) ? value.action : undefined,
     actionLabel: typeof value.actionLabel === "string" ? value.actionLabel : undefined,
@@ -157,7 +157,7 @@ export function handleNativePushNotificationTap(notification: {
         typeof data.notificationId === "string" ? data.notificationId : undefined,
       messageType: typeof data.messageType === "string" ? data.messageType : undefined,
       mode: typeof data.mode === "string" ? data.mode : undefined,
-      courseId: typeof data.courseId === "string" ? data.courseId : undefined,
+      productId: typeof data.productId === "string" ? data.productId : undefined,
       chapterKey: typeof data.chapterKey === "string" ? data.chapterKey : undefined,
       actionLabel: typeof data.actionLabel === "string" ? data.actionLabel : undefined,
       actionUrl: typeof data.actionUrl === "string" ? data.actionUrl : undefined,

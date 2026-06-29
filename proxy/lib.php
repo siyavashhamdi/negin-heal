@@ -74,11 +74,11 @@ function proxyLogDir(): string
 
 function sanitizeMetadataForLog(array $metadata): array
 {
-    $courseId = normalizeText($metadata['courseId'] ?? null);
+    $productId = normalizeText($metadata['productId'] ?? null);
     $userId = normalizeText($metadata['userId'] ?? null);
 
     return array_filter([
-        'courseId' => $courseId !== '' ? $courseId : null,
+        'productId' => $productId !== '' ? $productId : null,
         'userId' => $userId !== '' ? $userId : null,
     ], static fn ($value) => $value !== null);
 }
@@ -353,7 +353,7 @@ function buildZarinpalMetadata(array $metadata): array
     return [
         'email' => normalizeText($metadata['email'] ?? null),
         'mobile' => normalizeText($metadata['mobile'] ?? null),
-        'courseId' => normalizeText($metadata['courseId'] ?? null),
+        'productId' => normalizeText($metadata['productId'] ?? null),
         'userId' => normalizeText($metadata['userId'] ?? null),
         'username' => normalizeText($metadata['username'] ?? null),
     ];

@@ -63,7 +63,7 @@ body {
   --app-multiline-textarea-max-height: #{variables.$multiline-textarea-max-height};
 }
 
-// Single-line inputs — same height as course edit dialog TextField (multiline excluded)
+// Single-line inputs — same height as product edit dialog TextField (multiline excluded)
 .MuiOutlinedInput-root:not(.MuiInputBase-multiline):not(:has(.MuiAutocomplete-tag)) {
   min-height: var(--app-input-min-height);
   align-items: center;
@@ -77,7 +77,7 @@ body {
   }
 }
 
-// size="small" — same resting label / placeholder alignment as course edit (medium) fields
+// size="small" — same resting label / placeholder alignment as product edit (medium) fields
 .MuiOutlinedInput-root.MuiInputBase-sizeSmall:not(.MuiInputBase-multiline):not(:has(.MuiAutocomplete-tag)) {
   min-height: var(--app-input-min-height);
   align-items: center;

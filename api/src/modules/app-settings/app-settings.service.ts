@@ -13,7 +13,7 @@ import {
   PAYMENT_CHECKOUT_SETTING_KEYS,
 } from "../../constants/app-setting.constant";
 import { PAGINATION_CONSTANT } from "../../constants/pagination.constant";
-import { AppSettingValueType, UserCoursePaymentMethod } from "../../enums";
+import { AppSettingValueType, UserProductPaymentMethod } from "../../enums";
 import { SortingOrder } from "../../common/pagination/input";
 import { buildSortOptions } from "../../common/pagination/utils";
 import { AppSetting, AppSettingDocument } from "../../database/schemas";
@@ -60,19 +60,19 @@ import {
 
 const DEFAULT_PAYMENT_METHODS: readonly PaymentMethodConfig[] = [
   {
-    method: UserCoursePaymentMethod.GATEWAY,
+    method: UserProductPaymentMethod.GATEWAY,
     isVisible: true,
     isActive: true,
     isRecommended: true,
   },
   {
-    method: UserCoursePaymentMethod.CARD_TO_CARD,
+    method: UserProductPaymentMethod.CARD_TO_CARD,
     isVisible: true,
     isActive: true,
     isRecommended: false,
   },
   {
-    method: UserCoursePaymentMethod.CRYPTOCURRENCY,
+    method: UserProductPaymentMethod.CRYPTOCURRENCY,
     isVisible: true,
     isActive: true,
     isRecommended: false,
@@ -496,17 +496,17 @@ export class AppSettingsService {
 
   private normalizePaymentMethodKey(
     method?: string,
-  ): UserCoursePaymentMethod | null {
+  ): UserProductPaymentMethod | null {
     const normalizedMethod = method?.trim().toUpperCase();
     if (!normalizedMethod) {
       return null;
     }
 
-    const methodMap: Record<string, UserCoursePaymentMethod> = {
-      GATEWAY: UserCoursePaymentMethod.GATEWAY,
-      CARD_TO_CARD: UserCoursePaymentMethod.CARD_TO_CARD,
-      CRYPTOCURRENCY: UserCoursePaymentMethod.CRYPTOCURRENCY,
-      FREE: UserCoursePaymentMethod.FREE,
+    const methodMap: Record<string, UserProductPaymentMethod> = {
+      GATEWAY: UserProductPaymentMethod.GATEWAY,
+      CARD_TO_CARD: UserProductPaymentMethod.CARD_TO_CARD,
+      CRYPTOCURRENCY: UserProductPaymentMethod.CRYPTOCURRENCY,
+      FREE: UserProductPaymentMethod.FREE,
     };
 
     return methodMap[normalizedMethod] ?? null;

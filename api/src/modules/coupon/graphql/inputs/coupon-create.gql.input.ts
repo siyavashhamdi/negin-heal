@@ -88,19 +88,19 @@ export class CouponCreateGqlInput {
 
   @Field(() => [ID], {
     nullable: true,
-    description: "Course IDs this coupon applies to. Empty means all courses",
+    description: "Product IDs this coupon applies to. Empty means all products",
   })
   @IsOptional()
-  @IsArray({ message: "Applicable course IDs must be an array" })
-  @ArrayUnique((courseId: Types.ObjectId) => courseId.toString(), {
-    message: "Applicable course IDs must be unique",
+  @IsArray({ message: "Applicable product IDs must be an array" })
+  @ArrayUnique((productId: Types.ObjectId) => productId.toString(), {
+    message: "Applicable product IDs must be unique",
   })
   @IsObjectId({
     each: true,
-    message: "Each applicable course ID must be a valid MongoDB ObjectId",
+    message: "Each applicable product ID must be a valid MongoDB ObjectId",
   })
   @Transform(toObjectIdArrayOptional)
-  applicableCourseIds?: Types.ObjectId[];
+  applicableProductIds?: Types.ObjectId[];
 
   @Field(() => Boolean, {
     nullable: true,

@@ -1,9 +1,15 @@
+import {
+  PRODUCT_DETAIL_ROUTE_PATTERN,
+  PRODUCTS_ROUTE_PATH,
+  isProductDetailRoutePathname,
+} from "./product-route-path";
+
 export const APP_SHELL_ROUTES = {
   login: "/login",
   resetPassword: "/reset-password",
   activateAccount: "/activate",
-  courses: "/courses",
-  courseDetail: "/courses/:courseId",
+  products: PRODUCTS_ROUTE_PATH,
+  productDetail: PRODUCT_DETAIL_ROUTE_PATTERN,
   more: "/more",
   moreAbout: "/more/about",
   morePrivacyPolicy: "/more/privacy-policy",
@@ -53,7 +59,5 @@ export const isStandaloneShellRoute = (pathname: string): boolean => {
 export const isLandingRoute = (pathname: string): boolean =>
   normalizeShellPathname(pathname) === APP_SHELL_ROUTES.landing;
 
-export const isCourseDetailRoute = (pathname: string): boolean => {
-  const normalized = normalizeShellPathname(pathname);
-  return /^\/courses\/[^/]+(?:\/(?:purchase|max))?$/.test(normalized);
-};
+export const isProductDetailRoute = (pathname: string): boolean =>
+  isProductDetailRoutePathname(normalizeShellPathname(pathname));

@@ -59,10 +59,10 @@ export function buildDefaultStructuredData(
   ];
 }
 
-type BuildCourseStructuredDataInput = {
+type BuildProductStructuredDataInput = {
   readonly appUrl: string;
   readonly canonicalUrl: string;
-  readonly courseId: string;
+  readonly productId: string;
   readonly title: string;
   readonly description: string;
   readonly imageUrl?: string;
@@ -71,13 +71,13 @@ type BuildCourseStructuredDataInput = {
   readonly priceIrt?: number | null;
 };
 
-export function buildCourseStructuredData(
-  input: BuildCourseStructuredDataInput
+export function buildProductStructuredData(
+  input: BuildProductStructuredDataInput
 ): ReadonlyArray<Record<string, unknown>> {
   const {
     appUrl,
     canonicalUrl,
-    courseId,
+    productId,
     title,
     description,
     imageUrl,
@@ -86,7 +86,7 @@ export function buildCourseStructuredData(
     priceIrt,
   } = input;
 
-  const course: Record<string, unknown> = {
+  const productEntity: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Course",
     "@id": `${canonicalUrl}#course`,
@@ -98,20 +98,20 @@ export function buildCourseStructuredData(
       "@id": `${appUrl}/#organization`,
     },
     inLanguage: "fa",
-    courseCode: courseId,
+    identifier: productId,
     isAccessibleForFree: isFree,
   };
 
   if (imageUrl) {
-    course.image = imageUrl;
+    productEntity.image = imageUrl;
   }
 
   if (keywords?.trim()) {
-    course.keywords = keywords;
+    productEntity.keywords = keywords;
   }
 
   if (!isFree && typeof priceIrt === "number" && priceIrt > 0) {
-    course.offers = {
+    productEntity.offers = {
       "@type": "Offer",
       price: priceIrt,
       priceCurrency: "IRR",
@@ -132,7 +132,7 @@ export function buildCourseStructuredData(
         "@id": `${canonicalUrl}#course`,
       },
     },
-    course,
+    productEntity,
   ];
 }
 
@@ -195,7 +195,7 @@ export function buildFaqStructuredData(
   ];
 }
 
-type CourseListItem = {
+type ProductListItem = {
   readonly id: string;
   readonly title: string;
   readonly description?: string | null;
@@ -203,16 +203,16 @@ type CourseListItem = {
   readonly imageUrl?: string;
 };
 
-type CourseListStructuredDataInput = {
+type ProductListStructuredDataInput = {
   readonly appUrl: string;
   readonly canonicalUrl: string;
   readonly siteName: string;
   readonly description: string;
-  readonly courses: readonly CourseListItem[];
+  readonly products: readonly ProductListItem[];
 };
 
-export function buildCourseListStructuredData(
-  input: CourseListStructuredDataInput
+export function buildProductListStructuredData(
+  input: ProductListStructuredDataInput
 ): ReadonlyArray<Record<string, unknown>> {
   return [
     {
@@ -222,18 +222,18 @@ export function buildCourseListStructuredData(
       url: input.canonicalUrl,
       name: `${input.siteName} — دوره‌های آموزشی`,
       description: input.description,
-      numberOfItems: input.courses.length,
-      itemListElement: input.courses.map((course, index) => ({
+      numberOfItems: input.products.length,
+      itemListElement: input.products.map((product, index) => ({
         "@type": "ListItem",
         position: index + 1,
-        url: course.url,
+        url: product.url,
         item: {
           "@type": "Course",
-          "@id": `${course.url}#course`,
-          name: course.title,
-          description: course.description?.trim() || course.title,
-          url: course.url,
-          ...(course.imageUrl ? { image: course.imageUrl } : {}),
+          "@id": `${product.url}#course`,
+          name: product.title,
+          description: product.description?.trim() || product.title,
+          url: product.url,
+          ...(product.imageUrl ? { image: product.imageUrl } : {}),
           provider: {
             "@type": "Organization",
             "@id": `${input.appUrl}/#organization`,

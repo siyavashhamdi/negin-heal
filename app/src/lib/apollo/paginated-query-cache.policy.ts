@@ -97,28 +97,28 @@ export const paginatedQueryTypePolicies: TypePolicies = {
           return incoming;
         },
       },
-      userCourseReviewList: {
+      userProductReviewList: {
         keyArgs: paginatedInputKey,
         merge(_existing, incoming) {
           return incoming;
         },
       },
-      courseReviewList: {
+      productReviewList: {
         keyArgs: paginatedInputKey,
         merge(_existing, incoming) {
           return incoming;
         },
       },
-      userCourseDetail: {
+      userProductDetail: {
         keyArgs: ["input"],
       },
-      courseList: {
+      productList: {
         keyArgs: paginatedInputKey,
         merge(_existing, incoming) {
           return incoming;
         },
       },
-      userCourseList: {
+      userProductList: {
         keyArgs: paginatedInputKey,
         merge(_existing, incoming) {
           return incoming;
@@ -198,7 +198,7 @@ export const paginatedQueryTypePolicies: TypePolicies = {
       },
     },
   },
-  UserCourseReviewListPaginatedCursorGqlResponse: {
+  UserProductReviewListPaginatedCursorGqlResponse: {
     fields: {
       items: {
         merge(_existing, incoming) {
@@ -207,7 +207,7 @@ export const paginatedQueryTypePolicies: TypePolicies = {
       },
     },
   },
-  CourseReviewListPaginatedCursorGqlResponse: {
+  ProductReviewListPaginatedCursorGqlResponse: {
     fields: {
       items: {
         merge(_existing, incoming) {

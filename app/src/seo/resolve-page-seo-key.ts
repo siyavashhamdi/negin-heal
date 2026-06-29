@@ -1,5 +1,10 @@
+import {
+  PRODUCT_DETAIL_PAGE_ROUTE_REGEX,
+  PRODUCTS_ROUTE_PATH,
+} from "../routing/product-route-path";
+
 const STATIC_ROUTE_SEO_KEYS: Readonly<Record<string, string>> = {
-  "/courses": "courses",
+  [PRODUCTS_ROUTE_PATH]: "products",
   "/more/about": "moreAbout",
   "/more/privacy-policy": "morePrivacyPolicy",
   "/more/terms-of-use": "moreTermsOfUse",
@@ -14,7 +19,7 @@ const STATIC_ROUTE_SEO_KEYS: Readonly<Record<string, string>> = {
   "/reset-password": "resetPassword",
   "/activate": "activateAccount",
   "/payment/zarinpal/callback": "paymentCallback",
-  "/": "courses",
+  "/": "products",
 };
 
 type RouteSeoRule = {
@@ -25,8 +30,8 @@ type RouteSeoRule = {
 /** Public routes only — authenticated and super-admin pages fall back to `genericPage`. */
 const ROUTE_SEO_RULES: readonly RouteSeoRule[] = [
   {
-    match: (p) => /^\/courses\/[^/]+$/.test(p) && p !== "/courses/new",
-    key: "courseDetail",
+    match: (p) => PRODUCT_DETAIL_PAGE_ROUTE_REGEX.test(p) && p !== `${PRODUCTS_ROUTE_PATH}/new`,
+    key: "productDetail",
   },
 ];
 

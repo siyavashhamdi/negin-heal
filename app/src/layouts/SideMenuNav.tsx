@@ -32,7 +32,7 @@ export interface SideMenuNavProps {
 }
 
 const DEFAULT_BADGE_COUNTS: AppShellNavBadgeCounts = {
-  courses: 0,
+  products: 0,
   payments: 0,
   notifications: 0,
   support: 0,

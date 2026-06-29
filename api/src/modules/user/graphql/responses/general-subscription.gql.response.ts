@@ -13,7 +13,7 @@ export class GeneralSubscriptionGqlResponse {
   @Field(() => String, {
     nullable: true,
     description:
-      "Optional scoped identifier for this update (for example, ticket or course id)",
+      "Optional scoped identifier for this update (for example, ticket or product id)",
   })
   targetId?: string;
 

@@ -144,13 +144,13 @@ export class CouponListFilterInput {
 
   @Field(() => ID, {
     nullable: true,
-    description: "Filter coupons by applicable course ID",
+    description: "Filter coupons by applicable product ID",
   })
   @IsOptional()
   @IsMongoId({
-    message: "Applicable course ID filter must be a valid Mongo ID",
+    message: "Applicable product ID filter must be a valid Mongo ID",
   })
-  applicableCourseId?: string;
+  applicableProductId?: string;
 
   @Field({
     nullable: true,

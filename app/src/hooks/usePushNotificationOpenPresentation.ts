@@ -45,7 +45,7 @@ export function usePushNotificationOpenPresentation({
           description: payload.description,
           messageType: payload.messageType,
           mode: payload.mode,
-          courseId: payload.courseId,
+          productId: payload.productId,
           chapterKey: payload.chapterKey,
           action: payload.action,
           actionLabel: payload.actionLabel,

@@ -1,6 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { PRODUCTS_ROUTE_PATH } from "../src/routing/product-route-path.constants.mjs";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const appDir = path.resolve(scriptDir, "..");
@@ -8,11 +9,11 @@ const envFilePath = path.join(appDir, ".env");
 const outputPath = path.join(appDir, "public", "sitemap.xml");
 
 const DEFAULT_SITE_URL = "https://neginheal.ir";
-const COURSE_PAGE_SIZE = 100;
+const PRODUCT_PAGE_SIZE = 100;
 
 const STATIC_ROUTES = [
   { path: "/landing", changefreq: "weekly", priority: "1.0" },
-  { path: "/courses", changefreq: "daily", priority: "0.9" },
+  { path: PRODUCTS_ROUTE_PATH, changefreq: "daily", priority: "0.9" },
   { path: "/support", changefreq: "weekly", priority: "0.8" },
   { path: "/support/faq", changefreq: "weekly", priority: "0.8" },
   { path: "/more/about", changefreq: "monthly", priority: "0.6" },
@@ -20,9 +21,9 @@ const STATIC_ROUTES = [
   { path: "/more/terms-of-use", changefreq: "monthly", priority: "0.5" },
 ];
 
-const USER_COURSE_LIST_QUERY = `
-  query UserCourseList($input: CourseListGqlInput!) {
-    userCourseList(input: $input) {
+const USER_PRODUCT_LIST_QUERY = `
+  query UserProductList($input: ProductListGqlInput!) {
+    userProductList(input: $input) {
       items {
         id
       }
@@ -101,9 +102,9 @@ function resolveGraphqlUrl(apiBaseUrl) {
   return `${apiBaseUrl.replace(/\/+$/, "")}/graphql`;
 }
 
-async function fetchActiveCourseIds(apiBaseUrl) {
+async function fetchActiveProductIds(apiBaseUrl) {
   const graphqlUrl = resolveGraphqlUrl(apiBaseUrl);
-  const courseIds = [];
+  const productIds = [];
   let startCursor;
 
   while (true) {
@@ -113,14 +114,14 @@ async function fetchActiveCourseIds(apiBaseUrl) {
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        query: USER_COURSE_LIST_QUERY,
+        query: USER_PRODUCT_LIST_QUERY,
         variables: {
           input: {
             filters: {
               isActive: true,
             },
             options: {
-              limit: COURSE_PAGE_SIZE,
+              limit: PRODUCT_PAGE_SIZE,
               ...(startCursor ? { startCursor } : {}),
             },
           },
@@ -138,14 +139,14 @@ async function fetchActiveCourseIds(apiBaseUrl) {
       throw new Error(payload.errors.map((error) => error.message).join("; "));
     }
 
-    const page = payload.data?.userCourseList;
+    const page = payload.data?.userProductList;
     if (!page) {
-      throw new Error("userCourseList response was empty");
+      throw new Error("userProductList response was empty");
     }
 
     for (const item of page.items ?? []) {
       if (item?.id) {
-        courseIds.push(item.id);
+        productIds.push(item.id);
       }
     }
 
@@ -159,7 +160,7 @@ async function fetchActiveCourseIds(apiBaseUrl) {
     }
   }
 
-  return courseIds;
+  return productIds;
 }
 
 async function generateSitemap() {
@@ -179,12 +180,12 @@ async function generateSitemap() {
   );
 
   try {
-    const courseIds = await fetchActiveCourseIds(apiBaseUrl);
+    const productIds = await fetchActiveProductIds(apiBaseUrl);
 
-    for (const courseId of courseIds) {
+    for (const productId of productIds) {
       entries.push(
         buildUrlEntry({
-          loc: `${siteUrl}/courses/${courseId}`,
+          loc: `${siteUrl}${PRODUCTS_ROUTE_PATH}/${productId}`,
           lastmod,
           changefreq: "weekly",
           priority: "0.9",
@@ -192,10 +193,10 @@ async function generateSitemap() {
       );
     }
 
-    console.log(`Generated sitemap with ${STATIC_ROUTES.length} static routes and ${courseIds.length} course routes`);
+    console.log(`Generated sitemap with ${STATIC_ROUTES.length} static routes and ${productIds.length} product routes`);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.warn(`Could not fetch courses for sitemap (${message}); writing static routes only`);
+    console.warn(`Could not fetch products for sitemap (${message}); writing static routes only`);
   }
 
   const xml = [

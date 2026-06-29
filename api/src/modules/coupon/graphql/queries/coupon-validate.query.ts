@@ -17,7 +17,7 @@ export class CouponValidateQuery {
 
   @Query(() => CouponValidateGqlResponse, {
     name: "couponValidate",
-    description: "Validate a coupon for the current user's course purchase",
+    description: "Validate a coupon for the current user's product purchase",
   })
   async validateCoupon(
     @Args("input") input: CouponValidateGqlInput,
@@ -30,6 +30,6 @@ export class CouponValidateQuery {
       throw new ForbiddenException(EXCEPTION_CONSTANT.END_USER_ONLY);
     }
 
-    return this.couponService.validateForCoursePurchase(input, user.userId);
+    return this.couponService.validateForProductPurchase(input, user.userId);
   }
 }

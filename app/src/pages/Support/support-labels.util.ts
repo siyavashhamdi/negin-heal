@@ -2,7 +2,7 @@ import type { TicketCategory, TicketClosedBy, TicketPriority, TicketStatus } fro
 
 export const TICKET_CATEGORY_LABEL: Record<TicketCategory, string> = {
   PAYMENT: "پرداخت",
-  COURSE: "دوره",
+  PRODUCT: "دوره",
   ACCOUNT: "حساب کاربری",
   TECHNICAL: "فنی",
   BUG: "گزارش باگ",
@@ -29,7 +29,7 @@ export const TICKET_CLOSED_BY_LABEL: Record<TicketClosedBy, string> = {
 
 export const TICKET_CATEGORY_OPTIONS: readonly TicketCategory[] = [
   "PAYMENT",
-  "COURSE",
+  "PRODUCT",
   "ACCOUNT",
   "TECHNICAL",
   "BUG",

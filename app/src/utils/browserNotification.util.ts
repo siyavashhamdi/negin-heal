@@ -11,7 +11,7 @@ export type BrowserNotificationInput = {
 export type NotificationPushPayload = {
   readonly isPushNotification?: boolean;
   readonly messageType?: string;
-  readonly courseId?: string;
+  readonly productId?: string;
   readonly chapterKey?: string;
   readonly purchaseStatus?: string;
 };
@@ -41,7 +41,7 @@ export function isGlobalAnnouncementNotificationPayload(
     return false;
   }
 
-  return !payload.courseId && !payload.chapterKey && payload.purchaseStatus === undefined;
+  return !payload.productId && !payload.chapterKey && payload.purchaseStatus === undefined;
 }
 
 export function shouldDeliverNotificationPush(

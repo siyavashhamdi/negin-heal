@@ -1,8 +1,8 @@
 export const FILE_UPLOAD_POLICY = {
   ANY: "ANY",
   AVATAR: "AVATAR",
-  COURSE_COVER: "COURSE_COVER",
-  COURSE_ITEM: "COURSE_ITEM",
+  PRODUCT_COVER: "PRODUCT_COVER",
+  PRODUCT_ITEM: "PRODUCT_ITEM",
   SUPPORT_ATTACHMENT: "SUPPORT_ATTACHMENT",
   PAYMENT_RECEIPT: "PAYMENT_RECEIPT",
   PAYMENT_EVIDENCE: "PAYMENT_EVIDENCE",
@@ -29,11 +29,11 @@ export const FILE_UPLOAD_POLICIES: Record<
     maxSizeBytes: 5 * 1024 * 1024,
     allowedMimePatterns: ["image/"],
   },
-  [FILE_UPLOAD_POLICY.COURSE_COVER]: {
+  [FILE_UPLOAD_POLICY.PRODUCT_COVER]: {
     maxSizeBytes: 20 * 1024 * 1024,
     allowedMimePatterns: ["image/"],
   },
-  [FILE_UPLOAD_POLICY.COURSE_ITEM]: {
+  [FILE_UPLOAD_POLICY.PRODUCT_ITEM]: {
     maxSizeBytes: 50 * 1024 * 1024,
     allowedMimePatterns: null,
   },

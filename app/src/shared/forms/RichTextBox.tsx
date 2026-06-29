@@ -55,7 +55,7 @@ type RichTextBoxProps = {
   readonly hideLabel?: boolean;
   readonly renderTitle?: string;
   readonly maximizeLabel?: string;
-  /** Parent-owned maximize (e.g. course detail item modal). */
+  /** Parent-owned maximize (e.g. product detail item modal). */
   readonly onPreviewMaximize?: () => void;
   /** Stable id for `/max` route ownership in self-managed maximize. */
   readonly previewId?: string;

@@ -1,7 +1,7 @@
 /** Shared dynamic imports so route chunks are deduplicated between React.lazy and prefetch. */
 
-export const importCourseDetail = () => import("../pages/Courses/CourseDetail");
-export const importCoursesIndex = () => import("../pages/Courses/Index");
+export const importProductDetail = () => import("../pages/Products/ProductDetail");
+export const importProductsIndex = () => import("../pages/Products/Index");
 export const importLoginRoute = () => import("../pages/Login/LoginRoute");
 export const importAboutPage = () => import("../pages/More/About");
 export const importGlobalAnouncementPage = () => import("../pages/More/GlobalAnouncement");

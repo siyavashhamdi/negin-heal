@@ -3,7 +3,7 @@ import { usePageSeoContext } from "../contexts/page-seo-context";
 import type { PageSeoOverride } from "../seo/seo.types";
 
 /**
- * Lets a page override route-default SEO (e.g. course title, cover image, structured data).
+ * Lets a page override route-default SEO (e.g. product title, cover image, structured data).
  */
 export const usePageSeoOverride = (override: PageSeoOverride | null | undefined): void => {
   const { setOverride } = usePageSeoContext();

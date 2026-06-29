@@ -2,6 +2,12 @@ import { useEffect, type ReactElement } from "react";
 import { Card, CardContent, CircularProgress, Stack, Typography } from "@mui/material";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { API_CONFIG } from "../../config/env";
+import {
+  PRODUCT_ROUTE_ID_PARAM,
+  PRODUCTS_ROUTE_PATH,
+  productDetailPath,
+  productsPaymentZarinPalVerifyApiPath,
+} from "../../routing/product-route-path";
 
 type ZarinPalVerificationResult = {
   readonly status: "success" | "failed" | "cancelled";
@@ -16,10 +22,10 @@ function getApiBaseUrl(): string {
 
 function buildPaymentResultUrl(
   result: ZarinPalVerificationResult,
-  callbackCourseId?: string | null
+  callbackProductId?: string | null
 ): string {
   const resultParams = new URLSearchParams({ payment: result.status });
-  const courseId = result.courseId || callbackCourseId;
+  const productId = result.courseId || callbackProductId;
 
   if (result.refId) {
     resultParams.set("refId", result.refId);
@@ -28,11 +34,11 @@ function buildPaymentResultUrl(
     resultParams.set("reason", result.reason);
   }
 
-  if (courseId) {
-    return `/courses/${courseId}?${resultParams.toString()}`;
+  if (productId) {
+    return `${productDetailPath(productId)}?${resultParams.toString()}`;
   }
 
-  return `/courses?${resultParams.toString()}`;
+  return `${PRODUCTS_ROUTE_PATH}?${resultParams.toString()}`;
 }
 
 const ZarinPalCallback = (): ReactElement => {
@@ -44,7 +50,8 @@ const ZarinPalCallback = (): ReactElement => {
       const verifyParams = new URLSearchParams();
       const authority = searchParams.get("Authority");
       const status = searchParams.get("Status");
-      const callbackCourseId = searchParams.get("courseId");
+      const callbackProductId =
+        searchParams.get(PRODUCT_ROUTE_ID_PARAM) ?? searchParams.get("productId");
 
       if (authority) {
         verifyParams.set("Authority", authority);
@@ -55,14 +62,16 @@ const ZarinPalCallback = (): ReactElement => {
 
       try {
         const response = await fetch(
-          `${getApiBaseUrl()}/api/v1/courses/payment/zarinpal/verify?${verifyParams.toString()}`,
+          `${getApiBaseUrl()}${productsPaymentZarinPalVerifyApiPath()}?${verifyParams.toString()}`,
           { credentials: "include" }
         );
         const result = (await response.json()) as ZarinPalVerificationResult;
 
-        navigate(buildPaymentResultUrl(result, callbackCourseId), { replace: true });
+        navigate(buildPaymentResultUrl(result, callbackProductId), { replace: true });
       } catch {
-        const fallbackPath = callbackCourseId ? `/courses/${callbackCourseId}` : "/courses";
+        const fallbackPath = callbackProductId
+          ? productDetailPath(callbackProductId)
+          : PRODUCTS_ROUTE_PATH;
         navigate(`${fallbackPath}?payment=failed&reason=ZARINPAL_VERIFICATION_ERROR`, {
           replace: true,
         });

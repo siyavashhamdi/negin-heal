@@ -106,9 +106,9 @@ export class CouponListGqlResponse {
   perUserUsageLimit?: number;
 
   @Field(() => [ID], {
-    description: "Course IDs this coupon applies to. Empty means all courses",
+    description: "Product IDs this coupon applies to. Empty means all products",
   })
-  applicableCourseIds: Types.ObjectId[];
+  applicableProductIds: Types.ObjectId[];
 
   @Field({
     description: "Whether the coupon is restricted to first purchases only",

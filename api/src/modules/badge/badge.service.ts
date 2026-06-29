@@ -3,21 +3,21 @@ import { InjectModel } from "@nestjs/mongoose";
 import { FilterQuery, Model, Types } from "mongoose";
 
 import {
-  Course,
-  CourseDocument,
+  Product,
+  ProductDocument,
   Notification,
   NotificationDocument,
   Ticket,
   TicketDocument,
-  UserCourse,
-  UserCourseDocument,
+  UserProduct,
+  UserProductDocument,
 } from "../../database/schemas";
 import {
   BadgeCountTriggerAction,
   BadgeCountTriggerSource,
   GeneralSubscriptionUpdateType,
   TicketStatus,
-  UserCoursePurchaseStatus,
+  UserProductPurchaseStatus,
   UserRole,
 } from "../../enums";
 import { AuthenticatedUser } from "../../types/graphql-context.types";
@@ -43,10 +43,10 @@ export interface PublishBadgeCountSignalInput {
 @Injectable()
 export class BadgeService {
   constructor(
-    @InjectModel(Course.name)
-    private readonly courseModel: Model<CourseDocument>,
-    @InjectModel(UserCourse.name)
-    private readonly userCourseModel: Model<UserCourseDocument>,
+    @InjectModel(Product.name)
+    private readonly productModel: Model<ProductDocument>,
+    @InjectModel(UserProduct.name)
+    private readonly userProductModel: Model<UserProductDocument>,
     @InjectModel(Notification.name)
     private readonly notificationModel: Model<NotificationDocument>,
     @InjectModel(Ticket.name)
@@ -61,7 +61,7 @@ export class BadgeService {
   ): Promise<BadgeCountGqlResponse> {
     if (!user) {
       return {
-        courses: await this.countCourses(false),
+        products: await this.countProducts(false),
         payments: null,
         notifications: null,
         tickets: null,
@@ -70,15 +70,15 @@ export class BadgeService {
 
     const isStaff = this.isStaff(user);
 
-    const [courses, payments, notifications, tickets] = await Promise.all([
-      this.countCourses(isStaff),
+    const [products, payments, notifications, tickets] = await Promise.all([
+      this.countProducts(isStaff),
       isStaff ? this.countPendingPayments() : Promise.resolve(null),
       this.countUnreadNotifications(user),
       this.countTickets(user, isStaff),
     ]);
 
     return {
-      courses,
+      products,
       payments,
       notifications,
       tickets,
@@ -144,16 +144,16 @@ export class BadgeService {
     return userIds.map((userId) => userId.toString());
   }
 
-  private countCourses(isStaff: boolean): Promise<number> {
-    const filterQuery: FilterQuery<Course> = isStaff ? {} : { isActive: true };
+  private countProducts(isStaff: boolean): Promise<number> {
+    const filterQuery: FilterQuery<Product> = isStaff ? {} : { isActive: true };
 
-    return this.courseModel.countDocuments(filterQuery).exec();
+    return this.productModel.countDocuments(filterQuery).exec();
   }
 
   private countPendingPayments(): Promise<number> {
-    return this.userCourseModel
+    return this.userProductModel
       .countDocuments({
-        "purchase.status": UserCoursePurchaseStatus.PENDING,
+        "purchase.status": UserProductPurchaseStatus.PENDING,
       })
       .exec();
   }

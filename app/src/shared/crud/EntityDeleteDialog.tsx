@@ -15,7 +15,7 @@ interface EntityDeleteDialogProps {
   loading?: boolean;
   icon?: ReactNode;
   children?: ReactNode;
-  /** Centered layout with icon, bold message, and action buttons matching course delete dialogs. */
+  /** Centered layout with icon, bold message, and action buttons matching product delete dialogs. */
   prominent?: boolean;
 }
 

@@ -23,7 +23,7 @@ type PageBackClickProps = PageBackNavigationBaseProps & {
 };
 
 export type PageBackNavigationProps = (PageBackHistoryProps | PageBackClickProps) & {
-  /** Shows a floating icon-only back control on small screens (course detail style). */
+  /** Shows a floating icon-only back control on small screens (product detail style). */
   readonly mobileOverlay?: boolean;
 };
 

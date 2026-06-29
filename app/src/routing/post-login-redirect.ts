@@ -4,25 +4,25 @@ const POST_LOGIN_REDIRECT_STORAGE_KEY = "post-login-redirect";
 
 export type PostLoginRedirect = {
   readonly pathname: string;
-  readonly openCoursePurchase?: boolean;
+  readonly openProductPurchase?: boolean;
 };
 
 export type LoginReturnState = {
   readonly returnTo: string;
-  readonly openCoursePurchase?: boolean;
+  readonly openProductPurchase?: boolean;
 };
 
-export function buildCoursePostLoginRedirect(courseId: string): PostLoginRedirect {
+export function buildProductPostLoginRedirect(productId: string): PostLoginRedirect {
   return {
-    pathname: `${APP_SHELL_ROUTES.courses}/${courseId}`,
-    openCoursePurchase: true,
+    pathname: `${APP_SHELL_ROUTES.products}/${productId}`,
+    openProductPurchase: true,
   };
 }
 
-export function buildCourseLoginReturnState(courseId: string): LoginReturnState {
+export function buildProductLoginReturnState(productId: string): LoginReturnState {
   return {
-    returnTo: `${APP_SHELL_ROUTES.courses}/${courseId}`,
-    openCoursePurchase: true,
+    returnTo: `${APP_SHELL_ROUTES.products}/${productId}`,
+    openProductPurchase: true,
   };
 }
 
@@ -35,8 +35,8 @@ function isPostLoginRedirect(value: unknown): value is PostLoginRedirect {
   return (
     typeof candidate.pathname === "string" &&
     candidate.pathname.startsWith("/") &&
-    (candidate.openCoursePurchase === undefined ||
-      typeof candidate.openCoursePurchase === "boolean")
+    (candidate.openProductPurchase === undefined ||
+      typeof candidate.openProductPurchase === "boolean")
   );
 }
 
@@ -52,7 +52,7 @@ export function extractLoginReturnState(value: unknown): LoginReturnState | null
 
   return {
     returnTo: candidate.returnTo,
-    openCoursePurchase: candidate.openCoursePurchase === true ? true : undefined,
+    openProductPurchase: candidate.openProductPurchase === true ? true : undefined,
   };
 }
 
@@ -64,7 +64,7 @@ export function postLoginRedirectFromReturnState(value: unknown): PostLoginRedir
 
   return {
     pathname: returnState.returnTo,
-    openCoursePurchase: returnState.openCoursePurchase,
+    openProductPurchase: returnState.openProductPurchase,
   };
 }
 
@@ -79,7 +79,7 @@ export function mergeWithLoginReturnState<T extends object>(
   return {
     ...base,
     returnTo: returnState.returnTo,
-    ...(returnState.openCoursePurchase ? { openCoursePurchase: true } : {}),
+    ...(returnState.openProductPurchase ? { openProductPurchase: true } : {}),
   };
 }
 

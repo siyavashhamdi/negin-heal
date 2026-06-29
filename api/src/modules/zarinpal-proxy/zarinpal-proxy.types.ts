@@ -1,7 +1,7 @@
 export type ZarinPalProxyMetadata = {
   email: string;
   mobile: string;
-  courseId: string;
+  productId: string;
   userId: string;
   username: string;
 };

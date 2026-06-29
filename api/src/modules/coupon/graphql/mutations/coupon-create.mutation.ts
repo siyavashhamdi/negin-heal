@@ -16,7 +16,7 @@ export class CouponCreateMutation {
   @Mutation(() => CouponListGqlResponse, {
     name: "couponCreate",
     description:
-      "Create a coupon with discount rules, usage limits, course applicability, and active status",
+      "Create a coupon with discount rules, usage limits, product applicability, and active status",
   })
   async createCoupon(
     @Args("input") input: CouponCreateGqlInput,

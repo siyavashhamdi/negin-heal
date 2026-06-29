@@ -30,7 +30,7 @@ export type CouponDetailRow = {
   readonly expiresAt?: string | null;
   readonly totalUsageLimit?: number | null;
   readonly perUserUsageLimit?: number | null;
-  readonly applicableCourseIds: readonly string[];
+  readonly applicableProductIds: readonly string[];
   readonly isFirstPurchaseOnly: boolean;
   readonly isActive: boolean;
   readonly totalUsageCount: number;
@@ -78,8 +78,8 @@ export type CouponRecord = {
   readonly expiresAt: string;
   readonly totalUsageLimit: number | null;
   readonly perUserUsageLimit: number | null;
-  readonly applicableCourseIds: readonly string[];
-  readonly applicableCourseIdsText: string;
+  readonly applicableProductIds: readonly string[];
+  readonly applicableProductIdsText: string;
   readonly isFirstPurchaseOnly: boolean;
   readonly isActive: boolean;
   readonly totalUsageCount: number;
@@ -132,7 +132,7 @@ export type CouponListFilters = {
   totalUsageLimitMax: string;
   perUserUsageLimitMin: string;
   perUserUsageLimitMax: string;
-  applicableCourseId: string;
+  applicableProductId: string;
   isFirstPurchaseOnly: "ALL" | "true" | "false";
   isActive: "ALL" | "true" | "false";
   createdBy: string;
@@ -161,7 +161,7 @@ export type CouponListQueryVariables = {
       totalUsageLimitMax?: number | null;
       perUserUsageLimitMin?: number | null;
       perUserUsageLimitMax?: number | null;
-      applicableCourseId?: string | null;
+      applicableProductId?: string | null;
       isFirstPurchaseOnly?: boolean | null;
       isActive?: boolean | null;
       createdBy?: string | null;
@@ -201,7 +201,7 @@ export type CouponFormState = {
   expiresAt: string;
   totalUsageLimit: string;
   perUserUsageLimit: string;
-  applicableCourseIds: string[];
+  applicableProductIds: string[];
   isFirstPurchaseOnly: boolean;
   isActive: boolean;
 };
@@ -217,7 +217,7 @@ export type CouponCreateMutationVariables = {
     expiresAt?: string | null;
     totalUsageLimit?: number | null;
     perUserUsageLimit?: number | null;
-    applicableCourseIds?: string[] | null;
+    applicableProductIds?: string[] | null;
     isFirstPurchaseOnly?: boolean;
     isActive?: boolean;
   };
@@ -251,7 +251,7 @@ export const EMPTY_COUPON_LIST_FILTERS: CouponListFilters = {
   totalUsageLimitMax: "",
   perUserUsageLimitMin: "",
   perUserUsageLimitMax: "",
-  applicableCourseId: "",
+  applicableProductId: "",
   isFirstPurchaseOnly: "ALL",
   isActive: "ALL",
   createdBy: "",
@@ -272,7 +272,7 @@ export const EMPTY_COUPON_FORM: CouponFormState = {
   expiresAt: "",
   totalUsageLimit: "",
   perUserUsageLimit: "",
-  applicableCourseIds: [],
+  applicableProductIds: [],
   isFirstPurchaseOnly: false,
   isActive: true,
 };
@@ -365,7 +365,7 @@ function nullableNumberInput(value: string): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function normalizeCourseIds(value: readonly string[]): string[] | null {
+function normalizeProductIds(value: readonly string[]): string[] | null {
   const ids = value.map((item) => item.trim()).filter(Boolean);
   return ids.length > 0 ? Array.from(new Set(ids)) : null;
 }
@@ -390,7 +390,7 @@ export function mapCouponListRowToRecord(row: CouponListItemRow): CouponListReco
 }
 
 export function mapCouponDetailRowToRecord(row: CouponDetailRow): CouponRecord {
-  const applicableCourseIds = row.applicableCourseIds ?? [];
+  const applicableProductIds = row.applicableProductIds ?? [];
 
   return {
     id: String(row.id),
@@ -403,9 +403,9 @@ export function mapCouponDetailRowToRecord(row: CouponDetailRow): CouponRecord {
     expiresAt: row.expiresAt ?? "",
     totalUsageLimit: typeof row.totalUsageLimit === "number" ? row.totalUsageLimit : null,
     perUserUsageLimit: typeof row.perUserUsageLimit === "number" ? row.perUserUsageLimit : null,
-    applicableCourseIds,
-    applicableCourseIdsText:
-      applicableCourseIds.length > 0 ? applicableCourseIds.join("، ") : "همه دوره‌ها",
+    applicableProductIds,
+    applicableProductIdsText:
+      applicableProductIds.length > 0 ? applicableProductIds.join("، ") : "همه دوره‌ها",
     isFirstPurchaseOnly: row.isFirstPurchaseOnly,
     isActive: row.isActive,
     totalUsageCount: row.totalUsageCount,
@@ -443,7 +443,7 @@ export function buildCouponListQueryVariables(
         totalUsageLimitMax: numberFilterToNull(appliedFilters.totalUsageLimitMax),
         perUserUsageLimitMin: numberFilterToNull(appliedFilters.perUserUsageLimitMin),
         perUserUsageLimitMax: numberFilterToNull(appliedFilters.perUserUsageLimitMax),
-        applicableCourseId: trimToNull(appliedFilters.applicableCourseId),
+        applicableProductId: trimToNull(appliedFilters.applicableProductId),
         isFirstPurchaseOnly: booleanFilterToNull(appliedFilters.isFirstPurchaseOnly),
         isActive: booleanFilterToNull(appliedFilters.isActive),
         createdBy: trimToNull(appliedFilters.createdBy),
@@ -486,7 +486,7 @@ export function buildInitialCouponForm(record?: CouponRecord | null): CouponForm
     expiresAt: isoToDateTimeLocal(record.expiresAt),
     totalUsageLimit: record.totalUsageLimit == null ? "" : String(record.totalUsageLimit),
     perUserUsageLimit: record.perUserUsageLimit == null ? "" : String(record.perUserUsageLimit),
-    applicableCourseIds: [...record.applicableCourseIds],
+    applicableProductIds: [...record.applicableProductIds],
     isFirstPurchaseOnly: record.isFirstPurchaseOnly,
     isActive: record.isActive,
   };
@@ -504,7 +504,7 @@ export function buildCouponCreateVariables(form: CouponFormState): CouponCreateM
       expiresAt: dateTimeLocalToIso(form.expiresAt),
       totalUsageLimit: nullableNumberInput(form.totalUsageLimit),
       perUserUsageLimit: nullableNumberInput(form.perUserUsageLimit),
-      applicableCourseIds: normalizeCourseIds(form.applicableCourseIds),
+      applicableProductIds: normalizeProductIds(form.applicableProductIds),
       isFirstPurchaseOnly: form.isFirstPurchaseOnly,
       isActive: form.isActive,
     },

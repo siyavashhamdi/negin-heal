@@ -1,6 +1,6 @@
 import { Field, Float, ObjectType } from "@nestjs/graphql";
 
-import { UserCoursePaymentMethod } from "../../../../enums";
+import { UserProductPaymentMethod } from "../../../../enums";
 
 @ObjectType()
 export class PaymentCheckoutCardGqlResponse {
@@ -25,10 +25,10 @@ export class PaymentCheckoutCryptoWalletGqlResponse {
 
 @ObjectType()
 export class PaymentCheckoutMethodGqlResponse {
-  @Field(() => UserCoursePaymentMethod, {
+  @Field(() => UserProductPaymentMethod, {
     description: "Payment method identifier",
   })
-  method: UserCoursePaymentMethod;
+  method: UserProductPaymentMethod;
 
   @Field({ description: "Whether the method should be shown in checkout" })
   isVisible: boolean;

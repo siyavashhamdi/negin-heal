@@ -16,7 +16,7 @@ export class CouponUpdateMutation {
   @Mutation(() => CouponListGqlResponse, {
     name: "couponUpdate",
     description:
-      "Update a coupon's discount rules, usage limits, course applicability, or active status",
+      "Update a coupon's discount rules, usage limits, product applicability, or active status",
   })
   async updateCoupon(
     @Args("input") input: CouponUpdateGqlInput,

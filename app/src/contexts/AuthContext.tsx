@@ -182,7 +182,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
         return;
       }
 
-      navigate(APP_SHELL_ROUTES.courses);
+      navigate(APP_SHELL_ROUTES.products);
     },
     [beginPostLoginRedirect, location.state, navigate]
   );
@@ -317,8 +317,8 @@ export const AuthProvider = ({ children }: AuthProviderProps): ReactElement => {
           to={postLoginRedirectTarget.pathname}
           replace
           state={
-            postLoginRedirectTarget.openCoursePurchase
-              ? { openCoursePurchase: true }
+            postLoginRedirectTarget.openProductPurchase
+              ? { openProductPurchase: true }
               : undefined
           }
         />

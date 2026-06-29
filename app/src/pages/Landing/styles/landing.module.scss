@@ -682,7 +682,7 @@
 
 .featuresSection,
 .stepsSection,
-.coursesSection,
+.productsSection,
 .trustSection,
 .ctaSection {
   max-width: 75rem;
@@ -847,9 +847,9 @@
   margin-inline: auto;
 }
 
-// --- Courses ---
+// --- Products ---
 
-.courseGrid {
+.productGrid {
   display: grid;
   gap: variables.$spacing-2;
   grid-template-columns: 1fr;
@@ -863,20 +863,20 @@
   }
 }
 
-.courseSkeleton {
+.productSkeleton {
   aspect-ratio: 0.72;
   border-radius: 1.15rem !important;
   background: color-mix(in srgb, var(--app-surface-border) 40%, transparent) !important;
 }
 
-.coursesEmpty {
+.productsEmpty {
   grid-column: 1 / -1;
   text-align: center;
   color: var(--text-secondary);
   padding: variables.$spacing-3;
 }
 
-.coursesCta {
+.productsCta {
   display: flex;
   justify-content: center;
   margin-top: variables.$spacing-3;

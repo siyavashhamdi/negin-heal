@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 
-import { ChapterReleaseNotificationService } from "../../modules/course/chapter-release-notification.service";
+import { ChapterReleaseNotificationService } from "../../modules/product/chapter-release-notification.service";
 
 @Injectable()
 export class ChapterReleaseNotificationCron implements OnModuleInit {

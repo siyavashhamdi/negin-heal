@@ -35,7 +35,7 @@ import { opaqueShellProps } from "../../shared/opaqueShell";
 
 const SECTION_ICONS: Record<string, ComponentType<{ className?: string }>> = {
   account: AccountCircleRoundedIcon,
-  courses: SchoolRoundedIcon,
+  products: SchoolRoundedIcon,
   payments: PaymentRoundedIcon,
   support: ConfirmationNumberRoundedIcon,
   technical: OndemandVideoRoundedIcon,

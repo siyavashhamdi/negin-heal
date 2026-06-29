@@ -24,7 +24,7 @@ type SeedCouponDefinition = {
   expiresAt?: string;
   totalUsageLimit?: number;
   perUserUsageLimit?: number;
-  applicableCourseIds: string[];
+  applicableProductIds: string[];
   isFirstPurchaseOnly: boolean;
   isActive: boolean;
   metadata?: Record<string, unknown>;
@@ -50,7 +50,7 @@ type SeedCouponDocument = {
   expiresAt?: Date;
   totalUsageLimit?: number;
   perUserUsageLimit?: number;
-  applicableCourseIds: Types.ObjectId[];
+  applicableProductIds: Types.ObjectId[];
   isFirstPurchaseOnly: boolean;
   isActive: boolean;
   metadata?: Record<string, unknown>;
@@ -68,12 +68,12 @@ type SeedCouponDocument = {
 const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
   {
     _id: "6a2ebc3b2e87f21c19582a8e",
-    code: "TEST-COURSE-MULTI",
-    title: "QA multi-course coupon",
-    description: "Applicable to three selected active courses.",
+    code: "TEST-PRODUCT-MULTI",
+    title: "QA multi-product coupon",
+    description: "Applicable to three selected active products.",
     discountType: CouponDiscountType.FIXED_AMOUNT,
     discountValue: 200000,
-    applicableCourseIds: [
+    applicableProductIds: [
       "6a2d1bf45ee4d985f372f0eb",
       "6a2d1bf45ee4d985f372f0e1",
       "6a2d1bf45ee4d985f372f0f5",
@@ -83,9 +83,9 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     metadata: {
       campaignName: "Comprehensive coupon QA seed",
       source: "cursor-direct-db-seed",
-      note: "course-scoped to multiple active courses",
+      note: "product-scoped to multiple active products",
     },
-    note: "course-scoped to multiple active courses",
+    note: "product-scoped to multiple active products",
     audit: {
       createdAt: "2026-06-14T14:35:38.880Z",
       updatedAt: "2026-06-14T14:35:38.880Z",
@@ -93,20 +93,20 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
   },
   {
     _id: "6a2ebc3b2e87f21c19582a8d",
-    code: "TEST-COURSE-ONLY-A",
-    title: "QA single-course coupon",
-    description: "Only applicable to the pregnancy preparation course.",
+    code: "TEST-PRODUCT-ONLY-A",
+    title: "QA single-product coupon",
+    description: "Only applicable to the pregnancy preparation product.",
     discountType: CouponDiscountType.PERCENTAGE,
     discountValue: 40,
-    applicableCourseIds: ["6a2d1bf45ee4d985f372f0eb"],
+    applicableProductIds: ["6a2d1bf45ee4d985f372f0eb"],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
       campaignName: "Comprehensive coupon QA seed",
       source: "cursor-direct-db-seed",
-      note: "course-scoped to one active course",
+      note: "product-scoped to one active product",
     },
-    note: "course-scoped to one active course",
+    note: "product-scoped to one active product",
     audit: {
       createdAt: "2026-06-14T14:35:38.880Z",
       updatedAt: "2026-06-14T14:35:38.880Z",
@@ -121,7 +121,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     discountValue: 20,
     startsAt: "2026-05-31T14:35:38.880Z",
     expiresAt: "2026-06-13T14:35:38.880Z",
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
@@ -142,7 +142,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     description: "Only valid for users with no committed purchases.",
     discountType: CouponDiscountType.PERCENTAGE,
     discountValue: 35,
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: true,
     isActive: true,
     metadata: {
@@ -163,7 +163,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     description: "Valid medium fixed amount coupon.",
     discountType: CouponDiscountType.FIXED_AMOUNT,
     discountValue: 500000,
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
@@ -184,7 +184,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     description: "Valid small fixed amount coupon.",
     discountType: CouponDiscountType.FIXED_AMOUNT,
     discountValue: 50000,
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
@@ -203,10 +203,10 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     code: "TEST-FIXED-HUGE",
     title: "QA oversized fixed coupon",
     description:
-      "Fixed amount larger than many course prices to verify final amount floors at zero.",
+      "Fixed amount larger than many product prices to verify final amount floors at zero.",
     discountType: CouponDiscountType.FIXED_AMOUNT,
     discountValue: 99999999,
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
@@ -228,7 +228,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     discountType: CouponDiscountType.PERCENTAGE,
     discountValue: 20,
     startsAt: "2026-06-21T14:35:38.880Z",
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
@@ -249,7 +249,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     description: "Inactive coupon for invalid-state testing.",
     discountType: CouponDiscountType.PERCENTAGE,
     discountValue: 25,
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: false,
     metadata: {
@@ -271,7 +271,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     discountType: CouponDiscountType.FIXED_AMOUNT,
     discountValue: 150000,
     startsAt: "2026-06-13T14:35:38.880Z",
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
@@ -293,7 +293,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     discountType: CouponDiscountType.FIXED_AMOUNT,
     discountValue: 175000,
     expiresAt: "2026-06-21T14:35:38.880Z",
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
@@ -314,7 +314,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     description: "Valid global percentage coupon.",
     discountType: CouponDiscountType.PERCENTAGE,
     discountValue: 10,
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
@@ -335,7 +335,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     description: "Valid coupon that can reduce payable amount to zero.",
     discountType: CouponDiscountType.PERCENTAGE,
     discountValue: 100,
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
@@ -357,7 +357,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
       "Percentage above 100 to verify validation caps at full payable amount.",
     discountType: CouponDiscountType.PERCENTAGE,
     discountValue: 150,
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
@@ -378,7 +378,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     description: "Valid large global percentage coupon.",
     discountType: CouponDiscountType.PERCENTAGE,
     discountValue: 50,
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
@@ -400,7 +400,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     discountType: CouponDiscountType.FIXED_AMOUNT,
     discountValue: 125000,
     perUserUsageLimit: 1,
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
@@ -422,7 +422,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     discountType: CouponDiscountType.PERCENTAGE,
     discountValue: 15,
     totalUsageLimit: 1,
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
@@ -445,7 +445,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     discountValue: 30,
     startsAt: "2026-06-13T14:35:38.880Z",
     expiresAt: "2026-06-21T14:35:38.880Z",
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
@@ -466,7 +466,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     description: "Active but ineffective fixed coupon.",
     discountType: CouponDiscountType.FIXED_AMOUNT,
     discountValue: 0,
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
@@ -487,7 +487,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     description: "Active but ineffective percentage coupon.",
     discountType: CouponDiscountType.PERCENTAGE,
     discountValue: 0,
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
@@ -510,7 +510,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     discountValue: 15,
     startsAt: "2026-06-13T14:43:12.405Z",
     expiresAt: "2026-07-14T14:43:12.405Z",
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
@@ -532,7 +532,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     discountValue: 75000,
     totalUsageLimit: 5,
     perUserUsageLimit: 1,
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
@@ -546,18 +546,18 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
   },
   {
     _id: "6a2ebe032e87f21c19582a9f",
-    code: "TEST_COURSE1_20",
-    title: "Test course 1 only 20 percent",
-    description: "Only applicable to one active course.",
+    code: "TEST_PRODUCT1_20",
+    title: "Test product 1 only 20 percent",
+    description: "Only applicable to one active product.",
     discountType: CouponDiscountType.PERCENTAGE,
     discountValue: 20,
-    applicableCourseIds: ["6a2d1bf55ee4d985f372f0ff"],
+    applicableProductIds: ["6a2d1bf55ee4d985f372f0ff"],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
       campaignName: "Coupon QA fixtures",
       source: "manual-db-seed",
-      note: "Only applicable to one active course.",
+      note: "Only applicable to one active product.",
     },
     audit: {
       createdAt: "2026-06-14T14:43:12.405Z",
@@ -565,18 +565,18 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
   },
   {
     _id: "6a2ebe032e87f21c19582aa0",
-    code: "TEST_COURSE2_FIXED",
-    title: "Test course 2 only fixed 100k",
-    description: "Only applicable to one active course.",
+    code: "TEST_PRODUCT2_FIXED",
+    title: "Test product 2 only fixed 100k",
+    description: "Only applicable to one active product.",
     discountType: CouponDiscountType.FIXED_AMOUNT,
     discountValue: 100000,
-    applicableCourseIds: ["6a2d1bf45ee4d985f372f0fa"],
+    applicableProductIds: ["6a2d1bf45ee4d985f372f0fa"],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
       campaignName: "Coupon QA fixtures",
       source: "manual-db-seed",
-      note: "Only applicable to one active course.",
+      note: "Only applicable to one active product.",
     },
     audit: {
       createdAt: "2026-06-14T14:43:12.405Z",
@@ -591,7 +591,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     discountValue: 30,
     startsAt: "2026-05-15T14:43:12.405Z",
     expiresAt: "2026-06-13T14:43:12.405Z",
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
@@ -610,7 +610,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     description: "Valid only for users with no committed purchases.",
     discountType: CouponDiscountType.PERCENTAGE,
     discountValue: 40,
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: true,
     isActive: true,
     metadata: {
@@ -629,7 +629,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     description: "Valid larger fixed amount coupon.",
     discountType: CouponDiscountType.FIXED_AMOUNT,
     discountValue: 200000,
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
@@ -648,7 +648,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     description: "Valid fixed amount coupon.",
     discountType: CouponDiscountType.FIXED_AMOUNT,
     discountValue: 50000,
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
@@ -665,16 +665,16 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     code: "TEST_FIXED_HUGE",
     title: "Test huge fixed amount",
     description:
-      "Fixed amount higher than most courses; service caps at payable amount.",
+      "Fixed amount higher than most products; service caps at payable amount.",
     discountType: CouponDiscountType.FIXED_AMOUNT,
     discountValue: 999999999,
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
       campaignName: "Coupon QA fixtures",
       source: "manual-db-seed",
-      note: "Fixed amount higher than most courses; service caps at payable amount.",
+      note: "Fixed amount higher than most products; service caps at payable amount.",
     },
     audit: {
       createdAt: "2026-06-14T14:43:12.405Z",
@@ -689,7 +689,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     discountValue: 30,
     startsAt: "2026-06-15T14:43:12.405Z",
     expiresAt: "2026-07-14T14:43:12.405Z",
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
@@ -708,7 +708,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     description: "Valid global percentage coupon.",
     discountType: CouponDiscountType.PERCENTAGE,
     discountValue: 10,
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
@@ -727,7 +727,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     description: "Valid coupon that can make payable amount zero.",
     discountType: CouponDiscountType.PERCENTAGE,
     discountValue: 100,
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
@@ -746,7 +746,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     description: "Valid global percentage coupon.",
     discountType: CouponDiscountType.PERCENTAGE,
     discountValue: 25,
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
@@ -765,7 +765,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     description: "Invalid because isActive is false.",
     discountType: CouponDiscountType.PERCENTAGE,
     discountValue: 20,
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: false,
     metadata: {
@@ -779,12 +779,12 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
   },
   {
     _id: "6a2ebe032e87f21c19582aa1",
-    code: "TEST_MULTI_COURSE_15",
-    title: "Test multi-course 15 percent",
-    description: "Applicable to three active courses.",
+    code: "TEST_MULTI_PRODUCT_15",
+    title: "Test multi-product 15 percent",
+    description: "Applicable to three active products.",
     discountType: CouponDiscountType.PERCENTAGE,
     discountValue: 15,
-    applicableCourseIds: [
+    applicableProductIds: [
       "6a2d1bf55ee4d985f372f0ff",
       "6a2d1bf45ee4d985f372f0fa",
       "6a2d1bf45ee4d985f372f0f5",
@@ -794,7 +794,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     metadata: {
       campaignName: "Coupon QA fixtures",
       source: "manual-db-seed",
-      note: "Applicable to three active courses.",
+      note: "Applicable to three active products.",
     },
     audit: {
       createdAt: "2026-06-14T14:43:12.405Z",
@@ -808,7 +808,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
       "Percentage above 100; service caps discount at payable amount.",
     discountType: CouponDiscountType.PERCENTAGE,
     discountValue: 150,
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
@@ -828,7 +828,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
       "Soft-deleted fixture; Mongoose queries should treat it like not found.",
     discountType: CouponDiscountType.PERCENTAGE,
     discountValue: 20,
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
@@ -849,7 +849,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     discountType: CouponDiscountType.PERCENTAGE,
     discountValue: 15,
     totalUsageLimit: 1,
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
@@ -869,7 +869,7 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
     discountType: CouponDiscountType.PERCENTAGE,
     discountValue: 15,
     perUserUsageLimit: 1,
-    applicableCourseIds: [],
+    applicableProductIds: [],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
@@ -883,19 +883,19 @@ const COUPON_DEFINITIONS: SeedCouponDefinition[] = [
   },
   {
     _id: "6a2ebe032e87f21c19582aa2",
-    code: "TEST_WRONG_COURSE_40",
-    title: "Test non-matching course 40 percent",
+    code: "TEST_WRONG_PRODUCT_40",
+    title: "Test non-matching product 40 percent",
     description:
-      "Course-scoped to a fake course ID, so it should be inapplicable to real courses.",
+      "Product-scoped to a fake product ID, so it should be inapplicable to real products.",
     discountType: CouponDiscountType.PERCENTAGE,
     discountValue: 40,
-    applicableCourseIds: ["000000000000000000000001"],
+    applicableProductIds: ["000000000000000000000001"],
     isFirstPurchaseOnly: false,
     isActive: true,
     metadata: {
       campaignName: "Coupon QA fixtures",
       source: "manual-db-seed",
-      note: "Course-scoped to a fake course ID, so it should be inapplicable to real courses.",
+      note: "Product-scoped to a fake product ID, so it should be inapplicable to real products.",
     },
     audit: {
       createdAt: "2026-06-14T14:43:12.405Z",
@@ -929,8 +929,8 @@ function buildCoupons(): SeedCouponDocument[] {
     expiresAt: coupon.expiresAt ? new Date(coupon.expiresAt) : undefined,
     totalUsageLimit: coupon.totalUsageLimit,
     perUserUsageLimit: coupon.perUserUsageLimit,
-    applicableCourseIds: coupon.applicableCourseIds.map(
-      (courseId) => new Types.ObjectId(courseId),
+    applicableProductIds: coupon.applicableProductIds.map(
+      (productId) => new Types.ObjectId(productId),
     ),
     isFirstPurchaseOnly: coupon.isFirstPurchaseOnly,
     isActive: coupon.isActive,

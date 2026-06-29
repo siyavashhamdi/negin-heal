@@ -4,9 +4,9 @@ import { Field, Int, ObjectType } from "@nestjs/graphql";
 export class BadgeCountGqlResponse {
   @Field(() => Int, {
     description:
-      "Course badge count. Staff users receive all courses; end users receive active courses.",
+      "Product badge count. Staff users receive all products; end users receive active products.",
   })
-  courses: number;
+  products: number;
 
   @Field(() => Int, {
     nullable: true,

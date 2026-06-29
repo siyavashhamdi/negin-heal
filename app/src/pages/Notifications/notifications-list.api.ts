@@ -1,9 +1,9 @@
-import type { SortOrder } from "../Courses/courses-list.api";
+import type { SortOrder } from "../Products/product-list.api";
 
 export type NotificationMode = "INFO" | "SUCCESS" | "WARNING" | "ERROR";
 export type NotificationSource =
-  | "COURSE"
-  | "COURSE_CHAPTER"
+  | "PRODUCT"
+  | "PRODUCT_CHAPTER"
   | "PAYMENT"
   | "USER"
   | "TICKET"
@@ -100,8 +100,8 @@ export type NotificationRecord = {
 export const NOTIFICATION_LIST_PAGE_SIZE = 12;
 
 export const NOTIFICATION_SOURCE_LABEL: Record<NotificationSource, string> = {
-  COURSE: "دوره",
-  COURSE_CHAPTER: "فصل دوره",
+  PRODUCT: "دوره",
+  PRODUCT_CHAPTER: "فصل دوره",
   PAYMENT: "پرداخت",
   USER: "کاربر",
   TICKET: "پشتیبانی",

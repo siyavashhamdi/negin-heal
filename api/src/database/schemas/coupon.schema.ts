@@ -47,8 +47,8 @@ export class Coupon extends BaseIdTimestampableBlameableSchema {
   @Prop({ min: 1, type: Number })
   perUserUsageLimit?: number;
 
-  @Prop({ default: [], ref: "Course", type: [Types.ObjectId] })
-  applicableCourseIds?: Types.ObjectId[];
+  @Prop({ default: [], ref: "Product", type: [Types.ObjectId] })
+  applicableProductIds?: Types.ObjectId[];
 
   @Prop({ default: false, required: true, type: Boolean })
   isFirstPurchaseOnly: boolean;
@@ -66,6 +66,6 @@ CouponSchema.plugin(softDeletePlugin);
 CouponSchema.index({ code: 1 }, { unique: true });
 CouponSchema.index({ isActive: 1 });
 CouponSchema.index({ startsAt: 1, expiresAt: 1 });
-CouponSchema.index({ applicableCourseIds: 1 });
+CouponSchema.index({ applicableProductIds: 1 });
 CouponSchema.index({ "audit.createdAt": -1 });
 CouponSchema.index({ "audit.updatedAt": -1 });

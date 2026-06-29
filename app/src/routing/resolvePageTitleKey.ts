@@ -1,5 +1,12 @@
+import {
+  PRODUCTS_DELETE_PAGE_ROUTE_REGEX,
+  PRODUCT_DETAIL_PAGE_ROUTE_REGEX,
+  PRODUCTS_EDIT_PAGE_ROUTE_REGEX,
+  PRODUCTS_ROUTE_PATH,
+} from "./product-route-path";
+
 const STATIC_ROUTE_TITLE_KEYS: Readonly<Record<string, string>> = {
-  "/courses": "app.pageTitles.courses",
+  [PRODUCTS_ROUTE_PATH]: "app.pageTitles.products",
   "/more": "app.pageTitles.more",
   "/more/about": "app.pageTitles.moreAbout",
   "/more/privacy-policy": "app.pageTitles.morePrivacyPolicy",
@@ -35,19 +42,19 @@ type RouteTitleRule = {
 const ROUTE_TITLE_RULES: readonly RouteTitleRule[] = [
   { match: (p) => /\/compress-media$/.test(p), key: "app.pageTitles.mediaCompress" },
   { match: (p) => /\/max$/.test(p), key: "app.pageTitles.contentViewer" },
-  { match: (p) => /\/purchase$/.test(p), key: "app.pageTitles.coursePurchase" },
-  { match: (p) => p === "/courses/new", key: "app.pageTitles.courseCreate" },
+  { match: (p) => /\/purchase$/.test(p), key: "app.pageTitles.productPurchase" },
+  { match: (p) => p === `${PRODUCTS_ROUTE_PATH}/new`, key: "app.pageTitles.productCreate" },
   {
-    match: (p) => /^\/courses\/edit\/[^/]+$/.test(p),
-    key: "app.pageTitles.courseEdit",
+    match: (p) => PRODUCTS_EDIT_PAGE_ROUTE_REGEX.test(p),
+    key: "app.pageTitles.productEdit",
   },
   {
-    match: (p) => /^\/courses\/delete\/[^/]+$/.test(p),
+    match: (p) => PRODUCTS_DELETE_PAGE_ROUTE_REGEX.test(p),
     key: "table.dataGrid.deleteDialog.title",
   },
   {
-    match: (p) => /^\/courses\/[^/]+$/.test(p),
-    key: "app.pageTitles.courseDetail",
+    match: (p) => PRODUCT_DETAIL_PAGE_ROUTE_REGEX.test(p),
+    key: "app.pageTitles.productDetail",
   },
   { match: (p) => p === "/support/tickets/new", key: "pages.support.create.title" },
   {

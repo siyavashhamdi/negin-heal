@@ -1,8 +1,0 @@
-export enum UserCoursePurchaseStatus {
-  PENDING = "PENDING",
-  PENDING_GATEWAY = "PENDING_GATEWAY",
-  PAID = "PAID",
-  FAILED = "FAILED",
-  REFUNDED = "REFUNDED",
-  CANCELLED = "CANCELLED",
-}
